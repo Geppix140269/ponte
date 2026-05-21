@@ -1,0 +1,11 @@
+# Normalize line endings to LF in the repository for consistent CI builds
+* text=auto eol=lf
+
+# Treat these as binary (no line-ending conversion)
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.woff binary
+*.woff2 binary

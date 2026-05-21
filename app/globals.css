@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif font-normal text-navy;
+  }
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-container px-6 sm:px-8 lg:px-10;
+  }
+
+  /* Section label: uppercase, tracked, gold, small */
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-gold;
+  }
+
+  /* Gold-rule label: brand "tag" treatment with a leading hairline */
+  .tag-rule {
+    @apply inline-flex items-center gap-3.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold;
+  }
+  .tag-rule::before {
+    content: "";
+    @apply h-px w-7 bg-gold;
+  }
+
+  /* Buttons — square corners, no rounding */
+  .btn {
+    @apply inline-flex items-center justify-center px-7 py-3.5 text-sm font-medium tracking-wide transition-colors duration-200;
+  }
+
+  .btn-gold {
+    @apply btn bg-gold text-navy hover:bg-[#b3852f];
+  }
+
+  .btn-navy {
+    @apply btn bg-navy text-white hover:bg-[#16263a];
+  }
+
+  .btn-outline-light {
+    @apply btn border border-white/40 text-white hover:bg-white hover:text-navy;
+  }
+
+  .btn-outline-dark {
+    @apply btn border border-navy/30 text-navy hover:bg-navy hover:text-white;
+  }
+
+  .link-gold {
+    @apply inline-flex items-center gap-2 text-sm font-medium tracking-wide text-gold transition-colors hover:text-navy;
+  }
+
+  /* Generic vertical section padding */
+  .section {
+    @apply py-20 sm:py-24 lg:py-28;
+  }
+
+  .serif-number {
+    @apply font-serif text-4xl text-gold;
+  }
+
+  /* Legal / long-form content */
+  .legal-prose {
+    @apply text-sm leading-relaxed text-gray;
+  }
+  .legal-prose h2 {
+    @apply mb-3 mt-10 text-xl text-navy;
+  }
+  .legal-prose p {
+    @apply mb-4;
+  }
+  .legal-prose ul {
+    @apply mb-4 list-disc space-y-2 pl-5;
+  }
+  .legal-prose a {
+    @apply text-gold underline-offset-2 hover:underline;
+  }
+  .legal-prose strong {
+    @apply font-medium text-navy;
+  }
+  .legal-note {
+    @apply mt-10 border-l-2 border-gold bg-cream p-5 text-xs text-gray;
+  }
+}
