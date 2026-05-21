@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/format";
+import AdminDeliverForm from "@/components/AdminDeliverForm";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,12 @@ export default async function AdminOrders() {
                   </span>
                 </div>
               </div>
-              <ul className="mt-3 space-y-1 text-sm text-navy/70">
+              <ul className="mt-3 space-y-3 text-sm text-navy/70">
                 {(o.order_items ?? []).map((it: any) => (
-                  <li key={it.id} className="flex items-center justify-between">
+                  <li
+                    key={it.id}
+                    className="flex flex-col gap-2 border-t border-line pt-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
+                  >
                     <span>
                       {it.config_values?.sku ?? "Item"}
                       <span className="ml-2 text-xs text-navy/45">
@@ -49,15 +53,20 @@ export default async function AdminOrders() {
                           .join(" · ")}
                       </span>
                     </span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        it.delivery_status === "delivered"
-                          ? "text-emerald-700"
-                          : "text-gold-600"
-                      }`}
-                    >
-                      {it.delivery_status}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      {it.delivery_status === "processing" && (
+                        <AdminDeliverForm itemId={it.id} orderId={o.id} />
+                      )}
+                      <span
+                        className={`text-xs font-semibold ${
+                          it.delivery_status === "delivered"
+                            ? "text-emerald-700"
+                            : "text-gold-600"
+                        }`}
+                      >
+                        {it.delivery_status}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>

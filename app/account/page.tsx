@@ -42,7 +42,7 @@ export default async function AccountPage() {
 
   const allItems = (orders ?? []).flatMap((o: any) => o.order_items ?? []);
   const downloads = allItems.filter(
-    (it: any) => it.delivery_status === "delivered" && it.download_url,
+    (it: any) => it.delivery_status === "delivered" && it.report_path,
   );
 
   return (
@@ -70,8 +70,13 @@ export default async function AccountPage() {
               <li key={it.id} className="flex items-center justify-between py-4">
                 <span className="text-sm font-medium text-navy">
                   {it.config_values?.sku ?? "Report"}
+                  {it.download_count != null && (
+                    <span className="ml-2 text-xs text-navy/45">
+                      {Math.max(0, (it.max_downloads ?? 5) - (it.download_count ?? 0))} downloads left
+                    </span>
+                  )}
                 </span>
-                <a href={it.download_url} className="btn-gold">
+                <a href={`/api/download/${it.id}`} className="btn-gold">
                   <Download className="h-4 w-4" /> Download
                 </a>
               </li>

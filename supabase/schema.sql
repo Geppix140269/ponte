@@ -47,6 +47,7 @@ create table if not exists products (
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles,
+  email text,
   stripe_payment_intent_id text unique,
   stripe_session_id text,
   status text default 'pending',         -- 'pending' | 'paid' | 'processing' | 'delivered' | 'failed'
@@ -64,6 +65,7 @@ create table if not exists order_items (
   unit_price_cents int,
   config_values jsonb,
   delivery_status text default 'pending',-- 'pending' | 'processing' | 'ready' | 'delivered'
+  report_path text,                       -- object path in the ponte-reports bucket
   download_url text,
   download_expires_at timestamptz,
   download_count int default 0,

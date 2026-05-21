@@ -55,6 +55,7 @@ export async function persistPaidOrder(
     .from("orders")
     .insert({
       user_id: session.client_reference_id ?? null,
+      email: session.customer_details?.email ?? session.customer_email ?? null,
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntentId,
       status: "paid",
