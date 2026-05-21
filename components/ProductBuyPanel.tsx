@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, ShieldCheck, FileText, Clock } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { displayPrice, DELIVERY_LABEL } from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
 import { useCart } from "@/lib/cart-store";
+import { startCheckout } from "@/lib/checkout";
 
 export default function ProductBuyPanel({ product }: { product: Product }) {
-  const router = useRouter();
   const addItem = useCart((s) => s.addItem);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   function validate(): boolean {
     if (!product.isConfigurable || !product.configFields) return true;
@@ -28,14 +28,17 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
     return true;
   }
 
-  function handleAdd(thenCheckout: boolean) {
+  function handleAddToCart() {
     if (!validate()) return;
     addItem(product.sku, values);
-    if (thenCheckout) {
-      router.push("/checkout");
-    } else {
-      setAdded(true);
-    }
+    setAdded(true);
+  }
+
+  async function handleBuyNow() {
+    if (!validate()) return;
+    setBusy(true);
+    await startCheckout([{ sku: product.sku, config: values }]);
+    setBusy(false);
   }
 
   function setField(name: string, value: string) {
@@ -148,14 +151,15 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
         <div className="mt-6 space-y-3">
           <button
             type="button"
-            onClick={() => handleAdd(true)}
-            className="btn-gold w-full"
+            onClick={handleBuyNow}
+            disabled={busy}
+            className="btn-gold w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Buy now
+            {busy ? "Starting checkout…" : "Buy now"}
           </button>
           <button
             type="button"
-            onClick={() => handleAdd(false)}
+            onClick={handleAddToCart}
             className="btn-outline w-full"
           >
             Add to cart

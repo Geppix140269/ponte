@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart-store";
 import { getProductBySku } from "@/lib/catalogue";
 import { formatPrice } from "@/lib/format";
 import { countryName } from "@/lib/countries";
+import { startCheckout } from "@/lib/checkout";
 import type { CartItemConfig } from "@/lib/types";
 
 function describeConfig(sku: string, config: CartItemConfig): string[] {
@@ -29,6 +31,13 @@ export default function CartPage() {
   const items = useCart((s) => s.items);
   const removeItem = useCart((s) => s.removeItem);
   const subtotalCents = useCart((s) => s.subtotalCents());
+  const [busy, setBusy] = useState(false);
+
+  async function handleCheckout() {
+    setBusy(true);
+    await startCheckout(items);
+    setBusy(false);
+  }
 
   if (items.length === 0) {
     return (
@@ -98,9 +107,14 @@ export default function CartPage() {
             <p className="mt-1 text-xs text-navy/50">
               VAT calculated at checkout based on billing country.
             </p>
-            <Link href="/checkout" className="btn-gold mt-6 w-full">
-              Proceed to checkout
-            </Link>
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={busy}
+              className="btn-gold mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {busy ? "Starting checkout…" : "Proceed to checkout"}
+            </button>
             <Link href="/catalogue" className="btn-outline mt-3 w-full">
               Continue browsing
             </Link>
