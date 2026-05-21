@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { getProductBySku } from "@/lib/catalogue";
+import { getUser } from "@/lib/auth";
 import type { CartItem } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
   const stripe = getStripe();
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  const user = await getUser();
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
     resolved.map(({ product }) => ({
@@ -77,6 +79,12 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/cart`,
       metadata,
+      ...(user
+        ? {
+            client_reference_id: user.id,
+            customer_email: user.email ?? undefined,
+          }
+        : {}),
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {

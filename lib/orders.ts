@@ -1,6 +1,12 @@
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getProductBySku } from "@/lib/catalogue";
+import { formatPrice } from "@/lib/format";
+import {
+  sendOrderConfirmation,
+  sendProcessing,
+  sendAdminAlert,
+} from "@/lib/email";
 
 export function isSupabaseAdminConfigured(): boolean {
   return Boolean(
@@ -48,6 +54,7 @@ export async function persistPaidOrder(
   const { data: order, error: orderError } = await sb
     .from("orders")
     .insert({
+      user_id: session.client_reference_id ?? null,
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntentId,
       status: "paid",
@@ -61,6 +68,11 @@ export async function persistPaidOrder(
     console.error("[ponte] failed to insert order:", orderError);
     return;
   }
+
+  const buyerEmail =
+    session.customer_details?.email ?? session.customer_email ?? null;
+  const lines: string[] = [];
+  let hasProcessing = false;
 
   for (const item of items) {
     const product = getProductBySku(item.sku);
@@ -82,12 +94,34 @@ export async function persistPaidOrder(
       delivery_status: deliveryStatus,
     });
 
+    const cfg = Object.entries(item.config)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+    lines.push(
+      `${product?.title ?? item.sku}${cfg ? ` (${cfg})` : ""}`,
+    );
+
     if (deliveryStatus === "processing") {
-      // TODO (Resend phase): email buyer "preparing" + alert ADMIN_ALERT_EMAIL.
-      console.log(
-        `[ponte] manual delivery required: ${item.sku}`,
-        item.config,
-      );
+      hasProcessing = true;
+      await sendAdminAlert({
+        orderId: order.id,
+        sku: item.sku,
+        config: item.config,
+      });
+    }
+  }
+
+  if (buyerEmail) {
+    await sendOrderConfirmation(buyerEmail, {
+      orderId: order.id,
+      lines,
+      total: formatPrice(
+        session.amount_total ?? 0,
+        (session.currency ?? "eur").toUpperCase(),
+      ),
+    });
+    if (hasProcessing) {
+      await sendProcessing(buyerEmail, { sla: "24–48 hours" });
     }
   }
 }

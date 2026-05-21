@@ -1,6 +1,7 @@
 import { Lock } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { displayPrice } from "@/lib/format";
+import PdfPreview from "@/components/PdfPreview";
 
 // Placeholder "report page" — stands in for a rasterized PDF page until the
 // react-pdf integration and real preview assets are wired (Phase: PDF preview).
@@ -44,23 +45,38 @@ export default function PreviewPaywall({ product }: { product: Product }) {
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {Array.from({ length: freePages }).map((_, i) => (
-          <MockPage key={i} />
-        ))}
-
-        {/* Locked page with CSS-blur overlay */}
-        <div className="relative col-span-2 sm:col-span-1">
-          <MockPage blurred />
-          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy/40 p-4 text-center">
-            <Lock className="h-6 w-6 text-white" />
-            <p className="mt-2 text-sm font-semibold text-white">
-              Unlock the full report
+      {product.previewPdfUrl ? (
+        <div className="mt-4">
+          <PdfPreview
+            url={product.previewPdfUrl}
+            pages={product.previewPages ?? freePages}
+          />
+          <div className="mt-4 flex flex-col items-center justify-center rounded-md border border-dashed border-line bg-mist p-6 text-center">
+            <Lock className="h-6 w-6 text-gold-600" />
+            <p className="mt-2 text-sm font-semibold text-navy">
+              Unlock the full report — {displayPrice(product)}
             </p>
-            <p className="text-xs text-white/80">{displayPrice(product)}</p>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {Array.from({ length: freePages }).map((_, i) => (
+            <MockPage key={i} />
+          ))}
+
+          {/* Locked page with CSS-blur overlay */}
+          <div className="relative col-span-2 sm:col-span-1">
+            <MockPage blurred />
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy/40 p-4 text-center">
+              <Lock className="h-6 w-6 text-white" />
+              <p className="mt-2 text-sm font-semibold text-white">
+                Unlock the full report
+              </p>
+              <p className="text-xs text-white/80">{displayPrice(product)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="mt-4 text-xs leading-relaxed text-navy/50">
         Preview pages are watermarked samples. The full report is delivered as a

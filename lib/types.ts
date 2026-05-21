@@ -40,6 +40,8 @@ export interface Product {
   bundleOf?: string[];
   savingsCents?: number;
   featured?: boolean;
+  previewPdfUrl?: string;
+  previewPages?: number;
 }
 
 export interface CartItemConfig {
