@@ -1,26 +1,19 @@
 import Link from "next/link";
-import ArchPattern from "@/components/ArchPattern";
 
 export default function NotFound() {
   return (
-    <section className="relative flex min-h-[calc(100vh-5rem)] items-center overflow-hidden bg-navy">
-      <ArchPattern className="opacity-[0.04]" />
-      <div className="container-px relative py-20 text-center">
-        <p className="section-label">Error 404</p>
-        <h1 className="mt-6 font-serif text-6xl text-white sm:text-7xl">
+    <section className="bg-navy">
+      <div className="container-px flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
+        <p className="eyebrow">Error 404</p>
+        <h1 className="mt-5 text-5xl font-extrabold text-white sm:text-6xl">
           Page not found
         </h1>
-        <p className="mx-auto mt-6 max-w-md text-lg leading-relaxed text-white/70">
-          The page you&apos;re looking for doesn&apos;t exist or may have moved.
-          Let&apos;s get you back on track.
+        <p className="mt-5 max-w-md text-lg text-white/70">
+          The page you&apos;re looking for doesn&apos;t exist or has moved.
         </p>
-        <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-          <Link href="/" className="btn-gold">
-            Back to Home
-          </Link>
-          <Link href="/contact" className="btn-outline-light">
-            Contact Us
-          </Link>
+        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <Link href="/" className="btn-gold">Back to home</Link>
+          <Link href="/catalogue" className="btn-ghost-light">Browse the Catalogue</Link>
         </div>
       </div>
     </section>

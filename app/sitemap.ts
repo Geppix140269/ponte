@@ -1,27 +1,33 @@
 import type { MetadataRoute } from "next";
+import { CATEGORIES, PRODUCTS } from "@/lib/catalogue";
 
-const BASE_URL = "https://ponte.trade";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const now = new Date();
 
-  const routes: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
-    { path: "", priority: 1, changeFrequency: "weekly" },
-    { path: "/about", priority: 0.8, changeFrequency: "monthly" },
-    { path: "/services", priority: 0.8, changeFrequency: "monthly" },
-    { path: "/case-studies", priority: 0.8, changeFrequency: "monthly" },
-    { path: "/insights", priority: 0.7, changeFrequency: "weekly" },
-    { path: "/contact", priority: 0.7, changeFrequency: "monthly" },
-    { path: "/marketplace", priority: 0.5, changeFrequency: "monthly" },
-    { path: "/partners", priority: 0.5, changeFrequency: "monthly" },
-    { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
-    { path: "/cookies", priority: 0.3, changeFrequency: "yearly" },
-  ];
+  const staticRoutes = ["", "/catalogue", "/about", "/terms", "/privacy"].map(
+    (path) => ({
+      url: `${BASE_URL}${path}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: path === "" ? 1 : 0.6,
+    }),
+  );
 
-  return routes.map((route) => ({
-    url: `${BASE_URL}${route.path}`,
-    lastModified,
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
+  const categoryRoutes = CATEGORIES.map((c) => ({
+    url: `${BASE_URL}/category/${c.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
   }));
+
+  const productRoutes = PRODUCTS.map((p) => ({
+    url: `${BASE_URL}/product/${p.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
 }

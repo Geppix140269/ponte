@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import CookieConsent from "@/components/CookieConsent";
-import StructuredData from "@/components/StructuredData";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,35 +10,29 @@ const inter = Inter({
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
-  display: "swap",
-});
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ponte.trade"),
+  metadataBase: new URL(APP_URL),
   title: {
-    default: "Ponte — International Trade & Procurement",
-    template: "%s — Ponte",
+    default: "Ponte Trade — Trade intelligence. Delivered.",
+    template: "%s — Ponte Trade",
   },
   description:
-    "Ponte connects suppliers with buyers globally — empowering businesses to expand internationally through strategic partnerships and expert procurement.",
+    "Research-grade market reports and trade analysis. No subscription required — buy the intelligence you need as a one-time purchase.",
   openGraph: {
-    title: "Ponte — International Trade & Procurement",
+    title: "Ponte Trade — Trade intelligence. Delivered.",
     description:
-      "Where markets meet and trade flows. International trade, procurement, and market entry services.",
-    url: "https://ponte.trade",
-    siteName: "Ponte",
+      "Research-grade market reports and trade analysis. Buy what you need.",
+    url: APP_URL,
+    siteName: "Ponte Trade",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ponte — International Trade & Procurement",
+    title: "Ponte Trade — Trade intelligence. Delivered.",
     description:
-      "Where markets meet and trade flows. International trade, procurement, and market entry services.",
+      "Research-grade market reports and trade analysis. Buy what you need.",
   },
 };
 
@@ -50,13 +42,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body className="flex min-h-screen flex-col">
-        <StructuredData />
-        <Navbar />
-        <main className="flex-1 pt-20">{children}</main>
-        <Footer />
-        <CookieConsent />
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

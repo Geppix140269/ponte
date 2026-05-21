@@ -1,0 +1,140 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Check } from "lucide-react";
+import ProductBuyPanel from "@/components/ProductBuyPanel";
+import ProductCard from "@/components/ProductCard";
+import PreviewPaywall from "@/components/PreviewPaywall";
+import {
+  PRODUCTS,
+  getProduct,
+  getCategory,
+  relatedProducts,
+} from "@/lib/catalogue";
+import { DELIVERY_LABEL } from "@/lib/format";
+
+const DATA_SOURCES = [
+  "UN Comtrade",
+  "World Bank",
+  "WTO",
+  "Eurostat",
+  "ITC",
+  "EU Taxud",
+];
+
+export function generateStaticParams() {
+  return PRODUCTS.map((p) => ({ slug: p.slug }));
+}
+
+export function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Metadata {
+  const product = getProduct(params.slug);
+  if (!product) return { title: "Product" };
+  return {
+    title: product.title,
+    description: product.shortDescription,
+  };
+}
+
+export default function ProductPage({ params }: { params: { slug: string } }) {
+  const product = getProduct(params.slug);
+  if (!product) notFound();
+
+  const category = getCategory(product.categorySlug);
+  const related = relatedProducts(product);
+
+  return (
+    <section className="bg-white py-10 lg:py-14">
+      <div className="container-px">
+        {/* Breadcrumb */}
+        <nav className="text-xs text-navy/50">
+          <Link href="/catalogue" className="hover:text-navy">Catalogue</Link>
+          <span className="mx-2">/</span>
+          <Link href={`/category/${category?.slug}`} className="hover:text-navy">
+            {category?.name}
+          </Link>
+          {product.band && (
+            <>
+              <span className="mx-2">/</span>
+              <span>{product.band}</span>
+            </>
+          )}
+        </nav>
+
+        <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px] lg:gap-14">
+          {/* Left column */}
+          <div>
+            <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">
+              {product.title}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <span className="badge-navy">{product.sku}</span>
+              <span className="text-sm font-medium text-emerald-700">
+                {DELIVERY_LABEL[product.deliveryType]}
+              </span>
+            </div>
+
+            <p className="mt-6 text-base leading-relaxed text-navy/75">
+              {product.fullDescription}
+            </p>
+
+            {/* What's included */}
+            <div className="mt-8">
+              <h2 className="text-lg font-bold text-navy">What&apos;s included</h2>
+              <ul className="mt-4 space-y-2.5">
+                {product.includes.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-navy/75">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold-600" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Data sources */}
+            <div className="mt-8">
+              <p className="field-label">Data sources</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {DATA_SOURCES.map((s) => (
+                  <span key={s} className="rounded-md border border-line bg-mist px-3 py-1.5 text-xs font-medium text-navy/70">
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-navy/50">
+                Reports are verified against multiple official sources. Where
+                sources conflict, outliers are identified first and probabilistic
+                models are used to calculate the most likely outcome.
+              </p>
+            </div>
+
+            {/* Preview */}
+            <div className="mt-10 border-t border-line pt-10">
+              <PreviewPaywall product={product} />
+            </div>
+          </div>
+
+          {/* Right column — sticky buy panel */}
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <ProductBuyPanel product={product} />
+          </div>
+        </div>
+
+        {/* Related */}
+        {related.length > 0 && (
+          <div className="mt-16 border-t border-line pt-12">
+            <h2 className="text-xl font-bold text-navy">You may also like</h2>
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {related.map((p) => (
+                <ProductCard key={p.sku} product={p} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

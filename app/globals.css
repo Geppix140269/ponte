@@ -6,92 +6,76 @@
   html {
     scroll-behavior: smooth;
   }
-
   body {
-    @apply bg-white text-gray font-sans antialiased;
+    @apply bg-white text-navy/80 font-sans antialiased;
   }
-
   h1,
   h2,
   h3,
   h4 {
-    @apply font-serif font-normal text-navy;
+    @apply font-bold tracking-tight text-navy;
   }
 }
 
 @layer components {
   .container-px {
-    @apply mx-auto w-full max-w-container px-6 sm:px-8 lg:px-10;
+    @apply mx-auto w-full max-w-container px-5 sm:px-6 lg:px-8;
   }
 
-  /* Section label: uppercase, tracked, gold, small */
-  .section-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-gold;
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-gold;
   }
 
-  /* Gold-rule label: brand "tag" treatment with a leading hairline */
-  .tag-rule {
-    @apply inline-flex items-center gap-3.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold;
-  }
-  .tag-rule::before {
-    content: "";
-    @apply h-px w-7 bg-gold;
-  }
-
-  /* Buttons — square corners, no rounding */
   .btn {
-    @apply inline-flex items-center justify-center px-7 py-3.5 text-sm font-medium tracking-wide transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-colors duration-150;
   }
-
   .btn-gold {
-    @apply btn bg-gold text-navy hover:bg-[#b3852f];
+    @apply btn bg-gold text-navy hover:bg-gold-600;
   }
-
   .btn-navy {
-    @apply btn bg-navy text-white hover:bg-[#16263a];
+    @apply btn bg-navy text-white hover:bg-navy-700;
+  }
+  .btn-outline {
+    @apply btn border border-navy/20 text-navy hover:border-navy hover:bg-navy hover:text-white;
+  }
+  .btn-ghost-light {
+    @apply btn border border-white/30 text-white hover:bg-white hover:text-navy;
   }
 
-  .btn-outline-light {
-    @apply btn border border-white/40 text-white hover:bg-white hover:text-navy;
+  .card {
+    @apply flex flex-col rounded-xl border border-line bg-white transition-shadow duration-200 hover:shadow-lg hover:shadow-navy/5;
   }
 
-  .btn-outline-dark {
-    @apply btn border border-navy/30 text-navy hover:bg-navy hover:text-white;
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide;
+  }
+  .badge-gold {
+    @apply badge bg-gold/15 text-gold-600;
+  }
+  .badge-navy {
+    @apply badge bg-navy/10 text-navy;
   }
 
-  .link-gold {
-    @apply inline-flex items-center gap-2 text-sm font-medium tracking-wide text-gold transition-colors hover:text-navy;
+  .field {
+    @apply w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-sm text-navy outline-none transition-colors placeholder:text-navy/40 focus:border-gold;
+  }
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-navy/70;
   }
 
-  /* Generic vertical section padding */
-  .section {
-    @apply py-20 sm:py-24 lg:py-28;
+  .prose-legal {
+    @apply text-sm leading-relaxed text-navy/75;
   }
-
-  .serif-number {
-    @apply font-serif text-4xl text-gold;
+  .prose-legal h2 {
+    @apply mb-3 mt-9 text-xl text-navy;
   }
-
-  /* Legal / long-form content */
-  .legal-prose {
-    @apply text-sm leading-relaxed text-gray;
-  }
-  .legal-prose h2 {
-    @apply mb-3 mt-10 text-xl text-navy;
-  }
-  .legal-prose p {
+  .prose-legal p {
     @apply mb-4;
   }
-  .legal-prose ul {
+  .prose-legal ul {
     @apply mb-4 list-disc space-y-2 pl-5;
   }
-  .legal-prose a {
-    @apply text-gold underline-offset-2 hover:underline;
-  }
-  .legal-prose strong {
-    @apply font-medium text-navy;
-  }
-  .legal-note {
-    @apply mt-10 border-l-2 border-gold bg-cream p-5 text-xs text-gray;
+  .prose-legal a {
+    @apply text-gold-600 underline-offset-2 hover:underline;
   }
 }

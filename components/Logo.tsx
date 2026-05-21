@@ -1,25 +1,25 @@
-function ArchMark({ className }: { className?: string }) {
+function BridgeMark({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 120 120"
+      viewBox="0 0 32 32"
       className={className}
       fill="none"
       aria-hidden="true"
     >
+      {/* deck */}
+      <line x1="3" y1="22" x2="29" y2="22" stroke="currentColor" strokeWidth="2" />
+      {/* towers */}
+      <line x1="9" y1="22" x2="9" y2="9" stroke="currentColor" strokeWidth="2" />
+      <line x1="23" y1="22" x2="23" y2="9" stroke="currentColor" strokeWidth="2" />
+      {/* suspension cable */}
       <path
-        d="M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98"
+        d="M3 14 C 9 9, 23 9, 29 14"
         stroke="currentColor"
-        strokeWidth={9}
-        strokeLinejoin="miter"
+        strokeWidth="2"
+        fill="none"
       />
-      <line
-        x1="14"
-        y1="98"
-        x2="106"
-        y2="98"
-        stroke="currentColor"
-        strokeWidth={3}
-      />
+      {/* hangers */}
+      <line x1="16" y1="12.4" x2="16" y2="22" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -32,16 +32,14 @@ export default function Logo({
   className?: string;
 }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <ArchMark
-        className={`h-6 w-6 ${reversed ? "text-gold" : "text-navy"}`}
-      />
+    <span className={`inline-flex items-center gap-2 ${className}`}>
+      <BridgeMark className={`h-7 w-7 ${reversed ? "text-gold" : "text-gold"}`} />
       <span
-        className={`font-serif text-2xl tracking-[0.12em] ${
+        className={`text-lg font-extrabold tracking-tight ${
           reversed ? "text-white" : "text-navy"
         }`}
       >
-        Ponte
+        Ponte&nbsp;Trade
       </span>
     </span>
   );

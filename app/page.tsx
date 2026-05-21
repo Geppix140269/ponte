@@ -1,182 +1,200 @@
 import Link from "next/link";
-import ArchPattern from "@/components/ArchPattern";
-
-const services = [
-  {
-    title: "Market Entry & Expansion",
-    description:
-      "Navigate international markets with expert guidance on regulatory compliance and strategic partnerships.",
-  },
-  {
-    title: "Procurement & Supply Chain",
-    description:
-      "Optimize supply chains with comprehensive procurement services ensuring quality and cost-effectiveness.",
-  },
-  {
-    title: "Brokering Services",
-    description:
-      "Facilitating seamless connections between suppliers and buyers across international markets.",
-  },
-  {
-    title: "Cross-Cultural Communication",
-    description:
-      "Multilingual support and cultural consultation across 15+ countries.",
-  },
-  {
-    title: "Market Intelligence",
-    description:
-      "In-depth market analysis and competitive intelligence.",
-  },
-  {
-    title: "Trade Compliance",
-    description:
-      "Navigate complex trade regulations and documentation.",
-  },
-];
+import {
+  ArrowRight,
+  FileText,
+  BarChart3,
+  Layers,
+  Globe2,
+  Building2,
+  Sparkles,
+  Lock,
+} from "lucide-react";
+import ProductCard from "@/components/ProductCard";
+import NewsletterSignup from "@/components/NewsletterSignup";
+import { featuredProducts } from "@/lib/catalogue";
 
 const stats = [
-  { value: "30+", label: "Years Experience" },
-  { value: "15+", label: "Countries Covered" },
-  { value: "€120M+", label: "Revenue Scaled" },
-  { value: "50+", label: "Projects Delivered" },
+  { value: "7B+", label: "verified trade records" },
+  { value: "199", label: "country profiles" },
+  { value: "48h", label: "report delivery" },
+  { value: "100%", label: "grounded intelligence" },
 ];
 
-const pillars = [
-  {
-    number: "01",
-    title: "Tailored Solutions",
-    description:
-      "Every business is unique. We develop customised strategies aligned with your specific goals and market conditions.",
-  },
-  {
-    number: "02",
-    title: "Global Expertise",
-    description:
-      "Over 30 years of international business experience with operations across Europe and beyond.",
-  },
-  {
-    number: "03",
-    title: "Reliable Partnership",
-    description:
-      "Lasting relationships built on trust, transparency, and mutual success. Your growth is our commitment.",
-  },
+const browse = [
+  { slug: "market-reports", name: "Market Reports", icon: FileText },
+  { slug: "analysis", name: "Market Analysis", icon: BarChart3 },
+  { slug: "bundles", name: "Intelligence Bundles", icon: Layers },
+  { slug: "geopolitical", name: "Geopolitical Risk", icon: Globe2 },
+  { slug: "company-supplier", name: "Company Intel", icon: Building2 },
+  { slug: "custom-research", name: "Custom Research", icon: Sparkles },
+];
+
+const steps = [
+  { n: "01", title: "Choose your report", body: "Browse the catalogue and pick the intelligence you need." },
+  { n: "02", title: "Configure it", body: "Add your HS code, country, or product. We tailor the report to your question." },
+  { n: "03", title: "Pay once. Receive your PDF.", body: "Instant download or SLA-backed delivery to your inbox. No subscription." },
 ];
 
 export default function HomePage() {
+  const featured = featuredProducts().slice(0, 6);
+
   return (
     <>
       {/* Hero */}
-      <section className="relative flex min-h-[calc(100vh-5rem)] items-center overflow-hidden bg-navy">
-        <ArchPattern className="opacity-[0.04]" />
-        <div className="container-px relative py-20">
-          <p className="tag-rule">International Trade &amp; Procurement</p>
-          <h1 className="mt-6 max-w-4xl text-5xl leading-[1.1] text-white sm:text-6xl lg:text-7xl">
-            Where Markets Meet &amp;{" "}
-            <span className="italic text-gold">Trade Flows</span>
-          </h1>
-          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/70">
-            Ponte connects suppliers with buyers globally — empowering
-            businesses to expand internationally through strategic partnerships
-            and expert procurement.
-          </p>
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <Link href="/contact" className="btn-gold">
-              Book a Consultation
-            </Link>
-            <Link href="/services" className="btn-outline-light">
-              Our Services
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Services */}
-      <section className="section bg-white">
-        <div className="container-px">
-          <div className="max-w-2xl">
-            <p className="section-label">What We Offer</p>
-            <h2 className="mt-4 text-3xl sm:text-4xl">
-              End-to-end international trade services
-            </h2>
-          </div>
-
-          <div className="mt-14 grid grid-cols-1 gap-px bg-line sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="group border-t-2 border-gold bg-white p-8"
-              >
-                <h3 className="text-xl">{service.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray">
-                  {service.description}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12">
-            <Link href="/services" className="link-gold">
-              View All Services <span aria-hidden>→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats banner */}
-      <section className="bg-cream py-16">
-        <div className="container-px">
-          <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-serif text-4xl text-navy sm:text-5xl">
-                  {stat.value}
-                </p>
-                <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Ponte */}
-      <section className="section bg-white">
-        <div className="container-px">
-          <div className="max-w-2xl">
-            <p className="section-label">Why Choose Us</p>
-            <h2 className="mt-4 text-3xl sm:text-4xl">The Ponte difference</h2>
-          </div>
-
-          <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-3">
-            {pillars.map((pillar) => (
-              <div key={pillar.number}>
-                <span className="serif-number">{pillar.number}</span>
-                <h3 className="mt-5 text-xl">{pillar.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray">
-                  {pillar.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
       <section className="bg-navy">
-        <div className="container-px py-20 text-center sm:py-24">
-          <h2 className="mx-auto max-w-3xl text-3xl text-white sm:text-4xl">
-            Let&apos;s build your international presence together
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-white/70">
-            Book a free consultation and discover how Ponte can open new markets
-            for your business.
+        <div className="container-px py-24 sm:py-28 lg:py-32">
+          <p className="eyebrow">International trade intelligence</p>
+          <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.05] text-white sm:text-5xl lg:text-6xl">
+            Trade intelligence.{" "}
+            <span className="text-gold">Delivered.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+            Research-grade market reports and analysis. No subscription
+            required. Buy what you need.
           </p>
-          <div className="mt-10">
-            <Link href="/contact" className="btn-gold">
-              Book a Consultation
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/catalogue" className="btn-gold">
+              Browse the Catalogue <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/category/bundles" className="btn-ghost-light">
+              See bundles
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Trust bar */}
+      <section className="border-b border-line bg-mist">
+        <div className="container-px grid grid-cols-2 gap-6 py-8 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center sm:text-left">
+              <p className="text-2xl font-extrabold text-navy sm:text-3xl">{s.value}</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-navy/55">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured products */}
+      <section className="section bg-white py-20">
+        <div className="container-px">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="eyebrow">Featured</p>
+              <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+                Popular intelligence products
+              </h2>
+            </div>
+            <Link href="/catalogue" className="hidden text-sm font-semibold text-gold-600 hover:text-navy sm:inline-flex sm:items-center sm:gap-1.5">
+              View all <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.map((p) => (
+              <ProductCard key={p.sku} product={p} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Browse by category */}
+      <section className="bg-mist py-20">
+        <div className="container-px">
+          <p className="eyebrow">Browse by category</p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+            Find the right intelligence
+          </h2>
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {browse.map((c) => {
+              const Icon = c.icon;
+              return (
+                <Link
+                  key={c.slug}
+                  href={`/category/${c.slug}`}
+                  className="card items-center gap-3 p-6 text-center"
+                >
+                  <Icon className="h-7 w-7 text-gold-600" />
+                  <span className="text-sm font-semibold text-navy">{c.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-white py-20">
+        <div className="container-px">
+          <p className="eyebrow">How it works</p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+            From question to PDF in three steps
+          </h2>
+          <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3">
+            {steps.map((s) => (
+              <div key={s.n} className="border-t-2 border-gold pt-5">
+                <span className="text-2xl font-extrabold text-gold">{s.n}</span>
+                <h3 className="mt-2 text-lg font-bold">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-navy/60">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sample preview CTA */}
+      <section className="bg-navy py-20">
+        <div className="container-px grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+          <div className="grid grid-cols-3 gap-3">
+            {[false, false, true].map((blur, i) => (
+              <div key={i} className="relative">
+                <div className={`aspect-[1/1.414] rounded-md bg-white/95 p-3 ${blur ? "blur-[5px]" : ""}`}>
+                  <div className="h-2 w-1/2 rounded bg-gold/70" />
+                  <div className="mt-2 space-y-1.5">
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <div key={j} className="h-1.5 rounded bg-navy/15" style={{ width: `${88 - j * 9}%` }} />
+                    ))}
+                  </div>
+                  <div className="mt-3 h-12 rounded bg-navy/5" />
+                </div>
+                {blur && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Lock className="h-6 w-6 text-white" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div>
+            <p className="eyebrow">See before you buy</p>
+            <h2 className="mt-3 text-3xl font-extrabold text-white sm:text-4xl">
+              See what you get before you buy
+            </h2>
+            <p className="mt-4 max-w-md text-white/70">
+              Every product shows free preview pages. Read the structure, the
+              charts, and the methodology — then unlock the full watermarked
+              report with one payment.
+            </p>
+            <Link href="/product/single-country-market-report" className="btn-gold mt-7">
+              View a sample report <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="bg-navy-900 py-16">
+        <div className="container-px flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+          <div>
+            <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
+              Stay ahead of global trade shifts
+            </h2>
+            <p className="mt-2 text-white/60">
+              Weekly intelligence: chokepoint alerts, tender wins, policy changes. €29/mo.
+            </p>
+          </div>
+          <NewsletterSignup />
         </div>
       </section>
     </>
