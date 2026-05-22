@@ -29,8 +29,9 @@ function layout(body: string): string {
         <span style="color:#E8A020;font-size:13px;margin-left:8px">Trade intelligence. Delivered.</span>
       </div>
       <div style="padding:28px;color:#0F1E3C;font-size:14px;line-height:1.6">${body}</div>
-      <div style="padding:18px 28px;border-top:1px solid #E5E7EB;color:#6B7280;font-size:12px">
-        Ponte Trade · <a href="${APP_URL}" style="color:#D08F18">ponte.trade</a>
+      <div style="padding:18px 28px;border-top:1px solid #E5E7EB;color:#6B7280;font-size:12px;line-height:1.6">
+        The Ponte Trade Team — An ICTTM Company<br/>
+        Powered by ADAMftd · <a href="${APP_URL}" style="color:#D08F18">pontetrade.com</a>
       </div>
     </div>
   </div>`;
@@ -99,7 +100,7 @@ export async function sendAdminAlert(data: {
     .join(", ");
   await send(
     admin,
-    `New order requires manual delivery — ${data.sku}`,
+    `New order requires manual delivery via ADAMftd — ${data.sku}`,
     layout(`
       <h2 style="margin:0 0 12px">Manual delivery required</h2>
       <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>

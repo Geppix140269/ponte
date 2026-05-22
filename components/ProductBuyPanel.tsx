@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ShieldCheck, FileText, Clock } from "lucide-react";
+import { Check, ShieldCheck, FileText, Clock, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { displayPrice, DELIVERY_LABEL } from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
@@ -177,8 +177,7 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
           Stripe
         </li>
         <li className="flex items-center gap-2">
-          <Clock className="h-3.5 w-3.5 text-gold-600" /> Instant or SLA-backed
-          delivery
+          <Sparkles className="h-3.5 w-3.5 text-gold-600" /> Powered by ADAMftd
         </li>
       </ul>
     </div>

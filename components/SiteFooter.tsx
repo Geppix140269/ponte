@@ -13,6 +13,9 @@ export default function SiteFooter() {
               Trade intelligence. Delivered. Research-grade market reports and
               analysis — buy what you need, no subscription required.
             </p>
+            <p className="mt-4 text-sm font-medium text-gold">
+              An ICTTM company · Powered by ADAMftd
+            </p>
           </div>
 
           <div>
@@ -71,8 +74,20 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 text-xs text-white/40">
-          © {new Date().getFullYear()} Ponte Trade. All rights reserved.
+        <div className="mt-12 space-y-2 border-t border-white/10 pt-6 text-xs text-white/40">
+          <p>
+            Ponte Trade is an ICTTM company. Powered by ADAMftd — the world&apos;s
+            first grounded AI for international trade.{" "}
+            <a
+              href="https://adamftd.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/60 underline-offset-2 hover:text-gold hover:underline"
+            >
+              adamftd.com
+            </a>
+          </p>
+          <p>© {new Date().getFullYear()} Ponte Trade / ICTTM. All rights reserved.</p>
         </div>
       </div>
     </footer>

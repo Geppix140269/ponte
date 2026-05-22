@@ -13,11 +13,12 @@ import ProductCard from "@/components/ProductCard";
 import NewsletterSignup from "@/components/NewsletterSignup";
 import { featuredProducts } from "@/lib/catalogue";
 
-const stats = [
-  { value: "7B+", label: "verified trade records" },
-  { value: "199", label: "country profiles" },
-  { value: "48h", label: "report delivery" },
-  { value: "100%", label: "grounded intelligence" },
+const trust = [
+  "7B+ verified trade records",
+  "199 country profiles",
+  "48h report delivery",
+  "Grounded AI, not guesswork",
+  "An ICTTM company",
 ];
 
 const browse = [
@@ -49,8 +50,8 @@ export default function HomePage() {
             <span className="text-gold">Delivered.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
-            Research-grade market reports and analysis. No subscription
-            required. Buy what you need.
+            Research-grade market reports and analysis powered by ADAMftd. No
+            subscription required. Buy exactly what you need.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link href="/catalogue" className="btn-gold">
@@ -65,14 +66,12 @@ export default function HomePage() {
 
       {/* Trust bar */}
       <section className="border-b border-line bg-mist">
-        <div className="container-px grid grid-cols-2 gap-6 py-8 lg:grid-cols-4">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center sm:text-left">
-              <p className="text-2xl font-extrabold text-navy sm:text-3xl">{s.value}</p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-navy/55">
-                {s.label}
-              </p>
-            </div>
+        <div className="container-px flex flex-wrap items-center justify-center gap-x-4 gap-y-2 py-5 text-center text-sm font-medium text-navy/70">
+          {trust.map((t, i) => (
+            <span key={t} className="flex items-center gap-4">
+              {i > 0 && <span className="h-1 w-1 rounded-full bg-gold" />}
+              {t}
+            </span>
           ))}
         </div>
       </section>
