@@ -64,8 +64,8 @@ export default function SiteFooter() {
             <h4 className="eyebrow text-white/50">Contact</h4>
             <ul className="mt-4 space-y-2.5 text-sm text-white/60">
               <li>
-                <a href="mailto:hello@pontetrade.com" className="hover:text-gold">
-                  hello@pontetrade.com
+                <a href="mailto:hello@ponte.trade" className="hover:text-gold">
+                  hello@ponte.trade
                 </a>
               </li>
               <li>Secure payment via Stripe</li>

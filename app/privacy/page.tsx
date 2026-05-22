@@ -19,7 +19,7 @@ export default function PrivacyPage() {
         <div className="prose-legal mt-8">
           <p>
             This policy explains how Ponte Trade collects, uses, and protects
-            personal data when you use pontetrade.com and purchase our products.
+            personal data when you use ponte.trade and purchase our products.
             We act as the data controller.
           </p>
 
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
             Under UK and EU GDPR you may access, correct, erase, restrict, or
             port your data, and object to processing. You can withdraw consent at
             any time and complain to a supervisory authority. To exercise a
-            right, email <a href="mailto:hello@pontetrade.com">hello@pontetrade.com</a>.
+            right, email <a href="mailto:hello@ponte.trade">hello@ponte.trade</a>.
           </p>
 
           <h2>Cookies</h2>

@@ -60,7 +60,7 @@ export default function TermsPage() {
           <h2>Contact</h2>
           <p>
             Questions about an order? Email{" "}
-            <a href="mailto:hello@pontetrade.com">hello@pontetrade.com</a>.
+            <a href="mailto:hello@ponte.trade">hello@ponte.trade</a>.
           </p>
 
           <p className="mt-10 rounded-md border-l-2 border-gold bg-mist p-4 text-xs">
