@@ -5,13 +5,18 @@ import { Check } from "lucide-react";
 import ProductBuyPanel from "@/components/ProductBuyPanel";
 import ProductCard from "@/components/ProductCard";
 import PreviewPaywall from "@/components/PreviewPaywall";
+import { PRODUCTS } from "@/lib/catalogue";
 import {
-  PRODUCTS,
   getProduct,
   getCategory,
   relatedProducts,
-} from "@/lib/catalogue";
+} from "@/lib/catalogue-db";
 import { DELIVERY_LABEL } from "@/lib/format";
+
+// ISR: revalidate every 60 s; admin saves call revalidatePath() for instant update.
+export const revalidate = 60;
+// Allow new DB products that weren't in the build-time list.
+export const dynamicParams = true;
 
 const DATA_SOURCES = [
   "UN Comtrade",
@@ -23,20 +28,19 @@ const DATA_SOURCES = [
   "ADAMftd",
 ];
 
+// Pre-render all products that exist at build time.
 export function generateStaticParams() {
   return PRODUCTS.map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
-}): Metadata {
-  const product = getProduct(params.slug);
+}): Promise<Metadata> {
+  const product = await getProduct(params.slug);
   if (!product) return { title: "Product" };
 
-  // Each product gets its own canonical URL and social-share card, so a
-  // shared link previews the product — not the generic homepage.
   const path = `/product/${product.slug}`;
   const ogTitle = `${product.title} — Ponte Trade`;
   return {
@@ -58,15 +62,21 @@ export function generateMetadata({
   };
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProduct(params.slug);
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const [product, related] = await Promise.all([
+    getProduct(params.slug),
+    getProduct(params.slug).then((p) =>
+      p ? relatedProducts(p) : Promise.resolve([]),
+    ),
+  ]);
   if (!product) notFound();
 
-  const category = getCategory(product.categorySlug);
-  const related = relatedProducts(product);
+  const category = await getCategory(product.categorySlug);
 
-  // Product structured data — makes the page eligible for rich results
-  // (price, availability) in search.
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",

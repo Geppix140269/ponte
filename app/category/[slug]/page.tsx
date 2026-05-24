@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import { CATEGORIES, getCategory, productsByCategory } from "@/lib/catalogue";
+import { CATEGORIES } from "@/lib/catalogue";
+import { getAllCategories, getCategory, productsByCategory } from "@/lib/catalogue-db";
+
+export const revalidate = 60;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ slug: c.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
-}): Metadata {
-  const category = getCategory(params.slug);
+}): Promise<Metadata> {
+  const category = await getCategory(params.slug);
   if (!category) return { title: "Category" };
 
   const path = `/category/${category.slug}`;
@@ -36,11 +40,17 @@ export function generateMetadata({
   };
 }
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const category = getCategory(params.slug);
+export default async function CategoryPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const [category, products] = await Promise.all([
+    getCategory(params.slug),
+    productsByCategory(params.slug),
+  ]);
   if (!category) notFound();
 
-  const products = productsByCategory(category.slug);
   const bands = Array.from(
     new Set(products.map((p) => p.band).filter(Boolean)),
   ) as string[];

@@ -102,17 +102,48 @@ Refactor the catalogue accessors so the storefront reads from Supabase:
   create/edit form: title, slug, SKU, category, band, descriptions, includes
   list, price, currency, delivery type, featured toggle, status
   (`draft` / `published` / `archived`), config-fields editor, price-tiers
-  editor.
+  editor, and a preview-PDF control (see 3.6).
 - `app/admin/products/actions.ts` — server actions (`createProduct`,
   `updateProduct`, `archiveProduct`) that re-check `is_admin()` and call
   `revalidatePath()`.
 
-### 3.6 Acceptance criteria
+### 3.6 Preview report assets
+
+Every product page can show a real PDF preview (first 2–3 pages) via the
+`previewPdfUrl` / `previewPages` fields and the existing `PreviewPaywall` /
+`PdfPreview` / `PdfViewer` components. Today **no product sets
+`previewPdfUrl`**, so all 40 product pages render a placeholder mockup. Phase 1
+wires real previews into the products dashboard:
+
+- **Public bucket.** Create a *new, public* Supabase Storage bucket
+  (e.g. `ponte-previews`). It must be public — `PdfViewer` fetches the PDF from
+  the visitor's browser. Do **not** reuse `ponte-reports`: that bucket is
+  private and holds the full delivered reports.
+- **Upload from the admin.** Add a preview-PDF upload control to the product
+  create/edit form. On upload, store the file in `ponte-previews`, set the
+  product's `preview_pdf_url` to its public URL, and let the admin set
+  `preview_pages` (default 2–3).
+- **Reusable samples.** Previews need not be unique per SKU. The owner has
+  sample reports and can generate missing ones; one representative sample per
+  product type (market report, analysis module, company intel, geopolitical,
+  etc.) can be reused across that group. The upload control should let the admin
+  either upload a new PDF or pick an already-uploaded preview.
+- **Watermark.** Preview PDFs are watermarked sample pages — the product page
+  already states "watermarked samples". Upload pre-watermarked files, or stamp
+  them with `lib/watermark.ts` on upload.
+
+Scope note: this covers **previews** only. Full delivered reports are generated
+per order and handled by the existing admin deliver flow + the private
+`ponte-reports` bucket — no bulk upload needed there.
+
+### 3.7 Acceptance criteria
 
 - Editing a price in the admin changes the live product page (within the
   revalidate window, or immediately if `revalidatePath` is used).
 - A product set to `draft` disappears from the public catalogue (RLS already
   enforces `status = 'published' or is_admin()`).
+- Uploading a preview PDF in the admin makes real sample pages appear on that
+  product page, replacing the placeholder mockup.
 - Checkout still works end-to-end after the cutover — **test this explicitly.**
 
 ---

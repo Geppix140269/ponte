@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import CatalogueBrowser from "@/components/CatalogueBrowser";
+import { getAllProducts, getAllCategories } from "@/lib/catalogue-db";
+
+export const revalidate = 60;
 
 const CATALOGUE_DESC =
   "Browse the full Ponte Trade catalogue — market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.";
@@ -22,7 +25,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CataloguePage() {
+export default async function CataloguePage() {
+  const [products, categories] = await Promise.all([
+    getAllProducts(),
+    getAllCategories(),
+  ]);
+
   return (
     <>
       <section className="bg-navy">
@@ -40,7 +48,7 @@ export default function CataloguePage() {
 
       <section className="bg-white py-12 lg:py-16">
         <div className="container-px">
-          <CatalogueBrowser />
+          <CatalogueBrowser products={products} categories={categories} />
         </div>
       </section>
     </>

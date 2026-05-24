@@ -18,7 +18,9 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import NewsletterSignup from "@/components/NewsletterSignup";
-import { featuredProducts } from "@/lib/catalogue";
+import { featuredProducts } from "@/lib/catalogue-db";
+
+export const revalidate = 60;
 
 const trust = [
   "7B+ verified trade records",
@@ -95,8 +97,8 @@ const steps = [
   { n: "03", title: "Pay once. Receive your PDF.", body: "Instant download or SLA-backed delivery to your inbox. No subscription." },
 ];
 
-export default function HomePage() {
-  const featured = featuredProducts();
+export default async function HomePage() {
+  const featured = await featuredProducts();
 
   return (
     <>

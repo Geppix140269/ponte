@@ -2,22 +2,26 @@
 
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
-import { CATEGORIES, PRODUCTS } from "@/lib/catalogue";
-import type { DeliveryType } from "@/lib/types";
+import type { Category, DeliveryType, Product } from "@/lib/types";
 
 const DELIVERY_OPTIONS: { value: DeliveryType | "all"; label: string }[] = [
   { value: "all", label: "Any delivery" },
   { value: "instant", label: "Instant" },
   { value: "24h", label: "24 hours" },
   { value: "48h", label: "48 hours" },
+  { value: "72h", label: "72 hours" },
   { value: "custom", label: "Custom" },
 ];
 
 type Sort = "relevance" | "price-asc" | "price-desc";
 
 export default function CatalogueBrowser({
+  products,
+  categories,
   initialCategory = "all",
 }: {
+  products: Product[];
+  categories: Category[];
   initialCategory?: string;
 }) {
   const [category, setCategory] = useState(initialCategory);
@@ -25,7 +29,7 @@ export default function CatalogueBrowser({
   const [sort, setSort] = useState<Sort>("relevance");
 
   const results = useMemo(() => {
-    let list = PRODUCTS.filter((p) => {
+    let list = products.filter((p) => {
       if (category !== "all" && p.categorySlug !== category) return false;
       if (delivery !== "all" && p.deliveryType !== delivery) return false;
       return true;
@@ -33,7 +37,7 @@ export default function CatalogueBrowser({
     if (sort === "price-asc") list = [...list].sort((a, b) => a.priceCents - b.priceCents);
     if (sort === "price-desc") list = [...list].sort((a, b) => b.priceCents - a.priceCents);
     return list;
-  }, [category, delivery, sort]);
+  }, [products, category, delivery, sort]);
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_1fr]">
@@ -43,7 +47,7 @@ export default function CatalogueBrowser({
           <label className="field-label">Category</label>
           <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="all">All categories</option>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name}
               </option>
