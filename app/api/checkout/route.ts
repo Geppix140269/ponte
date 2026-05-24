@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { getProductBySku } from "@/lib/catalogue";
+import { effectivePriceCents } from "@/lib/format";
 import { getUser } from "@/lib/auth";
 import type { CartItem } from "@/lib/types";
 
@@ -46,11 +47,11 @@ export async function POST(req: NextRequest) {
   const user = await getUser();
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
-    resolved.map(({ product }) => ({
+    resolved.map(({ product, config }) => ({
       quantity: 1,
       price_data: {
-        currency: (product!.currency || "EUR").toLowerCase(),
-        unit_amount: product!.priceCents,
+        currency: (product!.currency || "USD").toLowerCase(),
+        unit_amount: effectivePriceCents(product!, config),
         product_data: {
           name: product!.title,
           metadata: { sku: product!.sku },

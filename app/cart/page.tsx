@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Trash2, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart-store";
 import { getProductBySku } from "@/lib/catalogue";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, effectivePriceCents } from "@/lib/format";
 import { countryName } from "@/lib/countries";
 import { startCheckout } from "@/lib/checkout";
 import type { CartItemConfig } from "@/lib/types";
@@ -82,7 +82,10 @@ export default function CartPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className="font-bold text-navy">
-                      {formatPrice(product.priceCents, product.currency)}
+                      {formatPrice(
+                        effectivePriceCents(product, item.config),
+                        product.currency,
+                      )}
                       {product.priceSuffix}
                     </span>
                     <button

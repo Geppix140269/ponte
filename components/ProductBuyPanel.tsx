@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, ShieldCheck, FileText, Clock, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { displayPrice, DELIVERY_LABEL } from "@/lib/format";
+import { displayPrice, formatPrice, effectivePriceCents, DELIVERY_LABEL } from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
 import { useCart } from "@/lib/cart-store";
 import { startCheckout } from "@/lib/checkout";
@@ -45,11 +45,25 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
     setValues((v) => ({ ...v, [name]: value }));
   }
 
+  function panelPrice(): string {
+    if (product.priceTiers) {
+      const selected = values[product.priceTiers.field];
+      if (!selected) {
+        const min = Math.min(
+          ...product.priceTiers.tiers.map((t) => t.priceCents),
+        );
+        return `From ${formatPrice(min, product.currency)}`;
+      }
+      return formatPrice(effectivePriceCents(product, values), product.currency);
+    }
+    return displayPrice(product);
+  }
+
   return (
     <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
       <div className="flex items-baseline gap-2">
         <span className="text-3xl font-extrabold text-navy">
-          {displayPrice(product)}
+          {panelPrice()}
         </span>
         {product.altPrice && (
           <span className="text-sm text-navy/50">{product.altPrice}</span>

@@ -34,7 +34,7 @@ export default async function AdminOrders() {
                 <div className="flex items-center gap-3">
                   <span className="badge-navy capitalize">{o.status}</span>
                   <span className="text-sm font-semibold">
-                    {formatPrice(o.total_cents ?? 0, o.currency ?? "EUR")}
+                    {formatPrice(o.total_cents ?? 0, o.currency ?? "USD")}
                   </span>
                 </div>
               </div>

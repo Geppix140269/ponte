@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem, CartItemConfig } from "./types";
 import { getProductBySku } from "./catalogue";
+import { effectivePriceCents } from "./format";
 
 interface CartState {
   items: CartItem[];
@@ -29,7 +30,7 @@ export const useCart = create<CartState>()(
       subtotalCents: () =>
         get().items.reduce((sum, item) => {
           const product = getProductBySku(item.sku);
-          return sum + (product?.priceCents ?? 0);
+          return sum + (product ? effectivePriceCents(product, item.config) : 0);
         }, 0),
     }),
     { name: "ponte-trade-cart" },

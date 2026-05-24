@@ -30,7 +30,7 @@ create table if not exists products (
   short_description text,
   full_description text,
   price_cents int not null,
-  currency text default 'EUR',
+  currency text default 'USD',
   delivery_type text not null,           -- 'instant' | '24h' | '48h' | 'custom'
   is_subscription bool default false,
   stripe_price_id text,
@@ -52,7 +52,7 @@ create table if not exists orders (
   stripe_session_id text,
   status text default 'pending',         -- 'pending' | 'paid' | 'processing' | 'delivered' | 'failed'
   total_cents int,
-  currency text default 'EUR',
+  currency text default 'USD',
   created_at timestamptz default now(),
   delivered_at timestamptz
 );

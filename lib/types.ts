@@ -1,4 +1,4 @@
-export type DeliveryType = "instant" | "24h" | "48h" | "custom";
+export type DeliveryType = "instant" | "24h" | "48h" | "72h" | "custom";
 
 export type ConfigFieldType = "text" | "country" | "select" | "textarea";
 
@@ -19,6 +19,17 @@ export interface Category {
   order: number;
 }
 
+export interface PriceTier {
+  value: string;
+  label: string;
+  priceCents: number;
+}
+
+export interface PriceTiers {
+  field: string; // config field name whose value selects the tier
+  tiers: PriceTier[];
+}
+
 export interface Product {
   sku: string;
   slug: string;
@@ -31,8 +42,9 @@ export interface Product {
   priceCents: number;
   priceFrom?: boolean;
   priceSuffix?: string; // e.g. "/mo"
-  altPrice?: string; // e.g. "or €249/yr"
+  altPrice?: string; // e.g. "or $249/yr"
   currency: string;
+  priceTiers?: PriceTiers; // quantity/size-based pricing selected via a config field
   deliveryType: DeliveryType;
   isSubscription: boolean;
   isConfigurable: boolean;

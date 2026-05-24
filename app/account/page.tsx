@@ -110,7 +110,7 @@ export default async function AccountPage() {
                   ))}
                 </div>
                 <div className="mt-3 border-t border-line pt-3 text-right text-sm font-semibold">
-                  {formatPrice(o.total_cents ?? 0, o.currency ?? "EUR")}
+                  {formatPrice(o.total_cents ?? 0, o.currency ?? "USD")}
                 </div>
               </li>
             ))}

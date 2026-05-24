@@ -16,7 +16,7 @@ export default function CheckoutPage() {
         <p className="mt-3 text-navy/65">
           Stripe checkout is being connected in the next build phase. Once your
           Stripe keys are in place, this step redirects to a hosted, PCI-compliant
-          payment page in EUR with automatic VAT via Stripe Tax.
+          payment page in USD with automatic VAT via Stripe Tax.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/cart" className="btn-outline">Back to cart</Link>

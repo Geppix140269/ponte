@@ -37,7 +37,7 @@ const steps = [
 ];
 
 export default function HomePage() {
-  const featured = featuredProducts().slice(0, 6);
+  const featured = featuredProducts();
 
   return (
     <>
@@ -190,7 +190,7 @@ export default function HomePage() {
               Stay ahead of global trade shifts
             </h2>
             <p className="mt-2 text-white/60">
-              Weekly intelligence: chokepoint alerts, tender wins, policy changes. €29/mo.
+              Weekly intelligence: chokepoint alerts, tender wins, policy changes. $29/mo.
             </p>
           </div>
           <NewsletterSignup />

@@ -53,7 +53,7 @@ export default function TermsPage() {
 
           <h2>Payment &amp; tax</h2>
           <p>
-            Payments are processed securely by Stripe in EUR. Applicable VAT is
+            Payments are processed securely by Stripe in USD. Applicable VAT is
             calculated at checkout based on your billing country.
           </p>
 
