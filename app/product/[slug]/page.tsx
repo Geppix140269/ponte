@@ -34,9 +34,27 @@ export function generateMetadata({
 }): Metadata {
   const product = getProduct(params.slug);
   if (!product) return { title: "Product" };
+
+  // Each product gets its own canonical URL and social-share card, so a
+  // shared link previews the product — not the generic homepage.
+  const path = `/product/${product.slug}`;
+  const ogTitle = `${product.title} — Ponte Trade`;
   return {
     title: product.title,
     description: product.shortDescription,
+    alternates: { canonical: path },
+    openGraph: {
+      title: ogTitle,
+      description: product.shortDescription,
+      url: path,
+      siteName: "Ponte Trade",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: product.shortDescription,
+    },
   };
 }
 
@@ -47,8 +65,32 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const category = getCategory(product.categorySlug);
   const related = relatedProducts(product);
 
+  // Product structured data — makes the page eligible for rich results
+  // (price, availability) in search.
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.fullDescription,
+    sku: product.sku,
+    category: category?.name,
+    brand: { "@type": "Brand", name: "Ponte Trade" },
+    offers: {
+      "@type": "Offer",
+      price: (product.priceCents / 100).toFixed(2),
+      priceCurrency: product.currency,
+      availability: "https://schema.org/InStock",
+      url: `https://ponte.trade/product/${product.slug}`,
+      seller: { "@type": "Organization", name: "Ponte Trade" },
+    },
+  };
+
   return (
     <section className="bg-white py-10 lg:py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="container-px">
         {/* Breadcrumb */}
         <nav className="text-xs text-navy/50">

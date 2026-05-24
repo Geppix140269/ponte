@@ -7,10 +7,12 @@ import { ShoppingCart, Menu, X, User } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useCart } from "@/lib/cart-store";
 
+// Labels match lib/catalogue.ts CATEGORIES names so naming stays consistent
+// across the header, homepage tiles and footer.
 const navLinks = [
   { href: "/catalogue", label: "Catalogue" },
-  { href: "/category/bundles", label: "Bundles" },
-  { href: "/category/geopolitical", label: "Geopolitical" },
+  { href: "/category/bundles", label: "Intelligence Bundles" },
+  { href: "/category/geopolitical", label: "Geopolitical & Risk" },
   { href: "/about", label: "About" },
 ];
 

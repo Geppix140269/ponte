@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const ABOUT_DESC =
+  "Ponte Trade is an ICTTM company, powered by ADAMftd. We sell research-grade trade intelligence as one-time products — reports, analysis, and risk briefs.";
+
 export const metadata: Metadata = {
   title: "About",
-  description:
-    "Ponte Trade is an ICTTM company, powered by ADAMftd. We sell research-grade trade intelligence as one-time products — reports, analysis, and risk briefs.",
+  description: ABOUT_DESC,
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About — Ponte Trade",
+    description: ABOUT_DESC,
+    url: "/about",
+    siteName: "Ponte Trade",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About — Ponte Trade",
+    description: ABOUT_DESC,
+  },
 };
 
 const principles = [

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ShieldCheck, FileText, Clock, Sparkles } from "lucide-react";
+import { Check, ShieldCheck, FileText, Clock, Sparkles, BadgeCheck } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { displayPrice, formatPrice, effectivePriceCents, DELIVERY_LABEL } from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
@@ -181,10 +181,19 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
         </div>
       )}
 
-      <ul className="mt-6 space-y-2 border-t border-line pt-5 text-xs text-navy/60">
+      <div className="mt-6 flex items-start gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-xs leading-relaxed text-emerald-800">
+        <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+        <span>
+          <span className="font-semibold">Quality guaranteed.</span> Every
+          report is manually QA&apos;d before delivery — if it misses your
+          brief, we&apos;ll revise it free.
+        </span>
+      </div>
+
+      <ul className="mt-5 space-y-2 border-t border-line pt-5 text-xs text-navy/60">
         <li className="flex items-center gap-2">
-          <FileText className="h-3.5 w-3.5 text-gold-600" /> Watermarked PDF,
-          licensed to you
+          <FileText className="h-3.5 w-3.5 text-gold-600" /> Licensed PDF,
+          watermarked to you
         </li>
         <li className="flex items-center gap-2">
           <ShieldCheck className="h-3.5 w-3.5 text-gold-600" /> Secure payment via

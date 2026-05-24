@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
 import CatalogueBrowser from "@/components/CatalogueBrowser";
 
+const CATALOGUE_DESC =
+  "Browse the full Ponte Trade catalogue — market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.";
+
 export const metadata: Metadata = {
   title: "Catalogue",
-  description:
-    "Browse the full Ponte Trade catalogue — market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.",
+  description: CATALOGUE_DESC,
+  alternates: { canonical: "/catalogue" },
+  openGraph: {
+    title: "Catalogue — Ponte Trade",
+    description: CATALOGUE_DESC,
+    url: "/catalogue",
+    siteName: "Ponte Trade",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Catalogue — Ponte Trade",
+    description: CATALOGUE_DESC,
+  },
 };
 
 export default function CataloguePage() {

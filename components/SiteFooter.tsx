@@ -69,7 +69,7 @@ export default function SiteFooter() {
                 </a>
               </li>
               <li>Secure payment via Stripe</li>
-              <li>Watermarked PDF delivery</li>
+              <li>Licensed PDF delivery, watermarked to you</li>
             </ul>
           </div>
         </div>

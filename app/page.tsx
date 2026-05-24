@@ -8,6 +8,13 @@ import {
   Building2,
   Sparkles,
   Lock,
+  Compass,
+  Users,
+  ShieldAlert,
+  Rocket,
+  FileSearch,
+  ShieldCheck,
+  BadgeCheck,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import NewsletterSignup from "@/components/NewsletterSignup";
@@ -18,16 +25,68 @@ const trust = [
   "199 country profiles",
   "48h report delivery",
   "Grounded AI, not guesswork",
-  "An ICTTM company",
 ];
 
+// Category names match lib/catalogue.ts CATEGORIES exactly — keep them in sync.
 const browse = [
   { slug: "market-reports", name: "Market Reports", icon: FileText },
   { slug: "analysis", name: "Market Analysis", icon: BarChart3 },
   { slug: "bundles", name: "Intelligence Bundles", icon: Layers },
-  { slug: "geopolitical", name: "Geopolitical Risk", icon: Globe2 },
-  { slug: "company-supplier", name: "Company Intel", icon: Building2 },
+  { slug: "geopolitical", name: "Geopolitical & Risk", icon: Globe2 },
+  { slug: "company-supplier", name: "Company & Supplier", icon: Building2 },
   { slug: "custom-research", name: "Custom Research", icon: Sparkles },
+];
+
+// Guided entry points — turns 40 SKUs into a "start from your goal" choice.
+const useCases = [
+  {
+    icon: Compass,
+    title: "I'm entering a new market",
+    body: "Check readiness — SWOT, entry barriers, packaging and standards.",
+    href: "/product/market-entry-bundle",
+    cta: "Market Entry Bundle",
+  },
+  {
+    icon: Users,
+    title: "I need buyers or suppliers",
+    body: "Get a ranked, contactable shortlist for your HS code.",
+    href: "/product/buyers-by-hs-code",
+    cta: "Buyers & Suppliers by HS Code",
+  },
+  {
+    icon: ShieldAlert,
+    title: "I'm assessing trade risk",
+    body: "Sanctions screening, chokepoint exposure and conflict scenarios.",
+    href: "/category/geopolitical",
+    cta: "Geopolitical & Risk",
+  },
+  {
+    icon: Rocket,
+    title: "I want the full picture",
+    body: "A market report plus entry analysis for one product and market.",
+    href: "/product/export-launchpad",
+    cta: "Export Launchpad",
+  },
+];
+
+// Factual authority signals. NOTE FOR MARKETING: once real customer quotes
+// are available, add a testimonials section here (name, role, company).
+const trustPoints = [
+  {
+    icon: FileSearch,
+    title: "Verified against official sources",
+    body: "Every report is cross-checked against UN Comtrade, the World Bank, WTO, Eurostat, ITC and EU Taxud.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Grounded AI, with human QA",
+    body: "Built on the ADAMftd engine and 7B+ verified trade records, then manually quality-checked before delivery.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Backed by ICTTM",
+    body: "Ponte Trade is owned by the International Centre for Trade Transparency — the UK group behind ADAMftd.",
+  },
 ];
 
 const steps = [
@@ -49,9 +108,11 @@ export default function HomePage() {
             Trade intelligence.{" "}
             <span className="text-gold">Delivered.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
-            Research-grade market reports and analysis powered by ADAMftd. No
-            subscription required. Buy exactly what you need.
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/70">
+            For exporters, importers and trade bodies: research-grade market
+            reports and risk analysis, built on ADAMftd&apos;s grounded-AI
+            engine and 7B+ verified trade records. Buy exactly what you need —
+            no subscription required.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link href="/catalogue" className="btn-gold">
@@ -94,6 +155,44 @@ export default function HomePage() {
             {featured.map((p) => (
               <ProductCard key={p.sku} product={p} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Start from your goal — guided recommender */}
+      <section className="bg-white pb-20">
+        <div className="container-px">
+          <p className="eyebrow">Not sure where to start?</p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+            Start from what you&apos;re trying to do
+          </h2>
+          <p className="mt-3 max-w-xl text-navy/60">
+            Tell us your goal and we&apos;ll point you to the right report or
+            bundle — no need to read all 40.
+          </p>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {useCases.map((u) => {
+              const Icon = u.icon;
+              return (
+                <Link
+                  key={u.title}
+                  href={u.href}
+                  className="card group p-6"
+                >
+                  <Icon className="h-7 w-7 text-gold-600" />
+                  <h3 className="mt-4 text-base font-bold leading-snug text-navy">
+                    {u.title}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-navy/60">
+                    {u.body}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-600 transition-colors group-hover:text-navy">
+                    {u.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -142,6 +241,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Why buyers trust Ponte */}
+      <section className="bg-mist py-20">
+        <div className="container-px">
+          <p className="eyebrow">Why buyers trust Ponte Trade</p>
+          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+            Intelligence you can stand behind
+          </h2>
+          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {trustPoints.map((t) => {
+              const Icon = t.icon;
+              return (
+                <div
+                  key={t.title}
+                  className="rounded-xl border border-line bg-white p-6"
+                >
+                  <Icon className="h-7 w-7 text-gold-600" />
+                  <h3 className="mt-4 text-base font-bold text-navy">
+                    {t.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-navy/60">
+                    {t.body}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Sample preview CTA */}
       <section className="bg-navy py-20">
         <div className="container-px grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
@@ -172,8 +300,8 @@ export default function HomePage() {
             </h2>
             <p className="mt-4 max-w-md text-white/70">
               Every product shows free preview pages. Read the structure, the
-              charts, and the methodology — then unlock the full watermarked
-              report with one payment.
+              charts, and the methodology — then unlock the full report,
+              licensed to you, with one payment.
             </p>
             <Link href="/product/single-country-market-report" className="btn-gold mt-7">
               View a sample report <ArrowRight className="h-4 w-4" />
@@ -189,8 +317,10 @@ export default function HomePage() {
             <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
               Stay ahead of global trade shifts
             </h2>
-            <p className="mt-2 text-white/60">
-              Weekly intelligence: chokepoint alerts, tender wins, policy changes. $29/mo.
+            <p className="mt-2 max-w-lg text-white/60">
+              Weekly intelligence: chokepoint alerts, tender wins, policy
+              changes. An optional $29/mo subscription — every report in the
+              catalogue stays a one-time purchase.
             </p>
           </div>
           <NewsletterSignup />

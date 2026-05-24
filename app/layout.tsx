@@ -36,6 +36,31 @@ export const metadata: Metadata = {
   },
 };
 
+// Organization-level structured data, emitted on every page so search engines
+// understand the Ponte Trade / ICTTM / ADAMftd relationship and can show
+// rich results.
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Ponte Trade",
+  url: APP_URL,
+  logo: `${APP_URL}/icon.png`,
+  email: "hello@ponte.trade",
+  description:
+    "Research-grade international trade intelligence sold as one-time reports — market analysis, geopolitical risk, and company intelligence.",
+  parentOrganization: {
+    "@type": "Organization",
+    name: "International Centre for Trade Transparency Limited (ICTTM)",
+  },
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Ponte Trade",
+  url: APP_URL,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -44,6 +69,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="flex min-h-screen flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([organizationJsonLd, websiteJsonLd]),
+          }}
+        />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

@@ -14,9 +14,25 @@ export function generateMetadata({
 }): Metadata {
   const category = getCategory(params.slug);
   if (!category) return { title: "Category" };
+
+  const path = `/category/${category.slug}`;
+  const ogTitle = `${category.name} — Ponte Trade`;
   return {
     title: category.name,
     description: category.description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: ogTitle,
+      description: category.description,
+      url: path,
+      siteName: "Ponte Trade",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: category.description,
+    },
   };
 }
 
