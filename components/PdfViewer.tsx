@@ -61,17 +61,27 @@ export default function PdfViewer({
           </p>
         }
       >
-        <Page
-          key={current}
-          pageNumber={current}
-          width={containerWidth}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          className="overflow-hidden rounded-xl border border-line shadow-md"
-          loading={
-            <div className="aspect-[1/1.414] w-full animate-pulse rounded-xl bg-mist" />
-          }
-        />
+        {/* Wrap in relative container so the fade overlay can sit on top */}
+        <div className="relative overflow-hidden rounded-xl border border-line shadow-md">
+          <Page
+            key={current}
+            pageNumber={current}
+            width={containerWidth}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            loading={
+              <div className="aspect-[1/1.414] w-full animate-pulse bg-mist" />
+            }
+          />
+          {/* Gradient fade — hides the bottom ~45% of every preview page */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] rounded-b-xl"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.85) 55%, #ffffff 100%)",
+            }}
+          />
+        </div>
       </Document>
 
       {/* Navigation bar */}
