@@ -9,6 +9,7 @@ const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function signInWithEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -19,8 +20,10 @@ export default function LoginPage() {
         email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
-      setStatus(error ? "error" : "sent");
-    } catch {
+      if (error) { setErrorMsg(error.message); setStatus("error"); }
+      else setStatus("sent");
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? "Unknown error");
       setStatus("error");
     }
   }
@@ -89,7 +92,7 @@ export default function LoginPage() {
                 {status === "sending" ? "Sending…" : "Email me a magic link"}
               </button>
               {status === "error" && (
-                <p className="text-sm text-red-600">Something went wrong. Try again.</p>
+                <p className="text-sm text-red-600">{errorMsg ?? "Something went wrong. Try again."}</p>
               )}
             </form>
           </div>
