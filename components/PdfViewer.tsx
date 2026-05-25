@@ -73,12 +73,12 @@ export default function PdfViewer({
               <div className="aspect-[1/1.414] w-full animate-pulse bg-mist" />
             }
           />
-          {/* Gradient fade — hides the bottom ~45% of every preview page */}
+          {/* Gradient fade — hides the bottom ~65% of every preview page */}
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] rounded-b-xl"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[65%] rounded-b-xl"
             style={{
               background:
-                "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.85) 55%, #ffffff 100%)",
+                "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.85) 45%, #ffffff 100%)",
             }}
           />
         </div>
