@@ -7,28 +7,37 @@ import { getCategory } from "@/lib/catalogue";
 export default function ProductCard({ product }: { product: Product }) {
   const category = getCategory(product.categorySlug);
   return (
-    <Link href={`/product/${product.slug}`} className="card group p-6">
-      <div className="flex items-center justify-between">
+    <Link href={`/product/${product.slug}`} className="card group p-7">
+      <div className="flex items-center justify-between mb-4">
         <span className="badge-gold">{category?.name ?? product.categorySlug}</span>
-        <span className="text-[11px] font-medium text-navy/50">
+        <span
+          className="mono text-[10px] text-gray-2 uppercase"
+          style={{ letterSpacing: "0.18em" }}
+        >
           {DELIVERY_LABEL[product.deliveryType]}
         </span>
       </div>
 
-      <h3 className="mt-4 text-base font-bold leading-snug text-navy">
+      <h3
+        className="serif text-white text-xl leading-snug"
+        style={{ fontWeight: 500 }}
+      >
         {product.title}
       </h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-navy/60">
+      <p className="mt-3 flex-1 text-[13px] leading-relaxed text-gray-2">
         {product.shortDescription}
       </p>
 
-      <div className="mt-5 flex items-center justify-between">
-        <span className="text-lg font-extrabold text-navy">
+      <div className="mt-6 pt-4 border-t border-white/10 flex items-end justify-between">
+        <span className="serif text-white text-[22px]" style={{ fontWeight: 500 }}>
           {displayPrice(product)}
         </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-600 transition-colors group-hover:text-navy">
+        <span
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase text-gold transition-colors group-hover:text-cream"
+          style={{ letterSpacing: "0.18em" }}
+        >
           Preview &amp; Buy
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-3.5 w-3.5" />
         </span>
       </div>
     </Link>

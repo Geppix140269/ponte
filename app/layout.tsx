@@ -1,12 +1,28 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -19,20 +35,21 @@ export const metadata: Metadata = {
     template: "%s — Ponte Trade",
   },
   description:
-    "Research-grade market reports and trade analysis. No subscription required — buy the intelligence you need as a one-time purchase.",
+    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Built on ADAMftd's grounded-AI engine and 7B+ verified trade records. Buy exactly what you need — no subscription required.",
   openGraph: {
     title: "Ponte Trade — Trade intelligence. Delivered.",
     description:
-      "Research-grade market reports and trade analysis. Buy what you need.",
+      "Research-grade market reports and risk analysis. Built on 7B+ verified trade records.",
     url: APP_URL,
     siteName: "Ponte Trade",
     type: "website",
+    locale: "en_GB",
   },
   twitter: {
     card: "summary_large_image",
     title: "Ponte Trade — Trade intelligence. Delivered.",
     description:
-      "Research-grade market reports and trade analysis. Buy what you need.",
+      "Research-grade market reports and risk analysis. 7B+ verified trade records.",
   },
 };
 
@@ -67,7 +84,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${playfair.variable} ${jetbrains.variable}`}
+    >
       <body className="flex min-h-screen flex-col">
         <script
           type="application/ld+json"
@@ -75,6 +95,7 @@ export default function RootLayout({
             __html: JSON.stringify([organizationJsonLd, websiteJsonLd]),
           }}
         />
+        <div className="bg-ambient" aria-hidden="true" />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

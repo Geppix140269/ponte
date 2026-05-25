@@ -2,80 +2,259 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ======================================================================
+   Ponte Brand v2 — Trade intelligence. Delivered.
+   Glass over navy-deep. Gold reserved for live data. One blur,
+   one border weight, one shadow. The discipline is in restraint.
+   ====================================================================== */
+
+:root {
+  --navy: #0D1B2A;
+  --navy-2: #142336;
+  --navy-3: #1B2E47;
+  --navy-deep: #07101B;
+  --gold: #C9973A;
+  --gold-soft: #D9AC55;
+  --cream: #F5F0E8;
+  --gray: #6B7280;
+  --gray-2: #9CA3AF;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.20);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --positive: #4AC09A;
+  --negative: #E07A5F;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-white text-navy/80 font-sans antialiased;
+    background: var(--navy-deep);
+    color: var(--cream);
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
-  h1,
-  h2,
-  h3,
-  h4 {
-    @apply font-bold tracking-tight text-navy;
+  h1, h2, h3, h4 {
+    font-family: var(--font-playfair), Georgia, serif;
+    color: #FFFFFF;
+    letter-spacing: -0.01em;
   }
 }
 
+/* ============ AMBIENT BACKGROUND ============ */
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--navy-deep);
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-ambient::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% -10% -10%;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,151,58,0.18), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 20% 30%, rgba(31, 62, 110, 0.55), transparent 65%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(13, 27, 42, 0.9), transparent 70%);
+  filter: blur(20px);
+}
+.bg-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.6;
+  mix-blend-mode: screen;
+}
+
 @layer components {
+  /* ===== Layout primitives ===== */
   .container-px {
-    @apply mx-auto w-full max-w-container px-5 sm:px-6 lg:px-8;
+    @apply mx-auto w-full px-5 sm:px-6 lg:px-10;
+    max-width: 1320px;
+  }
+  .serif {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+  .mono {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
   }
 
+  /* ===== Glass primitives ===== */
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.12) inset,
+      0 24px 60px -20px rgba(0,0,0,0.55),
+      0 0 0 0.5px rgba(255,255,255,0.04);
+  }
+  .glass-tight {
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 14px;
+  }
+  .nav-glass {
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    background: rgba(7, 16, 27, 0.55);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ===== Pills and eyebrows ===== */
+  .pill {
+    @apply inline-flex items-center gap-[10px] px-4 py-2 rounded-full text-[11px] uppercase text-cream;
+    letter-spacing: 0.22em;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold);
+  }
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-gold;
+    @apply text-[11px] uppercase text-gold;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+  }
+  .num-italic {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--gold);
   }
 
+  /* ===== Buttons ===== */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-colors duration-150;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-[22px] py-[13px] text-[13px] font-medium transition-all duration-200;
+    letter-spacing: 0.06em;
   }
   .btn-gold {
-    @apply btn bg-gold text-navy hover:bg-gold-600;
+    @apply btn text-navy;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    box-shadow: 0 10px 30px -10px rgba(201,151,58,0.6);
+  }
+  .btn-gold:hover {
+    transform: translateY(-1px);
+    background: var(--gold-soft);
   }
   .btn-navy {
-    @apply btn bg-navy text-white hover:bg-navy-700;
+    @apply btn text-cream;
+    background: var(--navy);
+    border: 1px solid var(--glass-border);
   }
-  .btn-outline {
-    @apply btn border border-navy/20 text-navy hover:border-navy hover:bg-navy hover:text-white;
-  }
+  .btn-navy:hover { background: var(--navy-2); }
+  .btn-outline,
   .btn-ghost-light {
-    @apply btn border border-white/30 text-white hover:bg-white hover:text-navy;
+    @apply btn text-cream;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .btn-outline:hover,
+  .btn-ghost-light:hover {
+    background: rgba(255,255,255,0.10);
   }
 
+  /* ===== Cards ===== */
   .card {
-    @apply flex flex-col rounded-xl border border-line bg-white transition-shadow duration-200 hover:shadow-lg hover:shadow-navy/5;
+    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    @apply flex flex-col transition-all duration-200;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.12) inset,
+      0 24px 60px -20px rgba(0,0,0,0.55);
+  }
+  .card:hover {
+    border-color: rgba(201,151,58,0.3);
+    transform: translateY(-2px);
   }
 
+  /* ===== Badges ===== */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
   }
   .badge-gold {
-    @apply badge bg-gold/15 text-gold-600;
+    @apply badge text-gold;
+    background: rgba(201,151,58,0.15);
+    border: 1px solid rgba(201,151,58,0.35);
   }
   .badge-navy {
-    @apply badge bg-navy/10 text-navy;
+    @apply badge text-cream;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
   }
 
+  /* ===== Form fields ===== */
   .field {
-    @apply w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-sm text-navy outline-none transition-colors placeholder:text-navy/40 focus:border-gold;
+    @apply w-full rounded-[10px] px-4 py-3 text-[14px] outline-none transition-colors;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #FFFFFF;
   }
+  .field::placeholder { color: var(--gray-2); }
+  .field:focus { border-color: var(--gold); }
   .field-label {
-    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-navy/70;
+    @apply mb-2 block text-[10px] uppercase;
+    color: var(--gray-2);
+    letter-spacing: 0.22em;
+    font-weight: 500;
   }
 
+  /* ===== Legal prose ===== */
   .prose-legal {
-    @apply text-sm leading-relaxed text-navy/75;
+    @apply text-sm leading-relaxed;
+    color: var(--gray-2);
   }
   .prose-legal h2 {
-    @apply mb-3 mt-9 text-xl text-navy;
+    @apply mb-3 mt-9 text-xl;
+    color: #FFFFFF;
+    font-family: var(--font-playfair), Georgia, serif;
+    font-weight: 500;
   }
-  .prose-legal p {
-    @apply mb-4;
-  }
-  .prose-legal ul {
-    @apply mb-4 list-disc space-y-2 pl-5;
-  }
+  .prose-legal p { @apply mb-4; }
+  .prose-legal ul { @apply mb-4 list-disc space-y-2 pl-5; }
   .prose-legal a {
-    @apply text-gold-600 underline-offset-2 hover:underline;
+    color: var(--gold);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
+  .prose-legal a:hover { color: var(--gold-soft); }
+}
+
+/* ===== Pulse for live signals ===== */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulse-dot {
+  animation: pulse-dot 2.4s infinite;
 }

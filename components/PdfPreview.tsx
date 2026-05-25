@@ -5,7 +5,9 @@ import dynamic from "next/dynamic";
 // react-pdf is heavy and browser-only — load it lazily, client-side only.
 const PdfViewer = dynamic(() => import("./PdfViewer"), {
   ssr: false,
-  loading: () => <p className="text-sm text-navy/50">Loading preview…</p>,
+  loading: () => (
+    <p className="text-sm text-gray-2">Loading preview…</p>
+  ),
 });
 
 export default function PdfPreview({

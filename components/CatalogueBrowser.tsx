@@ -34,21 +34,27 @@ export default function CatalogueBrowser({
       if (delivery !== "all" && p.deliveryType !== delivery) return false;
       return true;
     });
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.priceCents - b.priceCents);
-    if (sort === "price-desc") list = [...list].sort((a, b) => b.priceCents - a.priceCents);
+    if (sort === "price-asc")
+      list = [...list].sort((a, b) => a.priceCents - b.priceCents);
+    if (sort === "price-desc")
+      list = [...list].sort((a, b) => b.priceCents - a.priceCents);
     return list;
   }, [products, category, delivery, sort]);
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_1fr]">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
       {/* Filters */}
-      <aside className="space-y-6">
+      <aside className="glass p-6 space-y-6 self-start lg:sticky lg:top-24">
         <div>
           <label className="field-label">Category</label>
-          <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="all">All categories</option>
+          <select
+            className="field"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="all" className="bg-navy">All categories</option>
             {categories.map((c) => (
-              <option key={c.slug} value={c.slug}>
+              <option key={c.slug} value={c.slug} className="bg-navy">
                 {c.name}
               </option>
             ))}
@@ -56,9 +62,15 @@ export default function CatalogueBrowser({
         </div>
         <div>
           <label className="field-label">Delivery</label>
-          <select className="field" value={delivery} onChange={(e) => setDelivery(e.target.value as DeliveryType | "all")}>
+          <select
+            className="field"
+            value={delivery}
+            onChange={(e) =>
+              setDelivery(e.target.value as DeliveryType | "all")
+            }
+          >
             {DELIVERY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
+              <option key={o.value} value={o.value} className="bg-navy">
                 {o.label}
               </option>
             ))}
@@ -66,24 +78,33 @@ export default function CatalogueBrowser({
         </div>
         <div>
           <label className="field-label">Sort</label>
-          <select className="field" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-            <option value="relevance">Relevance</option>
-            <option value="price-asc">Price: low to high</option>
-            <option value="price-desc">Price: high to low</option>
+          <select
+            className="field"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+          >
+            <option value="relevance" className="bg-navy">Relevance</option>
+            <option value="price-asc" className="bg-navy">Price: low to high</option>
+            <option value="price-desc" className="bg-navy">Price: high to low</option>
           </select>
         </div>
       </aside>
 
       {/* Results */}
       <div>
-        <p className="mb-5 text-sm text-navy/55">{results.length} products</p>
+        <p
+          className="mb-5 mono text-[11px] uppercase text-gray-2"
+          style={{ letterSpacing: "0.18em" }}
+        >
+          {results.length} {results.length === 1 ? "product" : "products"}
+        </p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {results.map((p) => (
             <ProductCard key={p.sku} product={p} />
           ))}
         </div>
         {results.length === 0 && (
-          <p className="py-16 text-center text-sm text-navy/50">
+          <p className="py-16 text-center text-[14px] text-gray-2">
             No products match these filters.
           </p>
         )}

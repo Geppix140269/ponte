@@ -27,18 +27,31 @@ export default async function AdminOverview() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold">Overview</h1>
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <h1
+        className="serif text-white mb-7"
+        style={{ fontSize: 32, fontWeight: 500 }}
+      >
+        Overview
+      </h1>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border border-line bg-white p-6">
-            <p className="text-3xl font-extrabold text-navy">{c.value}</p>
-            <p className="mt-1 text-xs font-medium uppercase tracking-wide text-navy/55">
+          <div key={c.label} className="glass p-6">
+            <p
+              className="serif text-white"
+              style={{ fontSize: 36, fontWeight: 500, lineHeight: 1 }}
+            >
+              {c.value}
+            </p>
+            <p
+              className="mt-3 text-[10px] uppercase text-gray-2"
+              style={{ letterSpacing: "0.22em" }}
+            >
               {c.label}
             </p>
           </div>
         ))}
       </div>
-      <p className="mt-6 text-sm text-navy/55">
+      <p className="mt-6 text-[13px] text-gray-2">
         Counts read live from Supabase. Seed the catalogue (supabase/seed.sql)
         to populate products.
       </p>

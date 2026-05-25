@@ -8,7 +8,9 @@ const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle"
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function signInWithEmail(e: React.FormEvent) {
@@ -20,8 +22,10 @@ export default function LoginPage() {
         email,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
-      if (error) { setErrorMsg(error.message); setStatus("error"); }
-      else setStatus("sent");
+      if (error) {
+        setErrorMsg(error.message);
+        setStatus("error");
+      } else setStatus("sent");
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Unknown error");
       setStatus("error");
@@ -41,39 +45,58 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="bg-white py-20">
-      <div className="container-px max-w-md">
-        <h1 className="text-3xl font-extrabold">Sign in</h1>
-        <p className="mt-2 text-navy/60">
+    <section className="container-px py-20">
+      <div className="glass p-10 max-w-md mx-auto">
+        <span className="pill">Sign in</span>
+        <h1
+          className="serif text-white mt-6 mb-2"
+          style={{ fontSize: 36, fontWeight: 500 }}
+        >
+          Welcome back.
+        </h1>
+        <p className="text-gray-2 text-[14px] mb-7">
           Access your orders, downloads, and subscriptions.
         </p>
 
         {!configured ? (
-          <div className="mt-8 rounded-xl border border-line bg-mist p-6 text-sm text-navy/70">
-            Sign-in becomes available once Supabase Auth is connected. Add your
-            Supabase keys to enable magic-link and Google login.
+          <div className="glass-tight p-6 text-[13px] text-gray-2 leading-relaxed">
+            Sign-in becomes available once Supabase Auth is connected. Add
+            your Supabase keys to enable magic-link and Google login.
           </div>
         ) : status === "sent" ? (
-          <div className="mt-8 flex items-center gap-2 rounded-xl border border-line bg-emerald-50 p-6 text-sm font-semibold text-emerald-700">
-            <Mail className="h-4 w-4" /> Check your inbox for a magic sign-in link.
+          <div
+            className="flex items-center gap-2 rounded-[10px] px-4 py-3 text-[13px] text-positive"
+            style={{
+              background: "rgba(74,192,154,0.15)",
+              border: "1px solid rgba(74,192,154,0.35)",
+            }}
+          >
+            <Mail className="h-4 w-4" /> Check your inbox for a magic sign-in
+            link.
           </div>
         ) : (
-          <div className="mt-8 space-y-5">
+          <div className="space-y-5">
             <button
               type="button"
               onClick={signInWithGoogle}
-              className="btn-outline w-full"
+              className="btn-ghost-light w-full"
             >
               Continue with Google
             </button>
 
-            <div className="flex items-center gap-3 text-xs text-navy/40">
-              <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+            <div
+              className="flex items-center gap-3 text-[10px] uppercase text-gray-2"
+              style={{ letterSpacing: "0.22em" }}
+            >
+              <span className="h-px flex-1 bg-white/10" /> or{" "}
+              <span className="h-px flex-1 bg-white/10" />
             </div>
 
             <form onSubmit={signInWithEmail} className="space-y-3">
               <div>
-                <label htmlFor="email" className="field-label">Email address</label>
+                <label htmlFor="email" className="field-label">
+                  Email address
+                </label>
                 <input
                   id="email"
                   type="email"
@@ -92,7 +115,9 @@ export default function LoginPage() {
                 {status === "sending" ? "Sending…" : "Email me a magic link"}
               </button>
               {status === "error" && (
-                <p className="text-sm text-red-600">{errorMsg ?? "Something went wrong. Try again."}</p>
+                <p className="text-sm text-negative">
+                  {errorMsg ?? "Something went wrong. Try again."}
+                </p>
               )}
             </form>
           </div>

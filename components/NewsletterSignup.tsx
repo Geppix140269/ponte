@@ -16,14 +16,21 @@ export default function NewsletterSignup() {
 
   if (done) {
     return (
-      <p className="text-sm font-semibold text-gold" role="status">
-        Thanks — we&apos;ll be in touch with subscription details.
+      <p
+        className="text-[13px] uppercase text-gold"
+        role="status"
+        style={{ letterSpacing: "0.18em" }}
+      >
+        Thanks — we&apos;ll be in touch.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
+    <form
+      onSubmit={handleSubmit}
+      className="flex w-full max-w-md flex-col gap-3 sm:flex-row"
+    >
       <label htmlFor="newsletter-email" className="sr-only">
         Email address
       </label>
@@ -34,7 +41,7 @@ export default function NewsletterSignup() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@company.com"
-        className="flex-1 rounded-md border border-white/25 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-gold"
+        className="field flex-1 rounded-full"
       />
       <button type="submit" className="btn-gold whitespace-nowrap">
         Subscribe

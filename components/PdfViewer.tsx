@@ -53,16 +53,16 @@ export default function PdfViewer({
         file={url}
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
         loading={
-          <div className="aspect-[1/1.414] w-full animate-pulse rounded-xl bg-mist" />
+          <div className="aspect-[1/1.414] w-full animate-pulse rounded-xl bg-white/5" />
         }
         error={
-          <p className="py-8 text-center text-sm text-navy/50">
+          <p className="py-8 text-center text-sm text-gray-2">
             Preview unavailable.
           </p>
         }
       >
         {/* Wrap in relative container so the fade overlay can sit on top */}
-        <div className="relative overflow-hidden rounded-xl border border-line shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-white/10">
           <Page
             key={current}
             pageNumber={current}
@@ -70,7 +70,7 @@ export default function PdfViewer({
             renderTextLayer={false}
             renderAnnotationLayer={false}
             loading={
-              <div className="aspect-[1/1.414] w-full animate-pulse bg-mist" />
+              <div className="aspect-[1/1.414] w-full animate-pulse bg-white/5" />
             }
           />
           {/* Gradient fade — hides the left ~70% of every preview page */}
@@ -90,7 +90,7 @@ export default function PdfViewer({
           onClick={prev}
           disabled={current === 1}
           aria-label="Previous page"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-white text-navy shadow-sm transition-colors hover:bg-mist disabled:opacity-30"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-cream transition-colors hover:bg-white/10 disabled:opacity-30"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -105,7 +105,7 @@ export default function PdfViewer({
               className={`h-2 rounded-full transition-all duration-200 ${
                 current === i + 1
                   ? "w-6 bg-gold"
-                  : "w-2 bg-navy/20 hover:bg-navy/40"
+                  : "w-2 bg-white/15 hover:bg-white/30"
               }`}
             />
           ))}
@@ -115,13 +115,13 @@ export default function PdfViewer({
           onClick={next}
           disabled={current === shown}
           aria-label="Next page"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-line bg-white text-navy shadow-sm transition-colors hover:bg-mist disabled:opacity-30"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-cream transition-colors hover:bg-white/10 disabled:opacity-30"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      <p className="mt-2 text-center text-xs text-navy/40">
+      <p className="mt-2 text-center text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
         Page {current} of {shown} · sample preview
       </p>
     </div>

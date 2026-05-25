@@ -1,25 +1,44 @@
-function BridgeMark({ className }: { className?: string }) {
+/**
+ * Ponte Brand v2 — the mark.
+ *
+ *   The arch — Italian heritage, classical structure, distilled.
+ *   A single gold node at the apex: the trade record, the data point,
+ *   the moment of intelligence. The bridge has a payload.
+ *
+ * This is the single source of truth for the Ponte mark across the
+ * platform. Do not draw an arch SVG anywhere else — import this.
+ */
+
+type BridgeMarkProps = {
+  className?: string;
+  stroke?: string;
+  node?: string;
+  showBaseline?: boolean;
+};
+
+export function BridgeMark({
+  className,
+  stroke = "#FFFFFF",
+  node = "#C9973A",
+  showBaseline = true,
+}: BridgeMarkProps) {
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox="0 0 120 120"
       className={className}
       fill="none"
       aria-hidden="true"
     >
-      {/* deck */}
-      <line x1="3" y1="22" x2="29" y2="22" stroke="currentColor" strokeWidth="2" />
-      {/* towers */}
-      <line x1="9" y1="22" x2="9" y2="9" stroke="currentColor" strokeWidth="2" />
-      <line x1="23" y1="22" x2="23" y2="9" stroke="currentColor" strokeWidth="2" />
-      {/* suspension cable */}
       <path
-        d="M3 14 C 9 9, 23 9, 29 14"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
+        d="M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98"
+        stroke={stroke}
+        strokeWidth="9"
+        strokeLinejoin="miter"
       />
-      {/* hangers */}
-      <line x1="16" y1="12.4" x2="16" y2="22" stroke="currentColor" strokeWidth="1.5" />
+      {showBaseline && (
+        <line x1="14" y1="98" x2="106" y2="98" stroke={stroke} strokeWidth="3" />
+      )}
+      <circle cx="60" cy="42" r="7" fill={node} />
     </svg>
   );
 }
@@ -27,19 +46,28 @@ function BridgeMark({ className }: { className?: string }) {
 export default function Logo({
   reversed = false,
   className = "",
+  size = "md",
 }: {
   reversed?: boolean;
   className?: string;
+  size?: "sm" | "md" | "lg";
 }) {
+  const dims =
+    size === "sm" ? "h-6 w-6" : size === "lg" ? "h-10 w-10" : "h-8 w-8";
+  const text =
+    size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-xl";
+
+  const stroke = reversed ? "#FFFFFF" : "#0D1B2A";
+  const wordColor = reversed ? "text-white" : "text-navy";
+
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
-      <BridgeMark className={`h-7 w-7 ${reversed ? "text-gold" : "text-gold"}`} />
+    <span className={`inline-flex items-center gap-[10px] ${className}`}>
+      <BridgeMark className={dims} stroke={stroke} node="#C9973A" />
       <span
-        className={`text-lg font-extrabold tracking-tight ${
-          reversed ? "text-white" : "text-navy"
-        }`}
+        className={`serif font-medium tracking-[3px] ${text} ${wordColor}`}
+        style={{ letterSpacing: "3px" }}
       >
-        Ponte&nbsp;Trade
+        Ponte
       </span>
     </span>
   );

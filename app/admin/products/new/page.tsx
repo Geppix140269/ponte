@@ -13,12 +13,25 @@ export default async function NewProductPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <Link href="/admin/products" className="text-sm text-navy/50 hover:text-navy">
+      <div
+        className="mb-7 flex items-center gap-3 text-[11px] uppercase"
+        style={{ letterSpacing: "0.18em" }}
+      >
+        <Link href="/admin/products" className="text-gray-2 hover:text-gold">
           ← Products
         </Link>
-        <span className="text-navy/30">/</span>
-        <h1 className="text-2xl font-extrabold">New product</h1>
+        <span className="text-white/20">/</span>
+        <h1
+          className="serif text-white"
+          style={{
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            textTransform: "none",
+          }}
+        >
+          New product
+        </h1>
       </div>
       <AdminProductForm categories={categories ?? []} />
     </div>

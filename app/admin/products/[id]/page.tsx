@@ -12,11 +12,7 @@ export default async function EditProductPage({
 }) {
   const supabase = createClient();
   const [{ data: product }, { data: categories }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("*")
-      .eq("id", params.id)
-      .maybeSingle(),
+    supabase.from("products").select("*").eq("id", params.id).maybeSingle(),
     supabase
       .from("categories")
       .select("id, slug, name")
@@ -27,13 +23,26 @@ export default async function EditProductPage({
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <Link href="/admin/products" className="text-sm text-navy/50 hover:text-navy">
+      <div className="mb-7 flex items-center gap-3 flex-wrap">
+        <Link
+          href="/admin/products"
+          className="text-[11px] uppercase text-gray-2 hover:text-gold"
+          style={{ letterSpacing: "0.18em" }}
+        >
           ← Products
         </Link>
-        <span className="text-navy/30">/</span>
-        <h1 className="text-2xl font-extrabold">{product.title}</h1>
-        <span className="ml-2 font-mono text-sm text-navy/40">{product.sku}</span>
+        <span className="text-white/20">/</span>
+        <h1
+          className="serif text-white"
+          style={{
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {product.title}
+        </h1>
+        <span className="ml-1 mono text-sm text-gray-2">{product.sku}</span>
       </div>
       <AdminProductForm product={product} categories={categories ?? []} />
     </div>

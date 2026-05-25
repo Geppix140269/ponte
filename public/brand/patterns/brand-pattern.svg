@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Ponte brand pattern">
+  <title>Ponte brand pattern</title>
+  <defs>
+    <pattern id="arches" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+      <path d="M 18 96 L 18 64 C 18 44 102 44 102 64 L 102 96" fill="none" stroke="#0D1B2A" stroke-opacity="0.08" stroke-width="2"></path>
+      <path d="M 78 96 L 78 64 C 78 44 162 44 162 64 L 162 96" transform="translate(-60 -60)" fill="none" stroke="#0D1B2A" stroke-opacity="0.08" stroke-width="2"></path>
+    </pattern>
+  </defs>
+  <rect width="240" height="240" fill="#F5F0E8"></rect>
+  <rect width="240" height="240" fill="url(#arches)"></rect>
+</svg>

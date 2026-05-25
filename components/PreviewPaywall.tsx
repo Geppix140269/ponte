@@ -7,7 +7,7 @@ import PdfPreview from "@/components/PdfPreview";
 function MockPage({ blurred = false }: { blurred?: boolean }) {
   return (
     <div
-      className={`aspect-[1/1.414] rounded-md border border-line bg-white p-5 shadow-sm ${
+      className={`aspect-[1/1.414] rounded-md bg-cream/95 p-5 ${
         blurred ? "blur-[6px]" : ""
       }`}
       aria-hidden={blurred}
@@ -23,10 +23,14 @@ function MockPage({ blurred = false }: { blurred?: boolean }) {
           />
         ))}
       </div>
-      <div className="mt-5 h-20 rounded bg-mist" />
+      <div className="mt-5 h-20 rounded bg-navy/5" />
       <div className="mt-4 space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-2 rounded bg-navy/10" style={{ width: `${85 - i * 9}%` }} />
+          <div
+            key={i}
+            className="h-2 rounded bg-navy/10"
+            style={{ width: `${85 - i * 9}%` }}
+          />
         ))}
       </div>
     </div>
@@ -37,43 +41,56 @@ export default function PreviewPaywall({ product }: { product: Product }) {
   const freePages = product.previewPages ?? (product.configFields ? 2 : 3);
 
   return (
-    <div>
-      <h2 className="text-lg font-bold text-navy">Report preview</h2>
+    <div className="glass p-8">
+      <h2
+        className="serif text-white text-xl"
+        style={{ fontWeight: 500 }}
+      >
+        Report preview
+      </h2>
 
       {product.previewPdfUrl ? (
-        <div className="mt-4">
+        <div className="mt-5">
           <PdfPreview url={product.previewPdfUrl} pages={freePages} />
-          <div className="mt-5 flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-mist p-6 text-center">
-            <Lock className="h-6 w-6 text-gold-600" />
-            <p className="mt-2 text-sm font-semibold text-navy">
+          <div className="mt-5 glass-tight p-6 flex flex-col items-center text-center">
+            <Lock className="h-6 w-6 text-gold" />
+            <p
+              className="serif text-white mt-3"
+              style={{ fontSize: 18, fontWeight: 500 }}
+            >
               Unlock the full report — {displayPrice(product)}
             </p>
-            <p className="mt-1 text-xs text-navy/50">
+            <p className="mt-1 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
               Delivered as a watermarked PDF licensed to you
             </p>
           </div>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {Array.from({ length: Math.min(freePages, 2) }).map((_, i) => (
             <MockPage key={i} />
           ))}
           <div className="relative col-span-2 sm:col-span-1">
             <MockPage blurred />
-            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy/40 p-4 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy-deep/70 p-4 text-center">
               <Lock className="h-6 w-6 text-white" />
-              <p className="mt-2 text-sm font-semibold text-white">
+              <p
+                className="serif text-white mt-3"
+                style={{ fontSize: 16, fontWeight: 500 }}
+              >
                 Unlock the full report
               </p>
-              <p className="text-xs text-white/80">{displayPrice(product)}</p>
+              <p className="text-[11px] uppercase text-gold mt-1" style={{ letterSpacing: "0.18em" }}>
+                {displayPrice(product)}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      <p className="mt-4 text-xs leading-relaxed text-navy/50">
-        Preview pages are watermarked samples. The full report is delivered as a
-        watermarked PDF, licensed to the purchaser.
+      <p className="mt-5 text-[11px] leading-relaxed text-gray-2">
+        Preview pages are watermarked samples. The full report is delivered as
+        a watermarked PDF, licensed to the purchaser.
       </p>
     </div>
   );

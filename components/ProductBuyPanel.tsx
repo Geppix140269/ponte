@@ -2,9 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ShieldCheck, FileText, Clock, Sparkles, BadgeCheck } from "lucide-react";
+import {
+  Check,
+  ShieldCheck,
+  FileText,
+  Clock,
+  Sparkles,
+  BadgeCheck,
+} from "lucide-react";
 import type { Product } from "@/lib/types";
-import { displayPrice, formatPrice, effectivePriceCents, DELIVERY_LABEL } from "@/lib/format";
+import {
+  displayPrice,
+  formatPrice,
+  effectivePriceCents,
+  DELIVERY_LABEL,
+} from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
 import { useCart } from "@/lib/cart-store";
 import { startCheckout } from "@/lib/checkout";
@@ -50,41 +62,57 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
       const selected = values[product.priceTiers.field];
       if (!selected) {
         const min = Math.min(
-          ...product.priceTiers.tiers.map((t) => t.priceCents),
+          ...product.priceTiers.tiers.map((t) => t.priceCents)
         );
         return `From ${formatPrice(min, product.currency)}`;
       }
-      return formatPrice(effectivePriceCents(product, values), product.currency);
+      return formatPrice(
+        effectivePriceCents(product, values),
+        product.currency
+      );
     }
     return displayPrice(product);
   }
 
   return (
-    <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
+    <div className="glass p-7">
       <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-extrabold text-navy">
+        <span
+          className="serif text-white"
+          style={{ fontSize: 36, fontWeight: 500 }}
+        >
           {panelPrice()}
         </span>
         {product.altPrice && (
-          <span className="text-sm text-navy/50">{product.altPrice}</span>
+          <span className="text-sm text-gray-2">{product.altPrice}</span>
         )}
       </div>
 
-      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-        <Clock className="h-3.5 w-3.5" />
+      <div
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] uppercase text-positive"
+        style={{
+          background: "rgba(74,192,154,0.15)",
+          border: "1px solid rgba(74,192,154,0.35)",
+          letterSpacing: "0.22em",
+        }}
+      >
+        <Clock className="h-3 w-3" />
         {DELIVERY_LABEL[product.deliveryType]}
       </div>
 
       {product.isConfigurable && product.configFields && (
         <div className="mt-6 space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-navy/60">
+          <p
+            className="text-[10px] uppercase text-gold"
+            style={{ letterSpacing: "0.22em", fontWeight: 500 }}
+          >
             Configure your report
           </p>
           {product.configFields.map((field) => (
             <div key={field.name}>
               <label htmlFor={field.name} className="field-label">
                 {field.label}
-                {field.required && <span className="text-gold-600"> *</span>}
+                {field.required && <span className="text-gold"> *</span>}
               </label>
 
               {field.type === "country" ? (
@@ -94,9 +122,11 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
                   value={values[field.name] ?? ""}
                   onChange={(e) => setField(field.name, e.target.value)}
                 >
-                  <option value="">Select a country…</option>
+                  <option value="" className="bg-navy">
+                    Select a country…
+                  </option>
                   {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
+                    <option key={c.code} value={c.code} className="bg-navy">
                       {c.name}
                     </option>
                   ))}
@@ -108,9 +138,11 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
                   value={values[field.name] ?? ""}
                   onChange={(e) => setField(field.name, e.target.value)}
                 >
-                  <option value="">Select…</option>
+                  <option value="" className="bg-navy">
+                    Select…
+                  </option>
                   {field.options?.map((o) => (
-                    <option key={o.value} value={o.value}>
+                    <option key={o.value} value={o.value} className="bg-navy">
                       {o.label}
                     </option>
                   ))}
@@ -140,23 +172,30 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
       )}
 
       {error && (
-        <p className="mt-4 text-sm text-red-600" role="alert">
+        <p className="mt-4 text-sm text-negative" role="alert">
           {error}
         </p>
       )}
 
       {added ? (
         <div className="mt-6 space-y-3">
-          <div className="flex items-center gap-2 rounded-md bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-            <Check className="h-4 w-4" /> Added to cart
+          <div
+            className="flex items-center gap-2 rounded-full px-4 py-3 text-[11px] uppercase text-positive"
+            style={{
+              background: "rgba(74,192,154,0.15)",
+              border: "1px solid rgba(74,192,154,0.35)",
+              letterSpacing: "0.22em",
+            }}
+          >
+            <Check className="h-3.5 w-3.5" /> Added to cart
           </div>
-          <Link href="/cart" className="btn-navy w-full">
+          <Link href="/cart" className="btn-gold w-full">
             View cart
           </Link>
           <button
             type="button"
             onClick={() => setAdded(false)}
-            className="btn-outline w-full"
+            className="btn-ghost-light w-full"
           >
             Keep browsing
           </button>
@@ -174,33 +213,39 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
           <button
             type="button"
             onClick={handleAddToCart}
-            className="btn-outline w-full"
+            className="btn-ghost-light w-full"
           >
             Add to cart
           </button>
         </div>
       )}
 
-      <div className="mt-6 flex items-start gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-xs leading-relaxed text-emerald-800">
-        <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <div
+        className="mt-6 flex items-start gap-2 rounded-md px-3 py-2.5 text-[12px] leading-relaxed text-positive"
+        style={{
+          background: "rgba(74,192,154,0.10)",
+          border: "1px solid rgba(74,192,154,0.25)",
+        }}
+      >
+        <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          <span className="font-semibold">Quality guaranteed.</span> Every
-          report is manually QA&apos;d before delivery — if it misses your
-          brief, we&apos;ll revise it free.
+          <span className="font-medium text-cream">Quality guaranteed.</span>{" "}
+          Every report is manually QA&apos;d before delivery — if it misses
+          your brief, we&apos;ll revise it free.
         </span>
       </div>
 
-      <ul className="mt-5 space-y-2 border-t border-line pt-5 text-xs text-navy/60">
+      <ul className="mt-5 space-y-2 border-t border-white/10 pt-5 text-[12px] text-gray-2">
         <li className="flex items-center gap-2">
-          <FileText className="h-3.5 w-3.5 text-gold-600" /> Licensed PDF,
+          <FileText className="h-3.5 w-3.5 text-gold" /> Licensed PDF,
           watermarked to you
         </li>
         <li className="flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-gold-600" /> Secure payment via
+          <ShieldCheck className="h-3.5 w-3.5 text-gold" /> Secure payment via
           Stripe
         </li>
         <li className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-gold-600" /> Powered by ADAMftd
+          <Sparkles className="h-3.5 w-3.5 text-gold" /> Powered by ADAMftd
         </li>
       </ul>
     </div>

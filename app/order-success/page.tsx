@@ -9,18 +9,23 @@ export const metadata: Metadata = {
 
 export default function OrderSuccessPage() {
   return (
-    <section className="bg-white py-20">
-      <div className="container-px max-w-xl text-center">
-        <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
-        <h1 className="mt-5 text-3xl font-extrabold">Thank you for your order</h1>
-        <p className="mt-3 text-navy/65">
+    <section className="container-px py-20">
+      <div className="glass p-12 max-w-xl mx-auto text-center">
+        <CheckCircle2 className="mx-auto h-12 w-12 text-positive" />
+        <h1
+          className="serif text-white mt-6"
+          style={{ fontSize: 32, fontWeight: 500 }}
+        >
+          Thank you for your order
+        </h1>
+        <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
           Instant downloads are available immediately in your account. Reports
-          with a 24h or 48h SLA are being prepared — you&apos;ll receive an email
-          with your download link when they&apos;re ready.
+          with a 24h or 48h SLA are being prepared — you&apos;ll receive an
+          email with your download link when they&apos;re ready.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/account" className="btn-navy">Go to my account</Link>
-          <Link href="/catalogue" className="btn-outline">Browse more</Link>
+          <Link href="/account" className="btn-gold">Go to my account</Link>
+          <Link href="/catalogue" className="btn-ghost-light">Browse more</Link>
         </div>
       </div>
     </section>

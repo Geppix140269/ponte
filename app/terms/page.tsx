@@ -9,12 +9,30 @@ const LAST_UPDATED = "21 May 2026";
 
 export default function TermsPage() {
   return (
-    <section className="bg-white py-16 lg:py-20">
-      <div className="container-px max-w-3xl">
-        <h1 className="text-4xl font-extrabold">Terms of Sale</h1>
-        <p className="mt-3 text-sm text-navy/55">Last updated: {LAST_UPDATED}</p>
+    <section className="container-px py-14 lg:py-20">
+      <header className="max-w-3xl mb-10">
+        <span className="pill">Legal</span>
+        <h1
+          className="serif text-white mt-6 mb-3"
+          style={{
+            fontSize: "clamp(36px, 5vw, 56px)",
+            fontWeight: 400,
+            lineHeight: 1.04,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Terms of Sale
+        </h1>
+        <p
+          className="mono text-[11px] uppercase text-gray-2"
+          style={{ letterSpacing: "0.18em" }}
+        >
+          Last updated · {LAST_UPDATED}
+        </p>
+      </header>
 
-        <div className="prose-legal mt-8">
+      <div className="glass p-8 md:p-12 max-w-3xl">
+        <div className="prose-legal">
           <p>
             These Terms of Sale govern your purchase of digital intelligence
             products from Ponte Trade. By placing an order you agree to these
@@ -24,15 +42,21 @@ export default function TermsPage() {
           <h2>Products</h2>
           <p>
             We sell digital reports, data packs, and intelligence briefs as
-            one-time purchases or subscriptions. Some products are configured by
-            you (for example by HS code or country) before purchase; the
+            one-time purchases or subscriptions. Some products are configured
+            by you (for example by HS code or country) before purchase; the
             configuration you provide determines the report you receive.
           </p>
 
           <h2>Delivery</h2>
           <ul>
-            <li>Instant products are available to download immediately after payment.</li>
-            <li>Reports marked 24h or 48h are delivered within that window after order confirmation, following manual QA.</li>
+            <li>
+              Instant products are available to download immediately after
+              payment.
+            </li>
+            <li>
+              Reports marked 24h or 48h are delivered within that window
+              after order confirmation, following manual QA.
+            </li>
             <li>Custom research timelines are scoped with you after purchase.</li>
           </ul>
 
@@ -46,15 +70,15 @@ export default function TermsPage() {
           <h2>Refunds</h2>
           <p>
             Because our products are bespoke digital intelligence prepared for
-            you, sales are generally final once a report has been delivered. If a
-            report is materially defective or not delivered, contact us and we
-            will correct or refund it.
+            you, sales are generally final once a report has been delivered.
+            If a report is materially defective or not delivered, contact us
+            and we will correct or refund it.
           </p>
 
           <h2>Payment &amp; tax</h2>
           <p>
-            Payments are processed securely by Stripe in USD. Applicable VAT is
-            calculated at checkout based on your billing country.
+            Payments are processed securely by Stripe in USD. Applicable VAT
+            is calculated at checkout based on your billing country.
           </p>
 
           <h2>Contact</h2>
@@ -63,9 +87,12 @@ export default function TermsPage() {
             <a href="mailto:hello@ponte.trade">hello@ponte.trade</a>.
           </p>
 
-          <p className="mt-10 rounded-md border-l-2 border-gold bg-mist p-4 text-xs">
-            This page is general information, not legal advice. Have it reviewed
-            by qualified counsel before relying on it.
+          <p
+            className="mt-10 rounded-md border-l-2 border-gold p-4 text-xs"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
+            This page is general information, not legal advice. Have it
+            reviewed by qualified counsel before relying on it.
           </p>
         </div>
       </div>

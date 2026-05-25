@@ -32,7 +32,8 @@ export default function AdminDeliverForm({
         name="file"
         accept="application/pdf"
         required
-        className="max-w-[180px] text-xs text-navy/70 file:mr-2 file:rounded file:border-0 file:bg-navy file:px-2 file:py-1 file:text-xs file:text-white"
+        className="max-w-[180px] text-[11px] text-gray-2 file:mr-2 file:rounded-full file:border-0 file:bg-navy-700 file:px-3 file:py-1 file:text-[11px] file:uppercase file:text-cream"
+        style={{ letterSpacing: "0.18em" }}
       />
       <SubmitButton />
     </form>

@@ -93,8 +93,8 @@ export default function AdminProductForm({ product, categories }: Props) {
       <input type="hidden" name="preview_pdf_url" value={previewUrl} />
 
       {/* ---- Identity ---------------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Identity</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Identity</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="field-label">SKU *</label>
@@ -127,8 +127,8 @@ export default function AdminProductForm({ product, categories }: Props) {
       </section>
 
       {/* ---- Copy -------------------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Copy</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Copy</h2>
         <div>
           <label className="field-label">Short description *</label>
           <input name="short_description" className="field" required defaultValue={product?.short_description ?? ""} />
@@ -144,8 +144,8 @@ export default function AdminProductForm({ product, categories }: Props) {
       </section>
 
       {/* ---- Pricing ----------------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Pricing</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Pricing</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <label className="field-label">Price (USD) *</label>
@@ -173,7 +173,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="price_from" id="price_from" defaultChecked={product?.price_from} />
-            <label htmlFor="price_from" className="text-sm text-navy">Show as &ldquo;From $X&rdquo;</label>
+            <label htmlFor="price_from" className="text-sm text-cream">Show as &ldquo;From $X&rdquo;</label>
           </div>
         </div>
         <div>
@@ -183,8 +183,8 @@ export default function AdminProductForm({ product, categories }: Props) {
       </section>
 
       {/* ---- Delivery & status ------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Delivery &amp; status</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Delivery &amp; status</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <label className="field-label">Delivery type *</label>
@@ -206,21 +206,21 @@ export default function AdminProductForm({ product, categories }: Props) {
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="featured" id="featured" defaultChecked={product?.featured} />
-            <label htmlFor="featured" className="text-sm text-navy">Featured on homepage</label>
+            <label htmlFor="featured" className="text-sm text-cream">Featured on homepage</label>
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="is_subscription" id="is_subscription" defaultChecked={product?.is_subscription} />
-            <label htmlFor="is_subscription" className="text-sm text-navy">Subscription product</label>
+            <label htmlFor="is_subscription" className="text-sm text-cream">Subscription product</label>
           </div>
         </div>
       </section>
 
       {/* ---- Configuration ----------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Configuration</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Configuration</h2>
         <div className="flex items-center gap-2">
           <input type="checkbox" name="is_configurable" id="is_configurable" defaultChecked={product?.is_configurable} />
-          <label htmlFor="is_configurable" className="text-sm text-navy">Product is configurable (has form fields)</label>
+          <label htmlFor="is_configurable" className="text-sm text-cream">Product is configurable (has form fields)</label>
         </div>
         <div>
           <label className="field-label">Config fields (JSON array — leave blank if not configurable)</label>
@@ -229,11 +229,11 @@ export default function AdminProductForm({ product, categories }: Props) {
       </section>
 
       {/* ---- Preview PDF ------------------------------------------------- */}
-      <section className="rounded-xl border border-line bg-white p-6 space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-navy/50">Preview PDF</h2>
+      <section className="glass p-6 space-y-4">
+        <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Preview PDF</h2>
         {previewUrl && (
-          <p className="text-xs text-navy/60 break-all">
-            Current: <a href={previewUrl} target="_blank" rel="noopener" className="underline">{previewUrl}</a>
+          <p className="text-xs text-gray-2 break-all">
+            Current: <a href={previewUrl} target="_blank" rel="noopener" className="text-gold underline">{previewUrl}</a>
           </p>
         )}
         <div className="flex items-end gap-3">
@@ -250,9 +250,9 @@ export default function AdminProductForm({ product, categories }: Props) {
             {uploading ? "Uploading…" : "Upload"}
           </button>
         </div>
-        {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
+        {uploadError && <p className="text-xs text-negative">{uploadError}</p>}
         {previewUrl && !uploading && (
-          <p className="text-xs text-emerald-700">✓ Preview PDF set</p>
+          <p className="text-xs text-positive">✓ Preview PDF set</p>
         )}
         <div>
           <label className="field-label">Preview pages to show</label>
@@ -266,7 +266,7 @@ export default function AdminProductForm({ product, categories }: Props) {
         <button type="submit" disabled={isPending} className="btn-gold">
           {isPending ? "Saving…" : isEdit ? "Save changes" : "Create product"}
         </button>
-        <a href="/admin/products" className="btn-outline">Cancel</a>
+        <a href="/admin/products" className="btn-ghost-light">Cancel</a>
         {isEdit && product && (
           <form
             action={() =>
@@ -276,7 +276,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           >
             <button
               type="submit"
-              className="text-sm text-red-600 hover:text-red-700 underline"
+              className="text-sm text-negative hover:text-negative/80 underline"
               onClick={(e) => {
                 if (!confirm("Archive this product? It will be hidden from the public catalogue.")) {
                   e.preventDefault();

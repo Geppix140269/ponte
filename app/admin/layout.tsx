@@ -14,11 +14,18 @@ const adminNav = [
 
 function Notice({ title, body }: { title: string; body: string }) {
   return (
-    <section className="bg-white py-20">
-      <div className="container-px max-w-xl text-center">
-        <h1 className="text-3xl font-extrabold">{title}</h1>
-        <p className="mt-3 text-navy/65">{body}</p>
-        <Link href="/" className="btn-gold mt-8">Back to site</Link>
+    <section className="container-px py-20">
+      <div className="glass p-12 max-w-xl mx-auto text-center">
+        <h1
+          className="serif text-white"
+          style={{ fontSize: 32, fontWeight: 500 }}
+        >
+          {title}
+        </h1>
+        <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">{body}</p>
+        <Link href="/" className="btn-gold mt-8">
+          Back to site
+        </Link>
       </div>
     </section>
   );
@@ -58,15 +65,21 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="bg-mist">
-      <div className="border-b border-line bg-white">
+    <div>
+      <div className="nav-glass border-b border-white/10">
         <div className="container-px flex h-14 items-center gap-6 overflow-x-auto">
-          <span className="text-sm font-bold text-navy">Admin</span>
+          <span
+            className="serif text-white text-sm uppercase"
+            style={{ letterSpacing: "0.22em", fontWeight: 500 }}
+          >
+            Admin
+          </span>
           {adminNav.map((n) => (
             <Link
               key={n.href}
               href={n.href}
-              className="whitespace-nowrap text-sm font-medium text-navy/60 hover:text-navy"
+              className="whitespace-nowrap text-[12px] uppercase text-gray-2 hover:text-gold"
+              style={{ letterSpacing: "0.18em" }}
             >
               {n.label}
             </Link>

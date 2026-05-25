@@ -41,11 +41,16 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="bg-white py-24">
-        <div className="container-px flex flex-col items-center text-center">
-          <ShoppingCart className="h-10 w-10 text-navy/30" />
-          <h1 className="mt-5 text-2xl font-extrabold">Your cart is empty</h1>
-          <p className="mt-2 text-navy/60">
+      <section className="container-px py-24">
+        <div className="glass p-12 flex flex-col items-center text-center max-w-xl mx-auto">
+          <ShoppingCart className="h-10 w-10 text-gray-2" />
+          <h1
+            className="serif text-white mt-6"
+            style={{ fontSize: 32, fontWeight: 500 }}
+          >
+            Your cart is empty
+          </h1>
+          <p className="mt-3 text-gray-2">
             Browse the catalogue and add the intelligence you need.
           </p>
           <Link href="/catalogue" className="btn-gold mt-7">
@@ -57,23 +62,46 @@ export default function CartPage() {
   }
 
   return (
-    <section className="bg-white py-12 lg:py-16">
-      <div className="container-px">
-        <h1 className="text-3xl font-extrabold">Your cart</h1>
+    <section className="container-px py-14 lg:py-20">
+      <header className="mb-10">
+        <span className="pill">Cart</span>
+        <h1
+          className="serif text-white mt-6"
+          style={{
+            fontSize: "clamp(36px, 5vw, 56px)",
+            fontWeight: 400,
+            lineHeight: 1.04,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Your cart
+        </h1>
+      </header>
 
-        <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
-          <ul className="divide-y divide-line border-y border-line">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_360px]">
+        <div className="glass p-7 md:p-9">
+          <ul className="divide-y divide-white/10">
             {items.map((item, index) => {
               const product = getProductBySku(item.sku);
               if (!product) return null;
               const config = describeConfig(item.sku, item.config);
               return (
-                <li key={index} className="flex items-start justify-between gap-4 py-5">
+                <li
+                  key={index}
+                  className="flex items-start justify-between gap-4 py-5 first:pt-0 last:pb-0"
+                >
                   <div>
-                    <p className="font-bold text-navy">{product.title}</p>
-                    <p className="text-xs text-navy/50">{product.sku}</p>
+                    <p
+                      className="serif text-white text-lg"
+                      style={{ fontWeight: 500 }}
+                    >
+                      {product.title}
+                    </p>
+                    <p className="mono text-[11px] text-gray-2 mt-1">
+                      {product.sku}
+                    </p>
                     {config.length > 0 && (
-                      <ul className="mt-2 space-y-0.5 text-xs text-navy/60">
+                      <ul className="mt-3 space-y-1 text-[12px] text-gray-2">
                         {config.map((c) => (
                           <li key={c}>{c}</li>
                         ))}
@@ -81,47 +109,61 @@ export default function CartPage() {
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className="font-bold text-navy">
+                    <span
+                      className="serif text-white text-xl"
+                      style={{ fontWeight: 500 }}
+                    >
                       {formatPrice(
                         effectivePriceCents(product, item.config),
-                        product.currency,
+                        product.currency
                       )}
                       {product.priceSuffix}
                     </span>
                     <button
                       type="button"
                       onClick={() => removeItem(index)}
-                      className="inline-flex items-center gap-1 text-xs text-navy/50 hover:text-red-600"
+                      className="inline-flex items-center gap-1 text-[11px] uppercase text-gray-2 hover:text-negative"
+                      style={{ letterSpacing: "0.18em" }}
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> Remove
+                      <Trash2 className="h-3 w-3" /> Remove
                     </button>
                   </div>
                 </li>
               );
             })}
           </ul>
+        </div>
 
-          <div className="h-fit rounded-xl border border-line bg-mist p-6">
-            <h2 className="text-lg font-bold">Order summary</h2>
-            <div className="mt-4 flex justify-between text-sm">
-              <span className="text-navy/60">Subtotal</span>
-              <span className="font-semibold text-navy">{formatPrice(subtotalCents)}</span>
-            </div>
-            <p className="mt-1 text-xs text-navy/50">
-              VAT calculated at checkout based on billing country.
-            </p>
-            <button
-              type="button"
-              onClick={handleCheckout}
-              disabled={busy}
-              className="btn-gold mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
+        <div className="glass h-fit p-7">
+          <h2
+            className="serif text-white text-xl mb-5"
+            style={{ fontWeight: 500 }}
+          >
+            Order summary
+          </h2>
+          <div className="flex justify-between items-baseline text-sm pb-4 border-b border-white/10">
+            <span className="text-gray-2">Subtotal</span>
+            <span
+              className="serif text-white text-xl"
+              style={{ fontWeight: 500 }}
             >
-              {busy ? "Starting checkout…" : "Proceed to checkout"}
-            </button>
-            <Link href="/catalogue" className="btn-outline mt-3 w-full">
-              Continue browsing
-            </Link>
+              {formatPrice(subtotalCents)}
+            </span>
           </div>
+          <p className="mt-3 text-[11px] text-gray-2">
+            VAT calculated at checkout based on billing country.
+          </p>
+          <button
+            type="button"
+            onClick={handleCheckout}
+            disabled={busy}
+            className="btn-gold mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busy ? "Starting checkout…" : "Proceed to checkout"}
+          </button>
+          <Link href="/catalogue" className="btn-ghost-light mt-3 w-full">
+            Continue browsing
+          </Link>
         </div>
       </div>
     </section>

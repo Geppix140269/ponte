@@ -12,31 +12,43 @@ export default async function AdminUsers() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold">Users</h1>
-      <p className="mt-2 text-sm text-navy/55">{(users ?? []).length} registered users.</p>
+      <h1
+        className="serif text-white"
+        style={{ fontSize: 32, fontWeight: 500 }}
+      >
+        Users
+      </h1>
+      <p className="mt-2 text-[13px] text-gray-2">
+        {(users ?? []).length} registered users.
+      </p>
 
       {(users ?? []).length === 0 ? (
-        <div className="mt-6 rounded-xl border border-line bg-white p-6 text-sm text-navy/65">
+        <div className="mt-7 glass p-6 text-[13px] text-gray-2">
           No users yet. Profiles are created automatically on first sign-in.
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border border-line bg-white">
+        <div className="mt-7 glass overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-xs uppercase tracking-wide text-navy/50">
+            <thead
+              className="border-b border-white/10 text-left text-[10px] uppercase text-gray-2"
+              style={{ letterSpacing: "0.22em" }}
+            >
               <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Company</th>
-                <th className="px-4 py-3">Country</th>
-                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-4">Name</th>
+                <th className="px-4 py-4">Company</th>
+                <th className="px-4 py-4">Country</th>
+                <th className="px-4 py-4">Role</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-line">
+            <tbody className="divide-y divide-white/10">
               {(users ?? []).map((u: any) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 font-medium text-navy">{u.full_name ?? "—"}</td>
-                  <td className="px-4 py-3">{u.company ?? "—"}</td>
-                  <td className="px-4 py-3">{u.country ?? "—"}</td>
-                  <td className="px-4 py-3 capitalize">{u.role ?? "customer"}</td>
+                  <td className="px-4 py-3 text-cream">{u.full_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-2">{u.company ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-2">{u.country ?? "—"}</td>
+                  <td className="px-4 py-3 capitalize text-gold">
+                    {u.role ?? "customer"}
+                  </td>
                 </tr>
               ))}
             </tbody>
