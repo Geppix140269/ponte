@@ -255,9 +255,9 @@ export default function AdminProductForm({ product, categories }: Props) {
           <p className="text-xs text-emerald-700">✓ Preview PDF set</p>
         )}
         <div>
-          <label className="field-label">Preview pages to show (default 2)</label>
-          <input name="preview_pages" type="number" min="1" max="10" className="field w-24"
-            defaultValue={product?.preview_pages ?? 2} />
+          <label className="field-label">Preview pages to show</label>
+          <input name="preview_pages" type="number" min="1" max="20" className="field w-24"
+            defaultValue={product?.preview_pages ?? 3} />
         </div>
       </section>
 

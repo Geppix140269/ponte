@@ -3,8 +3,7 @@ import type { Product } from "@/lib/types";
 import { displayPrice } from "@/lib/format";
 import PdfPreview from "@/components/PdfPreview";
 
-// Placeholder "report page" — stands in for a rasterized PDF page until the
-// react-pdf integration and real preview assets are wired (Phase: PDF preview).
+// Placeholder "report page" — shown when no real PDF has been uploaded yet.
 function MockPage({ blurred = false }: { blurred?: boolean }) {
   return (
     <div
@@ -35,36 +34,30 @@ function MockPage({ blurred = false }: { blurred?: boolean }) {
 }
 
 export default function PreviewPaywall({ product }: { product: Product }) {
-  const freePages = Math.max(1, product.configFields ? 2 : 3);
+  const freePages = product.previewPages ?? (product.configFields ? 2 : 3);
+
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-navy">Report preview</h2>
-        <span className="text-xs text-navy/50">
-          First {freePages} pages shown · sample
-        </span>
-      </div>
+      <h2 className="text-lg font-bold text-navy">Report preview</h2>
 
       {product.previewPdfUrl ? (
         <div className="mt-4">
-          <PdfPreview
-            url={product.previewPdfUrl}
-            pages={product.previewPages ?? freePages}
-          />
-          <div className="mt-4 flex flex-col items-center justify-center rounded-md border border-dashed border-line bg-mist p-6 text-center">
+          <PdfPreview url={product.previewPdfUrl} pages={freePages} />
+          <div className="mt-5 flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-mist p-6 text-center">
             <Lock className="h-6 w-6 text-gold-600" />
             <p className="mt-2 text-sm font-semibold text-navy">
               Unlock the full report — {displayPrice(product)}
+            </p>
+            <p className="mt-1 text-xs text-navy/50">
+              Delivered as a watermarked PDF licensed to you
             </p>
           </div>
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {Array.from({ length: freePages }).map((_, i) => (
+          {Array.from({ length: Math.min(freePages, 2) }).map((_, i) => (
             <MockPage key={i} />
           ))}
-
-          {/* Locked page with CSS-blur overlay */}
           <div className="relative col-span-2 sm:col-span-1">
             <MockPage blurred />
             <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy/40 p-4 text-center">
