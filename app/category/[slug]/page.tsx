@@ -23,7 +23,7 @@ export async function generateMetadata({
   if (!category) return { title: "Category" };
 
   const path = `/category/${category.slug}`;
-  const ogTitle = `${category.name} — Ponte Trade`;
+  const ogTitle = `${category.name} | Ponte Trade`;
   return {
     title: category.name,
     description: category.description,

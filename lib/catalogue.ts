@@ -71,9 +71,9 @@ function listSizeField(): ConfigField {
     required: true,
     options: HS_LIST_TIERS.map((t) => ({
       value: t.value,
-      label: `${t.label} — $${(t.priceCents / 100).toLocaleString("en-US")}`,
+      label: `${t.label}, $${(t.priceCents / 100).toLocaleString("en-US")}`,
     })),
-    help: "Top 50 for $399, Top 100 for $899. Need more than 100? Contact us — $10 per additional contact.",
+    help: "Top 50 for $399, Top 100 for $899. Need more than 100? Contact us, $10 per additional contact.",
   };
 }
 
@@ -90,7 +90,7 @@ export const CATEGORIES: Category[] = [
     slug: "analysis",
     name: "Market Analysis",
     description:
-      "Focused analysis modules covering demand, competition, and trade readiness — delivered in 24h.",
+      "Focused analysis modules covering demand, competition, and trade readiness, delivered in 24h.",
     order: 2,
   },
   {
@@ -148,7 +148,7 @@ const USD = "USD";
 
 // ---- Products -------------------------------------------------------------
 export const PRODUCTS: Product[] = [
-  // ===== A — Market Reports (48h) =====
+  // ===== A, Market Reports (48h) =====
   {
     sku: "MR-001",
     slug: "single-country-market-report",
@@ -246,7 +246,7 @@ export const PRODUCTS: Product[] = [
     configFields: [f.product(), f.origin(), f.destination()],
   },
 
-  // ===== B — Market Analysis (24h) =====
+  // ===== B, Market Analysis (24h) =====
   // Market Overview band
   {
     sku: "MA-001",
@@ -421,7 +421,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Strengths, weaknesses, opportunities, and threats for exporting to a specific market.",
     fullDescription:
-      "A structured SWOT for exporting a specific product to a specific market — a fast, decision-ready read on where you stand before you commit.",
+      "A structured SWOT for exporting a specific product to a specific market, a fast, decision-ready read on where you stand before you commit.",
     includes: [
       "Strengths and weaknesses",
       "Opportunities and threats",
@@ -505,7 +505,7 @@ export const PRODUCTS: Product[] = [
     configFields: [f.product(), f.country("Target market")],
   },
 
-  // ===== C — Bundles =====
+  // ===== C, Bundles =====
   {
     sku: "BU-001",
     slug: "market-entry-bundle",
@@ -561,7 +561,7 @@ export const PRODUCTS: Product[] = [
     categorySlug: "bundles",
     shortDescription: "All six Market Overview modules (MA-001 through MA-006).",
     fullDescription:
-      "The complete Market Overview band: retail snapshot, market size & demand, consumer preferences, sentiment, seasonal demand, and local production — all six modules.",
+      "The complete Market Overview band: retail snapshot, market size & demand, consumer preferences, sentiment, seasonal demand, and local production, all six modules.",
     includes: [
       "Retail Snapshot (MA-001)",
       "Market Size & Demand (MA-002)",
@@ -586,7 +586,7 @@ export const PRODUCTS: Product[] = [
     categorySlug: "bundles",
     shortDescription: "All five Trade Readiness modules (MA-007 through MA-011).",
     fullDescription:
-      "The complete Trade Readiness band: substitutes & competitors, SWOT, entry barriers, packaging & labeling, and quality standards — all five modules.",
+      "The complete Trade Readiness band: substitutes & competitors, SWOT, entry barriers, packaging & labeling, and quality standards, all five modules.",
     includes: [
       "Substitutes & Competitors (MA-007)",
       "SWOT Analysis (MA-008)",
@@ -610,7 +610,7 @@ export const PRODUCTS: Product[] = [
     categorySlug: "bundles",
     shortDescription: "All eleven Market Analysis modules in one pack.",
     fullDescription:
-      "Every Market Analysis module — both the Overview and Trade Readiness bands, eleven reports in total — for the most complete view of a product and market.",
+      "Every Market Analysis module, both the Overview and Trade Readiness bands, eleven reports in total, for the most complete view of a product and market.",
     includes: [
       "All six Market Overview modules",
       "All five Trade Readiness modules",
@@ -638,7 +638,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Single-country market report + market entry bundle + sentiment, for one product + market.",
     fullDescription:
-      "Our launch package for a single product and market: a full Single Country Market Report, the Market Entry Bundle, and a Market Sentiment Analysis — research and readiness in one purchase.",
+      "Our launch package for a single product and market: a full Single Country Market Report, the Market Entry Bundle, and a Market Sentiment Analysis, research and readiness in one purchase.",
     includes: [
       "Single Country Market Report (MR-001)",
       "Market Entry Bundle (BU-001)",
@@ -654,7 +654,7 @@ export const PRODUCTS: Product[] = [
     bundleOf: ["MR-001", "BU-001", "MA-004"],
   },
 
-  // ===== D — Geopolitical & Risk =====
+  // ===== D, Geopolitical & Risk =====
   {
     sku: "GR-001",
     slug: "strait-of-hormuz-impact-report",
@@ -699,7 +699,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Screen a company or country across OFAC / EU / UK / UN watchlists.",
     fullDescription:
-      "Screens a company or country against the major sanctions regimes — OFAC, EU, UK, and UN watchlists — and summarises exposure and red flags.",
+      "Screens a company or country against the major sanctions regimes, OFAC, EU, UK, and UN watchlists, and summarises exposure and red flags.",
     includes: [
       "OFAC / EU / UK / UN screening",
       "Direct and indirect exposure",
@@ -729,7 +729,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Impact of a specific chokepoint disruption on your product or route.",
     fullDescription:
-      "Assesses how a disruption at a chosen maritime chokepoint — Suez, Panama, Malacca, Bab-el-Mandeb, and others — would affect a specific product or route.",
+      "Assesses how a disruption at a chosen maritime chokepoint, Suez, Panama, Malacca, Bab-el-Mandeb, and others, would affect a specific product or route.",
     includes: [
       "Chokepoint dependency analysis",
       "Reroute options and added cost/time",
@@ -760,7 +760,7 @@ export const PRODUCTS: Product[] = [
     ],
   },
 
-  // ===== E — Country & Tariff =====
+  // ===== E, Country & Tariff =====
   {
     sku: "CT-001",
     slug: "country-trade-profile",
@@ -832,7 +832,7 @@ export const PRODUCTS: Product[] = [
     ],
   },
 
-  // ===== F — Company & Supplier =====
+  // ===== F, Company & Supplier =====
   {
     sku: "CI-001",
     slug: "company-trade-profile",
@@ -863,7 +863,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Ranked supplier list for a product + destination, with shipment volumes.",
     fullDescription:
-      "A ranked list of suppliers for a product into a destination country, with shipment volumes — your shortlist for sourcing.",
+      "A ranked list of suppliers for a product into a destination country, with shipment volumes, your shortlist for sourcing.",
     includes: [
       "Ranked supplier list",
       "Shipment volumes",
@@ -885,7 +885,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Ranked buyer list for a product + origin, with shipment volumes.",
     fullDescription:
-      "A ranked list of buyers for a product out of an origin country, with shipment volumes — your shortlist for selling.",
+      "A ranked list of buyers for a product out of an origin country, with shipment volumes, your shortlist for selling.",
     includes: [
       "Ranked buyer list",
       "Shipment volumes",
@@ -914,7 +914,7 @@ export const PRODUCTS: Product[] = [
       "Contactable company profiles where available",
       "Monthly volume, value and unit-price statistics",
       "Watermarked PDF, optional DOCX",
-      "Standard delivery 72h — urgent 24h delivery available on request, contact us",
+      "Standard delivery 72h, urgent 24h delivery available on request, contact us",
     ],
     priceCents: 39900,
     priceFrom: true,
@@ -941,7 +941,7 @@ export const PRODUCTS: Product[] = [
       "Contactable company profiles where available",
       "Monthly volume, value and unit-price statistics",
       "Watermarked PDF, optional DOCX",
-      "Standard delivery 72h — urgent 24h delivery available on request, contact us",
+      "Standard delivery 72h, urgent 24h delivery available on request, contact us",
     ],
     priceCents: 39900,
     priceFrom: true,
@@ -954,7 +954,7 @@ export const PRODUCTS: Product[] = [
     featured: true,
   },
 
-  // ===== G — Tender Intelligence =====
+  // ===== G, Tender Intelligence =====
   {
     sku: "TI-001",
     slug: "active-tenders-briefing",
@@ -1007,14 +1007,14 @@ export const PRODUCTS: Product[] = [
     ],
   },
 
-  // ===== H — Custom Research =====
+  // ===== H, Custom Research =====
   {
     sku: "CR-001",
     slug: "custom-research-request",
     title: "Custom Research Request",
     categorySlug: "custom-research",
     shortDescription:
-      "Bespoke intelligence brief — our team scopes it with you after purchase.",
+      "Bespoke intelligence brief, our team scopes it with you after purchase.",
     fullDescription:
       "Tell us the question and we build the answer: a bespoke intelligence brief scoped with you after purchase. Pricing starts from $999 depending on scope.",
     includes: [
@@ -1039,7 +1039,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Full entry strategy: market report + all 11 analysis modules + sanctions + tariff + company intel.",
     fullDescription:
-      "Our most complete engagement: a full market report, all eleven analysis modules, sanctions screening, tariff analysis, and company intelligence — assembled into one entry strategy. From $2,499 depending on scope.",
+      "Our most complete engagement: a full market report, all eleven analysis modules, sanctions screening, tariff analysis, and company intelligence, assembled into one entry strategy. From $2,499 depending on scope.",
     includes: [
       "Single Country Market Report",
       "All 11 analysis modules",
@@ -1056,7 +1056,7 @@ export const PRODUCTS: Product[] = [
     configFields: [f.product(), f.country("Target market"), f.brief()],
   },
 
-  // ===== I — Subscriptions & Credits =====
+  // ===== I, Subscriptions & Credits =====
   {
     sku: "SB-001",
     slug: "trade-intelligence-newsletter",
@@ -1065,7 +1065,7 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Weekly digest: macro trade shifts, chokepoint alerts, tender wins, policy changes.",
     fullDescription:
-      "A weekly digest of what moved in global trade: macro shifts, chokepoint alerts, key tender wins, and policy changes — written for people who trade.",
+      "A weekly digest of what moved in global trade: macro shifts, chokepoint alerts, key tender wins, and policy changes, written for people who trade.",
     includes: [
       "Weekly digest email",
       "Chokepoint and risk alerts",
@@ -1083,11 +1083,11 @@ export const PRODUCTS: Product[] = [
   {
     sku: "SB-002",
     slug: "report-credit-pack-starter",
-    title: "Report Credit Pack — Starter",
+    title: "Report Credit Pack, Starter",
     categorySlug: "subscriptions",
     shortDescription: "3 report credits, redeemable on any Analysis or Country & Tariff product.",
     fullDescription:
-      "Three report credits you can redeem on any Market Analysis or Country & Tariff product — buy now, decide later.",
+      "Three report credits you can redeem on any Market Analysis or Country & Tariff product, buy now, decide later.",
     includes: [
       "3 report credits",
       "Redeem on Analysis or Country & Tariff",
@@ -1102,11 +1102,11 @@ export const PRODUCTS: Product[] = [
   {
     sku: "SB-003",
     slug: "report-credit-pack-growth",
-    title: "Report Credit Pack — Growth",
+    title: "Report Credit Pack, Growth",
     categorySlug: "subscriptions",
     shortDescription: "10 report credits for teams buying intelligence regularly.",
     fullDescription:
-      "Ten report credits for teams that buy intelligence regularly — better value per report and a single invoice.",
+      "Ten report credits for teams that buy intelligence regularly, better value per report and a single invoice.",
     includes: [
       "10 report credits",
       "Redeem on Analysis or Country & Tariff",
@@ -1121,12 +1121,12 @@ export const PRODUCTS: Product[] = [
   {
     sku: "SB-004",
     slug: "report-credit-pack-enterprise",
-    title: "Report Credit Pack — Enterprise",
+    title: "Report Credit Pack, Enterprise",
     categorySlug: "subscriptions",
     shortDescription:
       "30 report credits + priority delivery + a dedicated account manager.",
     fullDescription:
-      "Thirty report credits with priority delivery and a dedicated account manager — for organisations that run on trade intelligence.",
+      "Thirty report credits with priority delivery and a dedicated account manager, for organisations that run on trade intelligence.",
     includes: [
       "30 report credits",
       "Priority delivery",

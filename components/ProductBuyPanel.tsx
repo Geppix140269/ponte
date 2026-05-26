@@ -230,7 +230,7 @@ export default function ProductBuyPanel({ product }: { product: Product }) {
         <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
           <span className="font-medium text-cream">Quality guaranteed.</span>{" "}
-          Every report is manually QA&apos;d before delivery — if it misses
+          Every report is manually QA&apos;d before delivery, if it misses
           your brief, we&apos;ll revise it free.
         </span>
       </div>

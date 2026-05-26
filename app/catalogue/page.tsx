@@ -5,14 +5,14 @@ import { getAllProducts, getAllCategories } from "@/lib/catalogue-db";
 export const revalidate = 60;
 
 const CATALOGUE_DESC =
-  "Browse the full Ponte Trade catalogue — market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.";
+  "Browse the full Ponte Trade catalogue, market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.";
 
 export const metadata: Metadata = {
   title: "Catalogue",
   description: CATALOGUE_DESC,
   alternates: { canonical: "/catalogue" },
   openGraph: {
-    title: "Catalogue — Ponte Trade",
+    title: "Catalogue | Ponte Trade",
     description: CATALOGUE_DESC,
     url: "/catalogue",
     siteName: "Ponte Trade",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Catalogue — Ponte Trade",
+    title: "Catalogue | Ponte Trade",
     description: CATALOGUE_DESC,
   },
 };
@@ -51,7 +51,7 @@ export default async function CataloguePage() {
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
           Filter by category and delivery time. Configure and buy what you
-          need — no subscription.
+          need, no subscription.
         </p>
       </header>
 

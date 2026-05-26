@@ -21,7 +21,7 @@ export default function NewsletterSignup() {
         role="status"
         style={{ letterSpacing: "0.18em" }}
       >
-        Thanks — we&apos;ll be in touch.
+        Thanks. We&apos;ll be in touch.
       </p>
     );
   }

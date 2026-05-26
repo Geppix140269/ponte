@@ -12,15 +12,9 @@ export default function SiteFooter() {
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
                 Trade intelligence, delivered. Research-grade market reports
-                and risk analysis built on ADAMftd&apos;s grounded-AI engine
-                and 7B+ verified trade records. Buy what you need, no
-                subscription required.
-              </p>
-              <p
-                className="mt-5 text-[11px] uppercase text-gold"
-                style={{ letterSpacing: "0.22em" }}
-              >
-                An ICTTM company · Powered by ADAMftd
+                and risk analysis built on a grounded-AI engine and 7B+
+                verified trade records. Buy what you need, no subscription
+                required.
               </p>
             </div>
 
@@ -90,7 +84,6 @@ export default function SiteFooter() {
                   </a>
                 </li>
                 <li>Secure payment via Stripe</li>
-                <li>Watermarked PDF delivery</li>
               </ul>
             </div>
           </div>
@@ -112,7 +105,7 @@ export default function SiteFooter() {
               className="uppercase"
               style={{ letterSpacing: "0.18em" }}
             >
-              © {new Date().getFullYear()} Ponte Trade / ICTTM · London · Plovdiv · ponte.trade
+              © {new Date().getFullYear()} Ponte Trade / ICTTM · London · ponte.trade
             </p>
           </div>
         </div>

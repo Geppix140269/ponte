@@ -45,7 +45,7 @@ const useCases = [
   {
     icon: Compass,
     title: "I'm entering a new market",
-    body: "Check readiness — SWOT, entry barriers, packaging and standards.",
+    body: "Check readiness: SWOT, entry barriers, packaging and standards.",
     href: "/product/market-entry-bundle",
     cta: "Market Entry Bundle",
   },
@@ -82,12 +82,12 @@ const trustPoints = [
   {
     icon: ShieldCheck,
     title: "Grounded AI, with human QA",
-    body: "Built on the ADAMftd engine and 7B+ verified trade records, then manually quality-checked before delivery.",
+    body: "Built on a grounded-AI engine and 7B+ verified trade records, then manually quality-checked by a sector specialist before delivery.",
   },
   {
     icon: BadgeCheck,
     title: "Backed by ICTTM",
-    body: "Ponte Trade is owned by the International Centre for Trade Transparency — the UK group behind ADAMftd.",
+    body: "Ponte Trade is owned by the International Centre for Trade Transparency, the UK group behind the engine that produces our reports.",
   },
 ];
 
@@ -137,9 +137,9 @@ export default async function HomePage() {
             </h1>
             <p className="text-[18px] text-gray-2 leading-relaxed max-w-xl mb-9">
               Research-grade market reports and risk analysis for exporters,
-              importers and trade bodies. Built on ADAMftd&apos;s grounded-AI
-              engine and 7B+ verified trade records. Buy exactly what you need
-              — no subscription required.
+              importers and trade bodies. Built on a grounded-AI engine and
+              7B+ verified trade records. Buy exactly what you need, no
+              subscription required.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <Link href="/catalogue" className="btn-gold">
@@ -253,7 +253,7 @@ export default async function HomePage() {
                 competitive landscape.
               </p>
               <div className="flex justify-between items-baseline mt-5 pt-3 border-t border-white/10">
-                <span className="serif text-white text-[22px]">$ 499</span>
+                <span className="serif text-white text-[22px]">$499</span>
                 <span
                   className="text-[10px] uppercase text-gray-2"
                   style={{ letterSpacing: "0.18em" }}
@@ -366,7 +366,7 @@ export default async function HomePage() {
             </h2>
             <p className="text-[15px] text-gray-2 leading-relaxed max-w-2xl mt-4">
               Tell us your goal and we&apos;ll point you to the right report
-              or bundle — no need to read all 40.
+              or bundle. No need to read all 40.
             </p>
           </div>
         </div>
@@ -567,7 +567,7 @@ export default async function HomePage() {
             </h2>
             <p className="mt-5 max-w-md text-[15px] text-gray-2 leading-relaxed">
               Every product shows free preview pages. Read the structure, the
-              charts, and the methodology — then unlock the full report,
+              charts, and the methodology, then unlock the full report,
               licensed to you, with one payment.
             </p>
             <Link
@@ -597,8 +597,8 @@ export default async function HomePage() {
             </h2>
             <p className="mt-3 max-w-lg text-[15px] text-gray-2 leading-relaxed">
               Weekly intelligence: chokepoint alerts, tender wins, policy
-              changes. An optional $29/mo subscription — every report in the
-              catalogue stays a one-time purchase.
+              changes. $29/mo. Every report in the catalogue stays a
+              one-time purchase.
             </p>
           </div>
           <NewsletterSignup />

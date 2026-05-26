@@ -3,14 +3,14 @@ import Link from "next/link";
 import { BridgeMark } from "@/components/Logo";
 
 const ABOUT_DESC =
-  "Ponte Trade is an ICTTM company, powered by ADAMftd. We sell research-grade trade intelligence as one-time products — reports, analysis, and risk briefs.";
+  "Ponte Trade sells research-grade trade intelligence as one-time products: reports, analysis, and risk briefs. An ICTTM company.";
 
 export const metadata: Metadata = {
   title: "About",
   description: ABOUT_DESC,
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About — Ponte Trade",
+    title: "About Ponte Trade",
     description: ABOUT_DESC,
     url: "/about",
     siteName: "Ponte Trade",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "About — Ponte Trade",
+    title: "About Ponte Trade",
     description: ABOUT_DESC,
   },
 };
@@ -27,7 +27,7 @@ const principles = [
   {
     n: "i.",
     title: "Output, not subscriptions",
-    body: "We sell the finished intelligence — PDFs, data packs, briefs — that you buy once. No seats, no platform to learn.",
+    body: "We sell the finished intelligence: PDFs, data packs, briefs. Buy once. No seats, no platform to learn.",
   },
   {
     n: "ii.",
@@ -63,8 +63,8 @@ export default function AboutPage() {
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
           Ponte (Italian for &ldquo;bridge&rdquo;) connects buyers and sellers
-          to the market intelligence they need to trade with confidence —
-          delivered as reports you own, not software you rent.
+          to the market intelligence they need to trade with confidence.
+          Delivered as reports you own, not software you rent.
         </p>
         <p
           className="mt-5 text-[11px] uppercase text-gold"
@@ -128,7 +128,7 @@ export default function AboutPage() {
             <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
               Ponte Trade is owned by the International Centre for Trade
               Transparency Limited (ICTTM), the UK group behind ADAMftd. Our
-              reports are produced using ADAMftd&apos;s intelligence engine —
+              reports are produced using ADAMftd&apos;s intelligence engine:
               7B+ verified trade records, multi-source verification, and Monte
               Carlo modelling.
             </p>
@@ -158,7 +158,7 @@ export default function AboutPage() {
             </h2>
             <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
               ADAMftd serves users who want ongoing platform access. Ponte
-              Trade serves a distinct buyer — the exporter, importer, or trade
+              Trade serves a distinct buyer: the exporter, importer, or trade
               body that needs one specific intelligence product, right now,
               without a subscription commitment. Different customers, one
               trusted engine.
@@ -199,8 +199,8 @@ export default function AboutPage() {
             </p>
             <p className="mt-4 max-w-xl text-[14px] text-gray-2 leading-relaxed">
               The mark is a single Roman arch with a gold apex node. The arch
-              is the bridge — connection, structure, classical confidence. The
-              node is the data point — the verified trade record at the centre
+              is the bridge: connection, structure, classical confidence. The
+              node is the data point: the verified trade record at the centre
               of every report.
             </p>
           </div>

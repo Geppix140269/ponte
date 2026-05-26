@@ -3,7 +3,7 @@ import type { Product } from "@/lib/types";
 import { displayPrice } from "@/lib/format";
 import PdfPreview from "@/components/PdfPreview";
 
-// Placeholder "report page" — shown when no real PDF has been uploaded yet.
+// Placeholder "report page", shown when no real PDF has been uploaded yet.
 function MockPage({ blurred = false }: { blurred?: boolean }) {
   return (
     <div
@@ -58,7 +58,7 @@ export default function PreviewPaywall({ product }: { product: Product }) {
               className="serif text-white mt-3"
               style={{ fontSize: 18, fontWeight: 500 }}
             >
-              Unlock the full report — {displayPrice(product)}
+              Unlock the full report, {displayPrice(product)}
             </p>
             <p className="mt-1 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
               Delivered as a watermarked PDF licensed to you

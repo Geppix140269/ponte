@@ -20,7 +20,7 @@ export default function OrderSuccessPage() {
         </h1>
         <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
           Instant downloads are available immediately in your account. Reports
-          with a 24h or 48h SLA are being prepared — you&apos;ll receive an
+          with a 24h or 48h SLA are being prepared, you&apos;ll receive an
           email with your download link when they&apos;re ready.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

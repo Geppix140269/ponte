@@ -31,13 +31,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Ponte Trade — Trade intelligence. Delivered.",
-    template: "%s — Ponte Trade",
+    default: "Ponte Trade. Trade intelligence, delivered.",
+    template: "%s | Ponte Trade",
   },
   description:
-    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Built on ADAMftd's grounded-AI engine and 7B+ verified trade records. Buy exactly what you need — no subscription required.",
+    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Built on a grounded-AI engine and 7B+ verified trade records. Buy exactly what you need. No subscription required.",
   openGraph: {
-    title: "Ponte Trade — Trade intelligence. Delivered.",
+    title: "Ponte Trade. Trade intelligence, delivered.",
     description:
       "Research-grade market reports and risk analysis. Built on 7B+ verified trade records.",
     url: APP_URL,
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ponte Trade — Trade intelligence. Delivered.",
+    title: "Ponte Trade. Trade intelligence, delivered.",
     description:
       "Research-grade market reports and risk analysis. 7B+ verified trade records.",
   },
@@ -64,7 +64,7 @@ const organizationJsonLd = {
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "Research-grade international trade intelligence sold as one-time reports — market analysis, geopolitical risk, and company intelligence.",
+    "Research-grade international trade intelligence sold as one-time reports: market analysis, geopolitical risk, and company intelligence.",
   parentOrganization: {
     "@type": "Organization",
     name: "International Centre for Trade Transparency Limited (ICTTM)",

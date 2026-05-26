@@ -29,8 +29,6 @@ declare global {
   }
 }
 
-// Generate a random nonce + its SHA-256 hash. Google receives the hash;
-// Supabase verifies the raw nonce matches the hash in the returned ID token.
 async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const raw = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -46,32 +44,18 @@ async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(
-    null,
-  );
+  const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  // Step 1: generate the nonce pair once on mount.
   useEffect(() => {
     generateNoncePair().then(setNonces);
   }, []);
 
-  // Step 2: once the GSI script is loaded AND we have a nonce, init + render.
   useEffect(() => {
-    if (
-      !scriptLoaded ||
-      !nonces ||
-      !GOOGLE_CLIENT_ID ||
-      !buttonRef.current ||
-      !window.google
-    ) {
-      return;
-    }
+    if (!scriptLoaded || !nonces || !GOOGLE_CLIENT_ID || !buttonRef.current || !window.google) return;
 
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
@@ -116,9 +100,7 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) {
         setErrorMsg(error.message);
@@ -134,86 +116,43 @@ export default function LoginPage() {
 
   return (
     <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => setScriptLoaded(true)}
-      />
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={() => setScriptLoaded(true)} />
       <section className="container-px py-20">
         <div className="glass p-10 max-w-md mx-auto">
           <span className="pill">Sign in</span>
-          <h1
-            className="serif text-white mt-6 mb-2"
-            style={{ fontSize: 36, fontWeight: 500 }}
-          >
-            Welcome back.
-          </h1>
-          <p className="text-gray-2 text-[14px] mb-7">
-            Access your orders, downloads, and subscriptions.
-          </p>
+          <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>Welcome back.</h1>
+          <p className="text-gray-2 text-[14px] mb-7">Access your orders, downloads, and subscriptions.</p>
 
           {!configured ? (
             <div className="glass-tight p-6 text-[13px] text-gray-2 leading-relaxed">
-              Sign-in becomes available once Supabase Auth is connected. Add
-              your Supabase keys to enable magic-link and Google login.
+              Sign-in becomes available once Supabase Auth is connected. Add your Supabase keys to enable magic-link and Google login.
             </div>
           ) : status === "sent" ? (
-            <div
-              className="flex items-center gap-2 rounded-[10px] px-4 py-3 text-[13px] text-positive"
-              style={{
-                background: "rgba(74,192,154,0.15)",
-                border: "1px solid rgba(74,192,154,0.35)",
-              }}
-            >
-              <Mail className="h-4 w-4" /> Check your inbox for a magic sign-in
-              link.
+            <div className="flex items-center gap-2 rounded-[10px] px-4 py-3 text-[13px] text-positive" style={{ background: "rgba(74,192,154,0.15)", border: "1px solid rgba(74,192,154,0.35)" }}>
+              <Mail className="h-4 w-4" /> Check your inbox for a magic sign-in link.
             </div>
           ) : (
             <div className="space-y-5">
               {GOOGLE_CLIENT_ID ? (
                 <div ref={buttonRef} className="flex justify-center" />
               ) : (
-                <div className="glass-tight p-4 text-[12px] text-gray-2">
-                  Google sign-in disabled (no client ID configured).
-                </div>
+                <div className="glass-tight p-4 text-[12px] text-gray-2">Google sign-in disabled (no client ID configured).</div>
               )}
 
-              <div
-                className="flex items-center gap-3 text-[10px] uppercase text-gray-2"
-                style={{ letterSpacing: "0.22em" }}
-              >
-                <span className="h-px flex-1 bg-white/10" /> or{" "}
-                <span className="h-px flex-1 bg-white/10" />
+              <div className="flex items-center gap-3 text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.22em" }}>
+                <span className="h-px flex-1 bg-white/10" /> or <span className="h-px flex-1 bg-white/10" />
               </div>
 
               <form onSubmit={signInWithEmail} className="space-y-3">
                 <div>
-                  <label htmlFor="email" className="field-label">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="field"
-                    placeholder="you@company.com"
-                  />
+                  <label htmlFor="email" className="field-label">Email address</label>
+                  <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="field" placeholder="you@company.com" />
                 </div>
-                <button
-                  type="submit"
-                  disabled={status === "sending"}
-                  className="btn-gold w-full disabled:opacity-60"
-                >
-                  {status === "sending"
-                    ? "Sending…"
-                    : "Email me a magic link"}
+                <button type="submit" disabled={status === "sending"} className="btn-gold w-full disabled:opacity-60">
+                  {status === "sending" ? "Sending..." : "Email me a magic link"}
                 </button>
                 {status === "error" && (
-                  <p className="text-sm text-negative">
-                    {errorMsg ?? "Something went wrong. Try again."}
-                  </p>
+                  <p className="text-sm text-negative">{errorMsg ?? "Something went wrong. Try again."}</p>
                 )}
               </form>
             </div>

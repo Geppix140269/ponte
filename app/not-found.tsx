@@ -19,7 +19,7 @@ export default function NotFound() {
           The bridge isn&apos;t there.
         </h1>
         <p className="mt-4 max-w-md mx-auto text-[15px] text-gray-2 leading-relaxed">
-          The page you&apos;re looking for doesn&apos;t exist — or has moved.
+          The page you&apos;re looking for doesn&apos;t exist, or has moved.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
           <Link href="/" className="btn-gold">

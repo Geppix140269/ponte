@@ -30,7 +30,7 @@ function layout(body: string): string {
       </div>
       <div style="padding:28px;color:#0F1E3C;font-size:14px;line-height:1.6">${body}</div>
       <div style="padding:18px 28px;border-top:1px solid #E5E7EB;color:#6B7280;font-size:12px;line-height:1.6">
-        The Ponte Trade Team — An ICTTM Company<br/>
+        The Ponte Trade Team, An ICTTM Company<br/>
         Powered by ADAMftd · <a href="${APP_URL}" style="color:#D08F18">ponte.trade</a>
       </div>
     </div>
@@ -44,14 +44,14 @@ export async function sendOrderConfirmation(
   const items = data.lines.map((l) => `<li>${l}</li>`).join("");
   await send(
     to,
-    "Order confirmed — Ponte Trade",
+    "Order confirmed | Ponte Trade",
     layout(`
       <h2 style="margin:0 0 12px">Thank you for your order</h2>
       <p>Order <strong>#${data.orderId.slice(0, 8)}</strong> is confirmed.</p>
       <ul>${items}</ul>
       <p><strong>Total: ${data.total}</strong></p>
       <p>Instant items are available in your account now. Reports with a 24h or
-      48h SLA are being prepared — we'll email your download link when ready.</p>
+      48h SLA are being prepared, we'll email your download link when ready.</p>
       <p><a href="${APP_URL}/account" style="color:#D08F18">View your account →</a></p>
     `),
   );
@@ -66,7 +66,7 @@ export async function sendReportReady(
     "Your Ponte Trade report is ready",
     layout(`
       <h2 style="margin:0 0 12px">Your report is ready</h2>
-      <p>Your report has been delivered. Download it below — the link is valid for 72 hours.</p>
+      <p>Your report has been delivered. Download it below, the link is valid for 72 hours.</p>
       <p><a href="${data.downloadUrl}" style="background:#E8A020;color:#0F1E3C;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700">Download report</a></p>
       <p style="color:#6B7280">You can also re-download from your account.</p>
     `),
@@ -79,7 +79,7 @@ export async function sendProcessing(
 ): Promise<void> {
   await send(
     to,
-    "We're preparing your report — Ponte Trade",
+    "We're preparing your report | Ponte Trade",
     layout(`
       <h2 style="margin:0 0 12px">We're on it</h2>
       <p>Your report is being prepared and verified. You'll receive it within
@@ -100,7 +100,7 @@ export async function sendAdminAlert(data: {
     .join(", ");
   await send(
     admin,
-    `New order requires manual delivery via ADAMftd — ${data.sku}`,
+    `New order requires manual delivery via ADAMftd, ${data.sku}`,
     layout(`
       <h2 style="margin:0 0 12px">Manual delivery required</h2>
       <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>

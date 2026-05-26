@@ -41,7 +41,7 @@ export async function generateMetadata({
   if (!product) return { title: "Product" };
 
   const path = `/product/${product.slug}`;
-  const ogTitle = `${product.title} — Ponte Trade`;
+  const ogTitle = `${product.title} | Ponte Trade`;
   return {
     title: product.title,
     description: product.shortDescription,
@@ -200,7 +200,7 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {/* Right column — sticky buy panel */}
+        {/* Right column, sticky buy panel */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <ProductBuyPanel product={product} />
         </div>
