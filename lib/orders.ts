@@ -120,9 +120,13 @@ export async function persistPaidOrder(
         session.amount_total ?? 0,
         (session.currency ?? "eur").toUpperCase(),
       ),
+      // Orders with any non-instant item were checked out with manual
+      // capture (see app/api/checkout/route.ts). The email then explains
+      // the card-held-not-charged behaviour.
+      manualCapture: hasProcessing,
     });
     if (hasProcessing) {
-      await sendProcessing(buyerEmail, { sla: "24–48 hours" });
+      await sendProcessing(buyerEmail, { sla: "24-48 hours" });
     }
   }
 }

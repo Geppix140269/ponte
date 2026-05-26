@@ -39,9 +39,29 @@ function layout(body: string): string {
 
 export async function sendOrderConfirmation(
   to: string,
-  data: { orderId: string; lines: string[]; total: string },
+  data: {
+    orderId: string;
+    lines: string[];
+    total: string;
+    /**
+     * True when the order contains non-instant items and we authorized
+     * the card without capturing. The email then explains the
+     * hold-then-charge flow so the customer understands why their bank
+     * shows a pending charge, not a settled one.
+     */
+    manualCapture?: boolean;
+  },
 ): Promise<void> {
   const items = data.lines.map((l) => `<li>${l}</li>`).join("");
+  const captureNote = data.manualCapture
+    ? `
+      <p style="background:#FAF7F0;border-left:3px solid #E8A020;padding:12px 14px;margin:18px 0;font-size:13px;line-height:1.55">
+        <strong>Card authorized, not yet charged.</strong> We'll confirm your
+        delivery date by email within 4 hours. Your card is charged only
+        when we start production. If we cannot deliver by the confirmed
+        date, the authorization is released and you are not charged.
+      </p>`
+    : "";
   await send(
     to,
     "Order confirmed | Ponte Trade",
@@ -50,6 +70,7 @@ export async function sendOrderConfirmation(
       <p>Order <strong>#${data.orderId.slice(0, 8)}</strong> is confirmed.</p>
       <ul>${items}</ul>
       <p><strong>Total: ${data.total}</strong></p>
+      ${captureNote}
       <p>Instant items are available in your account now. Reports with a 24h or
       48h SLA are being prepared, we'll email your download link when ready.</p>
       <p><a href="${APP_URL}/account" style="color:#D08F18">View your account →</a></p>

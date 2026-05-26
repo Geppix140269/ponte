@@ -41,9 +41,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "mixed_cart" }, { status: 400 });
   }
 
+  // Manual capture decision.
+  //
+  // For one-time payment orders that include ANY non-instant SKU (24h, 48h,
+  // 72h, custom — anything requiring human production), we authorize the
+  // card now but capture only when production starts. This lets us void
+  // the auth if we can't deliver, without ever charging the customer.
+  //
+  // Pure-instant payment orders (e.g. credit packs) and subscription orders
+  // keep automatic capture.
+  //
+  // Stripe's hold window is typically 7 days; we must capture or void
+  // within that window. See docs/CAPACITY-QUEUE-DESIGN.md for the broader
+  // queue model that this is part of.
+  const anyNonInstant = resolved.some(
+    (r) => !r.product!.isSubscription && r.product!.deliveryType !== "instant",
+  );
+  const useManualCapture = !allSubscription && anyNonInstant;
+
   const stripe = getStripe();
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
   const user = await getUser();
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
@@ -80,6 +97,14 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/cart`,
       metadata,
+      ...(useManualCapture
+        ? {
+            payment_intent_data: {
+              capture_method: "manual",
+              metadata: { capture_mode: "manual_review" },
+            },
+          }
+        : {}),
       ...(user
         ? {
             client_reference_id: user.id,
