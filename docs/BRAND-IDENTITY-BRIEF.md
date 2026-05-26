@@ -1,186 +1,178 @@
-# Ponte Trade — Brand Identity Brief
+# Ponte Trade — Brand v3 Brief
 
-**Prepared:** 2026-05-26
-**Audience:** Claude Design (brand designer AI)
-**Project status:** Site is live at ponte.trade. Brand v2 (glass over navy-deep) is in production. Logo mark is the weakest link.
+**For:** Claude Design (brand designer AI)
+**Prepared by:** Giuseppe Funaro, CEO, with Cowork assist
+**Date:** 2026-05-26
+**Status:** Iterating from brand v2 (in production). See companion file "Ponte Brand.html" for the full v2 system.
 
 ---
 
-## 1. Who Ponte Trade is
+## 0. How to read this brief
 
-Ponte Trade sells research-grade trade intelligence as one-time digital products (PDF reports, data packs, risk briefs). It is owned by ICTTM (International Centre for Trade Transparency Limited, UK) and uses the ADAMftd intelligence engine, but Ponte must stand as its own brand. ICTTM and ADAMftd belong in the footer and the About page, not in the customer's mental model of "the brand they bought from."
+This is not a redesign-from-scratch brief. The v2 system documented in `Ponte Brand.html` is solid. The concept is right, the palette is right, the typography pairing is right, the principles ("glass is restraint, not effect", "gold marks the signal", "numbers are typography") are right.
 
-The name "Ponte" is Italian for "bridge." The product bridges buyers, sellers, and trade bodies to the market intelligence they need to act with confidence.
+**What v3 must do:** fix the specific execution gaps where v2 is conceptually correct but visually under-delivering.
 
-**One-line positioning:** Evidence over opinion. Research-grade trade intelligence, sold as a product, no subscription required.
+**What v3 must NOT do:** throw away the arch + node + baseline mark, the navy-deep palette, the Playfair/Inter/JetBrains pairing, or the editorial restraint. These are the IP.
 
-## 2. What we sell, who buys it
+If a deliverable in this brief contradicts something the v2 book establishes, the v2 book wins unless that conflict is explicitly the thing we're trying to fix.
 
-- ~40 SKUs across Market Reports, Market Analysis, Bundles, Geopolitical & Risk, Country & Tariff, Company & Supplier, Tenders, Custom Research
-- Price points $79 to $2,499 (most reports $99 to $899, custom research from $999)
-- Delivery: instant download or 24h/48h SLA. PDFs are watermarked per buyer
-- Two subscription products exist (Newsletter $29/mo, Weekly Tender Digest $79/mo) but the business is one-time purchase first
+## 1. Who we are (one-paragraph context)
 
-**Buyers:**
-- Exporters and importers needing market-entry intelligence
-- Trade bodies and chambers of commerce
-- Government departments and ministries researching specific corridors
-- Banks and investors performing due diligence on trade exposures
-- Consulting firms reselling/citing the research
+Ponte Trade sells research-grade trade intelligence as one-time PDF products. Built on the ADAMftd engine, owned by ICTTM. Positioned against Bloomberg / S&P Global / Refinitiv at a more accessible price point. Audience is exporters, importers, trade bodies, banks, government — non-technical B2B professionals who expect institutional gravity, not startup energy.
 
-These are non-developer, non-designer, B2B professionals. They expect serious, institutional, expensive-feeling. They are turned off by anything that looks "AI startup" or "consumer SaaS."
+## 2. The v2 system we're protecting
 
-## 3. Positioning in the market
+From `Ponte Brand.html`:
 
-Closest peer set: Bloomberg, S&P Global Market Intelligence, Refinitiv (data + analysis), Economist Intelligence Unit, Oxford Economics, McKinsey reports.
+**The mark — three components, all meaningful:**
+1. **The span** (Roman arch) — connection, structure, classical confidence
+2. **The node** (gold dot at apex) — the trade record, the verified data point
+3. **The baseline** (rule beneath the pillars) — the ground truth that separates Ponte from opinion
 
-These competitors share a visual vocabulary: serif typography for editorial weight, restrained color (deep blue/navy, ink black, single accent color, lots of whitespace), data-forward layouts that look more like Financial Times than Stripe.
+All three are required. The baseline carries the "evidence over opinion" thesis visually.
 
-Ponte Trade should sit credibly inside that peer set, at a more accessible price point. The brand cannot look like a B2B SaaS startup. It cannot look like Notion. It cannot look like Linear. It must look like something a Permanent Secretary would expect to receive.
+**The palette:**
+- Navy `#0D1B2A` (primary ground)
+- Vellum / Glass `rgba(255,255,255,0.06)` blur 24, saturate 140 (translucent surface tokens)
+- Gold `#C9973A` (reserved for live data — counts, risk scores, the apex node)
+- Cream `#F5F0E8` (light surfaces, print, document covers)
+- Index status: `#4AC09A` positive, `#E07A5F` negative
 
-**What Ponte is not:**
-- Not a platform you log into daily
-- Not a "data feed"
-- Not a SaaS subscription
-- Not a consumer product
-- Not a consultancy (we sell the artefact, not the engagement)
+**The type system:**
+- Playfair Display — voice (display, italic when emphatic)
+- Inter — working UI text
+- JetBrains Mono — every figure that matters
 
-## 4. Current brand v2 system (keep)
+**The three principles (do not break):**
+1. Glass is restraint, not effect. One blur level, one border weight, one shadow.
+2. Gold marks the signal. If gold appears on something that isn't a fact, remove it.
+3. Numbers are typography. Mono for working figures, Playfair for headline scale.
 
-The visual system is solid. Do not touch this layer; design the mark to live inside it.
+## 3. The execution gaps in v2 (what to fix)
 
-**Color palette:**
-- `--navy-deep: #07101B` (page background)
-- `--navy: #0D1B2A` (UI surfaces)
-- `--gold: #C9973A` (single accent, reserved for live data + premium moments)
-- `--cream: #F5F0E8` (text on dark)
-- `--gray: #6B7280`, `--gray-2: #9CA3AF` (secondary text)
-- `--positive: #4AC09A`, `--negative: #E07A5F` (status only)
+### Gap A — The mark fails at small sizes
 
-**Typography:**
-- Playfair Display — serif, used for headings and "voice" moments (the italic "over", the italic "sold as a product")
-- Inter — sans-serif, body text
-- JetBrains Mono — monospace, numbers and codes (SKUs, prices, sync timestamps)
+At 16×16 (favicon) and 24×24 (browser tab, nav bar), the mark becomes ambiguous. The arch silhouette is recognizable but the gold node reads as a typo or glitch. The baseline rule disappears entirely. Without all three components legible, the meaning collapses.
 
-**Visual language:**
-- Glass-on-navy: subtle white-translucent surfaces over deep navy background
-- One blur weight, one border weight, one shadow weight ("the discipline is in restraint")
-- Gold appears sparingly: a pulsing dot for live signals, the apex node of the logo, accent CTAs
-- Editorial section numbering in italic gold: "— 01 / Featured", "— 02 / Start here"
+**Required:**
+- A small-size variant of the mark that survives at 16×16 and still reads as Ponte
+- Tested explicitly in a browser tab strip alongside Bloomberg, FT, Stripe, S&P favicons — it must hold its own
+- Source SVG plus exported ICO and PNG at 16/32/48
+- Rationale: explain whether the small-size variant is the same mark with weight adjustments, a simplified version (e.g., node-only), or a monogram. Brief stakeholders so future hand-offs don't get this wrong
 
-## 5. Current logo (the problem)
+### Gap B — No live-data motion state
 
-The existing mark is a single Roman arch with a gold dot at the apex (file: `components/Logo.tsx`).
+The v2 book describes the gold node as "the moment of intelligence." In execution, the node is static. There's no visual gesture for the moment a report arrives, data refreshes, or live values update.
 
-**Concept (keep):**
-- Italian heritage — "ponte" means bridge
-- The arch as a classical bridge, structure, confidence
-- The gold node at the apex represents the verified data point — the trade record at the centre of every report
-- "The bridge has a payload"
+**Required:**
+- A motion variant of the mark — a "loaded" or "live" state — that triggers in specific UI moments:
+  - When a report is delivered (success moment on `/order-success`)
+  - When live data updates in the dashboard (`Live · ADAMftd index` counter)
+  - When the report download is ready (email + in-app)
+- Could be: the node pulsing, light traveling across the arch span (left pillar → apex → right pillar), the baseline filling in left-to-right, the node "loading" with a sweep
+- Deliver as Lottie or simple CSS/SVG animation — whichever is cleanest to implement in Next.js
+- Must respect principle 2 (gold = signal): the motion should reinforce, not decorate
 
-**Execution problems (fix):**
-1. **Reads as architectural blueprint, not a brand.** The arch uses a hard miter join, uniform stroke weight, and a simple semicircular curve. It looks like a CAD drawing or a real-estate firm letterhead, not the mark of an intelligence product.
-2. **Falls apart at small sizes.** At 16x16 (favicon) and 24x24 (nav), the dot reads as a typo, a glitch, or visual noise. The story is invisible without the words.
-3. **No depth, motion, or signature gesture.** Compare to peers that have a memorable visual moment: the Bloomberg wordmark, the FT thumbnail, the S&P stacked monogram. The Ponte arch is generic.
-4. **The baseline line under the arch is decorative without meaning.** It does not carry the bridge metaphor; it just sits there.
-5. **No second state.** There's no animated, live, or "loaded" version that signals "intelligence has arrived" / "the report is ready" / "data is flowing."
+### Gap C — Stratum variation lacks usage rules
 
-## 6. What we need from you
+The v2 book shows a "Stratum variation" (`logo-icon-stratum.svg`) alongside the primary. When to use which is undefined.
 
-A complete primary logo system that solves the problems above while keeping the conceptual core (arch + payload + Italian classicism).
+**Required:**
+- Clear usage doctrine: Stratum is for X contexts, Primary for Y contexts
+- Document the doctrine in the rationale PDF and add an example surface for each
+- If Stratum doesn't earn its place under usage scrutiny, retire it. Brand systems get stronger by subtracting
 
-### Required deliverables
+### Gap D — Off-platform surfaces are templates, not assets
 
-**6.1 Primary mark (the bridge symbol)**
-- Standalone, no wordmark — works at 16x16 to 512x512
-- Must be unmistakable at 24x24 nav size
-- Must carry the "bridge with a payload" idea more articulately than a circle on an arch
-- Open to: variable stroke weight, multiple arches in a series, an arch with structural detail (capstones, piers), a more abstract gesture that suggests an arch without literally being one, a wordmark-first approach where the mark IS the typography
-- Single-color (white on navy) and full-color versions
+The v2 book shows a social card, a report cover, and an inbox preview as surface examples. They're stylistic mockups, not production-ready templates.
 
-**6.2 Wordmark**
-- "Ponte" as a logotype, either standalone or paired with the mark
-- Must feel editorial, expensive, and quietly Italian
-- Current attempt uses Playfair Display with 3px letterspacing — open to custom letterforms if a custom logotype is warranted
+**Required:**
+- Open Graph / Twitter card template (1200×630) as a Figma component with editable headline, eyebrow, and report code slots
+- Report PDF cover template (A4 + US Letter) as InDesign or Figma — used for every report Ponte ships
+- Email signature template (HTML and image fallback) — the team needs to use this consistently
+- All templates use Cream (`#F5F0E8`) backgrounds with Navy/Gold accents per principle 2
 
-**6.3 Combined lockup**
-- Mark + wordmark, horizontal and stacked variants
-- Optional descriptor lockup: "PONTE TRADE" or "Ponte / Trade Intelligence"
+### Gap E — Hero / brand wallpaper assets
 
-**6.4 Live-data state**
-- A version of the mark with motion or visual emphasis that triggers when:
-  - A report is freshly delivered (success moment)
-  - Live data is updating in the UI
-  - The user is on the page heading "your report is ready"
-- Could be: the apex node pulsing, light traveling across the arch, the mark "filling in" — open-ended
+The site uses ambient gradient backgrounds in code, but there are no hero-scale brand assets for moments where the brand needs to be felt (about page hero, report cover background, partnership decks).
 
-**6.5 Favicon**
-- Tested at 16x16, 32x32, 48x48
-- Must be recognizable in a browser tab strip alongside Bloomberg, FT, Stripe favicons
+**Required (nice-to-have, not must-have):**
+- 2-3 abstract brand wallpapers using only Navy + Gold + Glass tokens
+- Suitable for full-bleed hero placement and 16:9 deck slides
+- Compositions that suggest "trade routes" or "data flowing across geography" without being literal maps
 
-**6.6 OG image / social card (1200x630)**
-- Template, not a one-off
-- Used wherever ponte.trade is shared on LinkedIn, Twitter, Slack, email previews
+## 4. What stays untouched
 
-### Format
+For clarity, do NOT redesign:
+- The arch+node+baseline mark concept
+- The navy-deep `#07101B` ambient page background
+- The Playfair / Inter / JetBrains type pairing
+- The gold accent rule (`#C9973A` reserved for live data and premium moments)
+- The glass token system (blur 24, saturate 140, 14% white border)
+- Section numbering convention (`— 01 / Identity`)
+- The voice (italic emphatic Playfair: "Evidence *over* opinion.")
 
-- Source: Figma file with all variants, sized correctly, named properly
-- Export: SVG (primary, single-color, on-dark, on-light variants), PNG at 512/256/128/64/32, ICO favicon
-- Rationale doc: 1-2 page PDF explaining the design decisions (so we can defend the mark to internal stakeholders and brief future designers)
+If you find a v3 idea that needs to break one of these, flag it explicitly in the rationale, propose the substitution, and let the CEO sign off rather than shipping the change silently.
 
-## 7. Tone of voice (so the visual design lands in the right key)
+## 5. Tone — for the visual designer
 
-Words that describe Ponte's voice:
-- Evidence-led, not breathless
-- Editorial, not corporate
-- Confident, not loud
-- Italian-heritage cadence (the brand name, the italics in headlines, "sold as a product")
-- Quietly premium
+Where the brand should sit emotionally:
+- Closer to the Financial Times than to a Y Combinator startup
+- Closer to Aman Resorts than to a SaaS dashboard
+- Closer to a Patek Philippe identity than to a tech logo
 
-Lines that exemplify the voice (from the live site):
+Words that describe the voice (from the live site):
 - "Evidence *over* opinion."
 - "Output, not subscriptions."
-- "Grounded AI, not guesswork."
 - "The question is the brief. The brief is the report."
-- "Trade intelligence. Delivered."
 
-The visual identity needs to feel like the brand that says these things.
+The visual identity must feel like the brand that says these things.
 
-## 8. Inspiration and references
+## 6. Deliverables (ranked by importance)
 
-**Aim for:**
-- Financial Times brand system (typography discipline, editorial restraint)
-- Bloomberg Terminal (data-forward, serious, no fluff)
-- The Economist (intellectual confidence, italic-friendly)
-- Aman Resorts (quiet luxury, restraint, just enough)
-- Rolex / Patek Philippe identity systems (heritage marks executed with modern precision)
+**Must-have (P0):**
+1. Small-size mark variant — survives at 16×16 (Gap A)
+2. Live-data motion state — Lottie or CSS/SVG (Gap B)
+3. Open Graph / Twitter card template — 1200×630 Figma component (Gap D)
+4. Updated favicon set — ICO + PNG 16/32/48 (Gap A)
 
-**Avoid:**
-- Y Combinator startups
-- Generic SaaS dashboards
-- Anything that says "AI-first" visually
-- Gradients, glassmorphism heroics, glow effects in the mark itself (the surrounding UI handles that; the mark must be clean)
-- Geometric "tech bro" abstract shapes
-- Anything cute, friendly, or human (no smiles in the mark)
+**Should-have (P1):**
+5. Stratum usage doctrine and example surfaces (Gap C)
+6. Report PDF cover template — A4 + US Letter (Gap D)
+7. Email signature template — HTML and image fallback (Gap D)
 
-## 9. Constraints
+**Nice-to-have (P2):**
+8. 2-3 abstract brand wallpaper assets (Gap E)
+9. Pitch deck master template (continuation of Surfaces module)
 
-- Must work on the existing navy-deep background system without redesign of the UI
-- Must accommodate the gold accent rule (gold = live data / premium moments only, used sparingly)
-- Must scale to 16x16 favicon without losing identity
-- Cannot use any imagery that suggests "bridge" too literally (no engineering drawings, no Brooklyn Bridge silhouette, no rope/suspension imagery)
-- Cannot use any imagery that suggests "AI" (no neural nets, no brain icons, no chip patterns)
-- Cannot use the Italian flag colors or any nationalist imagery
-- Original work only — no riffs on existing trademarks
+## 7. Format and file specs
 
-## 10. Approval criteria
+- **Source:** Figma file with all variants, organized by deliverable, properly named
+- **Mark exports:** SVG (primary, single-color, on-dark, on-light), PNG at 512/256/128/64/32, ICO favicon
+- **Motion:** Lottie JSON preferred; or SVG with CSS animation in a self-contained component snippet
+- **Templates:** Figma components for social/email, InDesign or Figma for print/PDF cover
+- **Rationale PDF:** 2-4 pages. Document each design decision, especially the small-size mark approach and the Stratum usage rule
 
-The mark is approved when:
-1. It's recognizable at 16x16 without the wordmark
-2. It would not look out of place in a footer next to Bloomberg, FT, S&P logos
-3. The "bridge has a payload" concept reads to a brand-naive viewer within 5 seconds of explanation, but doesn't require explanation to be aesthetically resolved
-4. There's a live-data state that creates a "moment" the user will remember
-5. The CEO (Giuseppe Funaro) signs off
+## 8. Constraints (must-respect)
+
+- No additional colors beyond the existing palette
+- No animation beyond what's needed for the live-data state (no decorative motion)
+- No imagery that contradicts the v2 principles (no neural-net visuals, no AI cliches, no bridge engineering diagrams, no consumer/SaaS gradients)
+- No third-party trademarks or near-riffs
+
+## 9. Approval criteria
+
+v3 is approved when:
+1. The small-size mark is recognizable in a tab strip next to Bloomberg, FT, S&P
+2. The live-data motion state creates a moment users will remember without being decorative
+3. The OG card template can be used to ship 10 different reports without redesign
+4. The CEO signs off
+5. The companion brand book HTML can be updated to match (this is the v3 success signal — no orphaned references)
+
+## 10. Companion file
+
+`Ponte Brand.html` — the current v2 brand book. Read it first. Treat it as the source of truth for the existing system. Anything in this brief that conflicts with that book is intentional and is the thing you're being asked to evolve.
 
 ## 11. Contact
 

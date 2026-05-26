@@ -263,19 +263,19 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Risk gauge */}
+            {/* Hormuz impact gauge */}
             <div className="glass absolute bottom-0 right-10 w-[280px] p-6">
               <div
                 className="text-[10px] uppercase text-gray-2"
                 style={{ letterSpacing: "0.22em" }}
               >
-                Country Risk · Q2 2026
+                Hormuz Impact · 180d
               </div>
               <h4
                 className="serif text-white text-lg mt-2 mb-4"
                 style={{ fontWeight: 500 }}
               >
-                Bulgaria → Türkiye
+                Soybean meal · HS 230400
               </h4>
               <div
                 className="relative h-[6px] rounded-full overflow-hidden"
@@ -286,20 +286,20 @@ export default async function HomePage() {
               >
                 <div
                   className="absolute -top-1 w-[2px] h-[14px] bg-white rounded-sm"
-                  style={{ left: "38%", transform: "translateX(-50%)" }}
+                  style={{ left: "58%", transform: "translateX(-50%)" }}
                 />
               </div>
               <div className="flex justify-between mt-2 mono text-[10px] text-gray-2">
                 <span>LOW</span>
-                <span>MEDIUM</span>
-                <span>HIGH</span>
+                <span>MODERATE</span>
+                <span>SEVERE</span>
               </div>
               <div className="serif text-gold text-[40px] leading-none mt-4">
-                B+{" "}
-                <span className="text-gray-2 text-lg italic">/ Stable</span>
+                58{" "}
+                <span className="text-gray-2 text-lg italic">/ Moderate</span>
               </div>
               <div className="text-[11px] text-gray-2 mt-1">
-                Composite · 12 indicators
+                Supply vulnerability score
               </div>
             </div>
           </div>
