@@ -42,5 +42,6 @@ export const DELIVERY_LABEL: Record<string, string> = {
   "24h": "Standard turnaround",
   "48h": "Standard turnaround",
   "72h": "Standard turnaround",
+  "96h": "Standard turnaround",
   custom: "Custom timeline",
 };

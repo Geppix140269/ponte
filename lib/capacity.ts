@@ -89,7 +89,8 @@ function addSla(productionDay: Date, deliveryType: Product["deliveryType"]): Dat
     deliveryType === "24h" ? 24 :
     deliveryType === "48h" ? 48 :
     deliveryType === "72h" ? 72 :
-    72; // custom defaults to 72h customer-facing estimate
+    deliveryType === "96h" ? 96 :
+    96; // custom defaults to 96h customer-facing estimate
   const c = new Date(productionDay);
   c.setUTCHours(c.getUTCHours() + hours);
   return c;

@@ -1,4 +1,4 @@
-export type DeliveryType = "instant" | "24h" | "48h" | "72h" | "custom";
+export type DeliveryType = "instant" | "24h" | "48h" | "72h" | "96h" | "custom";
 
 /**
  * Which capacity pool a product consumes when ordered.
