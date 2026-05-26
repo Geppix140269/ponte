@@ -258,3 +258,56 @@
 .pulse-dot {
   animation: pulse-dot 2.4s infinite;
 }
+
+/* ======================================================================
+   Brand v3 — Span Traversal motion.
+   Used by <BridgeMark animate /> for real data-arrival moments only
+   (report ready, sync, download complete). Never on hover, scroll, or
+   page load. Respects prefers-reduced-motion.
+   ====================================================================== */
+.mark-anim .arch-base {
+  stroke: rgba(255, 255, 255, 0.18);
+}
+.mark-anim .arch-active {
+  stroke: #FFFFFF;
+  stroke-dasharray: 156;
+  stroke-dashoffset: 156;
+  animation: arch-fill 3.4s cubic-bezier(.6,.05,.3,1) infinite;
+}
+.mark-anim .apex-pulse {
+  transform-origin: 60px 42px;
+  animation: apex-pulse 3.4s ease-out infinite;
+  opacity: 0;
+}
+.mark-anim .traveller {
+  fill: var(--gold);
+  animation: traverse 3.4s cubic-bezier(.55,.05,.4,1) infinite;
+  opacity: 0;
+}
+@keyframes arch-fill {
+  0%   { stroke-dashoffset: 156; }
+  55%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes traverse {
+  0%   { offset-distance: 0%;   opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { offset-distance: 50%; }
+  55%  { offset-distance: 50%; opacity: 1; }
+  62%  { opacity: 0; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+@keyframes apex-pulse {
+  0%, 50% { opacity: 0;   transform: scale(1); }
+  55%     { opacity: 0.9; transform: scale(1); }
+  85%     { opacity: 0;   transform: scale(2.8); }
+  100%    { opacity: 0;   transform: scale(2.8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mark-anim .arch-active,
+  .mark-anim .traveller,
+  .mark-anim .apex-pulse {
+    animation: none;
+  }
+  .mark-anim .arch-active { stroke-dashoffset: 0; }
+}

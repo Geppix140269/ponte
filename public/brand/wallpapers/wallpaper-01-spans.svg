@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="w1bg" cx="80%" cy="20%" r="55%">
+            <stop offset="0%" stop-color="#C9973A" stop-opacity="0.18"></stop>
+            <stop offset="100%" stop-color="#07101B" stop-opacity="0"></stop>
+          </radialGradient>
+          <linearGradient id="goldStroke" x1="0" x2="1">
+            <stop offset="0%" stop-color="#C9973A" stop-opacity="0"></stop>
+            <stop offset="40%" stop-color="#C9973A" stop-opacity="0.55"></stop>
+            <stop offset="60%" stop-color="#C9973A" stop-opacity="0.55"></stop>
+            <stop offset="100%" stop-color="#C9973A" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="600" fill="#07101B"></rect>
+        <rect width="1600" height="600" fill="url(#w1bg)"></rect>
+        <!-- Glass scrim -->
+        <rect x="0" y="380" width="1600" height="100" fill="rgba(255,255,255,0.04)"></rect>
+        <!-- Multiple arcs (trade routes) -->
+        <g fill="none" stroke="url(#goldStroke)" stroke-width="1.2">
+          <path d="M -50 480 Q 300 280, 600 380 T 1200 320 T 1700 220"></path>
+          <path d="M -50 520 Q 350 420, 700 450 T 1250 410 T 1700 480"></path>
+          <path d="M -50 440 Q 380 240, 780 320 T 1300 250 T 1700 180"></path>
+        </g>
+        <!-- Data nodes -->
+        <g fill="#C9973A">
+          <circle cx="300" cy="338" r="3"></circle>
+          <circle cx="600" cy="380" r="3"></circle>
+          <circle cx="900" cy="350" r="3"></circle>
+          <circle cx="1200" cy="320" r="4"></circle>
+          <circle cx="700" cy="450" r="2.5"></circle>
+          <circle cx="1050" cy="430" r="2.5"></circle>
+          <circle cx="380" cy="290" r="2.5"></circle>
+          <circle cx="780" cy="320" r="3"></circle>
+          <circle cx="1300" cy="250" r="3.5"></circle>
+        </g>
+        <!-- ground line -->
+        <line x1="0" y1="540" x2="1600" y2="540" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+        <!-- vertical hairlines -->
+        <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+          <line x1="200" y1="540" x2="200" y2="490"></line>
+          <line x1="500" y1="540" x2="500" y2="480"></line>
+          <line x1="800" y1="540" x2="800" y2="490"></line>
+          <line x1="1100" y1="540" x2="1100" y2="475"></line>
+          <line x1="1400" y1="540" x2="1400" y2="490"></line>
+        </g>
+      </svg>

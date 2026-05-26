@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { BridgeMark } from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Order confirmed",
@@ -11,7 +11,8 @@ export default function OrderSuccessPage() {
   return (
     <section className="container-px py-20">
       <div className="glass p-12 max-w-xl mx-auto text-center">
-        <CheckCircle2 className="mx-auto h-12 w-12 text-positive" />
+        {/* Span Traversal motion fires on the report-ready moment. */}
+        <BridgeMark animate className="mx-auto h-20 w-20" />
         <h1
           className="serif text-white mt-6"
           style={{ fontSize: 32, fontWeight: 500 }}

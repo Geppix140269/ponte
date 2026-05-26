@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="w2bg" cx="20%" cy="80%" r="70%">
+            <stop offset="0%" stop-color="#1B2E47" stop-opacity="0.7"></stop>
+            <stop offset="100%" stop-color="#07101B" stop-opacity="0"></stop>
+          </radialGradient>
+        </defs>
+        <rect width="800" height="450" fill="#07101B"></rect>
+        <rect width="800" height="450" fill="url(#w2bg)"></rect>
+        <!-- Stratum arches at full bleed -->
+        <g fill="none" stroke="#FFFFFF">
+          <path d="M 40 380 L 40 220 C 40 80 760 80 760 220 L 760 380" stroke-width="2.5" stroke-opacity="0.9"></path>
+          <path d="M 90 380 L 90 240 C 90 130 710 130 710 240 L 710 380" stroke-width="1.5" stroke-opacity="0.4"></path>
+          <path d="M 140 380 L 140 260 C 140 180 660 180 660 260 L 660 380" stroke-width="1.2" stroke-opacity="0.25"></path>
+          <path d="M 190 380 L 190 280 C 190 220 610 220 610 280 L 610 380" stroke-width="1" stroke-opacity="0.15"></path>
+        </g>
+        <line x1="20" y1="380" x2="780" y2="380" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"></line>
+        <circle cx="400" cy="148" r="7" fill="#C9973A"></circle>
+        <!-- Floating data points -->
+        <g fill="#C9973A">
+          <circle cx="200" cy="200" r="2" opacity="0.7"></circle>
+          <circle cx="280" cy="260" r="1.5" opacity="0.5"></circle>
+          <circle cx="560" cy="220" r="2" opacity="0.7"></circle>
+          <circle cx="620" cy="280" r="1.5" opacity="0.5"></circle>
+          <circle cx="120" cy="320" r="1.5" opacity="0.4"></circle>
+          <circle cx="680" cy="320" r="1.5" opacity="0.4"></circle>
+        </g>
+      </svg>
