@@ -29,6 +29,8 @@ declare global {
   }
 }
 
+// Generate a random nonce + its SHA-256 hash. Google receives the hash;
+// Supabase verifies the raw nonce matches the hash in the returned ID token.
 async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const raw = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -44,16 +46,20 @@ async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
+  // Step 1: generate the nonce pair once on mount.
   useEffect(() => {
     generateNoncePair().then(setNonces);
   }, []);
 
+  // Step 2: once the GSI script is loaded AND we have a nonce, init + render.
   useEffect(() => {
     if (!scriptLoaded || !nonces || !GOOGLE_CLIENT_ID || !buttonRef.current || !window.google) return;
 
@@ -100,7 +106,9 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) {
         setErrorMsg(error.message);
