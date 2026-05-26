@@ -11,7 +11,7 @@ import {
   getCategory,
   relatedProducts,
 } from "@/lib/catalogue-db";
-import { DELIVERY_LABEL } from "@/lib/format";
+import { formatSlot, nextAvailableSlot } from "@/lib/capacity";
 
 // ISR: revalidate every 60 s; admin saves call revalidatePath() for instant update.
 export const revalidate = 60;
@@ -76,6 +76,16 @@ export default async function ProductPage({
 
   const category = await getCategory(product.categorySlug);
 
+  // Compute next available delivery slot from live queue depth.
+  // Falls back to undefined on error (panel renders without slot info).
+  let slotDisplay = undefined as ReturnType<typeof formatSlot> | undefined;
+  try {
+    const slot = await nextAvailableSlot(product);
+    slotDisplay = formatSlot(slot);
+  } catch (err) {
+    console.warn("[ponte] slot lookup failed for", product.sku, err);
+  }
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -135,12 +145,14 @@ export default async function ProductPage({
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <span className="badge-navy mono">{product.sku}</span>
-            <span
-              className="text-[11px] uppercase text-positive"
-              style={{ letterSpacing: "0.22em" }}
-            >
-              {DELIVERY_LABEL[product.deliveryType]}
-            </span>
+            {slotDisplay && (
+              <span
+                className={`text-[11px] uppercase ${slotDisplay.isSaturated ? "text-gold" : "text-positive"}`}
+                style={{ letterSpacing: "0.22em" }}
+              >
+                {slotDisplay.primary}
+              </span>
+            )}
           </div>
 
           <p className="mt-7 text-[16px] leading-relaxed text-gray-2 max-w-2xl">
@@ -202,7 +214,7 @@ export default async function ProductPage({
 
         {/* Right column, sticky buy panel */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <ProductBuyPanel product={product} />
+          <ProductBuyPanel product={product} slot={slotDisplay} />
         </div>
       </div>
 

@@ -20,9 +20,10 @@ export default function OrderSuccessPage() {
           Thank you for your order
         </h1>
         <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
-          Instant downloads are available immediately in your account. Reports
-          with a 24h or 48h SLA are being prepared, you&apos;ll receive an
-          email with your download link when they&apos;re ready.
+          Instant downloads are available immediately in your account. For
+          reports requiring production, we&apos;ll email you within 4 hours
+          with your confirmed delivery date. Your card is authorized now
+          and charged only when production starts.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/account" className="btn-gold">Go to my account</Link>

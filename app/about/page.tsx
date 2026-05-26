@@ -36,8 +36,8 @@ const principles = [
   },
   {
     n: "iii.",
-    title: "Fast, SLA-backed delivery",
-    body: "Instant downloads where possible; 24h and 48h SLAs on manual reports, with QA before anything reaches you.",
+    title: "Delivery date confirmed at checkout",
+    body: "Instant downloads where possible. For reports requiring production, we confirm your exact delivery date within 4 hours of order. Your card is held but not charged until we start work.",
   },
 ];
 

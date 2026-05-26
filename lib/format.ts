@@ -33,10 +33,14 @@ export function displayPrice(product: Product): string {
   return `${prefix}${base}${suffix}`;
 }
 
+// Generic delivery labels used as fallback (e.g., on ProductCard which is
+// a server component but doesn't compute the slot for performance). The
+// authoritative customer-facing delivery promise comes from
+// nextAvailableSlot + formatSlot on the product detail page.
 export const DELIVERY_LABEL: Record<string, string> = {
   instant: "Instant download",
-  "24h": "Delivered in 24h",
-  "48h": "Delivered in 48h",
-  "72h": "Delivered in 72h",
+  "24h": "Standard turnaround",
+  "48h": "Standard turnaround",
+  "72h": "Standard turnaround",
   custom: "Custom timeline",
 };

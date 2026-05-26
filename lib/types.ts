@@ -1,5 +1,18 @@
 export type DeliveryType = "instant" | "24h" | "48h" | "72h" | "custom";
 
+/**
+ * Which capacity pool a product consumes when ordered.
+ *
+ *   instant       — no human production, no slot consumed (auto-generated downloads, credit packs)
+ *   standard      — uses one slot in the daily standard pool (Market Reports, Analysis modules, Country & Tariff, Company & Supplier, Geopolitical, Tenders)
+ *   custom        — uses one slot in the daily custom pool (white-glove research, scoped engagements)
+ *   subscription  — recurring product, no slot consumed (Newsletter, Weekly Tender Digest)
+ *
+ * Derived automatically from `deliveryType` + `isSubscription` if not set
+ * explicitly — see deriveCapacityKind() in lib/capacity.ts.
+ */
+export type CapacityKind = "instant" | "standard" | "custom" | "subscription";
+
 export type ConfigFieldType = "text" | "country" | "select" | "textarea";
 
 export interface ConfigField {
@@ -42,9 +55,9 @@ export interface Product {
   priceCents: number;
   priceFrom?: boolean;
   priceSuffix?: string; // e.g. "/mo"
-  altPrice?: string; // e.g. "or $249/yr"
+  altPrice?: string;
   currency: string;
-  priceTiers?: PriceTiers; // quantity/size-based pricing selected via a config field
+  priceTiers?: PriceTiers;
   deliveryType: DeliveryType;
   isSubscription: boolean;
   isConfigurable: boolean;
@@ -54,6 +67,12 @@ export interface Product {
   featured?: boolean;
   previewPdfUrl?: string;
   previewPages?: number;
+  /**
+   * Optional override for the capacity pool this product consumes.
+   * Leave undefined to let it derive from deliveryType + isSubscription.
+   * Set explicitly when a SKU's capacity profile differs from its delivery SLA.
+   */
+  capacityKind?: CapacityKind;
 }
 
 export interface CartItemConfig {

@@ -131,3 +131,107 @@ export async function sendAdminAlert(data: {
     `),
   );
 }
+
+/**
+ * Sent when admin confirms the slot/delivery date for an authorized order.
+ * Customer's card is still held, not charged.
+ */
+export async function sendSlotConfirmed(
+  to: string,
+  data: { orderId: string; deliveryAt: Date | string; lines?: string[] },
+): Promise<void> {
+  const d = typeof data.deliveryAt === "string"
+    ? new Date(data.deliveryAt)
+    : data.deliveryAt;
+  const dateStr = d.toLocaleString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  });
+  const items = (data.lines ?? []).map((l) => `<li>${l}</li>`).join("");
+  await send(
+    to,
+    "Delivery date confirmed | Ponte Trade",
+    layout(`
+      <h2 style="margin:0 0 12px">Your delivery date is confirmed</h2>
+      <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>
+      ${items ? `<ul>${items}</ul>` : ""}
+      <p style="background:#FAF7F0;border-left:3px solid #E8A020;padding:12px 14px;margin:18px 0;font-size:14px;line-height:1.55">
+        <strong>Delivery by ${dateStr}</strong>
+      </p>
+      <p>Your card remains authorized but not yet charged. We will charge
+      your card and start production on the confirmed date. If we cannot
+      deliver, the authorization will be released and you will not be
+      charged.</p>
+      <p><a href="${APP_URL}/account" style="color:#D08F18">View your account →</a></p>
+    `),
+  );
+}
+
+/**
+ * Sent at capture: the customer's card is charged and production has started.
+ */
+export async function sendProductionStarted(
+  to: string,
+  data: { orderId: string; total: string; deliveryAt?: Date | string },
+): Promise<void> {
+  let dateLine = "";
+  if (data.deliveryAt) {
+    const d = typeof data.deliveryAt === "string"
+      ? new Date(data.deliveryAt)
+      : data.deliveryAt;
+    const dateStr = d.toLocaleString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "UTC",
+    });
+    dateLine = `<p>You will receive your download link by <strong>${dateStr}</strong>.</p>`;
+  }
+  await send(
+    to,
+    "We've started production on your report | Ponte Trade",
+    layout(`
+      <h2 style="margin:0 0 12px">Production started</h2>
+      <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>
+      <p>Your card has been charged <strong>${data.total}</strong> and our
+      team is now producing your report.</p>
+      ${dateLine}
+      <p><a href="${APP_URL}/account" style="color:#D08F18">View your account →</a></p>
+    `),
+  );
+}
+
+/**
+ * Sent when admin voids an authorized order (we cannot deliver).
+ * The authorization is released, customer is not charged.
+ */
+export async function sendOrderVoided(
+  to: string,
+  data: { orderId: string; reason?: string },
+): Promise<void> {
+  const reasonLine = data.reason
+    ? `<p style="color:#6B7280;font-size:13px">Reason: ${data.reason}</p>`
+    : "";
+  await send(
+    to,
+    "Your order could not be fulfilled, no charge made | Ponte Trade",
+    layout(`
+      <h2 style="margin:0 0 12px">We could not fulfil your order</h2>
+      <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>
+      <p><strong>Your card was authorized but not charged.</strong> The
+      authorization has now been released. You will not be charged.
+      Depending on your bank, the pending charge may take 1-7 days to
+      disappear from your statement.</p>
+      ${reasonLine}
+      <p>If you have questions, reply to this email and we will respond
+      within 24 hours.</p>
+      <p><a href="${APP_URL}/catalogue" style="color:#D08F18">Browse the catalogue →</a></p>
+    `),
+  );
+}

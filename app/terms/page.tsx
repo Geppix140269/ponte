@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "Terms of sale for Ponte Trade intelligence products.",
 };
 
-const LAST_UPDATED = "21 May 2026";
+const LAST_UPDATED = "26 May 2026";
 
 export default function TermsPage() {
   return (
@@ -47,18 +47,27 @@ export default function TermsPage() {
             configuration you provide determines the report you receive.
           </p>
 
-          <h2>Delivery</h2>
-          <ul>
-            <li>
-              Instant products are available to download immediately after
-              payment.
-            </li>
-            <li>
-              Reports marked 24h or 48h are delivered within that window
-              after order confirmation, following manual QA.
-            </li>
-            <li>Custom research timelines are scoped with you after purchase.</li>
-          </ul>
+          <h2>Delivery and payment authorization</h2>
+          <p>
+            For instant downloads, payment is taken at checkout and the
+            report is available immediately in your account.
+          </p>
+          <p>
+            For reports requiring human production, your card is{" "}
+            <strong>authorized but not charged</strong> at checkout. Within
+            4 hours of order we will email you with the confirmed delivery
+            date. Your card is only charged when we start production on the
+            confirmed date.
+          </p>
+          <p>
+            If we are unable to deliver by the confirmed date, the
+            authorization is released and your card is never charged. The
+            pending charge may remain visible on your bank statement for
+            1-7 days depending on your bank.
+          </p>
+          <p>
+            Custom research timelines are scoped with you after purchase.
+          </p>
 
           <h2>Licence &amp; use</h2>
           <p>
@@ -84,15 +93,8 @@ export default function TermsPage() {
           <h2>Contact</h2>
           <p>
             Questions about an order? Email{" "}
-            <a href="mailto:hello@ponte.trade">hello@ponte.trade</a>.
-          </p>
-
-          <p
-            className="mt-10 rounded-md border-l-2 border-gold p-4 text-xs"
-            style={{ background: "rgba(255,255,255,0.04)" }}
-          >
-            This page is general information, not legal advice. Have it
-            reviewed by qualified counsel before relying on it.
+            <a href="mailto:hello@ponte.trade">hello@ponte.trade</a> and we
+            will respond within one business day.
           </p>
         </div>
       </div>

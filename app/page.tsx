@@ -26,7 +26,7 @@ export const revalidate = 60;
 const trust = [
   "7B+ verified trade records",
   "199 country profiles",
-  "48h report delivery",
+  "Delivery date confirmed at checkout",
   "Grounded AI, not guesswork",
 ];
 
@@ -105,7 +105,7 @@ const steps = [
   {
     n: "iii.",
     title: "Pay once. Receive your PDF.",
-    body: "Instant download or SLA-backed delivery to your inbox. No subscription.",
+    body: "Card held at checkout. Charged when we start production on your confirmed slot. Delivered to your inbox.",
   },
 ];
 
@@ -235,7 +235,7 @@ export default async function HomePage() {
                   className="text-[10px] uppercase text-gold"
                   style={{ letterSpacing: "0.22em" }}
                 >
-                  Market Report · 48h
+                  Market Report
                 </span>
                 <span className="mono text-[10px] text-gray-2">MR-001</span>
               </div>
@@ -649,5 +649,12 @@ export default async function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+       </section>
+    </>
+  );
+}
+>
   );
 }
