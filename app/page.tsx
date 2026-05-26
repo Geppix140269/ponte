@@ -17,7 +17,6 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import NewsletterSignup from "@/components/NewsletterSignup";
 import { BridgeMark } from "@/components/Logo";
 import { featuredProducts } from "@/lib/catalogue-db";
 
@@ -40,35 +39,35 @@ const browse = [
   { slug: "custom-research", name: "Custom Research", icon: Sparkles },
 ];
 
-// Guided entry points — turns 40 SKUs into a "start from your goal" choice.
+// Guided entry points — turns the catalogue into a "start from your decision" choice.
 const useCases = [
   {
     icon: Compass,
     title: "I'm entering a new market",
-    body: "Check readiness: SWOT, entry barriers, packaging and standards.",
-    href: "/product/market-entry-bundle",
-    cta: "Market Entry Bundle",
+    body: "Integrated entry strategy for one product, one country: sizing, barriers, certification, go-to-market.",
+    href: "/product/market-entry-strategy",
+    cta: "Market Entry Strategy",
   },
   {
     icon: Users,
     title: "I need buyers or suppliers",
-    body: "Get a ranked, contactable shortlist for your HS code.",
-    href: "/product/buyers-by-hs-code",
-    cta: "Buyers & Suppliers by HS Code",
+    body: "Ranked, contactable shortlist with verified contacts for your HS code.",
+    href: "/product/buyer-supplier-intelligence",
+    cta: "Buyer/Supplier Intelligence",
   },
   {
     icon: ShieldAlert,
-    title: "I'm assessing trade risk",
-    body: "Sanctions screening, chokepoint exposure and conflict scenarios.",
+    title: "I'm assessing geopolitical risk",
+    body: "Sanctions screening, chokepoint exposure, maritime risk and conflict scenarios.",
     href: "/category/geopolitical",
     cta: "Geopolitical & Risk",
   },
   {
     icon: Rocket,
     title: "I want the full picture",
-    body: "A market report plus entry analysis for one product and market.",
-    href: "/product/export-launchpad",
-    cta: "Export Launchpad",
+    body: "All 11 analysis modules plus the single-country market report, integrated.",
+    href: "/product/full-market-intelligence",
+    cta: "Full Market Intelligence",
   },
 ];
 
@@ -580,11 +579,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ============ NEWSLETTER ============ */}
+      {/* ============ COMMISSION ============ */}
       <section className="container-px py-16">
         <div className="glass p-10 md:p-14 flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
           <div>
-            <span className="pill mb-4">Newsletter</span>
+            <span className="pill mb-4">Custom brief</span>
             <h2
               className="serif text-white mt-5"
               style={{
@@ -593,15 +592,16 @@ export default async function HomePage() {
                 lineHeight: 1.1,
               }}
             >
-              Stay ahead of global trade shifts
+              Don&apos;t see your question in the catalogue?
             </h2>
             <p className="mt-3 max-w-lg text-[15px] text-gray-2 leading-relaxed">
-              Weekly intelligence: chokepoint alerts, tender wins, policy
-              changes. $29/mo. Every report in the catalogue stays a
-              one-time purchase.
+              Tell us the decision you&apos;re trying to make. We&apos;ll
+              scope a custom brief inside 48 hours. From $2,999.
             </p>
           </div>
-          <NewsletterSignup />
+          <Link href="/product/custom-research-brief" className="btn-gold">
+            Commission a brief <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
