@@ -6,7 +6,9 @@ import {
   sendOrderConfirmation,
   sendProcessing,
   sendAdminAlert,
+  sendOpsNewOrder,
 } from "@/lib/email";
+import { sendTelegramOpsMessage, escapeMd } from "@/lib/telegram";
 import {
   computeCaptureDeadline,
   deriveCapacityKind,
@@ -112,6 +114,7 @@ export async function persistPaidOrder(
     session.customer_details?.email ?? session.customer_email ?? null;
   const lines: string[] = [];
   let hasProcessing = false;
+  let earliestSlot: string | null = null;
 
   for (const item of items) {
     const product = getProductBySku(item.sku);
@@ -137,6 +140,9 @@ export async function persistPaidOrder(
           console.warn("[ponte] slot allocation failed for", item.sku, err);
         }
       }
+    }
+    if (slotDate && (!earliestSlot || slotDate < earliestSlot)) {
+      earliestSlot = slotDate;
     }
 
     await sb.from("order_items").insert({
@@ -180,4 +186,41 @@ export async function persistPaidOrder(
       await sendProcessing(buyerEmail, { sla: "24-48 hours" });
     }
   }
+
+  // Consolidated ops alerts: one email + one Telegram message per order.
+  // Fire-and-forget — failures are logged in each helper and don't bubble.
+  const orderTotal = formatPrice(
+    session.amount_total ?? 0,
+    (session.currency ?? "eur").toUpperCase(),
+  );
+  void sendOpsNewOrder({
+    orderId: order.id,
+    email: buyerEmail,
+    total: orderTotal,
+    lines,
+    slotDate: earliestSlot,
+    captureDeadline,
+    manualCapture: captureMethod === "manual",
+  });
+  const telegramLines = lines.map((l) => `• ${escapeMd(l)}`).join("\n");
+  const captureTag = captureMethod === "manual" ? "🟡 CARD HELD" : "🟢 CAPTURED";
+  const slotLine = earliestSlot
+    ? `\nSlot: *${escapeMd(earliestSlot)}*`
+    : "";
+  const deadlineLine =
+    captureDeadline && captureMethod === "manual"
+      ? `\n⚠️ Capture or void by ${escapeMd(
+          captureDeadline.toISOString().slice(0, 16).replace("T", " ") + " UTC",
+        )}`
+      : "";
+  void sendTelegramOpsMessage(
+    `*New order* ${captureTag}\n` +
+      `\\#${escapeMd(order.id.slice(0, 8))} — ${escapeMd(orderTotal)}\n` +
+      `${escapeMd(buyerEmail ?? "no email")}\n` +
+      telegramLines +
+      slotLine +
+      deadlineLine +
+      `\n\n[Open admin orders](${process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade"}/admin/orders)`,
+    { parseMode: "MarkdownV2" },
+  );
 }

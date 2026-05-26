@@ -6,10 +6,9 @@ import type { Category, DeliveryType, Product } from "@/lib/types";
 
 const DELIVERY_OPTIONS: { value: DeliveryType | "all"; label: string }[] = [
   { value: "all", label: "Any delivery" },
-  { value: "instant", label: "Instant" },
-  { value: "24h", label: "24 hours" },
   { value: "48h", label: "48 hours" },
   { value: "72h", label: "72 hours" },
+  { value: "96h", label: "96 hours" },
   { value: "custom", label: "Custom" },
 ];
 

@@ -5,7 +5,7 @@ import { getAllProducts, getAllCategories } from "@/lib/catalogue-db";
 export const revalidate = 60;
 
 const CATALOGUE_DESC =
-  "Browse the full Ponte Trade catalogue, market reports, analysis modules, bundles, geopolitical risk, country and company intelligence.";
+  "Browse the Ponte Trade catalogue: analyst reports, strategic bundles and custom research engagements. Curated, licensed PDFs.";
 
 export const metadata: Metadata = {
   title: "Catalogue",
@@ -26,10 +26,18 @@ export const metadata: Metadata = {
 };
 
 export default async function CataloguePage() {
-  const [products, categories] = await Promise.all([
+  const [products, allCategories] = await Promise.all([
     getAllProducts(),
     getAllCategories(),
   ]);
+
+  // Only show categories that have at least one published product.
+  // This automatically hides legacy categories (tenders, subscriptions)
+  // whose products were archived in the Wave 2 restructure.
+  const activeCategorySlugs = new Set(products.map((p) => p.categorySlug));
+  const categories = allCategories.filter((c) =>
+    activeCategorySlugs.has(c.slug),
+  );
 
   return (
     <>
@@ -50,8 +58,8 @@ export default async function CataloguePage() {
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
-          Filter by category and delivery time. Configure and buy what you
-          need, no subscription.
+          Analyst reports, strategic bundles and custom research engagements.
+          Filter by category and delivery time, configure, commission.
         </p>
       </header>
 

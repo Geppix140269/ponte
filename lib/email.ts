@@ -109,6 +109,51 @@ export async function sendProcessing(
   );
 }
 
+/**
+ * Consolidated ops alert sent ONCE per new authorized order.
+ * Fires alongside the per-item sendAdminAlert. Uses OPS_EMAIL env var
+ * (defaults to ops@ponte.trade). Includes the slot date + Stripe capture
+ * deadline so ops can act fast.
+ */
+export async function sendOpsNewOrder(data: {
+  orderId: string;
+  email: string | null;
+  total: string;
+  lines: string[];
+  slotDate: string | null;
+  captureDeadline: Date | null;
+  manualCapture: boolean;
+}): Promise<void> {
+  const to = process.env.OPS_EMAIL || "ops@ponte.trade";
+  const items = data.lines.map((l) => `<li>${l}</li>`).join("");
+  const slotLine = data.slotDate
+    ? `<p>Earliest slot: <strong>${data.slotDate}</strong></p>`
+    : "";
+  const deadlineLine =
+    data.captureDeadline && data.manualCapture
+      ? `<p style="color:#B91C1C"><strong>Capture or void by ${data.captureDeadline.toLocaleString(
+          "en-GB",
+          { timeZone: "UTC", timeZoneName: "short" },
+        )}</strong> (Stripe 7-day window)</p>`
+      : "";
+  const captureBadge = data.manualCapture
+    ? `<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:4px;font-size:12px">CARD HELD</span>`
+    : `<span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:4px;font-size:12px">CAPTURED</span>`;
+  await send(
+    to,
+    `New order #${data.orderId.slice(0, 8)} — ${data.total}`,
+    layout(`
+      <h2 style="margin:0 0 12px">New order ${captureBadge}</h2>
+      <p>Order <strong>#${data.orderId.slice(0, 8)}</strong> — ${data.total}</p>
+      <p>Customer: ${data.email ?? "—"}</p>
+      <ul style="margin:8px 0 0">${items}</ul>
+      ${slotLine}
+      ${deadlineLine}
+      <p style="margin-top:16px"><a href="${APP_URL}/admin/orders" style="color:#D08F18">Open admin orders →</a></p>
+    `),
+  );
+}
+
 export async function sendAdminAlert(data: {
   orderId: string;
   sku: string;
