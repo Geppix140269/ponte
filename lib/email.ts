@@ -31,7 +31,7 @@ function layout(body: string): string {
       <div style="padding:28px;color:#0F1E3C;font-size:14px;line-height:1.6">${body}</div>
       <div style="padding:18px 28px;border-top:1px solid #E5E7EB;color:#6B7280;font-size:12px;line-height:1.6">
         The Ponte Trade Team, An ICTTM Company<br/>
-        Powered by ADAMftd · <a href="${APP_URL}" style="color:#D08F18">ponte.trade</a>
+        <a href="${APP_URL}" style="color:#D08F18">ponte.trade</a>
       </div>
     </div>
   </div>`;
@@ -57,7 +57,7 @@ export async function sendOrderConfirmation(
     ? `
       <p style="background:#FAF7F0;border-left:3px solid #E8A020;padding:12px 14px;margin:18px 0;font-size:13px;line-height:1.55">
         <strong>Card authorized, not yet charged.</strong> We'll confirm your
-        delivery date by email within 4 hours. Your card is charged only
+        delivery date by email within 24 hours. Your card is charged only
         when we start production. If we cannot deliver by the confirmed
         date, the authorization is released and you are not charged.
       </p>`
@@ -121,7 +121,7 @@ export async function sendAdminAlert(data: {
     .join(", ");
   await send(
     admin,
-    `New order requires manual delivery via ADAMftd, ${data.sku}`,
+    `New order requires manual delivery, ${data.sku}`,
     layout(`
       <h2 style="margin:0 0 12px">Manual delivery required</h2>
       <p>Order <strong>#${data.orderId.slice(0, 8)}</strong></p>

@@ -90,16 +90,8 @@ export default function SiteFooter() {
 
           <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
             <p>
-              Ponte Trade is an ICTTM company. Powered by ADAMftd — the world&apos;s
-              first grounded AI for international trade.{" "}
-              <a
-                href="https://adamftd.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-cream underline-offset-2 hover:text-gold hover:underline"
-              >
-                adamftd.com
-              </a>
+              Ponte Trade is an ICTTM company. Research-grade trade intelligence,
+              backed by 7 billion+ verified trade records.
             </p>
             <p
               className="uppercase"

@@ -55,7 +55,7 @@ export default function TermsPage() {
           <p>
             For reports requiring human production, your card is{" "}
             <strong>authorized but not charged</strong> at checkout. Within
-            4 hours of order we will email you with the confirmed delivery
+            24 hours of order we will email you with the confirmed delivery
             date. Your card is only charged when we start production on the
             confirmed date.
           </p>

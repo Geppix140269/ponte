@@ -25,5 +25,5 @@ export function watermarkText(opts: {
   orderId: string;
   date: string;
 }): string {
-  return `Ponte Trade — Licensed to ${opts.buyer} — ${opts.orderId.slice(0, 8)} — ${opts.date} — Powered by ADAMftd — ponte.trade`;
+  return `Ponte Trade · Licensed to ${opts.buyer} · ${opts.orderId.slice(0, 8)} · ${opts.date} · ponte.trade`;
 }

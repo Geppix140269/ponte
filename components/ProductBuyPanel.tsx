@@ -297,7 +297,8 @@ export default function ProductBuyPanel({
           Stripe
         </li>
         <li className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-gold" /> Powered by ADAMftd
+          <Sparkles className="h-3.5 w-3.5 text-gold" /> Curated by senior
+          analysts
         </li>
       </ul>
     </div>

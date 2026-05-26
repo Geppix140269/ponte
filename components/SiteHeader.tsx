@@ -12,7 +12,7 @@ import { useCart } from "@/lib/cart-store";
 const navLinks = [
   { href: "/catalogue", label: "Catalogue" },
   { href: "/category/bundles", label: "Bundles" },
-  { href: "/category/geopolitical", label: "Geopolitical & Risk" },
+  { href: "/why-ponte", label: "Why Ponte" },
   { href: "/about", label: "About" },
 ];
 

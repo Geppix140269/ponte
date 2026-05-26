@@ -21,7 +21,7 @@ export default function OrderSuccessPage() {
         </h1>
         <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
           Instant downloads are available immediately in your account. For
-          reports requiring production, we&apos;ll email you within 4 hours
+          reports requiring production, we&apos;ll email you within 24 hours
           with your confirmed delivery date. Your card is authorized now
           and charged only when production starts.
         </p>

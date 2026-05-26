@@ -75,7 +75,7 @@ SKU. See `app/api/checkout/route.ts` (look for `useManualCapture`).
 Flow:
 1. Customer checks out. Stripe authorizes the card but does NOT charge.
 2. Order lands in DB with status `authorized` and a confirmed delivery slot.
-3. Admin confirms (within 4 hours): production starts, capture the
+3. Admin confirms (within 24 hours): production starts, capture the
    authorization → customer is charged.
 4. Admin voids (if Ponte can't deliver): authorization is released →
    customer is never charged.

@@ -27,7 +27,7 @@ const trust = [
   "7B+ verified trade records",
   "199 country profiles",
   "Delivery date confirmed at checkout",
-  "Grounded AI, not guesswork",
+  "Curated by senior analysts",
 ];
 
 // Category names match lib/catalogue.ts CATEGORIES exactly — keep them in sync.
@@ -81,13 +81,13 @@ const trustPoints = [
   },
   {
     icon: ShieldCheck,
-    title: "Grounded AI, with human QA",
-    body: "Built on a grounded-AI engine and 7B+ verified trade records, then manually quality-checked by a sector specialist before delivery.",
+    title: "Curated by analysts",
+    body: "Every report is reviewed and signed off by a senior sector analyst before delivery. Backed by 7B+ verified trade records.",
   },
   {
     icon: BadgeCheck,
     title: "Backed by ICTTM",
-    body: "Ponte Trade is owned by the International Centre for Trade Transparency, the UK group behind the engine that produces our reports.",
+    body: "Ponte Trade is owned by the International Centre for Trade Transparency Limited (ICTTM), the UK group that maintains one of the largest verified trade-data infrastructures in the world.",
   },
 ];
 
@@ -136,10 +136,10 @@ export default async function HomePage() {
               opinion.
             </h1>
             <p className="text-[18px] text-gray-2 leading-relaxed max-w-xl mb-9">
-              Research-grade market reports and risk analysis for exporters,
-              importers and trade bodies. Built on a grounded-AI engine and
-              7B+ verified trade records. Buy exactly what you need, no
-              subscription required.
+              Curated by analysts. Backed by 7B+ verified trade records.
+              Delivered as licensed PDFs. Research-grade reports for
+              exporters, importers and trade bodies, no subscription
+              required.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <Link href="/catalogue" className="btn-gold">
@@ -163,7 +163,7 @@ export default async function HomePage() {
                   className="w-[6px] h-[6px] rounded-full bg-positive pulse-dot"
                   style={{ boxShadow: "0 0 10px var(--positive)" }}
                 />
-                Live · ADAMftd index
+                Live · ICTTM data index
               </div>
               <div
                 className="serif text-white mt-4"
@@ -331,9 +331,9 @@ export default async function HomePage() {
                 Popular intelligence products
               </h2>
               <p className="text-[15px] text-gray-2 leading-relaxed max-w-2xl mt-4">
-                The reports our buyers reach for first. Each is grounded in
-                7B+ verified records and quality-checked by a sector specialist
-                before it ships.
+                The reports our buyers reach for first. Each is curated by a
+                senior analyst, backed by 7B+ verified records, and signed off
+                before delivery.
               </p>
             </div>
             <Link
