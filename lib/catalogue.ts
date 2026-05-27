@@ -112,11 +112,11 @@ export const CATEGORIES: Category[] = [
 const USD = "USD";
 
 // ---- Products -------------------------------------------------------------
-// 17 active SKUs across three tiers (per dev brief v1).
+// 13 active SKUs across three tiers (Wave 4 restructure, 2026-05-27).
 // Static fallback for when Supabase is unconfigured or unavailable.
-// The canonical catalogue lives in Supabase; see supabase/migrations/20260526_catalogue_restructure.sql.
+// The canonical catalogue lives in Supabase; see supabase/migrations/20260527_wave4_catalogue.sql.
 export const PRODUCTS: Product[] = [
-  // ============================================================ Tier A — Analyst Reports ($299-599, 48h)
+  // ============================================================ Tier A — Analyst Extracts ($299-499, 48h)
   {
     sku: "MA-100",
     slug: "single-market-analysis-report",
@@ -171,13 +171,14 @@ export const PRODUCTS: Product[] = [
     categorySlug: "geopolitical",
     band: "Tier A",
     shortDescription:
-      "Sanctions screening, compliance exposure and mitigation analysis for a counterparty, jurisdiction, or trade lane.",
+      "Counterparty sanctions screening across OFAC, EU, UK and UN sanctions lists, with senior-analyst risk commentary.",
     fullDescription:
-      "A senior-analyst brief on sanctions and compliance exposure: applicable sanctions regimes, designated entity overlap, secondary-sanctions risk, and a mitigation playbook. Cross-checked against OFAC, EU, UK and UN lists plus our 7B+ verified trade-record base.",
+      "A senior-analyst brief built on ADAMftd's sanctions-screening data. We run your named counterparty (or vessel, port, jurisdiction) against OFAC, EU, UK and UN sanctions lists, then a senior analyst writes the risk commentary: applicable sanctions regimes, secondary-sanctions exposure, designated-entity overlap, and a mitigation playbook.",
     includes: [
       "Sanctions screen across OFAC, EU, UK, UN",
-      "Secondary-sanctions risk assessment",
-      "Counterparty / jurisdiction view",
+      "Secondary-sanctions exposure analysis",
+      "Designated-entity overlap check",
+      "Senior-analyst risk commentary",
       "Mitigation playbook",
       "Single-organisation licence",
     ],
@@ -293,51 +294,6 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
-    sku: "VM-001",
-    slug: "vessels-maritime-exposure",
-    title: "Vessels & Maritime Exposure Brief",
-    categorySlug: "geopolitical",
-    band: "Tier A",
-    shortDescription:
-      "Maritime exposure brief for a counterparty, vessel, fleet, or trade lane: ownership, port calls, AIS gaps, and sanctions touchpoints.",
-    fullDescription:
-      "A senior-analyst brief on maritime exposure: beneficial ownership, port-call history, AIS gap and dark-fleet flags, ship-to-ship transfer indicators, flag-of-convenience patterns, and sanctions-list touchpoints. Includes a counterparty risk verdict.",
-    includes: [
-      "Beneficial ownership trace",
-      "Port-call history",
-      "AIS gap / dark-fleet flags",
-      "Sanctions-list touchpoints",
-      "Counterparty risk verdict",
-    ],
-    priceCents: 44900,
-    currency: USD,
-    deliveryType: "48h",
-    isSubscription: false,
-    isConfigurable: true,
-    featured: true,
-    configFields: [
-      {
-        name: "subject_type",
-        label: "Subject",
-        type: "select",
-        required: true,
-        options: [
-          { value: "vessel", label: "Single vessel (IMO)" },
-          { value: "fleet", label: "Fleet / operator" },
-          { value: "counterparty", label: "Counterparty" },
-          { value: "corridor", label: "Trade lane / corridor" },
-        ],
-      },
-      {
-        name: "subject",
-        label: "Subject details (IMO, company, route)",
-        type: "text",
-        required: true,
-        placeholder: "e.g. IMO 9876543 / Acme Shipping / Hormuz crude exports",
-      },
-    ],
-  },
-  {
     sku: "GR-001",
     slug: "geopolitical-scenario-brief",
     title: "Geopolitical Scenario Brief",
@@ -384,74 +340,24 @@ export const PRODUCTS: Product[] = [
       ),
     ],
   },
-  {
-    sku: "CI-001",
-    slug: "company-deep-dive",
-    title: "Company Deep-Dive",
-    categorySlug: "company-supplier",
-    band: "Tier A",
-    shortDescription:
-      "Full corporate intelligence dossier: registry data, beneficial ownership, trade footprint, sanctions and adverse-media screening.",
-    fullDescription:
-      "A senior-analyst dossier on a single legal entity: corporate registry data, beneficial ownership, group structure, full trade footprint (imports and exports by corridor and HS code), sanctions and adverse-media screening, and a counterparty risk verdict.",
-    includes: [
-      "Corporate registry data",
-      "Beneficial ownership and group structure",
-      "Full import / export footprint",
-      "Sanctions + adverse-media screening",
-      "Counterparty risk verdict",
-    ],
-    priceCents: 49900,
-    currency: USD,
-    deliveryType: "48h",
-    isSubscription: false,
-    isConfigurable: true,
-    configFields: [f.company(), f.country("Country of incorporation")],
-  },
+  // ============================================================ Tier B — Strategic Reports ($1,099-1,799, 72-96h)
   {
     sku: "MR-001",
     slug: "single-country-market-report",
     title: "Single Country Market Report",
     categorySlug: "market-reports",
-    band: "Tier A",
-    shortDescription:
-      "Full market report for any HS code in a single target country.",
-    fullDescription:
-      "A complete market intelligence report for one product (by HS code) in one country: demand, imports, key partners, pricing, and competitive landscape. Curated by a senior analyst, cross-checked against multiple official sources, signed off before delivery.",
-    includes: [
-      "Demand and import analysis",
-      "Pricing and competitive landscape",
-      "Key trade partners",
-      "Methodology appendix",
-      "Single-organisation licence",
-    ],
-    priceCents: 59900,
-    currency: USD,
-    deliveryType: "48h",
-    isSubscription: false,
-    isConfigurable: true,
-    featured: true,
-    configFields: [f.hs(), f.country("Target country")],
-  },
-
-  // ============================================================ Tier B — Strategic Bundles ($1,099-1,999, 72-96h)
-  {
-    sku: "BU-001",
-    slug: "market-entry-strategy",
-    title: "Market Entry Strategy",
-    categorySlug: "bundles",
     band: "Tier B",
     shortDescription:
-      "Integrated market-entry strategy for a single country: sizing, demand, competition, barriers, packaging, certification, go-to-market.",
+      "Full ADAMftd-powered single-country market report, senior-analyst integrated, board-ready.",
     fullDescription:
-      "A senior-analyst integrated narrative for one product entering one country: market sizing and demand, competitive landscape, entry barriers, packaging and labelling, certifications, tariff and landed cost, and a go-to-market sequence with named partners. Board-ready.",
+      "A complete 40+ page market intelligence report for one product (by HS code) in one country, with senior-analyst executive summary integrating market structure, supplier landscape, demand, pricing, regulatory and risk into a board-ready narrative.",
     includes: [
-      "Market sizing and demand",
-      "Competitive landscape",
-      "Entry barriers and certifications",
-      "Packaging, labelling, tariffs",
-      "Go-to-market sequence with named partners",
-      "Executive summary",
+      "Full ADAMftd Market Research Report (21 sections)",
+      "Senior-analyst executive summary",
+      "Market structure and supplier landscape",
+      "Demand, pricing and competitive landscape",
+      "Regulatory and risk overview",
+      "Single-organisation licence",
     ],
     priceCents: 109900,
     currency: USD,
@@ -462,45 +368,22 @@ export const PRODUCTS: Product[] = [
     configFields: [f.hs(), f.country("Target country")],
   },
   {
-    sku: "MR-002",
-    slug: "global-market-strategy",
-    title: "Global Market Strategy",
+    sku: "BU-001",
+    slug: "market-entry-strategy",
+    title: "Market Entry Strategy",
     categorySlug: "bundles",
     band: "Tier B",
     shortDescription:
-      "Integrated global strategy for one product across all relevant markets: corridor prioritisation and ranked rollout plan.",
+      "Integrated single-country market entry strategy: Country MR + tariff calc + sales strategy + named partners.",
     fullDescription:
-      "A senior-analyst global strategy for one product: global demand and growth, top-priority markets ranked by opportunity and entry difficulty, comparative entry analysis across the top 5, corridor-level pricing, and a ranked rollout plan with year-1 to year-3 sequencing. Board-ready.",
+      "A senior-analyst-integrated narrative for one product entering one country. Combines the Single Country Market Report, a Tariff & Landed Cost calculation, the Accessing the Market sales strategy section, and a shortlist of named potential partners. Board-ready.",
     includes: [
-      "Global demand and growth",
-      "Top-priority markets ranked",
-      "Comparative entry analysis (top 5)",
-      "Corridor-level pricing",
-      "Year 1 to year 3 rollout plan",
-    ],
-    priceCents: 159900,
-    currency: USD,
-    deliveryType: "96h",
-    isSubscription: false,
-    isConfigurable: true,
-    configFields: [f.hs()],
-  },
-  {
-    sku: "BU-100",
-    slug: "geopolitical-resilience-pack",
-    title: "Geopolitical Resilience Pack",
-    categorySlug: "bundles",
-    band: "Tier B",
-    shortDescription:
-      "Integrated resilience analysis across your top exposed chokepoints, sanctions regimes, and counterparties.",
-    fullDescription:
-      "A board-ready resilience pack for executives carrying geopolitical exposure. Combines three Geopolitical Scenario Briefs, one Sanctions & Compliance Brief, one Vessels & Maritime Exposure Brief, and an integrated executive summary with a sequenced mitigation plan.",
-    includes: [
-      "Three Geopolitical Scenario Briefs",
-      "One Sanctions & Compliance Brief",
-      "One Vessels & Maritime Exposure Brief",
+      "Single Country Market Report (full ADAMftd MR)",
+      "Tariff & landed cost calculation",
+      "Accessing the market — sales strategy section",
+      "Named potential partner shortlist",
       "Integrated executive summary",
-      "Sequenced mitigation plan",
+      "Single-organisation licence",
     ],
     priceCents: 179900,
     currency: USD,
@@ -508,46 +391,42 @@ export const PRODUCTS: Product[] = [
     isSubscription: false,
     isConfigurable: true,
     featured: true,
-    configFields: [
-      f.textarea(
-        "scenarios",
-        "Top three exposures (chokepoints, sanctions regimes, regions)",
-        "e.g. Hormuz, Russia sanctions, Taiwan Strait",
-      ),
-      {
-        name: "counterparty",
-        label: "Key counterparty for vessel/maritime brief (optional)",
-        type: "text",
-        required: false,
-        placeholder: "Legal entity name",
-      },
-    ],
+    configFields: [f.hs(), f.country("Target country")],
   },
   {
-    sku: "BU-005",
-    slug: "full-market-intelligence",
-    title: "Full Market Intelligence",
+    sku: "MR-002",
+    slug: "multi-country-comparative-strategy",
+    title: "Multi-Country Comparative Strategy",
     categorySlug: "bundles",
     band: "Tier B",
     shortDescription:
-      "The full intelligence stack for one product in one country: all 11 analysis modules plus the single-country market report.",
+      "Comparative entry-readiness analysis across 3-5 target countries for one product. Ranked recommendation.",
     fullDescription:
-      "Our most comprehensive single-country product. Covers all 11 analysis modules (retail, market size, consumer preferences, sentiment, seasonality, local production, substitutes, SWOT, entry barriers, packaging, certifications) plus the full Single Country Market Report, integrated into one board-ready narrative.",
+      "A senior-analyst comparative report covering 3-5 target countries for one product. Each country gets the relevant ADAMftd MR sections (market size, demand, competition, tariffs, regulatory), then we rank them on entry difficulty, market opportunity and corridor pricing. Concludes with a ranked entry recommendation. Board-ready.",
     includes: [
-      "All 11 market-analysis modules",
-      "Single Country Market Report",
-      "Integrated executive summary",
-      "Methodology appendix",
-      "Board-ready format",
+      "ADAMftd MR sections for each target country",
+      "Market size, demand and competition per country",
+      "Tariff and regulatory comparison",
+      "Entry-readiness ranking across all countries",
+      "Ranked entry recommendation",
+      "Single-organisation licence",
     ],
-    priceCents: 199900,
+    priceCents: 159900,
     currency: USD,
     deliveryType: "96h",
     isSubscription: false,
     isConfigurable: true,
-    configFields: [f.hs(), f.country("Target country")],
+    configFields: [
+      f.hs(),
+      {
+        name: "countries",
+        label: "3-5 target countries (comma-separated)",
+        type: "textarea",
+        required: true,
+        placeholder: "e.g. Germany, France, Italy, Spain, Poland",
+      },
+    ],
   },
-
   // ============================================================ Tier C — White-glove / Custom (POA)
   {
     sku: "CR-001",
