@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { searchHSCodes, logSearch } from "@/lib/hs/search";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { HSSearchRequest, HSSearchResponse } from "@/lib/hs/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Rate limit: 30 searches per IP per hour. Plenty for genuine browsing,
+// caps OpenAI cost exposure from abuse. Tune via env if needed.
+const SEARCH_LIMIT = Number(process.env.HS_SEARCH_RATE_LIMIT) || 30;
+const SEARCH_WINDOW_MS = 60 * 60 * 1000;
+
 export async function POST(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Public endpoint (auth-optional). Anonymous users on a product page can
+  // search for their HS code without signing in. We still log the search
+  // against the user if they happen to be logged in.
+  const ip = getClientIp(req);
+  if (!checkRateLimit(`hs-search:${ip}`, SEARCH_LIMIT, SEARCH_WINDOW_MS)) {
+    return NextResponse.json(
+      { error: "Too many searches. Please try again later." },
+      { status: 429 },
+    );
   }
 
   let body: HSSearchRequest;
@@ -45,8 +57,13 @@ export async function POST(req: NextRequest) {
       clampedLimit,
     );
 
-    // Fire-and-forget — don't await
-    logSearch(user.id, query.trim(), schedule, results[0] ?? null, usedGPT);
+    // Fire-and-forget log. Anonymous searches are not logged because the
+    // schema requires a user_id. (Worth revisiting if we want anonymous
+    // analytics — would need to relax the schema.)
+    const user = await getUser();
+    if (user) {
+      logSearch(user.id, query.trim(), schedule, results[0] ?? null, usedGPT);
+    }
 
     const response: HSSearchResponse = {
       results,
