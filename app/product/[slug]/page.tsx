@@ -11,6 +11,7 @@ import {
   getCategory,
   relatedProducts,
 } from "@/lib/catalogue-db";
+import { nextAvailableSlot, formatSlot } from "@/lib/capacity";
 
 // ISR: revalidate every 60 s; admin saves call revalidatePath() for instant update.
 export const revalidate = 60;
@@ -73,6 +74,9 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const category = await getCategory(product.categorySlug);
+
+  const slot = await nextAvailableSlot(product);
+  const slotDisplay = formatSlot(slot);
 
   const productJsonLd = {
     "@context": "https://schema.org",
