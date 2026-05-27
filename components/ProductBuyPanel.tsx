@@ -9,10 +9,8 @@ import {
   Clock,
   Sparkles,
   BadgeCheck,
-  CalendarDays,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
-import type { SlotDisplay } from "@/lib/capacity";
 import {
   displayPrice,
   formatPrice,
@@ -24,15 +22,8 @@ import { startCheckout } from "@/lib/checkout";
 
 export default function ProductBuyPanel({
   product,
-  slot,
 }: {
   product: Product;
-  /**
-   * Slot info computed server-side in the product page wrapper. Optional so
-   * the panel still renders if the queue lookup fails (we fall back to the
-   * static delivery label).
-   */
-  slot?: SlotDisplay;
 }) {
   const addItem = useCart((s) => s.addItem);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -103,47 +94,29 @@ export default function ProductBuyPanel({
         )}
       </div>
 
-      {/* Dynamic slot block. Replaces the old static DELIVERY_LABEL chip. */}
-      {slot ? (
-        <div
-          className="mt-4 rounded-[12px] px-4 py-3"
-          style={{
-            background: slot.isSaturated
-              ? "rgba(201,151,58,0.10)"
-              : "rgba(74,192,154,0.12)",
-            border: slot.isSaturated
-              ? "1px solid rgba(201,151,58,0.35)"
-              : "1px solid rgba(74,192,154,0.30)",
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <CalendarDays
-              className={`h-3.5 w-3.5 ${slot.isSaturated ? "text-gold" : "text-positive"}`}
-            />
-            <span
-              className={`text-[12px] uppercase font-medium ${slot.isSaturated ? "text-gold" : "text-positive"}`}
-              style={{ letterSpacing: "0.18em" }}
-            >
-              {slot.primary}
-            </span>
-          </div>
-          <p className="mt-1 text-[12px] text-gray-2 leading-snug">
-            {slot.secondary}
-          </p>
+      {/* No upfront SLA promise. Delivery date is confirmed by ops within
+          24h of order, before the customer's card is ever charged. */}
+      <div
+        className="mt-4 rounded-[12px] px-4 py-3"
+        style={{
+          background: "rgba(74,192,154,0.10)",
+          border: "1px solid rgba(74,192,154,0.28)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-positive" />
+          <span
+            className="text-[12px] uppercase font-medium text-positive"
+            style={{ letterSpacing: "0.18em" }}
+          >
+            Delivery confirmed within 24h
+          </span>
         </div>
-      ) : (
-        <div
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] uppercase text-positive"
-          style={{
-            background: "rgba(74,192,154,0.15)",
-            border: "1px solid rgba(74,192,154,0.35)",
-            letterSpacing: "0.22em",
-          }}
-        >
-          <Clock className="h-3 w-3" />
-          Delivery on confirmation
-        </div>
-      )}
+        <p className="mt-1 text-[12px] text-gray-2 leading-snug">
+          Order now. We&apos;ll review feasibility and email your confirmed
+          delivery date. Your card is held but not charged until we confirm.
+        </p>
+      </div>
 
       {product.isConfigurable && product.configFields && (
         <div className="mt-6 space-y-4">

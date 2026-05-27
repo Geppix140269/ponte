@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { displayPrice, DELIVERY_LABEL } from "@/lib/format";
+import { displayPrice } from "@/lib/format";
 import { getCategory } from "@/lib/catalogue";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -10,12 +10,14 @@ export default function ProductCard({ product }: { product: Product }) {
     <Link href={`/product/${product.slug}`} className="card group p-7">
       <div className="flex items-center justify-between mb-4">
         <span className="badge-gold">{category?.name ?? product.categorySlug}</span>
-        <span
-          className="mono text-[10px] text-gray-2 uppercase"
-          style={{ letterSpacing: "0.18em" }}
-        >
-          {DELIVERY_LABEL[product.deliveryType]}
-        </span>
+        {product.band && (
+          <span
+            className="mono text-[10px] text-gray-2 uppercase"
+            style={{ letterSpacing: "0.18em" }}
+          >
+            {product.band}
+          </span>
+        )}
       </div>
 
       <h3

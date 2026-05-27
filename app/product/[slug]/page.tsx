@@ -11,7 +11,6 @@ import {
   getCategory,
   relatedProducts,
 } from "@/lib/catalogue-db";
-import { formatSlot, nextAvailableSlot } from "@/lib/capacity";
 
 // ISR: revalidate every 60 s; admin saves call revalidatePath() for instant update.
 export const revalidate = 60;
@@ -74,16 +73,6 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const category = await getCategory(product.categorySlug);
-
-  // Compute next available delivery slot from live queue depth.
-  // Falls back to undefined on error (panel renders without slot info).
-  let slotDisplay = undefined as ReturnType<typeof formatSlot> | undefined;
-  try {
-    const slot = await nextAvailableSlot(product);
-    slotDisplay = formatSlot(slot);
-  } catch (err) {
-    console.warn("[ponte] slot lookup failed for", product.sku, err);
-  }
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -213,7 +202,7 @@ export default async function ProductPage({
 
         {/* Right column, sticky buy panel */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <ProductBuyPanel product={product} slot={slotDisplay} />
+          <ProductBuyPanel product={product} />
         </div>
       </div>
 

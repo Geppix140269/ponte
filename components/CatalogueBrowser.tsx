@@ -2,18 +2,13 @@
 
 import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
-import type { Category, DeliveryType, Product } from "@/lib/types";
-
-const DELIVERY_OPTIONS: { value: DeliveryType | "all"; label: string }[] = [
-  { value: "all", label: "Any delivery" },
-  { value: "48h", label: "48 hours" },
-  { value: "72h", label: "72 hours" },
-  { value: "96h", label: "96 hours" },
-  { value: "custom", label: "Custom" },
-];
+import type { Category, Product } from "@/lib/types";
 
 type Sort = "relevance" | "price-asc" | "price-desc";
 
+// Delivery is intentionally NOT a customer-side filter.
+// Customers order; ops confirms the delivery date inside 24h.
+// Filtering by SLA would imply we commit to one upfront, which we don't.
 export default function CatalogueBrowser({
   products,
   categories,
@@ -24,13 +19,11 @@ export default function CatalogueBrowser({
   initialCategory?: string;
 }) {
   const [category, setCategory] = useState(initialCategory);
-  const [delivery, setDelivery] = useState<DeliveryType | "all">("all");
   const [sort, setSort] = useState<Sort>("relevance");
 
   const results = useMemo(() => {
     let list = products.filter((p) => {
       if (category !== "all" && p.categorySlug !== category) return false;
-      if (delivery !== "all" && p.deliveryType !== delivery) return false;
       return true;
     });
     if (sort === "price-asc")
@@ -38,7 +31,7 @@ export default function CatalogueBrowser({
     if (sort === "price-desc")
       list = [...list].sort((a, b) => b.priceCents - a.priceCents);
     return list;
-  }, [products, category, delivery, sort]);
+  }, [products, category, sort]);
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
@@ -60,22 +53,6 @@ export default function CatalogueBrowser({
           </select>
         </div>
         <div>
-          <label className="field-label">Delivery</label>
-          <select
-            className="field"
-            value={delivery}
-            onChange={(e) =>
-              setDelivery(e.target.value as DeliveryType | "all")
-            }
-          >
-            {DELIVERY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value} className="bg-navy">
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
           <label className="field-label">Sort</label>
           <select
             className="field"
@@ -87,6 +64,10 @@ export default function CatalogueBrowser({
             <option value="price-desc" className="bg-navy">Price: high to low</option>
           </select>
         </div>
+        <p className="mt-4 text-[11px] text-gray-2 leading-relaxed">
+          Delivery date is confirmed by our team within 24 hours of order.
+          No upfront SLA, no hard commitment until we&apos;ve reviewed feasibility.
+        </p>
       </aside>
 
       {/* Results */}
