@@ -44,6 +44,30 @@ update products set
   status = 'published'
 where sku = 'GR-002';
 
+-- CI-003: tiered pricing — Top 50 $2,000 / Top 100 $3,000 / Top 200 $5,000 / Top 500 $11,000
+update products set
+  price_cents = 200000,
+  price_from = true,
+  band = 'Tier B',
+  short_description = 'Ranked, contactable shortlist of qualified buyers or suppliers for your HS code. Choose your pack: Top 50 ($2,000), Top 100 ($3,000), Top 200 ($5,000), or Top 500 ($11,000).',
+  full_description = 'A senior-analyst-curated shortlist of qualified buyers or suppliers for your HS code, sourced from ADAMftd trade data: trade volumes, ranked match score, verified contact details, and known counterparty risk flags. Available in packs of 50, 100, 200 or 500 counterparties.',
+  price_tiers = '{
+    "field": "pack_size",
+    "tiers": [
+      {"value": "50",  "label": "Top 50",  "priceCents": 200000},
+      {"value": "100", "label": "Top 100", "priceCents": 300000},
+      {"value": "200", "label": "Top 200", "priceCents": 500000},
+      {"value": "500", "label": "Top 500", "priceCents": 1100000}
+    ]
+  }'::jsonb,
+  config_fields = '[
+    {"name":"role","label":"I am looking for","type":"select","required":true,"options":[{"value":"buyers","label":"Buyers"},{"value":"suppliers","label":"Suppliers"}]},
+    {"name":"pack_size","label":"Pack size","type":"select","required":true,"options":[{"value":"50","label":"Top 50 — $2,000"},{"value":"100","label":"Top 100 — $3,000"},{"value":"200","label":"Top 200 — $5,000"},{"value":"500","label":"Top 500 — $11,000"}]},
+    {"name":"hs_code","label":"HS Code","type":"text","required":true,"placeholder":"e.g. 0902.10"},
+    {"name":"country","label":"Target market (optional)","type":"country","required":false}
+  ]'::jsonb
+where sku = 'CI-003';
+
 -- Defensive: clear featured flag from any archived row
 update products set featured = false where status = 'archived';
 
