@@ -75,11 +75,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[hs/search] Error:", msg);
-    const isKeyMissing = msg.includes("API key") || msg.includes("401") || msg.includes("auth");
-    return NextResponse.json(
-      { error: isKeyMissing ? "Search service not configured (missing API key)." : "Search failed. Please try again." },
-      { status: 500 },
-    );
+    console.error("[hs/search] Error:", msg, err instanceof Error ? err.stack : "");
+    const isKeyMissing =
+      msg.includes("API key") ||
+      msg.includes("API_KEY") ||
+      msg.includes("not set") ||
+      msg.includes("401") ||
+      msg.includes("Unauthorized") ||
+      msg.includes("authentication");
+    const isVectorError = msg.includes("Vector search failed") || msg.includes("match_hs_codes");
+    const userMsg = isKeyMissing
+      ? "Search service not configured (missing API key)."
+      : isVectorError
+        ? "Database search unavailable. Please try again later."
+        : "Search failed. Please try again.";
+    return NextResponse.json({ error: userMsg }, { status: 500 });
   }
 }
