@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/server";
-import type { HSSchedule, HSSearchResult, MatchHSCodesRow } from "./types";
+import type { HSSchedule, HSSearchResult } from "./types";
 
 let _openai: OpenAI | null = null;
 function getOpenAI(): OpenAI {
@@ -12,38 +12,63 @@ function getOpenAI(): OpenAI {
   return _openai;
 }
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
 const GPT_MODEL = "gpt-4o";
-const HIGH_CONFIDENCE = 0.82;
-const MED_CONFIDENCE = 0.68;
 
-async function embedQuery(query: string): Promise<number[]> {
-  const response = await getOpenAI().embeddings.create({
-    input: query,
-    model: EMBEDDING_MODEL,
-  });
-  return response.data[0].embedding;
-}
+type SearchRow = {
+  id: number;
+  code: string;
+  schedule: HSSchedule;
+  level: number;
+  chapter: string;
+  chapter_desc: string | null;
+  heading: string;
+  heading_desc: string | null;
+  description: string;
+  unit: string | null;
+};
 
-async function vectorSearch(
-  embedding: number[],
+async function ftsSearch(
+  query: string,
   schedule: HSSchedule | null,
   limit: number,
-): Promise<MatchHSCodesRow[]> {
+): Promise<SearchRow[]> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("match_hs_codes", {
-    query_embedding: embedding,
-    schedule_filter: schedule ?? null,
-    match_threshold: 0.45,
-    match_count: limit,
-  });
-  if (error) throw new Error(`Vector search failed: ${error.message}`);
-  return (data as MatchHSCodesRow[]) ?? [];
+
+  let dbQuery = supabase
+    .from("hs_codes")
+    .select("id, code, schedule, level, chapter, chapter_desc, heading, heading_desc, description, unit")
+    .eq("is_active", true)
+    .textSearch("description", query, { type: "websearch", config: "english" })
+    .limit(limit);
+
+  if (schedule) dbQuery = dbQuery.eq("schedule", schedule);
+
+  const { data, error } = await dbQuery;
+  if (error) throw new Error(`Text search failed: ${error.message}`);
+  if (data && data.length > 0) return data as SearchRow[];
+
+  // If websearch returns nothing, fall back to a single-term plain search
+  // using just the first meaningful word (handles compound phrases)
+  const firstWord = query.split(/\s+/).find((w) => w.length > 3);
+  if (!firstWord) return [];
+
+  let fallbackQuery = supabase
+    .from("hs_codes")
+    .select("id, code, schedule, level, chapter, chapter_desc, heading, heading_desc, description, unit")
+    .eq("is_active", true)
+    .textSearch("description", firstWord, { type: "plain", config: "english" })
+    .limit(limit);
+
+  if (schedule) fallbackQuery = fallbackQuery.eq("schedule", schedule);
+
+  const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+  if (fallbackError) throw new Error(`Text search failed: ${fallbackError.message}`);
+  return (fallbackData as SearchRow[]) ?? [];
 }
 
 async function disambiguateWithGPT(
   query: string,
-  candidates: MatchHSCodesRow[],
+  candidates: SearchRow[],
 ): Promise<{ best_index: number; explanation: string }> {
   const candidateList = candidates
     .map((c, i) => `${i + 1}. [${c.code}] ${c.description} (${c.schedule})`)
@@ -73,12 +98,6 @@ Select the single best match. Reply with ONLY valid JSON in this exact format:
   };
 }
 
-function getConfidence(similarity: number): HSSearchResult["confidence"] {
-  if (similarity >= HIGH_CONFIDENCE) return "high";
-  if (similarity >= MED_CONFIDENCE) return "medium";
-  return "low";
-}
-
 export async function searchHSCodes(
   query: string,
   schedule: HSSchedule | null = null,
@@ -87,20 +106,14 @@ export async function searchHSCodes(
   const trimmed = query.trim();
   if (!trimmed || trimmed.length < 2) return { results: [], usedGPT: false };
 
-  const embedding = await embedQuery(trimmed);
-  const candidates = await vectorSearch(
-    embedding,
-    schedule,
-    Math.min(limit * 2, 20),
-  );
+  const candidates = await ftsSearch(trimmed, schedule, Math.min(limit * 3, 20));
   if (!candidates.length) return { results: [], usedGPT: false };
 
-  const topSimilarity = candidates[0]?.similarity ?? 0;
   let usedGPT = false;
   let gptExplanation: string | undefined;
   let ranked = candidates;
 
-  if (topSimilarity < HIGH_CONFIDENCE && candidates.length > 1) {
+  if (candidates.length > 1) {
     usedGPT = true;
     try {
       const { best_index, explanation } = await disambiguateWithGPT(
@@ -122,9 +135,9 @@ export async function searchHSCodes(
     schedule: c.schedule,
     level: c.level,
     chapter: c.chapter,
-    chapter_desc: c.chapter_desc,
+    chapter_desc: c.chapter_desc ?? "",
     heading: c.heading,
-    heading_desc: c.heading_desc,
+    heading_desc: c.heading_desc ?? "",
     subheading: null,
     subheading_desc: null,
     description: c.description,
@@ -133,8 +146,8 @@ export async function searchHSCodes(
     unit: c.unit,
     hs_version: "2022",
     is_active: true,
-    similarity: c.similarity,
-    confidence: getConfidence(c.similarity),
+    similarity: 0.75,
+    confidence: "medium",
     used_gpt: usedGPT && idx === 0,
     gpt_explanation: idx === 0 ? gptExplanation : undefined,
   }));
