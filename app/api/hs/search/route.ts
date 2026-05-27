@@ -74,9 +74,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (err) {
-    console.error("[hs/search] Error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[hs/search] Error:", msg);
+    const isKeyMissing = msg.includes("API key") || msg.includes("401") || msg.includes("auth");
     return NextResponse.json(
-      { error: "Search failed. Please try again." },
+      { error: isKeyMissing ? "Search service not configured (missing API key)." : "Search failed. Please try again." },
       { status: 500 },
     );
   }
