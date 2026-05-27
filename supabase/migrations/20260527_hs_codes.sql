@@ -77,19 +77,23 @@ CREATE INDEX IF NOT EXISTS hs_search_history_user_idx
 
 -- ── Row Level Security ────────────────────────────────────────
 ALTER TABLE public.hs_codes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Auth users can read hs_codes" ON public.hs_codes;
 CREATE POLICY "Auth users can read hs_codes"
   ON public.hs_codes FOR SELECT TO authenticated USING (true);
 
 ALTER TABLE public.hs_embeddings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Auth users can read hs_embeddings" ON public.hs_embeddings;
 CREATE POLICY "Auth users can read hs_embeddings"
   ON public.hs_embeddings FOR SELECT TO authenticated USING (true);
 
 ALTER TABLE public.hs_saved_codes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage own saved codes" ON public.hs_saved_codes;
 CREATE POLICY "Users manage own saved codes"
   ON public.hs_saved_codes FOR ALL TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 ALTER TABLE public.hs_search_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage own search history" ON public.hs_search_history;
 CREATE POLICY "Users manage own search history"
   ON public.hs_search_history FOR ALL TO authenticated
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);

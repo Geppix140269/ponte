@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function HSToolPage() {
   const user = await getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?returnTo=/tools/hs");
 
   return (
     <main className="min-h-screen bg-zinc-50">

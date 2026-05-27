@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search } from "lucide-react";
 import type { HSSchedule, HSSearchResult } from "@/lib/hs/types";
 import { SCHEDULE_LABELS } from "@/lib/hs/types";
@@ -34,6 +34,22 @@ export default function HSCodeSearch() {
   const [searched, setSearched] = useState(false);
   const [savedCodes, setSavedCodes] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<"search" | "saved">("search");
+
+  // Load the user's existing saved code IDs on mount so result cards
+  // correctly reflect prior saves without switching to the Saved tab.
+  useEffect(() => {
+    fetch("/api/hs/save")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.saved) return;
+        setSavedCodes(
+          new Set((d.saved as Array<{ hs_code_id: number }>).map((s) => s.hs_code_id)),
+        );
+      })
+      .catch(() => {
+        // Unauthenticated or network error — saved state stays empty, non-fatal.
+      });
+  }, []);
 
   const handleSearch = useCallback(
     async (overrideQuery?: string) => {
@@ -73,11 +89,12 @@ export default function HSCodeSearch() {
   const handleSave = useCallback(
     async (result: HSSearchResult) => {
       const isSaved = savedCodes.has(result.id);
-      await fetch("/api/hs/save", {
+      const res = await fetch("/api/hs/save", {
         method: isSaved ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hs_code_id: result.id }),
       });
+      if (!res.ok) return; // Don't update UI if the API call failed.
       setSavedCodes((prev) => {
         const next = new Set(prev);
         isSaved ? next.delete(result.id) : next.add(result.id);
