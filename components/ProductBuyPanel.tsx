@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Check,
@@ -9,9 +9,6 @@ import {
   Clock,
   Sparkles,
   BadgeCheck,
-  Search,
-  X,
-  ChevronDown,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
 import {
@@ -22,102 +19,6 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { useCart } from "@/lib/cart-store";
 import { startCheckout } from "@/lib/checkout";
-import type { HSSearchResult } from "@/lib/hs/types";
-
-// ── Inline HS code finder ────────────────────────────────────────────────────
-function HSCodeFinder({ onSelect }: { onSelect: (code: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<HSSearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const search = useCallback(async () => {
-    if (query.trim().length < 2) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/hs/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim(), limit: 4 }),
-      });
-      const data = await res.json();
-      setResults(data.results ?? []);
-    } catch {
-      /* silent */
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-[11px] text-gold hover:text-cream underline underline-offset-2 flex items-center gap-1 mt-1"
-      >
-        <Search className="h-3 w-3" />
-        Don&apos;t know your HS code?
-      </button>
-    );
-  }
-
-  return (
-    <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase text-gold" style={{ letterSpacing: "0.18em" }}>
-          HS Code Finder
-        </span>
-        <button type="button" onClick={() => { setOpen(false); setResults([]); }}>
-          <X className="h-3.5 w-3.5 text-gray-2 hover:text-white" />
-        </button>
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && search()}
-          placeholder="e.g. frozen mango chunks"
-          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[12px] text-white placeholder:text-gray-2/50 focus:outline-none focus:border-gold/40"
-        />
-        <button
-          type="button"
-          onClick={search}
-          disabled={loading || query.trim().length < 2}
-          className="px-3 py-2 bg-gold/20 text-gold text-[12px] rounded-lg hover:bg-gold/30 disabled:opacity-40 whitespace-nowrap"
-        >
-          {loading ? "…" : "Search"}
-        </button>
-      </div>
-      {results.length > 0 && (
-        <div className="space-y-1 pt-1">
-          {results.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => { onSelect(r.code); setOpen(false); setResults([]); }}
-              className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors group"
-            >
-              <span className="font-mono text-[12px] font-semibold text-white bg-white/10 rounded px-1.5 py-0.5 shrink-0">
-                {r.code}
-              </span>
-              <span className="text-[12px] text-gray-2 truncate group-hover:text-white">
-                {r.description}
-              </span>
-              <ChevronDown className="h-3 w-3 text-gold/60 rotate-[-90deg] shrink-0 ml-auto" />
-            </button>
-          ))}
-        </div>
-      )}
-      {!loading && results.length === 0 && query.trim().length >= 2 && (
-        <p className="text-[11px] text-gray-2/50 text-center py-1">
-          Type and press Search
-        </p>
-      )}
-    </div>
-  );
-}
 
 export default function ProductBuyPanel({
   product,
@@ -274,21 +175,14 @@ export default function ProductBuyPanel({
                   onChange={(e) => setField(field.name, e.target.value)}
                 />
               ) : (
-                <>
-                  <input
-                    id={field.name}
-                    type="text"
-                    className="field"
-                    placeholder={field.placeholder}
-                    value={values[field.name] ?? ""}
-                    onChange={(e) => setField(field.name, e.target.value)}
-                  />
-                  {field.name === "hs_code" && (
-                    <HSCodeFinder
-                      onSelect={(code) => setField(field.name, code)}
-                    />
-                  )}
-                </>
+                <input
+                  id={field.name}
+                  type="text"
+                  className="field"
+                  placeholder={field.placeholder}
+                  value={values[field.name] ?? ""}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                />
               )}
             </div>
           ))}
