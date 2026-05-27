@@ -8,6 +8,7 @@ import { markDelivered } from "@/lib/delivery";
 import {
   watermarkPdf,
   watermarkText,
+  watermarkDiagonal,
   prependCoverPage,
   formatWatermarkId,
   formatIssuedDate,
@@ -67,21 +68,35 @@ export async function deliverItemAction(formData: FormData): Promise<void> {
   const licensedTo =
     licensedToOverride || companyFallback || buyer || "Licensed user";
 
-  // Try to pull the item's product title for the cover page report title.
+  // Try to pull the item's product title + config for the cover page.
   const { data: itemRow } = await adminSb
     .from("order_items")
     .select("product_id, config_values")
     .eq("id", itemId)
     .maybeSingle();
-  let reportTitle: string | undefined;
+  let reportTitle = "Senior-analyst research brief";
   if (itemRow?.product_id) {
     const { data: productRow } = await adminSb
       .from("products")
       .select("title")
       .eq("id", itemRow.product_id)
       .maybeSingle();
-    reportTitle = productRow?.title ?? undefined;
+    if (productRow?.title) reportTitle = productRow.title;
   }
+
+  // Build a subtitle from the item's config values, e.g.
+  // "HS 080810 · country: PL · scenario: hormuz". Strip the internal
+  // "sku" key (we already use the product title) and join the rest.
+  let subtitle: string | undefined;
+  const cfg = (itemRow?.config_values ?? {}) as Record<string, string>;
+  const cfgParts = Object.entries(cfg)
+    .filter(([k, v]) => k !== "sku" && v && String(v).trim())
+    .map(([k, v]) => {
+      if (k === "hs_code") return `HS ${v}`;
+      if (k === "country") return `${v}`;
+      return `${k.replace(/_/g, " ")}: ${v}`;
+    });
+  if (cfgParts.length) subtitle = cfgParts.join(" · ");
 
   // Watermark ID anchors to order creation time (stable across redeliveries).
   const orderCreated = order?.created_at
@@ -102,11 +117,17 @@ export async function deliverItemAction(formData: FormData): Promise<void> {
       licensedTo,
       reviewerInitials,
       reportTitle,
+      subtitle,
       issuedDate: formatIssuedDate(issuedAt),
       watermarkId,
     });
-    // 2. Stamp the per-page footer across the cover + content pages
-    const stamped = await watermarkPdf(withCover, footerText);
+    // 2. Stamp the per-page footer + diagonal license mark
+    const diag = watermarkDiagonal(watermarkId);
+    const stamped = await watermarkPdf(withCover, {
+      footerText,
+      diagonalLine1: diag.line1,
+      diagonalLine2: diag.line2,
+    });
     upload = new Blob([stamped], { type: "application/pdf" });
   } catch (err) {
     console.error("[ponte] cover/watermark failed, uploading original:", err);
