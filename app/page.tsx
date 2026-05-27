@@ -15,6 +15,8 @@ import {
   FileSearch,
   ShieldCheck,
   BadgeCheck,
+  Hash,
+  Search,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { BridgeMark } from "@/components/Logo";
@@ -398,10 +400,104 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ============ HS CODE FINDER ============ */}
+      <section className="container-px py-20">
+        <div className="glass p-10 md:p-14 grid grid-cols-1 items-center gap-12 lg:grid-cols-2 relative overflow-hidden">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 70% at 80% 50%, rgba(80,110,220,0.10), transparent 70%)",
+            }}
+          />
+
+          {/* Left: copy */}
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="num-italic">— 03 / Free tool</span>
+            </div>
+            <h2
+              className="serif text-white"
+              style={{
+                fontSize: "clamp(28px, 4vw, 44px)",
+                fontWeight: 400,
+                lineHeight: 1.1,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Don&apos;t know your{" "}
+              <em className="text-gold italic" style={{ fontWeight: 400 }}>
+                HS code?
+              </em>
+            </h2>
+            <p className="mt-5 max-w-md text-[15px] text-gray-2 leading-relaxed">
+              Describe your product in plain English and get the correct
+              Harmonized System code for US HTS, EU TARIC, UK GTT, or the WCO
+              standard. AI-powered, instant, free for registered users.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-6">
+              {["fresh salmon fillets", "lithium batteries", "cotton t-shirts"].map(
+                (ex) => (
+                  <span
+                    key={ex}
+                    className="px-3 py-1 text-xs text-gray-2 bg-white/5 border border-white/10 rounded-full"
+                  >
+                    {ex}
+                  </span>
+                ),
+              )}
+            </div>
+            <Link href="/tools/hs" className="btn-gold mt-8">
+              Find your HS code <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {/* Right: static search preview */}
+          <div className="relative z-10 space-y-3">
+            <div className="glass-tight px-4 py-3 flex items-center gap-3">
+              <Search className="h-4 w-4 text-gray-2 shrink-0" />
+              <span className="text-[13px] text-gray-2">frozen mango chunks</span>
+            </div>
+            <div className="glass-tight p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono text-sm font-semibold text-white bg-white/10 rounded px-2 py-0.5 shrink-0">
+                    0811.90
+                  </span>
+                  <span className="text-[13px] text-gray-2 truncate">
+                    Frozen fruit, other — mangoes
+                  </span>
+                </div>
+                <span className="ml-3 shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-green-900/40 text-positive font-medium">
+                  high
+                </span>
+              </div>
+              <div className="mt-2 text-[11px] text-gray-2/60 flex items-center gap-1">
+                <Hash className="h-3 w-3" />
+                Ch. 08 — Edible fruit and nuts › 0811 — Frozen fruit
+              </div>
+            </div>
+            <div className="glass-tight p-4 opacity-40">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-sm font-semibold text-white/60 bg-white/5 rounded px-2 py-0.5">
+                  0804.50
+                </span>
+                <span className="text-[13px] text-gray-2/60">
+                  Guavas, mangoes and mangosteens, fresh or dried
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-2/40 text-center pt-1">
+              27,756 HS codes · US · EU · UK · WCO
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ============ BROWSE BY CATEGORY ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 03 / Catalogue</div>
+          <div className="num-italic">— 04 / Catalogue</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
@@ -441,7 +537,7 @@ export default async function HomePage() {
       {/* ============ HOW IT WORKS ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 04 / How it works</div>
+          <div className="num-italic">— 05 / How it works</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
@@ -477,7 +573,7 @@ export default async function HomePage() {
       {/* ============ TRUST ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 05 / Trust</div>
+          <div className="num-italic">— 06 / Trust</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
