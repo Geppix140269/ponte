@@ -7,6 +7,14 @@ import {
   rgb,
 } from "pdf-lib";
 
+// Extend pdf-lib types to include characterSpacing (present at runtime in >=1.17
+// but missing from some pinned type-definition versions).
+declare module "pdf-lib" {
+  interface PDFPageDrawTextOptions {
+    characterSpacing?: number;
+  }
+}
+
 // Shared separator for footer + diagonal text so the look stays consistent.
 const DOT = " · ";
 
