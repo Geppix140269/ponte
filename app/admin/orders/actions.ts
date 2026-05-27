@@ -5,7 +5,13 @@ import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { uploadReport } from "@/lib/storage";
 import { markDelivered } from "@/lib/delivery";
-import { watermarkPdf, watermarkText } from "@/lib/watermark";
+import {
+  watermarkPdf,
+  watermarkText,
+  prependCoverPage,
+  formatWatermarkId,
+  formatIssuedDate,
+} from "@/lib/watermark";
 import { getStripe } from "@/lib/stripe";
 import { formatPrice } from "@/lib/format";
 import {
@@ -33,36 +39,77 @@ export async function deliverItemAction(formData: FormData): Promise<void> {
   const itemId = String(formData.get("itemId") || "");
   const orderId = String(formData.get("orderId") || "");
   const file = formData.get("file");
+  const reviewerInitials =
+    String(formData.get("reviewerInitials") || "GF").toUpperCase().slice(0, 4);
+  const licensedToOverride = String(formData.get("licensedTo") || "").trim();
   if (!itemId || !orderId || !(file instanceof File) || file.size === 0) return;
 
   const adminSb = createAdminClient();
   const { data: order } = await adminSb
     .from("orders")
-    .select("email, user_id")
+    .select("email, user_id, created_at")
     .eq("id", orderId)
     .maybeSingle();
   let buyer = order?.email ?? "Licensed user";
+  let companyFallback: string | null = null;
   if (order?.user_id) {
     const { data: prof } = await adminSb
       .from("profiles")
-      .select("full_name")
+      .select("full_name, company")
       .eq("id", order.user_id)
       .maybeSingle();
     if (prof?.full_name) buyer = prof.full_name;
+    if (prof?.company) companyFallback = prof.company;
   }
 
-  const text = watermarkText({
-    buyer,
-    orderId,
-    date: new Date().toISOString().slice(0, 10),
+  // Best "Licensed to" value: explicit admin input > profile company >
+  // profile name > email > generic.
+  const licensedTo =
+    licensedToOverride || companyFallback || buyer || "Licensed user";
+
+  // Try to pull the item's product title for the cover page report title.
+  const { data: itemRow } = await adminSb
+    .from("order_items")
+    .select("product_id, config_values")
+    .eq("id", itemId)
+    .maybeSingle();
+  let reportTitle: string | undefined;
+  if (itemRow?.product_id) {
+    const { data: productRow } = await adminSb
+      .from("products")
+      .select("title")
+      .eq("id", itemRow.product_id)
+      .maybeSingle();
+    reportTitle = productRow?.title ?? undefined;
+  }
+
+  // Watermark ID anchors to order creation time (stable across redeliveries).
+  const orderCreated = order?.created_at
+    ? new Date(order.created_at)
+    : new Date();
+  const issuedAt = new Date();
+  const watermarkId = formatWatermarkId(orderId, orderCreated);
+  const footerText = watermarkText({
+    buyer: licensedTo,
+    watermarkId,
+    date: issuedAt.toISOString().slice(0, 10),
   });
 
   let upload: File | Blob = file;
   try {
-    const stamped = await watermarkPdf(await file.arrayBuffer(), text);
+    // 1. Prepend the branded cover page
+    const withCover = await prependCoverPage(await file.arrayBuffer(), {
+      licensedTo,
+      reviewerInitials,
+      reportTitle,
+      issuedDate: formatIssuedDate(issuedAt),
+      watermarkId,
+    });
+    // 2. Stamp the per-page footer across the cover + content pages
+    const stamped = await watermarkPdf(withCover, footerText);
     upload = new Blob([stamped], { type: "application/pdf" });
   } catch (err) {
-    console.error("[ponte] watermarking failed, uploading original:", err);
+    console.error("[ponte] cover/watermark failed, uploading original:", err);
   }
 
   const path = `${orderId}/${itemId}.pdf`;

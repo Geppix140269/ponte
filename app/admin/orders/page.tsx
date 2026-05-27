@@ -163,7 +163,11 @@ export default async function AdminOrders() {
                       <div className="flex items-center gap-3">
                         {it.delivery_status === "processing" &&
                           (statusV2 === "captured" || statusV2 === "delivered") && (
-                            <AdminDeliverForm itemId={it.id} orderId={o.id} />
+                            <AdminDeliverForm
+                              itemId={it.id}
+                              orderId={o.id}
+                              defaultLicensedTo={o.email ?? ""}
+                            />
                           )}
                         <span
                           className={`text-[11px] uppercase ${
