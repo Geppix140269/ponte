@@ -9,14 +9,11 @@
 // Usage (one-time, from the repo root):
 //   1. Make sure .env.local has NEXT_PUBLIC_SUPABASE_URL,
 //      SUPABASE_SERVICE_ROLE_KEY, and OPENAI_API_KEY.
-//   2. Run:  npx tsx scripts/import-hs-codes.ts
-//      (or: node --experimental-strip-types scripts/import-hs-codes.ts)
+//   2. Run (Node 20.6+):
+//      npx --yes tsx --env-file=.env.local scripts/import-hs-codes.ts
 //
 // Cost estimate: ~6,900 codes × ~20 tokens/description avg ≈ 140k tokens
 //                ≈ $0.003 on text-embedding-3-small. Negligible.
-
-import { config } from "dotenv";
-config({ path: ".env.local" });
 
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
