@@ -27,6 +27,7 @@ export function effectivePriceCents(
 }
 
 export function displayPrice(product: Product): string {
+  if (product.altPrice) return product.altPrice;
   const base = formatPrice(product.priceCents, product.currency);
   const prefix = product.priceFrom ? "From " : "";
   const suffix = product.priceSuffix ?? "";
