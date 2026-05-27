@@ -13,7 +13,7 @@ export default async function HSToolPage() {
   if (!user) redirect("/login?returnTo=/tools/hs");
 
   return (
-    <main className="min-h-screen bg-zinc-50">
+    <main className="min-h-screen bg-zinc-50 text-zinc-900">
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-zinc-900">HS Code Finder</h1>

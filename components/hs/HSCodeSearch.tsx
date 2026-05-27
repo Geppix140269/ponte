@@ -147,7 +147,7 @@ export default function HSCodeSearch() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Describe your product… e.g. frozen mango chunks"
-                  className="w-full pl-9 pr-4 py-3 border border-zinc-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-zinc-400"
+                  className="w-full pl-9 pr-4 py-3 border border-zinc-300 rounded-xl text-sm text-zinc-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-zinc-400"
                   autoComplete="off"
                 />
               </div>

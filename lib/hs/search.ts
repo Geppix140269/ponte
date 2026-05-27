@@ -2,7 +2,15 @@ import OpenAI from "openai";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { HSSchedule, HSSearchResult, MatchHSCodesRow } from "./types";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("OPENAI_API_KEY environment variable is not set");
+    _openai = new OpenAI({ apiKey });
+  }
+  return _openai;
+}
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const GPT_MODEL = "gpt-4o";
@@ -10,7 +18,7 @@ const HIGH_CONFIDENCE = 0.82;
 const MED_CONFIDENCE = 0.68;
 
 async function embedQuery(query: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
+  const response = await getOpenAI().embeddings.create({
     input: query,
     model: EMBEDDING_MODEL,
   });
@@ -49,7 +57,7 @@ ${candidateList}
 Select the single best match. Reply with ONLY valid JSON in this exact format:
 {"best_index": <1-based number>, "explanation": "<one sentence why>"}`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: GPT_MODEL,
     messages: [{ role: "user", content: prompt }],
     temperature: 0,
