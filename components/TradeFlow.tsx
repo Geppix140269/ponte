@@ -63,25 +63,6 @@ export default function TradeFlow() {
   return (
     <section className="container-px py-8 md:py-12 select-none">
       <div className="glass-tight p-6 md:p-8 relative overflow-hidden">
-        <div className="flex items-center justify-between mb-4">
-          <div
-            className="flex items-center gap-3 text-[10px] uppercase text-gray-2"
-            style={{ letterSpacing: "0.24em" }}
-          >
-            <span
-              className="w-[6px] h-[6px] rounded-full bg-positive pulse-dot"
-              style={{ boxShadow: "0 0 10px var(--positive)" }}
-            />
-            Live trade flows · Major corridors
-          </div>
-          <div
-            className="hidden md:block text-[10px] uppercase text-gray-2"
-            style={{ letterSpacing: "0.22em" }}
-          >
-            7B+ verified records · cross-checked daily
-          </div>
-        </div>
-
         <svg
           viewBox="0 0 1200 260"
           preserveAspectRatio="xMidYMid meet"
@@ -197,17 +178,9 @@ export default function TradeFlow() {
           ))}
         </svg>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-2">
-          <span>
-            Every Ponte report is anchored in flows like these — actual
-            shipments, real ports, traceable companies.
-          </span>
-          <span
-            className="uppercase text-gold"
-            style={{ letterSpacing: "0.18em" }}
-          >
-            Indicative · for illustration
-          </span>
+        <div className="mt-4 text-[11px] text-gray-2">
+          Every Ponte report is anchored in flows like these — actual
+          shipments, real ports, traceable companies.
         </div>
       </div>
     </section>
