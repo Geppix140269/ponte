@@ -61,15 +61,13 @@ export default function TradeFlow() {
   );
 
   return (
-    <section className="container-px py-8 md:py-12 select-none">
-      <div className="glass-tight p-6 md:p-8 relative overflow-hidden">
-        <svg
-          viewBox="0 0 1200 260"
-          preserveAspectRatio="xMidYMid meet"
-          className="w-full h-[180px] md:h-[220px]"
-          role="img"
-          aria-label="Animated visualisation of cross-border trade flows between major shipping hubs"
-        >
+    <section className="container-px py-6 md:py-10 select-none pointer-events-none">
+      <svg
+        viewBox="0 0 1200 260"
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full h-[200px] md:h-[260px]"
+        aria-hidden="true"
+      >
           <defs>
             {/* Soft glow filter for the moving dots */}
             <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -176,13 +174,7 @@ export default function TradeFlow() {
               </circle>
             </g>
           ))}
-        </svg>
-
-        <div className="mt-4 text-[11px] text-gray-2">
-          Every Ponte report is anchored in flows like these — actual
-          shipments, real ports, traceable companies.
-        </div>
-      </div>
+      </svg>
     </section>
   );
 }
