@@ -12,7 +12,6 @@ import { useCart } from "@/lib/cart-store";
 const navLinks = [
   { href: "/catalogue", label: "Catalogue" },
   { href: "/category/bundles", label: "Bundles" },
-  { href: "/tools/search", label: "Trade Search" },
   { href: "/why-ponte", label: "Why Ponte" },
   { href: "/about", label: "About" },
 ];

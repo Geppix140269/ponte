@@ -3,7 +3,13 @@ import OpenAI from "openai";
 import { getUser } from "@/lib/auth";
 import type { ShipmentRecord } from "@/app/tools/search/SearchClient";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy-instantiate so module-level code doesn't throw during Next.js build
+// when OPENAI_API_KEY is absent from the build environment.
+function getOpenAI(): OpenAI {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY is not configured.");
+  return new OpenAI({ apiKey: key });
+}
 
 // Coverage assignment heuristic based on countries
 const STRONG_COVERAGE = new Set([
@@ -77,7 +83,7 @@ Return a JSON object with this exact structure:
 
 Make the data realistic and varied. Use actual major trading companies, logistics ports, and market prices for this product category.`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
