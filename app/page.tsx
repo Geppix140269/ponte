@@ -322,7 +322,7 @@ export default async function HomePage() {
       <TradeFlow />
 
       {/* ============ START HERE (use-cases) ============ */}
-      <section className="container-px py-20">
+      <section className="container-px pt-6 pb-20 md:pt-8">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
           <div className="num-italic">— 01 / Start here</div>
           <div>

@@ -61,7 +61,7 @@ export default function TradeFlow() {
   );
 
   return (
-    <section className="container-px py-6 md:py-10 select-none pointer-events-none">
+    <section className="container-px pt-4 pb-0 md:pt-6 select-none pointer-events-none">
       <svg
         viewBox="0 0 1200 260"
         preserveAspectRatio="xMidYMid meet"
