@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { BridgeMark } from "@/components/Logo";
+import TradeFlow from "@/components/TradeFlow";
 import { featuredProducts } from "@/lib/catalogue-db";
 
 export const revalidate = 60;
@@ -317,45 +318,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ============ FEATURED ============ */}
+      {/* ============ TRADE FLOW ANIMATION ============ */}
+      <TradeFlow />
+
+      {/* ============ START HERE (use-cases) ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 01 / Featured</div>
-          <div className="flex items-end justify-between flex-wrap gap-4">
-            <div>
-              <h2
-                className="serif font-medium text-3xl md:text-[48px] text-white"
-                style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
-              >
-                Popular intelligence products
-              </h2>
-              <p className="text-[15px] text-gray-2 leading-relaxed max-w-2xl mt-4">
-                The reports our buyers reach for first. Each is curated by a
-                senior analyst, backed by 7B+ verified records, and signed off
-                before delivery.
-              </p>
-            </div>
-            <Link
-              href="/catalogue"
-              className="text-[11px] uppercase text-gold hover:text-cream inline-flex items-center gap-2"
-              style={{ letterSpacing: "0.18em" }}
-            >
-              View all <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((p) => (
-            <ProductCard key={p.sku} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* ============ START FROM YOUR GOAL ============ */}
-      <section className="container-px py-20">
-        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 02 / Start here</div>
+          <div className="num-italic">— 01 / Start here</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
@@ -364,8 +333,9 @@ export default async function HomePage() {
               Start from what you&apos;re trying to do
             </h2>
             <p className="text-[15px] text-gray-2 leading-relaxed max-w-2xl mt-4">
-              Tell us your goal and we&apos;ll point you to the right report
-              or bundle. No need to read all 40.
+              Tell us the decision you&apos;re making and we&apos;ll point you
+              to the right report or bundle. No subscription, no platform to
+              learn.
             </p>
           </div>
         </div>
@@ -398,10 +368,45 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ============ FEATURED ============ */}
+      <section className="container-px py-20">
+        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
+          <div className="num-italic">— 02 / Featured</div>
+          <div className="flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <h2
+                className="serif font-medium text-3xl md:text-[48px] text-white"
+                style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
+              >
+                Popular intelligence products
+              </h2>
+              <p className="text-[15px] text-gray-2 leading-relaxed max-w-2xl mt-4">
+                The reports our buyers reach for first. Each is curated by a
+                senior analyst, backed by 7B+ verified records, and signed off
+                before delivery.
+              </p>
+            </div>
+            <Link
+              href="/catalogue"
+              className="text-[11px] uppercase text-gold hover:text-cream inline-flex items-center gap-2"
+              style={{ letterSpacing: "0.18em" }}
+            >
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((p) => (
+            <ProductCard key={p.sku} product={p} />
+          ))}
+        </div>
+      </section>
+
       {/* ============ BROWSE BY CATEGORY ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 04 / Catalogue</div>
+          <div className="num-italic">— 03 / Catalogue</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
@@ -441,7 +446,7 @@ export default async function HomePage() {
       {/* ============ HOW IT WORKS ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 05 / How it works</div>
+          <div className="num-italic">— 04 / How it works</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
@@ -477,7 +482,7 @@ export default async function HomePage() {
       {/* ============ TRUST ============ */}
       <section className="container-px py-20">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 06 / Trust</div>
+          <div className="num-italic">— 05 / Trust</div>
           <div>
             <h2
               className="serif font-medium text-3xl md:text-[48px] text-white"
