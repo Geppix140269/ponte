@@ -37,7 +37,7 @@ const principles = [
   {
     n: "iii.",
     title: "Delivery date confirmed at checkout",
-    body: "Instant downloads where possible. For reports requiring production, we confirm your exact delivery date within 24 hours of order. Your card is held but not charged until we start work.",
+    body: "We confirm your exact delivery date within 24 hours of order. Your card is held but not charged until we start production on your confirmed slot.",
   },
 ];
 

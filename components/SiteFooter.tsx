@@ -11,10 +11,9 @@ export default function SiteFooter() {
             <div className="md:col-span-5 md:pr-6">
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                Trade intelligence, delivered. Research-grade market reports
-                and risk analysis built on a grounded-AI engine and 7B+
-                verified trade records. Buy what you need, no subscription
-                required.
+                Trade intelligence, delivered. Curated by analysts. Backed by
+                7B+ verified trade records. Delivered as licensed PDFs. Buy
+                what you need, no subscription required.
               </p>
             </div>
 
@@ -55,6 +54,16 @@ export default function SiteFooter() {
                 <li>
                   <Link href="/about" className="text-sm text-gray-2 hover:text-gold">
                     About
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/why-ponte" className="text-sm text-gray-2 hover:text-gold">
+                    Why Ponte
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/methodology" className="text-sm text-gray-2 hover:text-gold">
+                    Methodology
                   </Link>
                 </li>
                 <li>

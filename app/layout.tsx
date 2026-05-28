@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     template: "%s | Ponte Trade",
   },
   description:
-    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Built on a grounded-AI engine and 7B+ verified trade records. Buy exactly what you need. No subscription required.",
+    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs. No subscription required.",
   openGraph: {
     title: "Ponte Trade. Trade intelligence, delivered.",
     description:
-      "Research-grade market reports and risk analysis. Built on 7B+ verified trade records.",
+      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
     url: APP_URL,
     siteName: "Ponte Trade",
     type: "website",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ponte Trade. Trade intelligence, delivered.",
     description:
-      "Research-grade market reports and risk analysis. 7B+ verified trade records.",
+      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
   },
 };
 

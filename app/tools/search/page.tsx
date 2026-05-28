@@ -5,7 +5,7 @@ import SearchClient from "./SearchClient";
 export const metadata: Metadata = {
   title: "Trade Data Search | Ponte Trade",
   description:
-    "Search 7B+ verified trade records. Find real importers, exporters, shipment volumes, unit prices, and trade routes — powered by ADAMftd transaction-level customs data.",
+    "Search 7B+ verified trade records. Find real importers, exporters, shipment volumes, unit prices, and trade routes — the same transaction-level customs data that powers our analyst reports.",
   alternates: { canonical: "/tools/search" },
   openGraph: {
     title: "Trade Data Search | Ponte Trade",
