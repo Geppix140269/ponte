@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
@@ -20,7 +22,6 @@
     "resend": "^4.0.1",
     "openai": "^4.52.0",
     "stripe": "^16.12.0",
-    "openai": "^4.52.0",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
     "tailwindcss": "3.4.6",
-    "typescript": "5.5.3"
+    "typescript": "5.5.3",
+    "vitest": "^2"
   }
 }
