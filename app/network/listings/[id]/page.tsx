@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Ship, Boxes } from "lucide-react";
 import { getListing } from "@/lib/network/listing-search";
+import { EnquireButton } from "@/components/network/EnquireButton";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Listing", robots: { index: false } };
@@ -54,7 +55,10 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
               <p className="text-white text-[15px]">{listing.owner.company ?? listing.owner.full_name}</p>
               <p className="text-[12px] text-gray-2">{listing.owner.country} · trust {listing.owner.trust_score} · {listing.owner.verification_level.replace("_", " ")}</p>
             </div>
-            <Link href={`/network/profile/${listing.owner.id}`} className="btn-gold">View broker</Link>
+            <div className="flex items-center gap-3">
+              <EnquireButton listingId={listing.id} />
+              <Link href={`/network/profile/${listing.owner.id}`} className="btn-outline">View broker</Link>
+            </div>
           </div>
         )}
       </div>
