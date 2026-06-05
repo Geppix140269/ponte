@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       <header className="max-w-3xl mb-10">
         <span className="pill">Legal</span>
         <h1
-          className="serif text-white mt-6 mb-3"
+          className="serif text-ink mt-6 mb-3"
           style={{
             fontSize: "clamp(36px, 5vw, 56px)",
             fontWeight: 400,
@@ -44,19 +44,19 @@ export default function PrivacyPage() {
           <h2>Data we collect</h2>
           <ul>
             <li>
-              <strong className="text-cream">Account &amp; orders:</strong>{" "}
+              <strong className="text-ink">Account &amp; orders:</strong>{" "}
               name, email, company, billing country, and order history.
             </li>
             <li>
-              <strong className="text-cream">Report configuration:</strong>{" "}
+              <strong className="text-ink">Report configuration:</strong>{" "}
               the parameters you supply (HS code, country, product, brief).
             </li>
             <li>
-              <strong className="text-cream">Payments:</strong> handled by
+              <strong className="text-ink">Payments:</strong> handled by
               Stripe; we never see or store full card details.
             </li>
             <li>
-              <strong className="text-cream">Technical:</strong> limited data
+              <strong className="text-ink">Technical:</strong> limited data
               your browser sends, used to deliver and secure the site.
             </li>
           </ul>

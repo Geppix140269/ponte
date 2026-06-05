@@ -21,7 +21,7 @@ function Notice({ title, body }: { title: string; body: string }) {
   return (
     <section className="container-px py-20">
       <div className="glass p-12 max-w-xl mx-auto text-center">
-        <h1 className="serif text-white" style={{ fontSize: 32, fontWeight: 500 }}>{title}</h1>
+        <h1 className="serif text-ink" style={{ fontSize: 32, fontWeight: 500 }}>{title}</h1>
         <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">{body}</p>
         <Link href="/" className="btn-gold mt-8">Back to site</Link>
       </div>
@@ -42,9 +42,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
   return (
     <div>
-      <div className="nav-glass border-b border-white/10">
+      <div className="nav-glass border-b border-rule">
         <div className="container-px flex h-14 items-center gap-6 overflow-x-auto">
-          <span className="serif text-white text-sm uppercase" style={{ letterSpacing: "0.22em", fontWeight: 500 }}>Admin</span>
+          <span className="serif text-ink text-sm uppercase" style={{ letterSpacing: "0.22em", fontWeight: 500 }}>Admin</span>
           {adminNav.map((n) => (
             <Link key={n.href} href={n.href} className="whitespace-nowrap text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.18em" }}>{n.label}</Link>
           ))}

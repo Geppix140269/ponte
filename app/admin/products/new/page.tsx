@@ -20,9 +20,9 @@ export default async function NewProductPage() {
         <Link href="/admin/products" className="text-gray-2 hover:text-gold">
           ← Products
         </Link>
-        <span className="text-white/20">/</span>
+        <span className="text-ink/20">/</span>
         <h1
-          className="serif text-white"
+          className="serif text-ink"
           style={{
             fontSize: 28,
             fontWeight: 500,

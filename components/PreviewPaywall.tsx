@@ -13,22 +13,22 @@ function MockPage({ blurred = false }: { blurred?: boolean }) {
       aria-hidden={blurred}
     >
       <div className="h-2.5 w-1/3 rounded bg-gold/60" />
-      <div className="mt-3 h-3 w-3/4 rounded bg-navy/15" />
+      <div className="mt-3 h-3 w-3/4 rounded bg-surface/15" />
       <div className="mt-4 space-y-2">
         {Array.from({ length: 7 }).map((_, i) => (
           <div
             key={i}
-            className="h-2 rounded bg-navy/10"
+            className="h-2 rounded bg-surface/10"
             style={{ width: `${90 - (i % 3) * 12}%` }}
           />
         ))}
       </div>
-      <div className="mt-5 h-20 rounded bg-navy/5" />
+      <div className="mt-5 h-20 rounded bg-surface/5" />
       <div className="mt-4 space-y-2">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-2 rounded bg-navy/10"
+            className="h-2 rounded bg-surface/10"
             style={{ width: `${85 - i * 9}%` }}
           />
         ))}
@@ -43,7 +43,7 @@ export default function PreviewPaywall({ product }: { product: Product }) {
   return (
     <div className="glass p-8">
       <h2
-        className="serif text-white text-xl"
+        className="serif text-ink text-xl"
         style={{ fontWeight: 500 }}
       >
         Report preview
@@ -55,7 +55,7 @@ export default function PreviewPaywall({ product }: { product: Product }) {
           <div className="mt-5 glass-tight p-6 flex flex-col items-center text-center">
             <Lock className="h-6 w-6 text-gold" />
             <p
-              className="serif text-white mt-3"
+              className="serif text-ink mt-3"
               style={{ fontSize: 18, fontWeight: 500 }}
             >
               Unlock the full report, {displayPrice(product)}
@@ -72,10 +72,10 @@ export default function PreviewPaywall({ product }: { product: Product }) {
           ))}
           <div className="relative col-span-2 sm:col-span-1">
             <MockPage blurred />
-            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-navy-deep/70 p-4 text-center">
-              <Lock className="h-6 w-6 text-white" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-surface/70 p-4 text-center">
+              <Lock className="h-6 w-6 text-ink" />
               <p
-                className="serif text-white mt-3"
+                className="serif text-ink mt-3"
                 style={{ fontSize: 16, fontWeight: 500 }}
               >
                 Unlock the full report

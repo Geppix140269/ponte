@@ -57,7 +57,7 @@ export default function WhyPontePage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
         <span className="pill">Why Ponte</span>
         <h1
-          className="serif text-white mt-6 mb-7 max-w-3xl"
+          className="serif text-ink mt-6 mb-7 max-w-3xl"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -87,7 +87,7 @@ export default function WhyPontePage() {
                 <span className="eyebrow">{p.eyebrow}</span>
               </div>
               <h2
-                className="serif text-white mt-5"
+                className="serif text-ink mt-5"
                 style={{
                   fontSize: 28,
                   fontWeight: 400,
@@ -110,7 +110,7 @@ export default function WhyPontePage() {
         <div className="glass p-10 lg:p-14">
           <span className="eyebrow">Backed by ICTTM</span>
           <h2
-            className="serif text-white mt-4 max-w-3xl"
+            className="serif text-ink mt-4 max-w-3xl"
             style={{
               fontSize: 36,
               fontWeight: 400,
@@ -145,7 +145,7 @@ export default function WhyPontePage() {
           />
           <div className="relative z-10">
             <h2
-              className="serif text-white"
+              className="serif text-ink"
               style={{
                 fontSize: 32,
                 fontWeight: 400,

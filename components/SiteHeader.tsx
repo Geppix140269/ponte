@@ -46,26 +46,26 @@ export default function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <Link href="/account" className="hidden rounded-full p-2 text-gray-2 hover:bg-white/5 hover:text-gold sm:inline-flex" aria-label="Account"><User className="h-5 w-5" /></Link>
-          <Link href="/cart" className="relative inline-flex rounded-full p-2 text-cream hover:bg-white/5 hover:text-gold" aria-label="Cart">
+          <Link href="/cart" className="relative inline-flex rounded-full p-2 text-ink hover:bg-white/5 hover:text-gold" aria-label="Cart">
             <ShoppingCart className="h-5 w-5" />
             {mounted && count > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">{count}</span>
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-ink">{count}</span>
             )}
           </Link>
-          <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex rounded-full p-2 text-cream hover:bg-white/5 md:hidden" aria-label="Menu" aria-expanded={open}>
+          <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex rounded-full p-2 text-ink hover:bg-white/5 md:hidden" aria-label="Menu" aria-expanded={open}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </nav>
 
       {open && (
-        <div className="border-t border-white/10 bg-[rgba(7,16,27,0.85)] md:hidden">
+        <div className="border-t border-rule bg-[rgba(7,16,27,0.85)] md:hidden">
           <div className="container-px flex flex-col py-3">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="py-2.5 text-sm uppercase text-cream" style={{ letterSpacing: "0.18em" }}>{link.label}</Link>
+              <Link key={link.href} href={link.href} className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>{link.label}</Link>
             ))}
-            <Link href="/network" className="py-2.5 text-sm uppercase text-cream" style={{ letterSpacing: "0.18em" }}>Network</Link>
-            <Link href="/account" className="py-2.5 text-sm uppercase text-cream" style={{ letterSpacing: "0.18em" }}>Account</Link>
+            <Link href="/network" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>Network</Link>
+            <Link href="/account" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>Account</Link>
           </div>
         </div>
       )}

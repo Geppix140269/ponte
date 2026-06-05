@@ -26,7 +26,7 @@ export default async function TradeSearchPage() {
       <section className="container-px pt-14 pb-10 md:pt-20 md:pb-12">
         <span className="pill">Trade Data Search</span>
         <h1
-          className="serif text-white mt-6 mb-5"
+          className="serif text-ink mt-6 mb-5"
           style={{
             fontWeight: 400,
             fontSize: "clamp(36px, 5.5vw, 68px)",

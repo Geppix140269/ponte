@@ -50,7 +50,7 @@ export default function AdminDeliverForm({
         name="file"
         accept="application/pdf"
         required
-        className="max-w-[200px] text-[11px] text-gray-2 file:mr-2 file:rounded-full file:border-0 file:bg-navy-700 file:px-3 file:py-1 file:text-[11px] file:uppercase file:text-cream"
+        className="max-w-[200px] text-[11px] text-gray-2 file:mr-2 file:rounded-full file:border-0 file:bg-surface file:px-3 file:py-1 file:text-[11px] file:uppercase file:text-ink"
         style={{ letterSpacing: "0.18em" }}
       />
       <input
@@ -59,7 +59,7 @@ export default function AdminDeliverForm({
         defaultValue="GF"
         maxLength={4}
         placeholder="Reviewer (initials)"
-        className="w-[90px] rounded-full border border-white/15 bg-transparent px-3 py-1 text-[11px] text-cream placeholder:text-gray-2/60"
+        className="w-[90px] rounded-full border border-rule bg-transparent px-3 py-1 text-[11px] text-ink placeholder:text-gray-2/60"
         title="Senior reviewer initials, prints on the PDF cover page"
       />
       <input
@@ -67,7 +67,7 @@ export default function AdminDeliverForm({
         name="licensedTo"
         defaultValue={defaultLicensedTo ?? ""}
         placeholder="Licensed to (organisation)"
-        className="min-w-[180px] flex-1 rounded-full border border-white/15 bg-transparent px-3 py-1 text-[11px] text-cream placeholder:text-gray-2/60"
+        className="min-w-[180px] flex-1 rounded-full border border-rule bg-transparent px-3 py-1 text-[11px] text-ink placeholder:text-gray-2/60"
         title="Customer organisation name, prints on the PDF cover page. Falls back to email if blank."
       />
       <SubmitButton />

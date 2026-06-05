@@ -18,11 +18,11 @@ export default async function NetworkDashboard() {
   ];
   return (
     <div>
-      <h1 className="serif text-white mb-7" style={{ fontSize: 32, fontWeight: 500 }}>Network</h1>
+      <h1 className="serif text-ink mb-7" style={{ fontSize: 32, fontWeight: 500 }}>Network</h1>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {cards.map((c) => (
           <div key={c.label} className="glass p-6">
-            <p className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>{c.value}</p>
+            <p className="serif text-ink" style={{ fontSize: 30, fontWeight: 500 }}>{c.value}</p>
             <p className="mt-1 mono text-[10px] text-gray-2 uppercase" style={{ letterSpacing: "0.18em" }}>{c.label}</p>
           </div>
         ))}
@@ -68,7 +68,7 @@ function Row({ label, value, total }: { label: string; value: number; total: num
     <div className="flex items-center gap-3 mb-2">
       <span className="w-20 text-[12px] text-gray-2 capitalize">{label}</span>
       <div className="flex-1 h-2 bg-white/8 rounded"><div className="h-2 bg-gold rounded" style={{ width: `${pct}%` }} /></div>
-      <span className="w-10 text-right text-[12px] text-white">{value}</span>
+      <span className="w-10 text-right text-[12px] text-ink">{value}</span>
     </div>
   );
 }

@@ -22,7 +22,7 @@ export function NetworkHeader() {
       <nav className="container-px flex h-16 items-center justify-between">
         <Link href="/network" aria-label="ponte.trade" className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-gold" />
-          <span className="serif text-white text-lg" style={{ fontWeight: 600, letterSpacing: "0.01em" }}>ponte<span className="text-gold">.trade</span></span>
+          <span className="serif text-ink text-lg" style={{ fontWeight: 600, letterSpacing: "0.01em" }}>ponte<span className="text-gold">.trade</span></span>
         </Link>
 
         <div className="hidden items-center gap-7 md:flex">
@@ -41,18 +41,18 @@ export function NetworkHeader() {
           <Link href="/pricing" className="btn-gold px-4 py-2 text-[12px]">Get started</Link>
         </div>
 
-        <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex rounded-full p-2 text-cream hover:bg-white/5 md:hidden" aria-label="Menu" aria-expanded={open}>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex rounded-full p-2 text-ink hover:bg-white/5 md:hidden" aria-label="Menu" aria-expanded={open}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
 
       {open && (
-        <div className="border-t border-white/10 bg-[rgba(7,16,27,0.92)] md:hidden">
+        <div className="border-t border-rule bg-[rgba(7,16,27,0.92)] md:hidden">
           <div className="container-px flex flex-col py-3">
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="py-2.5 text-sm uppercase text-cream" style={{ letterSpacing: "0.16em" }}>{l.label}</Link>
+              <Link key={l.href} href={l.href} className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.16em" }}>{l.label}</Link>
             ))}
-            <Link href="/login" className="py-2.5 text-sm uppercase text-cream" style={{ letterSpacing: "0.16em" }}>Sign in</Link>
+            <Link href="/login" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.16em" }}>Sign in</Link>
             <Link href="/pricing" className="btn-gold mt-2 text-center">Get started</Link>
           </div>
         </div>

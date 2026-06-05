@@ -51,7 +51,7 @@ export default function SiteFooter() {
               </ul>
             </div>
           </div>
-          <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
+          <div className="mt-10 space-y-2 border-t border-rule pt-6 text-[11px] text-gray-2">
             <p>Ponte Trade is an ICTTM company. Research-grade trade intelligence, backed by 7 billion+ verified trade records.</p>
             <p className="uppercase" style={{ letterSpacing: "0.18em" }}>© {new Date().getFullYear()} Ponte Trade / ICTTM · London · ponte.trade</p>
           </div>

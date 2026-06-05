@@ -29,7 +29,7 @@ export function DealRoom({ room }: { room: Room }) {
       {/* Conversation */}
       <div className="glass p-6 flex flex-col">
         <div className="flex items-center justify-between">
-          <h1 className="serif text-white" style={{ fontSize: 22, fontWeight: 500 }}>{room.title ?? "Deal"}</h1>
+          <h1 className="serif text-ink" style={{ fontSize: 22, fontWeight: 500 }}>{room.title ?? "Deal"}</h1>
           <span className="badge-gold">{STAGE_LABEL[room.stage]}</span>
         </div>
 
@@ -42,7 +42,7 @@ export function DealRoom({ room }: { room: Room }) {
             const mine = m.sender_id === (room.viewerRole === "initiator" ? room.initiator?.id : room.counterparty?.id);
             return (
               <div key={m.id} className={`max-w-[80%] ${mine ? "ml-auto text-right" : ""}`}>
-                <div className={`inline-block px-4 py-2 rounded-lg text-[14px] ${mine ? "bg-gold/20 text-cream" : "bg-white/6 text-gray-2"}`}>{m.body}</div>
+                <div className={`inline-block px-4 py-2 rounded-lg text-[14px] ${mine ? "bg-gold/20 text-ink" : "bg-white/6 text-gray-2"}`}>{m.body}</div>
               </div>
             );
           })}
@@ -65,7 +65,7 @@ export function DealRoom({ room }: { room: Room }) {
       <div className="space-y-5">
         <div className="glass p-5">
           <p className="mono text-[10px] text-gray-2 uppercase" style={{ letterSpacing: "0.18em" }}>Counterparty</p>
-          <p className="mt-1 text-white">{counterpart?.company ?? counterpart?.full_name ?? "—"}</p>
+          <p className="mt-1 text-ink">{counterpart?.company ?? counterpart?.full_name ?? "—"}</p>
           {counterpart && <p className="text-[12px] text-gray-2">trust {counterpart.trust_score} · {counterpart.verification_level.replace("_", " ")}</p>}
         </div>
 
@@ -101,7 +101,7 @@ export function DealRoom({ room }: { room: Room }) {
             {room.documents.map((d) => (
               <li key={d.id} className="flex items-center justify-between text-[13px]">
                 <span className="text-gray-2 truncate">{d.name}</span>
-                <button className="text-gold hover:text-cream inline-flex items-center gap-1"
+                <button className="text-gold hover:text-ink inline-flex items-center gap-1"
                   onClick={() => start(async () => { const r = await getDealDocumentUrl(d.id); if (r.url) window.open(r.url, "_blank"); })}>
                   <Download className="h-3.5 w-3.5" />
                 </button>

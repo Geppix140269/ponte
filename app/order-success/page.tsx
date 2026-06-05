@@ -14,7 +14,7 @@ export default function OrderSuccessPage() {
         {/* Span Traversal motion fires on the report-ready moment. */}
         <BridgeMark animate className="mx-auto h-20 w-20" />
         <h1
-          className="serif text-white mt-6"
+          className="serif text-ink mt-6"
           style={{ fontSize: 32, fontWeight: 500 }}
         >
           Thank you for your order

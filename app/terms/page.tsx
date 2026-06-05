@@ -13,7 +13,7 @@ export default function TermsPage() {
       <header className="max-w-3xl mb-10">
         <span className="pill">Legal</span>
         <h1
-          className="serif text-white mt-6 mb-3"
+          className="serif text-ink mt-6 mb-3"
           style={{
             fontSize: "clamp(36px, 5vw, 56px)",
             fontWeight: 400,

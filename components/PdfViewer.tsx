@@ -62,7 +62,7 @@ export default function PdfViewer({
         }
       >
         {/* Wrap in relative container so the fade overlay can sit on top */}
-        <div className="relative overflow-hidden rounded-xl border border-white/10">
+        <div className="relative overflow-hidden rounded-xl border border-rule">
           <Page
             key={current}
             pageNumber={current}
@@ -90,7 +90,7 @@ export default function PdfViewer({
           onClick={prev}
           disabled={current === 1}
           aria-label="Previous page"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-cream transition-colors hover:bg-white/10 disabled:opacity-30"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rule bg-white/5 text-ink transition-colors hover:bg-white/10 disabled:opacity-30"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -115,7 +115,7 @@ export default function PdfViewer({
           onClick={next}
           disabled={current === shown}
           aria-label="Next page"
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-cream transition-colors hover:bg-white/10 disabled:opacity-30"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-rule bg-white/5 text-ink transition-colors hover:bg-white/10 disabled:opacity-30"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

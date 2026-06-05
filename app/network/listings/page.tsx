@@ -19,7 +19,7 @@ export default async function ListingsPage({
   return (
     <section className="container-px py-12 max-w-container mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>Listings</h1>
+        <h1 className="serif text-ink" style={{ fontSize: 30, fontWeight: 500 }}>Listings</h1>
         <Link href="/network/listings/new" className="btn-gold inline-flex items-center gap-2"><Plus className="h-4 w-4" />New listing</Link>
       </div>
 

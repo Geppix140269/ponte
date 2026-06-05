@@ -37,7 +37,7 @@ export function ProfileForm({ profile }: { profile: NetworkProfile }) {
 
   return (
     <form onSubmit={onSubmit} className="glass p-8 space-y-5">
-      <h2 className="serif text-white" style={{ fontSize: 22, fontWeight: 500 }}>Your profile</h2>
+      <h2 className="serif text-ink" style={{ fontSize: 22, fontWeight: 500 }}>Your profile</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input name="full_name" label="Full name" def={profile.full_name ?? ""} />
         <Input name="title" label="Title" def={profile.title ?? ""} />

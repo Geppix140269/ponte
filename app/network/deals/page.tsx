@@ -13,11 +13,11 @@ export default async function DealsPage() {
   const deals = await listMyDeals();
   return (
     <section className="container-px py-12 max-w-container mx-auto">
-      <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>Deal rooms</h1>
+      <h1 className="serif text-ink" style={{ fontSize: 30, fontWeight: 500 }}>Deal rooms</h1>
       <div className="mt-6 space-y-3">
         {deals.map((d: { id: string; title: string | null; stage: string }) => (
           <Link key={d.id} href={`/network/deals/${d.id}`} className="card p-5 flex items-center justify-between">
-            <span className="text-white">{d.title ?? "Deal"}</span>
+            <span className="text-ink">{d.title ?? "Deal"}</span>
             <span className="badge">{STAGE_LABEL[d.stage] ?? d.stage}</span>
           </Link>
         ))}

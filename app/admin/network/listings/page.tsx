@@ -7,13 +7,13 @@ export default async function ListingsModeration() {
   const rows = await flaggedListings();
   return (
     <div>
-      <h1 className="serif text-white mb-2" style={{ fontSize: 28, fontWeight: 500 }}>Listing moderation</h1>
+      <h1 className="serif text-ink mb-2" style={{ fontSize: 28, fontWeight: 500 }}>Listing moderation</h1>
       <p className="text-[13px] text-gray-2 mb-6">{rows.length} awaiting review</p>
       <div className="space-y-3">
         {rows.map((l: any) => (
           <div key={l.id} className="glass p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-white">{l.commodity} <span className="badge ml-2">{l.listing_type}</span> <span className="badge ml-1">{l.moderation_status}</span></p>
+              <p className="text-ink">{l.commodity} <span className="badge ml-2">{l.listing_type}</span> <span className="badge ml-1">{l.moderation_status}</span></p>
               {l.moderation_reasons?.length ? <p className="text-[12px] text-negative">{l.moderation_reasons.join("; ")}</p> : null}
             </div>
             <AdminActions kind="listing" id={l.id} />

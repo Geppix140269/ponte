@@ -20,14 +20,14 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
 
   return (
     <section className="container-px py-12 max-w-container mx-auto">
-      <Link href="/network/listings" className="text-gold text-sm hover:text-cream">← All listings</Link>
+      <Link href="/network/listings" className="text-gold text-sm hover:text-ink">← All listings</Link>
       <div className="glass p-8 md:p-10 mt-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <span className="badge-gold uppercase">{listing.listing_type}</span>
-            <h1 className="serif text-white mt-3" style={{ fontSize: 32, fontWeight: 500 }}>{listing.commodity}</h1>
+            <h1 className="serif text-ink mt-3" style={{ fontSize: 32, fontWeight: 500 }}>{listing.commodity}</h1>
           </div>
-          <span className="serif text-white text-2xl" style={{ fontWeight: 500 }}>{price(listing)}</span>
+          <span className="serif text-ink text-2xl" style={{ fontWeight: 500 }}>{price(listing)}</span>
         </div>
 
         {!isPublic && (
@@ -50,9 +50,9 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         )}
 
         {listing.owner && (
-          <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-rule flex items-center justify-between">
             <div>
-              <p className="text-white text-[15px]">{listing.owner.company ?? listing.owner.full_name}</p>
+              <p className="text-ink text-[15px]">{listing.owner.company ?? listing.owner.full_name}</p>
               <p className="text-[12px] text-gray-2">{listing.owner.country} · trust {listing.owner.trust_score} · {listing.owner.verification_level.replace("_", " ")}</p>
             </div>
             <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ function Detail({ icon, label, value }: { icon?: React.ReactNode; label: string;
   return (
     <div>
       <p className="mono text-[10px] text-gray-2 uppercase inline-flex items-center gap-1.5" style={{ letterSpacing: "0.18em" }}>{icon}{label}</p>
-      <p className="mt-1 text-white">{value}</p>
+      <p className="mt-1 text-ink">{value}</p>
     </div>
   );
 }

@@ -48,7 +48,7 @@ export default function AboutPage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
         <span className="pill">About Ponte Trade</span>
         <h1
-          className="serif text-white mt-6 mb-7 max-w-3xl"
+          className="serif text-ink mt-6 mb-7 max-w-3xl"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -80,7 +80,7 @@ export default function AboutPage() {
           <div className="num-italic">— 01 / Principles</div>
           <div>
             <h2
-              className="serif font-medium text-3xl md:text-[40px] text-white"
+              className="serif font-medium text-3xl md:text-[40px] text-ink"
               style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
             >
               Three rules we don&apos;t break.
@@ -93,7 +93,7 @@ export default function AboutPage() {
             <div key={p.title} className="glass p-8">
               <p className="num-italic mb-4">{p.n}</p>
               <h3
-                className="serif text-white text-xl"
+                className="serif text-ink text-xl"
                 style={{ fontWeight: 500 }}
               >
                 {p.title}
@@ -112,7 +112,7 @@ export default function AboutPage() {
           <div className="glass p-10">
             <span className="eyebrow">Ownership</span>
             <h2
-              className="serif text-white mt-4"
+              className="serif text-ink mt-4"
               style={{
                 fontSize: 32,
                 fontWeight: 400,
@@ -134,7 +134,7 @@ export default function AboutPage() {
             </p>
             <Link
               href="/why-ponte"
-              className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-cream"
+              className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-ink"
               style={{ letterSpacing: "0.18em" }}
             >
               Why Ponte →
@@ -144,7 +144,7 @@ export default function AboutPage() {
           <div className="glass p-10">
             <span className="eyebrow">Why Ponte Trade exists</span>
             <h2
-              className="serif text-white mt-4"
+              className="serif text-ink mt-4"
               style={{
                 fontSize: 32,
                 fontWeight: 400,
@@ -181,7 +181,7 @@ export default function AboutPage() {
           <div className="relative z-10 flex flex-col items-center">
             <BridgeMark className="h-20 w-20" />
             <p
-              className="serif text-white mt-6"
+              className="serif text-ink mt-6"
               style={{
                 fontSize: 28,
                 fontWeight: 400,

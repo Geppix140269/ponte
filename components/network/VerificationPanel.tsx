@@ -45,11 +45,11 @@ export function VerificationPanel({ canRunChecks }: { canRunChecks: boolean }) {
   return (
     <div className="glass p-8 space-y-6">
       <div>
-        <h2 className="serif text-white" style={{ fontSize: 22, fontWeight: 500 }}>Verification</h2>
+        <h2 className="serif text-ink" style={{ fontSize: 22, fontWeight: 500 }}>Verification</h2>
         <p className="mt-2 text-[13px] text-gray-2">Request verification to raise your trust score and unlock the Verified Trader badge.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {KINDS.map(({ kind, label }) => (
-            <button key={kind} type="button" disabled={pending} onClick={() => request(kind)} className="badge hover:text-white transition-colors">
+            <button key={kind} type="button" disabled={pending} onClick={() => request(kind)} className="badge hover:text-ink transition-colors">
               Request {label}
             </button>
           ))}
@@ -57,8 +57,8 @@ export function VerificationPanel({ canRunChecks }: { canRunChecks: boolean }) {
         {note && <p className="mt-3 text-positive text-sm">{note}</p>}
       </div>
 
-      <div className="border-t border-white/10 pt-6">
-        <h3 className="serif text-white" style={{ fontSize: 18, fontWeight: 500 }}>Verify a counterparty with ADAMftd</h3>
+      <div className="border-t border-rule pt-6">
+        <h3 className="serif text-ink" style={{ fontSize: 18, fontWeight: 500 }}>Verify a counterparty with ADAMftd</h3>
         <form onSubmit={runCheck} className="mt-4 grid gap-3 sm:grid-cols-3">
           <input name="companyName" placeholder="Company name" className="field" required />
           <input name="country" placeholder="Country" className="field" />

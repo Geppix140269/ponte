@@ -13,7 +13,7 @@ export default async function NewListingPage() {
 
   return (
     <section className="container-px py-12 max-w-container mx-auto">
-      <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>Publish a listing</h1>
+      <h1 className="serif text-ink" style={{ fontSize: 30, fontWeight: 500 }}>Publish a listing</h1>
       <p className="mt-2 text-[13px] text-gray-2">Listings are moderated automatically. Banned phrasing is flagged or rejected.</p>
       <div className="mt-6"><ListingForm defaultType={defaultType} /></div>
     </section>

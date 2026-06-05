@@ -27,7 +27,7 @@ export function NetworkLanding() {
         <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <span className="pill"><span className="pulse-dot" /> Powered by ADAMftd · grounded verified data</span>
-            <h1 className="serif text-white mt-6" style={{ fontSize: 58, fontWeight: 500, lineHeight: 1.03 }}>
+            <h1 className="serif text-ink mt-6" style={{ fontSize: 58, fontWeight: 500, lineHeight: 1.03 }}>
               Build Trust.<br /><span className="text-gold">Trade Smarter.</span>
             </h1>
             <p className="mt-6 max-w-xl text-[17px] text-gray-2 leading-relaxed">
@@ -53,7 +53,7 @@ export function NetworkLanding() {
                 <Building2 className="h-5 w-5 text-gold" />
               </div>
               <div>
-                <p className="text-white text-[15px]" style={{ fontWeight: 500 }}>Rotterdam Commodity Partners BV</p>
+                <p className="text-ink text-[15px]" style={{ fontWeight: 500 }}>Rotterdam Commodity Partners BV</p>
                 <p className="text-[12px] text-gray-2">Netherlands · trust 85 · Verified Trader</p>
               </div>
             </div>
@@ -72,14 +72,14 @@ export function NetworkLanding() {
                 </div>
               ))}
             </div>
-            <p className="mt-5 pt-4 border-t border-white/10 text-[11px] text-gray-2">Grounded intelligence signals, not a certification. Illustrative result.</p>
+            <p className="mt-5 pt-4 border-t border-rule text-[11px] text-gray-2">Grounded intelligence signals, not a certification. Illustrative result.</p>
           </div>
         </div>
 
         {/* stat band */}
         <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-px rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
           {STATS.map((s) => (
-            <div key={s.label} className="bg-navy-800 px-6 py-7 text-center">
+            <div key={s.label} className="bg-surface px-6 py-7 text-center">
               <p className="serif text-gold" style={{ fontSize: 32, fontWeight: 500 }}>{s.value}</p>
               <p className="mt-1 mono text-[10px] text-gray-2 uppercase" style={{ letterSpacing: "0.16em" }}>{s.label}</p>
             </div>
@@ -96,18 +96,18 @@ export function NetworkLanding() {
                 <span className="badge-gold uppercase">{l.type}</span>
                 {l.verified && <span className="inline-flex items-center gap-1 text-[10px] text-positive uppercase" style={{ letterSpacing: "0.14em" }}><ShieldCheck className="h-3.5 w-3.5" />Verified</span>}
               </div>
-              <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{l.commodity}</h3>
+              <h3 className="serif text-ink text-lg" style={{ fontWeight: 500 }}>{l.commodity}</h3>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-gray-2">
                 <span>{l.route}</span><span>·</span><span>{l.qty}</span>
               </div>
-              <div className="mt-5 pt-4 border-t border-white/10 flex items-end justify-between">
-                <span className="serif text-white text-lg" style={{ fontWeight: 500 }}>{l.price}</span>
+              <div className="mt-5 pt-4 border-t border-rule flex items-end justify-between">
+                <span className="serif text-ink text-lg" style={{ fontWeight: 500 }}>{l.price}</span>
                 <span className="text-[11px] text-gray-2">trust {l.trust}</span>
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-7"><Link href="/network/listings" className="text-gold text-sm hover:text-cream inline-flex items-center gap-1.5">See all listings <ArrowRight className="h-4 w-4" /></Link></div>
+        <div className="mt-7"><Link href="/network/listings" className="text-gold text-sm hover:text-ink inline-flex items-center gap-1.5">See all listings <ArrowRight className="h-4 w-4" /></Link></div>
       </Section>
 
       {/* ===== How it works ===== */}
@@ -138,7 +138,7 @@ export function NetworkLanding() {
       </Section>
 
       {/* ===== Credibility row ===== */}
-      <section className="container-px py-12 max-w-container mx-auto border-t border-white/8">
+      <section className="container-px py-12 max-w-container mx-auto border-t border-rule">
         <p className="text-center mono text-[10px] text-gray-2 uppercase mb-5" style={{ letterSpacing: "0.2em" }}>Verified against official sources</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {SOURCES.map((s) => <span key={s} className="badge">{s}</span>)}
@@ -158,7 +158,7 @@ export function NetworkLanding() {
       {/* ===== CTA ===== */}
       <section className="container-px py-20 max-w-container mx-auto">
         <div className="glass p-12 text-center" style={{ background: "linear-gradient(180deg, rgba(201,151,58,0.08), rgba(255,255,255,0.04))" }}>
-          <h2 className="serif text-white" style={{ fontSize: 40, fontWeight: 500 }}>Trade with people you can trust.</h2>
+          <h2 className="serif text-ink" style={{ fontSize: 40, fontWeight: 500 }}>Trade with people you can trust.</h2>
           <p className="mt-4 text-[16px] text-gray-2">Join the verified network for global trade.</p>
           <div className="mt-8 flex justify-center gap-3">
             <Link href="/pricing" className="btn-gold">Get started free</Link>
@@ -172,9 +172,9 @@ export function NetworkLanding() {
 
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="container-px py-14 max-w-container mx-auto border-t border-white/8">
+    <section className="container-px py-14 max-w-container mx-auto border-t border-rule">
       <p className="eyebrow text-gold">{eyebrow}</p>
-      <h2 className="serif text-white mt-3 mb-8" style={{ fontSize: 30, fontWeight: 500 }}>{title}</h2>
+      <h2 className="serif text-ink mt-3 mb-8" style={{ fontSize: 30, fontWeight: 500 }}>{title}</h2>
       {children}
     </section>
   );
@@ -183,7 +183,7 @@ function Step({ icon, n, title, body }: { icon: React.ReactNode; n: string; titl
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-3">{icon}<span className="mono text-[11px] text-gray-2">{n}</span></div>
-      <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{title}</h3>
+      <h3 className="serif text-ink text-lg" style={{ fontWeight: 500 }}>{title}</h3>
       <p className="mt-2 text-[13px] text-gray-2 leading-relaxed">{body}</p>
     </div>
   );
@@ -192,7 +192,7 @@ function Card({ icon, title, body }: { icon?: React.ReactNode; title: string; bo
   return (
     <div className="card p-6">
       {icon && <div className="mb-3">{icon}</div>}
-      <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{title}</h3>
+      <h3 className="serif text-ink text-lg" style={{ fontWeight: 500 }}>{title}</h3>
       <p className="mt-2 text-[13px] text-gray-2 leading-relaxed">{body}</p>
     </div>
   );
@@ -200,7 +200,7 @@ function Card({ icon, title, body }: { icon?: React.ReactNode; title: string; bo
 function Faq({ q, a }: { q: string; a: string }) {
   return (
     <div className="glass p-6">
-      <p className="text-white text-[15px]" style={{ fontWeight: 500 }}>{q}</p>
+      <p className="text-ink text-[15px]" style={{ fontWeight: 500 }}>{q}</p>
       <p className="mt-2 text-[13px] text-gray-2 leading-relaxed">{a}</p>
     </div>
   );

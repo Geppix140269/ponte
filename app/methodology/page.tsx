@@ -39,7 +39,7 @@ export default function MethodologyPage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
         <span className="pill">Methodology</span>
         <h1
-          className="serif text-white mt-6 mb-7 max-w-3xl"
+          className="serif text-ink mt-6 mb-7 max-w-3xl"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -68,7 +68,7 @@ export default function MethodologyPage() {
         <div className="glass p-10 lg:p-14">
           <span className="eyebrow">Authoritative sources</span>
           <h2
-            className="serif text-white mt-4 max-w-3xl"
+            className="serif text-ink mt-4 max-w-3xl"
             style={{
               fontSize: 32,
               fontWeight: 400,
@@ -108,7 +108,7 @@ export default function MethodologyPage() {
           <div className="num-italic">— 01 / Process</div>
           <div>
             <h2
-              className="serif font-medium text-3xl md:text-[40px] text-white"
+              className="serif font-medium text-3xl md:text-[40px] text-ink"
               style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
             >
               From query to licensed PDF.
@@ -119,7 +119,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Aggregation</span>
             <h3
-              className="serif text-white mt-5"
+              className="serif text-ink mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Machine-scale data ingestion.
@@ -135,7 +135,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Conflict resolution</span>
             <h3
-              className="serif text-white mt-5"
+              className="serif text-ink mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Sources conflict — we resolve them.
@@ -150,7 +150,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Senior-analyst review</span>
             <h3
-              className="serif text-white mt-5"
+              className="serif text-ink mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Every report signed off.
@@ -165,7 +165,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Licence and provenance</span>
             <h3
-              className="serif text-white mt-5"
+              className="serif text-ink mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Citable. Traceable. Yours.
@@ -192,7 +192,7 @@ export default function MethodologyPage() {
           />
           <div className="relative z-10">
             <h2
-              className="serif text-white"
+              className="serif text-ink"
               style={{
                 fontSize: 32,
                 fontWeight: 400,

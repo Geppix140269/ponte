@@ -173,7 +173,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="price_from" id="price_from" defaultChecked={product?.price_from} />
-            <label htmlFor="price_from" className="text-sm text-cream">Show as &ldquo;From $X&rdquo;</label>
+            <label htmlFor="price_from" className="text-sm text-ink">Show as &ldquo;From $X&rdquo;</label>
           </div>
         </div>
         <div>
@@ -206,11 +206,11 @@ export default function AdminProductForm({ product, categories }: Props) {
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="featured" id="featured" defaultChecked={product?.featured} />
-            <label htmlFor="featured" className="text-sm text-cream">Featured on homepage</label>
+            <label htmlFor="featured" className="text-sm text-ink">Featured on homepage</label>
           </div>
           <div className="flex items-center gap-2 self-end pb-2">
             <input type="checkbox" name="is_subscription" id="is_subscription" defaultChecked={product?.is_subscription} />
-            <label htmlFor="is_subscription" className="text-sm text-cream">Subscription product</label>
+            <label htmlFor="is_subscription" className="text-sm text-ink">Subscription product</label>
           </div>
         </div>
       </section>
@@ -220,7 +220,7 @@ export default function AdminProductForm({ product, categories }: Props) {
         <h2 className="text-[11px] uppercase text-gold tracking-[0.22em] font-medium">Configuration</h2>
         <div className="flex items-center gap-2">
           <input type="checkbox" name="is_configurable" id="is_configurable" defaultChecked={product?.is_configurable} />
-          <label htmlFor="is_configurable" className="text-sm text-cream">Product is configurable (has form fields)</label>
+          <label htmlFor="is_configurable" className="text-sm text-ink">Product is configurable (has form fields)</label>
         </div>
         <div>
           <label className="field-label">Config fields (JSON array — leave blank if not configurable)</label>

@@ -19,7 +19,7 @@ export default async function VerifyPage() {
   return (
     <section className="container-px py-16 max-w-container mx-auto">
       <p className="mono text-[11px] text-gold uppercase" style={{ letterSpacing: "0.22em" }}>Powered by ADAMftd</p>
-      <h1 className="serif text-white mt-3" style={{ fontSize: 34, fontWeight: 500 }}>Verify a counterparty</h1>
+      <h1 className="serif text-ink mt-3" style={{ fontSize: 34, fontWeight: 500 }}>Verify a counterparty</h1>
       <p className="mt-3 max-w-2xl text-[15px] text-gray-2 leading-relaxed">
         Screen a company against sanctions lists, official registries, and real customs records before
         you commit. Results are grounded in ADAMftd trade intelligence and cached so a counterparty is

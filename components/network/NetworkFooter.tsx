@@ -46,7 +46,7 @@ export function NetworkFooter() {
             <div className="md:col-span-4 md:pr-6">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-gold" />
-                <span className="serif text-white text-lg" style={{ fontWeight: 600 }}>ponte<span className="text-gold">.trade</span></span>
+                <span className="serif text-ink text-lg" style={{ fontWeight: 600 }}>ponte<span className="text-gold">.trade</span></span>
               </div>
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
                 The verified network for real buyers, sellers, and trading houses. Build trust,
@@ -65,7 +65,7 @@ export function NetworkFooter() {
               </div>
             ))}
           </div>
-          <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
+          <div className="mt-10 space-y-2 border-t border-rule pt-6 text-[11px] text-gray-2">
             <p>ponte.trade is an ICTTM company. Trade facilitation backed by ADAMftd and 7 billion+ verified trade records. ADAMftd verification provides grounded intelligence signals, not a certification of legitimacy.</p>
             <p className="uppercase" style={{ letterSpacing: "0.18em" }}>© {new Date().getFullYear()} Ponte Trade / ICTTM · London · ponte.trade</p>
           </div>

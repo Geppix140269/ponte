@@ -28,7 +28,7 @@ export default async function AdminOverview() {
   return (
     <div>
       <h1
-        className="serif text-white mb-7"
+        className="serif text-ink mb-7"
         style={{ fontSize: 32, fontWeight: 500 }}
       >
         Overview
@@ -37,7 +37,7 @@ export default async function AdminOverview() {
         {cards.map((c) => (
           <div key={c.label} className="glass p-6">
             <p
-              className="serif text-white"
+              className="serif text-ink"
               style={{ fontSize: 36, fontWeight: 500, lineHeight: 1 }}
             >
               {c.value}

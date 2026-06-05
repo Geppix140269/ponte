@@ -23,7 +23,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
       <div className="glass p-8 md:p-10">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <h1 className="serif text-white" style={{ fontSize: 34, fontWeight: 500 }}>
+            <h1 className="serif text-ink" style={{ fontSize: 34, fontWeight: 500 }}>
               {profile.full_name ?? "Unnamed trader"}
             </h1>
             {profile.title && <p className="mt-1 text-[15px] text-gray-2">{profile.title}</p>}
@@ -51,7 +51,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
           {profile.typical_deal_size && (
             <div>
               <p className="mono text-[10px] text-gray-2 uppercase" style={{ letterSpacing: "0.18em" }}>Typical deal size</p>
-              <p className="mt-1 text-[14px] text-white">{profile.typical_deal_size}</p>
+              <p className="mt-1 text-[14px] text-ink">{profile.typical_deal_size}</p>
             </div>
           )}
         </div>

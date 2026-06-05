@@ -84,7 +84,7 @@ export default function ProductBuyPanel({
     <div className="glass p-7">
       <div className="flex items-baseline gap-2">
         <span
-          className="serif text-white"
+          className="serif text-ink"
           style={{ fontSize: 36, fontWeight: 500 }}
         >
           {panelPrice()}
@@ -140,11 +140,11 @@ export default function ProductBuyPanel({
                   value={values[field.name] ?? ""}
                   onChange={(e) => setField(field.name, e.target.value)}
                 >
-                  <option value="" className="bg-navy">
+                  <option value="" className="bg-surface">
                     Select a country…
                   </option>
                   {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code} className="bg-navy">
+                    <option key={c.code} value={c.code} className="bg-surface">
                       {c.name}
                     </option>
                   ))}
@@ -156,11 +156,11 @@ export default function ProductBuyPanel({
                   value={values[field.name] ?? ""}
                   onChange={(e) => setField(field.name, e.target.value)}
                 >
-                  <option value="" className="bg-navy">
+                  <option value="" className="bg-surface">
                     Select…
                   </option>
                   {field.options?.map((o) => (
-                    <option key={o.value} value={o.value} className="bg-navy">
+                    <option key={o.value} value={o.value} className="bg-surface">
                       {o.label}
                     </option>
                   ))}
@@ -254,13 +254,13 @@ export default function ProductBuyPanel({
       >
         <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          <span className="font-medium text-cream">Quality guaranteed.</span>{" "}
+          <span className="font-medium text-ink">Quality guaranteed.</span>{" "}
           Every report is manually QA&apos;d before delivery, if it misses
           your brief, we&apos;ll revise it free.
         </span>
       </div>
 
-      <ul className="mt-5 space-y-2 border-t border-white/10 pt-5 text-[12px] text-gray-2">
+      <ul className="mt-5 space-y-2 border-t border-rule pt-5 text-[12px] text-gray-2">
         <li className="flex items-center gap-2">
           <FileText className="h-3.5 w-3.5 text-gold" /> Licensed PDF,
           watermarked to you

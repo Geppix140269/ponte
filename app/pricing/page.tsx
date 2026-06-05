@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Pricing — ponte.trade" };
 export default function PricingPage() {
   return (
     <section className="container-px py-16 max-w-container mx-auto">
-      <h1 className="serif text-white text-center" style={{ fontSize: 40, fontWeight: 500 }}>Plans built on trust</h1>
+      <h1 className="serif text-ink text-center" style={{ fontSize: 40, fontWeight: 500 }}>Plans built on trust</h1>
       <p className="mt-3 text-center text-[15px] text-gray-2">Start free. Upgrade for verification, deal rooms, and ADAMftd checks.</p>
 
       <div className="mt-12 grid gap-5 lg:grid-cols-4">
@@ -19,8 +19,8 @@ export default function PricingPage() {
           return (
             <div key={plan} className={`glass p-7 flex flex-col ${highlight ? "ring-1 ring-gold/50" : ""}`}>
               {highlight && <span className="badge-gold self-start mb-3">Most popular</span>}
-              <h2 className="serif text-white" style={{ fontSize: 22, fontWeight: 500 }}>{def.name}</h2>
-              <p className="serif text-white mt-2" style={{ fontSize: 30, fontWeight: 500 }}>{formatPlanPrice(plan)}</p>
+              <h2 className="serif text-ink" style={{ fontSize: 22, fontWeight: 500 }}>{def.name}</h2>
+              <p className="serif text-ink mt-2" style={{ fontSize: 30, fontWeight: 500 }}>{formatPlanPrice(plan)}</p>
               <ul className="mt-5 space-y-2 flex-1">
                 {PLAN_FEATURES[plan].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-[13px] text-gray-2">

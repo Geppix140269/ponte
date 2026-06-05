@@ -62,7 +62,7 @@ export default async function AdminOrders() {
   return (
     <div>
       <h1
-        className="serif text-white mb-2"
+        className="serif text-ink mb-2"
         style={{ fontSize: 32, fontWeight: 500 }}
       >
         Orders
@@ -101,7 +101,7 @@ export default async function AdminOrders() {
                     <span className="mono text-[11px] text-gray-2">
                       #{o.id.slice(0, 8)}
                       {o.email && (
-                        <span className="ml-2 text-cream">{o.email}</span>
+                        <span className="ml-2 text-ink">{o.email}</span>
                       )}
                     </span>
                     <span className="mono text-[10px] text-gray-2">
@@ -122,7 +122,7 @@ export default async function AdminOrders() {
                       {statusV2}
                     </span>
                     <span
-                      className="serif text-white text-lg"
+                      className="serif text-ink text-lg"
                       style={{ fontWeight: 500 }}
                     >
                       {formatPrice(o.total_cents ?? 0, o.currency ?? "USD")}
@@ -142,10 +142,10 @@ export default async function AdminOrders() {
                   {(o.order_items ?? []).map((it) => (
                     <li
                       key={it.id}
-                      className="flex flex-col gap-2 border-t border-white/10 pt-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-2 border-t border-rule pt-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <span>
-                        <span className="text-cream">
+                        <span className="text-ink">
                           {it.config_values?.sku ?? "Item"}
                         </span>
                         <span className="ml-2 mono text-[11px] text-gray-2">
