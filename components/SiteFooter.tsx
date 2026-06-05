@@ -3,11 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
 import { CATEGORIES } from "@/lib/catalogue";
-import { isPlatformRoute } from "@/lib/network/routes";
+import { isPlatformRoute, isOwnChromeRoute } from "@/lib/network/routes";
 import { NetworkFooter } from "@/components/network/NetworkFooter";
 
 export default function SiteFooter() {
   const pathname = usePathname();
+  // The landing ("/") renders its own footer — suppress the global one.
+  if (isOwnChromeRoute(pathname)) return null;
   if (isPlatformRoute(pathname)) return <NetworkFooter />;
 
   return (

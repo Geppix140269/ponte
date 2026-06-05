@@ -20,8 +20,15 @@ export function isStoreRoute(pathname: string): boolean {
   return STORE_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+// The homepage ("/") is the self-contained Ponte Landing, which renders its OWN
+// nav + footer (the light terminal chrome). The global header/footer are
+// suppressed there so they don't double up.
+export function isOwnChromeRoute(pathname: string): boolean {
+  return pathname === "/";
+}
+
 // True for everything that should wear the marketplace (network) chrome — i.e.
-// the whole site except the report shopping funnel.
+// the whole site except the report shopping funnel and the self-chromed landing.
 export function isPlatformRoute(pathname: string): boolean {
-  return !isStoreRoute(pathname);
+  return !isStoreRoute(pathname) && !isOwnChromeRoute(pathname);
 }

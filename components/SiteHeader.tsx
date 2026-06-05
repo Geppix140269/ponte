@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ShoppingCart, Menu, X, User } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useCart } from "@/lib/cart-store";
-import { isPlatformRoute } from "@/lib/network/routes";
+import { isPlatformRoute, isOwnChromeRoute } from "@/lib/network/routes";
 import { NetworkHeader } from "@/components/network/NetworkHeader";
 
 const navLinks = [
@@ -25,6 +25,8 @@ export default function SiteHeader() {
   useEffect(() => setMounted(true), []);
   useEffect(() => setOpen(false), [pathname]);
 
+  // The landing ("/") renders its own chrome — suppress the global header.
+  if (isOwnChromeRoute(pathname)) return null;
   // Trade-platform routes use the network chrome.
   if (isPlatformRoute(pathname)) return <NetworkHeader />;
 
