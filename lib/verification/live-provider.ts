@@ -3,19 +3,17 @@
 // Implements the VerificationProvider contract against the real ADAMftd API
 // (https://api.adamftd.org), auth via the X-API-KEY header.
 //
-// Endpoints used (from Phat's API bundle):
-//   Sanctions:    GET /sanction-service/public/v1/search?q=<name>
-//   Trade data:   GET /trade-service/public/v1/company-transactions/analytics/monthly?keyword=<name>
-//                 GET /trade-service/public/v1/company-transactions/hs-code-analytics/list?keyword=<name>
-//                 GET /trade-service/public/v1/company-transactions/trading-countries/list?keyword=<name>
+// Endpoints (from Phat's API bundle):
+//   Sanctions: GET /sanction-service/public/v1/search?q=<name>
+//   Trade:     GET /trade-service/public/v1/company-transactions/analytics/monthly?keyword=<name>
+//              GET /trade-service/public/v1/company-transactions/hs-code-analytics/list?keyword=<name>
+//              GET /trade-service/public/v1/company-transactions/trading-countries/list?keyword=<name>
 //
-// Registry note: the Company Due Diligence endpoints in the bundle are keyed by
-// an internal company_id and the bundle has no company-NAME search endpoint, so
-// we cannot independently resolve a registry record from a name yet. Until Phat
-// confirms a name-search endpoint, company_registered is derived from official
-// customs presence (a company that appears in customs records is a real trading
-// entity), at medium confidence. Swap lookupRegistry() for the real registry
-// call when available; nothing else changes.
+// Registry note: the Company Due Diligence endpoints are keyed by an internal
+// company_id and the bundle has no company-NAME search, so company_registered
+// is derived from official customs presence at medium confidence until a
+// name-search endpoint is available. Swap lookupRegistry() then; nothing else
+// changes.
 
 import type {
   VerificationProvider, SanctionsResult, RegistryResult, TradeActivityResult,
@@ -47,6 +45,46 @@ async function getJson(path: string): Promise<any> {
 function norm(s: string): string {
   return (s || "").toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()'"]/g, " ").replace(/\s+/g, " ").trim();
 }
+function sancTokens(s: string): string[] {
+  return norm(s).split(" ").filter((t) => t.length >= 2);
+}
+function jaccard(a: string[], b: string[]): number {
+  if (a.length === 0 || b.length === 0) return 0;
+  const B = new Set(b);
+  const seen = new Set<string>();
+  let inter = 0;
+  for (const x of a) { if (B.has(x) && !seen.has(x)) inter++; seen.add(x); }
+  const uni = new Set(a.concat(b)).size;
+  return uni ? inter / uni : 0;
+}
+function containsAll(q: string[], c: string[]): boolean {
+  const C = new Set(c);
+  return q.length > 0 && q.every((t) => C.has(t));
+}
+
+// Pure sanctions-match classifier. The sanctions search is fuzzy and returns
+// candidates even for clean names, so a returned candidate is NOT a match by
+// itself. Only a strong name match flags; moderate overlap goes to manual
+// review; tangential results resolve to clear. Exported for unit testing.
+export function sanctionMatchStatus(
+  query: string,
+  candidateNames: string[],
+): { status: "clear" | "partial" | "hit"; confidence: number } {
+  if (candidateNames.length === 0) return { status: "clear", confidence: 0.99 };
+  const qTok = sancTokens(query);
+  let bestScore = 0;
+  let strong = false;
+  for (const nm of candidateNames) {
+    const cTok = sancTokens(nm);
+    const j = jaccard(qTok, cTok);
+    if (j > bestScore) bestScore = j;
+    if (j >= 0.7 || (qTok.length >= 2 && containsAll(qTok, cTok))) strong = true;
+  }
+  if (strong) return { status: "hit", confidence: 0.95 };
+  if (bestScore >= 0.45) return { status: "partial", confidence: 0.6 };
+  return { status: "clear", confidence: 0.95 };
+}
+
 function dateRange(): { start: string; end: string } {
   const end = new Date();
   const start = new Date(end);
@@ -68,22 +106,20 @@ export class LiveVerificationProvider implements VerificationProvider {
     const results: any[] = json?.data?.results ?? [];
     if (results.length === 0) return { status: "clear", confidence: 0.99, matchedLists: [] };
 
-    const want = norm(name);
-    let best: any = null;
-    let bestExact = false;
+    const candidateNames: string[] = [];
     for (const r of results) {
-      const names = [r.caption, ...(r.properties?.alias ?? [])].filter(Boolean).map(norm);
-      if (names.includes(want)) { best = r; bestExact = true; break; }
-      if (!best && names.some((n: string) => n.includes(want) || want.includes(n))) best = r;
+      for (const nm of [r.caption, ...(r.properties?.alias ?? [])]) if (nm) candidateNames.push(String(nm));
     }
-    const matchedFrom = (r: any): string[] => {
-      const p = r?.properties ?? {};
-      const lists = p.program ?? p.programId ?? p.datasets ?? p.topics ?? [];
-      return Array.isArray(lists) ? lists.map(String) : [String(lists)];
-    };
-    if (bestExact) return { status: "hit", confidence: 0.97, matchedLists: matchedFrom(best), reason: "Exact name match on a sanctions list." };
-    if (best) return { status: "hit", confidence: 0.9, matchedLists: matchedFrom(best), reason: "Close name match on a sanctions list." };
-    return { status: "partial", confidence: 0.55, matchedLists: matchedFrom(results[0]), reason: "Possible name match requires review." };
+    const verdict = sanctionMatchStatus(name, candidateNames);
+    if (verdict.status === "clear") return { status: "clear", confidence: verdict.confidence, matchedLists: [] };
+
+    const p = results[0]?.properties ?? {};
+    const raw = p.program ?? p.programId ?? p.datasets ?? p.topics ?? [];
+    const matchedLists = (Array.isArray(raw) ? raw : [raw]).map(String);
+    const reason = verdict.status === "hit"
+      ? "Strong name match on a sanctions list."
+      : "Partial name match requires manual review.";
+    return { status: verdict.status, confidence: verdict.confidence, matchedLists, reason };
   }
 
   // ---- Trade activity ----
@@ -102,7 +138,6 @@ export class LiveVerificationProvider implements VerificationProvider {
     const months: any[] = monthly?.data ?? [];
     const totalBol = months.reduce((s, m) => s + (Number(m.bol) || 0), 0);
     const hasActivity = (monthly?.total_records ?? months.length) > 0;
-
     const topHsCodes: string[] = (hs?.data ?? []).map((d: any) => String(d.hscode)).filter(Boolean);
 
     const tradingAreas: string[] = [];
@@ -115,13 +150,7 @@ export class LiveVerificationProvider implements VerificationProvider {
       }
     }
 
-    return {
-      hasActivity,
-      totalShipments: totalBol,
-      topHsCodes,
-      tradingAreas,
-      billsOfLading: totalBol,
-    };
+    return { hasActivity, totalShipments: totalBol, topHsCodes, tradingAreas, billsOfLading: totalBol };
   }
 
   // ---- Registry (derived; see file header) ----
@@ -133,16 +162,10 @@ export class LiveVerificationProvider implements VerificationProvider {
   private registryFromTrade(name: string, country: string | undefined, trade: TradeActivityResult): RegistryResult {
     if (!trade.hasActivity) return { found: false, confidence: "none" };
     const inferredCountry = country ?? trade.tradingAreas.find((a) => a.length > 2);
-    return {
-      found: true,
-      legalName: name,
-      status: "active",
-      country: inferredCountry,
-      confidence: "medium", // upgrade to registry-backed once a name-search endpoint exists
-    };
+    return { found: true, legalName: name, status: "active", country: inferredCountry, confidence: "medium" };
   }
 
-  // ---- Compose (one efficient pass: sanctions + a single trade fetch) ----
+  // ---- Compose (sanctions + a single trade fetch) ----
   async verifyCounterparty(query: CounterpartyQuery): Promise<VerificationResult> {
     const [sanctions, tradeActivity] = await Promise.all([
       this.screenSanctions(query.companyName),
