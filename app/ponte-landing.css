@@ -1,8 +1,13 @@
 /* Ponte Landing v1 — "Concept C: Heritage trading press x terminal data".
- * Ported from Claude Design. ALL rules scoped under .ponte-terminal; keyframes
- * prefixed pt-. Comments stripped before scoping so token blocks resolve.
+ * Ported from Claude Design (accent = gold). ALL rules scoped under
+ * .ponte-terminal; keyframes prefixed pt-; comments stripped before scoping.
  */
 .ponte-terminal { min-height: 100vh; position: relative; z-index: 0; }
+/* Neutralize the dark site's global "h1..h4 { color:#fff }" (globals.css @layer
+ * base) which would otherwise render the landing's ink headings invisible on
+ * the cream surface. The design's heading classes set font but inherit color. */
+.ponte-terminal h1, .ponte-terminal h2, .ponte-terminal h3,
+.ponte-terminal h4, .ponte-terminal h5, .ponte-terminal h6 { color: var(--ink); }
 .ponte-terminal {
   
   --surface:    #FCFBF7;
@@ -21,7 +26,7 @@
   --warn:       #C9973A;     
   --gold:       #C9973A;     
 
-  --accent:     var(--pos);
+  --accent:     var(--gold);
 
   
   --f-serif: var(--font-playfair), 'Playfair Display', Georgia, serif;
