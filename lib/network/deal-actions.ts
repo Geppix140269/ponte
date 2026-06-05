@@ -52,7 +52,7 @@ export async function createDeal(listingId: string, message?: string): Promise<{
   if (listing.owner_id === user.id) return { error: "cannot_enquire_own_listing" };
 
   const { data: prof } = await createClient().from("profiles")
-    .select("id, role, account_type, plan, plan_status, verified_broker").eq("id", user.id).maybeSingle();
+    .select("id, role, account_type, plan, plan_status, verified_trader").eq("id", user.id).maybeSingle();
   if (!prof) return { error: "no_profile" };
   const limit = canOpenDeal(prof as Principal, await countActiveDeals(user.id));
   if (!limit.allowed) return { error: limit.reason ?? "deal_limit_reached" };

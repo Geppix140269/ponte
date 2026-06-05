@@ -22,7 +22,7 @@ export const PLAN_FEATURES: Record<Plan, string[]> = {
   ],
   pro: [
     "Unlimited listings", "Unlimited deals", "Advanced search", "Analytics",
-    "Trade references", "Verified Broker badge", "10 ADAMftd checks / month",
+    "Trade references", "Verified Trader badge", "10 ADAMftd checks / month",
   ],
   enterprise: [
     "Multi-user access", "Team management", "API access",

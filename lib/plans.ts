@@ -1,4 +1,4 @@
-// Broker-network subscription plans and Stripe price mapping.
+// Trade-network subscription plans and Stripe price mapping.
 //
 // Prices follow the spec: Starter EUR 49, Pro EUR 149, Enterprise EUR 499 / month.
 // The actual amounts live in Stripe Price objects; here we map plan + interval to

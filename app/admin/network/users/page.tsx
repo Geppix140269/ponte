@@ -13,7 +13,7 @@ export default async function NetworkUsers() {
         {rows.map((u: any) => (
           <div key={u.id} className="glass p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-white">{u.full_name ?? "—"} {u.company ? `· ${u.company}` : ""} {u.verified_broker ? <span className="badge-gold ml-2">Verified</span> : null}</p>
+              <p className="text-white">{u.full_name ?? "—"} {u.company ? `· ${u.company}` : ""} {u.verified_trader ? <span className="badge-gold ml-2">Verified</span> : null}</p>
               <p className="text-[12px] text-gray-2">{u.account_type ?? "no type"} · {u.plan} · trust {u.trust_score} · {u.risk_category}</p>
             </div>
             <AdminActions kind="user" id={u.id} />

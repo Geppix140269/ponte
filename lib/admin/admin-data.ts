@@ -28,7 +28,7 @@ export async function openFraudFlags() {
 export async function recentUsers() {
   const sb = createAdminClient();
   const { data } = await sb.from("profiles")
-    .select("id, full_name, company, country, account_type, plan, plan_status, trust_score, risk_category, verification_level, verified_broker, created_at")
+    .select("id, full_name, company, country, account_type, plan, plan_status, trust_score, risk_category, verification_level, verified_trader, created_at")
     .order("created_at", { ascending: false }).limit(200);
   return data ?? [];
 }

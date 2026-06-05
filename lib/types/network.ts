@@ -1,7 +1,7 @@
-// TypeScript row types for the broker-network tables (Phase 1 schema).
+// TypeScript row types for the trade-network tables (Phase 1 schema).
 // Mirror of supabase/migrations/20260604_broker_network_phase1.sql.
 
-export type AccountType = "broker" | "buyer" | "seller" | "trader" | "enterprise";
+export type AccountType = "buyer" | "seller" | "trader" | "enterprise";
 export type Plan = "free" | "starter" | "pro" | "enterprise";
 export type VerificationLevel =
   | "unverified" | "email_verified" | "phone_verified" | "company_verified" | "fully_verified";
@@ -16,7 +16,7 @@ export interface NetworkProfile {
   role: "customer" | "admin";
   account_type: AccountType | null;
   plan: Plan;
-  verified_broker: boolean;
+  verified_trader: boolean;
   organization_id: string | null;
   trust_score: number;
   verification_level: VerificationLevel;

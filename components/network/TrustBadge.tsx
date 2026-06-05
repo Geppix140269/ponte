@@ -1,5 +1,6 @@
 import { ShieldCheck, ShieldAlert, Shield } from "lucide-react";
-import type { VerificationLevel, RiskCategory } from "@/lib/types/network";
+import type { VerificationLevel, RiskCategory, AccountType } from "@/lib/types/network";
+import { verifiedTraderLabel } from "@/lib/network/verification-levels";
 
 const LEVEL_LABEL: Record<VerificationLevel, string> = {
   unverified: "Unverified",
@@ -10,12 +11,13 @@ const LEVEL_LABEL: Record<VerificationLevel, string> = {
 };
 
 export function TrustBadge({
-  trustScore, level, risk, verifiedBroker,
+  trustScore, level, risk, verifiedTrader, accountType,
 }: {
   trustScore: number;
   level: VerificationLevel;
   risk: RiskCategory;
-  verifiedBroker?: boolean;
+  verifiedTrader?: boolean;
+  accountType?: AccountType | null;
 }) {
   const Icon = level === "fully_verified" || level === "company_verified" ? ShieldCheck
     : risk === "high" || risk === "blocked" ? ShieldAlert : Shield;
@@ -28,7 +30,7 @@ export function TrustBadge({
         <span className="mono text-[10px] text-gray-2 uppercase" style={{ letterSpacing: "0.18em" }}>/ 100 trust</span>
       </div>
       <span className="badge">{LEVEL_LABEL[level]}</span>
-      {verifiedBroker && <span className="badge-gold">Verified Broker</span>}
+      {verifiedTrader && <span className="badge-gold">{verifiedTraderLabel(accountType ?? null)}</span>}
     </div>
   );
 }

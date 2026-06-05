@@ -16,7 +16,7 @@ export function ListingCard({ listing }: { listing: ListingWithOwner }) {
     <Link href={`/network/listings/${listing.id}`} className="card group p-6">
       <div className="flex items-center justify-between mb-3">
         <span className="badge-gold uppercase">{listing.listing_type}</span>
-        {listing.owner?.verified_broker && (
+        {listing.owner?.verified_trader && (
           <span className="inline-flex items-center gap-1 text-[10px] text-positive uppercase" style={{ letterSpacing: "0.16em" }}>
             <ShieldCheck className="h-3.5 w-3.5" />Verified
           </span>

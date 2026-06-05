@@ -47,7 +47,7 @@ export function ProfileForm({ profile }: { profile: NetworkProfile }) {
           <Label>Account type</Label>
           <select name="account_type" defaultValue={profile.account_type ?? ""} className="field">
             <option value="">Select…</option>
-            {["broker", "buyer", "seller", "trader", "enterprise"].map((t) => <option key={t} value={t}>{t}</option>)}
+            {["buyer", "seller", "trader", "enterprise"].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <Input name="years_active" label="Years active" def={profile.years_active?.toString() ?? ""} type="number" />

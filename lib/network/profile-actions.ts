@@ -10,7 +10,7 @@ export interface ProfileEdit {
   title?: string;
   company?: string;
   country?: string;
-  account_type?: "broker" | "buyer" | "seller" | "trader" | "enterprise";
+  account_type?: "buyer" | "seller" | "trader" | "enterprise";
   languages?: string[];
   commodities?: string[];
   regions_served?: string[];

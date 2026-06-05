@@ -23,9 +23,19 @@ export function computeVerificationLevel(approved: Iterable<VerificationKind>): 
   return "unverified";
 }
 
-// A broker earns the Verified Broker badge at company_verified or above.
-export function isVerifiedBroker(level: VerificationLevel, accountType: AccountType | null): boolean {
-  return accountType === "broker" && (level === "company_verified" || level === "fully_verified");
+// Any principal account (buyer, seller, or trader) earns the Verified Trader
+// badge at company_verified or above.
+export function isVerifiedTrader(level: VerificationLevel, accountType: AccountType | null): boolean {
+  const principal = accountType === "buyer" || accountType === "seller" || accountType === "trader";
+  return principal && (level === "company_verified" || level === "fully_verified");
+}
+
+// Role-aware label for the Verified badge.
+export function verifiedTraderLabel(accountType: AccountType | null): string {
+  if (accountType === "seller") return "Verified Seller";
+  if (accountType === "buyer") return "Verified Buyer";
+  if (accountType === "trader") return "Verified Trader";
+  return "Verified";
 }
 
 // Total trust contribution from a set of approved verifications.

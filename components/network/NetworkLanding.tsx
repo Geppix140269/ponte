@@ -31,8 +31,8 @@ export function NetworkLanding() {
               Build Trust.<br /><span className="text-gold">Trade Smarter.</span>
             </h1>
             <p className="mt-6 max-w-xl text-[17px] text-gray-2 leading-relaxed">
-              The verified professional network for commodity brokers, traders, and counterparties.
-              Know exactly who you are dealing with, publish opportunities, and close in trusted deal
+              The verified network for real buyers, sellers, and trading houses. Trade directly
+              with verified principals — no mandates, no daisy chains — and close in trusted deal
               rooms, backed by 7B+ verified trade records.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
@@ -54,7 +54,7 @@ export function NetworkLanding() {
               </div>
               <div>
                 <p className="text-white text-[15px]" style={{ fontWeight: 500 }}>Rotterdam Commodity Partners BV</p>
-                <p className="text-[12px] text-gray-2">Netherlands · trust 85 · Verified Broker</p>
+                <p className="text-[12px] text-gray-2">Netherlands · trust 85 · Verified Trader</p>
               </div>
             </div>
             <div className="mt-6 space-y-2.5">
@@ -113,7 +113,7 @@ export function NetworkLanding() {
       {/* ===== How it works ===== */}
       <Section eyebrow="How it works" title="From handshake to closed deal, with trust at every step">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Step icon={<BadgeCheck className="h-5 w-5 text-gold" />} n="01" title="Build your profile" body="Verify identity and company. Earn a trust score and the Verified Broker badge." />
+          <Step icon={<BadgeCheck className="h-5 w-5 text-gold" />} n="01" title="Build your profile" body="Verify identity and company. Earn a trust score and the Verified Trader badge." />
           <Step icon={<Search className="h-5 w-5 text-gold" />} n="02" title="Publish or search" body="Post offers and requests, or search by commodity, corridor, trust, and verification." />
           <Step icon={<FileSearch className="h-5 w-5 text-gold" />} n="03" title="Verify with ADAMftd" body="Screen a counterparty against sanctions, registries, and real customs records." />
           <Step icon={<Handshake className="h-5 w-5 text-gold" />} n="04" title="Close in a deal room" body="Negotiate privately. Exchange contact only after mutual acceptance." />
@@ -132,7 +132,7 @@ export function NetworkLanding() {
       {/* ===== Profiles + deal rooms ===== */}
       <Section eyebrow="The network" title="Professional profiles. Private deal rooms.">
         <div className="grid gap-5 lg:grid-cols-2">
-          <Card icon={<ShieldCheck className="h-5 w-5 text-gold" />} title="Broker profiles" body="LinkedIn-style profiles with trust scores, verification level, commodities, regions, and a real trading track record drawn from customs data." />
+          <Card icon={<ShieldCheck className="h-5 w-5 text-gold" />} title="Company profiles" body="LinkedIn-style profiles with trust scores, verification level, commodities, regions, and a real trading track record drawn from customs data." />
           <Card icon={<Lock className="h-5 w-5 text-gold" />} title="Deal rooms" body="A five-stage pipeline with messaging, documents, and an activity log. Contact details stay hidden until both sides agree." />
         </div>
       </Section>
@@ -148,7 +148,7 @@ export function NetworkLanding() {
       {/* ===== FAQ ===== */}
       <Section eyebrow="FAQ" title="Questions, answered">
         <div className="grid gap-4 lg:grid-cols-2">
-          <Faq q="Is this a marketplace?" a="It is a professional broker network where trust, verification, and deal management come first. Listings exist to start conversations, not to transact anonymously." />
+          <Faq q="Is this a marketplace?" a="It is a verified trade network where trust, verification, and direct buyer-seller dealing come first. Listings exist to start conversations, not to transact anonymously." />
           <Faq q="How does verification work?" a="You request verification levels (email, phone, company, ID, trade reference). Company checks draw on official registries and customs data via ADAMftd." />
           <Faq q="Can free users exchange contact details?" a="No. Direct contact is exchanged only inside a deal room, after both parties accept, and only on paid plans." />
           <Faq q="What does ADAMftd verification cost me?" a="It is metered by plan (Starter 1/mo, Pro 10/mo). Results are cached and shared, so a counterparty is never re-billed within the window." />

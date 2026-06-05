@@ -16,14 +16,14 @@ export default async function EditProfilePage() {
   // Free plans cannot run ADAMftd checks; gate the button accordingly.
   const principal: Principal = {
     id: profile.id, role: profile.role, account_type: profile.account_type,
-    plan: profile.plan, plan_status: (profile as any).plan_status, verified_broker: profile.verified_broker,
+    plan: profile.plan, plan_status: (profile as any).plan_status, verified_trader: profile.verified_trader,
   };
   const canRunChecks = canRunAdamftdCheck(principal, 0).allowed;
 
   return (
     <section className="container-px py-16 max-w-container mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>Your broker profile</h1>
+        <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>Your company profile</h1>
         <Link href={`/network/profile/${profile.id}`} className="text-gold text-sm hover:text-cream">View public profile →</Link>
       </div>
       <div className="grid gap-8 lg:grid-cols-2">

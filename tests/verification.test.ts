@@ -12,7 +12,7 @@ describe("MockVerificationProvider — pinned outcomes", () => {
   it("returns a full MATCH for the pinned 'match' company", async () => {
     const r = await mock.verifyCounterparty({
       companyName: "Rotterdam Commodity Partners BV",
-      country: "Netherlands", hsCode: "0901.11", claimedRole: "broker",
+      country: "Netherlands", hsCode: "0901.11", claimedRole: "trader",
     });
     expect(r.status).toBe("match");
     expect(r.signals.sanctions_clear).toBe(true);

@@ -57,7 +57,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             </div>
             <div className="flex items-center gap-3">
               <EnquireButton listingId={listing.id} />
-              <Link href={`/network/profile/${listing.owner.id}`} className="btn-outline">View broker</Link>
+              <Link href={`/network/profile/${listing.owner.id}`} className="btn-outline">View profile</Link>
             </div>
           </div>
         )}

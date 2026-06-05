@@ -1,4 +1,4 @@
-// Seeds the broker-network demo data: admin + 3 demo users, 2 organizations,
+// Seeds the trade-network demo data: admin + 3 demo users, 2 organizations,
 // sample listings, and one deal room with messages.
 //
 // Idempotent: re-running updates existing rows instead of duplicating.
@@ -8,7 +8,7 @@
 //
 // Demo logins (password for all): Ponte-Demo-2026!
 //   admin@ponte.trade   — platform admin
-//   broker@ponte.trade  — verified broker (Pro)
+//   trader@ponte.trade  — verified trader / principal trading house (Pro)
 //   buyer@ponte.trade    — buyer (Starter)
 //   seller@ponte.trade   — seller (Free)
 
@@ -31,9 +31,9 @@ type DemoUser = {
   email: string;
   full_name: string;
   role: "customer" | "admin";
-  account_type?: "broker" | "buyer" | "seller" | "trader" | "enterprise";
+  account_type?: "buyer" | "seller" | "trader" | "enterprise";
   plan?: "free" | "starter" | "pro" | "enterprise";
-  verified_broker?: boolean;
+  verified_trader?: boolean;
   verification_level?: string;
   trust_score?: number;
   country?: string;
@@ -45,8 +45,8 @@ type DemoUser = {
 const USERS: DemoUser[] = [
   { email: "admin@ponte.trade", full_name: "Platform Admin", role: "admin", plan: "enterprise", trust_score: 100 },
   {
-    email: "broker@ponte.trade", full_name: "Maria Broker", role: "customer",
-    account_type: "broker", plan: "pro", verified_broker: true,
+    email: "trader@ponte.trade", full_name: "Maria Trader", role: "customer",
+    account_type: "trader", plan: "pro", verified_trader: true,
     verification_level: "fully_verified", trust_score: 85, country: "Netherlands",
     commodities: ["Coffee", "Cocoa", "Sugar"], regions_served: ["EU", "West Africa"], years_active: 12,
   },
@@ -85,7 +85,7 @@ async function ensureAuthUser(u: DemoUser): Promise<string> {
 }
 
 async function main() {
-  console.log("Seeding broker-network demo data...");
+  console.log("Seeding trade-network demo data...");
 
   // 1. Users + profiles
   const ids: Record<string, string> = {};
@@ -98,7 +98,7 @@ async function main() {
       role: u.role,
       account_type: u.account_type ?? null,
       plan: u.plan ?? "free",
-      verified_broker: u.verified_broker ?? false,
+      verified_trader: u.verified_trader ?? false,
       verification_level: u.verification_level ?? "unverified",
       trust_score: u.trust_score ?? 40,
       country: u.country ?? null,
@@ -111,11 +111,11 @@ async function main() {
   }
 
   // 2. Organizations (deterministic ids so re-runs are idempotent)
-  const ORG_BROKER = "11111111-1111-1111-1111-111111111111";
+  const ORG_TRADER = "11111111-1111-1111-1111-111111111111";
   const ORG_SELLER = "22222222-2222-2222-2222-222222222222";
   const orgs = [
-    { id: ORG_BROKER, name: "Rotterdam Commodity Partners BV", country: "Netherlands",
-      website: "https://rcp.example", owner_id: ids["broker@ponte.trade"],
+    { id: ORG_TRADER, name: "Rotterdam Commodity Partners BV", country: "Netherlands",
+      website: "https://rcp.example", owner_id: ids["trader@ponte.trade"],
       name_normalized: "rotterdam commodity partners bv", domain_normalized: "rcp.example",
       verification_level: "company_verified", trust_score: 85 },
     { id: ORG_SELLER, name: "Abidjan Cocoa Exporters SA", country: "Côte d'Ivoire",
@@ -128,8 +128,8 @@ async function main() {
     if (error) throw error;
     console.log(`  org: ${o.name}`);
   }
-  // link broker + seller profiles to their orgs
-  await db.from("profiles").update({ organization_id: ORG_BROKER }).eq("id", ids["broker@ponte.trade"]);
+  // link trader + seller profiles to their orgs
+  await db.from("profiles").update({ organization_id: ORG_TRADER }).eq("id", ids["trader@ponte.trade"]);
   await db.from("profiles").update({ organization_id: ORG_SELLER }).eq("id", ids["seller@ponte.trade"]);
 
   // 3. Listings
@@ -142,7 +142,7 @@ async function main() {
       loading_port: "Abidjan", price_cents: 285000_00, currency: "USD",
       specifications: "Grade I, moisture <7.5%, 2025/26 main crop.",
       status: "active", moderation_status: "approved" },
-    { id: LIST_COFFEE, owner_id: ids["broker@ponte.trade"], organization_id: ORG_BROKER,
+    { id: LIST_COFFEE, owner_id: ids["trader@ponte.trade"], organization_id: ORG_TRADER,
       listing_type: "request", commodity: "Green Coffee (Arabica)", hs_code: "0901.11",
       origin_country: "Brazil", destination_country: "Netherlands", quantity: 200, unit: "MT",
       incoterms: "CIF", loading_port: "Santos", price_on_request: true,
@@ -173,13 +173,13 @@ async function main() {
   ]);
   console.log("  deal room: 1 deal, 3 messages");
 
-  // 5. Sample notification + a trust event for the broker
+  // 5. Sample notification + a trust event for the trader
   await db.from("notifications").insert({
-    profile_id: ids["broker@ponte.trade"], type: "verification",
-    title: "You are now a Verified Broker", body: "Your company verification was approved.", read: false,
+    profile_id: ids["trader@ponte.trade"], type: "verification",
+    title: "You are now a Verified Trader", body: "Your company verification was approved.", read: false,
   });
   await db.from("trust_score_events").insert({
-    profile_id: ids["broker@ponte.trade"], delta: 15, reason: "company_verified", new_score: 85,
+    profile_id: ids["trader@ponte.trade"], delta: 15, reason: "company_verified", new_score: 85,
   });
 
   console.log("Done. Demo password for all accounts: " + PASSWORD);

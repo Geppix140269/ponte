@@ -6,7 +6,7 @@ import {
 } from "@/lib/rbac";
 
 const make = (over: Partial<Principal> = {}): Principal => ({
-  id: "u1", role: "customer", account_type: "broker", plan: "free", plan_status: "inactive", ...over,
+  id: "u1", role: "customer", account_type: "trader", plan: "free", plan_status: "inactive", ...over,
 });
 
 describe("effectivePlan", () => {
@@ -58,8 +58,8 @@ describe("listing type by account", () => {
     expect(canCreateListingType(p, "offer")).toBe(true);
     expect(canCreateListingType(p, "request")).toBe(false);
   });
-  it("brokers post both", () => {
-    const p = make({ account_type: "broker" });
+  it("traders post both", () => {
+    const p = make({ account_type: "trader" });
     expect(canCreateListingType(p, "offer")).toBe(true);
     expect(canCreateListingType(p, "request")).toBe(true);
   });

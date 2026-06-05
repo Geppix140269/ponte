@@ -1,4 +1,4 @@
-// Server-side profile data helpers for the broker network.
+// Server-side profile data helpers for the trade network.
 import "server-only";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -6,7 +6,7 @@ import type { NetworkProfile } from "@/lib/types/network";
 
 // Columns safe to expose on a PUBLIC profile (no billing / PII-ish fields).
 const PUBLIC_COLUMNS =
-  "id, full_name, company, country, account_type, verified_broker, trust_score, " +
+  "id, full_name, company, country, account_type, verified_trader, trust_score, " +
   "verification_level, risk_category, completed_deals, title, languages, " +
   "commodities, regions_served, years_active, typical_deal_size, bio, organization_id";
 

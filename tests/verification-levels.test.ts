@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  computeVerificationLevel, isVerifiedBroker, verificationTrustTotal,
+  computeVerificationLevel, isVerifiedTrader, verificationTrustTotal,
 } from "@/lib/network/verification-levels";
 import type { VerificationKind } from "@/lib/types/network";
 
@@ -25,12 +25,13 @@ describe("computeVerificationLevel ladder", () => {
   });
 });
 
-describe("isVerifiedBroker", () => {
-  it("only brokers at company_verified+ qualify", () => {
-    expect(isVerifiedBroker("company_verified", "broker")).toBe(true);
-    expect(isVerifiedBroker("fully_verified", "broker")).toBe(true);
-    expect(isVerifiedBroker("company_verified", "buyer")).toBe(false);
-    expect(isVerifiedBroker("phone_verified", "broker")).toBe(false);
+describe("isVerifiedTrader", () => {
+  it("any principal (buyer/seller/trader) at company_verified+ qualifies", () => {
+    expect(isVerifiedTrader("company_verified", "trader")).toBe(true);
+    expect(isVerifiedTrader("fully_verified", "seller")).toBe(true);
+    expect(isVerifiedTrader("company_verified", "buyer")).toBe(true);
+    expect(isVerifiedTrader("phone_verified", "trader")).toBe(false);
+    expect(isVerifiedTrader("company_verified", "enterprise")).toBe(false);
   });
 });
 

@@ -41,7 +41,7 @@ export default async function ListingsPage({
         </select>
         <input name="company" defaultValue={searchParams.company ?? ""} placeholder="Company" className="field sm:col-span-2" />
         <label className="inline-flex items-center gap-2 text-[13px] text-gray-2">
-          <input type="checkbox" name="verifiedOnly" value="true" defaultChecked={searchParams.verifiedOnly === "true"} /> Verified brokers only
+          <input type="checkbox" name="verifiedOnly" value="true" defaultChecked={searchParams.verifiedOnly === "true"} /> Verified traders only
         </label>
         <button type="submit" className="btn-gold sm:col-span-1">Search</button>
       </form>

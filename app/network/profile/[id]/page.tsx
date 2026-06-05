@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MapPin, Building2, Globe2, Boxes } from "lucide-react";
 import { getPublicProfile, getApprovedVerifications } from "@/lib/network/profile";
-import { computeVerificationLevel, isVerifiedBroker } from "@/lib/network/verification-levels";
+import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
 import { TrustBadge } from "@/components/network/TrustBadge";
 import type { VerificationKind, VerificationLevel } from "@/lib/types/network";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Broker profile", robots: { index: false } };
+export const metadata: Metadata = { title: "Company profile", robots: { index: false } };
 
 export default async function PublicProfilePage({ params }: { params: { id: string } }) {
   const profile = await getPublicProfile(params.id);
@@ -16,7 +16,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
   const approved = await getApprovedVerifications(params.id);
   const level = (profile.verification_level as VerificationLevel)
     ?? computeVerificationLevel(approved as VerificationKind[]);
-  const verified = isVerifiedBroker(level, profile.account_type ?? null);
+  const verified = isVerifiedTrader(level, profile.account_type ?? null);
 
   return (
     <section className="container-px py-16 max-w-container mx-auto">
@@ -24,7 +24,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <h1 className="serif text-white" style={{ fontSize: 34, fontWeight: 500 }}>
-              {profile.full_name ?? "Unnamed broker"}
+              {profile.full_name ?? "Unnamed trader"}
             </h1>
             {profile.title && <p className="mt-1 text-[15px] text-gray-2">{profile.title}</p>}
             <div className="mt-4 flex flex-wrap gap-4 text-[13px] text-gray-2">
@@ -37,7 +37,8 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             trustScore={profile.trust_score ?? 40}
             level={level}
             risk={(profile.risk_category as any) ?? "low"}
-            verifiedBroker={verified}
+            verifiedTrader={verified}
+            accountType={profile.account_type ?? null}
           />
         </div>
 

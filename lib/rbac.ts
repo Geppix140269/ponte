@@ -14,7 +14,7 @@ export interface Principal {
   account_type: AccountType | null;
   plan: Plan;
   plan_status?: "inactive" | "trialing" | "active" | "past_due" | "canceled";
-  verified_broker?: boolean;
+  verified_trader?: boolean;
 }
 
 export interface LimitDecision {
@@ -57,13 +57,14 @@ export function canCreateListing(p: Principal, activeListingCount: number): Limi
   return decide(limitOf(effectivePlan(p), "activeListings"), activeListingCount, "listings");
 }
 
-// Buyers post requests; sellers/brokers/traders post offers. Admin posts either.
+// Buyers post requests; sellers post offers. Traders (principals that buy and
+// sell) and enterprise accounts post both. Admin posts either.
 export function canCreateListingType(p: Principal, type: "offer" | "request"): boolean {
   if (isAdmin(p)) return true;
   const at = p.account_type;
   if (!at) return false;
-  if (type === "request") return at === "buyer" || at === "broker" || at === "trader" || at === "enterprise";
-  return at === "seller" || at === "broker" || at === "trader" || at === "enterprise";
+  if (type === "request") return at === "buyer" || at === "trader" || at === "enterprise";
+  return at === "seller" || at === "trader" || at === "enterprise";
 }
 
 // ---- Deals ----

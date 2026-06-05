@@ -7,7 +7,7 @@
 // These shapes are our internal contract. When the real ADAMftd API docs
 // arrive, only the live adapter changes; everything downstream stays the same.
 
-export type ClaimedRole = "buyer" | "seller" | "broker";
+export type ClaimedRole = "buyer" | "seller" | "trader";
 
 // ---- Sanctions ----
 export type SanctionsStatus = "clear" | "partial" | "hit";

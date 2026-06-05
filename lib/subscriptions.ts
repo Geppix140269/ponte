@@ -84,7 +84,7 @@ export async function syncSubscriptionFromStripe(sub: Stripe.Subscription): Prom
     stripe_subscription_id: sub.id,
     stripe_customer_id: customerId,
     plan_renews_at: periodEnd,
-    // Pro plan confers the verified-broker badge eligibility; actual badge still
+    // Pro plan confers the verified-trader badge eligibility; actual badge still
     // requires COMPANY_VERIFIED (set by the verification flow in Phase 3).
   }).eq("id", profileId);
 }

@@ -47,7 +47,7 @@ describe("recomputeTrust", () => {
   it("baseline 40 with nothing", () => {
     expect(recomputeTrust({ approvedVerifications: [], completedDeals: 0, penalties: [] })).toBe(40);
   });
-  it("fully verified broker with deals", () => {
+  it("fully verified trader with deals", () => {
     // 40 + email5 + phone5 + company15 + id15 + 2 deals*10 = 100 (capped)
     const s = recomputeTrust({
       approvedVerifications: ["email_verified", "phone_verified", "company_verified", "id_verified"],

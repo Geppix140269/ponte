@@ -93,7 +93,7 @@ function dateRange(): { start: string; end: string } {
   return { start: iso(start), end: iso(end) };
 }
 function isBuyerFor(role?: ClaimedRole): boolean {
-  return role === "buyer"; // sellers/brokers default to the supplier perspective
+  return role === "buyer"; // sellers/traders default to the supplier perspective
 }
 
 export class LiveVerificationProvider implements VerificationProvider {

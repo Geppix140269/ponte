@@ -46,7 +46,7 @@ export function VerificationPanel({ canRunChecks }: { canRunChecks: boolean }) {
     <div className="glass p-8 space-y-6">
       <div>
         <h2 className="serif text-white" style={{ fontSize: 22, fontWeight: 500 }}>Verification</h2>
-        <p className="mt-2 text-[13px] text-gray-2">Request verification to raise your trust score and unlock the Verified Broker badge.</p>
+        <p className="mt-2 text-[13px] text-gray-2">Request verification to raise your trust score and unlock the Verified Trader badge.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {KINDS.map(({ kind, label }) => (
             <button key={kind} type="button" disabled={pending} onClick={() => request(kind)} className="badge hover:text-white transition-colors">

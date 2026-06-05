@@ -12,7 +12,7 @@ export default async function VerifyPage() {
   if (!profile) redirect("/login?next=/network/verify");
   const principal: Principal = {
     id: profile.id, role: profile.role, account_type: profile.account_type,
-    plan: profile.plan, plan_status: (profile as any).plan_status, verified_broker: profile.verified_broker,
+    plan: profile.plan, plan_status: (profile as any).plan_status, verified_trader: profile.verified_trader,
   };
   const canRun = canRunAdamftdCheck(principal, 0).allowed;
 

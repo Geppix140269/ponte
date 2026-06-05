@@ -4,7 +4,7 @@ import { MockVerificationProvider } from "@/lib/verification/mock-provider";
 import type { Principal } from "@/lib/rbac";
 
 const provider = new MockVerificationProvider();
-const proUser: Principal = { id: "u1", role: "customer", account_type: "broker", plan: "pro", plan_status: "active" };
+const proUser: Principal = { id: "u1", role: "customer", account_type: "trader", plan: "pro", plan_status: "active" };
 const freeUser: Principal = { id: "u2", role: "customer", account_type: "buyer", plan: "free", plan_status: "inactive" };
 
 function deps(over: Partial<CheckDeps> = {}): CheckDeps {

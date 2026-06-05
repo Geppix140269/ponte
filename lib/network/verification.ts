@@ -16,7 +16,7 @@ async function loadPrincipal(): Promise<Principal | null> {
   if (!user) return null;
   const sb = createClient();
   const { data } = await sb.from("profiles")
-    .select("id, role, account_type, plan, plan_status, verified_broker")
+    .select("id, role, account_type, plan, plan_status, verified_trader")
     .eq("id", user.id).maybeSingle();
   return (data as Principal) ?? null;
 }

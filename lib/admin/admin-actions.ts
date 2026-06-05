@@ -5,7 +5,7 @@ import { assertAdmin } from "@/lib/admin/guard";
 import { recordTrustEvent } from "@/lib/network/trust-service";
 import { blockEntity } from "@/lib/network/fraud-service";
 import { getApprovedVerifications } from "@/lib/network/profile";
-import { computeVerificationLevel, isVerifiedBroker } from "@/lib/network/verification-levels";
+import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
 import type { VerificationKind, AccountType } from "@/lib/types/network";
 import type { TrustReason } from "@/lib/network/trust-rules";
 
@@ -32,13 +32,13 @@ export async function approveVerification(verificationId: string): Promise<{ ok?
   await sb.from("verifications").update({ status: "approved", reviewer_id: adminId }).eq("id", verificationId);
   await recordTrustEvent(v.profile_id as string, KIND_TO_REASON[v.level as VerificationKind], adminId);
 
-  // Recompute the verification level + verified-broker badge from all approvals.
+  // Recompute the verification level + verified-trader badge from all approvals.
   const approved = await getApprovedVerifications(v.profile_id as string);
   const level = computeVerificationLevel(approved as VerificationKind[]);
   const { data: prof } = await sb.from("profiles").select("account_type").eq("id", v.profile_id).maybeSingle();
   await sb.from("profiles").update({
     verification_level: level,
-    verified_broker: isVerifiedBroker(level, (prof?.account_type as AccountType) ?? null),
+    verified_trader: isVerifiedTrader(level, (prof?.account_type as AccountType) ?? null),
   }).eq("id", v.profile_id);
 
   await audit(adminId, "approve_verification", "user", v.profile_id as string, { verificationId, level });

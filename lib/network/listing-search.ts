@@ -13,7 +13,7 @@ export interface ListingOwner {
   country: string | null;
   trust_score: number;
   verification_level: string;
-  verified_broker: boolean;
+  verified_trader: boolean;
 }
 
 export type ListingWithOwner = Listing & { owner: ListingOwner | null };
@@ -30,7 +30,7 @@ export async function searchListings(
   if (filters.minTrustScore || filters.verifiedOnly || filters.company) {
     let pq = sb.from("profiles").select("id");
     if (filters.minTrustScore) pq = pq.gte("trust_score", filters.minTrustScore);
-    if (filters.verifiedOnly) pq = pq.eq("verified_broker", true);
+    if (filters.verifiedOnly) pq = pq.eq("verified_trader", true);
     if (filters.company) pq = pq.ilike("company", `%${filters.company}%`);
     const { data } = await pq;
     ownerIds = (data ?? []).map((r: { id: string }) => r.id);
@@ -55,7 +55,7 @@ export async function searchListings(
   // Attach a compact owner summary for the cards.
   const ids = Array.from(new Set(rows.map((l) => l.owner_id)));
   const { data: owners } = await sb.from("profiles")
-    .select("id, full_name, company, country, trust_score, verification_level, verified_broker")
+    .select("id, full_name, company, country, trust_score, verification_level, verified_trader")
     .in("id", ids);
   const byId = new Map<string, ListingOwner>();
   for (const o of (owners ?? []) as ListingOwner[]) byId.set(o.id, o);
@@ -71,7 +71,7 @@ export async function getListing(id: string): Promise<ListingWithOwner | null> {
   if (!data) return null;
   const listing = data as Listing;
   const { data: owner } = await sb.from("profiles")
-    .select("id, full_name, company, country, trust_score, verification_level, verified_broker")
+    .select("id, full_name, company, country, trust_score, verification_level, verified_trader")
     .eq("id", listing.owner_id).maybeSingle();
   return { ...listing, owner: (owner as ListingOwner) ?? null };
 }

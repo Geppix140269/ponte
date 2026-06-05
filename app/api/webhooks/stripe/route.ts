@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.mode === "subscription") {
-          // Broker-network plan purchase.
+          // Trade-network plan purchase.
           await handleSubscriptionCheckout(session);
         } else if (isSupabaseAdminConfigured()) {
           // Existing report-store one-time order.

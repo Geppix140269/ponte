@@ -11,7 +11,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   ]},
   { title: "Trust", links: [
     { href: "/network/verify", label: "ADAMftd verification" },
-    { href: "/pricing", label: "Verified Broker badge" },
+    { href: "/pricing", label: "Verified Trader badge" },
     { href: "/network", label: "Trust scores" },
     { href: "/network", label: "Sanctions screening" },
   ]},
@@ -49,8 +49,8 @@ export function NetworkFooter() {
                 <span className="serif text-white text-lg" style={{ fontWeight: 600 }}>ponte<span className="text-gold">.trade</span></span>
               </div>
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                The verified professional network for commodity brokers, traders, and
-                counterparties. Build trust, publish opportunities, and trade with confidence,
+                The verified network for real buyers, sellers, and trading houses. Build trust,
+                publish opportunities, and trade directly with verified principals,
                 powered by ADAMftd grounded trade intelligence.
               </p>
             </div>
