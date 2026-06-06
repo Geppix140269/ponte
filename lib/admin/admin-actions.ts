@@ -37,12 +37,13 @@ export async function approveVerification(verificationId: string): Promise<{ ok?
   const approved = await getApprovedVerifications(v.profile_id as string);
   const level = computeVerificationLevel(approved as VerificationKind[]);
   const { data: prof } = await sb.from("profiles").select("account_type").eq("id", v.profile_id).maybeSingle();
-  const tier = computeTier({ approved: approved as VerificationKind[] });
   await sb.from("profiles").update({
     verification_level: level,
-    verification_tier: tier,
     verified_trader: isVerifiedTrader(level, (prof?.account_type as AccountType) ?? null),
   }).eq("id", v.profile_id);
+  // Best-effort: persist the tier (no-op if the column is not migrated yet).
+  const tier = computeTier({ approved: approved as VerificationKind[] });
+  await sb.from("profiles").update({ verification_tier: tier }).eq("id", v.profile_id).then(() => {}, () => {});
 
   await audit(adminId, "approve_verification", "user", v.profile_id as string, { verificationId, level });
   revalidatePath("/admin/network/verifications");

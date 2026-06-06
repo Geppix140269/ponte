@@ -23,8 +23,12 @@ export async function getOwnProfile(): Promise<NetworkProfile | null> {
 // public view is a clean future refinement.)
 export async function getPublicProfile(id: string): Promise<Partial<NetworkProfile> | null> {
   const sb = createAdminClient();
-  const { data } = await sb.from("profiles").select(PUBLIC_COLUMNS).eq("id", id).maybeSingle();
-  return (data as Partial<NetworkProfile>) ?? null;
+  const { data, error } = await sb.from("profiles").select(PUBLIC_COLUMNS).eq("id", id).maybeSingle();
+  if (!error) return (data as Partial<NetworkProfile>) ?? null;
+  // Fallback if a newly added column (e.g. verification_tier) is not migrated yet.
+  const safe = PUBLIC_COLUMNS.replace("verification_tier, ", "");
+  const { data: d2 } = await sb.from("profiles").select(safe).eq("id", id).maybeSingle();
+  return (d2 as Partial<NetworkProfile>) ?? null;
 }
 
 // Approved verification kinds for a profile (drives the level badge).
