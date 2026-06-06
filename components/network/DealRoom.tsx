@@ -7,13 +7,15 @@ import {
   sendMessage, advanceStage, acceptContact, uploadDealDocument, getDealDocumentUrl,
 } from "@/lib/network/deal-actions";
 import type { DealRoom as Room } from "@/lib/network/deal-data";
+import type { DealSettlement } from "@/lib/network/settlement-actions";
+import { SettlementPanel } from "@/components/network/SettlementPanel";
 import type { DealStage } from "@/lib/types/network";
 
 const STAGE_LABEL: Record<DealStage, string> = {
   enquiry: "Enquiry", offer: "Offer", negotiation: "Negotiation", closed: "Closed", cancelled: "Cancelled",
 };
 
-export function DealRoom({ room }: { room: Room }) {
+export function DealRoom({ room, settlement }: { room: Room; settlement?: DealSettlement | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -120,6 +122,9 @@ export function DealRoom({ room }: { room: Room }) {
             </label>
           </form>
         </div>
+
+        {/* Settlement */}
+        <SettlementPanel dealId={room.id} settlement={settlement ?? null} />
 
         {/* Activity */}
         <div className="glass p-5">
