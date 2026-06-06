@@ -3,14 +3,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const METHODOLOGY_DESC =
-  "Machine-scale data aggregation across UN Comtrade, World Bank, WTO, Eurostat, ITC and EU Taxud, combined with expert human review. Every report signed off by a senior sector analyst.";
+  "The data methodology behind ponte.trade: machine-scale aggregation across UN Comtrade, World Bank, WTO, Eurostat, ITC and EU Taxud with expert review. The same verified data grounds counterparty verification and market intelligence reports.";
 
 export const metadata: Metadata = {
   title: "Methodology",
   description: METHODOLOGY_DESC,
   alternates: { canonical: "/methodology" },
   openGraph: {
-    title: "Methodology | Ponte Trade",
+    title: "Methodology | ponte.trade",
     description: METHODOLOGY_DESC,
     url: "/methodology",
     siteName: "Ponte Trade",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Methodology | Ponte Trade",
+    title: "Methodology | ponte.trade",
     description: METHODOLOGY_DESC,
   },
 };
@@ -57,9 +57,10 @@ export default function MethodologyPage() {
           Comtrade, World Bank, WTO, Eurostat, ITC, EU Taxud and additional
           government sources with expert human review by our research team.
           Where official sources conflict, outliers are flagged and Monte
-          Carlo models estimate the most likely outcome. Every report is
-          reviewed and signed off by a senior sector specialist before it
-          reaches the customer.
+          Carlo models estimate the most likely outcome. The same verified
+          data grounds every counterparty verification on the network and every
+          market intelligence report, which is reviewed and signed off by a
+          senior sector specialist before it ships.
         </p>
       </header>
 
@@ -200,14 +201,14 @@ export default function MethodologyPage() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Ready to commission a report?
+              Put the data to work.
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/catalogue" className="btn-gold">
-                Browse the catalogue <ArrowRight className="h-4 w-4" />
+              <Link href="/network/verify" className="btn-gold">
+                Verify a counterparty <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/why-ponte" className="btn-ghost-light">
-                Why Ponte
+              <Link href="/catalogue" className="btn-ghost-light">
+                Browse the catalogue
               </Link>
             </div>
           </div>

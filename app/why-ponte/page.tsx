@@ -3,22 +3,22 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const WHY_DESC =
-  "Why buyers choose Ponte: curated by senior analysts, licensed for distribution, citable methodology, no subscription required.";
+  "Why trade on ponte.trade: every counterparty verified against sanctions, registry, customs activity and beneficial owners, direct access to real principals, and secured settlement. Backed by ADAMftd.";
 
 export const metadata: Metadata = {
-  title: "Why Ponte",
+  title: "Why ponte.trade",
   description: WHY_DESC,
   alternates: { canonical: "/why-ponte" },
   openGraph: {
-    title: "Why Ponte Trade",
+    title: "Why ponte.trade",
     description: WHY_DESC,
     url: "/why-ponte",
-    siteName: "Ponte Trade",
+    siteName: "ponte.trade",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Why Ponte Trade",
+    title: "Why ponte.trade",
     description: WHY_DESC,
   },
 };
@@ -26,27 +26,27 @@ export const metadata: Metadata = {
 const pillars = [
   {
     n: "01",
-    eyebrow: "Curation",
-    title: "Curated, not generated.",
-    body: "Every Ponte report is reviewed and signed off by a senior sector analyst before it reaches you. No auto-generated drops, no AI-only output landing in your inbox. The brief is the report.",
+    eyebrow: "Verification",
+    title: "Verify before you trade.",
+    body: "Every counterparty is screened against sanctions and watchlists, company registries, real customs activity, and beneficial owners. A 0-100 trust score and a verification tier sit on every profile, grounded in ADAMftd data, not self-reported claims.",
   },
   {
     n: "02",
-    eyebrow: "Licence",
-    title: "Licensed for distribution.",
-    body: "Each PDF ships with a redistribution licence for your organisation. Cite it in client proposals, board packs, regulatory filings or internal briefs. The watermark is the record.",
+    eyebrow: "Real principals",
+    title: "Buyers and sellers, not brokers.",
+    body: "ponte.trade connects you directly to verified trading houses, producers and end-buyers. Contact details stay private until both sides signal interest, so you reach decision-makers instead of chains of intermediaries.",
   },
   {
     n: "03",
-    eyebrow: "Methodology",
-    title: "Citable methodology.",
-    body: "Every report carries a methodology appendix and source citations: UN Comtrade, World Bank, WTO, Eurostat, ITC, EU Taxud and additional government sources. Outliers flagged, conflicts resolved, assumptions disclosed.",
+    eyebrow: "Settlement",
+    title: "Secured by ponte.",
+    body: "Move money and goods together. Milestone escrow holds funds and releases them against delivery documents, so neither side has to trade on blind trust. Payment risk stops being the reason a good deal dies.",
   },
   {
     n: "04",
-    eyebrow: "Ownership",
-    title: "No subscription, no platform.",
-    body: "Buy the artefact. Own it. There's no seat to maintain, no dashboard to learn, no renewal to negotiate. After delivery you don't need to log in again.",
+    eyebrow: "Backed by ICTTM",
+    title: "7 billion+ verified trade records.",
+    body: "ponte.trade is built on ADAMftd, the verified trade-data infrastructure maintained by ICTTM. The same data that powers our verification also feeds the market intelligence reports you can license on demand.",
   },
 ];
 
@@ -55,7 +55,7 @@ export default function WhyPontePage() {
     <>
       {/* Hero */}
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
-        <span className="pill">Why Ponte</span>
+        <span className="pill">Why ponte.trade</span>
         <h1
           className="serif text-ink mt-6 mb-7 max-w-3xl"
           style={{
@@ -65,15 +65,15 @@ export default function WhyPontePage() {
             letterSpacing: "-0.015em",
           }}
         >
-          The brief is the report.{" "}
+          Trade with counterparties{" "}
           <em className="text-gold italic" style={{ fontWeight: 400 }}>
-            Your licence is the proof.
+            you can actually trust.
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
-          Ponte serves the buyer who never logs into a platform: consultants,
-          lawyers, chambers, EPAs, M&amp;A teams, board members. You want a
-          licensed PDF you can cite, not a subscription you have to defend.
+          ponte.trade is the verified network for real buyers, sellers, and
+          trading houses. Verify any company, publish offers and requests, and
+          settle securely, all grounded in ADAMftd trade intelligence.
         </p>
       </header>
 
@@ -118,17 +118,18 @@ export default function WhyPontePage() {
               letterSpacing: "-0.01em",
             }}
           >
-            7 billion+ verified trade records.{" "}
+            Grounded intelligence,{" "}
             <em className="text-gold italic" style={{ fontWeight: 400 }}>
-              Cross-checked against the sources you already trust.
+              cross-checked against the sources you already trust.
             </em>
           </h2>
           <p className="mt-6 max-w-2xl text-[15px] text-gray-2 leading-relaxed">
-            Ponte Trade is owned by the International Centre for Trade
-            Transparency Limited (ICTTM), the UK group that maintains one of
-            the largest verified trade-data infrastructures in the world.
-            Every Ponte report combines machine-scale data aggregation with
-            expert human review by our research team.
+            ponte.trade is owned by the International Centre for Trade
+            Transparency Limited (ICTTM), the UK group that maintains one of the
+            largest verified trade-data infrastructures in the world. Every
+            verification and every report draws on the same ADAMftd data,
+            cross-checked against OFAC, EU, UN and UK screening and official
+            customs sources.
           </p>
         </div>
       </section>
@@ -153,19 +154,18 @@ export default function WhyPontePage() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Ready to commission a brief?
+              Verify your first counterparty.
             </h2>
             <p className="mt-5 max-w-xl mx-auto text-[15px] text-gray-2 leading-relaxed">
-              Browse the catalogue, or tell us the decision you&apos;re
-              trying to make and we&apos;ll scope a custom brief inside 48
-              hours.
+              Run a free verification, browse live offers and requests, or open a
+              secured deal room with a verified principal.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/catalogue" className="btn-gold">
-                Browse the catalogue <ArrowRight className="h-4 w-4" />
+              <Link href="/network/verify" className="btn-gold">
+                Verify a counterparty <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/about" className="btn-ghost-light">
-                About Ponte
+              <Link href="/network/listings" className="btn-ghost-light">
+                Browse listings
               </Link>
             </div>
           </div>
