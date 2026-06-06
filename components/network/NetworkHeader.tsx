@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, ShieldCheck, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import { BridgeMark } from "@/components/Logo";
 import { NotificationBell } from "@/components/network/NotificationBell";
 import { createClient } from "@/lib/supabase/client";
 
@@ -35,7 +36,7 @@ export function NetworkHeader() {
     <header className="sticky top-0 z-50 nav-glass">
       <nav className="container-px flex h-16 items-center justify-between">
         <Link href="/network" aria-label="ponte.trade" className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-gold" />
+          <BridgeMark className="h-7 w-7" stroke="#0F0F0E" node="#C9973A" />
           <span className="serif text-ink text-lg" style={{ fontWeight: 600, letterSpacing: "0.01em" }}>ponte<span className="text-gold">.trade</span></span>
         </Link>
 
