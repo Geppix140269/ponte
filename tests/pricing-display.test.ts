@@ -17,7 +17,7 @@ describe("plan features", () => {
   it("every plan has a feature list", () => {
     for (const p of PLAN_ORDER) expect(PLAN_FEATURES[p].length).toBeGreaterThan(0);
   });
-  it("free forbids direct contact exchange", () => {
-    expect(PLAN_FEATURES.free.join(" ").toLowerCase()).toContain("no direct contact");
+  it("free is browse + read-only", () => {
+    expect(PLAN_FEATURES.free.join(" ").toLowerCase()).toContain("read-only deal rooms");
   });
 });

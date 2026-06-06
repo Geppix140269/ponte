@@ -42,6 +42,8 @@ function limitOf(plan: Plan, key: "activeListings" | "activeDeals"): number | "u
 
 function decide(limit: number | "unlimited", currentCount: number, noun: string): LimitDecision {
   if (limit === "unlimited") return { allowed: true, limit: "unlimited", remaining: "unlimited" };
+  if (limit === 0)
+    return { allowed: false, limit: 0, remaining: 0, reason: `${noun[0].toUpperCase()}${noun.slice(1)} require a paid plan. Upgrade to Starter to continue.` };
   const remaining = Math.max(0, limit - currentCount);
   return {
     allowed: currentCount < limit,

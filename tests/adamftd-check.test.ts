@@ -6,6 +6,7 @@ import type { Principal } from "@/lib/rbac";
 const provider = new MockVerificationProvider();
 const proUser: Principal = { id: "u1", role: "customer", account_type: "trader", plan: "pro", plan_status: "active" };
 const freeUser: Principal = { id: "u2", role: "customer", account_type: "buyer", plan: "free", plan_status: "inactive" };
+const starterUser: Principal = { id: "u3", role: "customer", account_type: "seller", plan: "starter", plan_status: "active" };
 
 function deps(over: Partial<CheckDeps> = {}): CheckDeps {
   return {
@@ -34,18 +35,18 @@ describe("runCounterpartyCheck", () => {
     spy.mockRestore();
   });
 
-  it("blocks a free user (no ADAMftd allowance) and does not call the provider", async () => {
+  it("blocks a free user who has spent the monthly allowance (3) and does not call the provider", async () => {
     const spy = vi.spyOn(provider, "verifyCounterparty");
-    const out = await runCounterpartyCheck(freeUser, { companyName: "Acme" }, deps());
+    const out = await runCounterpartyCheck(freeUser, { companyName: "Acme" }, deps({ getMonthlyUsage: async () => 3 }));
     expect(out.ok).toBe(false);
     expect(out.blocked).toBe(true);
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 
-  it("blocks a pro user who has hit the monthly cap", async () => {
-    const out = await runCounterpartyCheck(proUser, { companyName: "Acme" }, deps({
-      getMonthlyUsage: async () => 10, // pro limit is 10
+  it("blocks a starter user who has hit the monthly cap (50)", async () => {
+    const out = await runCounterpartyCheck(starterUser, { companyName: "Acme" }, deps({
+      getMonthlyUsage: async () => 50, // starter limit is 50
     }));
     expect(out.blocked).toBe(true);
   });
