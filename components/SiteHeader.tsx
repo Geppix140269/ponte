@@ -41,7 +41,7 @@ export default function SiteHeader() {
               className={`text-[12px] uppercase transition-colors ${pathname === link.href ? "text-gold" : "text-gray-2 hover:text-gold"}`}
               style={{ letterSpacing: "0.18em" }}>{link.label}</Link>
           ))}
-          <Link href="/network" className="text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.18em" }}>Network</Link>
+          <Link href="/" className="text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.18em" }}>Network</Link>
         </div>
 
         <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function SiteHeader() {
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>{link.label}</Link>
             ))}
-            <Link href="/network" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>Network</Link>
+            <Link href="/" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>Network</Link>
             <Link href="/account" className="py-2.5 text-sm uppercase text-ink" style={{ letterSpacing: "0.18em" }}>Account</Link>
           </div>
         </div>

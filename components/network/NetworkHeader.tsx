@@ -35,7 +35,7 @@ export function NetworkHeader() {
   return (
     <header className="sticky top-0 z-50 nav-glass">
       <nav className="container-px flex h-16 items-center justify-between">
-        <Link href="/network" aria-label="ponte.trade" className="flex items-center gap-2">
+        <Link href="/" aria-label="ponte.trade" className="flex items-center gap-2">
           <BridgeMark className="h-7 w-7" stroke="#0F0F0E" node="#C9973A" />
           <span className="serif text-ink text-lg" style={{ fontWeight: 600, letterSpacing: "0.01em" }}>ponte<span className="text-gold">.trade</span></span>
         </Link>
