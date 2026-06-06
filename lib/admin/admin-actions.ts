@@ -6,6 +6,7 @@ import { recordTrustEvent } from "@/lib/network/trust-service";
 import { blockEntity } from "@/lib/network/fraud-service";
 import { getApprovedVerifications } from "@/lib/network/profile";
 import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
+import { computeTier } from "@/lib/network/verification-tiers";
 import type { VerificationKind, AccountType } from "@/lib/types/network";
 import type { TrustReason } from "@/lib/network/trust-rules";
 
@@ -40,6 +41,9 @@ export async function approveVerification(verificationId: string): Promise<{ ok?
     verification_level: level,
     verified_trader: isVerifiedTrader(level, (prof?.account_type as AccountType) ?? null),
   }).eq("id", v.profile_id);
+  // Best-effort: persist the tier (no-op if the column is not migrated yet).
+  const tier = computeTier({ approved: approved as VerificationKind[] });
+  await sb.from("profiles").update({ verification_tier: tier }).eq("id", v.profile_id).then(() => {}, () => {});
 
   await audit(adminId, "approve_verification", "user", v.profile_id as string, { verificationId, level });
   revalidatePath("/admin/network/verifications");

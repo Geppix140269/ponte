@@ -8,6 +8,8 @@
 // pinned to specific outcomes for predictable demos and tests.
 
 import type {
+  PepResult,
+  DirectorsUboResult,
   VerificationProvider,
   SanctionsResult,
   RegistryResult,
@@ -83,12 +85,30 @@ export class MockVerificationProvider implements VerificationProvider {
       : { hasActivity: false, totalShipments: 0, topHsCodes: [], tradingAreas: [], billsOfLading: 0 };
   }
 
+  async screenPep(name: string): Promise<PepResult> {
+    const pin = this.pin(name);
+    if (pin === "sanctioned") return { status: "hit", adverseMediaCount: 9, reason: "Adverse media + watchlist links." };
+    const h = hash("pep:" + name) % 100;
+    if (!pin && h < 12) return { status: "review", adverseMediaCount: 1 + (h % 3), reason: "Trade-press mentions, no material findings." };
+    return { status: "clear", adverseMediaCount: 0 };
+  }
+
+  async getDirectorsUbo(name: string): Promise<DirectorsUboResult> {
+    const pin = this.pin(name);
+    if (pin === "unknown") return { directors: [], uboCount: 0, checked: false };
+    const h = hash("ubo:" + name);
+    const directors = ["Director A", "Director B", "Director C"].slice(0, 1 + (h % 3));
+    return { directors, uboCount: 1 + (h % 2), checked: true };
+  }
+
   async verifyCounterparty(query: CounterpartyQuery): Promise<VerificationResult> {
-    const [sanctions, registry, tradeActivity] = await Promise.all([
+    const [sanctions, registry, tradeActivity, pep, directorsUbo] = await Promise.all([
       this.screenSanctions(query.companyName, query.country),
       this.lookupRegistry(query.companyName, query.country),
       this.getTradeActivity(query.companyName, query.country),
+      this.screenPep(query.companyName),
+      this.getDirectorsUbo(query.companyName),
     ]);
-    return composeVerification(query, sanctions, registry, tradeActivity, this.source);
+    return composeVerification(query, sanctions, registry, tradeActivity, this.source, pep, directorsUbo);
   }
 }
