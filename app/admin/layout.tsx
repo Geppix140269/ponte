@@ -15,6 +15,7 @@ const adminNav = [
   { href: "/admin/network/reports", label: "Reports" },
   { href: "/admin/network/fraud", label: "Fraud" },
   { href: "/admin/network/listings", label: "Listings" },
+  { href: "/admin/network/settlements", label: "Settlements" },
 ];
 
 function Notice({ title, body }: { title: string; body: string }) {
