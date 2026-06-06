@@ -1,4 +1,6 @@
 "use server";
+import { track } from "@/lib/analytics/track";
+import { EVENT } from "@/lib/analytics/events";
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -115,6 +117,7 @@ export async function createListing(
       }
     } catch { /* best-effort */ }
   }
+  await track(EVENT.listing_published, { commodity: input.commodity, type: input.listing_type, moderation: moderationStatus }, { profileId: user.id });
   revalidatePath("/network/listings");
   return { ok: true, id: data.id as string, moderation: moderationStatus };
 }
