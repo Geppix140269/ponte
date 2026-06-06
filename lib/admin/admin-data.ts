@@ -48,3 +48,19 @@ export async function adamftdRequests() {
     .order("created_at", { ascending: false }).limit(100);
   return data ?? [];
 }
+
+export async function recentSettlements() {
+  const sb = createAdminClient();
+  const { data } = await sb.from("settlements")
+    .select("id, deal_id, status, currency, total_cents, created_at")
+    .order("created_at", { ascending: false }).limit(200);
+  const rows = data ?? [];
+  // attach milestone counts
+  const out: any[] = [];
+  for (const s of rows as any[]) {
+    const { data: ms } = await sb.from("settlement_milestones").select("status").eq("settlement_id", s.id);
+    const released = (ms ?? []).filter((m: any) => m.status === "released").length;
+    out.push({ ...s, milestones: (ms ?? []).length, released });
+  }
+  return out;
+}
