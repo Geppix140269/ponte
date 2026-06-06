@@ -21,11 +21,10 @@ describe("effectivePlan", () => {
 });
 
 describe("listing limits", () => {
-  it("free allows 2 active listings then blocks", () => {
+  it("free cannot post (browse + read-only)", () => {
     const p = make({ plan: "free" });
-    expect(canCreateListing(p, 1).allowed).toBe(true);
-    expect(canCreateListing(p, 2).allowed).toBe(false);
-    expect(canCreateListing(p, 2).remaining).toBe(0);
+    expect(canCreateListing(p, 0).allowed).toBe(false);
+    expect(canCreateListing(p, 0).remaining).toBe(0);
   });
   it("starter allows 10", () => {
     const p = make({ plan: "starter", plan_status: "active" });
@@ -66,8 +65,8 @@ describe("listing type by account", () => {
 });
 
 describe("deals, documents, contact", () => {
-  it("free allows 2 deals", () => {
-    expect(canOpenDeal(make({ plan: "free" }), 2).allowed).toBe(false);
+  it("free cannot initiate deals (read-only rooms)", () => {
+    expect(canOpenDeal(make({ plan: "free" }), 0).allowed).toBe(false);
   });
   it("document uploads gated to paid plans", () => {
     expect(canUploadDocuments(make({ plan: "free" }))).toBe(false);
@@ -80,18 +79,19 @@ describe("deals, documents, contact", () => {
 });
 
 describe("ADAMftd monthly limits", () => {
-  it("free has none", () => {
-    expect(canRunAdamftdCheck(make({ plan: "free" }), 0).allowed).toBe(false);
+  it("free gets 3 per month", () => {
+    const p = make({ plan: "free" });
+    expect(canRunAdamftdCheck(p, 2).allowed).toBe(true);
+    expect(canRunAdamftdCheck(p, 3).allowed).toBe(false);
   });
-  it("starter gets 1 per month", () => {
+  it("starter gets 50 per month", () => {
     const p = make({ plan: "starter", plan_status: "active" });
-    expect(canRunAdamftdCheck(p, 0).allowed).toBe(true);
-    expect(canRunAdamftdCheck(p, 1).allowed).toBe(false);
+    expect(canRunAdamftdCheck(p, 49).allowed).toBe(true);
+    expect(canRunAdamftdCheck(p, 50).allowed).toBe(false);
   });
-  it("pro gets 10", () => {
+  it("pro is unlimited", () => {
     const p = make({ plan: "pro", plan_status: "active" });
-    expect(canRunAdamftdCheck(p, 9).allowed).toBe(true);
-    expect(canRunAdamftdCheck(p, 10).allowed).toBe(false);
+    expect(canRunAdamftdCheck(p, 99999).allowed).toBe(true);
   });
   it("enterprise is uncapped (custom)", () => {
     const p = make({ plan: "enterprise", plan_status: "active" });

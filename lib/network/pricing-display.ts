@@ -13,20 +13,16 @@ export function formatPlanPrice(plan: Plan): string {
 // Feature lists per plan (from the spec subscription tiers).
 export const PLAN_FEATURES: Record<Plan, string[]> = {
   free: [
-    "Profile creation", "Browse listings", "2 active listings", "2 active enquiries",
-    "Basic search", "No direct contact exchange",
+    "Identity verification", "3 verifications / mo", "Browse the marketplace", "Read-only deal rooms",
   ],
   starter: [
-    "10 active listings", "5 active deals", "Document uploads",
-    "Company verification request", "Deal room access", "1 ADAMftd check / month",
+    "Business verification", "50 verifications / mo", "Post offers & requests", "Deal rooms · 5 active", "Document uploads",
   ],
   pro: [
-    "Unlimited listings", "Unlimited deals", "Advanced search", "Analytics",
-    "Trade references", "Verified Trader badge", "10 ADAMftd checks / month",
+    "Activity verification (Tier III)", "Unlimited verifications", "ADAMftd discovery (7B records)", "Deal rooms · unlimited", "Verified Trader badge",
   ],
   enterprise: [
-    "Multi-user access", "Team management", "API access",
-    "White-label support", "Enhanced verification allocation",
+    "Institutional verification (Tier IV)", "Bulk verification API", "SSO, audit log, SLA", "Market intelligence access",
   ],
 };
 

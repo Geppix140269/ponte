@@ -241,8 +241,9 @@ export const PLAN_LIMITS: Record<Plan, {
   documentUploads: boolean;
   adamftdChecksPerMonth: number | "custom";
 }> = {
-  free:       { activeListings: 2,           activeDeals: 2,           documentUploads: false, adamftdChecksPerMonth: 0 },
-  starter:    { activeListings: 10,          activeDeals: 5,           documentUploads: true,  adamftdChecksPerMonth: 1 },
-  pro:        { activeListings: "unlimited", activeDeals: "unlimited", documentUploads: true,  adamftdChecksPerMonth: 10 },
+  // Aligned to the public pricing on the homepage (Free browse+verify, paid to transact).
+  free:       { activeListings: 0,           activeDeals: 0,           documentUploads: false, adamftdChecksPerMonth: 3 },
+  starter:    { activeListings: 10,          activeDeals: 5,           documentUploads: true,  adamftdChecksPerMonth: 50 },
+  pro:        { activeListings: "unlimited", activeDeals: "unlimited", documentUploads: true,  adamftdChecksPerMonth: "custom" },
   enterprise: { activeListings: "unlimited", activeDeals: "unlimited", documentUploads: true,  adamftdChecksPerMonth: "custom" },
 };
