@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Menu, X, ShieldCheck } from "lucide-react";
 
 const links = [
+  { href: "/network/discover", label: "Discover" },
   { href: "/network/listings", label: "Listings" },
   { href: "/network/verify", label: "Verify" },
   { href: "/network/deals", label: "Deal Rooms" },
