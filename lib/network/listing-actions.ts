@@ -6,6 +6,8 @@ import { canCreateListing, canCreateListingType, type Principal } from "@/lib/rb
 import { moderateListing } from "@/lib/network/moderation";
 import { maskContactInfo } from "@/lib/network/contact-mask";
 import { isWithinActivityLimit, flagSuspiciousActivity } from "@/lib/network/fraud-service";
+import { listingMatchesFilters } from "@/lib/network/listing-match";
+import { createNotification } from "@/lib/network/notifications";
 import type { ListingType } from "@/lib/types/network";
 
 export interface ListingInput {
@@ -97,6 +99,22 @@ export async function createListing(
   }).select("id").single();
   if (error) return { error: error.message };
 
+  // Alert users whose saved search matches this newly published listing.
+  if (moderationStatus === "approved") {
+    try {
+      const admin = createAdminClient();
+      const { data: searches } = await admin.from("saved_searches").select("profile_id, filters");
+      const listingLike = { commodity: input.commodity, origin_country: input.origin_country ?? null, destination_country: input.destination_country ?? null, listing_type: input.listing_type, hs_code: input.hs_code ?? null };
+      const notified = new Set<string>();
+      for (const row of (searches ?? []) as { profile_id: string; filters: Record<string, unknown> }[]) {
+        if (row.profile_id === user.id || notified.has(row.profile_id)) continue;
+        if (listingMatchesFilters(listingLike, (row.filters ?? {}) as never)) {
+          notified.add(row.profile_id);
+          await createNotification(row.profile_id, { type: "listing", title: "New listing matches your search", body: input.commodity, link: `/network/listings/${data.id}` });
+        }
+      }
+    } catch { /* best-effort */ }
+  }
   revalidatePath("/network/listings");
   return { ok: true, id: data.id as string, moderation: moderationStatus };
 }

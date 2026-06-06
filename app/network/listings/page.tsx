@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { parseListingFilters } from "@/lib/network/listing-filters";
 import { searchListings } from "@/lib/network/listing-search";
 import { ListingCard } from "@/components/network/ListingCard";
+import { SavedSearches } from "@/components/network/SavedSearches";
+import { listMySavedSearches } from "@/lib/network/saved-search-actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Listings", robots: { index: false } };
@@ -15,6 +17,7 @@ export default async function ListingsPage({
 }) {
   const filters = parseListingFilters(searchParams);
   const listings = await searchListings(filters, { limit: 60 });
+  const saved = await listMySavedSearches();
 
   return (
     <section className="container-px py-12 max-w-container mx-auto">
@@ -45,6 +48,7 @@ export default async function ListingsPage({
         </label>
         <button type="submit" className="btn-gold sm:col-span-1">Search</button>
       </form>
+      <SavedSearches current={filters} saved={saved} />
 
       <p className="mt-6 text-[13px] text-gray-2">{listings.length} listing{listings.length === 1 ? "" : "s"}</p>
       <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
