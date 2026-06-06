@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { getSettlementProvider } from "@/lib/settlement";
 import { buildMilestonePlan, feeCents } from "@/lib/settlement/plan";
+import { createNotification } from "@/lib/network/notifications";
 
 export interface DealSettlementMilestone {
   id: string; seq: number; label: string; amountCents: number;
@@ -111,6 +112,9 @@ export async function releaseSettlementMilestone(milestoneId: string): Promise<{
   const allReleased = (all ?? []).every((x: any) => x.status === "released");
   await sb.from("settlements").update({ status: allReleased ? "released" : "partially_released" }).eq("id", s.id);
   await logEvent(s.id as string, milestoneId, user.id, "released");
+  const { data: dp } = await sb.from("deals").select("initiator_id, counterparty_id").eq("id", s.deal_id).maybeSingle();
+  const other = dp ? (dp.initiator_id === user.id ? dp.counterparty_id : dp.initiator_id) : null;
+  if (other) await createNotification(other, { type: "settlement", title: "Escrow milestone released", link: `/network/deals/${s.deal_id}` });
   revalidatePath(`/network/deals/${s.deal_id}`);
   return { ok: true };
 }

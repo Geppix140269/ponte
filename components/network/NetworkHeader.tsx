@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X, ShieldCheck } from "lucide-react";
+import { NotificationBell } from "@/components/network/NotificationBell";
 
 const links = [
   { href: "/network/discover", label: "Discover" },
@@ -38,6 +39,7 @@ export function NetworkHeader() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <NotificationBell />
           <Link href="/login" className="text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.16em" }}>Sign in</Link>
           <Link href="/pricing" className="btn-gold px-4 py-2 text-[12px]">Get started</Link>
         </div>
