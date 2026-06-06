@@ -4,6 +4,7 @@ import { MapPin, Building2, Globe2, Boxes } from "lucide-react";
 import { getPublicProfile, getApprovedVerifications } from "@/lib/network/profile";
 import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
 import { TrustBadge } from "@/components/network/TrustBadge";
+import { TierBadge } from "@/components/network/VerificationTrail";
 import type { VerificationKind, VerificationLevel } from "@/lib/types/network";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
               {typeof profile.years_active === "number" && <span>{profile.years_active} yrs active</span>}
             </div>
           </div>
+          <>{(profile.verification_tier ?? 0) > 0 && <div className="mb-2"><TierBadge tier={profile.verification_tier as number} /></div>}</>
           <TrustBadge
             trustScore={profile.trust_score ?? 40}
             level={level}

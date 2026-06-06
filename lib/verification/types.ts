@@ -40,6 +40,21 @@ export interface TradeActivityResult {
   billsOfLading: number;
 }
 
+// ---- PEP & adverse media ----
+export type PepStatus = "clear" | "review" | "hit";
+export interface PepResult {
+  status: PepStatus;
+  adverseMediaCount: number;
+  reason?: string;
+}
+
+// ---- Directors & UBO ----
+export interface DirectorsUboResult {
+  directors: string[];
+  uboCount: number;
+  checked: boolean;
+}
+
 // ---- Composed result (mirrors adamftd_verification_checks.status/signals) ----
 export type VerificationStatus = "match" | "partial_match" | "no_match" | "manual_review";
 
@@ -70,6 +85,8 @@ export interface VerificationResult {
   sanctions: SanctionsResult;
   registry: RegistryResult;
   tradeActivity: TradeActivityResult;
+  pep?: PepResult;
+  directorsUbo?: DirectorsUboResult;
 }
 
 // The provider contract. Real and mock both implement this.
@@ -78,6 +95,9 @@ export interface VerificationProvider {
   screenSanctions(name: string, country?: string): Promise<SanctionsResult>;
   lookupRegistry(name: string, country?: string): Promise<RegistryResult>;
   getTradeActivity(name: string, country?: string): Promise<TradeActivityResult>;
+  // PEP / adverse media + directors / UBO (mock until ADAMftd endpoints confirmed)
+  screenPep?(name: string, country?: string): Promise<PepResult>;
+  getDirectorsUbo?(name: string, country?: string): Promise<DirectorsUboResult>;
   // convenience: runs the right calls and composes them
   verifyCounterparty(query: CounterpartyQuery): Promise<VerificationResult>;
 }

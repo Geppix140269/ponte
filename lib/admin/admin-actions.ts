@@ -6,6 +6,7 @@ import { recordTrustEvent } from "@/lib/network/trust-service";
 import { blockEntity } from "@/lib/network/fraud-service";
 import { getApprovedVerifications } from "@/lib/network/profile";
 import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
+import { computeTier } from "@/lib/network/verification-tiers";
 import type { VerificationKind, AccountType } from "@/lib/types/network";
 import type { TrustReason } from "@/lib/network/trust-rules";
 
@@ -36,8 +37,10 @@ export async function approveVerification(verificationId: string): Promise<{ ok?
   const approved = await getApprovedVerifications(v.profile_id as string);
   const level = computeVerificationLevel(approved as VerificationKind[]);
   const { data: prof } = await sb.from("profiles").select("account_type").eq("id", v.profile_id).maybeSingle();
+  const tier = computeTier({ approved: approved as VerificationKind[] });
   await sb.from("profiles").update({
     verification_level: level,
+    verification_tier: tier,
     verified_trader: isVerifiedTrader(level, (prof?.account_type as AccountType) ?? null),
   }).eq("id", v.profile_id);
 

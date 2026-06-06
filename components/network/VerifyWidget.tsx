@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { Check, X, AlertTriangle } from "lucide-react";
 import { runCompanyAdamftdCheck } from "@/lib/network/verification";
+import { VerificationTrail } from "@/components/network/VerificationTrail";
 import type { CheckOutcome } from "@/lib/network/adamftd-check";
 
 const SIGNAL_LABEL: Record<string, string> = {
@@ -58,14 +59,7 @@ export function VerifyWidget({ canRun }: { canRun: boolean }) {
             </span>
           </div>
           <p className="mt-3 text-[14px] text-gray-2">{outcome.result.resultSummary}</p>
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            {Object.entries(outcome.result.signals).map(([k, v]) => (
-              <div key={k} className="flex items-center gap-2 text-[13px]">
-                {v ? <Check className="h-4 w-4 text-positive" /> : <X className="h-4 w-4 text-negative" />}
-                <span className="text-gray-2">{SIGNAL_LABEL[k] ?? k}</span>
-              </div>
-            ))}
-          </div>
+          <div className="mt-5"><VerificationTrail result={outcome.result} /></div>
           <p className="mt-5 inline-flex items-center gap-2 text-[11px] text-gray-2">
             <AlertTriangle className="h-3.5 w-3.5 text-gold" />
             Grounded intelligence signals, not a certification of legitimacy. Verify against original sources for contractual decisions.

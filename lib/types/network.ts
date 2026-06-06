@@ -20,6 +20,7 @@ export interface NetworkProfile {
   organization_id: string | null;
   trust_score: number;
   verification_level: VerificationLevel;
+  verification_tier: number;
   risk_category: RiskCategory;
   completed_deals: number;
   title: string | null;

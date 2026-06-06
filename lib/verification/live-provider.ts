@@ -16,6 +16,8 @@
 // changes.
 
 import type {
+  PepResult,
+  DirectorsUboResult,
   VerificationProvider, SanctionsResult, RegistryResult, TradeActivityResult,
   VerificationResult, CounterpartyQuery, ClaimedRole,
 } from "./types";
@@ -165,13 +167,28 @@ export class LiveVerificationProvider implements VerificationProvider {
     return { found: true, legalName: name, status: "active", country: inferredCountry, confidence: "medium" };
   }
 
+  // ---- PEP / adverse media + Directors / UBO ----
+  // TODO(adamftd): wire adverse media (/data-service/companies/negative-exactly-story-web/<id>)
+  // and directors (/data-service/companies/contacts/ai/<id>) once a company-name
+  // search endpoint resolves company_id. PEP and true UBO need confirmed endpoints.
+  async screenPep(_name: string, _country?: string): Promise<PepResult> {
+    return { status: "review", adverseMediaCount: 0, reason: "Live PEP/adverse-media not yet wired." };
+  }
+  async getDirectorsUbo(_name: string, _country?: string): Promise<DirectorsUboResult> {
+    return { directors: [], uboCount: 0, checked: false };
+  }
+
   // ---- Compose (sanctions + a single trade fetch) ----
   async verifyCounterparty(query: CounterpartyQuery): Promise<VerificationResult> {
     const [sanctions, tradeActivity] = await Promise.all([
       this.screenSanctions(query.companyName),
       this.getTradeActivity(query.companyName, query.country, query.claimedRole),
     ]);
+    const [pep, directorsUbo] = await Promise.all([
+      this.screenPep(query.companyName, query.country),
+      this.getDirectorsUbo(query.companyName, query.country),
+    ]);
     const registry = this.registryFromTrade(query.companyName, query.country, tradeActivity);
-    return composeVerification(query, sanctions, registry, tradeActivity, this.source);
+    return composeVerification(query, sanctions, registry, tradeActivity, this.source, pep, directorsUbo);
   }
 }

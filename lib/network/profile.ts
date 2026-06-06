@@ -7,7 +7,7 @@ import type { NetworkProfile } from "@/lib/types/network";
 // Columns safe to expose on a PUBLIC profile (no billing / PII-ish fields).
 const PUBLIC_COLUMNS =
   "id, full_name, company, country, account_type, verified_trader, trust_score, " +
-  "verification_level, risk_category, completed_deals, title, languages, " +
+  "verification_level, verification_tier, risk_category, completed_deals, title, languages, " +
   "commodities, regions_served, years_active, typical_deal_size, bio, organization_id";
 
 export async function getOwnProfile(): Promise<NetworkProfile | null> {

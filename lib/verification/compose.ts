@@ -9,6 +9,8 @@ import type {
   VerificationSignals,
   VerificationStatus,
   CounterpartyQuery,
+  PepResult,
+  DirectorsUboResult,
 } from "./types";
 
 function commodityMatches(query: CounterpartyQuery, trade: TradeActivityResult): boolean {
@@ -32,6 +34,8 @@ export function composeVerification(
   registry: RegistryResult,
   tradeActivity: TradeActivityResult,
   source: "mock" | "live",
+  pep?: PepResult,
+  directorsUbo?: DirectorsUboResult,
 ): VerificationResult {
   const signals: VerificationSignals = {
     sanctions_clear: sanctions.status === "clear",
@@ -96,6 +100,8 @@ export function composeVerification(
     sanctions,
     registry,
     tradeActivity,
+    pep,
+    directorsUbo,
   };
 }
 
