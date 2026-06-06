@@ -7,6 +7,7 @@ import { hasContactInfo } from "@/lib/network/contact-mask";
 import { canTransition, isSuccessfulClose } from "@/lib/network/deal-stages";
 import { computeContactUnlocked, acceptanceColumnFor } from "@/lib/network/contact-gate";
 import { onCompletedDeal } from "@/lib/network/trust-service";
+import { createNotification } from "@/lib/network/notifications";
 import type { DealStage } from "@/lib/types/network";
 
 type Role = "initiator" | "counterparty";
@@ -65,6 +66,7 @@ export async function createDeal(listingId: string, message?: string): Promise<{
 
   await admin.from("deal_status_history").insert({ deal_id: deal.id, from_stage: null, to_stage: "enquiry", changed_by: user.id });
   await logEvent(deal.id as string, user.id, "created", listing.commodity as string);
+  await createNotification(listing.owner_id as string, { type: "deal", title: "New enquiry", body: `${listing.commodity}`, link: `/network/deals/${deal.id}` });
   if (message?.trim()) {
     await admin.from("messages").insert({ deal_id: deal.id, sender_id: user.id, body: message, contains_contact_info: hasContactInfo(message) });
     await logEvent(deal.id as string, user.id, "message");
@@ -86,6 +88,8 @@ export async function sendMessage(dealId: string, body: string): Promise<{ ok?: 
   });
   if (error) return { error: error.message };
   await logEvent(dealId, user.id, "message");
+  const other = ctx.role === "initiator" ? ctx.deal.counterparty_id : ctx.deal.initiator_id;
+  if (other) await createNotification(other, { type: "deal", title: "New message", link: `/network/deals/${dealId}` });
   revalidatePath(`/network/deals/${dealId}`);
   return { ok: true };
 }
@@ -103,6 +107,8 @@ export async function advanceStage(dealId: string, toStage: DealStage): Promise<
   if (error) return { error: error.message };
   await admin.from("deal_status_history").insert({ deal_id: dealId, from_stage: deal.stage, to_stage: toStage, changed_by: user.id });
   await logEvent(dealId, user.id, "stage_change", `${deal.stage} -> ${toStage}`);
+  const otherStage = ctx.role === "initiator" ? deal.counterparty_id : deal.initiator_id;
+  if (otherStage) await createNotification(otherStage, { type: "deal", title: `Deal moved to ${toStage}`, link: `/network/deals/${dealId}` });
 
   // Successful close: award completed-deal trust to both parties.
   if (isSuccessfulClose(deal.stage, toStage)) {

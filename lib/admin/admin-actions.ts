@@ -7,6 +7,7 @@ import { blockEntity } from "@/lib/network/fraud-service";
 import { getApprovedVerifications } from "@/lib/network/profile";
 import { computeVerificationLevel, isVerifiedTrader } from "@/lib/network/verification-levels";
 import { computeTier } from "@/lib/network/verification-tiers";
+import { createNotification } from "@/lib/network/notifications";
 import type { VerificationKind, AccountType } from "@/lib/types/network";
 import type { TrustReason } from "@/lib/network/trust-rules";
 
@@ -46,6 +47,7 @@ export async function approveVerification(verificationId: string): Promise<{ ok?
   await sb.from("profiles").update({ verification_tier: tier }).eq("id", v.profile_id).then(() => {}, () => {});
 
   await audit(adminId, "approve_verification", "user", v.profile_id as string, { verificationId, level });
+  await createNotification(v.profile_id as string, { type: "verification", title: "Verification approved", body: `Level: ${level}`, link: "/network/profile/edit" });
   revalidatePath("/admin/network/verifications");
   return { ok: true };
 }
