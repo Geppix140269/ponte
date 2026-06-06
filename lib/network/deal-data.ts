@@ -40,6 +40,64 @@ export async function listMyDeals() {
   return data ?? [];
 }
 
+export interface RichDeal {
+  id: string;
+  title: string | null;
+  stage: DealStage;
+  created_at: string;
+  updated_at: string | null;
+  counterpartyCompany: string | null;
+  counterpartyTrust: number | null;
+  counterpartyVerified: boolean;
+  commodity: string | null;
+  listingType: string | null;
+  priceCents: number | null;
+  currency: string | null;
+}
+
+// Enriched deal list for the deals index: resolves the other party and the
+// underlying listing so the row can show real context. Best-effort joins.
+export async function listMyDealsRich(): Promise<RichDeal[]> {
+  const user = await getUser();
+  if (!user) return [];
+  const sb = createClient();
+  const { data } = await sb.from("deals")
+    .select("id, title, stage, created_at, updated_at, initiator_id, counterparty_id, listing_id")
+    .order("updated_at", { ascending: false });
+  const rows = data ?? [];
+  if (rows.length === 0) return [];
+
+  const otherIds = Array.from(new Set(rows.map((d: { initiator_id: string; counterparty_id: string | null }) =>
+    d.initiator_id === user.id ? d.counterparty_id : d.initiator_id).filter(Boolean))) as string[];
+  const listingIds = Array.from(new Set(rows.map((d: { listing_id: string | null }) => d.listing_id).filter(Boolean))) as string[];
+
+  const admin = createAdminClient();
+  const [{ data: profiles }, { data: listings }] = await Promise.all([
+    otherIds.length ? admin.from("profiles").select("id, company, trust_score, verified_trader").in("id", otherIds) : Promise.resolve({ data: [] }),
+    listingIds.length ? admin.from("listings").select("id, commodity, listing_type, price_cents, currency").in("id", listingIds) : Promise.resolve({ data: [] }),
+  ]);
+  const pById = new Map<string, { company: string | null; trust_score: number; verified_trader: boolean }>();
+  for (const p of (profiles ?? []) as { id: string; company: string | null; trust_score: number; verified_trader: boolean }[]) pById.set(p.id, p);
+  const lById = new Map<string, { commodity: string | null; listing_type: string | null; price_cents: number | null; currency: string | null }>();
+  for (const l of (listings ?? []) as { id: string; commodity: string | null; listing_type: string | null; price_cents: number | null; currency: string | null }[]) lById.set(l.id, l);
+
+  return rows.map((d: { id: string; title: string | null; stage: string; created_at: string; updated_at: string | null; initiator_id: string; counterparty_id: string | null; listing_id: string | null }) => {
+    const otherId = d.initiator_id === user.id ? d.counterparty_id : d.initiator_id;
+    const prof = otherId ? pById.get(otherId) : undefined;
+    const lst = d.listing_id ? lById.get(d.listing_id) : undefined;
+    return {
+      id: d.id, title: d.title, stage: d.stage as DealStage, created_at: d.created_at, updated_at: d.updated_at,
+      counterpartyCompany: prof?.company ?? null,
+      counterpartyTrust: prof?.trust_score ?? null,
+      counterpartyVerified: prof?.verified_trader ?? false,
+      commodity: lst?.commodity ?? null,
+      listingType: lst?.listing_type ?? null,
+      priceCents: lst?.price_cents ?? null,
+      currency: lst?.currency ?? null,
+    };
+  });
+}
+
 export async function getDealRoom(dealId: string): Promise<DealRoom | null> {
   const user = await getUser();
   if (!user) return null;
