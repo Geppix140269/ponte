@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
-import { NetworkLanding } from "@/components/network/NetworkLanding";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "ponte.trade — Build Trust. Trade Smarter.",
-  description: "The verified network for real buyers, sellers, and trading houses. Trade directly with verified principals, powered by ADAMftd grounded trade intelligence.",
-};
-
-export default function NetworkHomePage() {
-  return <NetworkLanding />;
+// Single front door: the landing lives at "/". /network used to render a second,
+// parallel landing — it now redirects so there is one homepage, with the app
+// sections living under /network/listings, /network/verify, etc.
+export default function NetworkIndex() {
+  redirect("/");
 }
