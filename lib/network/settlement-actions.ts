@@ -1,4 +1,6 @@
 "use server";
+import { track } from "@/lib/analytics/track";
+import { EVENT } from "@/lib/analytics/events";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -75,6 +77,7 @@ export async function createSettlement(dealId: string, totalCents: number, curre
     trigger_type: m.trigger, required_doc_type: m.requiredDocType ?? null, status: "pending",
   })));
   await logEvent(s.id as string, null, user.id, "created", `${(totalCents / 100).toLocaleString()} ${currency}`);
+  await track(EVENT.settlement_created, { dealId, totalCents }, { profileId: user.id });
   revalidatePath(`/network/deals/${dealId}`);
   return { ok: true };
 }
@@ -91,6 +94,7 @@ export async function fundSettlement(settlementId: string): Promise<{ ok?: true;
   await sb.from("settlements").update({ status: "funded" }).eq("id", settlementId);
   await sb.from("settlement_milestones").update({ status: "funded" }).eq("settlement_id", settlementId).eq("status", "pending");
   await logEvent(settlementId, null, user.id, "funded");
+  await track(EVENT.settlement_funded, { settlementId }, { profileId: user.id });
   revalidatePath(`/network/deals/${s.deal_id}`);
   return { ok: true };
 }
@@ -112,6 +116,7 @@ export async function releaseSettlementMilestone(milestoneId: string): Promise<{
   const allReleased = (all ?? []).every((x: any) => x.status === "released");
   await sb.from("settlements").update({ status: allReleased ? "released" : "partially_released" }).eq("id", s.id);
   await logEvent(s.id as string, milestoneId, user.id, "released");
+  await track(EVENT.settlement_released, { settlementId: s.id, milestoneId }, { profileId: user.id });
   const { data: dp } = await sb.from("deals").select("initiator_id, counterparty_id").eq("id", s.deal_id).maybeSingle();
   const other = dp ? (dp.initiator_id === user.id ? dp.counterparty_id : dp.initiator_id) : null;
   if (other) await createNotification(other, { type: "settlement", title: "Escrow milestone released", link: `/network/deals/${s.deal_id}` });

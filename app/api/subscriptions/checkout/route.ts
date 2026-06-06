@@ -3,6 +3,8 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { getUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { priceIdFor, isSubscribablePlan, PLANS, type BillingInterval } from "@/lib/plans";
+import { track } from "@/lib/analytics/track";
+import { EVENT } from "@/lib/analytics/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "price_not_configured" }, { status: 503 });
   }
 
+  await track(EVENT.subscribe_started, { plan, interval }, { profileId: user.id });
   const stripe = getStripe();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
 

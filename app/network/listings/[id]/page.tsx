@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackView } from "@/components/network/TrackView";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Ship, Boxes } from "lucide-react";
@@ -20,6 +21,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
 
   return (
     <section className="container-px py-12 max-w-container mx-auto">
+      <TrackView event="listing_viewed" props={{ id: listing.id, commodity: listing.commodity }} />
       <Link href="/network/listings" className="text-gold text-sm hover:text-ink">← All listings</Link>
       <div className="glass p-8 md:p-10 mt-4">
         <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,4 +1,6 @@
 "use server";
+import { track } from "@/lib/analytics/track";
+import { EVENT } from "@/lib/analytics/events";
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -95,6 +97,7 @@ export async function runCompanyAdamftdCheck(
   if (!principal) return { error: "unauthorized" };
   if (!input.companyName?.trim()) return { error: "company_name_required" };
   const outcome = await runCounterpartyCheck(principal, input, supabaseCheckDeps());
+  await track(EVENT.verify_run, { status: "result" in outcome ? (outcome as { result?: { status?: string } }).result?.status : "blocked", fromCache: (outcome as { fromCache?: boolean }).fromCache ?? false }, { profileId: principal.id });
   revalidatePath("/network/profile/edit");
   return outcome;
 }

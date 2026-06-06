@@ -1,4 +1,6 @@
 "use server";
+import { track } from "@/lib/analytics/track";
+import { EVENT } from "@/lib/analytics/events";
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
@@ -71,6 +73,7 @@ export async function createDeal(listingId: string, message?: string): Promise<{
     await admin.from("messages").insert({ deal_id: deal.id, sender_id: user.id, body: message, contains_contact_info: hasContactInfo(message) });
     await logEvent(deal.id as string, user.id, "message");
   }
+  await track(EVENT.deal_opened, { dealId: deal.id, listingId: listing.id }, { profileId: user.id });
   revalidatePath("/network/deals");
   return { ok: true, id: deal.id as string };
 }
@@ -90,6 +93,7 @@ export async function sendMessage(dealId: string, body: string): Promise<{ ok?: 
   await logEvent(dealId, user.id, "message");
   const other = ctx.role === "initiator" ? ctx.deal.counterparty_id : ctx.deal.initiator_id;
   if (other) await createNotification(other, { type: "deal", title: "New message", link: `/network/deals/${dealId}` });
+  await track(EVENT.message_sent, { dealId }, { profileId: user.id });
   revalidatePath(`/network/deals/${dealId}`);
   return { ok: true };
 }
@@ -109,6 +113,7 @@ export async function advanceStage(dealId: string, toStage: DealStage): Promise<
   await logEvent(dealId, user.id, "stage_change", `${deal.stage} -> ${toStage}`);
   const otherStage = ctx.role === "initiator" ? deal.counterparty_id : deal.initiator_id;
   if (otherStage) await createNotification(otherStage, { type: "deal", title: `Deal moved to ${toStage}`, link: `/network/deals/${dealId}` });
+  await track(EVENT.deal_stage_changed, { dealId, to: toStage }, { profileId: user.id });
 
   // Successful close: award completed-deal trust to both parties.
   if (isSuccessfulClose(deal.stage, toStage)) {
