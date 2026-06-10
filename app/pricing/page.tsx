@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Transparent pricing for every Ponte Trade product — from £199 quick briefs to full market entry strategies. No subscriptions. Buy once, own it.",
+    "Transparent pricing for every Ponte Trade product — from $199 quick briefs to full market entry strategies. No subscriptions. Buy once, own it.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Pricing | Ponte Trade",
@@ -24,18 +24,18 @@ const TIERS = [
     colour: "border-gold/40 bg-gold/5",
     badge: "bg-gold/20 text-gold",
     products: [
-      { sku: "CP-001", name: "Counterparty Screening Package", price: "£199", href: "/product/counterparty-screening-package", note: "Up to 25 entities, OFAC/EU/UK/UN lists" },
-      { sku: "CT-001", name: "Country Trade Profile", price: "£249", href: "/product/country-trade-profile-report", note: "14-dimension country overview" },
-      { sku: "MA-200", name: "AI Market Snapshot Report", price: "£299", href: "/product/ai-market-snapshot-report", note: "All 11 analysis dimensions, ADAMftd-powered", badge: "ADAMftd" },
-      { sku: "MA-100", name: "Single Market Analysis Report", price: "£299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
-      { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "£299", href: "/product/tariff-landed-cost-analysis", note: "Full duty calculation + mitigation matrix" },
-      { sku: "CS-002", name: "Trade Company Deep Profile", price: "£349", href: "/product/trade-company-deep-profile", note: "One entity: volumes, partners, risk flags" },
-      { sku: "GR-002", name: "Sanctions & Compliance Brief", price: "£349", href: "/product/sanctions-compliance-brief", note: "OFAC, EU, UK, UN screening + analyst commentary" },
-      { sku: "MR-004", name: "Trade Corridor Report", price: "£399", href: "/product/trade-corridor-report", note: "5-year flows, operators, ports" },
-      { sku: "TI-001", name: "Tender Intelligence Brief", price: "£399", href: "/product/government-tender-intelligence-brief", note: "Active tenders matched to your HS code" },
-      { sku: "CT-003", name: "FTA Routing Analysis", price: "£499", href: "/product/fta-routing-analysis", note: "Origin-rules check + duty saving quantified" },
-      { sku: "GR-001", name: "Geopolitical Scenario Brief", price: "£499", href: "/product/geopolitical-scenario-brief", note: "Chokepoint exposure + mitigation playbook" },
-      { sku: "GR-003", name: "Hormuz Oil Shock Scenario", price: "£599", href: "/product/hormuz-oil-shock-scenario-report", note: "World-exclusive 4-scenario HS-6 shock model", badge: "Exclusive" },
+      { sku: "CP-001", name: "Counterparty Screening Package", price: "$199", href: "/product/counterparty-screening-package", note: "Up to 25 entities, OFAC/EU/UK/UN lists" },
+      { sku: "CT-001", name: "Country Trade Profile", price: "$249", href: "/product/country-trade-profile-report", note: "14-dimension country overview" },
+      { sku: "MA-200", name: "AI Market Snapshot Report", price: "$299", href: "/product/ai-market-snapshot-report", note: "All 11 analysis dimensions, ADAMftd-powered", badge: "ADAMftd" },
+      { sku: "MA-100", name: "Single Market Analysis Report", price: "$299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
+      { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "$299", href: "/product/tariff-landed-cost-analysis", note: "Full duty calculation + mitigation matrix" },
+      { sku: "CS-002", name: "Trade Company Deep Profile", price: "$349", href: "/product/trade-company-deep-profile", note: "One entity: volumes, partners, risk flags" },
+      { sku: "GR-002", name: "Sanctions & Compliance Brief", price: "$349", href: "/product/sanctions-compliance-brief", note: "OFAC, EU, UK, UN screening + analyst commentary" },
+      { sku: "MR-004", name: "Trade Corridor Report", price: "$399", href: "/product/trade-corridor-report", note: "5-year flows, operators, ports" },
+      { sku: "TI-001", name: "Tender Intelligence Brief", price: "$399", href: "/product/government-tender-intelligence-brief", note: "Active tenders matched to your HS code" },
+      { sku: "CT-003", name: "FTA Routing Analysis", price: "$499", href: "/product/fta-routing-analysis", note: "Origin-rules check + duty saving quantified" },
+      { sku: "GR-001", name: "Geopolitical Scenario Brief", price: "$499", href: "/product/geopolitical-scenario-brief", note: "Chokepoint exposure + mitigation playbook" },
+      { sku: "GR-003", name: "Hormuz Oil Shock Scenario", price: "$599", href: "/product/hormuz-oil-shock-scenario-report", note: "World-exclusive 4-scenario HS-6 shock model", badge: "Exclusive" },
     ],
   },
   {
@@ -45,10 +45,10 @@ const TIERS = [
     colour: "border-steel/40 bg-steel/5",
     badge: "bg-steel/20 text-cream",
     products: [
-      { sku: "MA-300", name: "Complete Market Analysis Suite", price: "£899", href: "/product/complete-market-analysis-suite", note: "All 11 modules + executive synthesis narrative" },
-      { sku: "GR-004", name: "Supply Chain Risk Assessment", price: "£899", href: "/product/supply-chain-risk-assessment", note: "End-to-end risk map + mitigation roadmap" },
-      { sku: "MR-001", name: "Single Country Market Report", price: "£1,099", href: "/product/single-country-market-report", note: "40+ page analyst report, one HS code + country" },
-      { sku: "MR-002", name: "Multi-Country Comparative Strategy", price: "£1,599", href: "/product/multi-country-comparative-analysis", note: "3-5 countries ranked, one HS code" },
+      { sku: "MA-300", name: "Complete Market Analysis Suite", price: "$899", href: "/product/complete-market-analysis-suite", note: "All 11 modules + executive synthesis narrative" },
+      { sku: "GR-004", name: "Supply Chain Risk Assessment", price: "$899", href: "/product/supply-chain-risk-assessment", note: "End-to-end risk map + mitigation roadmap" },
+      { sku: "MR-001", name: "Single Country Market Report", price: "$1,099", href: "/product/single-country-market-report", note: "40+ page analyst report, one HS code + country" },
+      { sku: "MR-002", name: "Multi-Country Comparative Strategy", price: "$1,599", href: "/product/multi-country-comparative-analysis", note: "3-5 countries ranked, one HS code" },
     ],
   },
   {
@@ -58,8 +58,8 @@ const TIERS = [
     colour: "border-amber-500/30 bg-amber-500/5",
     badge: "bg-amber-500/20 text-amber-400",
     products: [
-      { sku: "BU-004", name: "Compliance Essentials Pack", price: "£749", href: "/product/compliance-essentials-pack", note: "Sanctions Brief + 25-entity screening", saving: "Save £99" },
-      { sku: "BU-002", name: "Trade Intelligence Pack", price: "£799", href: "/product/trade-intelligence-pack", note: "Market Snapshot + Corridor + Tariff Brief", saving: "Save £198" },
+      { sku: "BU-004", name: "Compliance Essentials Pack", price: "$749", href: "/product/compliance-essentials-pack", note: "Sanctions Brief + 25-entity screening", saving: "Save $99" },
+      { sku: "BU-002", name: "Trade Intelligence Pack", price: "$799", href: "/product/trade-intelligence-pack", note: "Market Snapshot + Corridor + Tariff Brief", saving: "Save $198" },
     ],
   },
   {
@@ -69,23 +69,19 @@ const TIERS = [
     colour: "border-white/20 bg-white/[0.03]",
     badge: "bg-white/10 text-cream",
     products: [
-      { sku: "CR-001", name: "Custom Research Brief", price: "from £2,499", href: "/product/custom-research-brief", note: "Your question, scoped and quoted in 48 hours" },
-      { sku: "CR-002", name: "Market Entry Consulting", price: "from £3,999", href: "/product/market-entry-consulting", note: "4-8 week engagement, named senior partner" },
-      { sku: "CR-003", name: "Sector Quarterly Outlook", price: "from £4,999/yr", href: "/product/sector-quarterly-outlook", note: "Four outlooks/year, co-branded, member licence" },
-      { sku: "CR-004", name: "Sponsored Reports", price: "POA", href: "/product/sponsored-reports", note: "Joint-branded thought leadership PDF" },
+      { sku: "CR-003", name: "Sector Quarterly Outlook", price: "from $4,999/yr", href: "/product/sector-quarterly-outlook", note: "Four outlooks/year, co-branded, member licence" },
     ],
   },
 ] as const;
 
 const SUBSCRIPTIONS = [
-  { sku: "TI-002", name: "Weekly Tender Digest", price: "£79/mo", href: "/product/weekly-tender-digest", note: "Curated tender alerts by HS code, 190+ countries. Cancel any time." },
-  { sku: "SB-001", name: "Trade Intelligence Newsletter", price: "£29/mo", href: "/product/trade-intelligence-newsletter", note: "Monthly sector analysis and corridor intelligence digest." },
+  { sku: "TI-002", name: "Weekly Tender Digest", price: "$79/mo", href: "/product/weekly-tender-digest", note: "Curated tender alerts by HS code, 190+ countries. Cancel any time." },
 ] as const;
 
 const PRINCIPLES = [
   { icon: "01", title: "Buy once, own it", body: "Every report ships with a single-organisation licence. No renewal, no platform lock-in. The PDF is yours." },
   { icon: "02", title: "Card held, not charged", body: "Your card is held at checkout. You are only charged when a senior analyst signs off your report." },
-  { icon: "03", title: "GBP pricing", body: "All Tier A, B and Bundle products are priced in GBP. Tier C engagements are quoted in your preferred currency." },
+  { icon: "03", title: "USD pricing", body: "All Tier A, B and Bundle products are priced in USD. Tier C engagements are quoted in your preferred currency." },
   { icon: "04", title: "No subscriptions by default", body: "The digest products are month-to-month and cancel any time. Everything else is a one-off purchase." },
 ] as const;
 
@@ -101,7 +97,7 @@ export default function PricingPage() {
         </h1>
         <p className="body-lg max-w-xl text-muted">
           Every product is a one-off, analyst-curated PDF. No platform login
-          required after purchase. No subscriptions. Prices in GBP.
+          required after purchase. No subscriptions. Prices in USD.
         </p>
       </section>
 

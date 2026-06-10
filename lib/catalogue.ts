@@ -124,7 +124,6 @@ export const CATEGORIES: Category[] = [
 ];
 
 const USD = "USD";
-const GBP = "GBP";
 
 // ---- Products -------------------------------------------------------------
 // 13 active SKUs across three tiers (Wave 4 restructure, 2026-05-27).
@@ -358,7 +357,7 @@ export const PRODUCTS: Product[] = [
       "40+ page licensed PDF, single-organisation licence",
     ],
     priceCents: 109900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "72h",
     isSubscription: false,
     isConfigurable: true,
@@ -427,7 +426,7 @@ export const PRODUCTS: Product[] = [
     isSubscription: false,
     isConfigurable: false,
     cobrandable: true,
-  },  // ============================================================ Tier A — ADAMftd-powered (GBP, 24-48h)
+  },  // ============================================================ Tier A — ADAMftd-powered (24-48h)
   {
     sku: "MA-200",
     slug: "ai-market-snapshot-report",
@@ -450,7 +449,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 29900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
@@ -478,7 +477,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 89900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
@@ -508,7 +507,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 24900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
@@ -538,7 +537,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 49900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
@@ -566,7 +565,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 34900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
@@ -614,7 +613,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 59900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
@@ -658,7 +657,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 89900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "custom",
     isSubscription: false,
     isConfigurable: true,
@@ -692,7 +691,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 19900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
@@ -726,7 +725,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDF",
     ],
     priceCents: 39900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
@@ -762,7 +761,7 @@ export const PRODUCTS: Product[] = [
     ],
     priceCents: 7900,
     priceSuffix: "/mo",
-    currency: GBP,
+    currency: USD,
     deliveryType: "instant",
     isSubscription: true,
     isConfigurable: true,
@@ -784,7 +783,7 @@ export const PRODUCTS: Product[] = [
       },
     ],
   },
-  // ============================================================ ADAMftd Intelligence Bundles (GBP)
+  // ============================================================ ADAMftd Intelligence Bundles ()
   {
     sku: "BU-002",
     slug: "trade-intelligence-pack",
@@ -803,7 +802,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDFs",
     ],
     priceCents: 79900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
@@ -831,7 +830,7 @@ export const PRODUCTS: Product[] = [
       "Single-organisation licensed PDFs",
     ],
     priceCents: 74900,
-    currency: GBP,
+    currency: USD,
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,

@@ -350,7 +350,7 @@ export default function LearnDutiesPage() {
               Open duty calculator
             </Link>
             <Link href="/product/tariff-landed-cost-analysis" className="btn-ghost text-sm">
-              Get a full analyst brief — CT-002, £299
+              Get a full analyst brief — CT-002, $299
             </Link>
           </div>
         </section>
