@@ -1,4 +1,4 @@
--- Ponte Trade — Wave 5: ADAMftd Catalogue Expansion
+-- Ponte Trade  -  Wave 5: ADAMftd Catalogue Expansion
 -- Date: 2026-06-10
 -- CEO to paste into Supabase SQL editor. Do not run via CLI.
 --
@@ -8,8 +8,8 @@
 --   - Archives: BU-001, CR-001, CR-002, CR-004
 --   - Re-activates with new content: CT-001, CT-003, GR-003, BU-002, BU-004, TI-001, TI-002
 --   - Inserts 5 new SKUs: MA-200, MA-300, CS-002, GR-004, CP-001
---   - Renames MR-002 → Multi-Country Comparative Analysis
---   - Renames CT-002 → Tariff & Landed Cost Analysis
+--   - Renames MR-002 -> Multi-Country Comparative Analysis
+--   - Renames CT-002 -> Tariff & Landed Cost Analysis
 --   - Sets cobrandable = true on all published non-subscription products
 
 begin;
@@ -92,7 +92,7 @@ update products set
   title             = 'FTA Routing Analysis',
   slug              = 'fta-routing-analysis',
   short_description = 'Which routing saves the most duty? Origin-rules analysis across every applicable FTA for your HS code and corridor.',
-  full_description  = 'You know your product. You know your destination. The question is whether an FTA applies — and whether your goods actually qualify under the rules of origin. CT-003 maps every FTA applicable to your origin-destination corridor, checks rules-of-origin qualification criteria for your HS code, quantifies the duty saving under each qualifying agreement, and flags the documentation you need. For complex multi-origin supply chains, we model alternative sourcing routings and their qualification risk.',
+  full_description  = 'You know your product. You know your destination. The question is whether an FTA applies  -  and whether your goods actually qualify under the rules of origin. CT-003 maps every FTA applicable to your origin-destination corridor, checks rules-of-origin qualification criteria for your HS code, quantifies the duty saving under each qualifying agreement, and flags the documentation you need. For complex multi-origin supply chains, we model alternative sourcing routings and their qualification risk.',
   includes          = '["FTA landscape for your corridor: all applicable agreements","Rules-of-origin qualification check per HS code","Duty saving quantification under each qualifying FTA","Documentation and certification requirements","Alternative origin routing scenarios (where applicable)","Senior-analyst commentary on qualification risk","Single-organisation licensed PDF"]'::jsonb,
   price_cents       = 49900,
   currency          = 'GBP',
@@ -115,7 +115,7 @@ update products set
   title             = 'Hormuz Oil Shock Scenario Report',
   slug              = 'hormuz-oil-shock-scenario-report',
   short_description = 'World-exclusive HS-6 oil shock modelling: four escalation scenarios, quantified supply disruption, sector-by-sector impact.',
-  full_description  = 'The only report in the world that models Hormuz disruption at HS-6 level. Using Ponte''s proprietary Hormuz Simulator, we quantify trade-flow disruption, oil price trajectories and sector-by-sector downstream impact across four escalation scenarios: (1) blockade threat only — market fear premium, (2) partial closure — 30-day disruption, (3) full closure — 90-day sustained, (4) military escalation — extended six-month scenario. For each scenario: which HS codes are most exposed, how prices move, which corridors reroute and to where, and your specific exposure by HS code if provided. No other research house publishes this.',
+  full_description  = 'The only report in the world that models Hormuz disruption at HS-6 level. Using Ponte''s proprietary Hormuz Simulator, we quantify trade-flow disruption, oil price trajectories and sector-by-sector downstream impact across four escalation scenarios: (1) blockade threat only  -  market fear premium, (2) partial closure  -  30-day disruption, (3) full closure  -  90-day sustained, (4) military escalation  -  extended six-month scenario. For each scenario: which HS codes are most exposed, how prices move, which corridors reroute and to where, and your specific exposure by HS code if provided. No other research house publishes this.',
   includes          = '["Hormuz Simulator: 4-scenario quantified disruption model","HS-6 trade flow exposure per scenario","Oil price and energy input cost trajectories","Sector-by-sector downstream impact analysis","Corridor rerouting patterns: alternative lanes and ports","Your specific HS code exposure (if provided)","Mitigation and hedging playbook","Single-organisation licensed PDF"]'::jsonb,
   price_cents       = 59900,
   currency          = 'GBP',
@@ -130,7 +130,7 @@ update products set
       {"value":"full","label":"Scenario 3: Full 90-day closure"},
       {"value":"military","label":"Scenario 4: Military escalation"}
     ]},
-    {"name":"hs_code","label":"HS code (optional — for your-exposure section)","type":"text","required":false,"placeholder":"e.g. 2709.00"}
+    {"name":"hs_code","label":"HS code (optional  -  for your-exposure section)","type":"text","required":false,"placeholder":"e.g. 2709.00"}
   ]'::jsonb,
   band              = 'Tier A',
   featured          = true,
@@ -142,9 +142,9 @@ update products set
   category_id       = (select id from categories where slug = 'bundles'),
   title             = 'Trade Intelligence Pack',
   slug              = 'trade-intelligence-pack',
-  short_description = 'AI Market Snapshot + Trade Corridor + Tariff Analysis — everything you need before entering a market.',
+  short_description = 'AI Market Snapshot + Trade Corridor + Tariff Analysis  -  everything you need before entering a market.',
   full_description  = 'Three essential reports bundled for market-entry intelligence. BU-002 pairs the AI Market Snapshot (MA-200, all 11 analysis dimensions) with the Trade Corridor Report (MR-004, 5-year flow data) and the Tariff & Landed Cost Analysis (CT-002, full duty calculation and mitigation matrix). Together they answer the three questions every exporter needs answered: Is the market right? What is flowing on this corridor? What will it actually cost after duty?',
-  includes          = '["AI Market Snapshot Report (MA-200) — all 11 analysis dimensions","Trade Corridor Report (MR-004) — 5-year flow, operators, ports","Tariff & Landed Cost Analysis (CT-002) — duty and mitigation","Integrated summary note tying findings across all three reports","Single-organisation licensed PDFs"]'::jsonb,
+  includes          = '["AI Market Snapshot Report (MA-200)  -  all 11 analysis dimensions","Trade Corridor Report (MR-004)  -  5-year flow, operators, ports","Tariff & Landed Cost Analysis (CT-002)  -  duty and mitigation","Integrated summary note tying findings across all three reports","Single-organisation licensed PDFs"]'::jsonb,
   price_cents       = 79900,
   currency          = 'GBP',
   delivery_type     = '48h',
@@ -166,9 +166,9 @@ update products set
   category_id       = (select id from categories where slug = 'bundles'),
   title             = 'Compliance Essentials Pack',
   slug              = 'compliance-essentials-pack',
-  short_description = 'Sanctions brief + counterparty screening for 25 entities — the compliance starter pack for new trade corridors.',
+  short_description = 'Sanctions brief + counterparty screening for 25 entities  -  the compliance starter pack for new trade corridors.',
   full_description  = 'Opening a new trading corridor comes with compliance obligations. BU-004 pairs the Sanctions & Compliance Brief (GR-002) for your corridor with the Counterparty Screening Package (CP-001) for up to 25 entities. The GR-002 brief covers the sanctions regime, secondary exposure and risk commentary; the CP-001 screens every named entity against OFAC, EU, UK and UN lists. Together they give you defensible pre-trade due diligence documentation in 24 hours.',
-  includes          = '["Sanctions & Compliance Brief (GR-002) — corridor and regime analysis","Counterparty Screening Package (CP-001) — up to 25 entities","OFAC, EU, UK and UN sanctions coverage","RAG-classified entity cards with risk notes","Combined compliance summary PDF","Single-organisation licensed PDFs"]'::jsonb,
+  includes          = '["Sanctions & Compliance Brief (GR-002)  -  corridor and regime analysis","Counterparty Screening Package (CP-001)  -  up to 25 entities","OFAC, EU, UK and UN sanctions coverage","RAG-classified entity cards with risk notes","Combined compliance summary PDF","Single-organisation licensed PDFs"]'::jsonb,
   price_cents       = 74900,
   currency          = 'GBP',
   delivery_type     = '24h',
@@ -189,7 +189,7 @@ update products set
   category_id       = (select id from categories where slug = 'tenders'),
   title             = 'Government Tender Intelligence Brief',
   slug              = 'government-tender-intelligence-brief',
-  short_description = 'Active government tenders for your HS code and target markets — curated, assessed and ready to respond to.',
+  short_description = 'Active government tenders for your HS code and target markets  -  curated, assessed and ready to respond to.',
   full_description  = 'Governments and institutions publish tens of thousands of procurement notices globally. Most are invisible to exporters without dedicated monitoring. TI-001 searches 190+ countries'' public procurement portals for active tenders matching your HS code and target markets, assesses each for fit and bid likelihood, and delivers a curated shortlist with full tender details, submission requirements and deadlines. Ideal for exporters, chambers, and trade advisers managing client pipelines.',
   includes          = '["Active tenders matched to your HS code and target markets","Tender details: contracting authority, value, deadline, specs","Fit and bid-likelihood assessment per tender","Submission requirements and contact points","190+ country procurement portal coverage","Single-organisation licensed PDF"]'::jsonb,
   price_cents       = 39900,
@@ -212,7 +212,7 @@ update products set
   title             = 'Weekly Tender Digest',
   slug              = 'weekly-tender-digest',
   short_description = 'Weekly curated tender alerts by HS code and sector. Never miss a procurement opportunity again.',
-  full_description  = 'A weekly email digest of new government and institutional tenders matched to your HS codes and target markets. Each digest includes: contracting authority, tender value, deadline, brief specification summary, and a direct link to the source notice. Fully curated by our tender intelligence team — no noise, no auto-generated alerts. Monthly subscription, cancel any time. Covers 190+ countries.',
+  full_description  = 'A weekly email digest of new government and institutional tenders matched to your HS codes and target markets. Each digest includes: contracting authority, tender value, deadline, brief specification summary, and a direct link to the source notice. Fully curated by our tender intelligence team  -  no noise, no auto-generated alerts. Monthly subscription, cancel any time. Covers 190+ countries.',
   includes          = '["Weekly email digest every Monday","New tenders matched to your specified HS codes","Contracting authority, value and deadline per tender","Brief specification summary","Direct link to source procurement notice","190+ country coverage"]'::jsonb,
   price_cents       = 7900,
   price_suffix      = '/mo',
@@ -240,7 +240,7 @@ values (
   (select id from categories where slug = 'analysis'),
   'AI Market Snapshot Report',
   'ai-market-snapshot-report',
-  'Complete 11-function market intelligence for one HS code and country — all topics in a single 24-hour brief.',
+  'Complete 11-function market intelligence for one HS code and country  -  all topics in a single 24-hour brief.',
   'Powered by the ADAMftd grounded-AI engine and 7 billion+ verified trade records. MA-200 runs all eleven Market Analysis Suite functions in parallel: Retail Snapshot, Market Size, Consumer Preferences, Sentiment, Seasonal Demand, Local Production, Substitutes, SWOT, Entry Barriers, Packaging, and Quality & Certifications. Each finding is verified through a 4-source pull, conflict-detection and Monte Carlo resolution before a senior analyst signs off the final PDF. Faster, broader, and more affordable than ordering each topic individually.',
   '["All 11 Market Analysis Suite dimensions","Retail landscape and market size","Consumer preferences and sentiment analysis","Seasonal demand and local production overview","Substitutes, SWOT and entry barriers","Packaging, labelling and certification requirements","ADAMftd 4-source verified findings with full citations","Senior-analyst sign-off","Single-organisation licensed PDF"]'::jsonb,
   29900,
@@ -407,7 +407,7 @@ values (
   'Counterparty Screening Package',
   'counterparty-screening-package',
   'Bulk sanctions and risk screening for up to 25 counterparties. OFAC, EU, UK and UN lists. 24-hour delivery.',
-  'Onboarding a new roster of suppliers, partners or distributors? CP-001 screens up to 25 named entities in a single engagement. Each entity is checked against OFAC, EU, UK and UN sanctions lists, beneficial-ownership databases, PEP lists, and open-source adverse-media sources. Delivered as a batch PDF report with individual entity cards — red/amber/green classification, risk notes, and flagged issues. Faster and more cost-effective than screening one by one with GR-002.',
+  'Onboarding a new roster of suppliers, partners or distributors? CP-001 screens up to 25 named entities in a single engagement. Each entity is checked against OFAC, EU, UK and UN sanctions lists, beneficial-ownership databases, PEP lists, and open-source adverse-media sources. Delivered as a batch PDF report with individual entity cards  -  red/amber/green classification, risk notes, and flagged issues. Faster and more cost-effective than screening one by one with GR-002.',
   '["Up to 25 named entities screened","OFAC, EU, UK and UN sanctions list checks","Beneficial ownership and PEP screening","Adverse media and open-source check","Individual entity cards: RAG classification and risk notes","Batch summary PDF","Single-organisation licensed PDF"]'::jsonb,
   19900,
   'GBP',
