@@ -40,6 +40,7 @@ function mapRow(row: any): Product {
     configFields: row.config_fields ?? undefined,
     savingsCents: row.savings_cents ?? undefined,
     featured: row.featured ?? false,
+    cobrandable: row.cobrandable ?? false,
     previewPdfUrl: row.preview_pdf_url ?? undefined,
     previewPages: row.preview_pages ?? undefined,
   };
