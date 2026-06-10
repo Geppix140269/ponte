@@ -13,7 +13,7 @@ export default function NotFound() {
           404
         </p>
         <h1
-          className="serif text-ink mt-4"
+          className="serif text-white mt-4"
           style={{ fontSize: 32, fontWeight: 500 }}
         >
           The bridge isn&apos;t there.
@@ -25,8 +25,8 @@ export default function NotFound() {
           <Link href="/" className="btn-gold">
             Back to home
           </Link>
-          <Link href="/network/listings" className="btn-ghost-light">
-            Browse listings
+          <Link href="/catalogue" className="btn-ghost-light">
+            Browse the Catalogue
           </Link>
         </div>
       </div>

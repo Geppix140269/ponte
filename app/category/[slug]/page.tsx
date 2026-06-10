@@ -63,7 +63,7 @@ export default async function CategoryPage({
       <header className="container-px pt-14 pb-10 md:pt-20 md:pb-12">
         <span className="pill">Category</span>
         <h1
-          className="serif text-ink mt-6 mb-5"
+          className="serif text-white mt-6 mb-5"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -83,7 +83,7 @@ export default async function CategoryPage({
           bands.map((band) => (
             <div key={band}>
               <h2
-                className="serif text-ink mb-7"
+                className="serif text-white mb-7"
                 style={{ fontSize: 26, fontWeight: 500 }}
               >
                 {band}

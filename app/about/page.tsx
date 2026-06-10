@@ -3,14 +3,14 @@ import Link from "next/link";
 import { BridgeMark } from "@/components/Logo";
 
 const ABOUT_DESC =
-  "ponte.trade is the verified network for real buyers, sellers, and trading houses: counterparty verification, direct deal rooms, secured settlement, and market intelligence. An ICTTM company.";
+  "Ponte Trade sells research-grade trade intelligence as one-time products: reports, analysis, and risk briefs. An ICTTM company.";
 
 export const metadata: Metadata = {
   title: "About",
   description: ABOUT_DESC,
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About ponte.trade",
+    title: "About Ponte Trade",
     description: ABOUT_DESC,
     url: "/about",
     siteName: "Ponte Trade",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "About ponte.trade",
+    title: "About Ponte Trade",
     description: ABOUT_DESC,
   },
 };
@@ -26,18 +26,18 @@ export const metadata: Metadata = {
 const principles = [
   {
     n: "i.",
-    title: "Verified, not self-reported",
-    body: "Every counterparty is screened against sanctions, company registries, customs activity and beneficial owners, with a trust score and verification tier on each profile. Grounded in ADAMftd data, not claims.",
+    title: "Output, not subscriptions",
+    body: "We sell the finished intelligence: PDFs, data packs, briefs. Buy once. No seats, no platform to learn.",
   },
   {
     n: "ii.",
-    title: "Principals, not brokers",
-    body: "ponte.trade is for real buyers, sellers and trading houses. Contact details stay private until both sides signal interest, so you deal directly with decision-makers rather than chains of intermediaries.",
+    title: "Curated, not generated",
+    body: "Every report is reviewed and signed off by a senior sector analyst, then cross-checked against UN Comtrade, the World Bank, WTO, Eurostat, ITC and EU Taxud. Where sources conflict, outliers are flagged and Monte Carlo models estimate the most likely outcome.",
   },
   {
     n: "iii.",
-    title: "Secured settlement",
-    body: "Milestone escrow holds funds and releases them against delivery documents, so payment and goods move together and neither side trades on blind trust.",
+    title: "Delivery date confirmed at checkout",
+    body: "We confirm your exact delivery date within 24 hours of order. Your card is held but not charged until we start production on your confirmed slot.",
   },
 ];
 
@@ -48,7 +48,7 @@ export default function AboutPage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
         <span className="pill">About Ponte Trade</span>
         <h1
-          className="serif text-ink mt-6 mb-7 max-w-3xl"
+          className="serif text-white mt-6 mb-7 max-w-3xl"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -56,16 +56,15 @@ export default function AboutPage() {
             letterSpacing: "-0.015em",
           }}
         >
-          The verified network for{" "}
+          Trade intelligence,{" "}
           <em className="text-gold italic" style={{ fontWeight: 400 }}>
-            real buyers and sellers.
+            sold as a product.
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
-          Ponte (Italian for &ldquo;bridge&rdquo;) connects verified buyers
-          and sellers so they can trade directly and settle securely, backed by
-          ADAMftd trade intelligence. Market intelligence reports are available
-          on demand.
+          Ponte (Italian for &ldquo;bridge&rdquo;) connects buyers and sellers
+          to the market intelligence they need to trade with confidence.
+          Delivered as reports you own, not software you rent.
         </p>
         <p
           className="mt-5 text-[11px] uppercase text-gold"
@@ -81,7 +80,7 @@ export default function AboutPage() {
           <div className="num-italic">— 01 / Principles</div>
           <div>
             <h2
-              className="serif font-medium text-3xl md:text-[40px] text-ink"
+              className="serif font-medium text-3xl md:text-[40px] text-white"
               style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
             >
               Three rules we don&apos;t break.
@@ -94,7 +93,7 @@ export default function AboutPage() {
             <div key={p.title} className="glass p-8">
               <p className="num-italic mb-4">{p.n}</p>
               <h3
-                className="serif text-ink text-xl"
+                className="serif text-white text-xl"
                 style={{ fontWeight: 500 }}
               >
                 {p.title}
@@ -113,7 +112,7 @@ export default function AboutPage() {
           <div className="glass p-10">
             <span className="eyebrow">Ownership</span>
             <h2
-              className="serif text-ink mt-4"
+              className="serif text-white mt-4"
               style={{
                 fontSize: 32,
                 fontWeight: 400,
@@ -127,25 +126,25 @@ export default function AboutPage() {
               </em>
             </h2>
             <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
-              ponte.trade is owned by the International Centre for Trade
+              Ponte Trade is owned by the International Centre for Trade
               Transparency Limited (ICTTM), the UK group that maintains one
               of the largest verified trade-data infrastructures in the
-              world: 7 billion+ records cross-checked against OFAC, EU, UN
-              and UK screening and official customs sources.
+              world: 7 billion+ records cross-checked against UN Comtrade,
+              the World Bank, WTO, Eurostat, ITC and EU Taxud.
             </p>
             <Link
               href="/why-ponte"
-              className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-ink"
+              className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-cream"
               style={{ letterSpacing: "0.18em" }}
             >
-              Why ponte.trade →
+              Why Ponte →
             </Link>
           </div>
 
           <div className="glass p-10">
-            <span className="eyebrow">Why ponte.trade exists</span>
+            <span className="eyebrow">Why Ponte Trade exists</span>
             <h2
-              className="serif text-ink mt-4"
+              className="serif text-white mt-4"
               style={{
                 fontSize: 32,
                 fontWeight: 400,
@@ -153,17 +152,17 @@ export default function AboutPage() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Payment is the problem.
+              A different buyer.
             </h2>
             <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
-              In global trade, the hardest part is rarely finding a
-              counterparty. It is trusting them enough to move money. ponte.trade
-              exists to remove that friction: verify who you are dealing with,
-              trade directly with verified principals, and settle through
-              milestone escrow.
+              Ponte serves a distinct buyer: the consultant, lawyer,
+              chamber, EPA, board member or M&amp;A team who needs one
+              specific intelligence artefact, right now, without a
+              subscription, a seat, or a platform to learn. Buy the
+              report. Cite it. Move on.
             </p>
-            <Link href="/network/verify" className="btn-gold mt-7">
-              Verify a counterparty
+            <Link href="/catalogue" className="btn-gold mt-7">
+              Browse the Catalogue
             </Link>
           </div>
         </div>
@@ -182,7 +181,7 @@ export default function AboutPage() {
           <div className="relative z-10 flex flex-col items-center">
             <BridgeMark className="h-20 w-20" />
             <p
-              className="serif text-ink mt-6"
+              className="serif text-white mt-6"
               style={{
                 fontSize: 28,
                 fontWeight: 400,
@@ -200,7 +199,7 @@ export default function AboutPage() {
               The mark is a single Roman arch with a gold apex node. The arch
               is the bridge: connection, structure, classical confidence. The
               node is the data point: the verified trade record at the centre
-              of every counterparty check.
+              of every report.
             </p>
           </div>
         </div>

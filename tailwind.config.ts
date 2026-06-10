@@ -1,53 +1,38 @@
 import type { Config } from "tailwindcss";
 
-// ===== Ponte Brand v4 — "Heritage trading press × terminal data" =====
-// Light heritage theme. Tokens mirror app/ponte-landing.css. Legacy v2 color
-// names (navy, cream, gray-2, positive, negative, glass-border…) are remapped
-// onto v4 values so existing utility classes flip to the light theme centrally.
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // ---- v4 surfaces & ink ----
-        surface: "#FCFBF7",
-        raised: "#FFFFFF",
-        sunken: "#F2EFE6",
-        ink: {
-          DEFAULT: "#0F0F0E",
-          2: "#3A3733",
-        },
-        "ink-2": "#3A3733",
-        mute: "#9A958A",
-        rule: { DEFAULT: "#E5DFD2", 2: "#D5CEBC" },
-        "rule-2": "#D5CEBC",
-
-        // ---- accent (gold) ----
-        gold: { DEFAULT: "#C9973A", 600: "#B5852E", 400: "#D9AC55" },
-
-        // ---- semantic ----
-        pos: { DEFAULT: "#0F6E3D", mid: "#5C9C5A" },
-        neg: { DEFAULT: "#C84A2C", mid: "#E07A5F" },
-        warn: "#C9973A",
-        positive: "#0F6E3D",
-        negative: "#C84A2C",
-
-        // ---- legacy v2 names remapped to v4 (so old classes flip) ----
+        // ===== v2 Brand =====
+        // Navy: primary ground (was #0F1E3C, now the deeper v2 #0D1B2A)
         navy: {
-          DEFAULT: "#FCFBF7", // was dark ground → now light surface
-          900: "#F2EFE6",
-          800: "#FCFBF7",
-          700: "#FFFFFF",
-          600: "#F2EFE6",
+          DEFAULT: "#0D1B2A",
+          900: "#07101B",      // navy-deep (body background)
+          800: "#0D1B2A",      // navy
+          700: "#142336",      // navy-2
+          600: "#1B2E47",      // navy-3
         },
-        cream: "#0F0F0E", // legacy "light text on dark" → now ink (dark text)
-        mist: "#FCFBF7",
-        "gray-2": "#5C5852",
-        line: "#E5DFD2",
-        "line-strong": "#D5CEBC",
-        glass: "rgba(15,15,14,0.04)",
-        "glass-strong": "rgba(15,15,14,0.06)",
-        "glass-border": "#E5DFD2",
+        // Gold: signal, reserved for live data / accents
+        gold: {
+          DEFAULT: "#C9973A",
+          600: "#B5852E",
+          400: "#D9AC55",      // gold-soft
+        },
+        cream: "#F5F0E8",
+        ink: "#0D1B2A",
+        mist: "#F5F0E8",       // light surface alias (legacy callsites)
+        line: "rgba(255, 255, 255, 0.12)",
+        "line-strong": "rgba(255, 255, 255, 0.20)",
+        glass: "rgba(255, 255, 255, 0.06)",
+        "glass-strong": "rgba(255, 255, 255, 0.10)",
+        "glass-border": "rgba(255, 255, 255, 0.14)",
+        // Data deltas
+        positive: "#4AC09A",
+        negative: "#E07A5F",
+        // Neutral text greys for v2 dark UI
+        "gray-2": "#9CA3AF",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
@@ -59,12 +44,12 @@ const config: Config = {
         widest3: "0.24em",
       },
       boxShadow: {
-        glass: "0 1px 0 var(--rule), 0 20px 40px -28px rgba(15,15,14,0.18)",
-        gold: "0 14px 30px -16px rgba(201,151,58,0.4)",
-        card: "0 1px 0 var(--rule), 0 20px 40px -28px rgba(15,15,14,0.18)",
+        glass:
+          "0 1px 0 rgba(255,255,255,0.12) inset, 0 24px 60px -20px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.04)",
+        gold: "0 10px 30px -10px rgba(201,151,58,0.6)",
       },
       backdropBlur: {
-        glass: "16px",
+        glass: "24px",
       },
       maxWidth: {
         container: "1320px",

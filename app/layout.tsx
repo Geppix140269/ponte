@@ -31,15 +31,15 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "ponte.trade. The verified trade network.",
-    template: "%s | ponte.trade",
+    default: "Ponte Trade. Trade intelligence, delivered.",
+    template: "%s | Ponte Trade",
   },
   description:
-    "The verified network for real buyers, sellers, and trading houses. Verify any counterparty against sanctions, registry, customs activity and beneficial owners, publish offers and requests, and settle securely. Backed by ADAMftd and 7B+ verified trade records.",
+    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs. No subscription required.",
   openGraph: {
-    title: "ponte.trade. The verified trade network.",
+    title: "Ponte Trade. Trade intelligence, delivered.",
     description:
-      "Verify any counterparty, trade directly with verified principals, and settle securely. Backed by ADAMftd and 7B+ verified trade records.",
+      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
     url: APP_URL,
     siteName: "Ponte Trade",
     type: "website",
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ponte.trade. The verified trade network.",
+    title: "Ponte Trade. Trade intelligence, delivered.",
     description:
-      "Verify any counterparty, trade directly with verified principals, and settle securely. Backed by ADAMftd and 7B+ verified trade records.",
+      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
   },
 };
 
@@ -64,7 +64,7 @@ const organizationJsonLd = {
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "The verified trade network for real buyers, sellers, and trading houses: counterparty verification, direct deal rooms, secured settlement, and market intelligence. Backed by ADAMftd and 7B+ verified trade records.",
+    "Research-grade international trade intelligence sold as one-time reports: market analysis, geopolitical risk, and company intelligence.",
   parentOrganization: {
     "@type": "Organization",
     name: "International Centre for Trade Transparency Limited (ICTTM)",

@@ -13,7 +13,7 @@ export default function CheckoutPage() {
       <div className="glass p-12 max-w-xl mx-auto text-center">
         <CreditCard className="mx-auto h-10 w-10 text-gold" />
         <h1
-          className="serif text-ink mt-6"
+          className="serif text-white mt-6"
           style={{ fontSize: 32, fontWeight: 500 }}
         >
           Secure checkout

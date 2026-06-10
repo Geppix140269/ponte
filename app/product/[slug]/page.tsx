@@ -109,13 +109,13 @@ export default async function ProductPage({
         style={{ letterSpacing: "0.18em" }}
       >
         <Link href="/catalogue" className="hover:text-gold">Catalogue</Link>
-        <span className="mx-2 text-ink/20">/</span>
+        <span className="mx-2 text-white/20">/</span>
         <Link href={`/category/${category?.slug}`} className="hover:text-gold">
           {category?.name}
         </Link>
         {product.band && (
           <>
-            <span className="mx-2 text-ink/20">/</span>
+            <span className="mx-2 text-white/20">/</span>
             <span>{product.band}</span>
           </>
         )}
@@ -125,7 +125,7 @@ export default async function ProductPage({
         {/* Left column */}
         <div>
           <h1
-            className="serif text-ink leading-tight"
+            className="serif text-white leading-tight"
             style={{
               fontSize: "clamp(36px, 5vw, 56px)",
               fontWeight: 400,
@@ -154,7 +154,7 @@ export default async function ProductPage({
           {/* What's included */}
           <div className="mt-10 glass p-8">
             <h2
-              className="serif text-ink text-xl mb-5"
+              className="serif text-white text-xl mb-5"
               style={{ fontWeight: 500 }}
             >
               What&apos;s included
@@ -163,7 +163,7 @@ export default async function ProductPage({
               {product.includes.map((item) => (
                 <li
                   key={item}
-                  className="flex items-start gap-2.5 text-[14px] text-ink"
+                  className="flex items-start gap-2.5 text-[14px] text-cream"
                 >
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                   {item}
@@ -212,9 +212,9 @@ export default async function ProductPage({
 
       {/* Related */}
       {related.length > 0 && (
-        <div className="mt-20 pt-12 border-t border-rule">
+        <div className="mt-20 pt-12 border-t border-white/10">
           <h2
-            className="serif text-ink text-2xl mb-8"
+            className="serif text-white text-2xl mb-8"
             style={{ fontWeight: 500 }}
           >
             You may also like

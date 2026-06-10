@@ -37,7 +37,7 @@ type BridgeMarkProps = {
 
 export function BridgeMark({
   className,
-  stroke = "currentColor",
+  stroke = "#FFFFFF",
   node = "#C9973A",
   showBaseline = true,
   compact = false,
@@ -165,9 +165,8 @@ export default function Logo({
   const text =
     size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-xl";
 
-  // v4 light theme: the mark and wordmark are ink on cream everywhere.
-  const stroke = "#0F0F0E";
-  const wordColor = "text-ink";
+  const stroke = reversed ? "#FFFFFF" : "#0D1B2A";
+  const wordColor = reversed ? "text-white" : "text-navy";
 
   // Auto-select compact variant for sm to keep the silhouette crisp.
   const useCompact = size === "sm";

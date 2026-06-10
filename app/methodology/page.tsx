@@ -3,14 +3,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const METHODOLOGY_DESC =
-  "The data methodology behind ponte.trade: machine-scale aggregation across UN Comtrade, World Bank, WTO, Eurostat, ITC and EU Taxud with expert review. The same verified data grounds counterparty verification and market intelligence reports.";
+  "Machine-scale data aggregation across UN Comtrade, World Bank, WTO, Eurostat, ITC and EU Taxud, combined with expert human review. Every report signed off by a senior sector analyst.";
 
 export const metadata: Metadata = {
   title: "Methodology",
   description: METHODOLOGY_DESC,
   alternates: { canonical: "/methodology" },
   openGraph: {
-    title: "Methodology | ponte.trade",
+    title: "Methodology | Ponte Trade",
     description: METHODOLOGY_DESC,
     url: "/methodology",
     siteName: "Ponte Trade",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Methodology | ponte.trade",
+    title: "Methodology | Ponte Trade",
     description: METHODOLOGY_DESC,
   },
 };
@@ -39,7 +39,7 @@ export default function MethodologyPage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
         <span className="pill">Methodology</span>
         <h1
-          className="serif text-ink mt-6 mb-7 max-w-3xl"
+          className="serif text-white mt-6 mb-7 max-w-3xl"
           style={{
             fontWeight: 400,
             fontSize: "clamp(40px, 6vw, 72px)",
@@ -57,10 +57,9 @@ export default function MethodologyPage() {
           Comtrade, World Bank, WTO, Eurostat, ITC, EU Taxud and additional
           government sources with expert human review by our research team.
           Where official sources conflict, outliers are flagged and Monte
-          Carlo models estimate the most likely outcome. The same verified
-          data grounds every counterparty verification on the network and every
-          market intelligence report, which is reviewed and signed off by a
-          senior sector specialist before it ships.
+          Carlo models estimate the most likely outcome. Every report is
+          reviewed and signed off by a senior sector specialist before it
+          reaches the customer.
         </p>
       </header>
 
@@ -69,7 +68,7 @@ export default function MethodologyPage() {
         <div className="glass p-10 lg:p-14">
           <span className="eyebrow">Authoritative sources</span>
           <h2
-            className="serif text-ink mt-4 max-w-3xl"
+            className="serif text-white mt-4 max-w-3xl"
             style={{
               fontSize: 32,
               fontWeight: 400,
@@ -109,7 +108,7 @@ export default function MethodologyPage() {
           <div className="num-italic">— 01 / Process</div>
           <div>
             <h2
-              className="serif font-medium text-3xl md:text-[40px] text-ink"
+              className="serif font-medium text-3xl md:text-[40px] text-white"
               style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
             >
               From query to licensed PDF.
@@ -120,7 +119,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Aggregation</span>
             <h3
-              className="serif text-ink mt-5"
+              className="serif text-white mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Machine-scale data ingestion.
@@ -136,7 +135,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Conflict resolution</span>
             <h3
-              className="serif text-ink mt-5"
+              className="serif text-white mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Sources conflict — we resolve them.
@@ -151,7 +150,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Senior-analyst review</span>
             <h3
-              className="serif text-ink mt-5"
+              className="serif text-white mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Every report signed off.
@@ -166,7 +165,7 @@ export default function MethodologyPage() {
           <div className="glass p-10">
             <span className="eyebrow">Licence and provenance</span>
             <h3
-              className="serif text-ink mt-5"
+              className="serif text-white mt-5"
               style={{ fontSize: 24, fontWeight: 400, lineHeight: 1.1 }}
             >
               Citable. Traceable. Yours.
@@ -193,7 +192,7 @@ export default function MethodologyPage() {
           />
           <div className="relative z-10">
             <h2
-              className="serif text-ink"
+              className="serif text-white"
               style={{
                 fontSize: 32,
                 fontWeight: 400,
@@ -201,14 +200,14 @@ export default function MethodologyPage() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Put the data to work.
+              Ready to commission a report?
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/network/verify" className="btn-gold">
-                Verify a counterparty <ArrowRight className="h-4 w-4" />
+              <Link href="/catalogue" className="btn-gold">
+                Browse the catalogue <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/catalogue" className="btn-ghost-light">
-                Browse the catalogue
+              <Link href="/why-ponte" className="btn-ghost-light">
+                Why Ponte
               </Link>
             </div>
           </div>

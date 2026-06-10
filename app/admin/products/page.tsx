@@ -24,7 +24,7 @@ export default async function AdminProducts() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1
-            className="serif text-ink"
+            className="serif text-white"
             style={{ fontSize: 32, fontWeight: 500 }}
           >
             Products
@@ -56,7 +56,7 @@ export default async function AdminProducts() {
         <div className="mt-7 glass overflow-x-auto">
           <table className="w-full text-sm">
             <thead
-              className="border-b border-rule text-left text-[10px] uppercase text-gray-2"
+              className="border-b border-white/10 text-left text-[10px] uppercase text-gray-2"
               style={{ letterSpacing: "0.22em" }}
             >
               <tr>
@@ -69,21 +69,21 @@ export default async function AdminProducts() {
                 <th className="px-4 py-4"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rule">
+            <tbody className="divide-y divide-white/10">
               {(products ?? []).map((p: any) => (
                 <tr key={p.sku} className="hover:bg-white/[0.03]">
                   <td className="px-4 py-3 mono text-[11px] text-gray-2">
                     {p.sku}
                   </td>
-                  <td className="px-4 py-3 text-ink">{p.title}</td>
+                  <td className="px-4 py-3 text-cream">{p.title}</td>
                   <td className="px-4 py-3 mono text-gold">
                     {formatPrice(p.price_cents, p.currency)}
                   </td>
-                  <td className="px-4 py-3 text-ink">{p.delivery_type}</td>
+                  <td className="px-4 py-3 text-cream">{p.delivery_type}</td>
                   <td className="px-4 py-3 text-gold">{p.featured ? "★" : ""}</td>
                   <td
                     className={`px-4 py-3 capitalize ${
-                      statusColor[p.status] ?? "text-ink"
+                      statusColor[p.status] ?? "text-cream"
                     }`}
                   >
                     {p.status}
@@ -91,7 +91,7 @@ export default async function AdminProducts() {
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/products/${p.id}`}
-                      className="text-[11px] uppercase text-gold hover:text-ink"
+                      className="text-[11px] uppercase text-gold hover:text-cream"
                       style={{ letterSpacing: "0.18em" }}
                     >
                       Edit →

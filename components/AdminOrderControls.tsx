@@ -63,18 +63,18 @@ export default function AdminOrderControls({
   }
 
   return (
-    <div className="mt-4 rounded-md border border-rule bg-white/5 p-4">
+    <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-4">
       <div className="flex flex-wrap items-center gap-4 text-[11px] uppercase text-gray-2"
            style={{ letterSpacing: "0.18em" }}>
         <span>
           STATUS:{" "}
-          <span className={`${statusV2 === "voided" ? "text-negative" : "text-ink"}`}>
+          <span className={`${statusV2 === "voided" ? "text-negative" : "text-cream"}`}>
             {statusV2}
           </span>
         </span>
         <span>
           METHOD:{" "}
-          <span className="text-ink">{captureMethod ?? "automatic"}</span>
+          <span className="text-cream">{captureMethod ?? "automatic"}</span>
         </span>
         {isManual && (isAuthorized || isConfirmed) && (
           <span>
@@ -87,7 +87,7 @@ export default function AdminOrderControls({
         {confirmedDeliveryAt && (
           <span>
             CONFIRMED:{" "}
-            <span className="text-ink">{fmtDate(confirmedDeliveryAt)}</span>
+            <span className="text-cream">{fmtDate(confirmedDeliveryAt)}</span>
           </span>
         )}
       </div>

@@ -13,7 +13,7 @@ export default async function AdminUsers() {
   return (
     <div>
       <h1
-        className="serif text-ink"
+        className="serif text-white"
         style={{ fontSize: 32, fontWeight: 500 }}
       >
         Users
@@ -30,7 +30,7 @@ export default async function AdminUsers() {
         <div className="mt-7 glass overflow-x-auto">
           <table className="w-full text-sm">
             <thead
-              className="border-b border-rule text-left text-[10px] uppercase text-gray-2"
+              className="border-b border-white/10 text-left text-[10px] uppercase text-gray-2"
               style={{ letterSpacing: "0.22em" }}
             >
               <tr>
@@ -40,10 +40,10 @@ export default async function AdminUsers() {
                 <th className="px-4 py-4">Role</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rule">
+            <tbody className="divide-y divide-white/10">
               {(users ?? []).map((u: any) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 text-ink">{u.full_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-cream">{u.full_name ?? "—"}</td>
                   <td className="px-4 py-3 text-gray-2">{u.company ?? "—"}</td>
                   <td className="px-4 py-3 text-gray-2">{u.country ?? "—"}</td>
                   <td className="px-4 py-3 capitalize text-gold">

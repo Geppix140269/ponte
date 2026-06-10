@@ -51,7 +51,7 @@ function CoverageBadge({ level }: { level: ShipmentRecord["coverage"] }) {
   const styles: Record<ShipmentRecord["coverage"], string> = {
     Strong: "text-positive border-positive/30 bg-positive/10",
     Partial: "text-gold border-gold/30 bg-gold/10",
-    Extrapolated: "text-gray-2 border-rule bg-white/5",
+    Extrapolated: "text-gray-2 border-white/20 bg-white/5",
   };
   return (
     <span
@@ -65,7 +65,7 @@ function CoverageBadge({ level }: { level: ShipmentRecord["coverage"] }) {
 
 function BlurredRow({ index }: { index: number }) {
   return (
-    <tr className="border-b border-rule" style={{ opacity: 0.5 }}>
+    <tr className="border-b border-white/5" style={{ opacity: 0.5 }}>
       {[60, 80, 55, 70, 45, 55, 40, 50, 60, 45, 55].map((w, i) => (
         <td key={i} className="px-4 py-3">
           <span
@@ -96,7 +96,7 @@ function SignupPrompt() {
         <div className="inline-flex items-center justify-center w-10 h-10 rounded-full mb-4" style={{ background: "rgba(201,151,58,0.15)", border: "1px solid rgba(201,151,58,0.35)" }}>
           <Lock className="h-4 w-4 text-gold" />
         </div>
-        <p className="text-ink text-[16px] font-medium mb-2">
+        <p className="text-white text-[16px] font-medium mb-2">
           Free account required to see all results
         </p>
         <p className="text-gray-2 text-[13px] leading-relaxed">
@@ -107,7 +107,7 @@ function SignupPrompt() {
         <Link href="/login" className="btn-gold px-6 py-2.5 text-[13px]">
           Create free account
         </Link>
-        <Link href="/login" className="btn px-6 py-2.5 text-[13px] text-ink">
+        <Link href="/login" className="btn px-6 py-2.5 text-[13px] text-cream">
           Sign in
         </Link>
       </div>
@@ -219,7 +219,7 @@ export default function SearchClient({
                 className={`px-3 py-1.5 rounded-lg text-[12px] transition-colors ${
                   form.direction === d
                     ? "bg-gold/20 text-gold border border-gold/40"
-                    : "text-gray-2 border border-rule hover:border-rule"
+                    : "text-gray-2 border border-white/10 hover:border-white/20"
                 }`}
               >
                 {d === "both" ? "Import & Export" : d.charAt(0).toUpperCase() + d.slice(1)}
@@ -231,7 +231,7 @@ export default function SearchClient({
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
-            className="flex items-center gap-2 text-[12px] text-gray-2 hover:text-ink transition-colors"
+            className="flex items-center gap-2 text-[12px] text-gray-2 hover:text-white transition-colors"
           >
             <Filter className="h-3.5 w-3.5" />
             Advanced filters
@@ -315,7 +315,7 @@ export default function SearchClient({
           {/* Results header */}
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <span className="text-ink text-[15px] font-medium">
+              <span className="text-white text-[15px] font-medium">
                 {totalCount.toLocaleString()} shipment records
               </span>
               <span className="text-gray-2 text-[13px] ml-2">
@@ -330,7 +330,7 @@ export default function SearchClient({
                 title="5 credits per export"
               >
                 <Download className="h-3.5 w-3.5" />
-                Export CSV <span className="text-ink/60 text-[11px]">(5 credits)</span>
+                Export CSV <span className="text-navy/60 text-[11px]">(5 credits)</span>
               </button>
             ) : (
               <Link href="/login" className="flex items-center gap-2 text-[13px] text-gold hover:text-gold/80 transition-colors">
@@ -365,16 +365,16 @@ export default function SearchClient({
                     {(visibleResults ?? []).map((r) => (
                       <tr
                         key={r.id}
-                        className="border-b border-rule hover:bg-white/[0.03] transition-colors"
+                        className="border-b border-white/5 hover:bg-white/[0.03] transition-colors"
                       >
                         <td className="px-4 py-3 text-gray-2 whitespace-nowrap">{r.date}</td>
-                        <td className="px-4 py-3 text-ink font-medium max-w-[160px] truncate">{r.importer}</td>
-                        <td className="px-4 py-3 text-ink max-w-[160px] truncate">{r.exporter}</td>
+                        <td className="px-4 py-3 text-white font-medium max-w-[160px] truncate">{r.importer}</td>
+                        <td className="px-4 py-3 text-white max-w-[160px] truncate">{r.exporter}</td>
                         <td className="px-4 py-3 text-gold font-mono text-[12px] whitespace-nowrap">{r.hsCode}</td>
                         <td className="px-4 py-3 text-gray-2 max-w-[200px] truncate">{r.description}</td>
                         <td className="px-4 py-3 text-gray-2 whitespace-nowrap">{r.quantity}</td>
-                        <td className="px-4 py-3 text-ink whitespace-nowrap">{r.unitValue}</td>
-                        <td className="px-4 py-3 text-ink font-medium whitespace-nowrap">{r.totalValue}</td>
+                        <td className="px-4 py-3 text-white whitespace-nowrap">{r.unitValue}</td>
+                        <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{r.totalValue}</td>
                         <td className="px-4 py-3 text-gray-2 whitespace-nowrap">{r.portOfLoading}</td>
                         <td className="px-4 py-3 text-gray-2 whitespace-nowrap">{r.portOfDischarge}</td>
                         <td className="px-4 py-3">
@@ -474,7 +474,7 @@ export default function SearchClient({
                     onClick={() => {
                       setForm((f) => ({ ...f, query: hs ?? label }));
                     }}
-                    className="px-3 py-2 rounded-lg text-[12px] text-gray-2 border border-rule hover:border-rule hover:text-ink transition-colors"
+                    className="px-3 py-2 rounded-lg text-[12px] text-gray-2 border border-white/10 hover:border-white/20 hover:text-white transition-colors"
                   >
                     {label}
                   </button>
@@ -488,7 +488,7 @@ export default function SearchClient({
             className="glass-tight rounded-xl p-5 text-[13px] text-gray-2 leading-relaxed max-w-2xl"
             style={{ border: "1px solid rgba(255,255,255,0.07)" }}
           >
-            <strong className="text-ink block mb-1">What you&apos;re searching</strong>
+            <strong className="text-white block mb-1">What you&apos;re searching</strong>
             Transaction-level customs declarations and bills of lading from 199 countries.
             Each record shows the actual importer, exporter, HS code, quantity, and declared
             unit value — not statistical aggregates. Coverage and freshness varies by country;
@@ -528,11 +528,11 @@ function CtaCard({
     >
       <span className="text-[10px] uppercase text-gold" style={{ letterSpacing: "0.18em" }}>{label}</span>
       <div>
-        <p className="text-ink text-[14px] font-medium group-hover:text-gold transition-colors mb-1">{title}</p>
+        <p className="text-white text-[14px] font-medium group-hover:text-gold transition-colors mb-1">{title}</p>
         <p className="text-gray-2 text-[12px] leading-relaxed">{body}</p>
       </div>
       <div className="flex items-center justify-between mt-auto pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-        <span className="text-ink text-[13px] font-medium">{price}</span>
+        <span className="text-white text-[13px] font-medium">{price}</span>
         <ArrowRight className="h-4 w-4 text-gold group-hover:translate-x-1 transition-transform" />
       </div>
     </Link>
