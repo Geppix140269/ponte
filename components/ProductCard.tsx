@@ -21,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       <h3
-        className="serif text-ink text-xl leading-snug"
+        className="serif text-white text-xl leading-snug"
         style={{ fontWeight: 500 }}
       >
         {product.title}
@@ -30,12 +30,12 @@ export default function ProductCard({ product }: { product: Product }) {
         {product.shortDescription}
       </p>
 
-      <div className="mt-6 pt-4 border-t border-rule flex items-end justify-between">
-        <span className="serif text-ink text-[22px]" style={{ fontWeight: 500 }}>
+      <div className="mt-6 pt-4 border-t border-white/10 flex items-end justify-between">
+        <span className="serif text-white text-[22px]" style={{ fontWeight: 500 }}>
           {displayPrice(product)}
         </span>
         <span
-          className="inline-flex items-center gap-1.5 text-[11px] uppercase text-gold transition-colors group-hover:text-ink"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase text-gold transition-colors group-hover:text-cream"
           style={{ letterSpacing: "0.18em" }}
         >
           Preview &amp; Buy

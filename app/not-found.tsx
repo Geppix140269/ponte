@@ -13,7 +13,7 @@ export default function NotFound() {
           404
         </p>
         <h1
-          className="serif text-ink mt-4"
+          className="serif text-white mt-4"
           style={{ fontSize: 32, fontWeight: 500 }}
         >
           The bridge isn&apos;t there.

@@ -45,7 +45,7 @@ export default function CartPage() {
         <div className="glass p-12 flex flex-col items-center text-center max-w-xl mx-auto">
           <ShoppingCart className="h-10 w-10 text-gray-2" />
           <h1
-            className="serif text-ink mt-6"
+            className="serif text-white mt-6"
             style={{ fontSize: 32, fontWeight: 500 }}
           >
             Your cart is empty
@@ -66,7 +66,7 @@ export default function CartPage() {
       <header className="mb-10">
         <span className="pill">Cart</span>
         <h1
-          className="serif text-ink mt-6"
+          className="serif text-white mt-6"
           style={{
             fontSize: "clamp(36px, 5vw, 56px)",
             fontWeight: 400,
@@ -80,7 +80,7 @@ export default function CartPage() {
 
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_360px]">
         <div className="glass p-7 md:p-9">
-          <ul className="divide-y divide-rule">
+          <ul className="divide-y divide-white/10">
             {items.map((item, index) => {
               const product = getProductBySku(item.sku);
               if (!product) return null;
@@ -92,7 +92,7 @@ export default function CartPage() {
                 >
                   <div>
                     <p
-                      className="serif text-ink text-lg"
+                      className="serif text-white text-lg"
                       style={{ fontWeight: 500 }}
                     >
                       {product.title}
@@ -110,7 +110,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span
-                      className="serif text-ink text-xl"
+                      className="serif text-white text-xl"
                       style={{ fontWeight: 500 }}
                     >
                       {formatPrice(
@@ -136,15 +136,15 @@ export default function CartPage() {
 
         <div className="glass h-fit p-7">
           <h2
-            className="serif text-ink text-xl mb-5"
+            className="serif text-white text-xl mb-5"
             style={{ fontWeight: 500 }}
           >
             Order summary
           </h2>
-          <div className="flex justify-between items-baseline text-sm pb-4 border-b border-rule">
+          <div className="flex justify-between items-baseline text-sm pb-4 border-b border-white/10">
             <span className="text-gray-2">Subtotal</span>
             <span
-              className="serif text-ink text-xl"
+              className="serif text-white text-xl"
               style={{ fontWeight: 500 }}
             >
               {formatPrice(subtotalCents)}

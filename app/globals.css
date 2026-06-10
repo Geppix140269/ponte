@@ -3,76 +3,55 @@
 @tailwind utilities;
 
 /* ======================================================================
-   Ponte Brand v4 — "Heritage trading press × terminal data".
-   Light heritage theme: cream surface, ink type, gold accent, green/red
-   semantics. Shared primitives below are redefined for the light system so
-   every page flips cohesively. Tokens mirror app/ponte-landing.css.
+   Ponte Brand v2 — Trade intelligence. Delivered.
+   Glass over navy-deep. Gold reserved for live data. One blur,
+   one border weight, one shadow. The discipline is in restraint.
    ====================================================================== */
 
 :root {
-  /* surfaces & ink */
-  --surface: #FCFBF7;
-  --raised:  #FFFFFF;
-  --sunken:  #F2EFE6;
-  --ink:     #0F0F0E;
-  --ink-2:   #3A3733;
-  --mute:    #9A958A;
-  --rule:    #E5DFD2;
-  --rule-2:  #D5CEBC;
-
-  /* accent + semantics */
-  --gold:      #C9973A;
+  --navy: #0D1B2A;
+  --navy-2: #142336;
+  --navy-3: #1B2E47;
+  --navy-deep: #07101B;
+  --gold: #C9973A;
   --gold-soft: #D9AC55;
-  --accent:    var(--gold);
-  --pos:       #0F6E3D;
-  --pos-mid:   #5C9C5A;
-  --neg:       #C84A2C;
-  --neg-mid:   #E07A5F;
-  --warn:      #C9973A;
-
-  /* geometry */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 16px;
-  --shadow-card: 0 1px 0 var(--rule), 0 20px 40px -28px rgba(15,15,14,0.18);
-
-  /* legacy aliases (kept so older var() callsites still resolve) */
-  --navy: var(--ink);
-  --navy-deep: var(--surface);
-  --cream: var(--ink);
-  --gray: var(--mute);
-  --gray-2: #5C5852;
-  --gray-3: var(--mute);
-  --line: var(--rule);
-  --glass-border: var(--rule);
-  --positive: var(--pos);
-  --negative: var(--neg);
+  --cream: #F5F0E8;
+  --gray: #6B7280;
+  --gray-2: #9CA3AF;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.20);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --positive: #4AC09A;
+  --negative: #E07A5F;
 }
 
 @layer base {
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    background: var(--surface);
-    color: var(--ink);
+    background: var(--navy-deep);
+    color: var(--cream);
     font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
-    font-feature-settings: "ss01","cv11";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-playfair), Georgia, serif;
-    color: var(--ink);
+    color: #FFFFFF;
     letter-spacing: -0.01em;
   }
 }
 
-/* ============ AMBIENT BACKGROUND (light) ============ */
+/* ============ AMBIENT BACKGROUND ============ */
 .bg-ambient {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--surface);
+  background: var(--navy-deep);
   overflow: hidden;
   pointer-events: none;
 }
@@ -81,16 +60,20 @@
   position: absolute;
   inset: -20% -10% -10% -10%;
   background:
-    radial-gradient(ellipse 60% 40% at 85% 8%, rgba(201,151,58,0.07), transparent 60%),
-    radial-gradient(ellipse 50% 50% at 10% 0%, rgba(15,110,61,0.04), transparent 65%);
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,151,58,0.18), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 20% 30%, rgba(31, 62, 110, 0.55), transparent 65%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(13, 27, 42, 0.9), transparent 70%);
+  filter: blur(20px);
 }
 .bg-ambient::after {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(15,15,14,0.035) 1px, transparent 1px);
-  background-size: 26px 26px;
-  opacity: 0.5;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.6;
+  mix-blend-mode: screen;
 }
 
 @layer components {
@@ -99,154 +82,161 @@
     @apply mx-auto w-full px-5 sm:px-6 lg:px-10;
     max-width: 1320px;
   }
-  .serif { font-family: var(--font-playfair), Georgia, serif; }
-  .mono  { font-family: var(--font-jetbrains), ui-monospace, monospace; font-feature-settings: "tnum","zero"; }
+  .serif {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+  .mono {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+  }
 
-  /* ===== Surfaces (was glass) ===== */
+  /* ===== Glass primitives ===== */
   .glass {
-    background: var(--raised);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-card);
+    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.12) inset,
+      0 24px 60px -20px rgba(0,0,0,0.55),
+      0 0 0 0.5px rgba(255,255,255,0.04);
   }
   .glass-tight {
-    background: var(--raised);
-    border: 1px solid var(--rule);
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 14px;
   }
   .nav-glass {
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border-bottom: 1px solid var(--rule);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    background: rgba(7, 16, 27, 0.55);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
 
   /* ===== Pills and eyebrows ===== */
   .pill {
-    @apply inline-flex items-center gap-[10px] px-4 py-2 rounded-full text-[11px] uppercase;
+    @apply inline-flex items-center gap-[10px] px-4 py-2 rounded-full text-[11px] uppercase text-cream;
     letter-spacing: 0.22em;
-    color: var(--ink-2);
-    background: var(--raised);
-    border: 1px solid var(--rule);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   .pill::before {
     content: "";
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold);
   }
-  .pill-p0 {
-    color: var(--gold);
-    border-color: color-mix(in srgb, var(--gold) 40%, var(--rule));
-    background: color-mix(in srgb, var(--gold) 12%, var(--surface));
-  }
-  .pill-p1 { color: var(--ink-2); }
-  .pill-p2 { color: var(--mute); }
-
   .eyebrow {
-    @apply text-[11px] uppercase;
-    color: var(--ink-2);
+    @apply text-[11px] uppercase text-gold;
     letter-spacing: 0.22em;
-    font-weight: 600;
+    font-weight: 500;
   }
   .num-italic {
     font-family: var(--font-playfair), Georgia, serif;
     font-style: italic;
     font-weight: 400;
     font-size: 22px;
-    color: var(--accent);
+    color: var(--gold);
   }
 
   /* ===== Buttons ===== */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-[18px] py-[11px] text-[13px] font-semibold transition-all duration-150;
-    letter-spacing: 0.01em;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-[22px] py-[13px] text-[13px] font-medium transition-all duration-200;
+    letter-spacing: 0.06em;
   }
-  /* Primary = ink (heritage), hover → gold accent. Keeps the .btn-gold name. */
   .btn-gold {
-    @apply btn;
-    color: var(--surface);
-    background: var(--ink);
-    border: 1px solid var(--ink);
+    @apply btn text-navy;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    box-shadow: 0 10px 30px -10px rgba(201,151,58,0.6);
   }
-  .btn-gold:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-gold:hover {
+    transform: translateY(-1px);
+    background: var(--gold-soft);
+  }
   .btn-navy {
-    @apply btn;
-    color: var(--surface);
-    background: var(--ink);
-    border: 1px solid var(--ink);
+    @apply btn text-cream;
+    background: var(--navy);
+    border: 1px solid var(--glass-border);
   }
-  .btn-navy:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-navy:hover { background: var(--navy-2); }
   .btn-outline,
   .btn-ghost-light {
-    @apply btn;
-    color: var(--ink);
-    background: transparent;
-    border: 1px solid var(--rule-2);
+    @apply btn text-cream;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   .btn-outline:hover,
-  .btn-ghost-light:hover { background: var(--sunken); border-color: var(--ink-2); }
+  .btn-ghost-light:hover {
+    background: rgba(255,255,255,0.10);
+  }
 
   /* ===== Cards ===== */
   .card {
-    background: var(--raised);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    @apply flex flex-col transition-all duration-150;
-    box-shadow: var(--shadow-card);
+    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    @apply flex flex-col transition-all duration-200;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.12) inset,
+      0 24px 60px -20px rgba(0,0,0,0.55);
   }
   .card:hover {
-    border-color: var(--ink-2);
+    border-color: rgba(201,151,58,0.3);
+    transform: translateY(-2px);
   }
 
   /* ===== Badges ===== */
   .badge {
     @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] uppercase;
-    letter-spacing: 0.18em;
-    font-weight: 600;
-    color: var(--ink-2);
-    background: var(--sunken);
-    border: 1px solid var(--rule);
+    letter-spacing: 0.22em;
+    font-weight: 500;
   }
   .badge-gold {
-    @apply badge;
-    color: var(--ink);
-    background: color-mix(in srgb, var(--gold) 16%, var(--surface));
-    border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--rule));
+    @apply badge text-gold;
+    background: rgba(201,151,58,0.15);
+    border: 1px solid rgba(201,151,58,0.35);
   }
   .badge-navy {
-    @apply badge;
-    color: var(--surface);
-    background: var(--ink);
-    border: 1px solid var(--ink);
+    @apply badge text-cream;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
   }
 
   /* ===== Form fields ===== */
   .field {
     @apply w-full rounded-[10px] px-4 py-3 text-[14px] outline-none transition-colors;
-    background: var(--raised);
-    border: 1px solid var(--rule-2);
-    color: var(--ink);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #FFFFFF;
   }
-  .field::placeholder { color: var(--mute); }
+  .field::placeholder { color: var(--gray-2); }
   .field:focus { border-color: var(--gold); }
   .field-label {
     @apply mb-2 block text-[10px] uppercase;
-    color: var(--mute);
-    letter-spacing: 0.2em;
-    font-weight: 600;
+    color: var(--gray-2);
+    letter-spacing: 0.22em;
+    font-weight: 500;
   }
 
   /* ===== Legal prose ===== */
   .prose-legal {
     @apply text-sm leading-relaxed;
-    color: var(--ink-2);
+    color: var(--gray-2);
   }
   .prose-legal h2 {
     @apply mb-3 mt-9 text-xl;
-    color: var(--ink);
+    color: #FFFFFF;
     font-family: var(--font-playfair), Georgia, serif;
     font-weight: 500;
   }
@@ -265,14 +255,21 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
-.pulse-dot { animation: pulse-dot 2.4s infinite; }
+.pulse-dot {
+  animation: pulse-dot 2.4s infinite;
+}
 
 /* ======================================================================
-   BridgeMark — Span Traversal motion (data-arrival moments only).
+   Brand v3 — Span Traversal motion.
+   Used by <BridgeMark animate /> for real data-arrival moments only
+   (report ready, sync, download complete). Never on hover, scroll, or
+   page load. Respects prefers-reduced-motion.
    ====================================================================== */
-.mark-anim .arch-base { stroke: var(--rule-2); }
+.mark-anim .arch-base {
+  stroke: rgba(255, 255, 255, 0.18);
+}
 .mark-anim .arch-active {
-  stroke: var(--ink);
+  stroke: #FFFFFF;
   stroke-dasharray: 156;
   stroke-dashoffset: 156;
   animation: arch-fill 3.4s cubic-bezier(.6,.05,.3,1) infinite;
@@ -309,6 +306,8 @@
 @media (prefers-reduced-motion: reduce) {
   .mark-anim .arch-active,
   .mark-anim .traveller,
-  .mark-anim .apex-pulse { animation: none; }
+  .mark-anim .apex-pulse {
+    animation: none;
+  }
   .mark-anim .arch-active { stroke-dashoffset: 0; }
 }

@@ -31,9 +31,9 @@ export default async function EditProductPage({
         >
           ← Products
         </Link>
-        <span className="text-ink/20">/</span>
+        <span className="text-white/20">/</span>
         <h1
-          className="serif text-ink"
+          className="serif text-white"
           style={{
             fontSize: 28,
             fontWeight: 500,

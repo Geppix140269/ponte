@@ -20,7 +20,7 @@ export default async function AccountPage() {
         <div className="glass p-12 max-w-xl mx-auto text-center">
           <UserCircle2 className="mx-auto h-10 w-10 text-gold" />
           <h1
-            className="serif text-ink mt-5"
+            className="serif text-white mt-5"
             style={{ fontSize: 32, fontWeight: 500 }}
           >
             Your account
@@ -58,7 +58,7 @@ export default async function AccountPage() {
         <div>
           <span className="pill">Account</span>
           <h1
-            className="serif text-ink mt-5"
+            className="serif text-white mt-5"
             style={{
               fontSize: "clamp(32px, 4vw, 48px)",
               fontWeight: 400,
@@ -81,7 +81,7 @@ export default async function AccountPage() {
       <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
         <div className="num-italic">— 01 / Downloads</div>
         <h2
-          className="serif text-ink"
+          className="serif text-white"
           style={{ fontSize: 28, fontWeight: 500 }}
         >
           Delivered reports
@@ -92,13 +92,13 @@ export default async function AccountPage() {
           No reports ready to download yet. Delivered reports appear here.
         </p>
       ) : (
-        <ul className="glass divide-y divide-rule mb-12">
+        <ul className="glass divide-y divide-white/10 mb-12">
           {downloads.map((it: any) => (
             <li
               key={it.id}
               className="flex items-center justify-between p-5 first:rounded-t-[18px] last:rounded-b-[18px]"
             >
-              <span className="text-sm text-ink">
+              <span className="text-sm text-cream">
                 <span className="serif" style={{ fontWeight: 500 }}>
                   {it.config_values?.sku ?? "Report"}
                 </span>
@@ -127,7 +127,7 @@ export default async function AccountPage() {
       <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
         <div className="num-italic">— 02 / Orders</div>
         <h2
-          className="serif text-ink"
+          className="serif text-white"
           style={{ fontSize: 28, fontWeight: 500 }}
         >
           History
@@ -153,7 +153,7 @@ export default async function AccountPage() {
                     key={it.id}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-ink">
+                    <span className="text-cream">
                       {it.config_values?.sku ?? "Item"}
                     </span>
                     <span className="inline-flex items-center gap-1 text-[11px] uppercase" style={{ letterSpacing: "0.18em" }}>
@@ -165,8 +165,8 @@ export default async function AccountPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-3 border-t border-rule pt-3 text-right">
-                <span className="serif text-ink text-lg" style={{ fontWeight: 500 }}>
+              <div className="mt-3 border-t border-white/10 pt-3 text-right">
+                <span className="serif text-white text-lg" style={{ fontWeight: 500 }}>
                   {formatPrice(o.total_cents ?? 0, o.currency ?? "USD")}
                 </span>
               </div>

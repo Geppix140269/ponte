@@ -44,9 +44,9 @@ export default function CatalogueBrowser({
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="all" className="bg-surface">All categories</option>
+            <option value="all" className="bg-navy">All categories</option>
             {categories.map((c) => (
-              <option key={c.slug} value={c.slug} className="bg-surface">
+              <option key={c.slug} value={c.slug} className="bg-navy">
                 {c.name}
               </option>
             ))}
@@ -59,9 +59,9 @@ export default function CatalogueBrowser({
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
           >
-            <option value="relevance" className="bg-surface">Relevance</option>
-            <option value="price-asc" className="bg-surface">Price: low to high</option>
-            <option value="price-desc" className="bg-surface">Price: high to low</option>
+            <option value="relevance" className="bg-navy">Relevance</option>
+            <option value="price-asc" className="bg-navy">Price: low to high</option>
+            <option value="price-desc" className="bg-navy">Price: high to low</option>
           </select>
         </div>
         <p className="mt-4 text-[11px] text-gray-2 leading-relaxed">
