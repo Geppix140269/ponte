@@ -167,7 +167,7 @@ update products set
   title             = 'Compliance Essentials Pack',
   slug              = 'compliance-essentials-pack',
   short_description = 'Sanctions brief + counterparty screening for 25 entities  -  the compliance starter pack for new trade corridors.',
-  full_description  = 'Opening a new trading corridor comes with compliance obligations. BU-004 pairs the Sanctions & Compliance Brief (GR-002) for your corridor with the Counterparty Screening Package (CP-001) for up to 25 entities. The GR-002 brief covers the sanctions regime, secondary exposure and risk commentary; the CP-001 screens every named entity against OFAC, EU, UK and UN lists. Together they give you defensible pre-trade due diligence documentation in 24 hours.',
+  full_description  = 'Opening a new trading corridor comes with compliance obligations. BU-004 pairs the Sanctions & Compliance Brief (GR-002) for your corridor with the Counterparty Screening Package (CP-001) for up to 25 entities. The GR-002 brief covers the sanctions regime, secondary exposure and risk commentary - the CP-001 screens every named entity against OFAC, EU, UK and UN lists. Together they give you defensible pre-trade due diligence documentation in 24 hours.',
   includes          = '["Sanctions & Compliance Brief (GR-002)  -  corridor and regime analysis","Counterparty Screening Package (CP-001)  -  up to 25 entities","OFAC, EU, UK and UN sanctions coverage","RAG-classified entity cards with risk notes","Combined compliance summary PDF","Single-organisation licensed PDFs"]'::jsonb,
   price_cents       = 74900,
   currency          = 'GBP',
