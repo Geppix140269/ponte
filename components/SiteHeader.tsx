@@ -14,6 +14,7 @@ const navLinks = [
   { href: "/category/bundles", label: "Bundles" },
   { href: "/why-ponte", label: "Why Ponte" },
   { href: "/about", label: "About" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export default function SiteHeader() {
