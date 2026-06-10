@@ -27,7 +27,7 @@ const TIERS = [
       { sku: "CP-001", name: "Counterparty Screening Package", price: "$199", href: "/product/counterparty-screening-package", note: "Up to 25 entities, OFAC/EU/UK/UN lists" },
       { sku: "CT-001", name: "Country Trade Profile", price: "$249", href: "/product/country-trade-profile-report", note: "14-dimension country overview" },
       { sku: "MA-200", name: "AI Market Snapshot Report", price: "$299", href: "/product/ai-market-snapshot-report", note: "All 11 analysis dimensions, ADAMftd-powered", badge: "ADAMftd" },
-      { sku: "MA-100", name: "Single Market Analysis Report", price: "$1,299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
+      { sku: "MA-100", name: "Single Market Analysis Report", price: "$199", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
       { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "$299", href: "/product/tariff-landed-cost-analysis", note: "Full duty calculation + mitigation matrix" },
       { sku: "CS-002", name: "Trade Company Deep Profile", price: "$349", href: "/product/trade-company-deep-profile", note: "One entity: volumes, partners, risk flags" },
       { sku: "GR-002", name: "Sanctions & Compliance Brief", price: "$349", href: "/product/sanctions-compliance-brief", note: "OFAC, EU, UK, UN screening + analyst commentary" },
@@ -58,7 +58,7 @@ const TIERS = [
     colour: "border-amber-500/30 bg-amber-500/5",
     badge: "bg-amber-500/20 text-amber-400",
     products: [
-      { sku: "BU-004", name: "Compliance Essentials Pack", price: "$749", href: "/product/compliance-essentials-pack", note: "Sanctions Brief + 25-entity screening", saving: "Save $99" },
+      { sku: "BU-004", name: "Compliance Essentials Pack", price: "$449", href: "/product/compliance-essentials-pack", note: "Sanctions Brief + 25-entity screening", saving: "Save $99" },
       { sku: "BU-002", name: "Trade Intelligence Pack", price: "$799", href: "/product/trade-intelligence-pack", note: "Market Snapshot + Corridor + Tariff Brief", saving: "Save $198" },
     ],
   },
