@@ -164,6 +164,29 @@ export default async function ProductPage({
             {product.fullDescription}
           </p>
 
+          {/* Co-branding callout */}
+          {product.cobrandable && (
+            <div className="mt-8 flex items-start gap-4 rounded-xl border border-gold/25 bg-gold/5 px-5 py-4">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gold/10">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="#E8A020" strokeWidth="1.2"/>
+                  <path d="M4 6.5h6M4 8.5h4" stroke="#E8A020" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="7" cy="2" r="1" fill="#E8A020"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-gold">
+                  Available with your company branding
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-gray-2">
+                  Every report can be delivered with your organisation&apos;s logo, colours and cover design.
+                  Select <strong className="text-cream">White-label PDF</strong> at checkout — no extra charge.
+                  Ideal for consultancies, chambers, law firms and advisory teams presenting intelligence to clients.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* What's included */}
           <div className="mt-10 glass p-8">
             <h2

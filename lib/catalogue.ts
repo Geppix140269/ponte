@@ -153,6 +153,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: true,
     configFields: [
       {
@@ -201,6 +202,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       {
         name: "subject_type",
@@ -224,8 +226,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     sku: "CT-002",
-    slug: "tariff-landed-cost-brief",
-    title: "Tariff & Landed Cost Strategic Brief",
+    slug: "tariff-landed-cost-analysis",
+    title: "Tariff & Landed Cost Analysis",
     categorySlug: "country-tariff",
     band: "Tier A",
     shortDescription:
@@ -245,6 +247,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [f.hs(), f.origin(), f.destination()],
   },
   {
@@ -270,6 +273,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [f.hs(), f.origin(), f.destination()],
   },
   {
@@ -305,6 +309,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       {
         name: "role",
@@ -331,113 +336,38 @@ export const PRODUCTS: Product[] = [
       f.hs(),
       f.countryOptional(),
     ],
-  },
-  {
-    sku: "GR-001",
-    slug: "geopolitical-scenario-brief",
-    title: "Geopolitical Scenario Brief",
-    categorySlug: "geopolitical",
-    band: "Tier A",
-    shortDescription:
-      "What's your exposure if Hormuz closes? Scenario analysis, quantified, with a mitigation playbook.",
-    fullDescription:
-      "Before the next chokepoint event, know your exposure. Pick a scenario — Hormuz, Suez, Red Sea, Taiwan, Panama, Russia/Ukraine corridors, or specify your own. A senior analyst models trade flows at risk, plausible escalation paths, exposed sectors and corridors, and a mitigation playbook for your specific HS-code exposure.",
-    includes: [
-      "Named chokepoint or scenario analysis",
-      "Trade flows at risk: base, moderate, severe cases",
-      "Plausible escalation paths",
-      "Sector and corridor exposure mapping",
-      "Mitigation playbook",
-      "Single-organisation licensed PDF",
-    ],
-    priceCents: 49900,
-    currency: USD,
-    deliveryType: "48h",
-    isSubscription: false,
-    isConfigurable: true,
-    featured: true,
-    configFields: [
-      {
-        name: "scenario",
-        label: "Scenario",
-        type: "select",
-        required: true,
-        options: [
-          { value: "hormuz", label: "Strait of Hormuz" },
-          { value: "suez", label: "Suez Canal" },
-          { value: "red-sea", label: "Red Sea / Bab el-Mandeb" },
-          { value: "taiwan", label: "Taiwan Strait" },
-          { value: "panama", label: "Panama Canal" },
-          { value: "russia-ukraine", label: "Russia / Ukraine corridors" },
-          { value: "custom", label: "Other (specify in notes)" },
-        ],
-      },
-      f.hsOptional(),
-      f.textarea(
-        "notes",
-        "Other / specific concern",
-        "Describe the exposure or scenario you need analysed",
-      ),
-    ],
-  },
-  // ============================================================ Tier B — Strategic Reports ($1,099-1,799, 72-96h)
-  {
+  },  // ============================================================ Tier B — Strategic Reports ($1,099-1,799, 72-96h)  {
     sku: "MR-001",
     slug: "single-country-market-report",
     title: "Single Country Market Report",
     categorySlug: "market-reports",
     band: "Tier B",
     shortDescription:
-      "Should you enter this country with this product? One 40+ page board-ready answer.",
+      "Should you enter this country with this product? One 40+ page board-ready analysis.",
     fullDescription:
-      "You've shortlisted a country. Now you need to commit — or walk away. MR-001 gives you the integrated read. Pick one HS code and one country; a senior analyst produces a 40+ page board-ready narrative covering market structure, supplier landscape, demand, pricing, regulatory environment, and risk. One PDF. One decision.",
+      "You've shortlisted a country. Now you need to commit — or walk away. MR-001 gives you the integrated read. Pick one HS code and one country; a senior analyst produces a 40+ page board-ready analysis covering market structure, supplier landscape, demand, pricing, regulatory environment, and risk. One PDF. One decision.",
     includes: [
       "Market structure and competitive landscape",
       "Demand and import analysis",
       "Supplier landscape with named players",
       "Pricing and unit-value benchmarks",
       "Regulatory environment and risk overview",
-      "Senior-analyst executive summary integrating all of the above",
+      "Senior-analyst executive summary",
       "40+ page licensed PDF, single-organisation licence",
     ],
     priceCents: 109900,
-    currency: USD,
+    currency: GBP,
     deliveryType: "72h",
     isSubscription: false,
     isConfigurable: true,
-    featured: true,
-    configFields: [f.hs(), f.country("Target country")],
-  },
-  {
-    sku: "BU-001",
-    slug: "market-entry-strategy",
-    title: "Market Entry Strategy",
-    categorySlug: "bundles",
-    band: "Tier B",
-    shortDescription:
-      "Not just the market read — the go-to-market plan, with named partners. Top of Tier B.",
-    fullDescription:
-      "MR-001 tells you whether to enter. BU-001 tells you how. Pick one HS code and one country; a senior analyst integrates the full Country Market Report with a Tariff & Landed Cost calculation, the Accessing-the-Market sales-strategy section, and a shortlist of named potential partners. One board-ready playbook covering the market, the cost base, the route to market, and who to talk to.",
-    includes: [
-      "Full Single Country Market Report",
-      "Tariff & landed cost calculation",
-      "Accessing-the-market: sales strategy section",
-      "Named potential partner shortlist",
-      "Integrated executive summary",
-      "Single-organisation licensed PDF",
-    ],
-    priceCents: 179900,
-    currency: USD,
-    deliveryType: "96h",
-    isSubscription: false,
-    isConfigurable: true,
+    cobrandable: true,
     featured: true,
     configFields: [f.hs(), f.country("Target country")],
   },
   {
     sku: "MR-002",
-    slug: "multi-country-comparative-strategy",
-    title: "Multi-Country Comparative Strategy",
+    slug: "multi-country-comparative-analysis",
+    title: "Multi-Country Comparative Analysis",
     categorySlug: "bundles",
     band: "Tier B",
     shortDescription:
@@ -457,6 +387,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "96h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       f.hs(),
       {
@@ -466,71 +397,6 @@ export const PRODUCTS: Product[] = [
         required: true,
         placeholder: "e.g. Germany, France, Italy, Spain, Poland",
       },
-    ],
-  },
-  // ============================================================ Tier C — White-glove / Custom (POA)
-  {
-    sku: "CR-001",
-    slug: "custom-research-brief",
-    title: "Custom Research Brief",
-    categorySlug: "custom-research",
-    band: "Tier C",
-    shortDescription:
-      "Your question doesn't fit a standard SKU? Tell us the decision; we scope it within 48 hours.",
-    fullDescription:
-      "Some questions don't fit a product page. Tell us the decision you're trying to make and we'll come back inside 48 hours with a scoped brief — deliverables, timeline, price. Typical engagements run $2,999 to $9,999. Once you approve, a senior analyst produces a bespoke licensed PDF answering exactly your question.",
-    includes: [
-      "Scoped to your specific question",
-      "Quote inside 48 hours",
-      "Bespoke senior-analyst delivery",
-      "Methodology and full source citations",
-      "Single-organisation licensed PDF",
-    ],
-    priceCents: 299900,
-    priceFrom: true,
-    currency: USD,
-    deliveryType: "custom",
-    isSubscription: false,
-    isConfigurable: true,
-    configFields: [
-      f.textarea(
-        "brief",
-        "Research brief",
-        "Describe the decision you are trying to make and what intelligence you need",
-      ),
-    ],
-  },
-  {
-    sku: "CR-002",
-    slug: "market-entry-consulting",
-    title: "Market Entry Consulting Engagement",
-    categorySlug: "custom-research",
-    band: "Tier C",
-    shortDescription:
-      "Multi-week, multi-deliverable consulting engagement led by a named senior partner.",
-    fullDescription:
-      "When a single brief isn't enough — when you need scoping, market analysis, partner identification, regulatory readiness, and a sequenced go-to-market plan delivered over weeks, not days — CR-002 is the engagement. A named senior partner leads a 4-8 week programme with weekly check-ins. Typical engagements $4,999 to $24,999.",
-    includes: [
-      "Named senior partner leading the engagement",
-      "Discovery and scoping phase",
-      "Market analysis and entry strategy",
-      "Partner identification and outreach",
-      "Regulatory readiness assessment",
-      "Sequenced go-to-market plan",
-      "Weekly check-ins",
-    ],
-    priceCents: 499900,
-    priceFrom: true,
-    currency: USD,
-    deliveryType: "custom",
-    isSubscription: false,
-    isConfigurable: true,
-    configFields: [
-      f.textarea(
-        "brief",
-        "Engagement scope",
-        "Describe the market, the product, and the decision you need to make",
-      ),
     ],
   },
   {
@@ -558,32 +424,8 @@ export const PRODUCTS: Product[] = [
     deliveryType: "custom",
     isSubscription: false,
     isConfigurable: false,
-  },
-  {
-    sku: "CR-004",
-    slug: "sponsored-reports",
-    title: "Sponsored Reports",
-    categorySlug: "custom-research",
-    band: "Tier C",
-    shortDescription:
-      "Institutional thought-leadership PDFs, co-designed and co-branded with your organisation.",
-    fullDescription:
-      "For banks, law firms, consultancies, trade bodies, and government agencies that want to publish a piece of thought leadership under joint branding. We co-design the scope, deliver the licensed PDF, and support distribution to your audience. Engagement scoped on request.",
-    includes: [
-      "Co-designed scope with your team",
-      "Joint branding",
-      "Senior-analyst research and curation",
-      "Licensed PDF deliverable",
-      "Distribution support to your audience",
-    ],
-    priceCents: 0,
-    altPrice: "POA",
-    currency: USD,
-    deliveryType: "custom",
-    isSubscription: false,
-    isConfigurable: false,
-  },
-  // ============================================================ Tier A — ADAMftd-powered (GBP, 24-48h)
+    cobrandable: true,
+  },  // ============================================================ Tier A — ADAMftd-powered (GBP, 24-48h)
   {
     sku: "MA-200",
     slug: "ai-market-snapshot-report",
@@ -610,6 +452,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: true,
     configFields: [f.hs(), f.country("Target market")],
   },
@@ -637,6 +480,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: true,
     configFields: [f.hs(), f.country("Target market")],
   },
@@ -666,6 +510,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       f.country("Country to profile"),
       f.hsOptional(),
@@ -695,6 +540,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [f.hs(), f.origin(), f.destination()],
   },
   {
@@ -722,6 +568,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       f.company(),
       {
@@ -769,6 +616,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: true,
     configFields: [
       {
@@ -812,6 +660,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "custom",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       f.hs(),
       f.textarea(
@@ -845,6 +694,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       {
         name: "entities",
@@ -878,6 +728,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     configFields: [
       f.hs(),
       {
@@ -941,11 +792,11 @@ export const PRODUCTS: Product[] = [
     shortDescription:
       "Single Market Analysis + Trade Corridor + Tariff Brief — everything you need before entering a market.",
     fullDescription:
-      "Three essential reports bundled for market-entry intelligence. BU-002 pairs the AI Market Snapshot (MA-200, all 11 analysis dimensions) with the Trade Corridor Report (MR-004, 5-year flow data) and the Tariff & Landed Cost Strategic Brief (CT-002, full duty calculation and mitigation matrix). Together they answer the three questions every exporter needs answered: Is the market right? What's flowing on this corridor? What will it actually cost me after duty?",
+      "Three essential reports bundled for market-entry intelligence. BU-002 pairs the AI Market Snapshot (MA-200, all 11 analysis dimensions) with the Trade Corridor Report (MR-004, 5-year flow data) and the Tariff & Landed Cost Analysis (CT-002, full duty calculation and mitigation matrix). Together they answer the three questions every exporter needs answered: Is the market right? What's flowing on this corridor? What will it actually cost me after duty?",
     includes: [
       "AI Market Snapshot Report (MA-200) — all 11 analysis dimensions",
       "Trade Corridor Report (MR-004) — 5-year flow, operators, ports",
-      "Tariff & Landed Cost Strategic Brief (CT-002) — duty + mitigation",
+      "Tariff & Landed Cost Analysis (CT-002) — duty + mitigation",
       "Integrated summary note tying findings across all three reports",
       "Single-organisation licensed PDFs",
     ],
@@ -954,40 +805,12 @@ export const PRODUCTS: Product[] = [
     deliveryType: "48h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: true,
     bundleOf: ["MA-200", "MR-004", "CT-002"],
     savingsCents: 19800,
     configFields: [f.hs(), f.origin(), f.destination()],
-  },
-  {
-    sku: "BU-003",
-    slug: "export-intelligence-bundle",
-    title: "Export Intelligence Bundle",
-    categorySlug: "bundles",
-    band: "Tier B",
-    shortDescription:
-      "The complete export readiness package: full market report, entry strategy, buyer list and FTA routing in one engagement.",
-    fullDescription:
-      "Designed for exporters preparing a serious board-level market entry decision. BU-003 combines the Single Country Market Report (MR-001), the Market Entry Strategy playbook (BU-001), the FTA Routing Analysis (CT-003), and the Country Trade Profile (CT-001) into a single coordinated delivery. A senior analyst produces an overarching executive synthesis that ties all four deliverables into one actionable recommendation. The most complete product in the catalogue for a single country-product entry.",
-    includes: [
-      "Single Country Market Report (MR-001) — full 40+ page market analysis",
-      "Market Entry Strategy (BU-001) — go-to-market + named partners",
-      "FTA Routing Analysis (CT-003) — duty optimisation and origin rules",
-      "Country Trade Profile (CT-001) — 14-dimension country overview",
-      "Senior-analyst overarching executive synthesis",
-      "Single-organisation licensed PDFs",
-    ],
-    priceCents: 349900,
-    currency: GBP,
-    deliveryType: "custom",
-    isSubscription: false,
-    isConfigurable: true,
-    featured: false,
-    bundleOf: ["MR-001", "BU-001", "CT-003", "CT-001"],
-    savingsCents: 74600,
-    configFields: [f.hs(), f.country("Target country")],
-  },
-  {
+  },  {
     sku: "BU-004",
     slug: "compliance-essentials-pack",
     title: "Compliance Essentials Pack",
@@ -1010,6 +833,7 @@ export const PRODUCTS: Product[] = [
     deliveryType: "24h",
     isSubscription: false,
     isConfigurable: true,
+    cobrandable: true,
     featured: false,
     bundleOf: ["GR-002", "CP-001"],
     savingsCents: 9900,

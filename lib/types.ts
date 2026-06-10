@@ -61,6 +61,7 @@ export interface Product {
   deliveryType: DeliveryType;
   isSubscription: boolean;
   isConfigurable: boolean;
+  cobrandable?: boolean;   // true = report PDF can be delivered with buyer company logo + styling
   configFields?: ConfigField[];
   bundleOf?: string[];
   savingsCents?: number;

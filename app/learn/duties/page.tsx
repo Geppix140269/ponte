@@ -349,7 +349,7 @@ export default function LearnDutiesPage() {
             <Link href="/tools/duties" className="btn-primary">
               Open duty calculator
             </Link>
-            <Link href="/product/tariff-landed-cost-brief" className="btn-ghost text-sm">
+            <Link href="/product/tariff-landed-cost-analysis" className="btn-ghost text-sm">
               Get a full analyst brief — CT-002, £299
             </Link>
           </div>

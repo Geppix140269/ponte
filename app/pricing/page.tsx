@@ -28,7 +28,7 @@ const TIERS = [
       { sku: "CT-001", name: "Country Trade Profile", price: "£249", href: "/product/country-trade-profile-report", note: "14-dimension country overview" },
       { sku: "MA-200", name: "AI Market Snapshot Report", price: "£299", href: "/product/ai-market-snapshot-report", note: "All 11 analysis dimensions, ADAMftd-powered", badge: "ADAMftd" },
       { sku: "MA-100", name: "Single Market Analysis Report", price: "£299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
-      { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "£299", href: "/product/tariff-landed-cost-brief", note: "Full duty calculation + mitigation matrix" },
+      { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "£299", href: "/product/tariff-landed-cost-analysis", note: "Full duty calculation + mitigation matrix" },
       { sku: "CS-002", name: "Trade Company Deep Profile", price: "£349", href: "/product/trade-company-deep-profile", note: "One entity: volumes, partners, risk flags" },
       { sku: "GR-002", name: "Sanctions & Compliance Brief", price: "£349", href: "/product/sanctions-compliance-brief", note: "OFAC, EU, UK, UN screening + analyst commentary" },
       { sku: "MR-004", name: "Trade Corridor Report", price: "£399", href: "/product/trade-corridor-report", note: "5-year flows, operators, ports" },
@@ -48,7 +48,7 @@ const TIERS = [
       { sku: "MA-300", name: "Complete Market Analysis Suite", price: "£899", href: "/product/complete-market-analysis-suite", note: "All 11 modules + executive synthesis narrative" },
       { sku: "GR-004", name: "Supply Chain Risk Assessment", price: "£899", href: "/product/supply-chain-risk-assessment", note: "End-to-end risk map + mitigation roadmap" },
       { sku: "MR-001", name: "Single Country Market Report", price: "£1,099", href: "/product/single-country-market-report", note: "40+ page analyst report, one HS code + country" },
-      { sku: "MR-002", name: "Multi-Country Comparative Strategy", price: "£1,599", href: "/product/multi-country-comparative-strategy", note: "3-5 countries ranked, one HS code" },
+      { sku: "MR-002", name: "Multi-Country Comparative Strategy", price: "£1,599", href: "/product/multi-country-comparative-analysis", note: "3-5 countries ranked, one HS code" },
     ],
   },
   {
@@ -60,8 +60,6 @@ const TIERS = [
     products: [
       { sku: "BU-004", name: "Compliance Essentials Pack", price: "£749", href: "/product/compliance-essentials-pack", note: "Sanctions Brief + 25-entity screening", saving: "Save £99" },
       { sku: "BU-002", name: "Trade Intelligence Pack", price: "£799", href: "/product/trade-intelligence-pack", note: "Market Snapshot + Corridor + Tariff Brief", saving: "Save £198" },
-      { sku: "BU-001", name: "Market Entry Strategy", price: "£1,799", href: "/product/market-entry-strategy", note: "Full market report + go-to-market + partners" },
-      { sku: "BU-003", name: "Export Intelligence Bundle", price: "£3,499", href: "/product/export-intelligence-bundle", note: "Market report + strategy + FTA + country profile", saving: "Save £746" },
     ],
   },
   {
