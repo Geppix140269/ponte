@@ -27,7 +27,7 @@ const TIERS = [
       { sku: "CP-001", name: "Counterparty Screening Package", price: "$199", href: "/product/counterparty-screening-package", note: "Up to 25 entities, OFAC/EU/UK/UN lists" },
       { sku: "CT-001", name: "Country Trade Profile", price: "$249", href: "/product/country-trade-profile-report", note: "14-dimension country overview" },
       { sku: "MA-200", name: "AI Market Snapshot Report", price: "$299", href: "/product/ai-market-snapshot-report", note: "All 11 analysis dimensions, ADAMftd-powered", badge: "ADAMftd" },
-      { sku: "MA-100", name: "Single Market Analysis Report", price: "$299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
+      { sku: "MA-100", name: "Single Market Analysis Report", price: "$1,299", href: "/product/single-market-analysis-report", note: "One topic, one country, one analyst brief" },
       { sku: "CT-002", name: "Tariff & Landed Cost Brief", price: "$299", href: "/product/tariff-landed-cost-analysis", note: "Full duty calculation + mitigation matrix" },
       { sku: "CS-002", name: "Trade Company Deep Profile", price: "$349", href: "/product/trade-company-deep-profile", note: "One entity: volumes, partners, risk flags" },
       { sku: "GR-002", name: "Sanctions & Compliance Brief", price: "$349", href: "/product/sanctions-compliance-brief", note: "OFAC, EU, UK, UN screening + analyst commentary" },
@@ -47,8 +47,8 @@ const TIERS = [
     products: [
       { sku: "MA-300", name: "Complete Market Analysis Suite", price: "$899", href: "/product/complete-market-analysis-suite", note: "All 11 modules + executive synthesis narrative" },
       { sku: "GR-004", name: "Supply Chain Risk Assessment", price: "$899", href: "/product/supply-chain-risk-assessment", note: "End-to-end risk map + mitigation roadmap" },
-      { sku: "MR-001", name: "Single Country Market Report", price: "$1,099", href: "/product/single-country-market-report", note: "40+ page analyst report, one HS code + country" },
-      { sku: "MR-002", name: "Multi-Country Comparative Strategy", price: "$1,599", href: "/product/multi-country-comparative-analysis", note: "3-5 countries ranked, one HS code" },
+      { sku: "MR-001", name: "Single Country Market Report", price: "$1,599", href: "/product/single-country-market-report", note: "40+ page analyst report, one HS code + country" },
+      { sku: "MR-002", name: "Multi-Country Comparative Analysis", price: "$1,999", href: "/product/multi-country-comparative-analysis", note: "3-5 countries ranked, one HS code" },
     ],
   },
   {
@@ -69,7 +69,7 @@ const TIERS = [
     colour: "border-white/20 bg-white/[0.03]",
     badge: "bg-white/10 text-cream",
     products: [
-      { sku: "CR-003", name: "Sector Quarterly Outlook", price: "from $4,999/yr", href: "/product/sector-quarterly-outlook", note: "Four outlooks/year, co-branded, member licence" },
+      { sku: "CR-003", name: "Sector Quarterly Outlook", price: "$6,000", href: "/product/sector-quarterly-outlook", note: "Four outlooks/year, co-branded, member licence" },
     ],
   },
 ] as const;
