@@ -78,6 +78,8 @@ export default async function ProductPage({
   const slot = await nextAvailableSlot(product);
   const slotDisplay = formatSlot(slot);
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -91,16 +93,27 @@ export default async function ProductPage({
       price: (product.priceCents / 100).toFixed(2),
       priceCurrency: product.currency,
       availability: "https://schema.org/InStock",
-      url: `https://ponte.trade/product/${product.slug}`,
+      url: `${APP_URL}/product/${product.slug}`,
       seller: { "@type": "Organization", name: "Ponte Trade" },
     },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: APP_URL },
+      { "@type": "ListItem", position: 2, name: "Catalogue", item: `${APP_URL}/catalogue` },
+      ...(category ? [{ "@type": "ListItem", position: 3, name: category.name, item: `${APP_URL}/category/${category.slug}` }] : []),
+      { "@type": "ListItem", position: category ? 4 : 3, name: product.title, item: `${APP_URL}/product/${product.slug}` },
+    ],
   };
 
   return (
     <section className="container-px py-10 lg:py-14">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([productJsonLd, breadcrumbJsonLd]) }}
       />
 
       {/* Breadcrumb */}

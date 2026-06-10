@@ -54,12 +54,28 @@ export default async function CategoryPage({
   ]);
   if (!category) notFound();
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
+
   const bands = Array.from(
     new Set(products.map((p) => p.band).filter(Boolean))
   ) as string[];
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: APP_URL },
+      { "@type": "ListItem", position: 2, name: "Catalogue", item: `${APP_URL}/catalogue` },
+      { "@type": "ListItem", position: 3, name: category.name, item: `${APP_URL}/category/${category.slug}` },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <header className="container-px pt-14 pb-10 md:pt-20 md:pb-12">
         <span className="pill">Category</span>
         <h1
