@@ -336,7 +336,9 @@ export const PRODUCTS: Product[] = [
       f.hs(),
       f.countryOptional(),
     ],
-  },  // ============================================================ Tier B — Strategic Reports ($1,099-1,799, 72-96h)  {
+  },
+  // ============================================================ Tier B — Strategic Reports
+  {
     sku: "MR-001",
     slug: "single-country-market-report",
     title: "Single Country Market Report",
