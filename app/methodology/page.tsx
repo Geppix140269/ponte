@@ -125,8 +125,8 @@ export default function MethodologyPage() {
               Machine-scale data ingestion.
             </h3>
             <p className="mt-4 text-[14px] text-gray-2 leading-relaxed">
-              Our infrastructure ingests, normalises and cross-references 7
-              billion+ verified trade records against the official sources
+              Our infrastructure ingests, normalises and cross-references
+              transaction-level trade evidence against the official sources
               listed above. HS codes are reconciled across national
               variants. Currencies and units are harmonised. Outliers are
               flagged.

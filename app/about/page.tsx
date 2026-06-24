@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BridgeMark } from "@/components/Logo";
 
 const ABOUT_DESC =
-  "Ponte Trade sells research-grade trade intelligence as one-time products: reports, analysis, and risk briefs. An ICTTM company.";
+  "Ponte Trade sells research-grade trade intelligence as one-time products: reports, analysis, and risk briefs. Senior-led trade intelligence.";
 
 export const metadata: Metadata = {
   title: "About",
@@ -70,7 +70,7 @@ export default function AboutPage() {
           className="mt-5 text-[11px] uppercase text-gold"
           style={{ letterSpacing: "0.22em" }}
         >
-          An ICTTM company
+          Senior-led trade intelligence
         </p>
       </header>
 
@@ -110,7 +110,7 @@ export default function AboutPage() {
       <section className="container-px py-16 lg:py-20">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="glass p-10">
-            <span className="eyebrow">Ownership</span>
+            <span className="eyebrow">Foundations</span>
             <h2
               className="serif text-white mt-4"
               style={{
@@ -120,17 +120,16 @@ export default function AboutPage() {
                 letterSpacing: "-0.01em",
               }}
             >
-              Backed by{" "}
+              Grounded in{" "}
               <em className="text-gold italic" style={{ fontWeight: 400 }}>
-                ICTTM.
+                official sources.
               </em>
             </h2>
             <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
-              Ponte Trade is owned by the International Centre for Trade
-              Transparency Limited (ICTTM), the UK group that maintains one
-              of the largest verified trade-data infrastructures in the
-              world: 7 billion+ records cross-checked against UN Comtrade,
-              the World Bank, WTO, Eurostat, ITC and EU Taxud.
+              Ponte Trade is grounded in transaction-level trade evidence,
+              cross-checked against UN Comtrade, the World Bank, WTO,
+              Eurostat, ITC and EU Taxud. Where official sources conflict,
+              outliers are flagged and the most likely outcome is estimated.
             </p>
             <Link
               href="/why-ponte"
@@ -198,8 +197,8 @@ export default function AboutPage() {
             <p className="mt-4 max-w-xl text-[14px] text-gray-2 leading-relaxed">
               The mark is a single Roman arch with a gold apex node. The arch
               is the bridge: connection, structure, classical confidence. The
-              node is the data point: the verified trade record at the centre
-              of every report.
+              node is the data point: the transaction-level trade evidence at
+              the centre of every report.
             </p>
           </div>
         </div>

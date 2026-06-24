@@ -323,7 +323,7 @@ export async function prependCoverPage(
   });
 
   const rows: [string, string][] = [
-    ["AUTHOR", "ICTTM Research Team"],
+    ["AUTHOR", "Ponte Trade Research Team"],
     ["SENIOR REVIEWER", data.reviewerInitials || "GF"],
     ["ISSUED", data.issuedDate],
     ["LICENSED TO", data.licensedTo],
@@ -351,7 +351,7 @@ export async function prependCoverPage(
   });
 
   // Bottom anchor
-  cover.drawText(`Ponte Trade${DOT}An ICTTM Company${DOT}ponte.trade`, {
+  cover.drawText(`Ponte Trade${DOT}ponte.trade`, {
     x: 56,
     y: 40,
     size: 8,

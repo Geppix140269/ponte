@@ -30,7 +30,7 @@ function layout(body: string): string {
       </div>
       <div style="padding:28px;color:#0F1E3C;font-size:14px;line-height:1.6">${body}</div>
       <div style="padding:18px 28px;border-top:1px solid #E5E7EB;color:#6B7280;font-size:12px;line-height:1.6">
-        The Ponte Trade Team, An ICTTM Company<br/>
+        The Ponte Trade Team<br/>
         <a href="${APP_URL}" style="color:#D08F18">ponte.trade</a>
       </div>
     </div>

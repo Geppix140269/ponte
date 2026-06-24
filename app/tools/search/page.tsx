@@ -5,12 +5,12 @@ import SearchClient from "./SearchClient";
 export const metadata: Metadata = {
   title: "Trade Data Search | Ponte Trade",
   description:
-    "Search 7B+ verified trade records. Find real importers, exporters, shipment volumes, unit prices, and trade routes — the same transaction-level customs data that powers our analyst reports.",
+    "Search transaction-level trade data. Find real importers, exporters, shipment volumes, unit prices, and trade routes — the same transaction-level customs data that powers our analyst reports.",
   alternates: { canonical: "/tools/search" },
   openGraph: {
     title: "Trade Data Search | Ponte Trade",
     description:
-      "Search 7B+ verified trade records. Real shipments, real companies, real prices.",
+      "Search transaction-level trade data. Real shipments, real companies, real prices.",
     url: "/tools/search",
     siteName: "Ponte Trade",
     type: "website",
@@ -40,7 +40,7 @@ export default async function TradeSearchPage() {
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl mb-3">
-          Search 7B+ verified customs declarations and bills of lading. Find
+          Search transaction-level customs declarations and bills of lading. Find
           importers, exporters, unit prices, and trade corridors — the same
           transaction-level data that powers our analyst reports.
         </p>

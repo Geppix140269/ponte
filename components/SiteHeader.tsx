@@ -10,11 +10,11 @@ import { useCart } from "@/lib/cart-store";
 // Labels match lib/catalogue.ts CATEGORIES names so naming stays consistent
 // across the header, homepage tiles and footer.
 const navLinks = [
-  { href: "/catalogue", label: "Catalogue" },
-  { href: "/category/bundles", label: "Bundles" },
-  { href: "/why-ponte", label: "Why Ponte" },
-  { href: "/about", label: "About" },
+  { href: "/advisory", label: "Analyst Desk" },
+  { href: "/product/full-market-report", label: "Market Report" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export default function SiteHeader() {

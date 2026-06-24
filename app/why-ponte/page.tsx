@@ -105,10 +105,10 @@ export default function WhyPontePage() {
         </div>
       </section>
 
-      {/* Backed by ICTTM */}
+      {/* Foundations */}
       <section className="container-px py-16 lg:py-20">
         <div className="glass p-10 lg:p-14">
-          <span className="eyebrow">Backed by ICTTM</span>
+          <span className="eyebrow">Foundations</span>
           <h2
             className="serif text-white mt-4 max-w-3xl"
             style={{
@@ -118,16 +118,14 @@ export default function WhyPontePage() {
               letterSpacing: "-0.01em",
             }}
           >
-            7 billion+ verified trade records.{" "}
+            Transaction-level trade evidence.{" "}
             <em className="text-gold italic" style={{ fontWeight: 400 }}>
               Cross-checked against the sources you already trust.
             </em>
           </h2>
           <p className="mt-6 max-w-2xl text-[15px] text-gray-2 leading-relaxed">
-            Ponte Trade is owned by the International Centre for Trade
-            Transparency Limited (ICTTM), the UK group that maintains one of
-            the largest verified trade-data infrastructures in the world.
-            Every Ponte report combines machine-scale data aggregation with
+            Every Ponte report is grounded in transaction-level trade evidence
+            and official sources, combining machine-scale data aggregation with
             expert human review by our research team.
           </p>
         </div>

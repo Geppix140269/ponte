@@ -31,15 +31,15 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Ponte Trade. Trade intelligence, delivered.",
+    default: "Ponte Trade. Senior-led trade intelligence and advisory.",
     template: "%s | Ponte Trade",
   },
   description:
-    "Research-grade market reports and risk analysis for exporters, importers and trade bodies. Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs. No subscription required.",
+    "Senior-led trade intelligence and advisory for exporters, importers and trade bodies. Book an analyst, commission a Full Market Report, or retain a standing desk. Grounded in transaction-level trade evidence and official sources. Priced by the engagement, no subscription.",
   openGraph: {
-    title: "Ponte Trade. Trade intelligence, delivered.",
+    title: "Ponte Trade. Senior-led trade intelligence and advisory.",
     description:
-      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
+      "Talk to the analyst, not the algorithm. Book an analyst call, commission a Full Market Report, or retain a standing desk.",
     url: APP_URL,
     siteName: "Ponte Trade",
     type: "website",
@@ -47,15 +47,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ponte Trade. Trade intelligence, delivered.",
+    title: "Ponte Trade. Senior-led trade intelligence and advisory.",
     description:
-      "Curated by analysts. Backed by 7B+ verified trade records. Delivered as licensed PDFs.",
+      "Talk to the analyst, not the algorithm. Senior-led trade intelligence and advisory.",
   },
 };
 
-// Organization-level structured data, emitted on every page so search engines
-// understand the Ponte Trade / ICTTM / ADAMftd relationship and can show
-// rich results.
+// Organization-level structured data, emitted on every page for rich results.
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -64,11 +62,7 @@ const organizationJsonLd = {
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "Research-grade international trade intelligence sold as one-time reports: market analysis, geopolitical risk, and company intelligence.",
-  parentOrganization: {
-    "@type": "Organization",
-    name: "International Centre for Trade Transparency Limited (ICTTM)",
-  },
+    "Senior-led trade intelligence and advisory: analyst access, market reports, and standing advisory engagements, grounded in transaction-level trade evidence and official sources.",
 };
 
 const websiteJsonLd = {

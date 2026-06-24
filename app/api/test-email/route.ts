@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 // rejected so the route can't be abused to spam.
 const ALLOWED = new Set([
   "g.funaro@1402celsius.com",
-  "ceo@adamftd.com",
   "hello@ponte.trade",
 ]);
 

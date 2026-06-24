@@ -208,8 +208,8 @@ export default function LearnTradeDataPage() {
           <div className="rounded-xl border border-white/10 bg-navy/40 p-6 max-w-3xl">
             <p className="text-[11px] uppercase tracking-[0.18em] text-gold mb-2">Ponte&apos;s data engine</p>
             <p className="text-sm text-muted leading-relaxed">
-              The ADAMftd platform underlying Ponte&apos;s research covers{" "}
-              <strong className="text-cream">7 billion+ verified trade records</strong> across
+              Ponte&apos;s research is grounded in{" "}
+              <strong className="text-cream">transaction-level trade evidence</strong> across
               199 countries. Every finding passes a 5-step verification pipeline: 4-source pull,
               conflict detection, Monte Carlo resolution, and senior-analyst sign-off before
               delivery.
@@ -285,7 +285,7 @@ export default function LearnTradeDataPage() {
         <section className="container-px py-12 border-t border-white/10">
           <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Ready to use it</p>
           <h2 className="heading-lg mb-4 max-w-xl">
-            Search 7 billion+ trade records for your product.
+            Search transaction-level trade data for your product.
           </h2>
           <p className="text-sm text-muted max-w-lg mb-6">
             Browse actual shipments: importer, exporter, HS code, unit value, port. Free to

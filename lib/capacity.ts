@@ -4,7 +4,7 @@
  * See docs/CAPACITY-QUEUE-DESIGN.md for the full model.
  *
  * Daily caps reflect operational reality, not aspirations:
- *   standard — ADAMftd report generation takes ~5-10 min, plus
+ *   standard — report generation takes ~5-10 min, plus
  *              human QA + watermarking + packaging.
  *   custom   — bespoke briefs need a discovery call + analyst time,
  *              tightly limited.

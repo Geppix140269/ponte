@@ -305,7 +305,7 @@ export default function SearchClient({
       {loading && (
         <div className="glass rounded-2xl p-8 flex flex-col items-center gap-4" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
           <Loader2 className="h-6 w-6 text-gold animate-spin" />
-          <p className="text-gray-2 text-[14px]">Searching 7B+ verified records…</p>
+          <p className="text-gray-2 text-[14px]">Searching transaction-level records…</p>
         </div>
       )}
 
