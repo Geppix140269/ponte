@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Phone, ClipboardList, CalendarClock } from "lucide-react";
 
-// TODO: paste your live Calendly event link. Enable Stripe payment collection on
-// the event so the $500 charge and the booking happen in one step.
-const CALENDLY_URL = "https://calendly.com/ponte-trade/analyst-call";
+// Calendly. This is the account link (shows all event types). For one-step
+// payment, create a dedicated 60-min "Analyst Call" event with Stripe payment
+// collection enabled, then point this at it:
+//   https://calendly.com/hello-giuseppefunaro/analyst-call
+const CALENDLY_URL = "https://calendly.com/hello-giuseppefunaro";
 
 export const metadata: Metadata = {
   title: "The Analyst Desk",

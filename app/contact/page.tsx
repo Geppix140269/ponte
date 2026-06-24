@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Phone, Mail, FileText } from "lucide-react";
 
-// TODO: paste your live Calendly event link (same as the Analyst Desk).
-const CALENDLY_URL = "https://calendly.com/ponte-trade/analyst-call";
+// Calendly account link (same as the Analyst Desk). Point at a dedicated
+// Stripe-enabled "Analyst Call" event for one-step payment when ready.
+const CALENDLY_URL = "https://calendly.com/hello-giuseppefunaro";
 
 export const metadata: Metadata = {
   title: "Contact",
