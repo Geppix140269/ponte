@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck } from "lucide-react";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import InterestButton from "@/components/InterestButton";
 
 export const dynamic = "force-dynamic";
 
@@ -63,8 +64,50 @@ export default async function MarketplacePage() {
     const { data } = await supabase
       .from("listings")
       .select("id, ref, type, product, status, created_at, decision_note")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     listings = data ?? [];
+  }
+
+  // The live board. Members get the full listing; visitors get a
+  // server-rendered teaser only (the browser never receives the rest).
+  type BoardItem = {
+    id: string;
+    ref: string;
+    type: string;
+    product: string;
+    origin: string | null;
+    destination: string | null;
+    volume: string | null;
+    incoterm: string | null;
+    details: string;
+    full: boolean;
+  };
+  let board: BoardItem[] = [];
+  if (isSupabaseConfigured()) {
+    if (user) {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("listings")
+        .select("id, ref, type, product, origin, destination, volume, incoterm, details")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      board = (data ?? []).map((l) => ({ ...l, full: true }));
+    } else {
+      const adminSb = createAdminClient();
+      const { data } = await adminSb
+        .from("listings")
+        .select("id, ref, type, product, origin, destination, volume, incoterm, details")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      board = (data ?? []).map((l) => ({
+        ...l,
+        details: l.details.length > 120 ? l.details.slice(0, 120) + "…" : l.details,
+        full: false,
+      }));
+    }
   }
 
   return (
@@ -115,6 +158,67 @@ export default async function MarketplacePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Live board */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <p className="eyebrow text-gold">Live now</p>
+            <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>
+              {board.length > 0
+                ? `${board.length} vetted ${board.length === 1 ? "listing" : "listings"} on the board.`
+                : "The board is warming up."}
+            </h2>
+          </div>
+          {!user && board.length > 0 && (
+            <Link href="/login?next=/marketplace" className="btn-ghost-light">
+              Sign in for full listings <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
+
+        {board.length === 0 ? (
+          <div className="glass p-8 text-[14px] text-gray-2">
+            Approved listings appear here the moment they clear vetting. Be
+            the first: submit an offer or a requirement and the desk will
+            take it from there.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {board.map((b) => (
+              <div key={b.id} className="glass p-5 md:p-6">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <span className="mono text-[12px] text-gold">{b.ref}</span>
+                  <span className="badge uppercase">{b.type}</span>
+                  <span className="flex-1 text-[15px] text-cream">{b.product}</span>
+                  {user ? (
+                    <InterestButton refCode={b.ref} />
+                  ) : (
+                    <Link
+                      href="/login?next=/marketplace"
+                      className="text-[11px] uppercase text-gold hover:text-cream"
+                      style={{ letterSpacing: "0.16em" }}
+                    >
+                      Sign in to respond
+                    </Link>
+                  )}
+                </div>
+                <p className="mono mt-3 text-[12px] leading-relaxed text-gray-2">
+                  {[b.origin && `Origin: ${b.origin}`, b.destination && `Destination: ${b.destination}`, b.volume, b.incoterm]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <p className={`mt-2 text-[13px] leading-relaxed ${b.full ? "text-gray-2" : "text-gray-2/70"}`}>
+                  {b.details}
+                  {!b.full && (
+                    <span className="ml-2 text-gold">Sign in to read the full listing.</span>
+                  )}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* My listings */}
