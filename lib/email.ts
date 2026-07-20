@@ -280,3 +280,71 @@ export async function sendOrderVoided(
     `),
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Brokerage: Deal Desk submissions and Deal Sheet access requests     */
+/* ------------------------------------------------------------------ */
+
+const DEALS_TO = process.env.DEALS_TO_EMAIL || "deals@ponte.trade";
+
+export type BrokerageSubmissionType = "offer" | "requirement" | "network";
+
+/**
+ * Notify the deal desk of a new submission from /brokerage or /network.
+ * Reply-To is set to the submitter so Giuseppe can answer in one click.
+ */
+export async function sendBrokerageSubmission(data: {
+  type: BrokerageSubmissionType;
+  name: string;
+  company: string;
+  email: string;
+  country: string;
+  product?: string;
+  volume?: string;
+  details: string;
+}): Promise<void> {
+  const subjectByType: Record<BrokerageSubmissionType, string> = {
+    offer: `Deal Desk | OFFER from ${data.company} (${data.country})`,
+    requirement: `Deal Desk | REQUIREMENT from ${data.company} (${data.country})`,
+    network: `Deal Sheet | access request from ${data.company} (${data.country})`,
+  };
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const rows = [
+    ["Type", data.type.toUpperCase()],
+    ["Name", data.name],
+    ["Company", data.company],
+    ["Email", data.email],
+    ["Country", data.country],
+    ...(data.product ? [["Product", data.product]] : []),
+    ...(data.volume ? [["Volume", data.volume]] : []),
+  ]
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:4px 12px 4px 0;color:#6B7280;white-space:nowrap">${k}</td><td style="padding:4px 0"><strong>${esc(v)}</strong></td></tr>`,
+    )
+    .join("");
+  const html = layout(`
+    <h2 style="margin:0 0 12px">New ${data.type === "network" ? "Deal Sheet access request" : `deal desk ${data.type}`}</h2>
+    <table style="border-collapse:collapse;font-size:14px">${rows}</table>
+    <p style="margin-top:16px;white-space:pre-wrap;background:#F8FAFC;border-left:3px solid #E8A020;padding:12px 14px">${esc(data.details)}</p>
+    <p style="color:#6B7280;font-size:12px">Reply to this email to answer ${esc(data.name)} directly.</p>
+  `);
+  if (!isEmailConfigured()) {
+    console.log(`[ponte] email skipped (Resend not configured): "${subjectByType[data.type]}" -> ${DEALS_TO}`);
+    return;
+  }
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
+    await resend.emails.send({
+      from: FROM,
+      to: DEALS_TO,
+      replyTo: data.email,
+      subject: subjectByType[data.type],
+      html,
+    });
+  } catch (err) {
+    console.error("[ponte] Resend error (brokerage submission):", err);
+    throw err;
+  }
+}

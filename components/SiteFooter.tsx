@@ -10,9 +10,10 @@ export default function SiteFooter() {
             <div className="md:col-span-5 md:pr-6">
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                Senior-led trade intelligence and advisory. Book an analyst,
-                commission a Full Market Report, or retain a standing desk.
-                Priced by the engagement, never by subscription.
+                Independent trade brokerage and senior-led intelligence.
+                Bring a deal to the desk, join the weekly Deal Sheet, book an
+                analyst, or commission a Full Market Report. Success fees and
+                engagements, never subscriptions.
               </p>
             </div>
 
@@ -24,6 +25,16 @@ export default function SiteFooter() {
                 Intelligence
               </h4>
               <ul className="space-y-2.5">
+                <li>
+                  <Link href="/brokerage" className="text-sm text-gray-2 transition-colors hover:text-gold">
+                    The Deal Desk
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/network" className="text-sm text-gray-2 transition-colors hover:text-gold">
+                    The Deal Sheet
+                  </Link>
+                </li>
                 <li>
                   <Link href="/advisory" className="text-sm text-gray-2 transition-colors hover:text-gold">
                     The Analyst Desk
@@ -98,11 +109,14 @@ export default function SiteFooter() {
 
           <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
             <p>
-              Senior-led trade intelligence and advisory, grounded in
-              transaction-level trade evidence and official sources.
+              Independent trade brokerage and advisory, grounded in evidence
+              and official sources. Ponte acts as broker and intermediary,
+              never as principal. Introductions are made under signed NCNDA
+              and fee agreements.
             </p>
             <p className="uppercase" style={{ letterSpacing: "0.18em" }}>
-              © {new Date().getFullYear()} Ponte Trade · London · ponte.trade
+              © {new Date().getFullYear()} Ponte · operated by 1402 Celsius Ltd
+              · ponte.trade
             </p>
           </div>
         </div>

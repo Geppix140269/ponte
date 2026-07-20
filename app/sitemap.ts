@@ -16,9 +16,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Educational content — high SEO value
     { url: `${BASE_URL}/learn/trade-data`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/learn/duties`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    // Free tools
-    { url: `${BASE_URL}/tools/duties`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/tools/search`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    // Brokerage
+    { url: `${BASE_URL}/brokerage`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE_URL}/network`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     // Legal
     { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

@@ -285,15 +285,15 @@ export default function LearnTradeDataPage() {
         <section className="container-px py-12 border-t border-white/10">
           <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Ready to use it</p>
           <h2 className="heading-lg mb-4 max-w-xl">
-            Search transaction-level trade data for your product.
+            Put this kind of evidence behind your next deal.
           </h2>
           <p className="text-sm text-muted max-w-lg mb-6">
-            Browse actual shipments: importer, exporter, HS code, unit value, port. Free to
-            search. Export to CSV with a credit account.
+            Commission a Full Market Report grounded in transaction-level
+            evidence, or bring a live offer or requirement to the Deal Desk.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/tools/search" className="btn-primary">
-              Search trade data
+            <Link href="/brokerage" className="btn-primary">
+              Visit the Deal Desk
             </Link>
             <Link href="/learn/duties" className="btn-ghost text-sm">
               Learn about import duties

@@ -2,7 +2,8 @@ import Link from "next/link";
 import {
   ArrowRight,
   Phone,
-  FileText,
+  Handshake,
+  Mail,
   CalendarClock,
   ShieldCheck,
   Scale,
@@ -14,28 +15,28 @@ export const revalidate = 60;
 
 const pillars = [
   {
+    icon: Handshake,
+    eyebrow: "Success fee only",
+    title: "The Deal Desk",
+    body: "Bring an offer or a requirement. We vet the counterparty, paper the introduction, and stay in the middle until the deal closes.",
+    href: "/brokerage",
+    cta: "Bring us a deal",
+  },
+  {
+    icon: Mail,
+    eyebrow: "Free · vetted",
+    title: "The Deal Sheet",
+    body: "One email a week with live, anonymized offers and requirements moving through the network. Reply to any item and we run the introduction.",
+    href: "/network",
+    cta: "Request access",
+  },
+  {
     icon: Phone,
     eyebrow: "From $500",
     title: "The Analyst Desk",
     body: "Book a senior analyst for one decision. A 60-minute call with a written recap, a half-day intensive, or a standing retainer.",
     href: "/advisory",
     cta: "Book an analyst call",
-  },
-  {
-    icon: FileText,
-    eyebrow: "$1,800",
-    title: "Full Market Report",
-    body: "A complete market report for one HS code or product, Global or for a single country. Demand, tariffs, competitors, counterparties.",
-    href: "/product/full-market-report",
-    cta: "Commission a report",
-  },
-  {
-    icon: CalendarClock,
-    eyebrow: "From $2,500 / mo",
-    title: "Standing advisory",
-    body: "A trade desk on retainer: priority turnaround, a fixed monthly block of senior hours, and a quarterly review. Cancel with 30 days notice.",
-    href: "/advisory",
-    cta: "Discuss a retainer",
   },
 ];
 
@@ -77,49 +78,50 @@ export default function HomePage() {
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16 relative">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-14 items-center">
           <div>
-            <span className="pill">Senior-led trade intelligence</span>
+            <span className="pill">Independent trade brokerage</span>
             <h1
               className="serif text-white mt-6 mb-7"
               style={{ fontWeight: 400, fontSize: "clamp(48px, 7vw, 92px)", lineHeight: 0.98, letterSpacing: "-0.015em" }}
             >
-              Evidence{" "}
-              <em className="text-gold italic" style={{ fontWeight: 400 }}>over</em>
+              The bridge{" "}
+              <em className="text-gold italic" style={{ fontWeight: 400 }}>between</em>
               <br />
-              opinion.
+              buyer and seller.
             </h1>
             <p className="text-[18px] text-gray-2 leading-relaxed max-w-xl mb-9">
-              Talk to the analyst, not the algorithm. Book a senior analyst,
-              commission a market report, or retain a standing trade desk.
-              Priced by the engagement, never by subscription.
+              Ponte is the independent brokerage of Giuseppe Funaro. Real
+              offers, vetted counterparties, papered introductions, and a
+              success fee only when the deal closes. Evidence over opinion,
+              in every deal.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
-              <Link href="/advisory" className="btn-gold">
-                Book an analyst call <ArrowRight className="h-4 w-4" />
+              <Link href="/brokerage#submit" className="btn-gold">
+                Bring us a deal <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/product/full-market-report" className="btn-ghost-light">
-                See the report
+              <Link href="/network" className="btn-ghost-light">
+                Join the Deal Sheet
               </Link>
             </div>
           </div>
 
-          {/* Analyst Desk panel (replaces the old data-records stat) */}
+          {/* Deal Desk panel */}
           <div className="relative hidden md:block">
             <div className="glass p-8 max-w-[420px] ml-auto">
               <div className="flex items-center gap-[10px] text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.24em" }}>
                 <span className="w-[6px] h-[6px] rounded-full bg-positive pulse-dot" style={{ boxShadow: "0 0 10px var(--positive)" }} />
-                Open · The Analyst Desk
+                Open · The Deal Desk
               </div>
               <div className="serif text-white mt-4" style={{ fontWeight: 500, fontSize: 84, lineHeight: 1, letterSpacing: "-0.02em" }}>
                 48
                 <span className="text-gold italic" style={{ fontSize: 30 }}>h</span>
               </div>
               <div className="text-[13px] text-gray-2 mt-1" style={{ letterSpacing: "0.04em" }}>
-                From your question to a booked analyst call
+                From your submission to a first answer
               </div>
-              <Link href="/advisory" className="btn-gold mt-7 w-full justify-center">
-                Book an analyst call <ArrowRight className="h-4 w-4" />
+              <Link href="/brokerage#submit" className="btn-gold mt-7 w-full justify-center">
+                Submit a deal <ArrowRight className="h-4 w-4" />
               </Link>
-              <p className="mt-4 mono text-[11px] text-gray-2 text-center">$500 · 60 minutes · written recap</p>
+              <p className="mt-4 mono text-[11px] text-gray-2 text-center">NCNDA · fee agreement · success fee only</p>
             </div>
           </div>
         </div>
@@ -129,7 +131,7 @@ export default function HomePage() {
       <section className="container-px py-12 border-t border-white/8">
         <p className="eyebrow text-gold">What we do</p>
         <h2 className="serif text-white mt-3 mb-8" style={{ fontSize: 30, fontWeight: 500 }}>
-          Three ways to put a senior analyst on your decision.
+          Deals brokered, opportunities shared, decisions backed.
         </h2>
         <div className="grid gap-5 md:grid-cols-3">
           {pillars.map((p) => (
@@ -195,16 +197,17 @@ export default function HomePage() {
       <section className="container-px py-16">
         <div className="glass p-10 md:p-12 text-center">
           <h2 className="serif text-white" style={{ fontSize: 36, fontWeight: 500 }}>
-            Put the question to an analyst.
+            Have a deal? Bring it to the desk.
           </h2>
           <p className="mt-4 text-[16px] text-gray-2 max-w-xl mx-auto">
-            Sixty minutes, one decision, a written record. Evidence over opinion.
+            An offer, a requirement, or a question worth an analyst&rsquo;s
+            hour. Papered, vetted, evidence over opinion.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <Link href="/advisory" className="btn-gold">
-              Book an analyst call <ArrowRight className="h-4 w-4" />
+            <Link href="/brokerage#submit" className="btn-gold">
+              Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/contact" className="btn-ghost-light">Talk to us</Link>
+            <Link href="/advisory" className="btn-ghost-light">Book an analyst call</Link>
           </div>
         </div>
       </section>
