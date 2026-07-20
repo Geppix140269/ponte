@@ -123,9 +123,10 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Notify both sides; never block the response on email.
+  // Notify both sides. Awaited: on serverless, un-awaited work is killed
+  // the moment the response returns.
   const memberEmail = user.email ?? "";
-  Promise.allSettled([
+  await Promise.allSettled([
     memberEmail
       ? sendListingReceived(memberEmail, { ref: listing.ref, product })
       : Promise.resolve(),
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
       volume: clean(form.get("volume"), 120) || undefined,
       details: `${details}\n\n[${files.length} document(s) attached · review in /admin/listings]`,
     }),
-  ]).catch(() => {});
+  ]);
 
   return NextResponse.json({ ok: true, ref: listing.ref });
 }

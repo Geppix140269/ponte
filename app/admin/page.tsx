@@ -10,19 +10,32 @@ async function count(table: string): Promise<number> {
   return count ?? 0;
 }
 
+async function countWhere(table: string, col: string, val: string): Promise<number> {
+  const supabase = createClient();
+  const { count } = await supabase
+    .from(table)
+    .select("*", { count: "exact", head: true })
+    .eq(col, val);
+  return count ?? 0;
+}
+
 export default async function AdminOverview() {
-  const [orders, products, users, subscribers] = await Promise.all([
+  const [pending, approved, listings, users, orders, products] = await Promise.all([
+    countWhere("listings", "status", "submitted"),
+    countWhere("listings", "status", "approved"),
+    count("listings"),
+    count("profiles"),
     count("orders"),
     count("products"),
-    count("profiles"),
-    count("newsletter_subscribers"),
   ]);
 
   const cards = [
-    { label: "Orders", value: orders },
-    { label: "Products", value: products },
+    { label: "Awaiting vetting", value: pending },
+    { label: "Approved listings", value: approved },
+    { label: "Listings total", value: listings },
     { label: "Users", value: users },
-    { label: "Subscribers", value: subscribers },
+    { label: "Legacy orders", value: orders },
+    { label: "Legacy products", value: products },
   ];
 
   return (
