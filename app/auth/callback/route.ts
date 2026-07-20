@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/account";
+  const rawNext = searchParams.get("next") ?? "/account";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/account";
 
   if (code && isSupabaseConfigured()) {
     const supabase = createClient();

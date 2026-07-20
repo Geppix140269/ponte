@@ -30,7 +30,7 @@ export default async function AccountPage() {
             connected. Add your Supabase keys to enable accounts.
           </p>
           <Link href="/pricing" className="btn-gold mt-8">
-            Browse the Catalogue
+            See what the desk offers
           </Link>
         </div>
       </section>
@@ -41,6 +41,11 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
 
   const supabase = createClient();
+  const { data: myListings } = await supabase
+    .from("listings")
+    .select("id, ref, type, product, status")
+    .order("created_at", { ascending: false })
+    .limit(5);
   const { data: orders } = await supabase
     .from("orders")
     .select("id, status, total_cents, currency, created_at, order_items(*)")
@@ -77,19 +82,52 @@ export default async function AccountPage() {
         </form>
       </header>
 
-      {/* Downloads */}
+      {/* Marketplace listings */}
       <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">— 01 / Downloads</div>
+        <div className="num-italic">— 01 / Marketplace</div>
         <h2
           className="serif text-white"
           style={{ fontSize: 28, fontWeight: 500 }}
         >
-          Delivered reports
+          Your listings
+        </h2>
+      </div>
+      {(myListings ?? []).length === 0 ? (
+        <p className="text-[13px] text-gray-2 mb-4">
+          Nothing submitted yet. Offers and requirements you submit are
+          vetted by the desk before anything is circulated.
+        </p>
+      ) : (
+        <ul className="glass divide-y divide-white/10 mb-4">
+          {(myListings ?? []).map((l) => (
+            <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 text-[14px]">
+              <span className="mono text-[12px] text-gold">{l.ref}</span>
+              <span className="badge uppercase">{l.type}</span>
+              <span className="flex-1 text-cream">{l.product}</span>
+              <span className="text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.14em" }}>
+                {l.status === "submitted" ? "in vetting" : l.status}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link href="/marketplace" className="btn-gold mb-12 inline-flex">
+        Go to the marketplace
+      </Link>
+
+      {/* Downloads */}
+      <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
+        <div className="num-italic">— 02 / Downloads</div>
+        <h2
+          className="serif text-white"
+          style={{ fontSize: 28, fontWeight: 500 }}
+        >
+          Past deliveries
         </h2>
       </div>
       {downloads.length === 0 ? (
         <p className="text-[13px] text-gray-2 mb-12">
-          No reports ready to download yet. Delivered reports appear here.
+          Nothing here. Files the desk delivers to you appear in this section.
         </p>
       ) : (
         <ul className="glass divide-y divide-white/10 mb-12">
@@ -125,7 +163,7 @@ export default async function AccountPage() {
 
       {/* Orders */}
       <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">— 02 / Orders</div>
+        <div className="num-italic">— 03 / Orders</div>
         <h2
           className="serif text-white"
           style={{ fontSize: 28, fontWeight: 500 }}

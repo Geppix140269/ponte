@@ -29,6 +29,13 @@ declare global {
   }
 }
 
+// Where to send the user after sign-in. Only same-site paths are allowed.
+function safeNext(): string {
+  if (typeof window === "undefined") return "/account";
+  const raw = new URLSearchParams(window.location.search).get("next") || "/account";
+  return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
+}
+
 // Generate a random nonce + its SHA-256 hash. Google receives the hash;
 // Supabase verifies the raw nonce matches the hash in the returned ID token.
 async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
@@ -80,7 +87,7 @@ export default function LoginPage() {
             setStatus("error");
             return;
           }
-          window.location.href = "/account";
+          window.location.href = safeNext();
         } catch (e: unknown) {
           setErrorMsg(e instanceof Error ? e.message : "Unknown error");
           setStatus("error");
@@ -107,7 +114,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext())}`,
         },
       });
       if (error) {
