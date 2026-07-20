@@ -136,7 +136,7 @@ export default function LoginPage() {
         <div className="glass p-10 max-w-md mx-auto">
           <span className="pill">Sign in</span>
           <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>Welcome back.</h1>
-          <p className="text-gray-2 text-[14px] mb-7">Access your orders, downloads, and subscriptions.</p>
+          <p className="text-gray-2 text-[14px] mb-7">Access your listings, your deals, and the board.</p>
 
           {!configured ? (
             <div className="glass-tight p-6 text-[13px] text-gray-2 leading-relaxed">

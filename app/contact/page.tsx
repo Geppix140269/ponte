@@ -28,7 +28,7 @@ export default function ContactPage({
   const key = searchParams.engagement ?? searchParams.product ?? "";
   const lead =
     LEAD[key] ??
-    "Tell us the decision you are weighing. A senior analyst will come back to you, usually within one business day.";
+    "Tell us the deal on your desk, or the decision you are weighing. The desk replies within one business day.";
 
   return (
     <>
@@ -45,13 +45,24 @@ export default function ContactPage({
 
       <section className="container-px pb-24">
         <div className="grid gap-5 md:grid-cols-3">
+          <div className="glass p-8 flex flex-col ring-1 ring-gold/40">
+            <FileText className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Bring us a deal</h3>
+            <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
+              An offer or a requirement, goods or trade services. Facts only, papered before any introduction.
+            </p>
+            <Link href="/brokerage#submit" className="btn-gold mt-6">
+              Go to the Deal Desk <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
           <div className="glass p-8 flex flex-col">
             <Phone className="h-5 w-5 text-gold" />
             <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Book an analyst call</h3>
             <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
               Sixty minutes with a senior analyst on one decision, with a written recap. $500.
             </p>
-            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="btn-gold mt-6">
+            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost-light mt-6">
               Book a call <ArrowRight className="h-4 w-4" />
             </a>
           </div>
@@ -70,16 +81,6 @@ export default function ContactPage({
             </a>
           </div>
 
-          <div className="glass p-8 flex flex-col">
-            <FileText className="h-5 w-5 text-gold" />
-            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Bring us a deal</h3>
-            <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
-              An offer or a requirement, goods or trade services. Facts only, papered before any introduction.
-            </p>
-            <Link href="/brokerage#submit" className="btn-ghost-light mt-6">
-              Go to the Deal Desk
-            </Link>
-          </div>
         </div>
       </section>
     </>
