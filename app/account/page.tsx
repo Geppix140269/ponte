@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Download, Clock, UserCircle2 } from "lucide-react";
+import { Download, UserCircle2 } from "lucide-react";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -26,8 +25,8 @@ export default async function AccountPage() {
             Your account
           </h1>
           <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
-            Sign-in and your download centre activate once Supabase Auth is
-            connected. Add your Supabase keys to enable accounts.
+            Sign-in activates once Supabase Auth is connected. Add your
+            Supabase keys to enable accounts.
           </p>
           <Link href="/pricing" className="btn-gold mt-8">
             See what the desk offers
@@ -45,17 +44,18 @@ export default async function AccountPage() {
     .from("listings")
     .select("id, ref, type, product, status")
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(10);
+
+  // Legacy report-era deliveries: shown only if this account actually has
+  // any, so old customers keep their files without new members ever seeing
+  // shop language.
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, status, total_cents, currency, created_at, order_items(*)")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const allItems = (orders ?? []).flatMap((o: any) => o.order_items ?? []);
-  const downloads = allItems.filter(
-    (it: any) => it.delivery_status === "delivered" && it.report_path
-  );
+    .select("id, order_items(*)")
+    .eq("user_id", user.id);
+  const downloads = (orders ?? [])
+    .flatMap((o: any) => o.order_items ?? [])
+    .filter((it: any) => it.delivery_status === "delivered" && it.report_path);
 
   return (
     <section className="container-px py-14 lg:py-20">
@@ -115,102 +115,34 @@ export default async function AccountPage() {
         Go to the marketplace
       </Link>
 
-      {/* Downloads */}
-      <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">— 02 / Downloads</div>
-        <h2
-          className="serif text-white"
-          style={{ fontSize: 28, fontWeight: 500 }}
-        >
-          Past deliveries
-        </h2>
-      </div>
-      {downloads.length === 0 ? (
-        <p className="text-[13px] text-gray-2 mb-12">
-          Nothing here. Files the desk delivers to you appear in this section.
-        </p>
-      ) : (
-        <ul className="glass divide-y divide-white/10 mb-12">
-          {downloads.map((it: any) => (
-            <li
-              key={it.id}
-              className="flex items-center justify-between p-5 first:rounded-t-[18px] last:rounded-b-[18px]"
+      {/* Legacy deliveries, only for accounts that have them */}
+      {downloads.length > 0 && (
+        <>
+          <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
+            <div className="num-italic">— 02 / Files</div>
+            <h2
+              className="serif text-white"
+              style={{ fontSize: 28, fontWeight: 500 }}
             >
-              <span className="text-sm text-cream">
-                <span className="serif" style={{ fontWeight: 500 }}>
-                  {it.config_values?.sku ?? "Report"}
+              Delivered files
+            </h2>
+          </div>
+          <ul className="glass divide-y divide-white/10 mb-12">
+            {downloads.map((it: any) => (
+              <li
+                key={it.id}
+                className="flex items-center justify-between p-5 first:rounded-t-[18px] last:rounded-b-[18px]"
+              >
+                <span className="serif text-sm text-cream" style={{ fontWeight: 500 }}>
+                  {it.config_values?.sku ?? "File"}
                 </span>
-                {it.download_count != null && (
-                  <span
-                    className="ml-3 mono text-[10px] uppercase text-gray-2"
-                    style={{ letterSpacing: "0.18em" }}
-                  >
-                    {Math.max(
-                      0,
-                      (it.max_downloads ?? 5) - (it.download_count ?? 0)
-                    )}{" "}
-                    downloads left
-                  </span>
-                )}
-              </span>
-              <a href={`/api/download/${it.id}`} className="btn-gold">
-                <Download className="h-4 w-4" /> Download
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Orders */}
-      <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">— 03 / Orders</div>
-        <h2
-          className="serif text-white"
-          style={{ fontSize: 28, fontWeight: 500 }}
-        >
-          History
-        </h2>
-      </div>
-      {(orders ?? []).length === 0 ? (
-        <p className="text-[13px] text-gray-2">
-          You haven&apos;t placed any orders yet.
-        </p>
-      ) : (
-        <ul className="space-y-4">
-          {(orders ?? []).map((o: any) => (
-            <li key={o.id} className="glass p-6">
-              <div className="flex items-center justify-between">
-                <span className="mono text-[11px] text-gray-2">
-                  #{o.id.slice(0, 8)}
-                </span>
-                <span className="badge-navy capitalize">{o.status}</span>
-              </div>
-              <div className="mt-3 space-y-1 text-sm text-gray-2">
-                {(o.order_items ?? []).map((it: any) => (
-                  <div
-                    key={it.id}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-cream">
-                      {it.config_values?.sku ?? "Item"}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] uppercase" style={{ letterSpacing: "0.18em" }}>
-                      {it.delivery_status !== "delivered" && (
-                        <Clock className="h-3 w-3" />
-                      )}
-                      {it.delivery_status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 border-t border-white/10 pt-3 text-right">
-                <span className="serif text-white text-lg" style={{ fontWeight: 500 }}>
-                  {formatPrice(o.total_cents ?? 0, o.currency ?? "USD")}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
+                <a href={`/api/download/${it.id}`} className="btn-gold">
+                  <Download className="h-4 w-4" /> Download
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );

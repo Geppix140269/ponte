@@ -48,7 +48,7 @@ const TIERS = [
 
 const STEPS = [
   { icon: Phone, title: "Tell us the decision", body: "One line on what you are weighing: a market, a counterparty, a corridor, a risk." },
-  { icon: ClipboardList, title: "Meet the analyst", body: "A senior analyst, not a chatbot, works your question against transaction-level trade evidence and official sources." },
+  { icon: ClipboardList, title: "Meet the analyst", body: "A senior analyst, not a chatbot, works your question against documents, market evidence and official sources." },
   { icon: CalendarClock, title: "Leave with evidence", body: "A clear answer and a written record: what we found, what it means, and what we would do." },
 ];
 

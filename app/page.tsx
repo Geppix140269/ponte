@@ -48,7 +48,7 @@ const why = [
   {
     icon: Scale,
     title: "Evidence, not opinion",
-    body: "Grounded in transaction-level trade evidence and official sources, with citations. You see where every claim comes from.",
+    body: "Grounded in documents, market evidence and official sources, with citations. You see where every claim comes from.",
   },
   {
     icon: CalendarClock,

@@ -31,13 +31,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ponte.trade";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Ponte Trade. Senior-led trade intelligence and advisory.",
+    default: "Ponte. The bridge between buyer and seller.",
     template: "%s | Ponte Trade",
   },
   description:
     "Independent trade brokerage and senior-led advisory. Bring an offer or requirement to the Deal Desk, join the weekly Deal Sheet, or book a senior analyst. Vetted counterparties, papered introductions, success fee only.",
   openGraph: {
-    title: "Ponte Trade. Senior-led trade intelligence and advisory.",
+    title: "Ponte. The bridge between buyer and seller.",
     description:
       "The bridge between buyer and seller. Vetted deals, papered introductions, senior-led advisory.",
     url: APP_URL,
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ponte Trade. Senior-led trade intelligence and advisory.",
+    title: "Ponte. The bridge between buyer and seller.",
     description:
       "Talk to the analyst, not the algorithm. Senior-led trade intelligence and advisory.",
   },

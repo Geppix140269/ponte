@@ -48,6 +48,12 @@ export default function DealForm() {
           We reply within two business days. If the deal is workable, the next
           step is paperwork, not a pitch.
         </p>
+        <p className="mt-4 text-[13px] text-gray-2">
+          Want to track it, attach documents, and see the live board?{" "}
+          <a href="/login?next=/marketplace" className="text-gold hover:text-cream">
+            Create your free account
+          </a>.
+        </p>
       </div>
     );
   }

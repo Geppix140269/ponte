@@ -4,6 +4,7 @@ import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck } from "lucide-r
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
+import Reveal from "@/components/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -150,12 +151,14 @@ export default async function MarketplacePage() {
       {/* Rules */}
       <section className="container-px py-12 border-t border-white/8">
         <div className="grid gap-5 md:grid-cols-3">
-          {RULES.map((r) => (
-            <div key={r.title} className="glass p-7">
-              <r.icon className="h-5 w-5 text-gold" />
-              <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{r.title}</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{r.body}</p>
-            </div>
+          {RULES.map((r, i) => (
+            <Reveal key={r.title} delay={i * 120}>
+              <div className="glass p-7 h-full">
+                <r.icon className="h-5 w-5 text-gold" />
+                <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{r.title}</h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{r.body}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>

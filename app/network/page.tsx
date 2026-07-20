@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Mail, EyeOff, UserCheck, Handshake } from "lucide-react";
 import NetworkForm from "@/components/NetworkForm";
+import Reveal from "@/components/Reveal";
 
 export const metadata: Metadata = {
   title: "The Deal Sheet",
@@ -57,12 +58,14 @@ export default function NetworkPage() {
           Built on discretion, run on paperwork.
         </h2>
         <div className="grid gap-5 md:grid-cols-3">
-          {RULES.map((r) => (
-            <div key={r.title} className="glass p-7">
-              <r.icon className="h-5 w-5 text-gold" />
-              <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{r.title}</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{r.body}</p>
-            </div>
+          {RULES.map((r, i) => (
+            <Reveal key={r.title} delay={i * 120}>
+              <div className="glass p-7 h-full">
+                <r.icon className="h-5 w-5 text-gold" />
+                <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{r.title}</h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{r.body}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
