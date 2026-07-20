@@ -348,3 +348,57 @@ export async function sendBrokerageSubmission(data: {
     throw err;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Marketplace: listing lifecycle emails                               */
+/* ------------------------------------------------------------------ */
+
+/** Confirmation to the member right after they submit a listing. */
+export async function sendListingReceived(
+  to: string,
+  data: { ref: string; product: string },
+): Promise<void> {
+  await send(
+    to,
+    `Listing received · ${data.ref} | Ponte Trade`,
+    layout(`
+      <h2 style="margin:0 0 12px">Your listing is with the desk</h2>
+      <p>Reference <strong>${data.ref}</strong> · ${data.product}</p>
+      <p>We vet every listing before anything is circulated: the facts, the
+      documents, and the counterparty. You will hear from us either way,
+      usually within two business days.</p>
+      <p>Nothing goes live without your paperwork and our approval.</p>
+      <p><a href="${APP_URL}/marketplace" style="color:#D08F18">View your listings →</a></p>
+    `),
+  );
+}
+
+/** Decision email when the desk approves or rejects a listing. */
+export async function sendListingDecision(
+  to: string,
+  data: { ref: string; product: string; approved: boolean; note?: string },
+): Promise<void> {
+  const noteBlock = data.note
+    ? `<p style="background:#F8FAFC;border-left:3px solid #E8A020;padding:12px 14px;white-space:pre-wrap">${data.note
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`
+    : "";
+  await send(
+    to,
+    `${data.approved ? "Listing approved" : "Listing not approved"} · ${data.ref} | Ponte Trade`,
+    layout(`
+      <h2 style="margin:0 0 12px">${data.approved ? "Approved and moving" : "Not approved this time"}</h2>
+      <p>Reference <strong>${data.ref}</strong> · ${data.product}</p>
+      ${
+        data.approved
+          ? `<p>Your listing passed vetting. The desk will work it through the
+             network: anonymized circulation first, introductions only under
+             signed NCNDA and fee terms. We will contact you as soon as there
+             is a serious counterparty.</p>`
+          : `<p>We could not approve this listing as submitted. This is often
+             about missing documents or details rather than the deal itself.</p>`
+      }
+      ${noteBlock}
+      <p><a href="${APP_URL}/marketplace" style="color:#D08F18">View your listings →</a></p>
+    `),
+  );
+}

@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Brokerage
     { url: `${BASE_URL}/brokerage`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE_URL}/network`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE_URL}/marketplace`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     // Intelligence
     { url: `${BASE_URL}/advisory`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },

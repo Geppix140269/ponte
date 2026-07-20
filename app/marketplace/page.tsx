@@ -1,0 +1,187 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck } from "lucide-react";
+import { getUser, isSupabaseConfigured } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Marketplace",
+  description:
+    "Submit offers and requirements to the Ponte marketplace. Every listing is vetted and documents verified before anything is circulated.",
+  alternates: { canonical: "/marketplace" },
+};
+
+const STATUS_STYLE: Record<string, string> = {
+  submitted: "text-gold",
+  approved: "text-positive",
+  rejected: "text-red-400",
+  closed: "text-gray-2",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  submitted: "In vetting",
+  approved: "Approved · live with the desk",
+  rejected: "Not approved",
+  closed: "Closed",
+};
+
+const RULES = [
+  {
+    icon: ShieldCheck,
+    title: "Vetted before live",
+    body: "Every listing is reviewed by the desk and documents are verified before anything is circulated. No exceptions.",
+  },
+  {
+    icon: EyeOff,
+    title: "Anonymized always",
+    body: "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Success fee only",
+    body: "Submitting and listing cost nothing. The desk earns an agreed fee only when your deal closes.",
+  },
+];
+
+export default async function MarketplacePage() {
+  const user = isSupabaseConfigured() ? await getUser() : null;
+
+  let listings: {
+    id: string;
+    ref: string;
+    type: string;
+    product: string;
+    status: string;
+    created_at: string;
+    decision_note: string | null;
+  }[] = [];
+
+  if (user) {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("listings")
+      .select("id, ref, type, product, status, created_at, decision_note")
+      .order("created_at", { ascending: false });
+    listings = data ?? [];
+  }
+
+  return (
+    <>
+      {/* Hero */}
+      <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
+        <span className="pill">Marketplace</span>
+        <h1
+          className="serif text-white mt-6 mb-5 max-w-3xl"
+          style={{ fontWeight: 400, fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1.0, letterSpacing: "-0.015em" }}
+        >
+          Every listing{" "}
+          <em className="text-gold italic" style={{ fontWeight: 400 }}>vetted</em>.
+          Every deal papered.
+        </h1>
+        <p className="text-[18px] text-gray-2 leading-relaxed max-w-2xl">
+          Submit your offers and requirements from your account. The desk
+          verifies the facts and the documents before anything reaches the
+          network, and introductions happen only under signed NCNDA and fee
+          terms.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          {user ? (
+            <Link href="/marketplace/new" className="btn-gold">
+              New listing <FilePlus2 className="h-4 w-4" />
+            </Link>
+          ) : (
+            <>
+              <Link href="/login?next=/marketplace/new" className="btn-gold">
+                Sign in to submit <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/network" className="btn-ghost-light">
+                Join the Deal Sheet first
+              </Link>
+            </>
+          )}
+        </div>
+      </header>
+
+      {/* Rules */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="grid gap-5 md:grid-cols-3">
+          {RULES.map((r) => (
+            <div key={r.title} className="glass p-7">
+              <r.icon className="h-5 w-5 text-gold" />
+              <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{r.title}</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{r.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* My listings */}
+      {user && (
+        <section className="container-px py-12 border-t border-white/8">
+          <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
+            <div>
+              <p className="eyebrow text-gold">Your listings</p>
+              <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>
+                {listings.length > 0 ? "Where things stand." : "Nothing submitted yet."}
+              </h2>
+            </div>
+            <Link href="/marketplace/new" className="btn-ghost-light">
+              New listing <FilePlus2 className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {listings.length === 0 ? (
+            <div className="glass p-8 text-[14px] text-gray-2">
+              Your first listing takes five minutes: the product, the terms,
+              and any documents that prove you are serious. The desk takes it
+              from there.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {listings.map((l) => (
+                <div key={l.id} className="glass p-5 md:p-6">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <span className="mono text-[12px] text-gold">{l.ref}</span>
+                    <span className="badge uppercase">{l.type}</span>
+                    <span className="flex-1 text-[14px] text-cream">{l.product}</span>
+                    <span
+                      className={`text-[11px] uppercase ${STATUS_STYLE[l.status] ?? "text-gray-2"}`}
+                      style={{ letterSpacing: "0.16em" }}
+                    >
+                      {STATUS_LABEL[l.status] ?? l.status}
+                    </span>
+                  </div>
+                  {l.status === "rejected" && l.decision_note && (
+                    <p className="mt-3 border-l-2 border-gold/40 pl-3 text-[13px] leading-relaxed text-gray-2">
+                      {l.decision_note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* CTA */}
+      <section className="container-px py-12">
+        <div className="glass p-10 text-center">
+          <h2 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
+            Prefer to talk it through first?
+          </h2>
+          <p className="mt-3 text-[15px] text-gray-2 max-w-xl mx-auto">
+            Bring the deal to the desk directly and we will scope it with you.
+          </p>
+          <div className="mt-7 flex justify-center gap-3">
+            <Link href="/brokerage#submit" className="btn-gold">
+              Go to the Deal Desk <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/contact" className="btn-ghost-light">Contact us</Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

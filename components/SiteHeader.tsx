@@ -12,6 +12,7 @@ import { useCart } from "@/lib/cart-store";
 const navLinks = [
   { href: "/brokerage", label: "Deal Desk" },
   { href: "/network", label: "Deal Sheet" },
+  { href: "/marketplace", label: "Marketplace" },
   { href: "/advisory", label: "Analyst Desk" },
   { href: "/pricing", label: "Pricing" },
   { href: "/contact", label: "Contact" },
