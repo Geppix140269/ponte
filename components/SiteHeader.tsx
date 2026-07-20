@@ -10,9 +10,8 @@ import { useCart } from "@/lib/cart-store";
 // Labels match lib/catalogue.ts CATEGORIES names so naming stays consistent
 // across the header, homepage tiles and footer.
 const navLinks = [
-  { href: "/brokerage", label: "Deal Desk" },
-  { href: "/network", label: "Deal Sheet" },
   { href: "/marketplace", label: "Marketplace" },
+  { href: "/network", label: "Deal Sheet" },
   { href: "/advisory", label: "Analyst Desk" },
   { href: "/pricing", label: "Fees" },
   { href: "/contact", label: "Contact" },

@@ -51,8 +51,8 @@ export default function ContactPage({
             <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
               An offer or a requirement, goods or trade services. Facts only, papered before any introduction.
             </p>
-            <Link href="/brokerage#submit" className="btn-gold mt-6">
-              Go to the Deal Desk <ArrowRight className="h-4 w-4" />
+            <Link href="/marketplace" className="btn-gold mt-6">
+              Go to the marketplace <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 

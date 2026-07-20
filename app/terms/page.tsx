@@ -58,7 +58,7 @@ export default function TermsPage() {
             conflict.
           </p>
           <p>
-            Submitting an offer or requirement through the Deal Desk creates
+            Submitting an offer or requirement through the marketplace creates
             no obligation on either side. We circulate opportunities on an
             anonymized basis and do not disclose counterparty identities
             before the paperwork above is in place. Our brokerage

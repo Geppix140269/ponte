@@ -16,9 +16,9 @@ const pillars = [
   {
     icon: Handshake,
     eyebrow: "Success fee only",
-    title: "The Deal Desk",
-    body: "Bring an offer or a requirement. Vetted, papered, worked to the close.",
-    href: "/brokerage",
+    title: "The Marketplace",
+    body: "List an offer or a requirement. Vetted, papered, worked to the close.",
+    href: "/marketplace",
     cta: "Bring us a deal",
   },
   {
@@ -80,7 +80,7 @@ export default function HomePage() {
               when the deal closes. Evidence over opinion, in every deal.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
-              <Link href="/brokerage#submit" className="btn-gold">
+              <Link href="/marketplace" className="btn-gold">
                 Bring us a deal <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/network" className="btn-ghost-light">
@@ -94,7 +94,7 @@ export default function HomePage() {
             <div className="glass p-8 max-w-[420px] ml-auto">
               <div className="flex items-center gap-[10px] text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.24em" }}>
                 <span className="w-[6px] h-[6px] rounded-full bg-positive pulse-dot" style={{ boxShadow: "0 0 10px var(--positive)" }} />
-                Open · The Deal Desk
+                Open · The Marketplace
               </div>
               <div className="serif text-white mt-4" style={{ fontWeight: 500, fontSize: 84, lineHeight: 1, letterSpacing: "-0.02em" }}>
                 48
@@ -103,7 +103,7 @@ export default function HomePage() {
               <div className="text-[13px] text-gray-2 mt-1" style={{ letterSpacing: "0.04em" }}>
                 From your submission to a first answer
               </div>
-              <Link href="/brokerage#submit" className="btn-gold mt-7 w-full justify-center">
+              <Link href="/marketplace" className="btn-gold mt-7 w-full justify-center">
                 Submit a deal <ArrowRight className="h-4 w-4" />
               </Link>
               <p className="mt-4 mono text-[11px] text-gray-2 text-center">NCNDA · fee agreement · success fee only</p>
@@ -172,7 +172,7 @@ export default function HomePage() {
             hour. Papered, vetted, evidence over opinion.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <Link href="/brokerage#submit" className="btn-gold">
+            <Link href="/marketplace" className="btn-gold">
               Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/advisory" className="btn-ghost-light">Book an analyst call</Link>

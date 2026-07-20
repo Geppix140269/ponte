@@ -100,7 +100,7 @@ export default function NetworkPage() {
         <p className="text-[15px] text-gray-2 max-w-2xl mb-8">
           Tell us who you are and what you trade. Approval is personal and
           usually quick. If you have a live deal today, go straight to{" "}
-          <Link href="/brokerage#submit" className="text-gold hover:text-cream">the Deal Desk</Link>.
+          <Link href="/marketplace" className="text-gold hover:text-cream">the marketplace</Link>.
         </p>
         <div className="max-w-2xl">
           <NetworkForm />
@@ -114,10 +114,10 @@ export default function NetworkPage() {
             Have a deal that cannot wait for Friday?
           </h2>
           <p className="mt-3 text-[15px] text-gray-2 max-w-xl mx-auto">
-            Bring it to the Deal Desk and we will work it directly.
+            List it on the marketplace and the desk will work it directly.
           </p>
           <div className="mt-7 flex justify-center gap-3">
-            <Link href="/brokerage#submit" className="btn-gold">
+            <Link href="/marketplace" className="btn-gold">
               Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/contact" className="btn-ghost-light">Talk to the desk</Link>

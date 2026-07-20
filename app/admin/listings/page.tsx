@@ -23,6 +23,7 @@ type Listing = {
 };
 
 type Doc = { id: string; listing_id: string; filename: string; path: string };
+type Media = { id: string; listing_id: string; path: string; kind: string };
 
 const FIELD =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
@@ -30,13 +31,14 @@ const FIELD =
 export default async function AdminListingsPage() {
   const adminSb = createAdminClient();
 
-  const [{ data: listings }, { data: docs }] = await Promise.all([
+  const [{ data: listings }, { data: docs }, { data: mediaRows }] = await Promise.all([
     adminSb
       .from("listings")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200),
     adminSb.from("listing_documents").select("id, listing_id, filename, path"),
+    adminSb.from("listing_media").select("id, listing_id, path, kind"),
   ]);
 
   const all = (listings ?? []) as Listing[];
@@ -63,11 +65,20 @@ export default async function AdminListingsPage() {
     if (data?.signedUrl) signedByDocId.set(d.id, data.signedUrl);
   }
 
+  const SUPA = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const mediaByListing = new Map<string, Media[]>();
+  for (const m of (mediaRows ?? []) as Media[]) {
+    const arr = mediaByListing.get(m.listing_id) ?? [];
+    arr.push(m);
+    mediaByListing.set(m.listing_id, arr);
+  }
+
   const pending = all.filter((l) => l.status === "submitted");
   const rest = all.filter((l) => l.status !== "submitted");
 
   function Card({ l }: { l: Listing }) {
     const ldocs = docsByListing.get(l.id) ?? [];
+    const lmedia = mediaByListing.get(l.id) ?? [];
     return (
       <div className="glass p-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -94,6 +105,33 @@ export default async function AdminListingsPage() {
         <p className="mt-3 whitespace-pre-wrap border-l-2 border-white/10 pl-3 text-[13px] leading-relaxed text-gray-2">
           {l.details}
         </p>
+
+        {lmedia.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {lmedia.map((m) =>
+              m.kind === "image" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <a key={m.id} href={`${SUPA}/storage/v1/object/public/listing-media/${m.path}`} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={`${SUPA}/storage/v1/object/public/listing-media/${m.path}`}
+                    alt="listing media"
+                    className="h-20 w-28 rounded-md object-cover"
+                  />
+                </a>
+              ) : (
+                <a
+                  key={m.id}
+                  href={`${SUPA}/storage/v1/object/public/listing-media/${m.path}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="badge-gold text-[11px] hover:opacity-80"
+                >
+                  ▶ video
+                </a>
+              ),
+            )}
+          </div>
+        )}
 
         {ldocs.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">

@@ -292,8 +292,8 @@ export default function LearnTradeDataPage() {
             senior analyst when a decision needs evidence first.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/brokerage" className="btn-primary">
-              Visit the Deal Desk
+            <Link href="/marketplace" className="btn-primary">
+              Visit the marketplace
             </Link>
             <Link href="/learn/duties" className="btn-ghost text-sm">
               Learn about import duties

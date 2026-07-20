@@ -44,9 +44,9 @@ const principles = [
 
 const offer = [
   {
-    title: "The Deal Desk",
+    title: "The Marketplace",
     body: "Offers and requirements, physical goods and trade services, brokered end to end.",
-    href: "/brokerage",
+    href: "/marketplace",
     cta: "Bring us a deal",
   },
   {
@@ -186,7 +186,7 @@ export default function AboutPage() {
             Bring it to the desk, or join the Deal Sheet and watch what moves.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <Link href="/brokerage#submit" className="btn-gold">
+            <Link href="/marketplace" className="btn-gold">
               Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/network" className="btn-ghost-light">Join the Deal Sheet</Link>

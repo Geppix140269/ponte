@@ -5,6 +5,7 @@ import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
 import Reveal from "@/components/Reveal";
+import ProcessFlow from "@/components/ProcessFlow";
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +85,11 @@ export default async function MarketplacePage() {
     details: string;
     full: boolean;
   };
+  // The board stays hidden from EVERYONE until it has real inventory.
+  const BOARD_MIN = Number(process.env.BOARD_MIN_LISTINGS ?? 3);
   let board: BoardItem[] = [];
+  let approvedCount = 0;
+  const mediaByListing = new Map<string, string>();
   if (isSupabaseConfigured()) {
     if (user) {
       const supabase = createClient();
@@ -108,6 +113,27 @@ export default async function MarketplacePage() {
         details: l.details.length > 120 ? l.details.slice(0, 120) + "…" : l.details,
         full: false,
       }));
+    }
+    approvedCount = board.length;
+    if (approvedCount < BOARD_MIN) {
+      board = [];
+    } else {
+      const adminSb = createAdminClient();
+      const { data: media } = await adminSb
+        .from("listing_media")
+        .select("listing_id, path, kind")
+        .in("listing_id", board.map((b) => b.id))
+        .eq("kind", "image")
+        .order("created_at", { ascending: true });
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      for (const m of media ?? []) {
+        if (!mediaByListing.has(m.listing_id)) {
+          mediaByListing.set(
+            m.listing_id,
+            `${base}/storage/v1/object/public/listing-media/${m.path}`,
+          );
+        }
+      }
     }
   }
 
@@ -163,6 +189,15 @@ export default async function MarketplacePage() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="container-px py-14 border-t border-white/8">
+        <p className="eyebrow text-gold">How it works</p>
+        <h2 className="serif text-white mt-3 mb-12" style={{ fontSize: 30, fontWeight: 500 }}>
+          Five steps. One rule: papered before introduced.
+        </h2>
+        <ProcessFlow />
+      </section>
+
       {/* Live board */}
       <section className="container-px py-12 border-t border-white/8">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
@@ -171,7 +206,7 @@ export default async function MarketplacePage() {
             <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>
               {board.length > 0
                 ? `${board.length} vetted ${board.length === 1 ? "listing" : "listings"} on the board.`
-                : "The board is warming up."}
+                : "The board opens soon."}
             </h2>
           </div>
           {!user && board.length > 0 && (
@@ -183,14 +218,23 @@ export default async function MarketplacePage() {
 
         {board.length === 0 ? (
           <div className="glass p-8 text-[14px] text-gray-2">
-            Approved listings appear here the moment they clear vetting. Be
-            the first: submit an offer or a requirement and the desk will
-            take it from there.
+            The board opens once the first vetted listings clear the desk.
+            Submissions are open now, and early listings get the most
+            attention when it goes live.
           </div>
         ) : (
           <div className="space-y-3">
             {board.map((b) => (
-              <div key={b.id} className="glass p-5 md:p-6">
+              <div key={b.id} className="glass p-5 md:p-6 md:flex md:gap-6">
+                {mediaByListing.has(b.id) && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={mediaByListing.get(b.id)}
+                    alt={b.product}
+                    className="mb-4 h-40 w-full rounded-lg object-cover md:mb-0 md:h-32 md:w-48 md:shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <span className="mono text-[12px] text-gold">{b.ref}</span>
                   <span className="badge uppercase">{b.type}</span>
@@ -218,6 +262,7 @@ export default async function MarketplacePage() {
                     <span className="ml-2 text-gold">Sign in to read the full listing.</span>
                   )}
                 </p>
+                </div>
               </div>
             ))}
           </div>
@@ -282,8 +327,8 @@ export default async function MarketplacePage() {
             Bring the deal to the desk directly and we will scope it with you.
           </p>
           <div className="mt-7 flex justify-center gap-3">
-            <Link href="/brokerage#submit" className="btn-gold">
-              Go to the Deal Desk <ArrowRight className="h-4 w-4" />
+            <Link href="/marketplace/new" className="btn-gold">
+              Start a listing <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/contact" className="btn-ghost-light">Contact us</Link>
           </div>

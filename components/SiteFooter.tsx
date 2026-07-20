@@ -25,8 +25,8 @@ export default function SiteFooter() {
               </h4>
               <ul className="space-y-2.5">
                 <li>
-                  <Link href="/brokerage" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    The Deal Desk
+                  <Link href="/marketplace" className="text-sm text-gray-2 transition-colors hover:text-gold">
+                    The Marketplace
                   </Link>
                 </li>
                 <li>

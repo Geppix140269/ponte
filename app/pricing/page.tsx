@@ -36,7 +36,7 @@ export default function PricingPage() {
             <p className="eyebrow text-gold">The Brokerage</p>
             <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>Deals and the network</h2>
           </div>
-          <Link href="/brokerage" className="btn-ghost-light">Visit the Deal Desk <ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/marketplace" className="btn-ghost-light">Visit the marketplace <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           <div className="glass p-7 flex flex-col ring-1 ring-gold/40">
@@ -48,7 +48,7 @@ export default function PricingPage() {
               The commission is agreed up front in the fee agreement and is
               due only when your deal closes.
             </p>
-            <Link href="/brokerage#submit" className="btn-gold mt-6">Submit a deal <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/marketplace" className="btn-gold mt-6">Submit a deal <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="glass p-7 flex flex-col">
             <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Sheet</h3>

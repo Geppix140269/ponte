@@ -7,20 +7,16 @@ import { sendListingReceived, sendBrokerageSubmission } from "@/lib/email";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_FILES = 5;
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_MIME = new Set([
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-]);
 const TYPES = new Set(["offer", "requirement", "service"]);
 
-function clean(v: FormDataEntryValue | null, max: number): string {
+function clean(v: unknown, max: number): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
 }
 
+// Metadata only. Photos, videos and documents are uploaded by the browser
+// straight to Supabase Storage (serverless request bodies are too small
+// for video), then registered in listing_media / listing_documents under
+// the member's own RLS identity.
 export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) {
@@ -38,11 +34,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const form = await req.formData();
-  const type = clean(form.get("type"), 20);
-  const product = clean(form.get("product"), 200);
-  const details = clean(form.get("details"), 3000);
-  const valueRaw = clean(form.get("indicative_value_usd"), 20);
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const type = clean(body.type, 20);
+  const product = clean(body.product, 200);
+  const details = clean(body.details, 3000);
+  const valueRaw = clean(body.indicative_value_usd, 20);
   const value = valueRaw ? Number(valueRaw) : null;
 
   if (!TYPES.has(type) || !product || !details) {
@@ -52,31 +54,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const files = form
-    .getAll("documents")
-    .filter((f): f is File => f instanceof File && f.size > 0);
-  if (files.length > MAX_FILES) {
-    return NextResponse.json(
-      { error: `Maximum ${MAX_FILES} documents.` },
-      { status: 400 },
-    );
-  }
-  for (const f of files) {
-    if (f.size > MAX_FILE_BYTES) {
-      return NextResponse.json(
-        { error: `"${f.name}" is over 10 MB.` },
-        { status: 400 },
-      );
-    }
-    if (!ALLOWED_MIME.has(f.type)) {
-      return NextResponse.json(
-        { error: `"${f.name}": only PDF, PNG, JPG or WEBP.` },
-        { status: 400 },
-      );
-    }
-  }
-
-  // Insert as the signed-in user so RLS applies.
   const supabase = createClient();
   const { data: listing, error: insertErr } = await supabase
     .from("listings")
@@ -84,12 +61,13 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       type,
       product,
-      hs_code: clean(form.get("hs_code"), 12) || null,
-      origin: clean(form.get("origin"), 80) || null,
-      destination: clean(form.get("destination"), 80) || null,
-      volume: clean(form.get("volume"), 120) || null,
-      incoterm: clean(form.get("incoterm"), 20) || null,
-      indicative_value_usd: value && Number.isFinite(value) && value > 0 ? value : null,
+      hs_code: clean(body.hs_code, 12) || null,
+      origin: clean(body.origin, 80) || null,
+      destination: clean(body.destination, 80) || null,
+      volume: clean(body.volume, 120) || null,
+      incoterm: clean(body.incoterm, 20) || null,
+      indicative_value_usd:
+        value && Number.isFinite(value) && value > 0 ? value : null,
       details,
       status: "submitted",
     })
@@ -104,27 +82,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Upload documents under the member's own prefix (storage RLS enforces it).
-  for (const f of files) {
-    const safeName = f.name.replace(/[^\w.\-]+/g, "_").slice(-80);
-    const path = `${user.id}/${listing.id}/${Date.now()}_${safeName}`;
-    const { error: upErr } = await supabase.storage
-      .from("listing-docs")
-      .upload(path, f, { contentType: f.type });
-    if (upErr) {
-      console.error("[ponte] doc upload failed:", upErr);
-      continue; // listing stands; missing docs surface during vetting
-    }
-    await supabase.from("listing_documents").insert({
-      listing_id: listing.id,
-      user_id: user.id,
-      path,
-      filename: f.name.slice(-120),
-    });
-  }
-
-  // Notify both sides. Awaited: on serverless, un-awaited work is killed
-  // the moment the response returns.
   const memberEmail = user.email ?? "";
   await Promise.allSettled([
     memberEmail
@@ -135,12 +92,12 @@ export async function POST(req: NextRequest) {
       name: memberEmail || user.id,
       company: `Marketplace listing ${listing.ref}`,
       email: memberEmail || "unknown@ponte.trade",
-      country: clean(form.get("origin"), 80) || "-",
+      country: clean(body.origin, 80) || "-",
       product,
-      volume: clean(form.get("volume"), 120) || undefined,
-      details: `${details}\n\n[${files.length} document(s) attached · review in /admin/listings]`,
+      volume: clean(body.volume, 120) || undefined,
+      details: `${details}\n\n[media and documents upload directly from the member's browser · review in /admin/listings]`,
     }),
   ]);
 
-  return NextResponse.json({ ok: true, ref: listing.ref });
+  return NextResponse.json({ ok: true, ref: listing.ref, id: listing.id });
 }
