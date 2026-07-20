@@ -1,9 +1,26 @@
--- Marketplace Phase 1: vetted listings pipeline.
+-- Marketplace Phase 1: vetted listings pipeline (v2).
 -- Run in the Supabase SQL Editor.
 --
--- Members submit offers/requirements from their account, attach documents,
--- and NOTHING goes live until an admin approves it. Phase 2 (browsable
--- board) will read from the same table: status = 'approved'.
+-- v2: the database may contain OLD "listings" / "listing_documents" tables
+-- from earlier experiments with a different structure. This migration
+-- archives them (rename, data preserved) before creating the new ones.
+
+do $$ begin
+  if exists (select from information_schema.tables
+             where table_schema = 'public' and table_name = 'listings')
+     and not exists (select from information_schema.columns
+                     where table_schema = 'public' and table_name = 'listings'
+                       and column_name = 'decision_note') then
+    alter table public.listings rename to listings_legacy_20260720;
+  end if;
+  if exists (select from information_schema.tables
+             where table_schema = 'public' and table_name = 'listing_documents')
+     and not exists (select from information_schema.columns
+                     where table_schema = 'public' and table_name = 'listing_documents'
+                       and column_name = 'path') then
+    alter table public.listing_documents rename to listing_documents_legacy_20260720;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------
 -- Reference sequence: PT-0001, PT-0002, ...
@@ -42,20 +59,24 @@ create index if not exists listings_status_idx on listings (status, created_at d
 alter table listings enable row level security;
 
 -- Owners see their own listings.
+drop policy if exists "Members read own listings" on listings;
 create policy "Members read own listings"
   on listings for select
   using (auth.uid() = user_id);
 
 -- Owners create listings for themselves; server forces status 'submitted'.
+drop policy if exists "Members create own listings" on listings;
 create policy "Members create own listings"
   on listings for insert
   with check (auth.uid() = user_id and status = 'submitted');
 
 -- Admins do everything.
+drop policy if exists "Admins read all listings" on listings;
 create policy "Admins read all listings"
   on listings for select
   using ((select is_admin()));
 
+drop policy if exists "Admins update listings" on listings;
 create policy "Admins update listings"
   on listings for update
   using ((select is_admin()));
@@ -76,14 +97,17 @@ create index if not exists listing_documents_listing_idx on listing_documents (l
 
 alter table listing_documents enable row level security;
 
+drop policy if exists "Members read own listing docs" on listing_documents;
 create policy "Members read own listing docs"
   on listing_documents for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Members add own listing docs" on listing_documents;
 create policy "Members add own listing docs"
   on listing_documents for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Admins read all listing docs" on listing_documents;
 create policy "Admins read all listing docs"
   on listing_documents for select
   using ((select is_admin()));
@@ -99,6 +123,7 @@ values (
 on conflict (id) do nothing;
 
 -- Owners upload only under their own uid/ prefix.
+drop policy if exists "Members upload own listing docs" on storage.objects;
 create policy "Members upload own listing docs"
   on storage.objects for insert
   with check (
@@ -106,6 +131,7 @@ create policy "Members upload own listing docs"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Members read own listing doc files" on storage.objects;
 create policy "Members read own listing doc files"
   on storage.objects for select
   using (
@@ -113,6 +139,7 @@ create policy "Members read own listing doc files"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Admins read all listing doc files" on storage.objects;
 create policy "Admins read all listing doc files"
   on storage.objects for select
   using (bucket_id = 'listing-docs' and (select is_admin()));
