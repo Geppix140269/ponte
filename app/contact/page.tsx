@@ -9,7 +9,7 @@ const CALENDLY_URL = "https://calendly.com/hello-giuseppefunaro";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Talk to Ponte. Book a senior analyst, scope a strategy intensive or retainer, or commission a Full Market Report.",
+    "Talk to Ponte. Bring a deal to the desk, book a senior analyst, or scope a strategy intensive or retainer.",
   alternates: { canonical: "/contact" },
 };
 
@@ -18,8 +18,6 @@ const LEAD: Record<string, string> = {
     "You are after a Strategy Intensive: a half-day with a senior analyst and a written brief. Tell us the decision and we will scope it.",
   retainer:
     "You are considering a Trade Desk Retainer: a standing analyst on call. Tell us the cadence and the kinds of questions you expect, and we will propose a monthly block.",
-  "MR-001":
-    "You want a Full Market Report. Tell us the HS code or product and whether you need it Global or for a single country.",
 };
 
 export default function ContactPage({
@@ -74,12 +72,12 @@ export default function ContactPage({
 
           <div className="glass p-8 flex flex-col">
             <FileText className="h-5 w-5 text-gold" />
-            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Commission a report</h3>
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Bring us a deal</h3>
             <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
-              The Full Market Report for one HS code or product, Global or single country. $1,800.
+              An offer or a requirement, goods or trade services. Facts only, papered before any introduction.
             </p>
-            <Link href="/product/full-market-report" className="btn-ghost-light mt-6">
-              Order a report
+            <Link href="/brokerage#submit" className="btn-ghost-light mt-6">
+              Go to the Deal Desk
             </Link>
           </div>
         </div>

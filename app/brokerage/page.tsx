@@ -15,7 +15,7 @@ import DealForm from "@/components/DealForm";
 export const metadata: Metadata = {
   title: "The Deal Desk",
   description:
-    "Independent trade brokerage led by Giuseppe Funaro. Submit an offer or a requirement. Vetted counterparties, papered introductions, success-fee only.",
+    "Independent trade brokerage. Submit an offer or a requirement. Vetted counterparties, papered introductions, success-fee only.",
   alternates: { canonical: "/brokerage" },
 };
 
@@ -69,8 +69,8 @@ export default function BrokeragePage() {
           <em className="text-gold italic" style={{ fontWeight: 400 }}>evidence</em>.
         </h1>
         <p className="text-[18px] text-gray-2 leading-relaxed max-w-2xl">
-          Ponte is the independent trade brokerage of Giuseppe Funaro. Thirty
-          years in global trade, a vetted network of buyers, sellers and
+          Ponte is an independent trade brokerage. Three decades of global
+          trade behind the desk, a vetted network of buyers, sellers and
           service partners, and one rule: every introduction is papered before
           it happens.
         </p>
@@ -146,7 +146,7 @@ export default function BrokeragePage() {
               <Link href="/network" className="btn-gold">
                 Join the Deal Sheet <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/contact" className="btn-ghost-light">Talk to Giuseppe</Link>
+              <Link href="/contact" className="btn-ghost-light">Talk to the desk</Link>
             </div>
           </div>
         </div>

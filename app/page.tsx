@@ -7,8 +7,6 @@ import {
   CalendarClock,
   ShieldCheck,
   Scale,
-  Globe2,
-  MapPin,
 } from "lucide-react";
 
 export const revalidate = 60;
@@ -40,24 +38,11 @@ const pillars = [
   },
 ];
 
-const reportVariants = [
-  {
-    icon: Globe2,
-    title: "Global",
-    body: "The whole picture for one HS code or product across world markets: where demand sits, who trades it, and the regulatory landscape.",
-  },
-  {
-    icon: MapPin,
-    title: "Single destination country",
-    body: "The same depth, focused on one target market: demand, tariffs and landed cost, the competitive field, and active counterparties.",
-  },
-];
-
 const why = [
   {
     icon: ShieldCheck,
-    title: "Senior analyst sign-off",
-    body: "Every report and every call is the work of a senior analyst, reviewed and signed off before it reaches you. Not an automated feed.",
+    title: "Vetted and signed off",
+    body: "Every introduction is vetted and every analyst call is senior-led, reviewed and signed off before it reaches you. Not an automated feed.",
   },
   {
     icon: Scale,
@@ -67,7 +52,7 @@ const why = [
   {
     icon: CalendarClock,
     title: "Priced by the engagement",
-    body: "Book a call, commission a report, or retain a desk. One-time or retainer, never a subscription you forget to cancel.",
+    body: "Success fee on closed deals, fixed fees for analyst work. One-time or retainer, never a subscription you forget to cancel.",
   },
 ];
 
@@ -89,10 +74,9 @@ export default function HomePage() {
               buyer and seller.
             </h1>
             <p className="text-[18px] text-gray-2 leading-relaxed max-w-xl mb-9">
-              Ponte is the independent brokerage of Giuseppe Funaro. Real
-              offers, vetted counterparties, papered introductions, and a
-              success fee only when the deal closes. Evidence over opinion,
-              in every deal.
+              Ponte is an independent trade brokerage. Real offers, vetted
+              counterparties, papered introductions, and a success fee only
+              when the deal closes. Evidence over opinion, in every deal.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <Link href="/brokerage#submit" className="btn-gold">
@@ -150,37 +134,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ============ THE REPORT ============ */}
-      <section className="container-px py-12 border-t border-white/8">
-        <p className="eyebrow text-gold">The report</p>
-        <h2 className="serif text-white mt-3 mb-3" style={{ fontSize: 30, fontWeight: 500 }}>
-          One report, two ways to scope it.
-        </h2>
-        <p className="text-[15px] text-gray-2 max-w-2xl mb-8">
-          The Full Market Report covers one HS code or product, with senior-analyst sign-off before it ships. Both variants are $1,800.
-        </p>
-        <div className="grid gap-5 md:grid-cols-2">
-          {reportVariants.map((v) => (
-            <Link key={v.title} href="/product/full-market-report" className="card group p-7">
-              <div className="flex items-center justify-between mb-3">
-                <span className="badge-gold uppercase">{v.title}</span>
-                <span className="serif text-white text-lg" style={{ fontWeight: 500 }}>$1,800</span>
-              </div>
-              <v.icon className="h-5 w-5 text-gold mt-1" />
-              <p className="mt-3 flex-1 text-[14px] leading-relaxed text-gray-2">{v.body}</p>
-              <span className="mt-5 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold group-hover:text-cream" style={{ letterSpacing: "0.18em" }}>
-                Commission this report <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       {/* ============ WHY PONTE ============ */}
       <section className="container-px py-12 border-t border-white/8">
         <p className="eyebrow text-gold">Why Ponte</p>
         <h2 className="serif text-white mt-3 mb-8" style={{ fontSize: 30, fontWeight: 500 }}>
-          A senior analyst, on the record.
+          Papered, vetted, and on the record.
         </h2>
         <div className="grid gap-5 md:grid-cols-3">
           {why.map((w) => (

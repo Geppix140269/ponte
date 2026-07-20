@@ -291,7 +291,7 @@ export type BrokerageSubmissionType = "offer" | "requirement" | "network";
 
 /**
  * Notify the deal desk of a new submission from /brokerage or /network.
- * Reply-To is set to the submitter so Giuseppe can answer in one click.
+ * Reply-To is set to the submitter so the desk can answer in one click.
  */
 export async function sendBrokerageSubmission(data: {
   type: BrokerageSubmissionType;

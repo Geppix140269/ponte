@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms",
   description:
-    "Terms for Ponte's brokerage services, Deal Sheet membership and intelligence products. Ponte is operated by 1402 Celsius Ltd.",
+    "Terms for Ponte's brokerage services, Deal Sheet membership and advisory engagements. Ponte is operated by 1402 Celsius Ltd (Bulgaria).",
 };
 
 const LAST_UPDATED = "20 July 2026";
@@ -36,10 +36,14 @@ export default function TermsPage() {
         <div className="prose-legal">
           <p>
             Ponte is a trading name of 1402 Celsius Ltd, a company
-            incorporated in Bulgaria (&ldquo;Ponte&rdquo;, &ldquo;we&rdquo;,
-            &ldquo;us&rdquo;). These terms govern your use of ponte.trade and
+            incorporated in Bulgaria with registered number 207314767 and
+            registered office at 1A Aton Street, Building 6, Plovdiv 4002,
+            Bulgaria (&ldquo;Ponte&rdquo;, &ldquo;we&rdquo;,
+            &ldquo;us&rdquo;). 1402 Celsius Ltd (United Kingdom, Reg.
+            12475013) is a group company and is not the contracting party
+            under these terms. These terms govern your use of ponte.trade and
             the services offered on it. By using the site, submitting a deal,
-            joining the Deal Sheet, or placing an order, you agree to them.
+            joining the Deal Sheet, or engaging us, you agree to them.
           </p>
 
           <h2>1. Brokerage services</h2>
@@ -74,27 +78,17 @@ export default function TermsPage() {
             time by replying to any issue.
           </p>
 
-          <h2>3. Intelligence products and advisory</h2>
+          <h2>3. Advisory and intelligence engagements</h2>
           <p>
-            We sell analyst engagements (calls, intensives, retainers) and
-            the Full Market Report as one-time purchases priced by the
-            engagement. Nothing on this site is sold as a subscription.
-          </p>
-          <p>
-            For reports requiring human production, your card is{" "}
-            <strong>authorized but not charged</strong> at checkout. Within
-            24 hours of order we email you the confirmed delivery date, and
-            your card is charged only when production starts. If we cannot
-            deliver by the confirmed date, the authorization is released and
-            you are not charged.
-          </p>
-          <p>
-            Reports are licensed to the named purchaser for internal business
-            use and delivered as watermarked PDFs. You may not resell,
-            redistribute or publish them without our written consent. Because
-            reports are bespoke, sales are final once delivered; if a report
-            is materially defective or not delivered, contact us and we will
-            correct or refund it.
+            We sell analyst engagements (calls, strategy intensives and
+            retainers) priced by the engagement and scoped in writing.
+            Nothing on this site is sold as a subscription. Written
+            deliverables from an engagement are licensed to the named client
+            for internal business use and may not be resold, redistributed
+            or published without our written consent. Because engagements
+            are bespoke, fees are final once the work is delivered; if a
+            deliverable is materially defective or not delivered, contact us
+            and we will correct or refund it.
           </p>
 
           <h2>4. No advice</h2>

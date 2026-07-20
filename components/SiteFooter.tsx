@@ -10,10 +10,9 @@ export default function SiteFooter() {
             <div className="md:col-span-5 md:pr-6">
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                Independent trade brokerage and senior-led intelligence.
-                Bring a deal to the desk, join the weekly Deal Sheet, book an
-                analyst, or commission a Full Market Report. Success fees and
-                engagements, never subscriptions.
+                Independent trade brokerage and senior-led advisory. Bring a
+                deal to the desk, join the weekly Deal Sheet, or book an
+                analyst. Success fees and engagements, never subscriptions.
               </p>
             </div>
 
@@ -22,7 +21,7 @@ export default function SiteFooter() {
                 className="text-[10px] uppercase text-gold mb-4 font-medium"
                 style={{ letterSpacing: "0.22em" }}
               >
-                Intelligence
+                The desk
               </h4>
               <ul className="space-y-2.5">
                 <li>
@@ -38,11 +37,6 @@ export default function SiteFooter() {
                 <li>
                   <Link href="/advisory" className="text-sm text-gray-2 transition-colors hover:text-gold">
                     The Analyst Desk
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/product/full-market-report" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    The Full Market Report
                   </Link>
                 </li>
                 <li>
@@ -67,13 +61,8 @@ export default function SiteFooter() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/methodology" className="text-sm text-gray-2 hover:text-gold">
-                    Methodology
-                  </Link>
-                </li>
-                <li>
                   <Link href="/terms" className="text-sm text-gray-2 hover:text-gold">
-                    Terms of sale
+                    Terms
                   </Link>
                 </li>
                 <li>
@@ -102,12 +91,31 @@ export default function SiteFooter() {
                     hello@ponte.trade
                   </a>
                 </li>
+                <li>
+                  <a href="tel:+447988540104" className="hover:text-gold">
+                    +44 7988 540104
+                  </a>
+                </li>
                 <li>Secure payment via Stripe</li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-10 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
+          {/* Legal entities */}
+          <div className="mt-10 grid gap-6 border-t border-white/10 pt-6 text-[11px] leading-relaxed text-gray-2 md:grid-cols-2">
+            <div>
+              <p className="text-cream font-medium">1402 Celsius Ltd (Bulgaria)</p>
+              <p>1A Aton Street, Building 6, Plovdiv 4002, Bulgaria</p>
+              <p>Reg. 207314767 · VAT BG207314767</p>
+            </div>
+            <div>
+              <p className="text-cream font-medium">1402 Celsius Ltd (United Kingdom)</p>
+              <p>20-22 Wenlock Road, London N1 7GU, United Kingdom</p>
+              <p>Reg. 12475013 · VAT GB 343 1702 32</p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
             <p>
               Independent trade brokerage and advisory, grounded in evidence
               and official sources. Ponte acts as broker and intermediary,
@@ -115,8 +123,8 @@ export default function SiteFooter() {
               and fee agreements.
             </p>
             <p className="uppercase" style={{ letterSpacing: "0.18em" }}>
-              © {new Date().getFullYear()} Ponte · operated by 1402 Celsius Ltd
-              · ponte.trade
+              © {new Date().getFullYear()} Ponte · a trading name of 1402
+              Celsius Ltd · ponte.trade
             </p>
           </div>
         </div>

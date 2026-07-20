@@ -288,8 +288,8 @@ export default function LearnTradeDataPage() {
             Put this kind of evidence behind your next deal.
           </h2>
           <p className="text-sm text-muted max-w-lg mb-6">
-            Commission a Full Market Report grounded in transaction-level
-            evidence, or bring a live offer or requirement to the Deal Desk.
+            Bring a live offer or requirement to the Deal Desk, or book a
+            senior analyst when a decision needs evidence first.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/brokerage" className="btn-primary">

@@ -19,7 +19,7 @@ const RULES = [
   {
     icon: UserCheck,
     title: "Vetted personally",
-    body: "Every member is approved by Giuseppe before they receive anything. No open signups, no scraped lists, no brokers-of-brokers chains.",
+    body: "Every member is approved by Ponte Trade before they receive anything. No open signups, no scraped lists, no brokers-of-brokers chains.",
   },
   {
     icon: Handshake,
@@ -116,7 +116,7 @@ export default function NetworkPage() {
             <Link href="/brokerage#submit" className="btn-gold">
               Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/contact" className="btn-ghost-light">Talk to Giuseppe</Link>
+            <Link href="/contact" className="btn-ghost-light">Talk to the desk</Link>
           </div>
         </div>
       </section>

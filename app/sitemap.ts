@@ -15,11 +15,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/network`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     // Intelligence
     { url: `${BASE_URL}/advisory`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/product/full-market-report`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     // Company
     { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/methodology`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     // Educational content
     { url: `${BASE_URL}/learn/trade-data`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },

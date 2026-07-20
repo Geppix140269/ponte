@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Brokerage on success fee only. Deal Sheet membership free for vetted members. Analyst calls from $500, Full Market Report $1,800. No subscriptions.",
+    "Brokerage on success fee only. Deal Sheet membership free for vetted members. Analyst calls from $500. No subscriptions.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -86,46 +86,16 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Route 2: The Full Market Report */}
-      <section className="container-px pb-12 border-t border-white/8 pt-12">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
-          <div>
-            <p className="eyebrow text-gold">The Report</p>
-            <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>Full Market Report</h2>
-          </div>
-        </div>
-        <div className="glass p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-8">
-          <div className="md:flex-1">
-            <p className="text-[15px] leading-relaxed text-gray-2 max-w-xl">
-              A complete market report for one HS code or product, delivered
-              either Global or for a single destination country. Demand,
-              regulatory and tariff context, the competitive landscape, and
-              active counterparties, with senior-analyst sign-off before it
-              ships.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {["64-page PDF", "Counterparty data", "Source citations", "Global or single country"].map((x) => (
-                <span key={x} className="badge">{x}</span>
-              ))}
-            </div>
-          </div>
-          <div className="md:text-right">
-            <div className="serif text-gold" style={{ fontSize: 44, fontWeight: 500 }}>$1,800</div>
-            <Link href="/product/full-market-report" className="btn-gold mt-4">Commission a report <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-        </div>
-      </section>
-
       {/* Enterprise / retainers */}
       <section className="container-px pb-24 border-t border-white/8 pt-12">
         <div className="glass p-8 md:p-10">
           <p className="eyebrow text-gold">For teams and trade bodies</p>
-          <h2 className="serif text-white mt-2 mb-3" style={{ fontSize: 26, fontWeight: 500 }}>Retainers, white-label and recurring briefings</h2>
+          <h2 className="serif text-white mt-2 mb-3" style={{ fontSize: 26, fontWeight: 500 }}>Retainers and recurring briefings</h2>
           <p className="text-[15px] leading-relaxed text-gray-2 max-w-2xl">
-            Standing advisory engagements, white-label reports under your own
-            brand, recurring market briefings for members or boards, and
-            multi-report programmes. Scoped to the mandate, billed as a retainer
-            or per engagement.
+            Standing advisory engagements, recurring market briefings for
+            members or boards, and desk arrangements for trade bodies and
+            trading teams. Scoped to the mandate, billed as a retainer or per
+            engagement.
           </p>
           <Link href="/contact?engagement=enterprise" className="btn-ghost-light mt-6">Talk to us <ArrowRight className="h-4 w-4" /></Link>
         </div>

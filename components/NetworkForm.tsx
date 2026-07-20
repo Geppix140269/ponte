@@ -42,8 +42,8 @@ export default function NetworkForm() {
           Request received.
         </h3>
         <p className="mt-2 text-[14px] text-gray-2">
-          Every member is approved personally. You will hear from Giuseppe
-          within a few business days.
+          Every member is approved personally by the desk. You will hear
+          from us within a few business days.
         </p>
       </div>
     );

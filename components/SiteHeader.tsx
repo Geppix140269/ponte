@@ -13,7 +13,6 @@ const navLinks = [
   { href: "/brokerage", label: "Deal Desk" },
   { href: "/network", label: "Deal Sheet" },
   { href: "/advisory", label: "Analyst Desk" },
-  { href: "/product/full-market-report", label: "Market Report" },
   { href: "/pricing", label: "Pricing" },
   { href: "/contact", label: "Contact" },
 ];

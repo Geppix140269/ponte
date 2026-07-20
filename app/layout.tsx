@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     template: "%s | Ponte Trade",
   },
   description:
-    "Senior-led trade intelligence and advisory for exporters, importers and trade bodies. Book an analyst, commission a Full Market Report, or retain a standing desk. Grounded in transaction-level trade evidence and official sources. Priced by the engagement, no subscription.",
+    "Independent trade brokerage and senior-led advisory. Bring an offer or requirement to the Deal Desk, join the weekly Deal Sheet, or book a senior analyst. Vetted counterparties, papered introductions, success fee only.",
   openGraph: {
     title: "Ponte Trade. Senior-led trade intelligence and advisory.",
     description:
-      "Talk to the analyst, not the algorithm. Book an analyst call, commission a Full Market Report, or retain a standing desk.",
+      "The bridge between buyer and seller. Vetted deals, papered introductions, senior-led advisory.",
     url: APP_URL,
     siteName: "Ponte Trade",
     type: "website",

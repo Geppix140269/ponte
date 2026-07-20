@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { BridgeMark } from "@/components/Logo";
 
 const ABOUT_DESC =
-  "Ponte is the independent trade brokerage of Giuseppe Funaro, operated by 1402 Celsius Ltd. Deals brokered on evidence, introductions papered, success fee only.";
+  "Ponte is an independent trade brokerage operated by 1402 Celsius Ltd. Deals brokered on evidence, introductions papered, success fee only.";
 
 export const metadata: Metadata = {
   title: "About",
@@ -84,30 +84,29 @@ export default function AboutPage() {
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
-          Ponte (Italian for &ldquo;bridge&rdquo;) is the independent trade
-          brokerage of Giuseppe Funaro. It connects vetted buyers, sellers and
-          trade service providers, papers every introduction, and backs deals
-          with senior-led market intelligence.
+          Ponte (Italian for &ldquo;bridge&rdquo;) is an independent trade
+          brokerage. It connects vetted buyers, sellers and trade service
+          providers, papers every introduction, and backs deals with
+          senior-led market intelligence.
         </p>
       </header>
 
-      {/* Giuseppe */}
+      {/* The desk */}
       <section className="container-px py-12 border-t border-white/8">
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline">
-          <div className="num-italic">— 01 / The broker</div>
+          <div className="num-italic">— 01 / The desk</div>
           <div className="max-w-2xl">
             <p className="text-[16px] leading-relaxed text-gray-2">
-              Giuseppe Funaro has spent three decades in international trade:
-              running trading operations, leading trade intelligence
-              organisations, and sitting between buyers and sellers on deals
-              across four continents. Ponte is that experience, working for
-              your deal. One broker, personally accountable, with a network
-              built over thirty years and a simple rule: the paperwork comes
-              before the introduction.
+              Behind Ponte sit three decades in international trade: running
+              trading operations, leading trade intelligence organisations,
+              and sitting between buyers and sellers on deals across four
+              continents. That experience now works for your deal, with a
+              network built over thirty years and a simple rule: the
+              paperwork comes before the introduction.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/contact" className="btn-gold">
-                Talk to Giuseppe <ArrowRight className="h-4 w-4" />
+                Talk to the desk <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -161,11 +160,16 @@ export default function AboutPage() {
           <div className="max-w-2xl">
             <p className="text-[15px] leading-relaxed text-gray-2">
               Ponte is a trading name of 1402 Celsius Ltd, a company
-              incorporated in Bulgaria. The Broker acts as intermediary only,
-              never as principal, and is remunerated by success fee on closed
-              deals and by fixed engagement fees for intelligence work.
-              Payments are processed by Stripe. Correspondence:{" "}
-              <a href="mailto:hello@ponte.trade" className="text-gold hover:text-cream">hello@ponte.trade</a>.
+              incorporated in Bulgaria (Reg. 207314767, VAT BG207314767, 1A
+              Aton Street, Building 6, Plovdiv 4002), part of the same group
+              as 1402 Celsius Ltd, United Kingdom (Reg. 12475013, VAT GB 343
+              1702 32, 20-22 Wenlock Road, London N1 7GU). The Broker acts as
+              intermediary only, never as principal, and is remunerated by
+              success fee on closed deals and by fixed engagement fees for
+              intelligence work. Payments are processed by Stripe.
+              Correspondence:{" "}
+              <a href="mailto:hello@ponte.trade" className="text-gold hover:text-cream">hello@ponte.trade</a>{" "}
+              · +44 7988 540104.
             </p>
           </div>
         </div>
