@@ -311,3 +311,88 @@
   }
   .mark-anim .arch-active { stroke-dashoffset: 0; }
 }
+
+/* ============ Process flow (How it works) ============ */
+.flow {
+  --step-delay: 0.35s;
+}
+.flow-track {
+  position: relative;
+}
+.flow-line {
+  position: absolute;
+  background: linear-gradient(90deg, var(--gold), rgba(232,160,32,0.25));
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.flow.in-view .flow-line {
+  animation: flow-draw 1.8s cubic-bezier(.65,.05,.35,1) forwards;
+}
+.flow-line--v {
+  transform: scaleY(0);
+  background: linear-gradient(180deg, var(--gold), rgba(232,160,32,0.25));
+}
+.flow.in-view .flow-line--v {
+  animation: flow-draw-v 1.8s cubic-bezier(.65,.05,.35,1) forwards;
+}
+@keyframes flow-draw {
+  to { transform: scaleX(1); }
+}
+@keyframes flow-draw-v {
+  to { transform: scaleY(1); }
+}
+.flow-step {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.flow.in-view .flow-step {
+  animation: flow-rise 0.6s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.flow.in-view .flow-step:nth-child(1) { animation-delay: calc(var(--step-delay) * 0); }
+.flow.in-view .flow-step:nth-child(2) { animation-delay: calc(var(--step-delay) * 1); }
+.flow.in-view .flow-step:nth-child(3) { animation-delay: calc(var(--step-delay) * 2); }
+.flow.in-view .flow-step:nth-child(4) { animation-delay: calc(var(--step-delay) * 3); }
+.flow.in-view .flow-step:nth-child(5) { animation-delay: calc(var(--step-delay) * 4); }
+@keyframes flow-rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+.flow-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  border: 1px solid rgba(232,160,32,0.4);
+  background: rgba(232,160,32,0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.flow-step:hover .flow-node {
+  transform: scale(1.12);
+  box-shadow: 0 0 24px rgba(232,160,32,0.35);
+}
+.flow.in-view .flow-step:nth-child(1) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 0 + 0.2s); }
+.flow.in-view .flow-step:nth-child(2) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 1 + 0.2s); }
+.flow.in-view .flow-step:nth-child(3) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 2 + 0.2s); }
+.flow.in-view .flow-step:nth-child(4) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 3 + 0.2s); }
+.flow.in-view .flow-step:nth-child(5) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 4 + 0.2s); }
+@keyframes node-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(232,160,32,0.5); }
+  60%  { box-shadow: 0 0 0 16px rgba(232,160,32,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,160,32,0); }
+}
+
+/* Generic scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(.2,.7,.3,1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-step, .flow-line, .reveal { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
+}

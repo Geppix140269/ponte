@@ -3,14 +3,13 @@ import Link from "next/link";
 import {
   ArrowRight,
   Handshake,
-  FileSignature,
   ShieldCheck,
   Ship,
   Banknote,
-  SearchCheck,
   Scale,
 } from "lucide-react";
 import DealForm from "@/components/DealForm";
+import ProcessFlow from "@/components/ProcessFlow";
 
 export const metadata: Metadata = {
   title: "The Deal Desk",
@@ -19,23 +18,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/brokerage" },
 };
 
-const STEPS = [
-  {
-    icon: FileSignature,
-    title: "Tell us the deal",
-    body: "Submit an offer or a requirement below. Product, origin, volume, terms. One page of facts, no marketing.",
-  },
-  {
-    icon: SearchCheck,
-    title: "We vet and match",
-    body: "We work the network for a real counterparty, verify the essentials, and paper the introduction with an NCNDA and fee agreement before anyone meets.",
-  },
-  {
-    icon: Handshake,
-    title: "You close, we earn on success",
-    body: "We stay in the middle until the deal is done. No retainer, no listing fee. Our commission is agreed in writing up front and paid only when the deal closes.",
-  },
-];
 
 const LANES = [
   {
@@ -77,20 +59,12 @@ export default function BrokeragePage() {
       </header>
 
       {/* How it works */}
-      <section className="container-px py-12 border-t border-white/8">
+      <section className="container-px py-14 border-t border-white/8">
         <p className="eyebrow text-gold">How it works</p>
-        <h2 className="serif text-white mt-3 mb-8" style={{ fontSize: 30, fontWeight: 500 }}>
-          Three steps between your deal and a closed one.
+        <h2 className="serif text-white mt-3 mb-12" style={{ fontSize: 30, fontWeight: 500 }}>
+          From your deal to a closed one.
         </h2>
-        <div className="grid gap-5 md:grid-cols-3">
-          {STEPS.map((s) => (
-            <div key={s.title} className="glass p-7">
-              <s.icon className="h-5 w-5 text-gold" />
-              <h3 className="serif text-white text-lg mt-4" style={{ fontWeight: 500 }}>{s.title}</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{s.body}</p>
-            </div>
-          ))}
-        </div>
+        <ProcessFlow />
       </section>
 
       {/* What we broker */}

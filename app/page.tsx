@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProcessFlow from "@/components/ProcessFlow";
 import {
   ArrowRight,
   Phone,
@@ -16,7 +17,7 @@ const pillars = [
     icon: Handshake,
     eyebrow: "Success fee only",
     title: "The Deal Desk",
-    body: "Bring an offer or a requirement. We vet the counterparty, paper the introduction, and stay in the middle until the deal closes.",
+    body: "Bring an offer or a requirement. Vetted, papered, worked to the close.",
     href: "/brokerage",
     cta: "Bring us a deal",
   },
@@ -24,7 +25,7 @@ const pillars = [
     icon: Mail,
     eyebrow: "Free · vetted",
     title: "The Deal Sheet",
-    body: "One email a week with live, anonymized offers and requirements moving through the network. Reply to any item and we run the introduction.",
+    body: "One email a week. Live, anonymized deals. Reply, and we run the introduction.",
     href: "/network",
     cta: "Request access",
   },
@@ -32,7 +33,7 @@ const pillars = [
     icon: Phone,
     eyebrow: "From $500",
     title: "The Analyst Desk",
-    body: "Book a senior analyst for one decision. A 60-minute call with a written recap, a half-day intensive, or a standing retainer.",
+    body: "A senior analyst on your decision. One call, one intensive, or a standing desk.",
     href: "/advisory",
     cta: "Book an analyst call",
   },
@@ -132,6 +133,15 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+      </section>
+
+      {/* ============ HOW IT WORKS ============ */}
+      <section className="container-px py-14 border-t border-white/8">
+        <p className="eyebrow text-gold">How it works</p>
+        <h2 className="serif text-white mt-3 mb-12" style={{ fontSize: 30, fontWeight: 500 }}>
+          Five steps. One rule: papered before introduced.
+        </h2>
+        <ProcessFlow />
       </section>
 
       {/* ============ WHY PONTE ============ */}
