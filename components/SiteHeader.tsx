@@ -14,7 +14,7 @@ const navLinks = [
   { href: "/network", label: "Deal Sheet" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/advisory", label: "Analyst Desk" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/pricing", label: "Fees" },
   { href: "/contact", label: "Contact" },
 ];
 

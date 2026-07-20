@@ -41,7 +41,7 @@ export default function SiteFooter() {
                 </li>
                 <li>
                   <Link href="/pricing" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    Pricing
+                    Fees
                   </Link>
                 </li>
               </ul>

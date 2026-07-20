@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Fees",
   description:
     "Brokerage on success fee only. Deal Sheet membership free for vetted members. Analyst calls from $500. No subscriptions.",
   alternates: { canonical: "/pricing" },
@@ -19,9 +19,9 @@ export default function PricingPage() {
   return (
     <>
       <section className="container-px pt-16 pb-10">
-        <span className="pill">Pricing</span>
+        <span className="pill">Fees</span>
         <h1 className="serif text-white mt-6 mb-4 max-w-2xl" style={{ fontWeight: 400, fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1.0, letterSpacing: "-0.015em" }}>
-          Priced by the engagement.
+          Fees, not subscriptions.
         </h1>
         <p className="text-[17px] text-gray-2 max-w-xl">
           Brokerage on success fee. Membership free. Intelligence by the
