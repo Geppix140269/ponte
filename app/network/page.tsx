@@ -6,7 +6,7 @@ import NetworkForm from "@/components/NetworkForm";
 export const metadata: Metadata = {
   title: "The Deal Sheet",
   description:
-    "A weekly sheet of live, anonymized trade offers and requirements from a vetted network. Free to join, approved personally, introductions papered before they happen.",
+    "The weekly email digest of the Ponte marketplace: live, anonymized listings delivered to vetted members. Free to join, introductions papered before they happen.",
   alternates: { canonical: "/network" },
 };
 
@@ -14,7 +14,7 @@ const RULES = [
   {
     icon: EyeOff,
     title: "Anonymized by default",
-    body: "The sheet shows the deal, never the counterparty: product, origin, volume, terms. Names are disclosed only after both sides sign the NCNDA and fee terms.",
+    body: "Every item is a vetted marketplace listing: product, origin, volume, terms, never the counterparty. Names are disclosed only after both sides sign the NCNDA and fee terms.",
   },
   {
     icon: UserCheck,
@@ -42,10 +42,11 @@ export default function NetworkPage() {
           <em className="text-gold italic" style={{ fontWeight: 400 }}>Live deals</em>, no noise.
         </h1>
         <p className="text-[18px] text-gray-2 leading-relaxed max-w-2xl">
-          The Deal Sheet is a short weekly circulation of real offers and
-          requirements moving through the Ponte network: what is for sale,
-          what is wanted, and on what terms. Anonymized until paperwork is
-          signed, curated by hand, free for vetted members.
+          The Deal Sheet is the weekly email digest of the{" "}
+          <Link href="/marketplace" className="text-gold hover:text-cream">marketplace</Link>:
+          the vetted listings that went live that week, what is for sale,
+          what is wanted, and on what terms. One list, two doors: browse it
+          on the board, or get it in your inbox.
         </p>
       </header>
 

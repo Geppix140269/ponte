@@ -25,7 +25,7 @@ const pillars = [
     icon: Mail,
     eyebrow: "Free · vetted",
     title: "The Deal Sheet",
-    body: "One email a week. Live, anonymized deals. Reply, and we run the introduction.",
+    body: "The marketplace in your inbox, once a week. Reply to any item and we run the introduction.",
     href: "/network",
     cta: "Request access",
   },

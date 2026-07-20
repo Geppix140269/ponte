@@ -140,7 +140,7 @@ export default async function MarketplacePage() {
                 Sign in to submit <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/network" className="btn-ghost-light">
-                Join the Deal Sheet first
+                Get the weekly digest
               </Link>
             </>
           )}
