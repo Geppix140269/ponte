@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Sale",
-  description: "Terms of sale for Ponte Trade intelligence products.",
+  title: "Terms",
+  description:
+    "Terms for Ponte's brokerage services, Deal Sheet membership and intelligence products. Ponte is operated by 1402 Celsius Ltd.",
 };
 
-const LAST_UPDATED = "26 May 2026";
+const LAST_UPDATED = "20 July 2026";
 
 export default function TermsPage() {
   return (
@@ -21,7 +22,7 @@ export default function TermsPage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Terms of Sale
+          Terms
         </h1>
         <p
           className="mono text-[11px] uppercase text-gray-2"
@@ -34,65 +35,96 @@ export default function TermsPage() {
       <div className="glass p-8 md:p-12 max-w-3xl">
         <div className="prose-legal">
           <p>
-            These Terms of Sale govern your purchase of digital intelligence
-            products from Ponte Trade. By placing an order you agree to these
-            terms.
+            Ponte is a trading name of 1402 Celsius Ltd, a company
+            incorporated in Bulgaria (&ldquo;Ponte&rdquo;, &ldquo;we&rdquo;,
+            &ldquo;us&rdquo;). These terms govern your use of ponte.trade and
+            the services offered on it. By using the site, submitting a deal,
+            joining the Deal Sheet, or placing an order, you agree to them.
           </p>
 
-          <h2>Products</h2>
+          <h2>1. Brokerage services</h2>
           <p>
-            We sell digital reports, data packs, and intelligence briefs as
-            one-time purchases or subscriptions. Some products are configured
-            by you (for example by HS code or country) before purchase; the
-            configuration you provide determines the report you receive.
+            We act as broker and intermediary only. We are never a party to,
+            or principal in, any transaction between counterparties we
+            introduce, and we make no warranty as to the performance,
+            solvency or conduct of any counterparty. Introductions are made
+            only after both sides have signed our non-circumvention and
+            non-disclosure agreement and written fee terms, which then govern
+            the introduction and prevail over these terms in case of
+            conflict.
+          </p>
+          <p>
+            Submitting an offer or requirement through the Deal Desk creates
+            no obligation on either side. We circulate opportunities on an
+            anonymized basis and do not disclose counterparty identities
+            before the paperwork above is in place. Our brokerage
+            remuneration is a success fee agreed in writing per transaction;
+            no fee is payable for submitting or browsing opportunities.
           </p>
 
-          <h2>Delivery and payment authorization</h2>
+          <h2>2. The Deal Sheet</h2>
           <p>
-            For instant downloads, payment is taken at checkout and the
-            report is available immediately in your account.
+            Deal Sheet membership is free, personal, and granted at our
+            discretion after vetting. Items in the Deal Sheet are indicative,
+            anonymized summaries provided by third parties; they are not
+            offers capable of acceptance, and we do not guarantee their
+            accuracy, availability or completion. Members may not forward,
+            republish or scrape the Deal Sheet, or use it to circumvent us.
+            Membership can be withdrawn at any time, and you can leave at any
+            time by replying to any issue.
+          </p>
+
+          <h2>3. Intelligence products and advisory</h2>
+          <p>
+            We sell analyst engagements (calls, intensives, retainers) and
+            the Full Market Report as one-time purchases priced by the
+            engagement. Nothing on this site is sold as a subscription.
           </p>
           <p>
             For reports requiring human production, your card is{" "}
             <strong>authorized but not charged</strong> at checkout. Within
-            24 hours of order we will email you with the confirmed delivery
-            date. Your card is only charged when we start production on the
-            confirmed date.
+            24 hours of order we email you the confirmed delivery date, and
+            your card is charged only when production starts. If we cannot
+            deliver by the confirmed date, the authorization is released and
+            you are not charged.
           </p>
-          <p>
-            If we are unable to deliver by the confirmed date, the
-            authorization is released and your card is never charged. The
-            pending charge may remain visible on your bank statement for
-            1-7 days depending on your bank.
-          </p>
-          <p>
-            Custom research timelines are scoped with you after purchase.
-          </p>
-
-          <h2>Licence &amp; use</h2>
           <p>
             Reports are licensed to the named purchaser for internal business
-            use and are delivered as watermarked PDFs. You may not resell,
-            redistribute, or publish the reports without our written consent.
+            use and delivered as watermarked PDFs. You may not resell,
+            redistribute or publish them without our written consent. Because
+            reports are bespoke, sales are final once delivered; if a report
+            is materially defective or not delivered, contact us and we will
+            correct or refund it.
           </p>
 
-          <h2>Refunds</h2>
+          <h2>4. No advice</h2>
           <p>
-            Because our products are bespoke digital intelligence prepared for
-            you, sales are generally final once a report has been delivered.
-            If a report is materially defective or not delivered, contact us
-            and we will correct or refund it.
+            Content on this site, in the Deal Sheet and in our reports is
+            commercial information, not legal, tax, investment or other
+            professional advice. You remain responsible for your own
+            decisions and for compliance with laws applicable to you,
+            including sanctions and export controls.
           </p>
 
-          <h2>Payment &amp; tax</h2>
+          <h2>5. Payment and tax</h2>
           <p>
             Payments are processed securely by Stripe in USD. Applicable VAT
             is calculated at checkout based on your billing country.
           </p>
 
-          <h2>Contact</h2>
+          <h2>6. Liability</h2>
           <p>
-            Questions about an order? Email{" "}
+            Nothing in these terms excludes liability that cannot be excluded
+            by law. Subject to that, our total liability arising out of the
+            site, the Deal Sheet or any product is limited to the fees you
+            paid us for the item giving rise to the claim, and we are not
+            liable for indirect or consequential loss, loss of profit or loss
+            of opportunity.
+          </p>
+
+          <h2>7. Contact</h2>
+          <p>
+            Questions? Email{" "}
             <a href="mailto:hello@ponte.trade">hello@ponte.trade</a> and we
             will respond within one business day.
           </p>

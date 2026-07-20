@@ -51,9 +51,9 @@ export default function CartPage() {
             Your cart is empty
           </h1>
           <p className="mt-3 text-gray-2">
-            Browse the catalogue and add the intelligence you need.
+            Nothing here yet. See what the desk offers.
           </p>
-          <Link href="/catalogue" className="btn-gold mt-7">
+          <Link href="/pricing" className="btn-gold mt-7">
             Browse the Catalogue
           </Link>
         </div>
@@ -161,7 +161,7 @@ export default function CartPage() {
           >
             {busy ? "Starting checkout…" : "Proceed to checkout"}
           </button>
-          <Link href="/catalogue" className="btn-ghost-light mt-3 w-full">
+          <Link href="/pricing" className="btn-ghost-light mt-3 w-full">
             Continue browsing
           </Link>
         </div>

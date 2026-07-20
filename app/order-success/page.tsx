@@ -27,7 +27,7 @@ export default function OrderSuccessPage() {
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/account" className="btn-gold">Go to my account</Link>
-          <Link href="/catalogue" className="btn-ghost-light">Browse more</Link>
+          <Link href="/pricing" className="btn-ghost-light">Browse more</Link>
         </div>
       </div>
     </section>

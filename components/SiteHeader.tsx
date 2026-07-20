@@ -59,18 +59,20 @@ export default function SiteHeader() {
           >
             <User className="h-5 w-5" />
           </Link>
-          <Link
-            href="/cart"
-            className="relative inline-flex rounded-full p-2 text-cream hover:bg-white/5 hover:text-gold"
-            aria-label="Cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {mounted && count > 0 && (
+          {/* Cart only appears once something is in it — Ponte is a
+              brokerage first, not a shop. */}
+          {mounted && count > 0 && (
+            <Link
+              href="/cart"
+              className="relative inline-flex rounded-full p-2 text-cream hover:bg-white/5 hover:text-gold"
+              aria-label="Cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
               <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">
                 {count}
               </span>
-            )}
-          </Link>
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}

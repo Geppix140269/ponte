@@ -4,10 +4,10 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Ponte Trade collects, uses, and protects your personal data under UK and EU GDPR.",
+    "How Ponte (operated by 1402 Celsius Ltd) collects, uses, and protects your personal data under EU GDPR.",
 };
 
-const LAST_UPDATED = "21 May 2026";
+const LAST_UPDATED = "20 July 2026";
 
 export default function PrivacyPage() {
   return (
@@ -36,9 +36,10 @@ export default function PrivacyPage() {
       <div className="glass p-8 md:p-12 max-w-3xl">
         <div className="prose-legal">
           <p>
-            This policy explains how Ponte Trade collects, uses, and protects
-            personal data when you use ponte.trade and purchase our products.
-            We act as the data controller.
+            This policy explains how Ponte (a trading name of 1402 Celsius Ltd,
+            Bulgaria) collects, uses, and protects personal data when you use
+            ponte.trade, submit a deal, join the Deal Sheet, or purchase our
+            products. 1402 Celsius Ltd is the data controller.
           </p>
 
           <h2>Data we collect</h2>

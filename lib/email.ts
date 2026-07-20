@@ -276,7 +276,7 @@ export async function sendOrderVoided(
       ${reasonLine}
       <p>If you have questions, reply to this email and we will respond
       within 24 hours.</p>
-      <p><a href="${APP_URL}/catalogue" style="color:#D08F18">Browse the catalogue →</a></p>
+      <p><a href="${APP_URL}/pricing" style="color:#D08F18">See what the desk offers →</a></p>
     `),
   );
 }

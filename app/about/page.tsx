@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { BridgeMark } from "@/components/Logo";
 
 const ABOUT_DESC =
-  "Ponte Trade sells research-grade trade intelligence as one-time products: reports, analysis, and risk briefs. Senior-led trade intelligence.";
+  "Ponte is the independent trade brokerage of Giuseppe Funaro, operated by 1402 Celsius Ltd. Deals brokered on evidence, introductions papered, success fee only.";
 
 export const metadata: Metadata = {
   title: "About",
   description: ABOUT_DESC,
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Ponte Trade",
+    title: "About Ponte",
     description: ABOUT_DESC,
     url: "/about",
     siteName: "Ponte Trade",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "About Ponte Trade",
+    title: "About Ponte",
     description: ABOUT_DESC,
   },
 };
@@ -26,18 +27,39 @@ export const metadata: Metadata = {
 const principles = [
   {
     n: "i.",
-    title: "Output, not subscriptions",
-    body: "We sell the finished intelligence: PDFs, data packs, briefs. Buy once. No seats, no platform to learn.",
+    title: "Papered, always",
+    body: "No introduction happens before both sides have signed a non-circumvention and non-disclosure agreement and written fee terms. It protects the counterparties as much as it protects us.",
   },
   {
     n: "ii.",
-    title: "Curated, not generated",
-    body: "Every report is reviewed and signed off by a senior sector analyst, then cross-checked against UN Comtrade, the World Bank, WTO, Eurostat, ITC and EU Taxud. Where sources conflict, outliers are flagged and Monte Carlo models estimate the most likely outcome.",
+    title: "Evidence over opinion",
+    body: "Counterparties are vetted before they are circulated. Claims are checked against documents and official sources. If we cannot verify it, we say so, or we do not circulate it.",
   },
   {
     n: "iii.",
-    title: "Delivery date confirmed at checkout",
-    body: "We confirm your exact delivery date within 24 hours of order. Your card is held but not charged until we start production on your confirmed slot.",
+    title: "Paid on results",
+    body: "The brokerage earns a success fee when a deal closes, nothing before. Intelligence work is priced by the engagement. Nothing on this site is a subscription.",
+  },
+];
+
+const offer = [
+  {
+    title: "The Deal Desk",
+    body: "Offers and requirements, physical goods and trade services, brokered end to end.",
+    href: "/brokerage",
+    cta: "Bring us a deal",
+  },
+  {
+    title: "The Deal Sheet",
+    body: "A weekly, anonymized circulation of live opportunities to a vetted network.",
+    href: "/network",
+    cta: "Request access",
+  },
+  {
+    title: "The Analyst Desk",
+    body: "Senior analyst calls, strategy intensives and retainers when a decision needs evidence first.",
+    href: "/advisory",
+    cta: "Book a call",
   },
 ];
 
@@ -46,7 +68,7 @@ export default function AboutPage() {
     <>
       {/* Hero */}
       <header className="container-px pt-14 pb-12 md:pt-20 md:pb-16">
-        <span className="pill">About Ponte Trade</span>
+        <span className="pill">About Ponte</span>
         <h1
           className="serif text-white mt-6 mb-7 max-w-3xl"
           style={{
@@ -56,150 +78,114 @@ export default function AboutPage() {
             letterSpacing: "-0.015em",
           }}
         >
-          Trade intelligence,{" "}
+          A broker&rsquo;s word,{" "}
           <em className="text-gold italic" style={{ fontWeight: 400 }}>
-            sold as a product.
+            in writing.
           </em>
         </h1>
         <p className="text-[17px] text-gray-2 leading-relaxed max-w-2xl">
-          Ponte (Italian for &ldquo;bridge&rdquo;) connects buyers and sellers
-          to the market intelligence they need to trade with confidence.
-          Delivered as reports you own, not software you rent.
-        </p>
-        <p
-          className="mt-5 text-[11px] uppercase text-gold"
-          style={{ letterSpacing: "0.22em" }}
-        >
-          Senior-led trade intelligence
+          Ponte (Italian for &ldquo;bridge&rdquo;) is the independent trade
+          brokerage of Giuseppe Funaro. It connects vetted buyers, sellers and
+          trade service providers, papers every introduction, and backs deals
+          with senior-led market intelligence.
         </p>
       </header>
 
-      {/* Principles */}
-      <section className="container-px py-16 lg:py-20">
-        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-14">
-          <div className="num-italic">— 01 / Principles</div>
-          <div>
-            <h2
-              className="serif font-medium text-3xl md:text-[40px] text-white"
-              style={{ lineHeight: 1.04, letterSpacing: "-0.01em" }}
-            >
-              Three rules we don&apos;t break.
-            </h2>
+      {/* Giuseppe */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline">
+          <div className="num-italic">— 01 / The broker</div>
+          <div className="max-w-2xl">
+            <p className="text-[16px] leading-relaxed text-gray-2">
+              Giuseppe Funaro has spent three decades in international trade:
+              running trading operations, leading trade intelligence
+              organisations, and sitting between buyers and sellers on deals
+              across four continents. Ponte is that experience, working for
+              your deal. One broker, personally accountable, with a network
+              built over thirty years and a simple rule: the paperwork comes
+              before the introduction.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/contact" className="btn-gold">
+                Talk to Giuseppe <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      {/* Principles */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-10">
+          <div className="num-italic">— 02 / Principles</div>
+          <h2 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
+            How the desk runs.
+          </h2>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
           {principles.map((p) => (
-            <div key={p.title} className="glass p-8">
+            <div key={p.n} className="glass p-7">
               <p className="num-italic mb-4">{p.n}</p>
-              <h3
-                className="serif text-white text-xl"
-                style={{ fontWeight: 500 }}
-              >
-                {p.title}
-              </h3>
-              <p className="mt-3 text-[13px] leading-relaxed text-gray-2">
-                {p.body}
-              </p>
+              <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{p.title}</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-gray-2">{p.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Ownership & Why */}
-      <section className="container-px py-16 lg:py-20">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <div className="glass p-10">
-            <span className="eyebrow">Foundations</span>
-            <h2
-              className="serif text-white mt-4"
-              style={{
-                fontSize: 32,
-                fontWeight: 400,
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Grounded in{" "}
-              <em className="text-gold italic" style={{ fontWeight: 400 }}>
-                official sources.
-              </em>
-            </h2>
-            <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
-              Ponte Trade is grounded in transaction-level trade evidence,
-              cross-checked against UN Comtrade, the World Bank, WTO,
-              Eurostat, ITC and EU Taxud. Where official sources conflict,
-              outliers are flagged and the most likely outcome is estimated.
-            </p>
-            <Link
-              href="/why-ponte"
-              className="mt-6 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-cream"
-              style={{ letterSpacing: "0.18em" }}
-            >
-              Why Ponte →
+      {/* What we do */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-10">
+          <div className="num-italic">— 03 / The desk</div>
+          <h2 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
+            Three doors, one house.
+          </h2>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {offer.map((o) => (
+            <Link key={o.title} href={o.href} className="card group p-7">
+              <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{o.title}</h3>
+              <p className="mt-2 flex-1 text-[13px] leading-relaxed text-gray-2">{o.body}</p>
+              <span className="mt-5 inline-flex items-center gap-1.5 text-[11px] uppercase text-gold group-hover:text-cream" style={{ letterSpacing: "0.18em" }}>
+                {o.cta} <ArrowRight className="h-3.5 w-3.5" />
+              </span>
             </Link>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="glass p-10">
-            <span className="eyebrow">Why Ponte Trade exists</span>
-            <h2
-              className="serif text-white mt-4"
-              style={{
-                fontSize: 32,
-                fontWeight: 400,
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              A different buyer.
-            </h2>
-            <p className="mt-5 text-[15px] text-gray-2 leading-relaxed">
-              Ponte serves a distinct buyer: the consultant, lawyer,
-              chamber, EPA, board member or M&amp;A team who needs one
-              specific intelligence artefact, right now, without a
-              subscription, a seat, or a platform to learn. Buy the
-              report. Cite it. Move on.
+      {/* Company */}
+      <section className="container-px py-12 border-t border-white/8">
+        <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline">
+          <div className="num-italic">— 04 / The company</div>
+          <div className="max-w-2xl">
+            <p className="text-[15px] leading-relaxed text-gray-2">
+              Ponte is a trading name of 1402 Celsius Ltd, a company
+              incorporated in Bulgaria. The Broker acts as intermediary only,
+              never as principal, and is remunerated by success fee on closed
+              deals and by fixed engagement fees for intelligence work.
+              Payments are processed by Stripe. Correspondence:{" "}
+              <a href="mailto:hello@ponte.trade" className="text-gold hover:text-cream">hello@ponte.trade</a>.
             </p>
-            <Link href="/catalogue" className="btn-gold mt-7">
-              Browse the Catalogue
-            </Link>
           </div>
         </div>
       </section>
 
-      {/* The mark */}
+      {/* CTA */}
       <section className="container-px py-16">
-        <div className="glass p-12 text-center relative overflow-hidden">
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "radial-gradient(ellipse 40% 60% at 50% 50%, rgba(201,151,58,0.18), transparent 70%)",
-            }}
-          />
-          <div className="relative z-10 flex flex-col items-center">
-            <BridgeMark className="h-20 w-20" />
-            <p
-              className="serif text-white mt-6"
-              style={{
-                fontSize: 28,
-                fontWeight: 400,
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              An arch ·{" "}
-              <em className="text-gold italic" style={{ fontWeight: 400 }}>
-                a signal
-              </em>{" "}
-              · a bridge.
-            </p>
-            <p className="mt-4 max-w-xl text-[14px] text-gray-2 leading-relaxed">
-              The mark is a single Roman arch with a gold apex node. The arch
-              is the bridge: connection, structure, classical confidence. The
-              node is the data point: the transaction-level trade evidence at
-              the centre of every report.
-            </p>
+        <div className="glass p-10 md:p-12 text-center">
+          <div className="mx-auto flex justify-center"><BridgeMark className="h-12 w-12" /></div>
+          <h2 className="serif text-white mt-4" style={{ fontSize: 32, fontWeight: 500 }}>
+            Have a deal in mind?
+          </h2>
+          <p className="mt-3 text-[15px] text-gray-2 max-w-xl mx-auto">
+            Bring it to the desk, or join the Deal Sheet and watch what moves.
+          </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <Link href="/brokerage#submit" className="btn-gold">
+              Submit a deal <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/network" className="btn-ghost-light">Join the Deal Sheet</Link>
           </div>
         </div>
       </section>

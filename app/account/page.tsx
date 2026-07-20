@@ -29,7 +29,7 @@ export default async function AccountPage() {
             Sign-in and your download centre activate once Supabase Auth is
             connected. Add your Supabase keys to enable accounts.
           </p>
-          <Link href="/catalogue" className="btn-gold mt-8">
+          <Link href="/pricing" className="btn-gold mt-8">
             Browse the Catalogue
           </Link>
         </div>

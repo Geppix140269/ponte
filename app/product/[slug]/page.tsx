@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Check } from "lucide-react";
 import ProductBuyPanel from "@/components/ProductBuyPanel";
 import ProductCard from "@/components/ProductCard";
@@ -28,7 +28,9 @@ const DATA_SOURCES = [
 ];
 
 export function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
+  return PRODUCTS.filter((p) => p.slug === "full-market-report").map((p) => ({
+    slug: p.slug,
+  }));
 }
 
 export async function generateMetadata({
@@ -60,11 +62,17 @@ export async function generateMetadata({
   };
 }
 
+// July 2026 brokerage repositioning: one report remains on sale.
+// Legacy product URLs redirect to /pricing rather than 404 so old
+// links and bookmarks land somewhere useful.
+const LIVE_SLUGS = new Set(["full-market-report"]);
+
 export default async function ProductPage({
   params,
 }: {
   params: { slug: string };
 }) {
+  if (!LIVE_SLUGS.has(params.slug)) redirect("/pricing");
   const [product, related] = await Promise.all([
     getProduct(params.slug),
     getProduct(params.slug).then((p) =>
@@ -103,9 +111,8 @@ export default async function ProductPage({
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: APP_URL },
-      { "@type": "ListItem", position: 2, name: "Catalogue", item: `${APP_URL}/catalogue` },
-      ...(category ? [{ "@type": "ListItem", position: 3, name: category.name, item: `${APP_URL}/category/${category.slug}` }] : []),
-      { "@type": "ListItem", position: category ? 4 : 3, name: product.title, item: `${APP_URL}/product/${product.slug}` },
+      { "@type": "ListItem", position: 2, name: "Pricing", item: `${APP_URL}/pricing` },
+      { "@type": "ListItem", position: 3, name: product.title, item: `${APP_URL}/product/${product.slug}` },
     ],
   };
 
@@ -121,11 +128,7 @@ export default async function ProductPage({
         className="mono text-[11px] uppercase text-gray-2"
         style={{ letterSpacing: "0.18em" }}
       >
-        <Link href="/catalogue" className="hover:text-gold">Catalogue</Link>
-        <span className="mx-2 text-white/20">/</span>
-        <Link href={`/category/${category?.slug}`} className="hover:text-gold">
-          {category?.name}
-        </Link>
+        <Link href="/pricing" className="hover:text-gold">Pricing</Link>
         {product.band && (
           <>
             <span className="mx-2 text-white/20">/</span>

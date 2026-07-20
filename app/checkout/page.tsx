@@ -25,7 +25,7 @@ export default function CheckoutPage() {
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/cart" className="btn-ghost-light">Back to cart</Link>
-          <Link href="/catalogue" className="btn-gold">Continue browsing</Link>
+          <Link href="/pricing" className="btn-gold">Continue browsing</Link>
         </div>
       </div>
     </section>

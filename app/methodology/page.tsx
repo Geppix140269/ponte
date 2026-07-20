@@ -203,11 +203,11 @@ export default function MethodologyPage() {
               Ready to commission a report?
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/catalogue" className="btn-gold">
-                Browse the catalogue <ArrowRight className="h-4 w-4" />
+              <Link href="/pricing" className="btn-gold">
+                See the report <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/why-ponte" className="btn-ghost-light">
-                Why Ponte
+              <Link href="/about" className="btn-ghost-light">
+                About Ponte
               </Link>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Senior-led trade intelligence, priced by the engagement. Book an analyst from $500, commission a Full Market Report at $1,800, or retain a standing desk from $2,500 a month. No subscriptions.",
+    "Brokerage on success fee only. Deal Sheet membership free for vetted members. Analyst calls from $500, Full Market Report $1,800. No subscriptions.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -24,9 +24,44 @@ export default function PricingPage() {
           Priced by the engagement.
         </h1>
         <p className="text-[17px] text-gray-2 max-w-xl">
-          No subscriptions, no credit pools. Book an analyst, commission a
-          report, or retain a desk. All prices in USD.
+          Brokerage on success fee. Membership free. Intelligence by the
+          engagement. No subscriptions, ever. All prices in USD.
         </p>
+      </section>
+
+      {/* Route 0: The Brokerage */}
+      <section className="container-px pb-12">
+        <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <p className="eyebrow text-gold">The Brokerage</p>
+            <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>Deals and the network</h2>
+          </div>
+          <Link href="/brokerage" className="btn-ghost-light">Visit the Deal Desk <ArrowRight className="h-4 w-4" /></Link>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="glass p-7 flex flex-col ring-1 ring-gold/40">
+            <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Desk</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Success fee only</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Agreed in writing · paid on closing</p>
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
+              Bring an offer or a requirement. No retainer, no listing fee.
+              The commission is agreed up front in the fee agreement and is
+              due only when your deal closes.
+            </p>
+            <Link href="/brokerage#submit" className="btn-gold mt-6">Submit a deal <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+          <div className="glass p-7 flex flex-col">
+            <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Sheet</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Free</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Vetted members · weekly email</p>
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
+              One email a week with live, anonymized offers and requirements.
+              Free for approved members. Introductions run under signed NCNDA
+              and fee terms.
+            </p>
+            <Link href="/network" className="btn-ghost-light mt-6">Request access <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+        </div>
       </section>
 
       {/* Route 1: The Analyst Desk */}
