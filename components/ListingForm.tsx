@@ -25,9 +25,9 @@ function safeName(name: string): string {
   return name.replace(/[^\w.\-]+/g, "_").slice(-80);
 }
 
-export default function ListingForm() {
+export default function ListingForm({ initialType = "offer" }: { initialType?: ListingType }) {
   const router = useRouter();
-  const [type, setType] = useState<ListingType>("offer");
+  const [type, setType] = useState<ListingType>(initialType);
   const [step, setStep] = useState(0);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [progress, setProgress] = useState("");
