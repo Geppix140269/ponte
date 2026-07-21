@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ShoppingCart, Menu, X, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import Logo from "@/components/Logo";
-import { useCart } from "@/lib/cart-store";
 
-// Labels match lib/catalogue.ts CATEGORIES names so naming stays consistent
-// across the header, homepage tiles and footer.
+// One nav, one story: the marketplace, what it costs, how to reach the desk.
 const navLinks = [
   { href: "/marketplace", label: "Marketplace" },
   { href: "/pricing", label: "Fees" },
@@ -18,10 +16,7 @@ const navLinks = [
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const count = useCart((s) => s.items.length);
 
-  useEffect(() => setMounted(true), []);
   useEffect(() => setOpen(false), [pathname]);
 
   return (
@@ -56,20 +51,6 @@ export default function SiteHeader() {
           >
             <User className="h-5 w-5" />
           </Link>
-          {/* Cart only appears once something is in it — Ponte is a
-              brokerage first, not a shop. */}
-          {mounted && count > 0 && (
-            <Link
-              href="/cart"
-              className="relative inline-flex rounded-full p-2 text-cream hover:bg-white/5 hover:text-gold"
-              aria-label="Cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">
-                {count}
-              </span>
-            </Link>
-          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
