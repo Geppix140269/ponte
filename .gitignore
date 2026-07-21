@@ -50,3 +50,6 @@ build.log
 build-verify.log
 *.build.log
 
+
+# Design mockups previewed locally. Never shipped.
+*.local.html

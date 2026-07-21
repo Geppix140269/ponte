@@ -1,0 +1,273 @@
+﻿<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07101B">
+</head><body><title>Ponte, landing direction</title>
+<style>
+/*
+  DESIGN PLAN
+
+  Honors the existing Ponte system rather than inventing one: navy-deep ground,
+  gold as the single signal colour, cream text. What changes is treatment.
+
+  Colour   #07101B ground Â· #101E30 surface Â· #C9973A gold (accent, spent once)
+           #F5F0E8 cream Â· #8493A6 neutral, biased blue toward the ground so it
+           reads chosen rather than inherited Â· #4AC09A verdict green, semantic
+           only, never decorative.
+
+  Type     No webfont: the CSP blocks font CDNs and a silent fallback is worse
+           than a considered system stack. The identity is carried by the
+           MONOSPACE, which is authentic here: a trade is written on telexes,
+           letters of credit and manifests, all monospaced. Every datum, label
+           and verdict is mono. Headlines are a heavy system sans, tight.
+
+  Layout   The hero is the thesis: not a phone mockup, which every SaaS page
+           has, but the actual artefact of this business. One deal, written as
+           a trade document, with the counterparty check resolving live beside
+           it. The page then shows three screens instead of describing them.
+
+  Theme    Committed to dark on purpose. Ponte's brand is a navy ground with
+           gold reserved for signal; a light variant would be a different
+           brand, not a courtesy.
+*/
+:root{
+  --ground:#07101B; --surface:#101E30; --raised:#16263B;
+  --gold:#C9973A; --gold-soft:#D9AC55;
+  --cream:#F5F0E8; --white:#FFFFFF;
+  --neutral:#8493A6; --neutral-dim:#5D6D80;
+  --verdict:#4AC09A;
+  --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.06);
+  --sans:system-ui,-apple-system,"Segoe UI Variable Display","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--cream);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{text-wrap:balance;margin:0}
+a{color:inherit}
+
+/* ---- label: the one repeated structural device, and it always names a real
+        category of thing, never decorates ---- */
+.label{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--neutral);font-weight:500}
+
+/* ---- top bar ---- */
+.bar{position:sticky;top:0;z-index:60;background:rgba(7,16,27,.82);
+  backdrop-filter:blur(18px);border-bottom:1px solid var(--line-soft)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--white)}
+.cta{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#0A1420;
+  border:0;border-radius:6px;padding:11px 18px;font-family:var(--sans);font-size:14px;font-weight:650;
+  letter-spacing:-.005em;cursor:pointer;text-decoration:none;transition:background .18s,transform .18s}
+.cta:hover{background:var(--gold-soft);transform:translateY(-1px)}
+.cta.lg{padding:15px 26px;font-size:15.5px;border-radius:7px}
+.cta:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ---- hero ---- */
+.hero{padding:56px 0 0;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-40% -20% 30% -20%;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 42% 40% at 74% 26%,rgba(201,151,58,.20),transparent 64%),
+             radial-gradient(ellipse 50% 55% at 14% 44%,rgba(30,66,120,.50),transparent 68%);
+  filter:blur(28px)}
+.hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);
+  gap:56px;align-items:center}
+.pitch h1{font-size:clamp(40px,5.3vw,66px);line-height:1.0;letter-spacing:-.038em;font-weight:750;color:var(--white)}
+.pitch h1 .two{color:var(--gold);display:block}
+.pitch .sub{margin:20px 0 0;font-size:17.5px;line-height:1.5;color:var(--neutral);max-width:34ch}
+.free{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(74,192,154,.30);
+  background:rgba(74,192,154,.10);color:var(--verdict);border-radius:999px;padding:6px 13px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.acts{margin-top:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.plain{font-size:14.5px;color:var(--cream);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.26);padding-bottom:2px}
+.plain:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ---- the deal document: the hero's thesis ---- */
+.doc{background:linear-gradient(168deg,var(--raised),var(--surface));border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.85)}
+.doc-top{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;
+  border-bottom:1px solid var(--line-soft);background:rgba(0,0,0,.22)}
+.kind{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--gold)}
+.ref{font-family:var(--mono);font-size:11.5px;color:var(--neutral-dim)}
+.doc-head{padding:20px 18px 16px}
+.goods{font-size:19px;font-weight:620;color:var(--white);letter-spacing:-.015em;line-height:1.25}
+.qty{font-family:var(--mono);font-size:clamp(34px,4.2vw,46px);font-weight:700;color:var(--white);
+  letter-spacing:-.035em;line-height:1;margin-top:14px;font-variant-numeric:tabular-nums}
+.qty span{font-size:.44em;color:var(--neutral);font-weight:500;letter-spacing:0;margin-left:8px}
+.terms{border-top:1px solid var(--line-soft)}
+.term{display:flex;justify-content:space-between;gap:16px;padding:10px 18px;font-size:13px}
+.term+.term{border-top:1px solid var(--line-soft)}
+.term dt{color:var(--neutral);font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;margin:0}
+.term dd{margin:0;font-family:var(--mono);font-size:12.5px;color:var(--cream);text-align:right}
+
+/* ---- the check, resolving ---- */
+.check{border-top:1px solid var(--line);background:rgba(0,0,0,.26);padding:15px 18px 17px}
+.check-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.srcs{margin:13px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.src{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;color:var(--neutral);
+  opacity:0;transform:translateY(4px);animation:arrive .42s cubic-bezier(.2,.7,.3,1) forwards}
+.src:nth-child(1){animation-delay:.35s}.src:nth-child(2){animation-delay:.62s}
+.src:nth-child(3){animation-delay:.89s}.src:nth-child(4){animation-delay:1.16s}
+.src b{color:var(--cream);font-weight:500;flex:1}
+.tick{width:15px;height:15px;flex:none;border-radius:50%;background:rgba(74,192,154,.14);
+  border:1px solid rgba(74,192,154,.42);color:var(--verdict);display:grid;place-items:center;font-size:9px;font-weight:700}
+.when{color:var(--neutral-dim);font-size:10.5px}
+@keyframes arrive{to{opacity:1;transform:none}}
+.stamp{margin-top:14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(74,192,154,.40);
+  background:rgba(74,192,154,.09);border-radius:7px;padding:10px 13px;
+  opacity:0;animation:arrive .5s cubic-bezier(.2,.7,.3,1) 1.5s forwards}
+.stamp .v{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--verdict);font-weight:700}
+.stamp .n{font-size:12px;color:var(--neutral);margin-left:auto;font-family:var(--mono)}
+
+/* ---- source strip ---- */
+.strip{margin-top:64px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+  background:rgba(255,255,255,.018)}
+.strip .wrap{display:flex;align-items:center;gap:14px 30px;flex-wrap:wrap;padding-top:20px;padding-bottom:20px}
+.strip .name{font-family:var(--mono);font-size:12.5px;color:var(--cream);opacity:.8;letter-spacing:.02em}
+
+/* ---- panels ---- */
+.panels{padding:84px 0 0}
+.center{text-align:center;max-width:34ch;margin:0 auto}
+.center h2{font-size:clamp(28px,3.4vw,42px);line-height:1.06;letter-spacing:-.032em;font-weight:730;color:var(--white)}
+.center p{color:var(--neutral);font-size:16px;margin:14px 0 0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:44px}
+.panel{background:linear-gradient(178deg,rgba(255,255,255,.055),rgba(255,255,255,.016));
+  border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.panel h3{font-size:17.5px;font-weight:640;color:var(--white);letter-spacing:-.018em}
+.panel p{margin:0;font-size:13.5px;color:var(--neutral);line-height:1.5}
+.screen{margin-top:auto;background:rgba(4,10,18,.72);border:1px solid var(--line-soft);border-radius:9px;padding:14px}
+.line{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;font-family:var(--mono);font-size:11.5px}
+.line+.line{border-top:1px solid var(--line-soft)}
+.line .k{color:var(--neutral)}
+.line .v{color:var(--verdict);font-weight:600;font-size:10.5px;letter-spacing:.1em}
+.figure{text-align:center;padding:14px 0 10px}
+.figure .n{font-family:var(--mono);font-size:42px;font-weight:700;color:var(--white);letter-spacing:-.04em;line-height:1}
+.figure .n.gold{color:var(--gold)}
+.figure .c{margin-top:9px}
+.figure .note{margin-top:12px;font-size:12px;color:var(--cream)}
+
+/* ---- closer ---- */
+.closer{margin-top:84px;padding:66px 0 84px;text-align:center;position:relative;overflow:hidden;
+  border-top:1px solid var(--line-soft)}
+.closer::before{content:"";position:absolute;inset:-70% 24% 34% 24%;z-index:0;
+  background:radial-gradient(ellipse at center,rgba(201,151,58,.20),transparent 66%);filter:blur(36px)}
+.closer .wrap{position:relative;z-index:1}
+
+@media (max-width:900px){
+  .hero{padding-top:36px}
+  .hero .wrap{grid-template-columns:1fr;gap:34px}
+  .grid{grid-template-columns:1fr}
+  .panels{padding-top:60px}
+}
+@media (prefers-reduced-motion:reduce){
+  .src,.stamp{animation:none;opacity:1;transform:none}
+  .cta:hover{transform:none}
+}
+</style>
+
+<header class="bar"><div class="wrap">
+  <span class="brand">
+    <svg width="22" height="22" viewBox="0 0 120 120" aria-hidden="true">
+      <path d="M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98" fill="none" stroke="#F5F0E8" stroke-width="9"/>
+      <line x1="14" y1="98" x2="106" y2="98" stroke="#F5F0E8" stroke-width="3"/>
+      <circle cx="60" cy="42" r="6.5" fill="#C9973A"/>
+    </svg>Ponte</span>
+  <a class="cta" href="#post">Post free</a>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <div class="pitch">
+    <span class="free">Free to post &middot; Free to connect</span>
+    <h1>Trade with strangers.<span class="two">Not with unknowns.</span></h1>
+    <p class="sub">Every counterparty on this board is screened before you ever speak to them.</p>
+    <div class="acts">
+      <a class="cta lg" href="#post">Post a listing, free &rarr;</a>
+      <a class="plain" href="#board">See the board</a>
+    </div>
+  </div>
+
+  <!-- The hero is one real deal, written the way a trade is written, with the
+       check on the counterparty resolving beside it. -->
+  <article class="doc" aria-label="Example listing with its counterparty check">
+    <div class="doc-top"><span class="kind">Requirement</span><span class="ref">PT&#8209;1481 &middot; HS 3102.10</span></div>
+    <div class="doc-head">
+      <h2 class="goods">Urea 46%, granular, bagged</h2>
+      <p class="qty">12,000<span>MT / month</span></p>
+    </div>
+    <dl class="terms">
+      <div class="term"><dt>Incoterm</dt><dd>FOB</dd></div>
+      <div class="term"><dt>Corridor</dt><dd>EG &rarr; BR</dd></div>
+      <div class="term"><dt>Payment</dt><dd>LC at sight</dd></div>
+      <div class="term"><dt>Role</dt><dd>End buyer</dd></div>
+    </dl>
+    <div class="check">
+      <div class="check-top"><span class="label">Counterparty check</span><span class="when mono">21 Jul 2026</span></div>
+      <ul class="srcs">
+        <li class="src"><span class="tick">&#10003;</span><b>Companies House</b><span class="when">Active</span></li>
+        <li class="src"><span class="tick">&#10003;</span><b>EU VIES</b><span class="when">VAT valid</span></li>
+        <li class="src"><span class="tick">&#10003;</span><b>GLEIF</b><span class="when">LEI held</span></li>
+        <li class="src"><span class="tick">&#10003;</span><b>Sanctions, 7 lists</b><span class="when">No match</span></li>
+      </ul>
+      <p class="stamp"><span class="v">Cleared</span><span class="n">Level 2</span></p>
+    </div>
+  </article>
+</div></section>
+
+<div class="strip"><div class="wrap">
+  <span class="label">Checked against</span>
+  <span class="name">Companies House</span><span class="name">EU VIES</span><span class="name">GLEIF</span>
+  <span class="name">OFAC</span><span class="name">EU Consolidated</span><span class="name">UN Security Council</span><span class="name">UK OFSI</span>
+</div></div>
+
+<section class="panels" id="board"><div class="wrap">
+  <div class="center">
+    <h2>Three things settled before you talk.</h2>
+    <p>Shown as they appear on screen, not described.</p>
+  </div>
+  <div class="grid">
+    <section class="panel">
+      <h3>They get checked</h3>
+      <p>Registers and seven sanctions lists, each with the date it was read. A source we cannot reach is reported as not checked, never as clean.</p>
+      <div class="screen">
+        <div class="line"><span class="k">Companies House</span><span class="v">ACTIVE</span></div>
+        <div class="line"><span class="k">EU VIES</span><span class="v">VALID</span></div>
+        <div class="line"><span class="k">OFAC SDN</span><span class="v">NO MATCH</span></div>
+        <div class="line"><span class="k">UK OFSI</span><span class="v">NO MATCH</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>You stay anonymous</h3>
+      <p>Your listing circulates under a reference. Your name appears only after both sides agree and the NCNDA is signed.</p>
+      <div class="screen figure">
+        <p class="n">PT&#8209;1481</p>
+        <p class="c label">Your reference</p>
+        <p class="note">Company name hidden</p>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>You keep the deal</h3>
+      <p>Nothing is taken from a deal you close yourselves. The desk runs one for you only if you ask.</p>
+      <div class="screen figure">
+        <p class="n gold">0%</p>
+        <p class="c label">Commission</p>
+        <p class="note">Desk optional, on a fee you agree</p>
+      </div>
+    </section>
+  </div>
+</div></section>
+
+<section class="closer" id="post"><div class="wrap">
+  <div class="center">
+    <h2>Post it in the next two minutes.</h2>
+    <p>Free to post, free to connect, and you will know exactly who answers.</p>
+  </div>
+  <p style="margin-top:30px"><a class="cta lg" href="#post">Post a listing, free &rarr;</a></p>
+</div></section>
+</main>
+
+</body></html>
