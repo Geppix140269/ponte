@@ -66,13 +66,16 @@ secrets. Those are not in git.
 | Asset | Backed up by | Frequency |
 |---|---|---|
 | Code and history | GitHub, plus local bundles | Every push |
-| Database | Supabase automatic backups. Confirm the retention on your plan. | Provider default |
-| Listing media | Supabase Storage. No independent copy today. | Gap, see below |
+| Database, all 15 tables | `npm run backup`, scheduled task `PonteTradeBackup` | Daily, 02:00 |
+| Storage, all buckets | Same run | Daily, 02:00 |
 | Secrets | Password manager | On rotation |
 
-**Known gap:** there is no independent export of the database or of uploaded
-listing media. If the Supabase project were deleted, the plan's own backups go
-with it. A periodic `pg_dump` to storage outside Supabase would close this.
+Full detail, including how to restore and how to test that a restore works,
+is in [BACKUP.md](BACKUP.md).
+
+**Remaining gap:** the backups are written to this machine. Copy
+`C:\Users\gfuna\ponte-backups` somewhere off it. A backup on the same disk as
+the original is not a backup.
 
 ## Restore
 

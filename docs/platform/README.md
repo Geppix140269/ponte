@@ -12,6 +12,7 @@ agreed.
 | [VERSIONS.md](VERSIONS.md) | What shipped, when, and what changed |
 | [FEATURES.md](FEATURES.md) | What the product currently does |
 | [RUNBOOK.md](RUNBOOK.md) | Deploy, back up, restore, and what to do in an incident |
+| [BACKUP.md](BACKUP.md) | How the database and storage are backed up, and how to restore |
 
 ## The two rules
 

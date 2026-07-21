@@ -38,3 +38,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Backups hold member personal data. Never commit them.
+ponte-backups/
+*.bundle
+*.ndjson
+

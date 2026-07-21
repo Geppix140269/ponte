@@ -7,6 +7,29 @@ Format: date, what changed, why, and anything that needs watching afterwards.
 
 ---
 
+## 21 July 2026, database and storage backup
+
+**Status:** shipped and running.
+
+Code was safe on GitHub, the data was not. Supabase keeps its own backups, but
+inside the same project, so losing the project or the account loses them too.
+
+- `npm run backup` exports all 15 tables as paged NDJSON and downloads every
+  file from every storage bucket, with a manifest carrying row counts, byte
+  counts and a SHA-256 per table. Built on the Supabase client, because this
+  machine has no `pg_dump`, `psql`, Supabase CLI or Docker.
+- `npm run restore` is a dry run unless confirmed, refuses a backup marked
+  incomplete, requires the target project spelled out and matching the
+  environment, refuses to move data between projects, and never deletes.
+- Scheduled task `PonteTradeBackup`, daily at 02:00. Verified end to end: run
+  through the Task Scheduler returned 0 and produced a complete run.
+- Verified on the first run: 15 tables, 103 rows, 2 files, 36.7 MB. Every
+  NDJSON parsed and every row count matched the manifest.
+- Backups are git ignored. They hold member personal data.
+
+**Still open:** the backups live on the same machine as the working copy. They
+need copying somewhere else.
+
 ## 21 July 2026, platform hygiene
 
 **Status:** shipped to `main` and live.
