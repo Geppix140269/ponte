@@ -9,7 +9,21 @@ Format: date, what changed, why, and anything that needs watching afterwards.
 
 ## 21 July 2026, platform hygiene
 
-**Status:** in progress, branch `i18n` and follow up work.
+**Status:** shipped to `main` and live.
+
+- One branch. Ten stale remote branches were removed after confirming each had
+  zero commits not already in `main`, so nothing was lost. `main` is now the
+  only branch on the remote.
+- Legacy redirects moved out of `next.config.mjs` and into `middleware.ts`.
+  On Netlify the middleware runs at the edge, ahead of the origin, so a
+  redirect declared in the config never saw an unprefixed URL: the locale
+  middleware had already rewritten it. The same URL was answering 307 in
+  English and 308 in Spanish. One authority now, verified live: `/cart`,
+  `/network`, `/catalogue`, `/brokerage`, `/why-ponte`, `/methodology`,
+  `/product/*` and `/category/*` all return 308, and a prefixed URL keeps its
+  language, so `/es/cart` lands on `/es/marketplace`.
+- Commits go straight to `main` by the owner's decision. The pre-commit guard
+  against secrets, env files and stray files stays.
 
 - Backed up all three local clones as full history bundles before any cleanup.
 - Established one source of truth and retired two stale clones that had been
@@ -21,8 +35,9 @@ Format: date, what changed, why, and anything that needs watching afterwards.
 
 ## 21 July 2026, ten language interface
 
-**Status:** built on branch `i18n`, not yet merged. Production build not yet
-confirmed green.
+**Status:** shipped to `main` and live on ponte.trade. Verified after deploy:
+`/`, `/marketplace` and `/pricing` serve English on their original URLs, and
+`/es/marketplace`, `/zh/marketplace` and `/ar/marketplace` all serve.
 
 - next-intl with `app/[locale]` routing. English keeps bare URLs, other
   languages are prefixed, so indexed URLs do not move.
