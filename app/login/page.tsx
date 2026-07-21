@@ -103,6 +103,7 @@ export default function LoginPage() {
       shape: "rectangular",
       logo_alignment: "left",
       width: 360,
+      locale: "en",
     });
   }, [scriptLoaded, nonces]);
 
@@ -134,9 +135,9 @@ export default function LoginPage() {
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={() => setScriptLoaded(true)} />
       <section className="container-px py-20">
         <div className="glass p-10 max-w-md mx-auto">
-          <span className="pill">Sign in</span>
-          <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>Welcome back.</h1>
-          <p className="text-gray-2 text-[14px] mb-7">Access your listings, your deals, and the board.</p>
+          <span className="pill">Members</span>
+          <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>One door. One login.</h1>
+          <p className="text-gray-2 text-[14px] mb-7">No passwords. New here? Signing in creates your account. Members post deals and see the board.</p>
 
           {!configured ? (
             <div className="glass-tight p-6 text-[13px] text-gray-2 leading-relaxed">
