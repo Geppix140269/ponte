@@ -13,6 +13,39 @@ State as at 21 July 2026. Written down so it does not live in one person's
 head or one chat session. Delete an item when it is genuinely done, not when
 it is started.
 
+## In flight as at 21 July 2026
+
+**Front door rework, professional trade positioning.** The owner's diagnosis,
+and it is correct: the data model is trade grade but the surface reads as
+consumer classifieds, "like eBay or Milanuncios". The listing form captures HS
+code, quantity and unit, incoterms, origin, destination and payment terms,
+while the homepage said "Post it in 3 clicks. Photos, videos, done."
+
+Two agents were working on this when the session ended:
+
+1. `app/[locale]/page.tsx`. Hero states the category in trade language rather
+   than a slogan. The verification proof strip moves high on the page, naming
+   the real sources (Companies House, VIES, GLEIF, OFAC, EU, UN, UK OFSI),
+   because that is the differentiator no classifieds portal can claim and it
+   was buried at /verification.
+2. The board and listing detail. Cards lead with the trade line, quantity and
+   unit in tabular numerals, then incoterm, then corridor. Photos demoted.
+   Dense rows rather than a grid of large cards.
+
+**Check both landed and CI is green before assuming this is done.**
+
+**The constraint that must not be relaxed:** the platform has very few
+listings. No invented volume, no member counts, no "X traders online", no
+urgency. Where the board is thin the page shows the FORMAT of a deal, clearly
+labelled as an example. A fake liquidity signal loses exactly the professional
+trader this is meant to attract, because they spot it immediately.
+
+**Earlier instruction this partly reverses:** commits such as "Landing page v2:
+two doors, three clicks, almost no words" optimised for simplicity, and that is
+what produced the consumer feel. Simplicity and institutional credibility pull
+against each other here. The three click flow stays, the language around it
+changes.
+
 ## Do these first
 
 **1. Set the GitHub Actions secrets, or the nightly sanctions refresh never
