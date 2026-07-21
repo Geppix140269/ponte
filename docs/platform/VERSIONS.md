@@ -15,13 +15,7 @@ it is started.
 
 ## Do these first
 
-**1. Rotate the Supabase personal access token.** A PAT was pasted into a chat
-transcript on 21 July to apply migrations. It grants **account level** access,
-not just this project, and a transcript is permanent. Revoke and reissue in
-Supabase account settings. This is the only item on this page that cannot be
-undone later.
-
-**2. Set the GitHub Actions secrets, or the nightly sanctions refresh never
+**1. Set the GitHub Actions secrets, or the nightly sanctions refresh never
 runs.** The scheduled refresh moved from a Netlify function to GitHub Actions
 (see the entry below for why). It needs, under Settings, Secrets and variables,
 Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
@@ -29,8 +23,16 @@ Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
 the workflow fails on its first run. The lists currently hold roughly 30,000
 rows from a manual load, so screening works today and will simply go stale.
 
-**3. Copy `C:\Users\gfuna\ponte-backups` off the machine.** A backup on the
+**2. Copy `C:\Users\gfuna\ponte-backups` off the machine.** A backup on the
 same disk as the original is not a backup. See [BACKUP.md](BACKUP.md).
+
+**Closed 21 July: the Supabase personal access token was rotated.** A PAT had
+been pasted into a chat transcript to apply migrations, which exposed account
+level access permanently. The old token is confirmed rejected with HTTP 401 and
+appears nowhere on disk. Recorded here rather than deleted, because the lesson
+outlives the incident: **never paste a credential into a chat, a ticket or a
+commit message.** Put it in the environment and hand over a reference to it.
+See [SECRETS.md](SECRETS.md).
 
 ## Measured, and not yet measured
 
