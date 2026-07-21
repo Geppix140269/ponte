@@ -38,6 +38,9 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
   const [uploadWarning, setUploadWarning] = useState("");
   const [product, setProduct] = useState("");
   const [details, setDetails] = useState("");
+  const [qty, setQty] = useState("");
+  const [unit, setUnit] = useState("MT");
+  const [freq, setFreq] = useState("One-off");
 
   function next() {
     setError("");
@@ -119,10 +122,13 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
     try {
       // 1. Create the listing (metadata only).
       setProgress("Creating your listing…");
+      const volume = qty.trim()
+        ? `${qty.trim()} ${unit}${freq !== "One-off" ? ` ${freq.toLowerCase()}` : ""}`
+        : "";
       const res = await fetch("/api/marketplace/submit", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...fields, product, details, type }),
+        body: JSON.stringify({ ...fields, product, details, type, volume }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "Something went wrong. Please try again.");
@@ -241,17 +247,48 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
             </button>
           ))}
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <input
-            value={product}
-            onChange={(e) => setProduct(e.target.value)}
-            maxLength={200}
-            placeholder={type === "service" ? "Service offered / needed *" : "Product (HS code if known) *"}
-            className={`${FIELD} sm:col-span-2`}
-          />
-          <input name="hs_code" maxLength={12} placeholder="HS code" className={FIELD} />
-          <input name="volume" maxLength={120} placeholder="Volume / quantity" className={FIELD} />
-        </div>
+        <input
+          value={product}
+          onChange={(e) => setProduct(e.target.value)}
+          maxLength={200}
+          placeholder={
+            type === "service"
+              ? "What service do you offer or need? *"
+              : type === "requirement"
+                ? "What product do you need? *"
+                : "What are you selling? *"
+          }
+          className={FIELD}
+        />
+        {type !== "service" && (
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <input
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              inputMode="decimal"
+              maxLength={12}
+              placeholder="Quantity"
+              className={FIELD}
+            />
+            <select value={unit} onChange={(e) => setUnit(e.target.value)} className={FIELD}>
+              <option>MT</option>
+              <option>KG</option>
+              <option>Tons</option>
+              <option>Litres</option>
+              <option>Units</option>
+              <option>Pallets</option>
+              <option>Containers</option>
+              <option>Other</option>
+            </select>
+            <select value={freq} onChange={(e) => setFreq(e.target.value)} className={FIELD}>
+              <option>One-off</option>
+              <option>Per month</option>
+              <option>Per quarter</option>
+              <option>Per year</option>
+              <option>Ongoing</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Step 2: the terms */}
