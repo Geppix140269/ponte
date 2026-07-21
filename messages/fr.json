@@ -1,0 +1,661 @@
+{
+  "categories": {
+    "grains": {
+      "label": "Grains et céréales",
+      "subs": {
+        "wheat": "Blé",
+        "corn": "Maïs",
+        "rice": "Riz",
+        "barley": "Orge",
+        "soybeans": "Soja",
+        "pulses": "Légumineuses et lentilles",
+        "seeds": "Graines",
+        "flour": "Farines et produits de mouture"
+      }
+    },
+    "produce": {
+      "label": "Fruits et légumes",
+      "subs": {
+        "freshFruit": "Fruits frais",
+        "freshVegetables": "Légumes frais",
+        "frozen": "Surgelés",
+        "driedFruitNuts": "Fruits secs et fruits à coque"
+      }
+    },
+    "meat": {
+      "label": "Viandes et volailles",
+      "subs": {
+        "beef": "Bœuf",
+        "poultry": "Volaille",
+        "pork": "Porc",
+        "lamb": "Agneau",
+        "processed": "Viandes transformées"
+      }
+    },
+    "seafood": {
+      "label": "Poissons et produits de la mer",
+      "subs": {
+        "freshFish": "Poisson frais",
+        "frozenFish": "Poisson surgelé",
+        "shellfish": "Crustacés et coquillages",
+        "processed": "Produits de la mer transformés"
+      }
+    },
+    "dairy": {
+      "label": "Produits laitiers et œufs",
+      "subs": {
+        "milkCream": "Lait et crème",
+        "cheese": "Fromages",
+        "butter": "Beurre",
+        "milkPowder": "Lait en poudre",
+        "eggs": "Œufs"
+      }
+    },
+    "oils": {
+      "label": "Huiles et graisses alimentaires",
+      "subs": {
+        "sunflower": "Huile de tournesol",
+        "olive": "Huile d’olive",
+        "palm": "Huile de palme",
+        "rapeseed": "Huile de colza",
+        "other": "Autres huiles et graisses"
+      }
+    },
+    "beverages": {
+      "label": "Boissons",
+      "subs": {
+        "wine": "Vins",
+        "beerSpirits": "Bières et spiritueux",
+        "juices": "Jus",
+        "waterSoftDrinks": "Eaux et boissons sans alcool"
+      }
+    },
+    "coffee": {
+      "label": "Café, thé et sucre",
+      "subs": {
+        "coffee": "Café",
+        "tea": "Thé",
+        "cocoa": "Cacao",
+        "spices": "Épices",
+        "sugar": "Sucre et édulcorants"
+      }
+    },
+    "foods": {
+      "label": "Produits alimentaires préparés",
+      "subs": {
+        "canned": "Conserves et produits appertisés",
+        "pastaBakery": "Pâtes et boulangerie",
+        "confectionery": "Confiserie",
+        "sauces": "Sauces et condiments",
+        "animalFeed": "Aliments pour animaux"
+      }
+    },
+    "fuels": {
+      "label": "Minerais et combustibles",
+      "subs": {
+        "refined": "Carburants raffinés",
+        "crude": "Pétrole brut",
+        "coal": "Charbon",
+        "gas": "Gaz",
+        "ores": "Minerais et minéraux",
+        "cement": "Ciment et granulats"
+      }
+    },
+    "chemicals": {
+      "label": "Chimie et pharmacie",
+      "subs": {
+        "industrial": "Produits chimiques industriels",
+        "fertilizers": "Engrais",
+        "pharmaceuticals": "Produits pharmaceutiques",
+        "cosmetics": "Cosmétiques",
+        "cleaning": "Produits d’entretien"
+      }
+    },
+    "plastics": {
+      "label": "Plastiques et caoutchouc",
+      "subs": {
+        "polymers": "Polymères bruts",
+        "products": "Produits plastiques",
+        "rubberTyres": "Caoutchouc et pneumatiques"
+      }
+    },
+    "wood": {
+      "label": "Bois et papier",
+      "subs": {
+        "timber": "Bois brut et sciages",
+        "plywood": "Contreplaqué et panneaux",
+        "pellets": "Granulés et biomasse",
+        "paper": "Papier et emballages"
+      }
+    },
+    "textiles": {
+      "label": "Textiles et habillement",
+      "subs": {
+        "fabrics": "Tissus et fils",
+        "clothing": "Vêtements",
+        "home": "Linge de maison",
+        "footwear": "Chaussures et cuir"
+      }
+    },
+    "metals": {
+      "label": "Métaux et acier",
+      "subs": {
+        "steel": "Acier et fer",
+        "aluminium": "Aluminium",
+        "copper": "Cuivre",
+        "scrap": "Ferraille",
+        "products": "Produits métalliques"
+      }
+    },
+    "machinery": {
+      "label": "Machines et électronique",
+      "subs": {
+        "industrial": "Machines industrielles",
+        "agricultural": "Machines agricoles",
+        "electronics": "Électronique et composants",
+        "appliances": "Électroménager"
+      }
+    },
+    "vehicles": {
+      "label": "Véhicules et transport",
+      "subs": {
+        "carsTrucks": "Voitures et camions",
+        "parts": "Pièces et pneumatiques",
+        "shipsRail": "Navires et ferroviaire"
+      }
+    },
+    "medical": {
+      "label": "Médical et instruments",
+      "subs": {
+        "devices": "Dispositifs médicaux",
+        "lab": "Laboratoire et instruments",
+        "ppe": "EPI et consommables"
+      }
+    },
+    "home": {
+      "label": "Mobilier et construction",
+      "subs": {
+        "furniture": "Mobilier",
+        "building": "Matériaux de construction",
+        "glass": "Verre et céramique",
+        "stone": "Pierre et marbre"
+      }
+    },
+    "other": {
+      "label": "Autres marchandises",
+      "subs": {
+        "other": "Autre"
+      }
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "Contact",
+      "description": "Parlez à Ponte. Confiez une affaire au desk, réservez un analyste senior, ou cadrez un Intensif Stratégie ou un forfait mensuel."
+    },
+    "pill": "Contact",
+    "title": "Parlons-en.",
+    "lead": {
+      "default": "Dites-nous l’affaire que vous avez en main, ou la décision que vous pesez. Le desk répond sous un jour ouvré.",
+      "strategyIntensive": "Vous cherchez un Intensif Stratégie : une demi-journée avec un analyste senior et une note écrite. Dites-nous la décision, nous la cadrons.",
+      "retainer": "Vous envisagez un forfait mensuel avec le desk : un analyste à disposition en permanence. Dites-nous la cadence et le type de questions attendues, nous proposerons un volume mensuel."
+    },
+    "deal": {
+      "title": "Confiez-nous une affaire",
+      "body": "Une offre ou un besoin, marchandises ou services liés au commerce. Des faits uniquement, contrats signés avant toute mise en relation.",
+      "cta": "Aller à la place de marché"
+    },
+    "email": {
+      "title": "Écrivez-nous",
+      "body": "Pour les intensifs, les forfaits mensuels ou toute demande sur mesure. Dites-nous la décision, nous la cadrons.",
+      "subject": "Demande : {topic}"
+    }
+  },
+  "footer": {
+    "blurb": "La place de marché vérifiée du commerce international. Publiez ce que vous vendez, indiquez ce que vous cherchez, entrez en relation gratuitement. Le desk gère votre affaire uniquement à votre demande, sur commission de réussite ou forfait mensuel.",
+    "deskHeading": "Le desk",
+    "deskMarketplace": "La place de marché",
+    "deskFees": "Tarifs",
+    "companyHeading": "Société",
+    "companyAbout": "À propos",
+    "companyTerms": "Conditions",
+    "companyPrivacy": "Confidentialité",
+    "contactHeading": "Contact",
+    "contactUs": "Nous contacter",
+    "securePayment": "Paiement sécurisé via Stripe",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd (Bulgarie)",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "Enreg. 207314767 · TVA BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd (Royaume-Uni)",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "Enreg. 12475013 · TVA GB 343 1702 32"
+      }
+    },
+    "disclaimer": "Courtage et conseil indépendants en commerce international, fondés sur des preuves et des sources officielles. Ponte agit comme courtier et intermédiaire, jamais comme contrepartie. Les mises en relation se font sous NCNDA et accords de commission signés.",
+    "copyright": "© {year} Ponte · nom commercial de 1402 Celsius Ltd · ponte.trade"
+  },
+  "home": {
+    "metaTitle": "Place de marché vérifiée et gratuite pour le commerce de marchandises",
+    "metaDescription": "Publiez une offre ou un besoin sur un tableau commercial vérifié et gratuit. Restez anonyme jusqu’à l’accord des deux parties, puis entrez en relation directe. L’appui du desk est optionnel, sur commission de réussite ou forfait mensuel.",
+    "hero": {
+      "title": "Vendez-le. Trouvez-le.",
+      "titleAccent": "Conclu."
+    },
+    "trust": {
+      "vetted": "Vérifié",
+      "ncnda": "NCNDA d’abord",
+      "successFee": "Commission uniquement en cas de réussite"
+    },
+    "sell": {
+      "titleLine1": "J’ai quelque chose",
+      "titleLine2": "à vendre",
+      "body": "Publiez en 3 clics. Photos, vidéos, terminé.",
+      "cta": "Publier l’offre"
+    },
+    "source": {
+      "titleLine1": "Je cherche",
+      "titleLine2": "un produit",
+      "body": "Dites au desk ce que vous cherchez. Le réseau répond.",
+      "cta": "Publier la demande"
+    },
+    "board": {
+      "link": "Voir le tableau en direct"
+    },
+    "process": {
+      "eyebrow": "Comment ça marche"
+    },
+    "closing": {
+      "title": "Contrats signés avant toute mise en relation. Payé uniquement en cas de réussite.",
+      "postDeal": "Publier une affaire",
+      "seeBoard": "Voir le tableau"
+    }
+  },
+  "legal": {
+    "originalsInEnglish": "Originaux juridiques en anglais. Cette page n’est pas traduite : le texte anglais fait foi."
+  },
+  "listingForm": {
+    "type": {
+      "offer": "Je vends",
+      "requirement": "Je cherche",
+      "service": "Service"
+    },
+    "steps": {
+      "offer": {
+        "product": "Le produit",
+        "terms": "Les conditions",
+        "media": "Photos et fichiers",
+        "preview": "Aperçu"
+      },
+      "requirement": {
+        "need": "Votre besoin",
+        "delivery": "Livraison",
+        "files": "Fichiers",
+        "preview": "Aperçu"
+      },
+      "service": {
+        "service": "Le service",
+        "scope": "Périmètre",
+        "files": "Fichiers",
+        "preview": "Aperçu"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "Que vendez-vous ? Choisissez une catégorie",
+      "categoryPromptBuy": "Que cherchez-vous ? Choisissez une catégorie",
+      "serviceNamePlaceholder": "Quel service proposez-vous ou cherchez-vous ? *",
+      "descriptionOffer": "Décrivez le produit : variété, calibre, spécifications, conditionnement. *",
+      "descriptionRequirement": "Décrivez votre besoin : spécifications, calibre, qualité, conditionnement. *",
+      "descriptionService": "Décrivez le périmètre en quelques lignes. *",
+      "quantityPlaceholder": "Quantité",
+      "pricePlaceholder": "Prix (USD)",
+      "targetPricePlaceholder": "Prix cible (USD)",
+      "priceBasisPerUnit": "USD par {unit}",
+      "priceBasisForDeal": "USD pour l’affaire"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "Tonnes",
+      "litres": "Litres",
+      "units": "Unités",
+      "pallets": "Palettes",
+      "containers": "Conteneurs",
+      "other": "Autre"
+    },
+    "frequency": {
+      "oneOff": "Ponctuel",
+      "perMonth": "Par mois",
+      "perQuarter": "Par trimestre",
+      "perYear": "Par an",
+      "ongoing": "En continu"
+    },
+    "roles": {
+      "offer": {
+        "producer": "Producteur ou propriétaire des marchandises",
+        "tradingCo": "Société de négoce détenant la propriété",
+        "mandatedBroker": "Courtier avec mandat vendeur",
+        "intermediary": "Intermédiaire (sans mandat)"
+      },
+      "requirement": {
+        "endBuyer": "Acheteur final",
+        "tradingCo": "Société de négoce",
+        "mandatedBroker": "Courtier avec mandat acheteur",
+        "intermediary": "Intermédiaire (sans mandat)"
+      }
+    },
+    "chain": {
+      "directToProducer": "En direct avec le producteur",
+      "directToEndBuyer": "En direct avec l’acheteur final",
+      "oneIntermediary": "Un intermédiaire entre les deux",
+      "twoOrMore": "Deux intermédiaires ou plus",
+      "notSure": "Je ne sais pas"
+    },
+    "timing": {
+      "readyNow": "Disponible maintenant",
+      "within30Days": "Sous 30 jours",
+      "within90Days": "Sous 90 jours",
+      "seasonal": "Saisonnier",
+      "toBeAgreed": "À convenir",
+      "asSoonAsPossible": "Dès que possible",
+      "flexible": "Flexible"
+    },
+    "step2": {
+      "roleQuestion": "Quel est votre rôle dans cette affaire ? *",
+      "chainPlaceholder": "Quelle est votre proximité avec l’affaire ? *",
+      "mandateHint": "Téléversez le mandat avec vos documents à l’étape suivante. Cela accélère la vérification.",
+      "originPlaceholder": "Origine (pays ou région)",
+      "destinationPlaceholder": "Livraison vers (pays ou région)",
+      "servicePlacePlaceholder": "Où ? (pays, région, ou monde entier)",
+      "incotermToDiscuss": "Incoterm : à discuter",
+      "extraTermsPlaceholder": "Autre information utile au desk (facultatif)"
+    },
+    "step3": {
+      "mediaRequired": "Photos et vidéos du produit * (au moins une photo, jusqu’à {max})",
+      "mediaOptional": "Photos ou vidéos (facultatif, jusqu’à {max})",
+      "documents": "Documents (facultatif : spécifications, licences, certificats · jusqu’à {max})",
+      "documentsPrivacy": "Les documents ne sont visibles que par le desk, jamais par les contreparties.",
+      "draftRestored": "Bon retour, votre brouillon a été restauré. Les photos ne survivent pas au passage par la connexion : joignez-les à nouveau ici avant de publier."
+    },
+    "preview": {
+      "heading": "Voici comment l’annonce apparaît sur le tableau",
+      "imageAlt": "Votre produit",
+      "badge": {
+        "offer": "Offre",
+        "requirement": "Besoin",
+        "service": "Service"
+      },
+      "productFallback": "Votre produit",
+      "origin": "Origine : {origin}",
+      "destination": "Destination : {destination}",
+      "descriptionFallback": "Votre description apparaît ici.",
+      "pricePerUnit": "Prix indicatif : USD {price} par {unit}",
+      "priceForDeal": "Prix indicatif : USD {price} pour l’affaire",
+      "frequency": {
+        "perMonth": "par mois",
+        "perQuarter": "par trimestre",
+        "perYear": "par an",
+        "ongoing": "en continu"
+      },
+      "privacy": "Votre nom et vos coordonnées ne sont jamais affichés. Le numéro de référence est attribué après validation de l’annonce par le desk.",
+      "freeToPublish": "La publication est gratuite : un clic pour se connecter, sans mot de passe."
+    },
+    "check": {
+      "heading": "Contrôle de l’annonce · gratuit",
+      "scoreSuffix": "/100",
+      "loading": "Lecture de votre annonce…",
+      "unavailable": "Le contrôle est indisponible pour le moment. Vous pouvez publier malgré tout.",
+      "upgrade": "Vous avez utilisé vos contrôles gratuits. Ponte AI vous donne des contrôles d’annonce illimités et votre gestionnaire de compte IA personnel pour <price>$19/mois</price>.",
+      "upgradeCta": "Débloquer Ponte AI",
+      "runAgain": "Relancer le contrôle après modification"
+    },
+    "actions": {
+      "back": "Retour",
+      "continue": "Continuer",
+      "preview": "Aperçu de mon annonce",
+      "working": "En cours…",
+      "publish": "Publier pour vérification",
+      "signInAndPublish": "Se connecter et publier (gratuit)",
+      "saveDraft": "Enregistrer comme brouillon"
+    },
+    "progress": {
+      "creating": "Création de votre annonce…",
+      "uploading": "Téléversement {done} sur {total} : {name}",
+      "uploadFailed": "{count, plural, one {# fichier n’a pas pu être téléversé.} other {# fichiers n’ont pas pu être téléversés.}} L’annonce reste valable. Le desk demandera ce qui manque."
+    },
+    "success": {
+      "titleDraft": "Enregistré comme brouillon.",
+      "titleDraftWithRef": "Enregistré comme brouillon · {ref}.",
+      "titleSent": "Soumis.",
+      "titleSentWithRef": "Soumis · {ref}.",
+      "bodyDraft": "Votre brouillon est conservé sous Vos annonces, sur la page place de marché. Soumettez-le pour vérification quand vous le souhaitez.",
+      "bodySent": "Votre annonce est en cours de vérification par le desk. Vous serez informé par e-mail dans tous les cas, généralement sous deux jours ouvrés.",
+      "back": "Retour à la place de marché"
+    },
+    "errors": {
+      "pickCategory": "Choisissez d’abord une catégorie, en une touche.",
+      "pickSubcategory": "Choisissez l’option la plus proche, une touche de plus.",
+      "nameService": "Nommez d’abord le service.",
+      "describeOffer": "Décrivez-le en quelques lignes : variété, calibre, spécifications.",
+      "describeRequirement": "Décrivez votre besoin : spécifications, calibre, qualité.",
+      "pickRole": "Une touche : quel est votre rôle dans cette affaire ?",
+      "pickChain": "Une touche de plus : quelle est votre proximité avec l’affaire ?",
+      "photoRequired": "Au moins une photo du produit est requise pour publier une offre.",
+      "tooManyMedia": "Maximum {max} photos et vidéos.",
+      "mediaType": "« {name} » : photos (PNG, JPG, WEBP, GIF) ou vidéos (MP4, WEBM, MOV) uniquement.",
+      "mediaTooLarge": "« {name} » dépasse {max} Mo.",
+      "tooManyDocs": "Maximum {max} documents.",
+      "docType": "« {name} » : documents PDF ou images uniquement.",
+      "docTooLarge": "« {name} » dépasse {max} Mo.",
+      "genericRetry": "Une erreur est survenue. Veuillez réessayer.",
+      "generic": "Une erreur est survenue."
+    },
+    "footer": {
+      "notice": "Ne partagez que ce que vous acceptez de partager. Vous préférez signer un NCNDA avec le desk au préalable ? <request>Demandez-le ici</request> et publiez après signature. Rien n’est mis en ligne sans validation du desk."
+    }
+  },
+  "login": {
+    "pill": "Membres",
+    "title": "Une porte. Un identifiant.",
+    "subtitle": "Pas de mot de passe. Nouveau ici ? La connexion crée votre compte. Les membres publient des affaires et consultent le tableau.",
+    "linkExpired": "Ce lien a expiré ou a déjà été utilisé. Saisissez votre e-mail ci-dessous et nous en enverrons un nouveau.",
+    "notConfigured": "La connexion sera disponible une fois Supabase Auth raccordé. Ajoutez vos clés Supabase pour activer le lien magique et la connexion Google.",
+    "checkInbox": "Consultez votre boîte de réception : un lien de connexion magique vous attend.",
+    "googleDisabled": "Connexion Google désactivée (aucun client ID configuré).",
+    "or": "ou",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "you@company.com",
+    "sending": "Envoi...",
+    "submit": "Recevoir un lien magique par e-mail",
+    "errorFallback": "Une erreur est survenue. Réessayez.",
+    "errorUnknown": "Erreur inconnue"
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Place de marché",
+      "description": "Soumettez vos offres et vos besoins sur la place de marché Ponte. Chaque annonce est vérifiée et les documents contrôlés avant toute diffusion."
+    },
+    "type": {
+      "offer": "offre",
+      "requirement": "besoin",
+      "service": "service"
+    },
+    "hero": {
+      "pill": "Place de marché",
+      "heading": "Chaque annonce <em>vérifiée</em>. Chaque affaire sous contrat.",
+      "intro": "Publiez ce que vous vendez ou ce que vous cherchez, gratuitement. L’IA et le desk vérifient chaque annonce avant sa mise en ligne, vous restez anonyme jusqu’à l’accord des deux parties, et la mise en relation ne coûte rien. Vous voulez une affaire gérée de bout en bout ? Le desk intervient sur commission de réussite ou forfait mensuel, uniquement à votre demande.",
+      "newListing": "Nouvelle annonce",
+      "signIn": "Se connecter pour soumettre"
+    },
+    "rules": {
+      "vetted": {
+        "title": "Vérifiée avant mise en ligne",
+        "body": "Chaque annonce est examinée par le desk et les documents sont contrôlés avant toute diffusion. Sans exception."
+      },
+      "anonymous": {
+        "title": "Anonyme en permanence",
+        "body": "Les contreparties voient l’affaire, jamais votre nom, tant que les deux parties n’ont pas signé le NCNDA et les conditions de commission."
+      },
+      "free": {
+        "title": "Gratuit pour négocier",
+        "body": "Publier, consulter et entrer en relation ne coûte rien. Faites appel au desk uniquement si vous voulez une affaire gérée de bout en bout, sur commission de réussite ou forfait mensuel."
+      }
+    },
+    "how": {
+      "eyebrow": "Comment ça marche",
+      "heading": "Cinq étapes. Une règle : contrats signés avant toute mise en relation."
+    },
+    "board": {
+      "eyebrow": "En direct",
+      "heading": "{count, plural, one {# annonce vérifiée sur le tableau.} other {# annonces vérifiées sur le tableau.}}",
+      "headingEmpty": "Le tableau ouvre bientôt.",
+      "signInFull": "Se connecter pour voir les annonces complètes",
+      "empty": "Le tableau ouvrira dès que les premières annonces auront été validées par le desk. Les soumissions sont ouvertes dès maintenant, et les premières annonces recevront le plus d’attention à l’ouverture.",
+      "signInToRespond": "Se connecter pour répondre",
+      "signInToRead": "Connectez-vous pour lire l’annonce complète."
+    },
+    "card": {
+      "origin": "Origine : {value}",
+      "destination": "Destination : {value}"
+    },
+    "ai": {
+      "label": "Votre gestionnaire de compte",
+      "lockedBody": "Votre gestionnaire de compte IA lit l’ensemble de votre compte chaque jour : ce qu’il faut répondre, actualiser, corriger, et rédige la prochaine action. Contrôles d’annonce illimités inclus.",
+      "lockedPrice": "Ponte AI · $19/mois.",
+      "unlock": "Débloquer Ponte AI"
+    },
+    "mine": {
+      "eyebrow": "Vos annonces",
+      "heading": "Où en sont les choses.",
+      "headingEmpty": "Rien de soumis pour l’instant.",
+      "newListing": "Nouvelle annonce",
+      "empty": "Votre première annonce prend cinq minutes : le produit, les conditions, et les documents qui prouvent votre sérieux. Le desk prend le relais.",
+      "status": {
+        "draft": "Brouillon · visible par vous seul",
+        "submitted": "En vérification",
+        "approved": "Validée · en ligne auprès du desk",
+        "rejected": "Non validée",
+        "closed": "Clôturée"
+      },
+      "submitForVetting": "Soumettre pour vérification →",
+      "shareWhatsApp": "Partager sur WhatsApp",
+      "shareText": "{product} · annonce vérifiée {ref} sur Ponte",
+      "connect": {
+        "request": "Un membre vérifié souhaite entrer en relation. Acceptez et vous recevrez chacun les coordonnées de l’autre. Gratuit.",
+        "requestNumbered": "Un membre vérifié souhaite entrer en relation ({n}). Acceptez et vous recevrez chacun les coordonnées de l’autre. Gratuit.",
+        "accept": "Accepter",
+        "decline": "Refuser"
+      }
+    },
+    "cta": {
+      "heading": "Vous préférez en parler d’abord ?",
+      "body": "Présentez l’affaire directement au desk et nous la cadrerons avec vous.",
+      "start": "Créer une annonce",
+      "contact": "Nous contacter"
+    },
+    "new": {
+      "meta": {
+        "title": "Nouvelle annonce",
+        "description": "Construisez votre offre ou votre besoin, prévisualisez le rendu sur le tableau, puis publiez pour vérification par le desk Ponte."
+      },
+      "pill": "Nouvelle annonce",
+      "heading": "Construisez. Visualisez. Publiez.",
+      "intro": "Aucun compte n’est nécessaire pour construire votre annonce et la prévisualiser telle qu’elle apparaîtra sur le tableau. Vous vous connectez seulement au moment de publier."
+    },
+    "detail": {
+      "meta": {
+        "notFound": "Annonce introuvable",
+        "description": "{type} · annonce vérifiée sur Ponte. {teaser}"
+      },
+      "pill": "Annonce vérifiée",
+      "assurance": "Examinée par le desk Ponte avant mise en ligne. Les contreparties restent anonymes jusqu’à l’accord des deux parties ; la mise en relation est gratuite.",
+      "signInToRead": "Connectez-vous gratuitement pour lire l’annonce complète.",
+      "readIn": "Lire en",
+      "original": "Original",
+      "machineTranslation": "Traduction automatique. La version d’origine fait foi.",
+      "interested": "Cette annonce m’intéresse",
+      "shareWhatsApp": "Partager sur WhatsApp",
+      "shareText": "{product} · annonce vérifiée {ref} sur Ponte",
+      "footer": "Vous avez vous-même quelque chose à vendre ou à sourcer ? <link>Construisez votre annonce en trois étapes</link>, aucun compte n’est requis avant la publication."
+    }
+  },
+  "meta": {
+    "siteTitle": "Ponte. Le pont entre acheteur et vendeur.",
+    "siteDescription": "La place de marché gratuite et vérifiée du commerce de marchandises. Publiez ce que vous vendez ou ce que vous cherchez. L’IA et le desk vérifient chaque annonce. Entrez en relation directement, dans l’anonymat jusqu’à l’accord des deux parties, sans frais. Le desk Ponte gère les affaires de bout en bout uniquement sur demande, sur commission de réussite ou forfait mensuel. Exploité par 1402 Celsius Ltd.",
+    "ogDescription": "Chaque annonce vérifiée. Chaque mise en relation gratuite. Publiez une offre ou un besoin en trois étapes, et faites appel au desk uniquement si vous voulez que l’affaire soit gérée.",
+    "twitterDescription": "La place de marché gratuite et vérifiée du commerce de marchandises. Gestion par le desk en option, sur commission de réussite ou forfait mensuel."
+  },
+  "nav": {
+    "homeAriaLabel": "Accueil Ponte Trade",
+    "marketplace": "Place de marché",
+    "fees": "Tarifs",
+    "contact": "Contact",
+    "account": "Compte",
+    "menuAriaLabel": "Menu"
+  },
+  "pricing": {
+    "meta": {
+      "title": "Tarifs",
+      "description": "La place de marché Ponte est gratuite : publiez, faites-vous vérifier, entrez en relation. Le desk est optionnel, sur commission de réussite ou forfait mensuel."
+    },
+    "pill": "Tarifs",
+    "title": "La place de marché est <em>gratuite</em>.",
+    "intro": "Publiez, faites-vous vérifier, entrez en relation : pas de frais d’annonce, pas d’abonnement, pas de commission sur les affaires que vous concluez vous-mêmes. Vous ne payez que si vous demandez au desk de travailler pour vous.",
+    "marketplace": {
+      "name": "La place de marché",
+      "price": "Gratuit",
+      "terms": "Toujours · pour tous",
+      "body": "Publiez ce que vous vendez ou ce que vous cherchez. L’IA et le desk vérifient chaque annonce avant sa mise en ligne. Vous restez anonyme jusqu’à l’accord des deux parties, puis vous traitez en direct. Producteurs, sociétés de négoce et courtiers sont les bienvenus, avec un rôle déclaré dès le départ.",
+      "cta": "Créer une annonce"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/mois",
+      "terms": "Ou $190/an · résiliable à tout moment",
+      "body": "Votre IA à l’intérieur : des contrôles d’annonce illimités qui notent et améliorent chaque annonce avant sa mise en ligne, un gestionnaire de compte IA personnel qui lit votre compte chaque jour, et l’accès prioritaire aux alertes de correspondance IA. Essayez gratuitement, gardez-la quand elle se rembourse.",
+      "cta": "Débloquer Ponte AI"
+    },
+    "desk": {
+      "name": "Le desk, à l’affaire",
+      "price": "Commission de réussite",
+      "terms": "% convenu par écrit · payé à la conclusion",
+      "body": "Vous voulez une affaire gérée de bout en bout ? Le desk mène la vérification approfondie, le NCNDA, la négociation, les contrats et la coordination de la clôture. Le pourcentage est convenu dès le départ dans l’accord de commission et n’est dû qu’à la conclusion de l’affaire. Chaque partie peut nous mandater.",
+      "cta": "Confiez-nous une affaire"
+    },
+    "retainer": {
+      "name": "Le desk, à vos côtés",
+      "price": "Forfait mensuel",
+      "terms": "Mensuel · calibré sur le mandat",
+      "body": "Un appui continu à l’achat ou à la vente : un mandat permanent pour trouver, vérifier et négocier pour votre compte, mois après mois. Pour les équipes de négoce, les producteurs qui entrent sur de nouveaux marchés, et les acheteurs avec des programmes récurrents.",
+      "cta": "Cadrer un mandat"
+    },
+    "footnote": "Les niveaux de commission sont convenus en privé, par écrit, avant tout début de travail. Pas de coûts cachés, aucun frais pour les mises en relation que vous réalisez vous-mêmes sur le tableau."
+  },
+  "process": {
+    "steps": {
+      "post": {
+        "label": "Publier",
+        "micro": "Votre affaire, gratuit"
+      },
+      "vet": {
+        "label": "Vérifier",
+        "micro": "L’IA contrôle, le desk valide"
+      },
+      "match": {
+        "label": "Rapprocher",
+        "micro": "Anonyme sur le tableau"
+      },
+      "connect": {
+        "label": "Mettre en relation",
+        "micro": "Accord des deux, gratuit"
+      },
+      "close": {
+        "label": "Conclure",
+        "micro": "Desk optionnel, sur commission"
+      }
+    }
+  }
+}

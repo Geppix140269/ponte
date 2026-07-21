@@ -1,0 +1,661 @@
+{
+  "categories": {
+    "grains": {
+      "label": "Cereali e granaglie",
+      "subs": {
+        "wheat": "Frumento",
+        "corn": "Mais",
+        "rice": "Riso",
+        "barley": "Orzo",
+        "soybeans": "Soia",
+        "pulses": "Legumi e lenticchie",
+        "seeds": "Semi",
+        "flour": "Farine e macinati"
+      }
+    },
+    "produce": {
+      "label": "Frutta e verdura",
+      "subs": {
+        "freshFruit": "Frutta fresca",
+        "freshVegetables": "Verdura fresca",
+        "frozen": "Surgelati",
+        "driedFruitNuts": "Frutta secca e a guscio"
+      }
+    },
+    "meat": {
+      "label": "Carne e pollame",
+      "subs": {
+        "beef": "Carne bovina",
+        "poultry": "Pollame",
+        "pork": "Carne suina",
+        "lamb": "Agnello",
+        "processed": "Carne trasformata"
+      }
+    },
+    "seafood": {
+      "label": "Pesce e prodotti ittici",
+      "subs": {
+        "freshFish": "Pesce fresco",
+        "frozenFish": "Pesce surgelato",
+        "shellfish": "Crostacei e molluschi",
+        "processed": "Prodotti ittici trasformati"
+      }
+    },
+    "dairy": {
+      "label": "Latticini e uova",
+      "subs": {
+        "milkCream": "Latte e panna",
+        "cheese": "Formaggi",
+        "butter": "Burro",
+        "milkPowder": "Latte in polvere",
+        "eggs": "Uova"
+      }
+    },
+    "oils": {
+      "label": "Oli e grassi alimentari",
+      "subs": {
+        "sunflower": "Olio di girasole",
+        "olive": "Olio d'oliva",
+        "palm": "Olio di palma",
+        "rapeseed": "Olio di colza",
+        "other": "Altri oli e grassi"
+      }
+    },
+    "beverages": {
+      "label": "Bevande",
+      "subs": {
+        "wine": "Vino",
+        "beerSpirits": "Birra e distillati",
+        "juices": "Succhi",
+        "waterSoftDrinks": "Acqua e bibite"
+      }
+    },
+    "coffee": {
+      "label": "Caffè, tè e zucchero",
+      "subs": {
+        "coffee": "Caffè",
+        "tea": "Tè",
+        "cocoa": "Cacao",
+        "spices": "Spezie",
+        "sugar": "Zucchero e dolcificanti"
+      }
+    },
+    "foods": {
+      "label": "Alimenti preparati",
+      "subs": {
+        "canned": "Conserve e prodotti in scatola",
+        "pastaBakery": "Pasta e prodotti da forno",
+        "confectionery": "Dolciumi",
+        "sauces": "Salse e condimenti",
+        "animalFeed": "Mangimi"
+      }
+    },
+    "fuels": {
+      "label": "Minerali e combustibili",
+      "subs": {
+        "refined": "Prodotti petroliferi raffinati",
+        "crude": "Petrolio greggio",
+        "coal": "Carbone",
+        "gas": "Gas",
+        "ores": "Minerali grezzi",
+        "cement": "Cemento e inerti"
+      }
+    },
+    "chemicals": {
+      "label": "Chimica e farmaceutica",
+      "subs": {
+        "industrial": "Prodotti chimici industriali",
+        "fertilizers": "Fertilizzanti",
+        "pharmaceuticals": "Prodotti farmaceutici",
+        "cosmetics": "Cosmetici",
+        "cleaning": "Prodotti per la pulizia"
+      }
+    },
+    "plastics": {
+      "label": "Plastica e gomma",
+      "subs": {
+        "polymers": "Polimeri grezzi",
+        "products": "Prodotti in plastica",
+        "rubberTyres": "Gomma e pneumatici"
+      }
+    },
+    "wood": {
+      "label": "Legno e carta",
+      "subs": {
+        "timber": "Legname",
+        "plywood": "Compensato e pannelli",
+        "pellets": "Pellet e biomasse",
+        "paper": "Carta e imballaggi"
+      }
+    },
+    "textiles": {
+      "label": "Tessile e abbigliamento",
+      "subs": {
+        "fabrics": "Tessuti e filati",
+        "clothing": "Abbigliamento",
+        "home": "Tessili per la casa",
+        "footwear": "Calzature e pelletteria"
+      }
+    },
+    "metals": {
+      "label": "Metalli e acciaio",
+      "subs": {
+        "steel": "Acciaio e ferro",
+        "aluminium": "Alluminio",
+        "copper": "Rame",
+        "scrap": "Rottami metallici",
+        "products": "Prodotti metallici"
+      }
+    },
+    "machinery": {
+      "label": "Macchinari ed elettronica",
+      "subs": {
+        "industrial": "Macchinari industriali",
+        "agricultural": "Macchine agricole",
+        "electronics": "Elettronica e componenti",
+        "appliances": "Elettrodomestici"
+      }
+    },
+    "vehicles": {
+      "label": "Veicoli e trasporti",
+      "subs": {
+        "carsTrucks": "Auto e camion",
+        "parts": "Ricambi e pneumatici",
+        "shipsRail": "Navi e materiale ferroviario"
+      }
+    },
+    "medical": {
+      "label": "Medicale e strumentazione",
+      "subs": {
+        "devices": "Dispositivi medici",
+        "lab": "Laboratorio e strumenti",
+        "ppe": "DPI e monouso"
+      }
+    },
+    "home": {
+      "label": "Arredamento ed edilizia",
+      "subs": {
+        "furniture": "Arredamento",
+        "building": "Materiali da costruzione",
+        "glass": "Vetro e ceramica",
+        "stone": "Pietra e marmo"
+      }
+    },
+    "other": {
+      "label": "Altre merci",
+      "subs": {
+        "other": "Altro"
+      }
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "Contatti",
+      "description": "Parli con Ponte. Porti un'operazione al desk, prenoti un analista senior, oppure definisca uno Strategy Intensive o un retainer."
+    },
+    "pill": "Contatti",
+    "title": "Parliamone.",
+    "lead": {
+      "default": "Ci dica quale operazione ha sul tavolo, o quale decisione sta valutando. Il desk risponde entro un giorno lavorativo.",
+      "strategyIntensive": "Le interessa uno Strategy Intensive: mezza giornata con un analista senior e un documento scritto. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "retainer": "Sta valutando un Trade Desk Retainer: un analista sempre a disposizione. Ci indichi la frequenza e il tipo di domande che prevede, e Le proporremo un pacchetto mensile."
+    },
+    "deal": {
+      "title": "Ci porti un'operazione",
+      "body": "Un'offerta o una richiesta, merci o servizi per il commercio. Solo fatti, formalizzati per iscritto prima di ogni presentazione.",
+      "cta": "Vai al marketplace"
+    },
+    "email": {
+      "title": "Ci scriva",
+      "body": "Per gli Strategy Intensive, i retainer o qualsiasi esigenza su misura. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "subject": "Richiesta di informazioni: {topic}"
+    }
+  },
+  "footer": {
+    "blurb": "Il marketplace verificato per il commercio internazionale. Pubblichi ciò che vende, indichi ciò che Le serve, entri in contatto gratuitamente. Il desk gestisce la Sua operazione solo su richiesta, a commissione di successo o a retainer.",
+    "deskHeading": "Il desk",
+    "deskMarketplace": "Il Marketplace",
+    "deskFees": "Commissioni",
+    "companyHeading": "Società",
+    "companyAbout": "Chi siamo",
+    "companyTerms": "Termini",
+    "companyPrivacy": "Privacy",
+    "contactHeading": "Contatti",
+    "contactUs": "Ci contatti",
+    "securePayment": "Pagamento sicuro tramite Stripe",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd (Bulgaria)",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "Reg. 207314767 · VAT BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd (Regno Unito)",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "Reg. 12475013 · VAT GB 343 1702 32"
+      }
+    },
+    "disclaimer": "Intermediazione e consulenza indipendenti per il commercio internazionale, fondate su prove e fonti ufficiali. Ponte agisce come broker e intermediario, mai come parte principale. Le presentazioni avvengono previa firma di NCNDA e accordi sulle commissioni.",
+    "copyright": "© {year} Ponte · denominazione commerciale di 1402 Celsius Ltd · ponte.trade"
+  },
+  "home": {
+    "metaTitle": "Marketplace verificato e gratuito per il commercio di merci",
+    "metaDescription": "Pubblichi un'offerta o una richiesta su una bacheca commerciale gratuita e verificata. Resti anonimo finché entrambe le parti non accettano, poi il contatto è diretto. Il supporto del desk è opzionale, a commissione di successo o a retainer.",
+    "hero": {
+      "title": "Vendere. Trovare.",
+      "titleAccent": "Concluso."
+    },
+    "trust": {
+      "vetted": "Verificato",
+      "ncnda": "Prima l'NCNDA",
+      "successFee": "Commissione solo in caso di successo"
+    },
+    "sell": {
+      "titleLine1": "Ho qualcosa",
+      "titleLine2": "da vendere",
+      "body": "La pubblichi in 3 clic. Foto, video, fatto.",
+      "cta": "Pubblica l'offerta"
+    },
+    "source": {
+      "titleLine1": "Mi serve",
+      "titleLine2": "un prodotto",
+      "body": "Dica al desk cosa sta cercando. La rete risponde.",
+      "cta": "Pubblica la richiesta"
+    },
+    "board": {
+      "link": "Guarda la bacheca live"
+    },
+    "process": {
+      "eyebrow": "Come funziona"
+    },
+    "closing": {
+      "title": "Formalizzato prima della presentazione. Pagato solo a operazione conclusa.",
+      "postDeal": "Pubblica un'operazione",
+      "seeBoard": "Guarda la bacheca"
+    }
+  },
+  "legal": {
+    "originalsInEnglish": "Gli originali legali sono in inglese. Questa pagina non è tradotta: il testo inglese è la versione vincolante."
+  },
+  "listingForm": {
+    "type": {
+      "offer": "Vendo",
+      "requirement": "Cerco",
+      "service": "Servizio"
+    },
+    "steps": {
+      "offer": {
+        "product": "Il prodotto",
+        "terms": "Le condizioni",
+        "media": "Foto e file",
+        "preview": "Anteprima"
+      },
+      "requirement": {
+        "need": "Cosa Le serve",
+        "delivery": "Consegna",
+        "files": "File",
+        "preview": "Anteprima"
+      },
+      "service": {
+        "service": "Il servizio",
+        "scope": "Perimetro",
+        "files": "File",
+        "preview": "Anteprima"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "Cosa sta vendendo? Scelga una categoria",
+      "categoryPromptBuy": "Cosa Le serve? Scelga una categoria",
+      "serviceNamePlaceholder": "Quale servizio offre o Le serve? *",
+      "descriptionOffer": "Descriva il prodotto: varietà, grado, specifiche, imballaggio. *",
+      "descriptionRequirement": "Descriva ciò che Le serve: specifiche, grado, qualità, imballaggio. *",
+      "descriptionService": "Descriva il perimetro in poche righe. *",
+      "quantityPlaceholder": "Quantità",
+      "pricePlaceholder": "Prezzo (USD)",
+      "targetPricePlaceholder": "Prezzo obiettivo (USD)",
+      "priceBasisPerUnit": "USD per {unit}",
+      "priceBasisForDeal": "USD per l'operazione"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "Tonnellate",
+      "litres": "Litri",
+      "units": "Unità",
+      "pallets": "Pallet",
+      "containers": "Container",
+      "other": "Altro"
+    },
+    "frequency": {
+      "oneOff": "Una tantum",
+      "perMonth": "Al mese",
+      "perQuarter": "Al trimestre",
+      "perYear": "All'anno",
+      "ongoing": "Continuativo"
+    },
+    "roles": {
+      "offer": {
+        "producer": "Produttore / proprietario della merce",
+        "tradingCo": "Società di trading titolare della merce",
+        "mandatedBroker": "Broker con mandato del venditore",
+        "intermediary": "Intermediario (senza mandato)"
+      },
+      "requirement": {
+        "endBuyer": "Acquirente finale",
+        "tradingCo": "Società di trading",
+        "mandatedBroker": "Broker con mandato dell'acquirente",
+        "intermediary": "Intermediario (senza mandato)"
+      }
+    },
+    "chain": {
+      "directToProducer": "Diretto al produttore",
+      "directToEndBuyer": "Diretto all'acquirente finale",
+      "oneIntermediary": "Un intermediario in mezzo",
+      "twoOrMore": "Due o più intermediari",
+      "notSure": "Non saprei"
+    },
+    "timing": {
+      "readyNow": "Disponibile subito",
+      "within30Days": "Entro 30 giorni",
+      "within90Days": "Entro 90 giorni",
+      "seasonal": "Stagionale",
+      "toBeAgreed": "Da concordare",
+      "asSoonAsPossible": "Il prima possibile",
+      "flexible": "Flessibile"
+    },
+    "step2": {
+      "roleQuestion": "Qual è il Suo ruolo in questa operazione? *",
+      "chainPlaceholder": "Quanto è vicino all'operazione? *",
+      "mandateHint": "Carichi il mandato insieme ai documenti nel passaggio successivo. Accelera la verifica.",
+      "originPlaceholder": "Origine (paese/regione)",
+      "destinationPlaceholder": "Consegna a (paese/regione)",
+      "servicePlacePlaceholder": "Dove? (paese/regione, oppure in tutto il mondo)",
+      "incotermToDiscuss": "Incoterm: da concordare",
+      "extraTermsPlaceholder": "Altro che il desk dovrebbe sapere (facoltativo)"
+    },
+    "step3": {
+      "mediaRequired": "Foto e video del prodotto * (almeno una foto, fino a {max})",
+      "mediaOptional": "Foto o video (facoltativo, fino a {max})",
+      "documents": "Documenti (facoltativo: specifiche, licenze, certificati · fino a {max})",
+      "documentsPrivacy": "I documenti sono visibili solo al desk, mai alle controparti.",
+      "draftRestored": "Bentornato, la Sua bozza è stata ripristinata. Le foto non sopravvivono al passaggio di accesso: le ricarichi qui prima di pubblicare."
+    },
+    "preview": {
+      "heading": "Ecco come appare sulla bacheca",
+      "imageAlt": "Il Suo prodotto",
+      "badge": {
+        "offer": "Offerta",
+        "requirement": "Richiesta",
+        "service": "Servizio"
+      },
+      "productFallback": "Il Suo prodotto",
+      "origin": "Origine: {origin}",
+      "destination": "Destinazione: {destination}",
+      "descriptionFallback": "Qui appare la Sua descrizione.",
+      "pricePerUnit": "Indicazione di prezzo: USD {price} per {unit}",
+      "priceForDeal": "Indicazione di prezzo: USD {price} per l'operazione",
+      "frequency": {
+        "perMonth": "al mese",
+        "perQuarter": "al trimestre",
+        "perYear": "all'anno",
+        "ongoing": "continuativo"
+      },
+      "privacy": "Il Suo nome e i Suoi recapiti non vengono mai mostrati. Il numero di riferimento viene assegnato dopo l'approvazione dell'annuncio da parte del desk.",
+      "freeToPublish": "Pubblicare è gratuito: un clic per accedere, senza password."
+    },
+    "check": {
+      "heading": "Controllo dell'annuncio · gratuito",
+      "scoreSuffix": "/100",
+      "loading": "Lettura del Suo annuncio…",
+      "unavailable": "Il controllo non è disponibile al momento. Può comunque pubblicare.",
+      "upgrade": "Ha esaurito i controlli gratuiti. Ponte AI Le offre controlli illimitati degli annunci e il Suo account manager AI personale per <price>$19/mese</price>.",
+      "upgradeCta": "Attiva Ponte AI",
+      "runAgain": "Controlla di nuovo dopo le modifiche"
+    },
+    "actions": {
+      "back": "Indietro",
+      "continue": "Continua",
+      "preview": "Anteprima dell'annuncio",
+      "working": "Elaborazione…",
+      "publish": "Pubblica per la verifica",
+      "signInAndPublish": "Accedi e pubblica (gratis)",
+      "saveDraft": "Salva come bozza"
+    },
+    "progress": {
+      "creating": "Creazione dell'annuncio…",
+      "uploading": "Caricamento di {done} su {total}: {name}",
+      "uploadFailed": "{count, plural, =1 {Un file non è stato caricato.} other {# file non sono stati caricati.}} L'annuncio resta valido. Il desk chiederà quanto manca."
+    },
+    "success": {
+      "titleDraft": "Salvato come bozza.",
+      "titleDraftWithRef": "Salvato come bozza · {ref}.",
+      "titleSent": "Inviato.",
+      "titleSentWithRef": "Inviato · {ref}.",
+      "bodyDraft": "La Sua bozza è al sicuro sotto I Suoi annunci, nella pagina del marketplace. La invii per la verifica quando preferisce.",
+      "bodySent": "Il Suo annuncio è al desk per la verifica. Riceverà una notifica via email in ogni caso, di norma entro due giorni lavorativi.",
+      "back": "Torna al marketplace"
+    },
+    "errors": {
+      "pickCategory": "Prima scelga una categoria, un tocco.",
+      "pickSubcategory": "Scelga la voce più vicina, ancora un tocco.",
+      "nameService": "Prima indichi il nome del servizio.",
+      "describeOffer": "Lo descriva in poche righe: varietà, grado, specifiche.",
+      "describeRequirement": "Descriva ciò che Le serve: specifiche, grado, qualità.",
+      "pickRole": "Un tocco: qual è il Suo ruolo in questa operazione?",
+      "pickChain": "Ancora un tocco: quanto è vicino all'operazione?",
+      "photoRequired": "Per pubblicare un'offerta serve almeno una foto del prodotto.",
+      "tooManyMedia": "Massimo {max} foto e video.",
+      "mediaType": "\"{name}\": solo foto (PNG, JPG, WEBP, GIF) o video (MP4, WEBM, MOV).",
+      "mediaTooLarge": "\"{name}\" supera {max} MB.",
+      "tooManyDocs": "Massimo {max} documenti.",
+      "docType": "\"{name}\": solo documenti PDF o immagine.",
+      "docTooLarge": "\"{name}\" supera {max} MB.",
+      "genericRetry": "Qualcosa è andato storto. Riprovi.",
+      "generic": "Qualcosa è andato storto."
+    },
+    "footer": {
+      "notice": "Condivida solo ciò che ritiene opportuno condividere. Preferisce prima un NCNDA con il desk? <request>Lo richieda qui</request> e pubblichi dopo la firma. Nulla va online senza l'approvazione del desk."
+    }
+  },
+  "login": {
+    "pill": "Membri",
+    "title": "Una porta. Un accesso.",
+    "subtitle": "Nessuna password. È la prima volta? Accedendo crea il Suo account. I membri pubblicano operazioni e vedono la bacheca.",
+    "linkExpired": "Quel link è scaduto o è già stato usato. Inserisca la Sua email qui sotto e gliene inviamo uno nuovo.",
+    "notConfigured": "L'accesso sarà disponibile una volta collegato Supabase Auth. Aggiunga le Sue chiavi Supabase per abilitare il magic link e l'accesso con Google.",
+    "checkInbox": "Controlli la casella di posta: troverà un link di accesso.",
+    "googleDisabled": "Accesso con Google disattivato (nessun client ID configurato).",
+    "or": "oppure",
+    "emailLabel": "Indirizzo email",
+    "emailPlaceholder": "you@company.com",
+    "sending": "Invio in corso...",
+    "submit": "Invia il link di accesso via email",
+    "errorFallback": "Qualcosa è andato storto. Riprovi.",
+    "errorUnknown": "Errore sconosciuto"
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Marketplace",
+      "description": "Invii offerte e richieste al marketplace Ponte. Ogni annuncio viene verificato e i documenti controllati prima di qualsiasi circolazione."
+    },
+    "type": {
+      "offer": "offerta",
+      "requirement": "richiesta",
+      "service": "servizio"
+    },
+    "hero": {
+      "pill": "Marketplace",
+      "heading": "Ogni annuncio <em>verificato</em>. Ogni operazione formalizzata.",
+      "intro": "Pubblichi ciò che vende o ciò che Le serve, gratis. L'AI e il desk verificano ogni annuncio prima della pubblicazione, Lei resta anonimo finché entrambe le parti non accettano il contatto, e il contatto non costa nulla. Vuole l'operazione gestita dall'inizio alla fine? Il desk interviene a commissione di successo o a retainer, solo su Sua richiesta.",
+      "newListing": "Nuovo annuncio",
+      "signIn": "Accedi per inviare"
+    },
+    "rules": {
+      "vetted": {
+        "title": "Verificato prima della pubblicazione",
+        "body": "Ogni annuncio è esaminato dal desk e i documenti sono verificati prima di qualsiasi circolazione. Senza eccezioni."
+      },
+      "anonymous": {
+        "title": "Sempre anonimo",
+        "body": "Le controparti vedono l'operazione, mai il Suo nome, finché entrambe le parti non hanno firmato l'NCNDA e le condizioni sulle commissioni."
+      },
+      "free": {
+        "title": "Commerciare è gratis",
+        "body": "Pubblicare, consultare e mettersi in contatto non costa nulla. Coinvolga il desk solo se vuole l'operazione gestita dall'inizio alla fine, a commissione di successo o a retainer."
+      }
+    },
+    "how": {
+      "eyebrow": "Come funziona",
+      "heading": "Cinque passaggi. Una regola: formalizzare prima di presentare."
+    },
+    "board": {
+      "eyebrow": "Live adesso",
+      "heading": "{count, plural, one {# annuncio verificato sulla bacheca.} other {# annunci verificati sulla bacheca.}}",
+      "headingEmpty": "La bacheca apre a breve.",
+      "signInFull": "Accedi per gli annunci completi",
+      "empty": "La bacheca apre appena i primi annunci verificati passano il desk. Gli invii sono già aperti, e i primi annunci ricevono più attenzione al momento del lancio.",
+      "signInToRespond": "Accedi per rispondere",
+      "signInToRead": "Accedi per leggere l'annuncio completo."
+    },
+    "card": {
+      "origin": "Origine: {value}",
+      "destination": "Destinazione: {value}"
+    },
+    "ai": {
+      "label": "Il Suo account manager",
+      "lockedBody": "Il Suo account manager AI legge ogni giorno l'intero account: cosa rispondere, cosa aggiornare, cosa correggere, e prepara la mossa successiva. Controlli illimitati degli annunci inclusi.",
+      "lockedPrice": "Ponte AI · $19/mese.",
+      "unlock": "Attiva Ponte AI"
+    },
+    "mine": {
+      "eyebrow": "I Suoi annunci",
+      "heading": "A che punto siamo.",
+      "headingEmpty": "Nessun invio finora.",
+      "newListing": "Nuovo annuncio",
+      "empty": "Il Suo primo annuncio richiede cinque minuti: il prodotto, le condizioni e i documenti che dimostrano la Sua serietà. Il desk pensa al resto.",
+      "status": {
+        "draft": "Bozza · visibile solo a Lei",
+        "submitted": "In verifica",
+        "approved": "Approvato · attivo con il desk",
+        "rejected": "Non approvato",
+        "closed": "Chiuso"
+      },
+      "submitForVetting": "Invia per la verifica →",
+      "shareWhatsApp": "Condividi su WhatsApp",
+      "shareText": "{product} · annuncio verificato {ref} su Ponte",
+      "connect": {
+        "request": "Un membro verificato vuole mettersi in contatto. Se accetta, riceverete entrambi i recapiti dell'altro. Gratis.",
+        "requestNumbered": "Un membro verificato vuole mettersi in contatto ({n}). Se accetta, riceverete entrambi i recapiti dell'altro. Gratis.",
+        "accept": "Accetta",
+        "decline": "Rifiuta"
+      }
+    },
+    "cta": {
+      "heading": "Preferisce prima parlarne?",
+      "body": "Porti l'operazione direttamente al desk e ne definiamo insieme il perimetro.",
+      "start": "Crea un annuncio",
+      "contact": "Ci contatti"
+    },
+    "new": {
+      "meta": {
+        "title": "Nuovo annuncio",
+        "description": "Costruisca la Sua offerta o richiesta, ne veda l'anteprima come apparirà sulla bacheca, poi la pubblichi per la verifica del desk Ponte."
+      },
+      "pill": "Nuovo annuncio",
+      "heading": "Crea. Guarda. Pubblica.",
+      "intro": "Non serve un account per costruire l'annuncio e vederne l'anteprima esattamente come apparirà sulla bacheca. Accede solo al momento di pubblicare."
+    },
+    "detail": {
+      "meta": {
+        "notFound": "Annuncio non trovato",
+        "description": "{type} con verifica del desk Ponte. {teaser}"
+      },
+      "pill": "Annuncio verificato",
+      "assurance": "Esaminato dal desk Ponte prima della pubblicazione. Le controparti restano anonime finché entrambe le parti non accettano il contatto; il contatto è gratuito.",
+      "signInToRead": "Acceda gratis per leggere l'annuncio completo.",
+      "readIn": "Leggi in",
+      "original": "Originale",
+      "machineTranslation": "Traduzione automatica. Fa fede il testo originale.",
+      "interested": "Sono interessato",
+      "shareWhatsApp": "Condividi su WhatsApp",
+      "shareText": "{product} · annuncio verificato {ref} su Ponte",
+      "footer": "Ha anche Lei qualcosa da vendere o da cercare? <link>Crei il Suo annuncio in tre passaggi</link>, senza account fino alla pubblicazione."
+    }
+  },
+  "meta": {
+    "siteTitle": "Ponte. Il collegamento tra acquirente e venditore.",
+    "siteDescription": "Il marketplace gratuito e verificato per il commercio di merci. Pubblichi ciò che vende o ciò che Le serve. L'AI e il desk verificano ogni annuncio. Contatto diretto, anonimo finché entrambe le parti non accettano, senza costi. Il desk Ponte gestisce le operazioni dall'inizio alla fine solo su richiesta, a commissione di successo o a retainer. Gestito da 1402 Celsius Ltd.",
+    "ogDescription": "Ogni annuncio verificato. Ogni contatto gratuito. Pubblichi un'offerta o una richiesta in tre passaggi, e coinvolga il desk solo quando vuole l'operazione gestita.",
+    "twitterDescription": "Il marketplace gratuito e verificato per il commercio di merci. Operazioni gestite dal desk opzionali, a commissione di successo o a retainer."
+  },
+  "nav": {
+    "homeAriaLabel": "Ponte Trade, home",
+    "marketplace": "Marketplace",
+    "fees": "Commissioni",
+    "contact": "Contatti",
+    "account": "Account",
+    "menuAriaLabel": "Menu"
+  },
+  "pricing": {
+    "meta": {
+      "title": "Commissioni",
+      "description": "Il marketplace Ponte è gratuito: pubblichi, si faccia verificare, entri in contatto. Il desk è opzionale, a commissione di successo o a retainer mensile."
+    },
+    "pill": "Commissioni",
+    "title": "Il marketplace è <em>gratuito</em>.",
+    "intro": "Pubblicare, essere verificati, entrare in contatto: nessun costo di inserzione, nessun abbonamento, nessuna commissione sulle operazioni che chiude da solo. Paga solo se chiede al desk di lavorare per Lei.",
+    "marketplace": {
+      "name": "Il Marketplace",
+      "price": "Gratis",
+      "terms": "Sempre · per tutti",
+      "body": "Pubblichi ciò che vende o ciò che Le serve. L'AI e il desk verificano ogni annuncio prima della pubblicazione. Resta anonimo finché entrambe le parti non accettano il contatto, poi tratta direttamente. Produttori, società di trading e broker sono tutti benvenuti, con il ruolo dichiarato fin dall'inizio.",
+      "cta": "Crea un annuncio"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/mese",
+      "terms": "Oppure $190/anno · disdetta in qualsiasi momento",
+      "body": "La Sua AI all'interno: controlli illimitati che valutano e migliorano ogni annuncio prima della pubblicazione, un account manager AI personale che legge il Suo account ogni giorno, e accesso prioritario agli avvisi di match AI. Lo provi gratis, lo tenga quando si ripaga da solo.",
+      "cta": "Attiva Ponte AI"
+    },
+    "desk": {
+      "name": "Il Desk, per operazione",
+      "price": "Commissione di successo",
+      "terms": "% concordata per iscritto · pagata alla chiusura",
+      "body": "Vuole un'operazione gestita dall'inizio alla fine? Il desk cura la verifica approfondita, l'NCNDA, la negoziazione, i contratti e il coordinamento della chiusura. La percentuale è concordata in anticipo nell'accordo sulle commissioni ed è dovuta solo quando l'operazione si chiude. Può incaricarci l'una o l'altra parte.",
+      "cta": "Ci porti un'operazione"
+    },
+    "retainer": {
+      "name": "Il Desk, al Suo fianco",
+      "price": "Retainer",
+      "terms": "Mensile · commisurato al mandato",
+      "body": "Supporto continuativo all'acquisto o alla vendita: un mandato permanente per trovare, verificare e negoziare per Suo conto, mese dopo mese. Per team di trading, produttori che entrano in nuovi mercati e acquirenti con programmi ricorrenti.",
+      "cta": "Definisci un mandato"
+    },
+    "footnote": "I livelli di commissione sono concordati in privato, per iscritto, prima dell'inizio di qualsiasi attività. Nessun costo nascosto, nessun addebito per le presentazioni che realizza da solo sulla bacheca."
+  },
+  "process": {
+    "steps": {
+      "post": {
+        "label": "Pubblica",
+        "micro": "La Sua operazione, gratis"
+      },
+      "vet": {
+        "label": "Verifica",
+        "micro": "L'AI controlla, il desk approva"
+      },
+      "match": {
+        "label": "Match",
+        "micro": "Anonimo sulla bacheca"
+      },
+      "connect": {
+        "label": "Contatto",
+        "micro": "Entrambi d'accordo, gratis"
+      },
+      "close": {
+        "label": "Chiusura",
+        "micro": "Desk opzionale, a commissione"
+      }
+    }
+  }
+}

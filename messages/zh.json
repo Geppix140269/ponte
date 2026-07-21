@@ -1,0 +1,661 @@
+{
+  "categories": {
+    "grains": {
+      "label": "谷物与粮食",
+      "subs": {
+        "wheat": "小麦",
+        "corn": "玉米",
+        "rice": "大米",
+        "barley": "大麦",
+        "soybeans": "大豆",
+        "pulses": "豆类与扁豆",
+        "seeds": "种子",
+        "flour": "面粉与碾磨产品"
+      }
+    },
+    "produce": {
+      "label": "水果与蔬菜",
+      "subs": {
+        "freshFruit": "新鲜水果",
+        "freshVegetables": "新鲜蔬菜",
+        "frozen": "冷冻品",
+        "driedFruitNuts": "干果与坚果"
+      }
+    },
+    "meat": {
+      "label": "肉类与禽类",
+      "subs": {
+        "beef": "牛肉",
+        "poultry": "禽肉",
+        "pork": "猪肉",
+        "lamb": "羊肉",
+        "processed": "加工肉制品"
+      }
+    },
+    "seafood": {
+      "label": "鱼类与海产",
+      "subs": {
+        "freshFish": "鲜鱼",
+        "frozenFish": "冻鱼",
+        "shellfish": "贝类与甲壳类",
+        "processed": "加工海产"
+      }
+    },
+    "dairy": {
+      "label": "乳制品与蛋类",
+      "subs": {
+        "milkCream": "牛奶与奶油",
+        "cheese": "奶酪",
+        "butter": "黄油",
+        "milkPowder": "奶粉",
+        "eggs": "蛋类"
+      }
+    },
+    "oils": {
+      "label": "食用油与油脂",
+      "subs": {
+        "sunflower": "葵花籽油",
+        "olive": "橄榄油",
+        "palm": "棕榈油",
+        "rapeseed": "菜籽油",
+        "other": "其他油与油脂"
+      }
+    },
+    "beverages": {
+      "label": "饮料",
+      "subs": {
+        "wine": "葡萄酒",
+        "beerSpirits": "啤酒与烈酒",
+        "juices": "果汁",
+        "waterSoftDrinks": "饮用水与软饮料"
+      }
+    },
+    "coffee": {
+      "label": "咖啡、茶与糖",
+      "subs": {
+        "coffee": "咖啡",
+        "tea": "茶叶",
+        "cocoa": "可可",
+        "spices": "香辛料",
+        "sugar": "糖与甜味剂"
+      }
+    },
+    "foods": {
+      "label": "加工食品",
+      "subs": {
+        "canned": "罐头与腌渍食品",
+        "pastaBakery": "面食与烘焙品",
+        "confectionery": "糖果",
+        "sauces": "酱料与调味品",
+        "animalFeed": "动物饲料"
+      }
+    },
+    "fuels": {
+      "label": "矿产与燃料",
+      "subs": {
+        "refined": "成品油",
+        "crude": "原油",
+        "coal": "煤炭",
+        "gas": "天然气",
+        "ores": "矿石与矿产",
+        "cement": "水泥与骨料"
+      }
+    },
+    "chemicals": {
+      "label": "化工与医药",
+      "subs": {
+        "industrial": "工业化学品",
+        "fertilizers": "化肥",
+        "pharmaceuticals": "药品",
+        "cosmetics": "化妆品",
+        "cleaning": "清洁用品"
+      }
+    },
+    "plastics": {
+      "label": "塑料与橡胶",
+      "subs": {
+        "polymers": "聚合物原料",
+        "products": "塑料制品",
+        "rubberTyres": "橡胶与轮胎"
+      }
+    },
+    "wood": {
+      "label": "木材与纸品",
+      "subs": {
+        "timber": "原木与锯材",
+        "plywood": "胶合板与板材",
+        "pellets": "颗粒燃料与生物质",
+        "paper": "纸张与包装"
+      }
+    },
+    "textiles": {
+      "label": "纺织与服装",
+      "subs": {
+        "fabrics": "面料与纱线",
+        "clothing": "服装",
+        "home": "家用纺织品",
+        "footwear": "鞋类与皮革"
+      }
+    },
+    "metals": {
+      "label": "金属与钢材",
+      "subs": {
+        "steel": "钢与铁",
+        "aluminium": "铝",
+        "copper": "铜",
+        "scrap": "废金属",
+        "products": "金属制品"
+      }
+    },
+    "machinery": {
+      "label": "机械与电子",
+      "subs": {
+        "industrial": "工业机械",
+        "agricultural": "农业机械",
+        "electronics": "电子产品与元器件",
+        "appliances": "家用电器"
+      }
+    },
+    "vehicles": {
+      "label": "车辆与运输",
+      "subs": {
+        "carsTrucks": "乘用车与卡车",
+        "parts": "零配件与轮胎",
+        "shipsRail": "船舶与轨道车辆"
+      }
+    },
+    "medical": {
+      "label": "医疗与仪器",
+      "subs": {
+        "devices": "医疗器械",
+        "lab": "实验室与仪器",
+        "ppe": "防护用品与一次性用品"
+      }
+    },
+    "home": {
+      "label": "家具与建材",
+      "subs": {
+        "furniture": "家具",
+        "building": "建筑材料",
+        "glass": "玻璃与陶瓷",
+        "stone": "石材与大理石"
+      }
+    },
+    "other": {
+      "label": "其他商品",
+      "subs": {
+        "other": "其他"
+      }
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "联系",
+      "description": "与 Ponte 联系。把交易带到交易台，预约资深分析师，或商定战略专题研讨与顾问月费方案。"
+    },
+    "pill": "联系",
+    "title": "谈一谈。",
+    "lead": {
+      "default": "告诉我们你手上的交易，或你正在权衡的决定。交易台在一个工作日内回复。",
+      "strategyIntensive": "你想要的是战略专题研讨：与资深分析师共处半天，并获得一份书面简报。告诉我们要做的决定，我们来界定范围。",
+      "retainer": "你在考虑交易台顾问月费：一位随时待命的常驻分析师。告诉我们你需要的频率和问题类型，我们会提出一个月度方案。"
+    },
+    "deal": {
+      "title": "把交易交给我们",
+      "body": "供应或求购，货物或贸易服务。只谈事实，任何介绍之前先签文件。",
+      "cta": "前往交易市场"
+    },
+    "email": {
+      "title": "给我们发邮件",
+      "body": "适用于专题研讨、顾问月费或任何定制需求。告诉我们要做的决定，我们来界定范围。",
+      "subject": "咨询：{topic}"
+    }
+  },
+  "footer": {
+    "blurb": "面向全球贸易的已审核交易市场。挂出你要卖的，发布你需要的，免费建立联系。只有在你提出要求时，交易台才会按成交佣金或顾问月费管理你的交易。",
+    "deskHeading": "交易台",
+    "deskMarketplace": "交易市场",
+    "deskFees": "费用",
+    "companyHeading": "公司",
+    "companyAbout": "关于",
+    "companyTerms": "条款",
+    "companyPrivacy": "隐私",
+    "contactHeading": "联系",
+    "contactUs": "联系我们",
+    "securePayment": "通过 Stripe 安全支付",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd（保加利亚）",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "注册号 207314767 · 增值税号 BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd（英国）",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "注册号 12475013 · 增值税号 GB 343 1702 32"
+      }
+    },
+    "disclaimer": "独立的贸易经纪与咨询服务，以证据和官方来源为依据。Ponte 仅作为经纪人和中介，绝不作为交易主体。所有介绍均在签署 NCNDA 和佣金协议后进行。",
+    "copyright": "© {year} Ponte · 1402 Celsius Ltd 的商号 · ponte.trade"
+  },
+  "home": {
+    "metaTitle": "面向实物贸易的免费已审核交易市场",
+    "metaDescription": "在免费的已审核贸易看板上发布供应或求购信息。在双方同意之前保持匿名，之后直接建立联系。交易台支持为可选项，按成交佣金或顾问月费计费。",
+    "hero": {
+      "title": "卖出货物。找到货源。",
+      "titleAccent": "成交。"
+    },
+    "trust": {
+      "vetted": "已审核",
+      "ncnda": "先签 NCNDA",
+      "successFee": "成交才收费"
+    },
+    "sell": {
+      "titleLine1": "我有商品",
+      "titleLine2": "要出售",
+      "body": "三次点击即可发布。照片、视频，完成。",
+      "cta": "发布供应信息"
+    },
+    "source": {
+      "titleLine1": "我需要",
+      "titleLine2": "一种商品",
+      "body": "告诉交易台你在采购什么。网络会给出回应。",
+      "cta": "发布求购信息"
+    },
+    "board": {
+      "link": "查看实时看板"
+    },
+    "process": {
+      "eyebrow": "运作方式"
+    },
+    "closing": {
+      "title": "先签文件，后作介绍。成交才付费。",
+      "postDeal": "发布交易",
+      "seeBoard": "查看看板"
+    }
+  },
+  "legal": {
+    "originalsInEnglish": "法律文件原件为英文。本页未翻译：英文文本为具有约束力的版本。"
+  },
+  "listingForm": {
+    "type": {
+      "offer": "我要卖",
+      "requirement": "我要买",
+      "service": "服务"
+    },
+    "steps": {
+      "offer": {
+        "product": "商品",
+        "terms": "条款",
+        "media": "照片与文件",
+        "preview": "预览"
+      },
+      "requirement": {
+        "need": "你的需求",
+        "delivery": "交付",
+        "files": "文件",
+        "preview": "预览"
+      },
+      "service": {
+        "service": "服务内容",
+        "scope": "范围",
+        "files": "文件",
+        "preview": "预览"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "你要卖什么？选择一个类别",
+      "categoryPromptBuy": "你需要什么？选择一个类别",
+      "serviceNamePlaceholder": "你提供或需要什么服务？*",
+      "descriptionOffer": "描述商品：品种、等级、规格、包装。*",
+      "descriptionRequirement": "描述你的需求：规格、等级、质量、包装。*",
+      "descriptionService": "用几句话描述服务范围。*",
+      "quantityPlaceholder": "数量",
+      "pricePlaceholder": "价格（USD）",
+      "targetPricePlaceholder": "目标价格（USD）",
+      "priceBasisPerUnit": "USD / {unit}",
+      "priceBasisForDeal": "整笔交易 USD"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "吨",
+      "litres": "升",
+      "units": "件",
+      "pallets": "托盘",
+      "containers": "集装箱",
+      "other": "其他"
+    },
+    "frequency": {
+      "oneOff": "一次性",
+      "perMonth": "每月",
+      "perQuarter": "每季度",
+      "perYear": "每年",
+      "ongoing": "持续"
+    },
+    "roles": {
+      "offer": {
+        "producer": "生产商 / 货物所有人",
+        "tradingCo": "持有货权的贸易公司",
+        "mandatedBroker": "持有卖方授权的经纪人",
+        "intermediary": "中间人（无授权）"
+      },
+      "requirement": {
+        "endBuyer": "最终买家",
+        "tradingCo": "贸易公司",
+        "mandatedBroker": "持有买方授权的经纪人",
+        "intermediary": "中间人（无授权）"
+      }
+    },
+    "chain": {
+      "directToProducer": "直接对接生产商",
+      "directToEndBuyer": "直接对接最终买家",
+      "oneIntermediary": "中间有一个中间人",
+      "twoOrMore": "中间有两个或以上中间人",
+      "notSure": "不确定"
+    },
+    "timing": {
+      "readyNow": "现货可供",
+      "within30Days": "30 天内",
+      "within90Days": "90 天内",
+      "seasonal": "按季节",
+      "toBeAgreed": "待商定",
+      "asSoonAsPossible": "尽快",
+      "flexible": "时间灵活"
+    },
+    "step2": {
+      "roleQuestion": "在这笔交易中你是什么角色？*",
+      "chainPlaceholder": "你与这笔交易的距离有多近？*",
+      "mandateHint": "下一步请随其他文件一并上传授权书。这样可以加快审核。",
+      "originPlaceholder": "产地（国家/地区）",
+      "destinationPlaceholder": "交付至（国家/地区）",
+      "servicePlacePlaceholder": "在哪里？（国家/地区，或全球）",
+      "incotermToDiscuss": "Incoterm：待商定",
+      "extraTermsPlaceholder": "交易台还需要知道的其他信息（选填）"
+    },
+    "step3": {
+      "mediaRequired": "商品的照片和视频 *（至少一张照片，最多 {max} 个）",
+      "mediaOptional": "照片或视频（选填，最多 {max} 个）",
+      "documents": "文件（选填：规格书、许可证、证书 · 最多 {max} 份）",
+      "documentsPrivacy": "文件仅交易台可见，绝不向交易对手展示。",
+      "draftRestored": "欢迎回来，你的草稿已恢复。照片无法在登录过程中保留，请在发布前重新上传。"
+    },
+    "preview": {
+      "heading": "这是它在看板上的显示效果",
+      "imageAlt": "你的商品",
+      "badge": {
+        "offer": "供应",
+        "requirement": "求购",
+        "service": "服务"
+      },
+      "productFallback": "你的商品",
+      "origin": "产地：{origin}",
+      "destination": "目的地：{destination}",
+      "descriptionFallback": "你的描述将显示在这里。",
+      "pricePerUnit": "参考价格：USD {price} / {unit}",
+      "priceForDeal": "参考价格：整笔交易 USD {price}",
+      "frequency": {
+        "perMonth": "每月",
+        "perQuarter": "每季度",
+        "perYear": "每年",
+        "ongoing": "持续"
+      },
+      "privacy": "你的姓名和联系方式绝不会显示。编号在交易台批准挂牌信息后分配。",
+      "freeToPublish": "发布免费：一次点击即可登录，无需密码。"
+    },
+    "check": {
+      "heading": "挂牌信息检查 · 免费",
+      "scoreSuffix": "/100",
+      "loading": "正在读取你的挂牌信息…",
+      "unavailable": "检查功能暂时不可用。你仍然可以发布。",
+      "upgrade": "你已用完免费检查次数。Ponte AI 提供无限次挂牌信息检查和你的专属 AI 客户经理，<price>$19/月</price>。",
+      "upgradeCta": "解锁 Ponte AI",
+      "runAgain": "修改后再次检查"
+    },
+    "actions": {
+      "back": "返回",
+      "continue": "继续",
+      "preview": "预览我的挂牌信息",
+      "working": "处理中…",
+      "publish": "提交审核并发布",
+      "signInAndPublish": "登录并发布（免费）",
+      "saveDraft": "存为草稿"
+    },
+    "progress": {
+      "creating": "正在创建你的挂牌信息…",
+      "uploading": "正在上传第 {done} 个，共 {total} 个：{name}",
+      "uploadFailed": "{count, plural, other {# 个文件上传失败。}}挂牌信息仍然有效。交易台会向你索取缺失的内容。"
+    },
+    "success": {
+      "titleDraft": "已存为草稿。",
+      "titleDraftWithRef": "已存为草稿 · {ref}。",
+      "titleSent": "已提交。",
+      "titleSentWithRef": "已提交 · {ref}。",
+      "bodyDraft": "你的草稿保存在交易市场页面的“你的挂牌信息”下。准备好后随时提交审核。",
+      "bodySent": "你的挂牌信息已交由交易台审核。无论结果如何，我们都会通过电子邮件通知你，通常在两个工作日内。",
+      "back": "返回交易市场"
+    },
+    "errors": {
+      "pickCategory": "先选一个类别，点一下即可。",
+      "pickSubcategory": "选择最接近的一项，再点一下。",
+      "nameService": "先填写服务名称。",
+      "describeOffer": "用几句话描述：品种、等级、规格。",
+      "describeRequirement": "描述你的需求：规格、等级、质量。",
+      "pickRole": "点一下：在这笔交易中你是什么角色？",
+      "pickChain": "再点一下：你与这笔交易的距离有多近？",
+      "photoRequired": "发布供应信息至少需要一张商品照片。",
+      "tooManyMedia": "照片和视频最多 {max} 个。",
+      "mediaType": "“{name}”：仅限照片（PNG、JPG、WEBP、GIF）或视频（MP4、WEBM、MOV）。",
+      "mediaTooLarge": "“{name}”超过 {max} MB。",
+      "tooManyDocs": "文件最多 {max} 份。",
+      "docType": "“{name}”：仅限 PDF 或图片文件。",
+      "docTooLarge": "“{name}”超过 {max} MB。",
+      "genericRetry": "出了点问题。请重试。",
+      "generic": "出了点问题。"
+    },
+    "footer": {
+      "notice": "只分享你愿意分享的内容。想先与交易台签署 NCNDA？<request>在此提出申请</request>，签署后再挂牌。在交易台批准之前，任何内容都不会上线。"
+    }
+  },
+  "login": {
+    "pill": "会员",
+    "title": "一个入口。一次登录。",
+    "subtitle": "无需密码。第一次来？登录即创建账户。会员可以发布交易并查看看板。",
+    "linkExpired": "该链接已过期或已被使用。请在下方输入你的邮箱，我们会发送一个新链接。",
+    "notConfigured": "连接 Supabase Auth 后即可登录。添加你的 Supabase 密钥以启用魔法链接和 Google 登录。",
+    "checkInbox": "请查收邮箱中的魔法登录链接。",
+    "googleDisabled": "Google 登录已停用（未配置 client ID）。",
+    "or": "或",
+    "emailLabel": "电子邮箱",
+    "emailPlaceholder": "you@company.com",
+    "sending": "发送中...",
+    "submit": "给我发送魔法链接",
+    "errorFallback": "出了点问题。请重试。",
+    "errorUnknown": "未知错误"
+  },
+  "marketplace": {
+    "meta": {
+      "title": "交易市场",
+      "description": "向 Ponte 交易市场提交供应和求购信息。每条挂牌信息都经过审核，文件在对外流通前均已核验。"
+    },
+    "type": {
+      "offer": "供应",
+      "requirement": "求购",
+      "service": "服务"
+    },
+    "hero": {
+      "pill": "交易市场",
+      "heading": "每条挂牌信息都<em>经过审核</em>。每笔交易都有文件。",
+      "intro": "免费发布你要卖的或你需要的。挂牌信息上线前，AI 和交易台会逐条核验；在双方同意建立联系之前你保持匿名，建立联系不收取任何费用。想让交易被全程管理？只要你提出要求，交易台就会介入，按成交佣金或顾问月费计费。",
+      "newListing": "新建挂牌信息",
+      "signIn": "登录后提交"
+    },
+    "rules": {
+      "vetted": {
+        "title": "上线前先审核",
+        "body": "每条挂牌信息都由交易台审阅，文件在对外流通前均已核验。没有例外。"
+      },
+      "anonymous": {
+        "title": "始终匿名",
+        "body": "在双方签署 NCNDA 和佣金条款之前，交易对手只看到交易本身，绝不会看到你的名字。"
+      },
+      "free": {
+        "title": "交易免费",
+        "body": "发布、浏览和建立联系都不收费。只有当你希望交易被全程管理时才引入交易台，按成交佣金或顾问月费计费。"
+      }
+    },
+    "how": {
+      "eyebrow": "运作方式",
+      "heading": "五个步骤。一条规则：先签文件，后作介绍。"
+    },
+    "board": {
+      "eyebrow": "正在上线",
+      "heading": "{count, plural, other {看板上有 # 条已审核挂牌信息。}}",
+      "headingEmpty": "看板即将开放。",
+      "signInFull": "登录查看完整挂牌信息",
+      "empty": "首批挂牌信息通过交易台审核后，看板即会开放。现在已开放提交，看板上线时最早的挂牌信息会获得最多关注。",
+      "signInToRespond": "登录后回应",
+      "signInToRead": "登录后阅读完整挂牌信息。"
+    },
+    "card": {
+      "origin": "产地：{value}",
+      "destination": "目的地：{value}"
+    },
+    "ai": {
+      "label": "你的客户经理",
+      "lockedBody": "你的 AI 客户经理每天通读你的整个账户：该回复什么、该更新什么、该修正什么，并起草下一步行动。含无限次挂牌信息检查。",
+      "lockedPrice": "Ponte AI · $19/月。",
+      "unlock": "解锁 Ponte AI"
+    },
+    "mine": {
+      "eyebrow": "你的挂牌信息",
+      "heading": "当前进展。",
+      "headingEmpty": "尚未提交任何内容。",
+      "newListing": "新建挂牌信息",
+      "empty": "第一条挂牌信息只需五分钟：商品、条款，以及任何能证明你认真对待的文件。之后交给交易台处理。",
+      "status": {
+        "draft": "草稿 · 仅你可见",
+        "submitted": "审核中",
+        "approved": "已批准 · 已在交易台上线",
+        "rejected": "未通过",
+        "closed": "已关闭"
+      },
+      "submitForVetting": "提交审核 →",
+      "shareWhatsApp": "分享到 WhatsApp",
+      "shareText": "{product} · Ponte 上的已审核挂牌信息 {ref}",
+      "connect": {
+        "request": "一位已审核会员希望与你建立联系。接受后，双方都会收到对方的联系方式。免费。",
+        "requestNumbered": "已审核会员希望与你建立联系（{n}）。接受后，双方都会收到对方的联系方式。免费。",
+        "accept": "接受",
+        "decline": "拒绝"
+      }
+    },
+    "cta": {
+      "heading": "想先聊一聊？",
+      "body": "直接把交易交给交易台，我们会与你一起界定范围。",
+      "start": "开始挂牌",
+      "contact": "联系我们"
+    },
+    "new": {
+      "meta": {
+        "title": "新建挂牌信息",
+        "description": "构建你的供应或求购信息，按看板上的实际样式预览，然后提交给 Ponte 交易台审核发布。"
+      },
+      "pill": "新建挂牌信息",
+      "heading": "构建。查看。发布。",
+      "intro": "构建挂牌信息并按看板上的实际样式预览，无需账户。只有在发布时才需要登录。"
+    },
+    "detail": {
+      "meta": {
+        "notFound": "未找到该挂牌信息",
+        "description": "Ponte 上的已审核{type}。{teaser}"
+      },
+      "pill": "已审核挂牌信息",
+      "assurance": "上线前由 Ponte 交易台审阅。在双方同意建立联系之前，交易对手保持匿名；建立联系免费。",
+      "signInToRead": "免费登录以阅读完整挂牌信息。",
+      "readIn": "阅读语言",
+      "original": "原文",
+      "machineTranslation": "机器翻译。以原文措辞为准。",
+      "interested": "我有意向",
+      "shareWhatsApp": "分享到 WhatsApp",
+      "shareText": "{product} · Ponte 上的已审核挂牌信息 {ref}",
+      "footer": "你自己也有东西要卖或要采购？<link>三步构建你的挂牌信息</link>，发布前无需账户。"
+    }
+  },
+  "meta": {
+    "siteTitle": "Ponte。买卖双方之间的桥梁。",
+    "siteDescription": "面向实物贸易的免费已审核交易市场。发布你要卖的或你需要的。AI 和交易台核验每一条挂牌信息。直接建立联系，在双方同意之前保持匿名，且不收取任何费用。Ponte 交易台仅在收到请求时才全程管理交易，按成交佣金或顾问月费计费。由 1402 Celsius Ltd 运营。",
+    "ogDescription": "每条挂牌信息都经审核。每次建立联系都免费。三步发布供应或求购信息，只有在你希望交易被管理时才引入交易台。",
+    "twitterDescription": "面向实物贸易的免费已审核交易市场。交易台全程管理为可选项，按成交佣金或顾问月费计费。"
+  },
+  "nav": {
+    "homeAriaLabel": "Ponte Trade 首页",
+    "marketplace": "交易市场",
+    "fees": "费用",
+    "contact": "联系",
+    "account": "账户",
+    "menuAriaLabel": "菜单"
+  },
+  "pricing": {
+    "meta": {
+      "title": "费用",
+      "description": "Ponte 交易市场免费：发布、通过审核、建立联系。交易台为可选项，按成交佣金或月度顾问费计费。"
+    },
+    "pill": "费用",
+    "title": "交易市场<em>免费</em>。",
+    "intro": "发布、通过审核、建立联系：没有挂牌费，没有订阅费，你们自行完成的交易不收佣金。只有在你请交易台为你工作时才付费。",
+    "marketplace": {
+      "name": "交易市场",
+      "price": "免费",
+      "terms": "始终如此 · 面向所有人",
+      "body": "发布你要卖的或你需要的。挂牌信息上线前，AI 和交易台会逐条审核。在双方同意建立联系之前你保持匿名，之后直接洽谈。生产商、贸易公司和经纪人都欢迎，角色须事先声明。",
+      "cta": "开始挂牌"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/月",
+      "terms": "或 $190/年 · 随时取消",
+      "body": "你在内部的 AI：无限次挂牌信息检查，在上线前为每条信息评分并给出改进建议；专属 AI 客户经理每天通读你的账户；优先获得 AI 匹配提醒。免费试用，物有所值时再保留。",
+      "cta": "解锁 Ponte AI"
+    },
+    "desk": {
+      "name": "交易台，按笔交易计费",
+      "price": "成交佣金",
+      "terms": "百分比以书面约定 · 成交时支付",
+      "body": "想让交易被全程管理？交易台负责深度核验、NCNDA、谈判、合同和成交协调。百分比在佣金协议中事先约定，仅在交易成交时才需支付。买卖任一方都可以聘请我们。",
+      "cta": "把交易交给我们"
+    },
+    "retainer": {
+      "name": "交易台，站在你这边",
+      "price": "顾问月费",
+      "terms": "按月 · 范围依授权而定",
+      "body": "持续的采购或销售支持：一份长期授权，由我们代表你逐月寻找、审核和谈判。适合贸易团队、进入新市场的生产商，以及有长期采购计划的买家。",
+      "cta": "商定授权范围"
+    },
+    "footnote": "费率在任何工作开始之前以书面形式私下约定。没有隐藏费用，你们在看板上自行完成的介绍不收费。"
+  },
+  "process": {
+    "steps": {
+      "post": {
+        "label": "发布",
+        "micro": "你的交易，免费"
+      },
+      "vet": {
+        "label": "审核",
+        "micro": "AI 检查，交易台批准"
+      },
+      "match": {
+        "label": "匹配",
+        "micro": "在看板上匿名"
+      },
+      "connect": {
+        "label": "联系",
+        "micro": "双方同意，免费"
+      },
+      "close": {
+        "label": "成交",
+        "micro": "交易台可选，按佣金计"
+      }
+    }
+  }
+}

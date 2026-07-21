@@ -1,0 +1,661 @@
+{
+  "categories": {
+    "grains": {
+      "label": "Getreide & Körnerfrüchte",
+      "subs": {
+        "wheat": "Weizen",
+        "corn": "Mais",
+        "rice": "Reis",
+        "barley": "Gerste",
+        "soybeans": "Sojabohnen",
+        "pulses": "Hülsenfrüchte & Linsen",
+        "seeds": "Saaten",
+        "flour": "Mehl & Mahlerzeugnisse"
+      }
+    },
+    "produce": {
+      "label": "Obst & Gemüse",
+      "subs": {
+        "freshFruit": "Frisches Obst",
+        "freshVegetables": "Frisches Gemüse",
+        "frozen": "Tiefkühlware",
+        "driedFruitNuts": "Trockenfrüchte & Nüsse"
+      }
+    },
+    "meat": {
+      "label": "Fleisch & Geflügel",
+      "subs": {
+        "beef": "Rindfleisch",
+        "poultry": "Geflügel",
+        "pork": "Schweinefleisch",
+        "lamb": "Lammfleisch",
+        "processed": "Verarbeitetes Fleisch"
+      }
+    },
+    "seafood": {
+      "label": "Fisch & Meeresfrüchte",
+      "subs": {
+        "freshFish": "Frischer Fisch",
+        "frozenFish": "Tiefgekühlter Fisch",
+        "shellfish": "Schalen- und Krustentiere",
+        "processed": "Verarbeitete Fischereierzeugnisse"
+      }
+    },
+    "dairy": {
+      "label": "Molkereiprodukte & Eier",
+      "subs": {
+        "milkCream": "Milch & Sahne",
+        "cheese": "Käse",
+        "butter": "Butter",
+        "milkPowder": "Milchpulver",
+        "eggs": "Eier"
+      }
+    },
+    "oils": {
+      "label": "Speiseöle & Fette",
+      "subs": {
+        "sunflower": "Sonnenblumenöl",
+        "olive": "Olivenöl",
+        "palm": "Palmöl",
+        "rapeseed": "Rapsöl",
+        "other": "Andere Öle & Fette"
+      }
+    },
+    "beverages": {
+      "label": "Getränke",
+      "subs": {
+        "wine": "Wein",
+        "beerSpirits": "Bier & Spirituosen",
+        "juices": "Säfte",
+        "waterSoftDrinks": "Wasser & Erfrischungsgetränke"
+      }
+    },
+    "coffee": {
+      "label": "Kaffee, Tee & Zucker",
+      "subs": {
+        "coffee": "Kaffee",
+        "tea": "Tee",
+        "cocoa": "Kakao",
+        "spices": "Gewürze",
+        "sugar": "Zucker & Süßungsmittel"
+      }
+    },
+    "foods": {
+      "label": "Zubereitete Lebensmittel",
+      "subs": {
+        "canned": "Konserven & Eingemachtes",
+        "pastaBakery": "Teigwaren & Backwaren",
+        "confectionery": "Süßwaren",
+        "sauces": "Saucen & Würzmittel",
+        "animalFeed": "Futtermittel"
+      }
+    },
+    "fuels": {
+      "label": "Mineralien & Brennstoffe",
+      "subs": {
+        "refined": "Raffinierte Kraftstoffe",
+        "crude": "Rohöl",
+        "coal": "Kohle",
+        "gas": "Gas",
+        "ores": "Erze & Mineralien",
+        "cement": "Zement & Zuschlagstoffe"
+      }
+    },
+    "chemicals": {
+      "label": "Chemie & Pharma",
+      "subs": {
+        "industrial": "Industriechemikalien",
+        "fertilizers": "Düngemittel",
+        "pharmaceuticals": "Arzneimittel",
+        "cosmetics": "Kosmetik",
+        "cleaning": "Reinigungsmittel"
+      }
+    },
+    "plastics": {
+      "label": "Kunststoffe & Kautschuk",
+      "subs": {
+        "polymers": "Rohpolymere",
+        "products": "Kunststofferzeugnisse",
+        "rubberTyres": "Kautschuk & Reifen"
+      }
+    },
+    "wood": {
+      "label": "Holz & Papier",
+      "subs": {
+        "timber": "Rund- & Schnittholz",
+        "plywood": "Sperrholz & Platten",
+        "pellets": "Pellets & Biomasse",
+        "paper": "Papier & Verpackung"
+      }
+    },
+    "textiles": {
+      "label": "Textilien & Bekleidung",
+      "subs": {
+        "fabrics": "Stoffe & Garne",
+        "clothing": "Bekleidung",
+        "home": "Heimtextilien",
+        "footwear": "Schuhe & Leder"
+      }
+    },
+    "metals": {
+      "label": "Metalle & Stahl",
+      "subs": {
+        "steel": "Stahl & Eisen",
+        "aluminium": "Aluminium",
+        "copper": "Kupfer",
+        "scrap": "Schrott",
+        "products": "Metallerzeugnisse"
+      }
+    },
+    "machinery": {
+      "label": "Maschinen & Elektronik",
+      "subs": {
+        "industrial": "Industriemaschinen",
+        "agricultural": "Landmaschinen",
+        "electronics": "Elektronik & Bauteile",
+        "appliances": "Haushaltsgeräte"
+      }
+    },
+    "vehicles": {
+      "label": "Fahrzeuge & Transport",
+      "subs": {
+        "carsTrucks": "Pkw & Lkw",
+        "parts": "Teile & Reifen",
+        "shipsRail": "Schiffe & Schienenfahrzeuge"
+      }
+    },
+    "medical": {
+      "label": "Medizintechnik & Instrumente",
+      "subs": {
+        "devices": "Medizinprodukte",
+        "lab": "Labor & Instrumente",
+        "ppe": "PSA & Einwegartikel"
+      }
+    },
+    "home": {
+      "label": "Möbel & Bau",
+      "subs": {
+        "furniture": "Möbel",
+        "building": "Baustoffe",
+        "glass": "Glas & Keramik",
+        "stone": "Naturstein & Marmor"
+      }
+    },
+    "other": {
+      "label": "Sonstige Waren",
+      "subs": {
+        "other": "Sonstiges"
+      }
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "Kontakt",
+      "description": "Sprechen Sie mit Ponte. Bringen Sie ein Geschäft an den Desk, buchen Sie einen Senior-Analysten oder umreißen Sie ein Strategie-Intensiv oder ein Retainer-Mandat."
+    },
+    "pill": "Kontakt",
+    "title": "Sprechen wir darüber.",
+    "lead": {
+      "default": "Erzählen Sie uns von dem Geschäft auf Ihrem Tisch oder von der Entscheidung, die Sie abwägen. Der Desk antwortet innerhalb eines Werktags.",
+      "strategyIntensive": "Sie möchten ein Strategie-Intensiv: ein halber Tag mit einem Senior-Analysten und ein schriftliches Briefing. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "retainer": "Sie erwägen ein Trade-Desk-Retainer: ein fest zugeordneter Analyst auf Abruf. Nennen Sie uns den Rhythmus und die Art der Fragen, die Sie erwarten, und wir schlagen ein monatliches Kontingent vor."
+    },
+    "deal": {
+      "title": "Bringen Sie uns ein Geschäft",
+      "body": "Ein Angebot oder ein Bedarf, Waren oder Handelsdienstleistungen. Nur Fakten, schriftlich geregelt vor jeder Kontaktvermittlung.",
+      "cta": "Zum Marktplatz"
+    },
+    "email": {
+      "title": "Schreiben Sie uns",
+      "body": "Für Intensivformate, Retainer oder alles Maßgeschneiderte. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "subject": "Anfrage: {topic}"
+    }
+  },
+  "footer": {
+    "blurb": "Der geprüfte Marktplatz für den globalen Handel. Inserieren Sie, was Sie verkaufen, stellen Sie ein, was Sie suchen, vernetzen Sie sich kostenlos. Der Desk führt Ihr Geschäft nur auf Ihren Wunsch, gegen Erfolgshonorar oder Retainer.",
+    "deskHeading": "Der Desk",
+    "deskMarketplace": "Der Marktplatz",
+    "deskFees": "Gebühren",
+    "companyHeading": "Unternehmen",
+    "companyAbout": "Über uns",
+    "companyTerms": "Nutzungsbedingungen",
+    "companyPrivacy": "Datenschutz",
+    "contactHeading": "Kontakt",
+    "contactUs": "Kontakt aufnehmen",
+    "securePayment": "Sichere Zahlung über Stripe",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd (Bulgarien)",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "Reg.-Nr. 207314767 · USt-Nr. BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd (Vereinigtes Königreich)",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "Reg.-Nr. 12475013 · USt-Nr. GB 343 1702 32"
+      }
+    },
+    "disclaimer": "Unabhängige Handelsvermittlung und Beratung, gestützt auf Belege und amtliche Quellen. Ponte handelt als Makler und Vermittler, niemals als Eigenhändler. Kontaktvermittlungen erfolgen ausschließlich auf Grundlage unterzeichneter NCNDA und Honorarvereinbarungen.",
+    "copyright": "© {year} Ponte · ein Handelsname der 1402 Celsius Ltd · ponte.trade"
+  },
+  "home": {
+    "metaTitle": "Kostenloser geprüfter Marktplatz für den physischen Handel",
+    "metaDescription": "Stellen Sie ein Angebot oder ein Gesuch auf ein kostenloses, geprüftes Handelsboard. Bleiben Sie anonym, bis beide Seiten zustimmen, und nehmen Sie dann direkt Kontakt auf. Die Unterstützung durch den Desk ist optional, gegen Erfolgshonorar oder Retainer.",
+    "hero": {
+      "title": "Verkaufen. Beschaffen.",
+      "titleAccent": "Abgeschlossen."
+    },
+    "trust": {
+      "vetted": "Geprüft",
+      "ncnda": "NCNDA zuerst",
+      "successFee": "Honorar nur bei Erfolg"
+    },
+    "sell": {
+      "titleLine1": "Ich habe etwas",
+      "titleLine2": "zu verkaufen",
+      "body": "In 3 Klicks eingestellt. Fotos, Videos, fertig.",
+      "cta": "Angebot einstellen"
+    },
+    "source": {
+      "titleLine1": "Ich brauche",
+      "titleLine2": "ein Produkt",
+      "body": "Sagen Sie dem Desk, was Sie beschaffen. Das Netzwerk antwortet.",
+      "cta": "Gesuch einstellen"
+    },
+    "board": {
+      "link": "Live-Board ansehen"
+    },
+    "process": {
+      "eyebrow": "So funktioniert es"
+    },
+    "closing": {
+      "title": "Schriftlich geregelt vor der Vermittlung. Bezahlt nur bei Erfolg.",
+      "postDeal": "Geschäft einstellen",
+      "seeBoard": "Board ansehen"
+    }
+  },
+  "legal": {
+    "originalsInEnglish": "Rechtstexte im Original auf Englisch. Diese Seite ist nicht übersetzt: Der englische Text ist die verbindliche Fassung."
+  },
+  "listingForm": {
+    "type": {
+      "offer": "Ich verkaufe",
+      "requirement": "Ich suche",
+      "service": "Dienstleistung"
+    },
+    "steps": {
+      "offer": {
+        "product": "Das Produkt",
+        "terms": "Die Konditionen",
+        "media": "Fotos & Dateien",
+        "preview": "Vorschau"
+      },
+      "requirement": {
+        "need": "Ihr Bedarf",
+        "delivery": "Lieferung",
+        "files": "Dateien",
+        "preview": "Vorschau"
+      },
+      "service": {
+        "service": "Die Dienstleistung",
+        "scope": "Umfang",
+        "files": "Dateien",
+        "preview": "Vorschau"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "Was verkaufen Sie? Wählen Sie eine Kategorie",
+      "categoryPromptBuy": "Was brauchen Sie? Wählen Sie eine Kategorie",
+      "serviceNamePlaceholder": "Welche Dienstleistung bieten oder suchen Sie? *",
+      "descriptionOffer": "Beschreiben Sie das Produkt: Sorte, Güteklasse, Spezifikationen, Verpackung. *",
+      "descriptionRequirement": "Beschreiben Sie Ihren Bedarf: Spezifikationen, Güteklasse, Qualität, Verpackung. *",
+      "descriptionService": "Beschreiben Sie den Umfang in wenigen Zeilen. *",
+      "quantityPlaceholder": "Menge",
+      "pricePlaceholder": "Preis (USD)",
+      "targetPricePlaceholder": "Zielpreis (USD)",
+      "priceBasisPerUnit": "USD je {unit}",
+      "priceBasisForDeal": "USD für das gesamte Geschäft"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "Tonnen",
+      "litres": "Liter",
+      "units": "Stück",
+      "pallets": "Paletten",
+      "containers": "Container",
+      "other": "Sonstige"
+    },
+    "frequency": {
+      "oneOff": "Einmalig",
+      "perMonth": "Pro Monat",
+      "perQuarter": "Pro Quartal",
+      "perYear": "Pro Jahr",
+      "ongoing": "Laufend"
+    },
+    "roles": {
+      "offer": {
+        "producer": "Erzeuger / Eigentümer der Ware",
+        "tradingCo": "Handelsunternehmen mit Eigentum an der Ware",
+        "mandatedBroker": "Makler mit Verkäufermandat",
+        "intermediary": "Vermittler (ohne Mandat)"
+      },
+      "requirement": {
+        "endBuyer": "Endabnehmer",
+        "tradingCo": "Handelsunternehmen",
+        "mandatedBroker": "Makler mit Käufermandat",
+        "intermediary": "Vermittler (ohne Mandat)"
+      }
+    },
+    "chain": {
+      "directToProducer": "Direkt zum Erzeuger",
+      "directToEndBuyer": "Direkt zum Endabnehmer",
+      "oneIntermediary": "Ein Vermittler dazwischen",
+      "twoOrMore": "Zwei oder mehr Vermittler",
+      "notSure": "Nicht sicher"
+    },
+    "timing": {
+      "readyNow": "Sofort verfügbar",
+      "within30Days": "Innerhalb von 30 Tagen",
+      "within90Days": "Innerhalb von 90 Tagen",
+      "seasonal": "Saisonal",
+      "toBeAgreed": "Nach Vereinbarung",
+      "asSoonAsPossible": "So bald wie möglich",
+      "flexible": "Flexibel"
+    },
+    "step2": {
+      "roleQuestion": "Welche Rolle haben Sie in diesem Geschäft? *",
+      "chainPlaceholder": "Wie nah sind Sie am Geschäft? *",
+      "mandateHint": "Laden Sie das Mandat im nächsten Schritt zusammen mit Ihren Dokumenten hoch. Das beschleunigt die Prüfung.",
+      "originPlaceholder": "Herkunft (Land/Region)",
+      "destinationPlaceholder": "Lieferung nach (Land/Region)",
+      "servicePlacePlaceholder": "Wo? (Land/Region oder weltweit)",
+      "incotermToDiscuss": "Incoterm: nach Absprache",
+      "extraTermsPlaceholder": "Was der Desk sonst noch wissen sollte (optional)"
+    },
+    "step3": {
+      "mediaRequired": "Fotos und Videos des Produkts * (mindestens ein Foto, bis zu {max})",
+      "mediaOptional": "Fotos oder Videos (optional, bis zu {max})",
+      "documents": "Dokumente (optional: Spezifikationen, Lizenzen, Zertifikate · bis zu {max})",
+      "documentsPrivacy": "Dokumente sieht nur der Desk, niemals die Gegenseite.",
+      "draftRestored": "Willkommen zurück, Ihr Entwurf wurde wiederhergestellt. Fotos überstehen den Weg durch die Anmeldung nicht, hängen Sie sie hier vor dem Veröffentlichen bitte erneut an."
+    },
+    "preview": {
+      "heading": "So erscheint es auf dem Board",
+      "imageAlt": "Ihr Produkt",
+      "badge": {
+        "offer": "Angebot",
+        "requirement": "Gesuch",
+        "service": "Dienstleistung"
+      },
+      "productFallback": "Ihr Produkt",
+      "origin": "Herkunft: {origin}",
+      "destination": "Bestimmungsort: {destination}",
+      "descriptionFallback": "Hier erscheint Ihre Beschreibung.",
+      "pricePerUnit": "Preisindikation: USD {price} je {unit}",
+      "priceForDeal": "Preisindikation: USD {price} für das gesamte Geschäft",
+      "frequency": {
+        "perMonth": "pro Monat",
+        "perQuarter": "pro Quartal",
+        "perYear": "pro Jahr",
+        "ongoing": "laufend"
+      },
+      "privacy": "Ihr Name und Ihre Kontaktdaten werden nie angezeigt. Die Referenznummer wird vergeben, sobald der Desk das Inserat freigegeben hat.",
+      "freeToPublish": "Veröffentlichen ist kostenlos: ein Klick zur Anmeldung, kein Passwort."
+    },
+    "check": {
+      "heading": "Inseratsprüfung · kostenlos",
+      "scoreSuffix": "/100",
+      "loading": "Ihr Inserat wird gelesen…",
+      "unavailable": "Die Prüfung ist derzeit nicht verfügbar. Sie können trotzdem veröffentlichen.",
+      "upgrade": "Sie haben Ihre kostenlosen Prüfungen aufgebraucht. Ponte AI gibt Ihnen unbegrenzte Inseratsprüfungen und Ihren persönlichen KI-Account-Manager für <price>$19/Monat</price>.",
+      "upgradeCta": "Ponte AI freischalten",
+      "runAgain": "Nach Änderungen erneut prüfen"
+    },
+    "actions": {
+      "back": "Zurück",
+      "continue": "Weiter",
+      "preview": "Inserat in der Vorschau ansehen",
+      "working": "Wird bearbeitet…",
+      "publish": "Zur Prüfung einreichen",
+      "signInAndPublish": "Anmelden und veröffentlichen (kostenlos)",
+      "saveDraft": "Als Entwurf speichern"
+    },
+    "progress": {
+      "creating": "Ihr Inserat wird erstellt…",
+      "uploading": "{done} von {total} wird hochgeladen: {name}",
+      "uploadFailed": "{count, plural, =1 {Eine Datei konnte nicht hochgeladen werden.} other {# Dateien konnten nicht hochgeladen werden.}} Das Inserat bleibt bestehen. Der Desk fragt Fehlendes nach."
+    },
+    "success": {
+      "titleDraft": "Als Entwurf gespeichert.",
+      "titleDraftWithRef": "Als Entwurf gespeichert · {ref}.",
+      "titleSent": "Eingereicht.",
+      "titleSentWithRef": "Eingereicht · {ref}.",
+      "bodyDraft": "Ihr Entwurf liegt sicher unter Ihre Inserate auf der Marktplatzseite. Reichen Sie ihn zur Prüfung ein, wann immer Sie so weit sind.",
+      "bodySent": "Ihr Inserat liegt beim Desk zur Prüfung. Sie erhalten in jedem Fall eine Nachricht per E-Mail, in der Regel innerhalb von zwei Werktagen.",
+      "back": "Zurück zum Marktplatz"
+    },
+    "errors": {
+      "pickCategory": "Wählen Sie zuerst eine Kategorie, ein Tippen genügt.",
+      "pickSubcategory": "Wählen Sie die passendste Option, noch ein Tippen.",
+      "nameService": "Benennen Sie zuerst die Dienstleistung.",
+      "describeOffer": "Beschreiben Sie es in wenigen Zeilen: Sorte, Güteklasse, Spezifikationen.",
+      "describeRequirement": "Beschreiben Sie Ihren Bedarf: Spezifikationen, Güteklasse, Qualität.",
+      "pickRole": "Ein Tippen: Welche Rolle haben Sie in diesem Geschäft?",
+      "pickChain": "Noch ein Tippen: Wie nah sind Sie am Geschäft?",
+      "photoRequired": "Für die Veröffentlichung eines Angebots ist mindestens ein Foto des Produkts erforderlich.",
+      "tooManyMedia": "Maximal {max} Fotos und Videos.",
+      "mediaType": "\"{name}\": nur Fotos (PNG, JPG, WEBP, GIF) oder Videos (MP4, WEBM, MOV).",
+      "mediaTooLarge": "\"{name}\" ist größer als {max} MB.",
+      "tooManyDocs": "Maximal {max} Dokumente.",
+      "docType": "\"{name}\": nur PDF- oder Bilddokumente.",
+      "docTooLarge": "\"{name}\" ist größer als {max} MB.",
+      "genericRetry": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "generic": "Etwas ist schiefgelaufen."
+    },
+    "footer": {
+      "notice": "Teilen Sie nur, was Sie ohne Bedenken teilen können. Lieber zuerst ein NCNDA mit dem Desk? <request>Hier anfordern</request> und nach der Unterzeichnung inserieren. Nichts geht online, bevor der Desk es freigibt."
+    }
+  },
+  "login": {
+    "pill": "Mitglieder",
+    "title": "Eine Tür. Eine Anmeldung.",
+    "subtitle": "Keine Passwörter. Neu hier? Mit der Anmeldung entsteht Ihr Konto. Mitglieder stellen Geschäfte ein und sehen das Board.",
+    "linkExpired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Geben Sie unten Ihre E-Mail-Adresse ein, wir senden Ihnen einen neuen.",
+    "notConfigured": "Die Anmeldung wird verfügbar, sobald Supabase Auth verbunden ist. Fügen Sie Ihre Supabase-Schlüssel hinzu, um Magic-Link- und Google-Anmeldung zu aktivieren.",
+    "checkInbox": "Prüfen Sie Ihren Posteingang, dort liegt Ihr Magic Link zur Anmeldung.",
+    "googleDisabled": "Google-Anmeldung deaktiviert (keine Client-ID konfiguriert).",
+    "or": "oder",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "you@company.com",
+    "sending": "Wird gesendet...",
+    "submit": "Magic Link per E-Mail senden",
+    "errorFallback": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
+    "errorUnknown": "Unbekannter Fehler"
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Marktplatz",
+      "description": "Reichen Sie Angebote und Gesuche auf dem Ponte-Marktplatz ein. Jedes Inserat wird geprüft und jedes Dokument verifiziert, bevor etwas in Umlauf kommt."
+    },
+    "type": {
+      "offer": "Angebot",
+      "requirement": "Gesuch",
+      "service": "Dienstleistung"
+    },
+    "hero": {
+      "pill": "Marktplatz",
+      "heading": "Jedes Inserat <em>geprüft</em>. Jedes Geschäft schriftlich geregelt.",
+      "intro": "Stellen Sie kostenlos ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk verifizieren jedes Inserat, bevor es online geht, Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, und die Kontaktaufnahme kostet nichts. Sie möchten das Geschäft von Anfang bis Ende betreut wissen? Der Desk übernimmt gegen Erfolgshonorar oder Retainer, nur wenn Sie es wünschen.",
+      "newListing": "Neues Inserat",
+      "signIn": "Zum Einreichen anmelden"
+    },
+    "rules": {
+      "vetted": {
+        "title": "Geprüft, bevor es online geht",
+        "body": "Jedes Inserat wird vom Desk geprüft und jedes Dokument verifiziert, bevor etwas in Umlauf kommt. Ohne Ausnahme."
+      },
+      "anonymous": {
+        "title": "Immer anonymisiert",
+        "body": "Die Gegenseite sieht das Geschäft, niemals Ihren Namen, bis beide Seiten NCNDA und Honorarbedingungen unterzeichnet haben."
+      },
+      "free": {
+        "title": "Kostenlos handeln",
+        "body": "Einstellen, Stöbern und Verbinden kosten nichts. Holen Sie den Desk nur dazu, wenn Sie das Geschäft von Anfang bis Ende betreut haben möchten, gegen Erfolgshonorar oder Retainer."
+      }
+    },
+    "how": {
+      "eyebrow": "So funktioniert es",
+      "heading": "Fünf Schritte. Eine Regel: schriftlich geregelt vor der Vermittlung."
+    },
+    "board": {
+      "eyebrow": "Jetzt live",
+      "heading": "{count, plural, one {# geprüftes Inserat auf dem Board.} other {# geprüfte Inserate auf dem Board.}}",
+      "headingEmpty": "Das Board öffnet bald.",
+      "signInFull": "Für vollständige Inserate anmelden",
+      "empty": "Das Board öffnet, sobald die ersten geprüften Inserate den Desk passiert haben. Einreichungen sind ab sofort möglich, und frühe Inserate erhalten zum Start die meiste Aufmerksamkeit.",
+      "signInToRespond": "Zum Antworten anmelden",
+      "signInToRead": "Melden Sie sich an, um das vollständige Inserat zu lesen."
+    },
+    "card": {
+      "origin": "Herkunft: {value}",
+      "destination": "Bestimmungsort: {value}"
+    },
+    "ai": {
+      "label": "Ihr Account-Manager",
+      "lockedBody": "Ihr KI-Account-Manager liest täglich Ihr gesamtes Konto: was zu beantworten, was zu aktualisieren, was zu korrigieren ist, und entwirft den nächsten Schritt. Unbegrenzte Inseratsprüfungen inklusive.",
+      "lockedPrice": "Ponte AI · $19/Monat.",
+      "unlock": "Ponte AI freischalten"
+    },
+    "mine": {
+      "eyebrow": "Ihre Inserate",
+      "heading": "Der aktuelle Stand.",
+      "headingEmpty": "Noch nichts eingereicht.",
+      "newListing": "Neues Inserat",
+      "empty": "Ihr erstes Inserat kostet fünf Minuten: das Produkt, die Konditionen und alle Dokumente, die zeigen, dass Sie es ernst meinen. Den Rest übernimmt der Desk.",
+      "status": {
+        "draft": "Entwurf · nur für Sie sichtbar",
+        "submitted": "In Prüfung",
+        "approved": "Freigegeben · live beim Desk",
+        "rejected": "Nicht freigegeben",
+        "closed": "Geschlossen"
+      },
+      "submitForVetting": "Zur Prüfung einreichen →",
+      "shareWhatsApp": "Auf WhatsApp teilen",
+      "shareText": "{product} · geprüftes Inserat {ref} auf Ponte",
+      "connect": {
+        "request": "Ein geprüftes Mitglied möchte Kontakt aufnehmen. Nehmen Sie an, und Sie erhalten beide die Kontaktdaten der anderen Seite. Kostenlos.",
+        "requestNumbered": "Ein geprüftes Mitglied möchte Kontakt aufnehmen ({n}). Nehmen Sie an, und Sie erhalten beide die Kontaktdaten der anderen Seite. Kostenlos.",
+        "accept": "Annehmen",
+        "decline": "Ablehnen"
+      }
+    },
+    "cta": {
+      "heading": "Lieber erst einmal sprechen?",
+      "body": "Bringen Sie das Geschäft direkt an den Desk, wir umreißen es gemeinsam mit Ihnen.",
+      "start": "Inserat beginnen",
+      "contact": "Kontakt aufnehmen"
+    },
+    "new": {
+      "meta": {
+        "title": "Neues Inserat",
+        "description": "Erstellen Sie Ihr Angebot oder Gesuch, sehen Sie es in der Vorschau genau so, wie es auf dem Board erscheint, und veröffentlichen Sie es zur Prüfung durch den Ponte-Desk."
+      },
+      "pill": "Neues Inserat",
+      "heading": "Erstellen. Ansehen. Veröffentlichen.",
+      "intro": "Zum Erstellen und Ansehen Ihres Inserats brauchen Sie kein Konto, die Vorschau zeigt es genau so, wie es auf dem Board erscheint. Anmelden müssen Sie sich erst beim Veröffentlichen."
+    },
+    "detail": {
+      "meta": {
+        "notFound": "Inserat nicht gefunden",
+        "description": "Geprüft auf Ponte: {type}. {teaser}"
+      },
+      "pill": "Geprüftes Inserat",
+      "assurance": "Vom Ponte-Desk geprüft, bevor es online ging. Die Gegenseite bleibt anonym, bis beide Seiten der Kontaktaufnahme zustimmen; die Kontaktaufnahme ist kostenlos.",
+      "signInToRead": "Melden Sie sich kostenlos an, um das vollständige Inserat zu lesen.",
+      "readIn": "Lesen auf",
+      "original": "Original",
+      "machineTranslation": "Maschinelle Übersetzung. Maßgeblich ist der Originalwortlaut.",
+      "interested": "Ich habe Interesse",
+      "shareWhatsApp": "Auf WhatsApp teilen",
+      "shareText": "{product} · geprüftes Inserat {ref} auf Ponte",
+      "footer": "Haben Sie selbst etwas zu verkaufen oder zu beschaffen? <link>Erstellen Sie Ihr Inserat in drei Schritten</link>, ein Konto brauchen Sie erst beim Veröffentlichen."
+    }
+  },
+  "meta": {
+    "siteTitle": "Ponte. Die Brücke zwischen Käufer und Verkäufer.",
+    "siteDescription": "Der kostenlose, geprüfte Marktplatz für den physischen Handel. Stellen Sie ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk verifizieren jedes Inserat. Nehmen Sie direkt Kontakt auf, anonym bis beide Seiten zustimmen, ohne Kosten. Der Ponte-Desk führt Geschäfte nur auf Anfrage von Anfang bis Ende, gegen Erfolgshonorar oder Retainer. Betrieben von 1402 Celsius Ltd.",
+    "ogDescription": "Jedes Inserat geprüft. Jede Kontaktaufnahme kostenlos. Stellen Sie ein Angebot oder ein Gesuch in drei Schritten ein und holen Sie den Desk nur dazu, wenn Sie das Geschäft betreut haben möchten.",
+    "twitterDescription": "Der kostenlose, geprüfte Marktplatz für den physischen Handel. Betreuung durch den Desk optional, gegen Erfolgshonorar oder Retainer."
+  },
+  "nav": {
+    "homeAriaLabel": "Ponte Trade Startseite",
+    "marketplace": "Marktplatz",
+    "fees": "Gebühren",
+    "contact": "Kontakt",
+    "account": "Konto",
+    "menuAriaLabel": "Menü"
+  },
+  "pricing": {
+    "meta": {
+      "title": "Gebühren",
+      "description": "Der Ponte-Marktplatz ist kostenlos: einstellen, prüfen lassen, Kontakt aufnehmen. Der Desk ist optional, gegen Erfolgshonorar oder monatlichen Retainer."
+    },
+    "pill": "Gebühren",
+    "title": "Der Marktplatz ist <em>kostenlos</em>.",
+    "intro": "Einstellen, prüfen lassen, Kontakt aufnehmen: keine Inseratsgebühren, keine Abonnements, keine Provision auf Geschäfte, die Sie selbst abschließen. Sie zahlen nur, wenn Sie den Desk für sich arbeiten lassen.",
+    "marketplace": {
+      "name": "Der Marktplatz",
+      "price": "Kostenlos",
+      "terms": "Immer · für alle",
+      "body": "Stellen Sie ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk prüfen jedes Inserat, bevor es online geht. Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, danach handeln Sie direkt. Erzeuger, Handelsunternehmen und Makler sind gleichermaßen willkommen, die Rolle wird vorab angegeben.",
+      "cta": "Inserat beginnen"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/Monat",
+      "terms": "Oder $190/Jahr · jederzeit kündbar",
+      "body": "Ihre KI auf der Innenseite: unbegrenzte Inseratsprüfungen, die jedes Inserat vor der Veröffentlichung bewerten und verbessern, ein persönlicher KI-Account-Manager, der Ihr Konto täglich liest, und Erstzugriff auf KI-Match-Benachrichtigungen. Kostenlos testen, behalten, sobald es sich rechnet.",
+      "cta": "Ponte AI freischalten"
+    },
+    "desk": {
+      "name": "Der Desk, pro Geschäft",
+      "price": "Erfolgshonorar",
+      "terms": "% schriftlich vereinbart · fällig bei Abschluss",
+      "body": "Sie möchten ein Geschäft von Anfang bis Ende betreut wissen? Der Desk übernimmt die vertiefte Prüfung, NCNDA, Verhandlung, Verträge und die Abschlusskoordination. Der Prozentsatz wird vorab in der Honorarvereinbarung festgelegt und ist erst mit dem Abschluss fällig. Beide Seiten können uns beauftragen.",
+      "cta": "Bringen Sie uns ein Geschäft"
+    },
+    "retainer": {
+      "name": "Der Desk, an Ihrer Seite",
+      "price": "Retainer",
+      "terms": "Monatlich · zugeschnitten auf das Mandat",
+      "body": "Laufende Unterstützung bei Beschaffung oder Verkauf: ein Dauermandat, um in Ihrem Namen zu finden, zu prüfen und zu verhandeln, Monat für Monat. Für Handelsteams, Erzeuger auf dem Weg in neue Märkte und Käufer mit wiederkehrenden Programmen.",
+      "cta": "Mandat umreißen"
+    },
+    "footnote": "Die Honorarhöhe wird vorab vertraulich und schriftlich vereinbart. Keine versteckten Kosten, keine Gebühr für Kontakte, die Sie selbst auf dem Board knüpfen."
+  },
+  "process": {
+    "steps": {
+      "post": {
+        "label": "Einstellen",
+        "micro": "Ihr Geschäft, kostenlos"
+      },
+      "vet": {
+        "label": "Prüfen",
+        "micro": "KI prüft, Desk gibt frei"
+      },
+      "match": {
+        "label": "Finden",
+        "micro": "Anonym auf dem Board"
+      },
+      "connect": {
+        "label": "Verbinden",
+        "micro": "Beide stimmen zu, kostenlos"
+      },
+      "close": {
+        "label": "Abschließen",
+        "micro": "Desk optional, gegen Honorar"
+      }
+    }
+  }
+}
