@@ -35,13 +35,13 @@ export const metadata: Metadata = {
     template: "%s | Ponte Trade",
   },
   description:
-    "Independent trade brokerage and senior-led advisory. Bring an offer or requirement to the Deal Desk, join the weekly Deal Sheet, or book a senior analyst. Vetted counterparties, papered introductions, success fee only.",
+    "The vetted marketplace for physical trade. Post what you sell or what you need in three steps; the desk verifies every listing before it circulates, and introductions happen only under NCNDA and agreed fee terms. Success fee only. Operated by 1402 Celsius Ltd.",
   openGraph: {
     title: "Ponte. The bridge between buyer and seller.",
     description:
-      "The bridge between buyer and seller. Vetted deals, papered introductions, senior-led advisory.",
+      "Every listing vetted. Every deal papered. Post an offer or a requirement in three steps; the desk does the rest.",
     url: APP_URL,
-    siteName: "Ponte Trade",
+    siteName: "Ponte",
     type: "website",
     locale: "en_GB",
   },
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ponte. The bridge between buyer and seller.",
     description:
-      "Talk to the analyst, not the algorithm. Senior-led trade intelligence and advisory.",
+      "Every listing vetted. Every deal papered. The marketplace for physical trade, success fee only.",
   },
 };
 
@@ -57,18 +57,18 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Ponte Trade",
+  name: "Ponte",
   url: APP_URL,
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "Senior-led trade intelligence and advisory: analyst access, market reports, and standing advisory engagements, grounded in transaction-level trade evidence and official sources.",
+    "Ponte is a vetted marketplace and brokerage desk for physical goods and trade services, operated by 1402 Celsius Ltd. Every listing is reviewed by the desk before circulation, counterparties stay anonymous, and introductions are made only under signed NCNDA and agreed fee terms.",
 };
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Ponte Trade",
+  name: "Ponte",
   url: APP_URL,
 };
 
