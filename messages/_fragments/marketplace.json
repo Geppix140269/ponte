@@ -1,0 +1,111 @@
+{
+  "marketplace": {
+    "meta": {
+      "title": "Marketplace",
+      "description": "Submit offers and requirements to the Ponte marketplace. Every listing is vetted and documents verified before anything is circulated."
+    },
+    "type": {
+      "offer": "offer",
+      "requirement": "requirement",
+      "service": "service"
+    },
+    "hero": {
+      "pill": "Marketplace",
+      "heading": "Every listing <em>vetted</em>. Every deal papered.",
+      "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
+      "newListing": "New listing",
+      "signIn": "Sign in to submit"
+    },
+    "rules": {
+      "vetted": {
+        "title": "Vetted before live",
+        "body": "Every listing is reviewed by the desk and documents are verified before anything is circulated. No exceptions."
+      },
+      "anonymous": {
+        "title": "Anonymized always",
+        "body": "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms."
+      },
+      "free": {
+        "title": "Free to trade",
+        "body": "Posting, browsing and connecting cost nothing. Bring in the desk only if you want the deal managed end to end, on a success fee or retainer."
+      }
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "heading": "Five steps. One rule: papered before introduced."
+    },
+    "board": {
+      "eyebrow": "Live now",
+      "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
+      "headingEmpty": "The board opens soon.",
+      "signInFull": "Sign in for full listings",
+      "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
+      "signInToRespond": "Sign in to respond",
+      "signInToRead": "Sign in to read the full listing."
+    },
+    "card": {
+      "origin": "Origin: {value}",
+      "destination": "Destination: {value}"
+    },
+    "ai": {
+      "label": "Your account manager",
+      "lockedBody": "Your AI account manager reads your whole account daily: what to answer, what to refresh, what to fix, and drafts the next move. Unlimited listing checks included.",
+      "lockedPrice": "Ponte AI · $19/month.",
+      "unlock": "Unlock Ponte AI"
+    },
+    "mine": {
+      "eyebrow": "Your listings",
+      "heading": "Where things stand.",
+      "headingEmpty": "Nothing submitted yet.",
+      "newListing": "New listing",
+      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. The desk takes it from there.",
+      "status": {
+        "draft": "Draft · only you see this",
+        "submitted": "In vetting",
+        "approved": "Approved · live with the desk",
+        "rejected": "Not approved",
+        "closed": "Closed"
+      },
+      "submitForVetting": "Submit for vetting →",
+      "shareWhatsApp": "Share on WhatsApp",
+      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "connect": {
+        "request": "A vetted member wants to connect. Accept and you both receive each other's contact. Free.",
+        "requestNumbered": "A vetted member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
+        "accept": "Accept",
+        "decline": "Decline"
+      }
+    },
+    "cta": {
+      "heading": "Prefer to talk it through first?",
+      "body": "Bring the deal to the desk directly and we will scope it with you.",
+      "start": "Start a listing",
+      "contact": "Contact us"
+    },
+    "new": {
+      "meta": {
+        "title": "New listing",
+        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish for vetting by the Ponte desk."
+      },
+      "pill": "New listing",
+      "heading": "Build it. See it. Publish it.",
+      "intro": "No account needed to build your listing and preview it exactly as it will appear on the board. You sign in only when you publish."
+    },
+    "detail": {
+      "meta": {
+        "notFound": "Listing not found",
+        "description": "Vetted {type} on Ponte. {teaser}"
+      },
+      "pill": "Vetted listing",
+      "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "signInToRead": "Sign in free to read the full listing.",
+      "readIn": "Read in",
+      "original": "Original",
+      "machineTranslation": "Machine translation. The original wording governs.",
+      "interested": "I am interested",
+      "shareWhatsApp": "Share on WhatsApp",
+      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
+    }
+  }
+}

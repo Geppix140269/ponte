@@ -1,0 +1,661 @@
+{
+  "categories": {
+    "grains": {
+      "label": "Grains & Cereals",
+      "subs": {
+        "wheat": "Wheat",
+        "corn": "Corn / maize",
+        "rice": "Rice",
+        "barley": "Barley",
+        "soybeans": "Soybeans",
+        "pulses": "Pulses & lentils",
+        "seeds": "Seeds",
+        "flour": "Flour & milled"
+      }
+    },
+    "produce": {
+      "label": "Fruits & Vegetables",
+      "subs": {
+        "freshFruit": "Fresh fruit",
+        "freshVegetables": "Fresh vegetables",
+        "frozen": "Frozen",
+        "driedFruitNuts": "Dried fruit & nuts"
+      }
+    },
+    "meat": {
+      "label": "Meat & Poultry",
+      "subs": {
+        "beef": "Beef",
+        "poultry": "Poultry",
+        "pork": "Pork",
+        "lamb": "Lamb",
+        "processed": "Processed meat"
+      }
+    },
+    "seafood": {
+      "label": "Fish & Seafood",
+      "subs": {
+        "freshFish": "Fresh fish",
+        "frozenFish": "Frozen fish",
+        "shellfish": "Shellfish",
+        "processed": "Processed seafood"
+      }
+    },
+    "dairy": {
+      "label": "Dairy & Eggs",
+      "subs": {
+        "milkCream": "Milk & cream",
+        "cheese": "Cheese",
+        "butter": "Butter",
+        "milkPowder": "Milk powder",
+        "eggs": "Eggs"
+      }
+    },
+    "oils": {
+      "label": "Edible Oils & Fats",
+      "subs": {
+        "sunflower": "Sunflower oil",
+        "olive": "Olive oil",
+        "palm": "Palm oil",
+        "rapeseed": "Rapeseed oil",
+        "other": "Other oils & fats"
+      }
+    },
+    "beverages": {
+      "label": "Beverages",
+      "subs": {
+        "wine": "Wine",
+        "beerSpirits": "Beer & spirits",
+        "juices": "Juices",
+        "waterSoftDrinks": "Water & soft drinks"
+      }
+    },
+    "coffee": {
+      "label": "Coffee, Tea & Sugar",
+      "subs": {
+        "coffee": "Coffee",
+        "tea": "Tea",
+        "cocoa": "Cocoa",
+        "spices": "Spices",
+        "sugar": "Sugar & sweeteners"
+      }
+    },
+    "foods": {
+      "label": "Prepared Foods",
+      "subs": {
+        "canned": "Canned & preserved",
+        "pastaBakery": "Pasta & bakery",
+        "confectionery": "Confectionery",
+        "sauces": "Sauces & condiments",
+        "animalFeed": "Animal feed"
+      }
+    },
+    "fuels": {
+      "label": "Minerals & Fuels",
+      "subs": {
+        "refined": "Refined fuels",
+        "crude": "Crude oil",
+        "coal": "Coal",
+        "gas": "Gas",
+        "ores": "Ores & minerals",
+        "cement": "Cement & aggregates"
+      }
+    },
+    "chemicals": {
+      "label": "Chemicals & Pharma",
+      "subs": {
+        "industrial": "Industrial chemicals",
+        "fertilizers": "Fertilizers",
+        "pharmaceuticals": "Pharmaceuticals",
+        "cosmetics": "Cosmetics",
+        "cleaning": "Cleaning products"
+      }
+    },
+    "plastics": {
+      "label": "Plastics & Rubber",
+      "subs": {
+        "polymers": "Raw polymers",
+        "products": "Plastic products",
+        "rubberTyres": "Rubber & tyres"
+      }
+    },
+    "wood": {
+      "label": "Wood & Paper",
+      "subs": {
+        "timber": "Timber & lumber",
+        "plywood": "Plywood & panels",
+        "pellets": "Pellets & biomass",
+        "paper": "Paper & packaging"
+      }
+    },
+    "textiles": {
+      "label": "Textiles & Apparel",
+      "subs": {
+        "fabrics": "Fabrics & yarns",
+        "clothing": "Clothing",
+        "home": "Home textiles",
+        "footwear": "Footwear & leather"
+      }
+    },
+    "metals": {
+      "label": "Metals & Steel",
+      "subs": {
+        "steel": "Steel & iron",
+        "aluminium": "Aluminium",
+        "copper": "Copper",
+        "scrap": "Scrap metal",
+        "products": "Metal products"
+      }
+    },
+    "machinery": {
+      "label": "Machinery & Electronics",
+      "subs": {
+        "industrial": "Industrial machinery",
+        "agricultural": "Agricultural machinery",
+        "electronics": "Electronics & components",
+        "appliances": "Appliances"
+      }
+    },
+    "vehicles": {
+      "label": "Vehicles & Transport",
+      "subs": {
+        "carsTrucks": "Cars & trucks",
+        "parts": "Parts & tyres",
+        "shipsRail": "Ships & rail"
+      }
+    },
+    "medical": {
+      "label": "Medical & Instruments",
+      "subs": {
+        "devices": "Medical devices",
+        "lab": "Lab & instruments",
+        "ppe": "PPE & disposables"
+      }
+    },
+    "home": {
+      "label": "Furniture & Construction",
+      "subs": {
+        "furniture": "Furniture",
+        "building": "Building materials",
+        "glass": "Glass & ceramics",
+        "stone": "Stone & marble"
+      }
+    },
+    "other": {
+      "label": "Other Goods",
+      "subs": {
+        "other": "Other"
+      }
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "Contact",
+      "description": "Talk to Ponte. Bring a deal to the desk, book a senior analyst, or scope a strategy intensive or retainer."
+    },
+    "pill": "Contact",
+    "title": "Let’s talk.",
+    "lead": {
+      "default": "Tell us the deal on your desk, or the decision you are weighing. The desk replies within one business day.",
+      "strategyIntensive": "You are after a Strategy Intensive: a half-day with a senior analyst and a written brief. Tell us the decision and we will scope it.",
+      "retainer": "You are considering a Trade Desk Retainer: a standing analyst on call. Tell us the cadence and the kinds of questions you expect, and we will propose a monthly block."
+    },
+    "deal": {
+      "title": "Bring us a deal",
+      "body": "An offer or a requirement, goods or trade services. Facts only, papered before any introduction.",
+      "cta": "Go to the marketplace"
+    },
+    "email": {
+      "title": "Email us",
+      "body": "For intensives, retainers, or anything bespoke. Tell us the decision and we will scope it.",
+      "subject": "Enquiry: {topic}"
+    }
+  },
+  "footer": {
+    "blurb": "The vetted marketplace for global trade. List what you sell, post what you need, connect free. The desk manages your deal only when you ask, on a success fee or retainer.",
+    "deskHeading": "The desk",
+    "deskMarketplace": "The Marketplace",
+    "deskFees": "Fees",
+    "companyHeading": "Company",
+    "companyAbout": "About",
+    "companyTerms": "Terms",
+    "companyPrivacy": "Privacy",
+    "contactHeading": "Contact",
+    "contactUs": "Contact us",
+    "securePayment": "Secure payment via Stripe",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd (Bulgaria)",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "Reg. 207314767 · VAT BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd (United Kingdom)",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "Reg. 12475013 · VAT GB 343 1702 32"
+      }
+    },
+    "disclaimer": "Independent trade brokerage and advisory, grounded in evidence and official sources. Ponte acts as broker and intermediary, never as principal. Introductions are made under signed NCNDA and fee agreements.",
+    "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
+  },
+  "home": {
+    "metaTitle": "Free vetted marketplace for physical trade",
+    "metaDescription": "Post an offer or a requirement on a free, vetted trade board. Stay anonymous until both sides agree, then connect direct. Desk support is optional, on a success fee or retainer.",
+    "hero": {
+      "title": "Sell it. Source it.",
+      "titleAccent": "Closed."
+    },
+    "trust": {
+      "vetted": "Vetted",
+      "ncnda": "NCNDA first",
+      "successFee": "Fee only on success"
+    },
+    "sell": {
+      "titleLine1": "I have something",
+      "titleLine2": "to sell",
+      "body": "Post it in 3 clicks. Photos, videos, done.",
+      "cta": "Post the offer"
+    },
+    "source": {
+      "titleLine1": "I need",
+      "titleLine2": "a product",
+      "body": "Tell the desk what you are sourcing. The network answers.",
+      "cta": "Post the request"
+    },
+    "board": {
+      "link": "See the live board"
+    },
+    "process": {
+      "eyebrow": "How it works"
+    },
+    "closing": {
+      "title": "Papered before introduced. Paid only on success.",
+      "postDeal": "Post a deal",
+      "seeBoard": "See the board"
+    }
+  },
+  "legal": {
+    "originalsInEnglish": "Legal originals in English. This page is not translated: the English text is the binding version."
+  },
+  "listingForm": {
+    "type": {
+      "offer": "I sell",
+      "requirement": "I need",
+      "service": "Service"
+    },
+    "steps": {
+      "offer": {
+        "product": "The product",
+        "terms": "The terms",
+        "media": "Photos & files",
+        "preview": "Preview"
+      },
+      "requirement": {
+        "need": "What you need",
+        "delivery": "Delivery",
+        "files": "Files",
+        "preview": "Preview"
+      },
+      "service": {
+        "service": "The service",
+        "scope": "Scope",
+        "files": "Files",
+        "preview": "Preview"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "What are you selling? Pick a category",
+      "categoryPromptBuy": "What do you need? Pick a category",
+      "serviceNamePlaceholder": "What service do you offer or need? *",
+      "descriptionOffer": "Describe the product: variety, grade, specs, packaging. *",
+      "descriptionRequirement": "Describe what you need: specs, grade, quality, packaging. *",
+      "descriptionService": "Describe the scope in a few lines. *",
+      "quantityPlaceholder": "Quantity",
+      "pricePlaceholder": "Price (USD)",
+      "targetPricePlaceholder": "Target price (USD)",
+      "priceBasisPerUnit": "USD per {unit}",
+      "priceBasisForDeal": "USD for the deal"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "Tons",
+      "litres": "Litres",
+      "units": "Units",
+      "pallets": "Pallets",
+      "containers": "Containers",
+      "other": "Other"
+    },
+    "frequency": {
+      "oneOff": "One-off",
+      "perMonth": "Per month",
+      "perQuarter": "Per quarter",
+      "perYear": "Per year",
+      "ongoing": "Ongoing"
+    },
+    "roles": {
+      "offer": {
+        "producer": "Producer / owner of the goods",
+        "tradingCo": "Trading company holding title",
+        "mandatedBroker": "Broker with a seller mandate",
+        "intermediary": "Intermediary (no mandate)"
+      },
+      "requirement": {
+        "endBuyer": "End buyer",
+        "tradingCo": "Trading company",
+        "mandatedBroker": "Broker with a buyer mandate",
+        "intermediary": "Intermediary (no mandate)"
+      }
+    },
+    "chain": {
+      "directToProducer": "Direct to the producer",
+      "directToEndBuyer": "Direct to the end buyer",
+      "oneIntermediary": "One intermediary between",
+      "twoOrMore": "Two or more intermediaries",
+      "notSure": "Not sure"
+    },
+    "timing": {
+      "readyNow": "Ready now",
+      "within30Days": "Within 30 days",
+      "within90Days": "Within 90 days",
+      "seasonal": "Seasonal",
+      "toBeAgreed": "To be agreed",
+      "asSoonAsPossible": "As soon as possible",
+      "flexible": "Flexible"
+    },
+    "step2": {
+      "roleQuestion": "Who are you in this deal? *",
+      "chainPlaceholder": "How close are you to the deal? *",
+      "mandateHint": "Upload the mandate with your documents in the next step. It speeds up vetting.",
+      "originPlaceholder": "Origin (country/region)",
+      "destinationPlaceholder": "Deliver to (country/region)",
+      "servicePlacePlaceholder": "Where? (country/region, or worldwide)",
+      "incotermToDiscuss": "Incoterm: to discuss",
+      "extraTermsPlaceholder": "Anything else the desk should know (optional)"
+    },
+    "step3": {
+      "mediaRequired": "Photos and videos of the product * (at least one photo, up to {max})",
+      "mediaOptional": "Photos or videos (optional, up to {max})",
+      "documents": "Documents (optional: specs, licences, certificates · up to {max})",
+      "documentsPrivacy": "Documents are visible only to the desk, never to counterparties.",
+      "draftRestored": "Welcome back, your draft was restored. Photos cannot survive the sign-in trip, so re-attach them here before publishing."
+    },
+    "preview": {
+      "heading": "This is how it appears on the board",
+      "imageAlt": "Your product",
+      "badge": {
+        "offer": "Offer",
+        "requirement": "Requirement",
+        "service": "Service"
+      },
+      "productFallback": "Your product",
+      "origin": "Origin: {origin}",
+      "destination": "Destination: {destination}",
+      "descriptionFallback": "Your description appears here.",
+      "pricePerUnit": "Price indication: USD {price} per {unit}",
+      "priceForDeal": "Price indication: USD {price} for the deal",
+      "frequency": {
+        "perMonth": "per month",
+        "perQuarter": "per quarter",
+        "perYear": "per year",
+        "ongoing": "ongoing"
+      },
+      "privacy": "Your name and contact details are never shown. The reference number is assigned after the desk approves the listing.",
+      "freeToPublish": "Publishing is free: one click to sign in, no password."
+    },
+    "check": {
+      "heading": "Listing check · free",
+      "scoreSuffix": "/100",
+      "loading": "Reading your listing…",
+      "unavailable": "The check is unavailable right now. You can still publish.",
+      "upgrade": "You have used your free checks. Ponte AI gives you unlimited listing checks and your personal AI account manager for <price>$19/month</price>.",
+      "upgradeCta": "Unlock Ponte AI",
+      "runAgain": "Check again after edits"
+    },
+    "actions": {
+      "back": "Back",
+      "continue": "Continue",
+      "preview": "Preview my listing",
+      "working": "Working…",
+      "publish": "Publish for vetting",
+      "signInAndPublish": "Sign in and publish (free)",
+      "saveDraft": "Save as draft"
+    },
+    "progress": {
+      "creating": "Creating your listing…",
+      "uploading": "Uploading {done} of {total}: {name}",
+      "uploadFailed": "{count, plural, =1 {One file failed to upload.} other {# files failed to upload.}} The listing stands. The desk will ask for anything missing."
+    },
+    "success": {
+      "titleDraft": "Saved as draft.",
+      "titleDraftWithRef": "Saved as draft · {ref}.",
+      "titleSent": "Submitted.",
+      "titleSentWithRef": "Submitted · {ref}.",
+      "bodyDraft": "Your draft is safe under Your listings on the marketplace page. Submit it for vetting whenever you are ready.",
+      "bodySent": "Your listing is with the desk for vetting. You will be notified by email either way, usually within two business days.",
+      "back": "Back to the marketplace"
+    },
+    "errors": {
+      "pickCategory": "Pick a category first, one tap.",
+      "pickSubcategory": "Pick the closest match, one more tap.",
+      "nameService": "Name the service first.",
+      "describeOffer": "Describe it in a few lines: variety, grade, specs.",
+      "describeRequirement": "Describe what you need: specs, grade, quality.",
+      "pickRole": "One tap: who are you in this deal?",
+      "pickChain": "One more tap: how close are you to the deal?",
+      "photoRequired": "At least one photo of the product is required to publish an offer.",
+      "tooManyMedia": "Maximum {max} photos and videos.",
+      "mediaType": "\"{name}\": photos (PNG, JPG, WEBP, GIF) or videos (MP4, WEBM, MOV) only.",
+      "mediaTooLarge": "\"{name}\" is over {max} MB.",
+      "tooManyDocs": "Maximum {max} documents.",
+      "docType": "\"{name}\": PDF or image documents only.",
+      "docTooLarge": "\"{name}\" is over {max} MB.",
+      "genericRetry": "Something went wrong. Please try again.",
+      "generic": "Something went wrong."
+    },
+    "footer": {
+      "notice": "Share only what you are comfortable sharing. Prefer an NCNDA with the desk first? <request>Request it here</request> and list after signing. Nothing goes live until the desk approves it."
+    }
+  },
+  "login": {
+    "pill": "Members",
+    "title": "One door. One login.",
+    "subtitle": "No passwords. New here? Signing in creates your account. Members post deals and see the board.",
+    "linkExpired": "That link expired or was already used. Enter your email below and we will send a fresh one.",
+    "notConfigured": "Sign-in becomes available once Supabase Auth is connected. Add your Supabase keys to enable magic-link and Google login.",
+    "checkInbox": "Check your inbox for a magic sign-in link.",
+    "googleDisabled": "Google sign-in disabled (no client ID configured).",
+    "or": "or",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "sending": "Sending...",
+    "submit": "Email me a magic link",
+    "errorFallback": "Something went wrong. Try again.",
+    "errorUnknown": "Unknown error"
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Marketplace",
+      "description": "Submit offers and requirements to the Ponte marketplace. Every listing is vetted and documents verified before anything is circulated."
+    },
+    "type": {
+      "offer": "offer",
+      "requirement": "requirement",
+      "service": "service"
+    },
+    "hero": {
+      "pill": "Marketplace",
+      "heading": "Every listing <em>vetted</em>. Every deal papered.",
+      "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
+      "newListing": "New listing",
+      "signIn": "Sign in to submit"
+    },
+    "rules": {
+      "vetted": {
+        "title": "Vetted before live",
+        "body": "Every listing is reviewed by the desk and documents are verified before anything is circulated. No exceptions."
+      },
+      "anonymous": {
+        "title": "Anonymized always",
+        "body": "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms."
+      },
+      "free": {
+        "title": "Free to trade",
+        "body": "Posting, browsing and connecting cost nothing. Bring in the desk only if you want the deal managed end to end, on a success fee or retainer."
+      }
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "heading": "Five steps. One rule: papered before introduced."
+    },
+    "board": {
+      "eyebrow": "Live now",
+      "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
+      "headingEmpty": "The board opens soon.",
+      "signInFull": "Sign in for full listings",
+      "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
+      "signInToRespond": "Sign in to respond",
+      "signInToRead": "Sign in to read the full listing."
+    },
+    "card": {
+      "origin": "Origin: {value}",
+      "destination": "Destination: {value}"
+    },
+    "ai": {
+      "label": "Your account manager",
+      "lockedBody": "Your AI account manager reads your whole account daily: what to answer, what to refresh, what to fix, and drafts the next move. Unlimited listing checks included.",
+      "lockedPrice": "Ponte AI · $19/month.",
+      "unlock": "Unlock Ponte AI"
+    },
+    "mine": {
+      "eyebrow": "Your listings",
+      "heading": "Where things stand.",
+      "headingEmpty": "Nothing submitted yet.",
+      "newListing": "New listing",
+      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. The desk takes it from there.",
+      "status": {
+        "draft": "Draft · only you see this",
+        "submitted": "In vetting",
+        "approved": "Approved · live with the desk",
+        "rejected": "Not approved",
+        "closed": "Closed"
+      },
+      "submitForVetting": "Submit for vetting →",
+      "shareWhatsApp": "Share on WhatsApp",
+      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "connect": {
+        "request": "A vetted member wants to connect. Accept and you both receive each other's contact. Free.",
+        "requestNumbered": "A vetted member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
+        "accept": "Accept",
+        "decline": "Decline"
+      }
+    },
+    "cta": {
+      "heading": "Prefer to talk it through first?",
+      "body": "Bring the deal to the desk directly and we will scope it with you.",
+      "start": "Start a listing",
+      "contact": "Contact us"
+    },
+    "new": {
+      "meta": {
+        "title": "New listing",
+        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish for vetting by the Ponte desk."
+      },
+      "pill": "New listing",
+      "heading": "Build it. See it. Publish it.",
+      "intro": "No account needed to build your listing and preview it exactly as it will appear on the board. You sign in only when you publish."
+    },
+    "detail": {
+      "meta": {
+        "notFound": "Listing not found",
+        "description": "Vetted {type} on Ponte. {teaser}"
+      },
+      "pill": "Vetted listing",
+      "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "signInToRead": "Sign in free to read the full listing.",
+      "readIn": "Read in",
+      "original": "Original",
+      "machineTranslation": "Machine translation. The original wording governs.",
+      "interested": "I am interested",
+      "shareWhatsApp": "Share on WhatsApp",
+      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
+    }
+  },
+  "meta": {
+    "siteTitle": "Ponte. The bridge between buyer and seller.",
+    "siteDescription": "The free, vetted marketplace for physical trade. Post what you sell or what you need. AI and the desk verify every listing. Connect directly, anonymous until both sides agree, at no cost. The Ponte desk manages deals end to end only on request, on a success fee or retainer. Operated by 1402 Celsius Ltd.",
+    "ogDescription": "Every listing vetted. Every connection free. Post an offer or a requirement in three steps, and bring in the desk only when you want the deal managed.",
+    "twitterDescription": "The free, vetted marketplace for physical trade. Desk-managed deals optional, on success fee or retainer."
+  },
+  "nav": {
+    "homeAriaLabel": "Ponte Trade home",
+    "marketplace": "Marketplace",
+    "fees": "Fees",
+    "contact": "Contact",
+    "account": "Account",
+    "menuAriaLabel": "Menu"
+  },
+  "pricing": {
+    "meta": {
+      "title": "Fees",
+      "description": "The Ponte marketplace is free: post, get vetted, connect. The desk is optional, on a success fee or a monthly retainer."
+    },
+    "pill": "Fees",
+    "title": "The marketplace is <em>free</em>.",
+    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. You pay only if you ask the desk to work for you.",
+    "marketplace": {
+      "name": "The Marketplace",
+      "price": "Free",
+      "terms": "Always · for everyone",
+      "body": "Post what you sell or what you need. AI and the desk vet every listing before it goes live. You stay anonymous until both sides agree to connect, then you deal directly. Producers, trading companies and brokers all welcome, roles declared up front.",
+      "cta": "Start a listing"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/month",
+      "terms": "Or $190/year · cancel anytime",
+      "body": "Your AI on the inside: unlimited listing checks that score and coach every listing before it goes live, a personal AI account manager reading your account daily, and first access to AI match alerts. Try it free, keep it when it pays for itself.",
+      "cta": "Unlock Ponte AI"
+    },
+    "desk": {
+      "name": "The Desk, per deal",
+      "price": "Success fee",
+      "terms": "% agreed in writing · paid on closing",
+      "body": "Want a deal managed end to end? The desk runs verification in depth, NCNDA, negotiation, contracts and closing coordination. The percentage is agreed up front in the fee agreement and is due only when the deal closes. Either side can engage us.",
+      "cta": "Bring us a deal"
+    },
+    "retainer": {
+      "name": "The Desk, on your side",
+      "price": "Retainer",
+      "terms": "Monthly · scoped to the mandate",
+      "body": "Continuous sourcing or selling support: a standing mandate to find, vet and negotiate on your behalf, month after month. For trading teams, producers entering new markets, and buyers with recurring programmes.",
+      "cta": "Scope a mandate"
+    },
+    "footnote": "Fee levels are agreed privately, in writing, before any work starts. No hidden costs, no charge for introductions you make yourselves on the board."
+  },
+  "process": {
+    "steps": {
+      "post": {
+        "label": "Post",
+        "micro": "Your deal, free"
+      },
+      "vet": {
+        "label": "Vet",
+        "micro": "AI checks, desk approves"
+      },
+      "match": {
+        "label": "Match",
+        "micro": "Anonymous on the board"
+      },
+      "connect": {
+        "label": "Connect",
+        "micro": "Both agree, free"
+      },
+      "close": {
+        "label": "Close",
+        "micro": "Desk optional, on fee"
+      }
+    }
+  }
+}

@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
   confirmDeliveryAction,
   capturePaymentAction,
   voidAuthorizationAction,
-} from "@/app/admin/orders/actions";
+} from "@/app/[locale]/admin/orders/actions";
 
 interface Props {
   orderId: string;

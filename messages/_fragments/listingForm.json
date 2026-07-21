@@ -1,0 +1,182 @@
+{
+  "listingForm": {
+    "type": {
+      "offer": "I sell",
+      "requirement": "I need",
+      "service": "Service"
+    },
+    "steps": {
+      "offer": {
+        "product": "The product",
+        "terms": "The terms",
+        "media": "Photos & files",
+        "preview": "Preview"
+      },
+      "requirement": {
+        "need": "What you need",
+        "delivery": "Delivery",
+        "files": "Files",
+        "preview": "Preview"
+      },
+      "service": {
+        "service": "The service",
+        "scope": "Scope",
+        "files": "Files",
+        "preview": "Preview"
+      }
+    },
+    "step1": {
+      "categoryPromptSell": "What are you selling? Pick a category",
+      "categoryPromptBuy": "What do you need? Pick a category",
+      "serviceNamePlaceholder": "What service do you offer or need? *",
+      "descriptionOffer": "Describe the product: variety, grade, specs, packaging. *",
+      "descriptionRequirement": "Describe what you need: specs, grade, quality, packaging. *",
+      "descriptionService": "Describe the scope in a few lines. *",
+      "quantityPlaceholder": "Quantity",
+      "pricePlaceholder": "Price (USD)",
+      "targetPricePlaceholder": "Target price (USD)",
+      "priceBasisPerUnit": "USD per {unit}",
+      "priceBasisForDeal": "USD for the deal"
+    },
+    "units": {
+      "mt": "MT",
+      "kg": "KG",
+      "tons": "Tons",
+      "litres": "Litres",
+      "units": "Units",
+      "pallets": "Pallets",
+      "containers": "Containers",
+      "other": "Other"
+    },
+    "frequency": {
+      "oneOff": "One-off",
+      "perMonth": "Per month",
+      "perQuarter": "Per quarter",
+      "perYear": "Per year",
+      "ongoing": "Ongoing"
+    },
+    "roles": {
+      "offer": {
+        "producer": "Producer / owner of the goods",
+        "tradingCo": "Trading company holding title",
+        "mandatedBroker": "Broker with a seller mandate",
+        "intermediary": "Intermediary (no mandate)"
+      },
+      "requirement": {
+        "endBuyer": "End buyer",
+        "tradingCo": "Trading company",
+        "mandatedBroker": "Broker with a buyer mandate",
+        "intermediary": "Intermediary (no mandate)"
+      }
+    },
+    "chain": {
+      "directToProducer": "Direct to the producer",
+      "directToEndBuyer": "Direct to the end buyer",
+      "oneIntermediary": "One intermediary between",
+      "twoOrMore": "Two or more intermediaries",
+      "notSure": "Not sure"
+    },
+    "timing": {
+      "readyNow": "Ready now",
+      "within30Days": "Within 30 days",
+      "within90Days": "Within 90 days",
+      "seasonal": "Seasonal",
+      "toBeAgreed": "To be agreed",
+      "asSoonAsPossible": "As soon as possible",
+      "flexible": "Flexible"
+    },
+    "step2": {
+      "roleQuestion": "Who are you in this deal? *",
+      "chainPlaceholder": "How close are you to the deal? *",
+      "mandateHint": "Upload the mandate with your documents in the next step. It speeds up vetting.",
+      "originPlaceholder": "Origin (country/region)",
+      "destinationPlaceholder": "Deliver to (country/region)",
+      "servicePlacePlaceholder": "Where? (country/region, or worldwide)",
+      "incotermToDiscuss": "Incoterm: to discuss",
+      "extraTermsPlaceholder": "Anything else the desk should know (optional)"
+    },
+    "step3": {
+      "mediaRequired": "Photos and videos of the product * (at least one photo, up to {max})",
+      "mediaOptional": "Photos or videos (optional, up to {max})",
+      "documents": "Documents (optional: specs, licences, certificates · up to {max})",
+      "documentsPrivacy": "Documents are visible only to the desk, never to counterparties.",
+      "draftRestored": "Welcome back, your draft was restored. Photos cannot survive the sign-in trip, so re-attach them here before publishing."
+    },
+    "preview": {
+      "heading": "This is how it appears on the board",
+      "imageAlt": "Your product",
+      "badge": {
+        "offer": "Offer",
+        "requirement": "Requirement",
+        "service": "Service"
+      },
+      "productFallback": "Your product",
+      "origin": "Origin: {origin}",
+      "destination": "Destination: {destination}",
+      "descriptionFallback": "Your description appears here.",
+      "pricePerUnit": "Price indication: USD {price} per {unit}",
+      "priceForDeal": "Price indication: USD {price} for the deal",
+      "frequency": {
+        "perMonth": "per month",
+        "perQuarter": "per quarter",
+        "perYear": "per year",
+        "ongoing": "ongoing"
+      },
+      "privacy": "Your name and contact details are never shown. The reference number is assigned after the desk approves the listing.",
+      "freeToPublish": "Publishing is free: one click to sign in, no password."
+    },
+    "check": {
+      "heading": "Listing check · free",
+      "scoreSuffix": "/100",
+      "loading": "Reading your listing…",
+      "unavailable": "The check is unavailable right now. You can still publish.",
+      "upgrade": "You have used your free checks. Ponte AI gives you unlimited listing checks and your personal AI account manager for <price>$19/month</price>.",
+      "upgradeCta": "Unlock Ponte AI",
+      "runAgain": "Check again after edits"
+    },
+    "actions": {
+      "back": "Back",
+      "continue": "Continue",
+      "preview": "Preview my listing",
+      "working": "Working…",
+      "publish": "Publish for vetting",
+      "signInAndPublish": "Sign in and publish (free)",
+      "saveDraft": "Save as draft"
+    },
+    "progress": {
+      "creating": "Creating your listing…",
+      "uploading": "Uploading {done} of {total}: {name}",
+      "uploadFailed": "{count, plural, =1 {One file failed to upload.} other {# files failed to upload.}} The listing stands. The desk will ask for anything missing."
+    },
+    "success": {
+      "titleDraft": "Saved as draft.",
+      "titleDraftWithRef": "Saved as draft · {ref}.",
+      "titleSent": "Submitted.",
+      "titleSentWithRef": "Submitted · {ref}.",
+      "bodyDraft": "Your draft is safe under Your listings on the marketplace page. Submit it for vetting whenever you are ready.",
+      "bodySent": "Your listing is with the desk for vetting. You will be notified by email either way, usually within two business days.",
+      "back": "Back to the marketplace"
+    },
+    "errors": {
+      "pickCategory": "Pick a category first, one tap.",
+      "pickSubcategory": "Pick the closest match, one more tap.",
+      "nameService": "Name the service first.",
+      "describeOffer": "Describe it in a few lines: variety, grade, specs.",
+      "describeRequirement": "Describe what you need: specs, grade, quality.",
+      "pickRole": "One tap: who are you in this deal?",
+      "pickChain": "One more tap: how close are you to the deal?",
+      "photoRequired": "At least one photo of the product is required to publish an offer.",
+      "tooManyMedia": "Maximum {max} photos and videos.",
+      "mediaType": "\"{name}\": photos (PNG, JPG, WEBP, GIF) or videos (MP4, WEBM, MOV) only.",
+      "mediaTooLarge": "\"{name}\" is over {max} MB.",
+      "tooManyDocs": "Maximum {max} documents.",
+      "docType": "\"{name}\": PDF or image documents only.",
+      "docTooLarge": "\"{name}\" is over {max} MB.",
+      "genericRetry": "Something went wrong. Please try again.",
+      "generic": "Something went wrong."
+    },
+    "footer": {
+      "notice": "Share only what you are comfortable sharing. Prefer an NCNDA with the desk first? <request>Request it here</request> and list after signing. Nothing goes live until the desk approves it."
+    }
+  }
+}

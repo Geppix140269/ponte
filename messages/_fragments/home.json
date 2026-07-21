@@ -1,0 +1,38 @@
+{
+  "home": {
+    "metaTitle": "Free vetted marketplace for physical trade",
+    "metaDescription": "Post an offer or a requirement on a free, vetted trade board. Stay anonymous until both sides agree, then connect direct. Desk support is optional, on a success fee or retainer.",
+    "hero": {
+      "title": "Sell it. Source it.",
+      "titleAccent": "Closed."
+    },
+    "trust": {
+      "vetted": "Vetted",
+      "ncnda": "NCNDA first",
+      "successFee": "Fee only on success"
+    },
+    "sell": {
+      "titleLine1": "I have something",
+      "titleLine2": "to sell",
+      "body": "Post it in 3 clicks. Photos, videos, done.",
+      "cta": "Post the offer"
+    },
+    "source": {
+      "titleLine1": "I need",
+      "titleLine2": "a product",
+      "body": "Tell the desk what you are sourcing. The network answers.",
+      "cta": "Post the request"
+    },
+    "board": {
+      "link": "See the live board"
+    },
+    "process": {
+      "eyebrow": "How it works"
+    },
+    "closing": {
+      "title": "Papered before introduced. Paid only on success.",
+      "postDeal": "Post a deal",
+      "seeBoard": "See the board"
+    }
+  }
+}

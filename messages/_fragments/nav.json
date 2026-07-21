@@ -1,0 +1,10 @@
+{
+  "nav": {
+    "homeAriaLabel": "Ponte Trade home",
+    "marketplace": "Marketplace",
+    "fees": "Fees",
+    "contact": "Contact",
+    "account": "Account",
+    "menuAriaLabel": "Menu"
+  }
+}

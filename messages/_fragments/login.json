@@ -1,0 +1,18 @@
+{
+  "login": {
+    "pill": "Members",
+    "title": "One door. One login.",
+    "subtitle": "No passwords. New here? Signing in creates your account. Members post deals and see the board.",
+    "linkExpired": "That link expired or was already used. Enter your email below and we will send a fresh one.",
+    "notConfigured": "Sign-in becomes available once Supabase Auth is connected. Add your Supabase keys to enable magic-link and Google login.",
+    "checkInbox": "Check your inbox for a magic sign-in link.",
+    "googleDisabled": "Google sign-in disabled (no client ID configured).",
+    "or": "or",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "sending": "Sending...",
+    "submit": "Email me a magic link",
+    "errorFallback": "Something went wrong. Try again.",
+    "errorUnknown": "Unknown error"
+  }
+}

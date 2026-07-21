@@ -1,0 +1,191 @@
+{
+  "categories": {
+    "grains": {
+      "label": "Grains & Cereals",
+      "subs": {
+        "wheat": "Wheat",
+        "corn": "Corn / maize",
+        "rice": "Rice",
+        "barley": "Barley",
+        "soybeans": "Soybeans",
+        "pulses": "Pulses & lentils",
+        "seeds": "Seeds",
+        "flour": "Flour & milled"
+      }
+    },
+    "produce": {
+      "label": "Fruits & Vegetables",
+      "subs": {
+        "freshFruit": "Fresh fruit",
+        "freshVegetables": "Fresh vegetables",
+        "frozen": "Frozen",
+        "driedFruitNuts": "Dried fruit & nuts"
+      }
+    },
+    "meat": {
+      "label": "Meat & Poultry",
+      "subs": {
+        "beef": "Beef",
+        "poultry": "Poultry",
+        "pork": "Pork",
+        "lamb": "Lamb",
+        "processed": "Processed meat"
+      }
+    },
+    "seafood": {
+      "label": "Fish & Seafood",
+      "subs": {
+        "freshFish": "Fresh fish",
+        "frozenFish": "Frozen fish",
+        "shellfish": "Shellfish",
+        "processed": "Processed seafood"
+      }
+    },
+    "dairy": {
+      "label": "Dairy & Eggs",
+      "subs": {
+        "milkCream": "Milk & cream",
+        "cheese": "Cheese",
+        "butter": "Butter",
+        "milkPowder": "Milk powder",
+        "eggs": "Eggs"
+      }
+    },
+    "oils": {
+      "label": "Edible Oils & Fats",
+      "subs": {
+        "sunflower": "Sunflower oil",
+        "olive": "Olive oil",
+        "palm": "Palm oil",
+        "rapeseed": "Rapeseed oil",
+        "other": "Other oils & fats"
+      }
+    },
+    "beverages": {
+      "label": "Beverages",
+      "subs": {
+        "wine": "Wine",
+        "beerSpirits": "Beer & spirits",
+        "juices": "Juices",
+        "waterSoftDrinks": "Water & soft drinks"
+      }
+    },
+    "coffee": {
+      "label": "Coffee, Tea & Sugar",
+      "subs": {
+        "coffee": "Coffee",
+        "tea": "Tea",
+        "cocoa": "Cocoa",
+        "spices": "Spices",
+        "sugar": "Sugar & sweeteners"
+      }
+    },
+    "foods": {
+      "label": "Prepared Foods",
+      "subs": {
+        "canned": "Canned & preserved",
+        "pastaBakery": "Pasta & bakery",
+        "confectionery": "Confectionery",
+        "sauces": "Sauces & condiments",
+        "animalFeed": "Animal feed"
+      }
+    },
+    "fuels": {
+      "label": "Minerals & Fuels",
+      "subs": {
+        "refined": "Refined fuels",
+        "crude": "Crude oil",
+        "coal": "Coal",
+        "gas": "Gas",
+        "ores": "Ores & minerals",
+        "cement": "Cement & aggregates"
+      }
+    },
+    "chemicals": {
+      "label": "Chemicals & Pharma",
+      "subs": {
+        "industrial": "Industrial chemicals",
+        "fertilizers": "Fertilizers",
+        "pharmaceuticals": "Pharmaceuticals",
+        "cosmetics": "Cosmetics",
+        "cleaning": "Cleaning products"
+      }
+    },
+    "plastics": {
+      "label": "Plastics & Rubber",
+      "subs": {
+        "polymers": "Raw polymers",
+        "products": "Plastic products",
+        "rubberTyres": "Rubber & tyres"
+      }
+    },
+    "wood": {
+      "label": "Wood & Paper",
+      "subs": {
+        "timber": "Timber & lumber",
+        "plywood": "Plywood & panels",
+        "pellets": "Pellets & biomass",
+        "paper": "Paper & packaging"
+      }
+    },
+    "textiles": {
+      "label": "Textiles & Apparel",
+      "subs": {
+        "fabrics": "Fabrics & yarns",
+        "clothing": "Clothing",
+        "home": "Home textiles",
+        "footwear": "Footwear & leather"
+      }
+    },
+    "metals": {
+      "label": "Metals & Steel",
+      "subs": {
+        "steel": "Steel & iron",
+        "aluminium": "Aluminium",
+        "copper": "Copper",
+        "scrap": "Scrap metal",
+        "products": "Metal products"
+      }
+    },
+    "machinery": {
+      "label": "Machinery & Electronics",
+      "subs": {
+        "industrial": "Industrial machinery",
+        "agricultural": "Agricultural machinery",
+        "electronics": "Electronics & components",
+        "appliances": "Appliances"
+      }
+    },
+    "vehicles": {
+      "label": "Vehicles & Transport",
+      "subs": {
+        "carsTrucks": "Cars & trucks",
+        "parts": "Parts & tyres",
+        "shipsRail": "Ships & rail"
+      }
+    },
+    "medical": {
+      "label": "Medical & Instruments",
+      "subs": {
+        "devices": "Medical devices",
+        "lab": "Lab & instruments",
+        "ppe": "PPE & disposables"
+      }
+    },
+    "home": {
+      "label": "Furniture & Construction",
+      "subs": {
+        "furniture": "Furniture",
+        "building": "Building materials",
+        "glass": "Glass & ceramics",
+        "stone": "Stone & marble"
+      }
+    },
+    "other": {
+      "label": "Other Goods",
+      "subs": {
+        "other": "Other"
+      }
+    }
+  }
+}

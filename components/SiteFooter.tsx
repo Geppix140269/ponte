@@ -1,7 +1,10 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import Logo from "@/components/Logo";
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
+  const t = await getTranslations("footer");
+
   return (
     <footer className="mt-20">
       <div className="container-px">
@@ -10,9 +13,7 @@ export default function SiteFooter() {
             <div className="md:col-span-5 md:pr-6">
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                The vetted marketplace for global trade. List what you sell,
-                post what you need, connect free. The desk manages your deal
-                only when you ask, on a success fee or retainer.
+                {t("blurb")}
               </p>
             </div>
 
@@ -21,17 +22,17 @@ export default function SiteFooter() {
                 className="text-[10px] uppercase text-gold mb-4 font-medium"
                 style={{ letterSpacing: "0.22em" }}
               >
-                The desk
+                {t("deskHeading")}
               </h4>
               <ul className="space-y-2.5">
                 <li>
                   <Link href="/marketplace" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    The Marketplace
+                    {t("deskMarketplace")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/pricing" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    Fees
+                    {t("deskFees")}
                   </Link>
                 </li>
               </ul>
@@ -42,22 +43,22 @@ export default function SiteFooter() {
                 className="text-[10px] uppercase text-gold mb-4 font-medium"
                 style={{ letterSpacing: "0.22em" }}
               >
-                Company
+                {t("companyHeading")}
               </h4>
               <ul className="space-y-2.5">
                 <li>
                   <Link href="/about" className="text-sm text-gray-2 hover:text-gold">
-                    About
+                    {t("companyAbout")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="text-sm text-gray-2 hover:text-gold">
-                    Terms
+                    {t("companyTerms")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/privacy" className="text-sm text-gray-2 hover:text-gold">
-                    Privacy
+                    {t("companyPrivacy")}
                   </Link>
                 </li>
               </ul>
@@ -68,12 +69,12 @@ export default function SiteFooter() {
                 className="text-[10px] uppercase text-gold mb-4 font-medium"
                 style={{ letterSpacing: "0.22em" }}
               >
-                Contact
+                {t("contactHeading")}
               </h4>
               <ul className="space-y-2.5 text-sm text-gray-2">
                 <li>
                   <Link href="/contact" className="hover:text-gold">
-                    Contact us
+                    {t("contactUs")}
                   </Link>
                 </li>
                 <li>
@@ -86,7 +87,7 @@ export default function SiteFooter() {
                     +44 7988 540104
                   </a>
                 </li>
-                <li>Secure payment via Stripe</li>
+                <li>{t("securePayment")}</li>
               </ul>
             </div>
           </div>
@@ -94,27 +95,21 @@ export default function SiteFooter() {
           {/* Legal entities */}
           <div className="mt-10 grid gap-6 border-t border-white/10 pt-6 text-[11px] leading-relaxed text-gray-2 md:grid-cols-2">
             <div>
-              <p className="text-cream font-medium">1402 Celsius Ltd (Bulgaria)</p>
-              <p>1A Aton Street, Building 6, Plovdiv 4002, Bulgaria</p>
-              <p>Reg. 207314767 · VAT BG207314767</p>
+              <p className="text-cream font-medium">{t("entities.bulgaria.name")}</p>
+              <p>{t("entities.bulgaria.address")}</p>
+              <p>{t("entities.bulgaria.registration")}</p>
             </div>
             <div>
-              <p className="text-cream font-medium">1402 Celsius Ltd (United Kingdom)</p>
-              <p>20-22 Wenlock Road, London N1 7GU, United Kingdom</p>
-              <p>Reg. 12475013 · VAT GB 343 1702 32</p>
+              <p className="text-cream font-medium">{t("entities.unitedKingdom.name")}</p>
+              <p>{t("entities.unitedKingdom.address")}</p>
+              <p>{t("entities.unitedKingdom.registration")}</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-2 border-t border-white/10 pt-6 text-[11px] text-gray-2">
-            <p>
-              Independent trade brokerage and advisory, grounded in evidence
-              and official sources. Ponte acts as broker and intermediary,
-              never as principal. Introductions are made under signed NCNDA
-              and fee agreements.
-            </p>
+            <p>{t("disclaimer")}</p>
             <p className="uppercase" style={{ letterSpacing: "0.18em" }}>
-              © {new Date().getFullYear()} Ponte · a trading name of 1402
-              Celsius Ltd · ponte.trade
+              {t("copyright", { year: String(new Date().getFullYear()) })}
             </p>
           </div>
         </div>

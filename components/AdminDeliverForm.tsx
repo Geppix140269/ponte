@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useFormStatus } from "react-dom";
-import { deliverItemAction } from "@/app/admin/orders/actions";
+import { deliverItemAction } from "@/app/[locale]/admin/orders/actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -11,7 +11,7 @@ function SubmitButton() {
       disabled={pending}
       className="btn-gold px-3 py-1.5 text-xs disabled:opacity-60"
     >
-      {pending ? "Delivering…" : "Upload & deliver"}
+      {pending ? "Deliveringâ€¦" : "Upload & deliver"}
     </button>
   );
 }

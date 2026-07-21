@@ -1,0 +1,25 @@
+{
+  "contact": {
+    "meta": {
+      "title": "Contact",
+      "description": "Talk to Ponte. Bring a deal to the desk, book a senior analyst, or scope a strategy intensive or retainer."
+    },
+    "pill": "Contact",
+    "title": "Let’s talk.",
+    "lead": {
+      "default": "Tell us the deal on your desk, or the decision you are weighing. The desk replies within one business day.",
+      "strategyIntensive": "You are after a Strategy Intensive: a half-day with a senior analyst and a written brief. Tell us the decision and we will scope it.",
+      "retainer": "You are considering a Trade Desk Retainer: a standing analyst on call. Tell us the cadence and the kinds of questions you expect, and we will propose a monthly block."
+    },
+    "deal": {
+      "title": "Bring us a deal",
+      "body": "An offer or a requirement, goods or trade services. Facts only, papered before any introduction.",
+      "cta": "Go to the marketplace"
+    },
+    "email": {
+      "title": "Email us",
+      "body": "For intensives, retainers, or anything bespoke. Tell us the decision and we will scope it.",
+      "subject": "Enquiry: {topic}"
+    }
+  }
+}

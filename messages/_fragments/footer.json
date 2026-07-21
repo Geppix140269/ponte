@@ -1,0 +1,29 @@
+{
+  "footer": {
+    "blurb": "The vetted marketplace for global trade. List what you sell, post what you need, connect free. The desk manages your deal only when you ask, on a success fee or retainer.",
+    "deskHeading": "The desk",
+    "deskMarketplace": "The Marketplace",
+    "deskFees": "Fees",
+    "companyHeading": "Company",
+    "companyAbout": "About",
+    "companyTerms": "Terms",
+    "companyPrivacy": "Privacy",
+    "contactHeading": "Contact",
+    "contactUs": "Contact us",
+    "securePayment": "Secure payment via Stripe",
+    "entities": {
+      "bulgaria": {
+        "name": "1402 Celsius Ltd (Bulgaria)",
+        "address": "1A Aton Street, Building 6, Plovdiv 4002, Bulgaria",
+        "registration": "Reg. 207314767 · VAT BG207314767"
+      },
+      "unitedKingdom": {
+        "name": "1402 Celsius Ltd (United Kingdom)",
+        "address": "20-22 Wenlock Road, London N1 7GU, United Kingdom",
+        "registration": "Reg. 12475013 · VAT GB 343 1702 32"
+      }
+    },
+    "disclaimer": "Independent trade brokerage and advisory, grounded in evidence and official sources. Ponte acts as broker and intermediary, never as principal. Introductions are made under signed NCNDA and fee agreements.",
+    "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
+  }
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, ArrowRight, CheckCircle2, Paperclip, Camera, Eye, AlertCircle, TrendingUp, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TRADE_CATEGORIES } from "@/components/tradeCategories";
@@ -20,31 +21,101 @@ const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const DOC_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
 
+// Incoterms are trade codes, never translated. "To discuss" is the sentinel
+// the submit step filters out, so it stays as a stable value too.
 const INCOTERMS = ["To discuss", "EXW", "FOB", "CIF", "CFR", "DAP", "DDP"];
 
-// Who is submitting: the single most important vetting fact in physical
-// trade. Sellers and buyers get their own wording.
-const ROLES: Record<"offer" | "requirement", { v: string; label: string }[]> = {
+// Every option below carries a stable `value` and a `labelKey`. The value is
+// what reaches Supabase, so it never changes and is never translated. The
+// labelKey is the only thing a trader reads.
+
+const UNITS: { value: string; labelKey: string }[] = [
+  { value: "MT", labelKey: "units.mt" },
+  { value: "KG", labelKey: "units.kg" },
+  { value: "Tons", labelKey: "units.tons" },
+  { value: "Litres", labelKey: "units.litres" },
+  { value: "Units", labelKey: "units.units" },
+  { value: "Pallets", labelKey: "units.pallets" },
+  { value: "Containers", labelKey: "units.containers" },
+  { value: "Other", labelKey: "units.other" },
+];
+
+// `inlineKey` is the lower-case form used mid-sentence on the preview.
+const FREQUENCIES: { value: string; labelKey: string; inlineKey?: string }[] = [
+  { value: "One-off", labelKey: "frequency.oneOff" },
+  { value: "Per month", labelKey: "frequency.perMonth", inlineKey: "preview.frequency.perMonth" },
+  { value: "Per quarter", labelKey: "frequency.perQuarter", inlineKey: "preview.frequency.perQuarter" },
+  { value: "Per year", labelKey: "frequency.perYear", inlineKey: "preview.frequency.perYear" },
+  { value: "Ongoing", labelKey: "frequency.ongoing", inlineKey: "preview.frequency.ongoing" },
+];
+
+const TIMINGS: Record<"offer" | "requirement", { value: string; labelKey: string }[]> = {
   offer: [
-    { v: "producer", label: "Producer / owner of the goods" },
-    { v: "trading_co", label: "Trading company holding title" },
-    { v: "mandated_broker", label: "Broker with a seller mandate" },
-    { v: "intermediary", label: "Intermediary (no mandate)" },
+    { value: "Ready now", labelKey: "timing.readyNow" },
+    { value: "Within 30 days", labelKey: "timing.within30Days" },
+    { value: "Seasonal", labelKey: "timing.seasonal" },
+    { value: "To be agreed", labelKey: "timing.toBeAgreed" },
   ],
   requirement: [
-    { v: "end_buyer", label: "End buyer" },
-    { v: "trading_co", label: "Trading company" },
-    { v: "mandated_broker", label: "Broker with a buyer mandate" },
-    { v: "intermediary", label: "Intermediary (no mandate)" },
+    { value: "As soon as possible", labelKey: "timing.asSoonAsPossible" },
+    { value: "Within 30 days", labelKey: "timing.within30Days" },
+    { value: "Within 90 days", labelKey: "timing.within90Days" },
+    { value: "Flexible", labelKey: "timing.flexible" },
+  ],
+};
+
+const CHAIN_OPTIONS: Record<"offer" | "requirement", { value: string; labelKey: string }[]> = {
+  offer: [
+    { value: "Direct to the producer", labelKey: "chain.directToProducer" },
+    { value: "One intermediary between", labelKey: "chain.oneIntermediary" },
+    { value: "Two or more intermediaries", labelKey: "chain.twoOrMore" },
+    { value: "Not sure", labelKey: "chain.notSure" },
+  ],
+  requirement: [
+    { value: "Direct to the end buyer", labelKey: "chain.directToEndBuyer" },
+    { value: "One intermediary between", labelKey: "chain.oneIntermediary" },
+    { value: "Two or more intermediaries", labelKey: "chain.twoOrMore" },
+    { value: "Not sure", labelKey: "chain.notSure" },
+  ],
+};
+
+// Who is submitting: the single most important vetting fact in physical
+// trade. Sellers and buyers get their own wording. `label` is the English
+// string sent to the desk and stored on the listing, `labelKey` is what the
+// trader sees.
+const ROLES: Record<"offer" | "requirement", { v: string; label: string; labelKey: string }[]> = {
+  offer: [
+    { v: "producer", label: "Producer / owner of the goods", labelKey: "roles.offer.producer" },
+    { v: "trading_co", label: "Trading company holding title", labelKey: "roles.offer.tradingCo" },
+    { v: "mandated_broker", label: "Broker with a seller mandate", labelKey: "roles.offer.mandatedBroker" },
+    { v: "intermediary", label: "Intermediary (no mandate)", labelKey: "roles.offer.intermediary" },
+  ],
+  requirement: [
+    { v: "end_buyer", label: "End buyer", labelKey: "roles.requirement.endBuyer" },
+    { v: "trading_co", label: "Trading company", labelKey: "roles.requirement.tradingCo" },
+    { v: "mandated_broker", label: "Broker with a buyer mandate", labelKey: "roles.requirement.mandatedBroker" },
+    { v: "intermediary", label: "Intermediary (no mandate)", labelKey: "roles.requirement.intermediary" },
   ],
 };
 
 const NEEDS_CHAIN = new Set(["mandated_broker", "intermediary"]);
 
 const STEPS: Record<ListingType, string[]> = {
-  offer: ["The product", "The terms", "Photos & files", "Preview"],
-  requirement: ["What you need", "Delivery", "Files", "Preview"],
-  service: ["The service", "Scope", "Files", "Preview"],
+  offer: ["steps.offer.product", "steps.offer.terms", "steps.offer.media", "steps.offer.preview"],
+  requirement: ["steps.requirement.need", "steps.requirement.delivery", "steps.requirement.files", "steps.requirement.preview"],
+  service: ["steps.service.service", "steps.service.scope", "steps.service.files", "steps.service.preview"],
+};
+
+const TYPE_LABEL_KEYS: Record<ListingType, string> = {
+  offer: "type.offer",
+  requirement: "type.requirement",
+  service: "type.service",
+};
+
+const BADGE_KEYS: Record<ListingType, string> = {
+  offer: "preview.badge.offer",
+  requirement: "preview.badge.requirement",
+  service: "preview.badge.service",
 };
 
 const LAST = 3;
@@ -63,6 +134,8 @@ export default function ListingForm({
   isAuthed?: boolean;
   restoreDraft?: boolean;
 }) {
+  const t = useTranslations("listingForm");
+  const tCat = useTranslations("categories");
   const router = useRouter();
   const [type, setType] = useState<ListingType>(initialType);
   const [step, setStep] = useState(0);
@@ -112,6 +185,7 @@ export default function ListingForm({
   const cat = TRADE_CATEGORIES.find((c) => c.id === catId);
   const isGoods = type !== "service";
   const stepsForType = STEPS[type];
+  const side = type === "offer" ? "offer" : "requirement";
 
   // Restore a draft stashed before the sign-in round-trip (text only:
   // browsers cannot persist chosen files across navigation).
@@ -157,9 +231,10 @@ export default function ListingForm({
   }, [previewUrls]);
 
   // Composed exactly as the submit payload composes them, so the preview
-  // is honest.
+  // is honest. These stay in the stored English values: they travel to the
+  // desk and to Supabase, they are not screen copy.
   const composedProduct = isGoods
-    ? `${cat?.label ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
+    ? `${cat?.value ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
     : serviceName.trim();
   const composedVolume = qty.trim()
     ? `${qty.trim()} ${unit}${freq !== "One-off" ? ` ${freq.toLowerCase()}` : ""}`
@@ -168,9 +243,28 @@ export default function ListingForm({
     ? `Price indication: USD ${price} ${priceBasis === "unit" ? `per ${unit}` : "for the deal"}`
     : "";
 
-  function switchType(t: ListingType) {
-    setType(t);
-    setTiming(t === "requirement" ? "As soon as possible" : "Ready now");
+  // The same facts in the reader's language. Preview only, never submitted.
+  const unitLabel = (v: string) => {
+    const u = UNITS.find((x) => x.value === v);
+    return u ? t(u.labelKey) : v;
+  };
+  const subLabelKey = cat?.subs.find((s) => s.value === sub)?.labelKey;
+  const shownProduct = isGoods
+    ? `${cat ? tCat(cat.labelKey) : ""}${sub && sub !== "Other" && subLabelKey ? ` · ${tCat(subLabelKey)}` : ""}`
+    : serviceName.trim();
+  const freqInlineKey = FREQUENCIES.find((f) => f.value === freq)?.inlineKey;
+  const shownVolume = qty.trim()
+    ? `${qty.trim()} ${unitLabel(unit)}${freqInlineKey ? ` ${t(freqInlineKey)}` : ""}`
+    : "";
+  const shownPriceLine = price
+    ? priceBasis === "unit"
+      ? t("preview.pricePerUnit", { price, unit: unitLabel(unit) })
+      : t("preview.priceForDeal", { price })
+    : "";
+
+  function switchType(t2: ListingType) {
+    setType(t2);
+    setTiming(t2 === "requirement" ? "As soon as possible" : "Ready now");
     setRole("");
     setChain("");
     setError("");
@@ -180,33 +274,33 @@ export default function ListingForm({
     setError("");
     if (step === 0) {
       if (isGoods && !catId) {
-        setError("Pick a category first, one tap.");
+        setError(t("errors.pickCategory"));
         return;
       }
       if (isGoods && cat && cat.subs.length > 1 && !sub) {
-        setError("Pick the closest match, one more tap.");
+        setError(t("errors.pickSubcategory"));
         return;
       }
       if (!isGoods && !serviceName.trim()) {
-        setError("Name the service first.");
+        setError(t("errors.nameService"));
         return;
       }
       if (!description.trim()) {
         setError(
           type === "requirement"
-            ? "Describe what you need: specs, grade, quality."
-            : "Describe it in a few lines: variety, grade, specs.",
+            ? t("errors.describeRequirement")
+            : t("errors.describeOffer"),
         );
         return;
       }
     }
     if (step === 1 && isGoods) {
       if (!role) {
-        setError("One tap: who are you in this deal?");
+        setError(t("errors.pickRole"));
         return;
       }
       if (NEEDS_CHAIN.has(role) && !chain) {
-        setError("One more tap: how close are you to the deal?");
+        setError(t("errors.pickChain"));
         return;
       }
     }
@@ -273,18 +367,18 @@ export default function ListingForm({
   function onMediaChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length > MAX_MEDIA) {
-      setError(`Maximum ${MAX_MEDIA} photos and videos.`);
+      setError(t("errors.tooManyMedia", { max: MAX_MEDIA }));
       e.target.value = "";
       return;
     }
     for (const f of files) {
       if (!IMAGE_TYPES.has(f.type) && !VIDEO_TYPES.has(f.type)) {
-        setError(`"${f.name}": photos (PNG, JPG, WEBP, GIF) or videos (MP4, WEBM, MOV) only.`);
+        setError(t("errors.mediaType", { name: f.name }));
         e.target.value = "";
         return;
       }
       if (f.size > MAX_MEDIA_MB * 1024 * 1024) {
-        setError(`"${f.name}" is over ${MAX_MEDIA_MB} MB.`);
+        setError(t("errors.mediaTooLarge", { name: f.name, max: MAX_MEDIA_MB }));
         e.target.value = "";
         return;
       }
@@ -296,18 +390,18 @@ export default function ListingForm({
   function onDocsChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length > MAX_DOCS) {
-      setError(`Maximum ${MAX_DOCS} documents.`);
+      setError(t("errors.tooManyDocs", { max: MAX_DOCS }));
       e.target.value = "";
       return;
     }
     for (const f of files) {
       if (!DOC_TYPES.has(f.type)) {
-        setError(`"${f.name}": PDF or image documents only.`);
+        setError(t("errors.docType", { name: f.name }));
         e.target.value = "";
         return;
       }
       if (f.size > MAX_DOC_MB * 1024 * 1024) {
-        setError(`"${f.name}" is over ${MAX_DOC_MB} MB.`);
+        setError(t("errors.docTooLarge", { name: f.name, max: MAX_DOC_MB }));
         e.target.value = "";
         return;
       }
@@ -337,7 +431,7 @@ export default function ListingForm({
     // Photos: required to publish an offer (buyers must see the product);
     // drafts can wait.
     if (!asDraft && type === "offer" && !media.some((f) => IMAGE_TYPES.has(f.type))) {
-      setError("At least one photo of the product is required to publish an offer.");
+      setError(t("errors.photoRequired"));
       return;
     }
 
@@ -368,7 +462,7 @@ export default function ListingForm({
       .join("\n");
 
     try {
-      setProgress("Creating your listing…");
+      setProgress(t("progress.creating"));
       const res = await fetch("/api/marketplace/submit", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -389,7 +483,7 @@ export default function ListingForm({
         }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || "Something went wrong. Please try again.");
+      if (!res.ok) throw new Error(body.error || t("errors.genericRetry"));
       setRef(body.ref || "");
       const listingId = body.id as string;
 
@@ -402,7 +496,7 @@ export default function ListingForm({
         let done = 0;
         for (const f of media) {
           done++;
-          setProgress(`Uploading ${done} of ${total}: ${f.name}`);
+          setProgress(t("progress.uploading", { done, total, name: f.name }));
           const path = `${uid}/${listingId}/${Date.now()}_${safeName(f.name)}`;
           const { error: upErr } = await supabase.storage
             .from("listing-media")
@@ -417,7 +511,7 @@ export default function ListingForm({
         }
         for (const f of docs) {
           done++;
-          setProgress(`Uploading ${done} of ${total}: ${f.name}`);
+          setProgress(t("progress.uploading", { done, total, name: f.name }));
           const path = `${uid}/${listingId}/${Date.now()}_${safeName(f.name)}`;
           const { error: upErr } = await supabase.storage
             .from("listing-docs")
@@ -431,15 +525,13 @@ export default function ListingForm({
           });
         }
         if (failed > 0) {
-          setUploadWarning(
-            `${failed} file(s) failed to upload. The listing stands; the desk will ask for anything missing.`,
-          );
+          setUploadWarning(t("progress.uploadFailed", { count: failed }));
         }
       }
       setStatus("sent");
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setProgress("");
     }
@@ -450,16 +542,16 @@ export default function ListingForm({
       <div className="glass p-8 text-center">
         <CheckCircle2 className="mx-auto h-8 w-8 text-positive" />
         <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>
-          {wasDraft ? "Saved as draft" : "Submitted"}{ref ? ` · ${ref}` : ""}.
+          {ref
+            ? t(wasDraft ? "success.titleDraftWithRef" : "success.titleSentWithRef", { ref })
+            : t(wasDraft ? "success.titleDraft" : "success.titleSent")}
         </h3>
         <p className="mt-2 text-[14px] text-gray-2">
-          {wasDraft
-            ? "Your draft is safe under Your listings on the marketplace page. Submit it for vetting whenever you are ready."
-            : "Your listing is with the desk for vetting. You will be notified by email either way, usually within two business days."}
+          {wasDraft ? t("success.bodyDraft") : t("success.bodySent")}
         </p>
         {uploadWarning && <p className="mt-3 text-[13px] text-gold">{uploadWarning}</p>}
         <button type="button" onClick={() => router.push("/marketplace")} className="btn-gold mt-6">
-          Back to the marketplace
+          {t("success.back")}
         </button>
       </div>
     );
@@ -469,8 +561,8 @@ export default function ListingForm({
     <form onSubmit={onSubmit} className="glass p-7 md:p-8">
       {/* Progress */}
       <div className="mb-7 flex items-center gap-3">
-        {stepsForType.map((label, i) => (
-          <div key={label} className="flex flex-1 flex-col gap-2">
+        {stepsForType.map((labelKey, i) => (
+          <div key={labelKey} className="flex flex-1 flex-col gap-2">
             <div
               className="h-1 rounded-full transition-colors duration-300"
               style={{ background: i <= step ? "var(--gold)" : "rgba(255,255,255,0.1)" }}
@@ -479,7 +571,7 @@ export default function ListingForm({
               className={`text-[10px] uppercase ${i === step ? "text-gold" : "text-gray-2"}`}
               style={{ letterSpacing: "0.16em" }}
             >
-              {i + 1}. {label}
+              {i + 1}. {t(labelKey)}
             </span>
           </div>
         ))}
@@ -488,17 +580,17 @@ export default function ListingForm({
       {/* ============ STEP 1 ============ */}
       <div className={step === 0 ? "" : "hidden"}>
         <div className="mb-5 grid grid-cols-3 gap-2 rounded-lg border border-white/10 p-1">
-          {(["offer", "requirement", "service"] as ListingType[]).map((t) => (
+          {(["offer", "requirement", "service"] as ListingType[]).map((tp) => (
             <button
-              key={t}
+              key={tp}
               type="button"
-              onClick={() => switchType(t)}
+              onClick={() => switchType(tp)}
               className={`rounded-md py-2.5 text-[11px] uppercase transition-colors ${
-                type === t ? "bg-gold text-navy font-bold" : "text-gray-2 hover:text-cream"
+                type === tp ? "bg-gold text-navy font-bold" : "text-gray-2 hover:text-cream"
               }`}
               style={{ letterSpacing: "0.14em" }}
             >
-              {t === "offer" ? "I sell" : t === "requirement" ? "I need" : "Service"}
+              {t(TYPE_LABEL_KEYS[tp])}
             </button>
           ))}
         </div>
@@ -507,7 +599,7 @@ export default function ListingForm({
           <>
             {/* Category grid: click, don't type */}
             <p className="mb-3 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              {type === "offer" ? "What are you selling?" : "What do you need?"} Pick a category
+              {type === "offer" ? t("step1.categoryPromptSell") : t("step1.categoryPromptBuy")}
             </p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
               {TRADE_CATEGORIES.map((c) => (
@@ -523,7 +615,7 @@ export default function ListingForm({
                 >
                   <c.icon className={`h-6 w-6 ${catId === c.id ? "text-gold" : "text-gray-2"}`} />
                   <span className={`text-[10.5px] leading-tight ${catId === c.id ? "text-cream" : "text-gray-2"}`}>
-                    {c.label}
+                    {tCat(c.labelKey)}
                   </span>
                 </button>
               ))}
@@ -534,16 +626,16 @@ export default function ListingForm({
               <div className="mt-4 flex flex-wrap gap-2">
                 {cat.subs.map((s) => (
                   <button
-                    key={s}
+                    key={s.value}
                     type="button"
-                    onClick={() => setSub(s)}
+                    onClick={() => setSub(s.value)}
                     className={`rounded-full border px-4 py-2 text-[12px] transition-colors ${
-                      sub === s
+                      sub === s.value
                         ? "border-gold bg-gold text-navy font-semibold"
                         : "border-white/15 text-gray-2 hover:border-gold/60 hover:text-cream"
                     }`}
                   >
-                    {s}
+                    {tCat(s.labelKey)}
                   </button>
                 ))}
               </div>
@@ -554,7 +646,7 @@ export default function ListingForm({
             value={serviceName}
             onChange={(e) => setServiceName(e.target.value)}
             maxLength={200}
-            placeholder="What service do you offer or need? *"
+            placeholder={t("step1.serviceNamePlaceholder")}
             className={FIELD}
           />
         )}
@@ -567,10 +659,10 @@ export default function ListingForm({
           rows={4}
           placeholder={
             type === "offer"
-              ? "Describe the product: variety, grade, specs, packaging. *"
+              ? t("step1.descriptionOffer")
               : type === "requirement"
-                ? "Describe what you need: specs, grade, quality, packaging. *"
-                : "Describe the scope in a few lines. *"
+                ? t("step1.descriptionRequirement")
+                : t("step1.descriptionService")
           }
           className={`${FIELD} mt-4 resize-y`}
         />
@@ -584,25 +676,18 @@ export default function ListingForm({
                 onChange={(e) => setQty(e.target.value)}
                 inputMode="decimal"
                 maxLength={12}
-                placeholder="Quantity"
+                placeholder={t("step1.quantityPlaceholder")}
                 className={FIELD}
               />
               <select value={unit} onChange={(e) => setUnit(e.target.value)} className={FIELD}>
-                <option>MT</option>
-                <option>KG</option>
-                <option>Tons</option>
-                <option>Litres</option>
-                <option>Units</option>
-                <option>Pallets</option>
-                <option>Containers</option>
-                <option>Other</option>
+                {UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>{t(u.labelKey)}</option>
+                ))}
               </select>
               <select value={freq} onChange={(e) => setFreq(e.target.value)} className={FIELD}>
-                <option>One-off</option>
-                <option>Per month</option>
-                <option>Per quarter</option>
-                <option>Per year</option>
-                <option>Ongoing</option>
+                {FREQUENCIES.map((f) => (
+                  <option key={f.value} value={f.value}>{t(f.labelKey)}</option>
+                ))}
               </select>
             </div>
 
@@ -613,7 +698,7 @@ export default function ListingForm({
                 onChange={(e) => setPrice(e.target.value)}
                 inputMode="decimal"
                 maxLength={12}
-                placeholder={type === "requirement" ? "Target price (USD)" : "Price (USD)"}
+                placeholder={type === "requirement" ? t("step1.targetPricePlaceholder") : t("step1.pricePlaceholder")}
                 className={FIELD}
               />
               <select
@@ -621,8 +706,8 @@ export default function ListingForm({
                 onChange={(e) => setPriceBasis(e.target.value as "unit" | "deal")}
                 className={FIELD}
               >
-                <option value="unit">USD per {unit}</option>
-                <option value="deal">USD for the deal</option>
+                <option value="unit">{t("step1.priceBasisPerUnit", { unit: unitLabel(unit) })}</option>
+                <option value="deal">{t("step1.priceBasisForDeal")}</option>
               </select>
             </div>
           </>
@@ -635,10 +720,10 @@ export default function ListingForm({
           <>
             {/* Who are you in this deal: role + chain distance */}
             <p className="mb-3 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              Who are you in this deal? *
+              {t("step2.roleQuestion")}
             </p>
             <div className="flex flex-wrap gap-2">
-              {ROLES[type === "offer" ? "offer" : "requirement"].map((r) => (
+              {ROLES[side].map((r) => (
                 <button
                   key={r.v}
                   type="button"
@@ -649,22 +734,21 @@ export default function ListingForm({
                       : "border-white/15 text-gray-2 hover:border-gold/60 hover:text-cream"
                   }`}
                 >
-                  {r.label}
+                  {t(r.labelKey)}
                 </button>
               ))}
             </div>
             {NEEDS_CHAIN.has(role) && (
               <div className="mt-3">
                 <select value={chain} onChange={(e) => setChain(e.target.value)} className={FIELD}>
-                  <option value="">How close are you to the deal? *</option>
-                  <option>{type === "offer" ? "Direct to the producer" : "Direct to the end buyer"}</option>
-                  <option>One intermediary between</option>
-                  <option>Two or more intermediaries</option>
-                  <option>Not sure</option>
+                  <option value="">{t("step2.chainPlaceholder")}</option>
+                  {CHAIN_OPTIONS[side].map((c) => (
+                    <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
+                  ))}
                 </select>
                 {role === "mandated_broker" && (
                   <p className="mt-2 text-[11px] text-gray-2">
-                    Upload the mandate with your documents in the next step. It speeds up vetting.
+                    {t("step2.mandateHint")}
                   </p>
                 )}
               </div>
@@ -674,41 +758,43 @@ export default function ListingForm({
         )}
         {type === "offer" && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder="Origin (country/region)" className={FIELD} />
+            <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder={t("step2.originPlaceholder")} className={FIELD} />
             <select value={incoterm} onChange={(e) => setIncoterm(e.target.value)} className={FIELD}>
-              {INCOTERMS.map((i) => <option key={i}>{i === "To discuss" ? "Incoterm: to discuss" : i}</option>)}
+              {INCOTERMS.map((i) => (
+                <option key={i} value={i}>{i === "To discuss" ? t("step2.incotermToDiscuss") : i}</option>
+              ))}
             </select>
             <select value={timing} onChange={(e) => setTiming(e.target.value)} className={`${FIELD} sm:col-span-2`}>
-              <option>Ready now</option>
-              <option>Within 30 days</option>
-              <option>Seasonal</option>
-              <option>To be agreed</option>
+              {TIMINGS.offer.map((o) => (
+                <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+              ))}
             </select>
           </div>
         )}
         {type === "requirement" && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <input value={destination} onChange={(e) => setDestination(e.target.value)} maxLength={80} placeholder="Deliver to (country/region)" className={FIELD} />
+            <input value={destination} onChange={(e) => setDestination(e.target.value)} maxLength={80} placeholder={t("step2.destinationPlaceholder")} className={FIELD} />
             <select value={incoterm} onChange={(e) => setIncoterm(e.target.value)} className={FIELD}>
-              {INCOTERMS.map((i) => <option key={i}>{i === "To discuss" ? "Incoterm: to discuss" : i}</option>)}
+              {INCOTERMS.map((i) => (
+                <option key={i} value={i}>{i === "To discuss" ? t("step2.incotermToDiscuss") : i}</option>
+              ))}
             </select>
             <select value={timing} onChange={(e) => setTiming(e.target.value)} className={`${FIELD} sm:col-span-2`}>
-              <option>As soon as possible</option>
-              <option>Within 30 days</option>
-              <option>Within 90 days</option>
-              <option>Flexible</option>
+              {TIMINGS.requirement.map((o) => (
+                <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
+              ))}
             </select>
           </div>
         )}
         {type === "service" && (
-          <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder="Where? (country/region, or worldwide)" className={FIELD} />
+          <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder={t("step2.servicePlacePlaceholder")} className={FIELD} />
         )}
         <textarea
           value={extraTerms}
           onChange={(e) => setExtraTerms(e.target.value)}
           maxLength={1000}
           rows={3}
-          placeholder="Anything else the desk should know (optional)"
+          placeholder={t("step2.extraTermsPlaceholder")}
           className={`${FIELD} mt-4 resize-y`}
         />
       </div>
@@ -723,8 +809,8 @@ export default function ListingForm({
             {media.length > 0
               ? media.map((f) => f.name).join(", ")
               : type === "offer"
-                ? `Photos and videos of the product * (at least one photo, up to ${MAX_MEDIA})`
-                : `Photos or videos (optional, up to ${MAX_MEDIA})`}
+                ? t("step3.mediaRequired", { max: MAX_MEDIA })
+                : t("step3.mediaOptional", { max: MAX_MEDIA })}
           </span>
           <input
             type="file"
@@ -740,7 +826,7 @@ export default function ListingForm({
           <span>
             {docs.length > 0
               ? docs.map((f) => f.name).join(", ")
-              : `Documents (optional: specs, licences, certificates · up to ${MAX_DOCS})`}
+              : t("step3.documents", { max: MAX_DOCS })}
           </span>
           <input
             type="file"
@@ -751,12 +837,11 @@ export default function ListingForm({
           />
         </label>
         <p className="mt-2 text-[11px] leading-relaxed text-gray-2">
-          Documents are visible only to the desk, never to counterparties.
+          {t("step3.documentsPrivacy")}
         </p>
         {restoredNote && (
           <p className="mt-3 rounded-[10px] px-4 py-3 text-[12px] text-gold" style={{ background: "rgba(232,160,32,0.12)", border: "1px solid rgba(232,160,32,0.35)" }}>
-            Welcome back, your draft was restored. Photos cannot survive the
-            sign-in trip, so re-attach them here before publishing.
+            {t("step3.draftRestored")}
           </p>
         )}
       </div>
@@ -764,7 +849,7 @@ export default function ListingForm({
       {/* ============ STEP 4: PREVIEW ============ */}
       <div className={step === LAST ? "" : "hidden"}>
         <p className="mb-3 flex items-center gap-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-          <Eye className="h-3.5 w-3.5 text-gold" /> This is how it appears on the board
+          <Eye className="h-3.5 w-3.5 text-gold" /> {t("preview.heading")}
         </p>
 
         <div className="rounded-2xl border border-gold/25 bg-white/[0.04] p-5 md:flex md:gap-6">
@@ -772,31 +857,31 @@ export default function ListingForm({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={previewUrls[0]}
-              alt="Your product"
+              alt={t("preview.imageAlt")}
               className="mb-4 h-40 w-full rounded-lg object-cover md:mb-0 md:h-32 md:w-48 md:shrink-0"
             />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span className="mono text-[12px] text-gold">PT-····</span>
-              <span className="badge uppercase">{type}</span>
+              <span className="badge uppercase">{t(BADGE_KEYS[type])}</span>
               <span className="flex-1 text-[15px] text-cream">
-                {composedProduct || "Your product"}
+                {shownProduct || t("preview.productFallback")}
               </span>
             </div>
             <p className="mono mt-3 text-[12px] leading-relaxed text-gray-2">
               {[
-                type !== "requirement" && origin && `Origin: ${origin}`,
-                type === "requirement" && destination && `Destination: ${destination}`,
-                composedVolume,
+                type !== "requirement" && origin && t("preview.origin", { origin }),
+                type === "requirement" && destination && t("preview.destination", { destination }),
+                shownVolume,
                 isGoods && incoterm !== "To discuss" ? incoterm : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
             <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-gray-2">
-              {[description.trim(), composedPriceLine].filter(Boolean).join("\n") ||
-                "Your description appears here."}
+              {[description.trim(), shownPriceLine].filter(Boolean).join("\n") ||
+                t("preview.descriptionFallback")}
             </p>
             {previewUrls.length > 1 && (
               <div className="mt-3 flex gap-2">
@@ -810,44 +895,43 @@ export default function ListingForm({
         </div>
 
         <p className="mt-4 text-[12px] leading-relaxed text-gray-2">
-          Your name and contact details are never shown. The reference number
-          is assigned after the desk approves the listing.
-          {!isAuthed && " Publishing is free: one click to sign in, no password."}
+          {t("preview.privacy")}
+          {!isAuthed && ` ${t("preview.freeToPublish")}`}
         </p>
 
         {/* Instant listing check */}
         <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              <Sparkles className="h-3.5 w-3.5 text-gold" /> Listing check · free
+              <Sparkles className="h-3.5 w-3.5 text-gold" /> {t("check.heading")}
             </span>
             {assessStatus === "done" && assess && (
               <span className="serif text-gold" style={{ fontSize: 26, fontWeight: 500 }}>
-                {assess.score}<span className="text-[14px] text-gray-2">/100</span>
+                {assess.score}<span className="text-[14px] text-gray-2">{t("check.scoreSuffix")}</span>
               </span>
             )}
           </div>
 
           {assessStatus === "loading" && (
-            <p className="mt-3 text-[13px] text-gray-2">Reading your listing…</p>
+            <p className="mt-3 text-[13px] text-gray-2">{t("check.loading")}</p>
           )}
           {assessStatus === "error" && (
             <p className="mt-3 text-[13px] text-gray-2">
-              The check is unavailable right now. You can still publish.
+              {t("check.unavailable")}
             </p>
           )}
           {assessStatus === "upgrade" && (
             <div className="mt-3">
               <p className="text-[13px] leading-relaxed text-gray-2">
-                You have used your free checks. Ponte AI gives you unlimited
-                listing checks and your personal AI account manager for
-                <span className="text-gold"> $19/month</span>.
+                {t.rich("check.upgrade", {
+                  price: (chunks) => <span className="text-gold">{chunks}</span>,
+                })}
               </p>
               <a
                 href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/pricing"}
                 className="btn-gold mt-3 inline-flex"
               >
-                Unlock Ponte AI
+                {t("check.upgradeCta")}
               </a>
             </div>
           )}
@@ -878,7 +962,7 @@ export default function ListingForm({
                 className="text-[11px] uppercase text-gray-2 hover:text-gold"
                 style={{ letterSpacing: "0.14em" }}
               >
-                Check again after edits
+                {t("check.runAgain")}
               </button>
             </div>
           )}
@@ -897,7 +981,7 @@ export default function ListingForm({
             className="btn-ghost-light"
             disabled={status === "sending"}
           >
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" /> {t("actions.back")}
           </button>
         )}
         <button
@@ -906,14 +990,14 @@ export default function ListingForm({
           className="btn-gold flex-1 justify-center disabled:opacity-60"
         >
           {step < 2
-            ? "Continue"
+            ? t("actions.continue")
             : step === 2
-              ? "Preview my listing"
+              ? t("actions.preview")
               : status === "sending"
-                ? "Working…"
+                ? t("actions.working")
                 : isAuthed
-                  ? "Publish for vetting"
-                  : "Sign in and publish (free)"}
+                  ? t("actions.publish")
+                  : t("actions.signInAndPublish")}
           <ArrowRight className="h-4 w-4" />
         </button>
         {step === LAST && isAuthed && (
@@ -923,21 +1007,22 @@ export default function ListingForm({
             disabled={status === "sending"}
             className="btn-ghost-light disabled:opacity-60"
           >
-            Save as draft
+            {t("actions.saveDraft")}
           </button>
         )}
       </div>
 
       <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-2">
-        Share only what you are comfortable sharing. Prefer an NCNDA with the
-        desk first?{" "}
-        <a
-          href="mailto:hello@ponte.trade?subject=NCNDA%20before%20listing&body=Please%20send%20me%20your%20NCNDA%20to%20sign%20before%20I%20submit%20my%20listing%20details."
-          className="text-gold hover:text-cream"
-        >
-          Request it here
-        </a>{" "}
-        and list after signing. Nothing goes live until the desk approves it.
+        {t.rich("footer.notice", {
+          request: (chunks) => (
+            <a
+              href="mailto:hello@ponte.trade?subject=NCNDA%20before%20listing&body=Please%20send%20me%20your%20NCNDA%20to%20sign%20before%20I%20submit%20my%20listing%20details."
+              className="text-gold hover:text-cream"
+            >
+              {chunks}
+            </a>
+          ),
+        })}
       </p>
     </form>
   );

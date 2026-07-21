@@ -1,28 +1,30 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, X, User } from "lucide-react";
 import Logo from "@/components/Logo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 // One nav, one story: the marketplace, what it costs, how to reach the desk.
 const navLinks = [
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/pricing", label: "Fees" },
-  { href: "/contact", label: "Contact" },
-];
+  { href: "/marketplace", key: "marketplace" },
+  { href: "/pricing", key: "fees" },
+  { href: "/contact", key: "contact" },
+] as const;
 
 export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("nav");
 
   useEffect(() => setOpen(false), [pathname]);
 
   return (
     <header className="sticky top-0 z-50 nav-glass">
       <nav className="container-px flex h-16 items-center justify-between">
-        <Link href="/" aria-label="Ponte Trade home">
+        <Link href="/" aria-label={t("homeAriaLabel")}>
           <Logo reversed />
         </Link>
 
@@ -38,16 +40,17 @@ export default function SiteHeader() {
               }`}
               style={{ letterSpacing: "0.18em" }}
             >
-              {link.label}
+              {t(link.key)}
             </Link>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <Link
             href="/account"
             className="hidden rounded-full p-2 text-gray-2 hover:bg-white/5 hover:text-gold sm:inline-flex"
-            aria-label="Account"
+            aria-label={t("account")}
           >
             <User className="h-5 w-5" />
           </Link>
@@ -55,7 +58,7 @@ export default function SiteHeader() {
             type="button"
             onClick={() => setOpen((v) => !v)}
             className="inline-flex rounded-full p-2 text-cream hover:bg-white/5 md:hidden"
-            aria-label="Menu"
+            aria-label={t("menuAriaLabel")}
             aria-expanded={open}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -73,7 +76,7 @@ export default function SiteHeader() {
                 className="py-2.5 text-sm uppercase text-cream"
                 style={{ letterSpacing: "0.18em" }}
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             ))}
             <Link
@@ -81,8 +84,11 @@ export default function SiteHeader() {
               className="py-2.5 text-sm uppercase text-cream"
               style={{ letterSpacing: "0.18em" }}
             >
-              Account
+              {t("account")}
             </Link>
+            <div className="py-2.5">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       )}

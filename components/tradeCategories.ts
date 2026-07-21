@@ -6,32 +6,203 @@ import {
 
 // Product taxonomy for the marketplace, grouped on HS-code families but
 // written in trader language. Users click, never type the product name.
-export type TradeCategory = {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  subs: string[];
+//
+// This is a plain data module, so it holds no hooks and no human copy. Every
+// visible label lives in the "categories" message namespace and is resolved
+// by the consuming component with useTranslations("categories").
+//
+// The `value` strings below are written to Supabase as part of the product
+// line. They are identifiers, not copy: never edit them, never translate
+// them. Only `labelKey` decides what a trader reads on screen.
+
+export type TradeSubcategory = {
+  /** Persisted to the database. Stable identifier, never translated. */
+  value: string;
+  /** Key inside the "categories" namespace, for example "grains.subs.wheat". */
+  labelKey: string;
 };
 
+export type TradeCategory = {
+  /** Persisted to the database on the listing row. Stable identifier. */
+  id: string;
+  /** Persisted to the database inside the product line. Stable identifier. */
+  value: string;
+  /** Key inside the "categories" namespace, for example "grains.label". */
+  labelKey: string;
+  icon: LucideIcon;
+  subs: TradeSubcategory[];
+};
+
+// Builder: keeps the table readable and derives every message key from the
+// category id, so keys and data can never drift apart.
+function category(
+  id: string,
+  value: string,
+  icon: LucideIcon,
+  subs: Array<[key: string, value: string]>,
+): TradeCategory {
+  return {
+    id,
+    value,
+    labelKey: `${id}.label`,
+    icon,
+    subs: subs.map(([key, subValue]) => ({
+      value: subValue,
+      labelKey: `${id}.subs.${key}`,
+    })),
+  };
+}
+
 export const TRADE_CATEGORIES: TradeCategory[] = [
-  { id: "grains", label: "Grains & Cereals", icon: Wheat, subs: ["Wheat", "Corn / maize", "Rice", "Barley", "Soybeans", "Pulses & lentils", "Seeds", "Flour & milled"] },
-  { id: "produce", label: "Fruits & Vegetables", icon: Apple, subs: ["Fresh fruit", "Fresh vegetables", "Frozen", "Dried fruit & nuts"] },
-  { id: "meat", label: "Meat & Poultry", icon: Beef, subs: ["Beef", "Poultry", "Pork", "Lamb", "Processed meat"] },
-  { id: "seafood", label: "Fish & Seafood", icon: Fish, subs: ["Fresh fish", "Frozen fish", "Shellfish", "Processed seafood"] },
-  { id: "dairy", label: "Dairy & Eggs", icon: Package, subs: ["Milk & cream", "Cheese", "Butter", "Milk powder", "Eggs"] },
-  { id: "oils", label: "Edible Oils & Fats", icon: Droplets, subs: ["Sunflower oil", "Olive oil", "Palm oil", "Rapeseed oil", "Other oils & fats"] },
-  { id: "beverages", label: "Beverages", icon: Wine, subs: ["Wine", "Beer & spirits", "Juices", "Water & soft drinks"] },
-  { id: "coffee", label: "Coffee, Tea & Sugar", icon: Coffee, subs: ["Coffee", "Tea", "Cocoa", "Spices", "Sugar & sweeteners"] },
-  { id: "foods", label: "Prepared Foods", icon: Boxes, subs: ["Canned & preserved", "Pasta & bakery", "Confectionery", "Sauces & condiments", "Animal feed"] },
-  { id: "fuels", label: "Minerals & Fuels", icon: Fuel, subs: ["Refined fuels", "Crude oil", "Coal", "Gas", "Ores & minerals", "Cement & aggregates"] },
-  { id: "chemicals", label: "Chemicals & Pharma", icon: FlaskConical, subs: ["Industrial chemicals", "Fertilizers", "Pharmaceuticals", "Cosmetics", "Cleaning products"] },
-  { id: "plastics", label: "Plastics & Rubber", icon: Layers, subs: ["Raw polymers", "Plastic products", "Rubber & tyres"] },
-  { id: "wood", label: "Wood & Paper", icon: Trees, subs: ["Timber & lumber", "Plywood & panels", "Pellets & biomass", "Paper & packaging"] },
-  { id: "textiles", label: "Textiles & Apparel", icon: Shirt, subs: ["Fabrics & yarns", "Clothing", "Home textiles", "Footwear & leather"] },
-  { id: "metals", label: "Metals & Steel", icon: Cog, subs: ["Steel & iron", "Aluminium", "Copper", "Scrap metal", "Metal products"] },
-  { id: "machinery", label: "Machinery & Electronics", icon: Cpu, subs: ["Industrial machinery", "Agricultural machinery", "Electronics & components", "Appliances"] },
-  { id: "vehicles", label: "Vehicles & Transport", icon: Truck, subs: ["Cars & trucks", "Parts & tyres", "Ships & rail"] },
-  { id: "medical", label: "Medical & Instruments", icon: Stethoscope, subs: ["Medical devices", "Lab & instruments", "PPE & disposables"] },
-  { id: "home", label: "Furniture & Construction", icon: Armchair, subs: ["Furniture", "Building materials", "Glass & ceramics", "Stone & marble"] },
-  { id: "other", label: "Other Goods", icon: Package, subs: ["Other"] },
+  category("grains", "Grains & Cereals", Wheat, [
+    ["wheat", "Wheat"],
+    ["corn", "Corn / maize"],
+    ["rice", "Rice"],
+    ["barley", "Barley"],
+    ["soybeans", "Soybeans"],
+    ["pulses", "Pulses & lentils"],
+    ["seeds", "Seeds"],
+    ["flour", "Flour & milled"],
+  ]),
+  category("produce", "Fruits & Vegetables", Apple, [
+    ["freshFruit", "Fresh fruit"],
+    ["freshVegetables", "Fresh vegetables"],
+    ["frozen", "Frozen"],
+    ["driedFruitNuts", "Dried fruit & nuts"],
+  ]),
+  category("meat", "Meat & Poultry", Beef, [
+    ["beef", "Beef"],
+    ["poultry", "Poultry"],
+    ["pork", "Pork"],
+    ["lamb", "Lamb"],
+    ["processed", "Processed meat"],
+  ]),
+  category("seafood", "Fish & Seafood", Fish, [
+    ["freshFish", "Fresh fish"],
+    ["frozenFish", "Frozen fish"],
+    ["shellfish", "Shellfish"],
+    ["processed", "Processed seafood"],
+  ]),
+  category("dairy", "Dairy & Eggs", Package, [
+    ["milkCream", "Milk & cream"],
+    ["cheese", "Cheese"],
+    ["butter", "Butter"],
+    ["milkPowder", "Milk powder"],
+    ["eggs", "Eggs"],
+  ]),
+  category("oils", "Edible Oils & Fats", Droplets, [
+    ["sunflower", "Sunflower oil"],
+    ["olive", "Olive oil"],
+    ["palm", "Palm oil"],
+    ["rapeseed", "Rapeseed oil"],
+    ["other", "Other oils & fats"],
+  ]),
+  category("beverages", "Beverages", Wine, [
+    ["wine", "Wine"],
+    ["beerSpirits", "Beer & spirits"],
+    ["juices", "Juices"],
+    ["waterSoftDrinks", "Water & soft drinks"],
+  ]),
+  category("coffee", "Coffee, Tea & Sugar", Coffee, [
+    ["coffee", "Coffee"],
+    ["tea", "Tea"],
+    ["cocoa", "Cocoa"],
+    ["spices", "Spices"],
+    ["sugar", "Sugar & sweeteners"],
+  ]),
+  category("foods", "Prepared Foods", Boxes, [
+    ["canned", "Canned & preserved"],
+    ["pastaBakery", "Pasta & bakery"],
+    ["confectionery", "Confectionery"],
+    ["sauces", "Sauces & condiments"],
+    ["animalFeed", "Animal feed"],
+  ]),
+  category("fuels", "Minerals & Fuels", Fuel, [
+    ["refined", "Refined fuels"],
+    ["crude", "Crude oil"],
+    ["coal", "Coal"],
+    ["gas", "Gas"],
+    ["ores", "Ores & minerals"],
+    ["cement", "Cement & aggregates"],
+  ]),
+  category("chemicals", "Chemicals & Pharma", FlaskConical, [
+    ["industrial", "Industrial chemicals"],
+    ["fertilizers", "Fertilizers"],
+    ["pharmaceuticals", "Pharmaceuticals"],
+    ["cosmetics", "Cosmetics"],
+    ["cleaning", "Cleaning products"],
+  ]),
+  category("plastics", "Plastics & Rubber", Layers, [
+    ["polymers", "Raw polymers"],
+    ["products", "Plastic products"],
+    ["rubberTyres", "Rubber & tyres"],
+  ]),
+  category("wood", "Wood & Paper", Trees, [
+    ["timber", "Timber & lumber"],
+    ["plywood", "Plywood & panels"],
+    ["pellets", "Pellets & biomass"],
+    ["paper", "Paper & packaging"],
+  ]),
+  category("textiles", "Textiles & Apparel", Shirt, [
+    ["fabrics", "Fabrics & yarns"],
+    ["clothing", "Clothing"],
+    ["home", "Home textiles"],
+    ["footwear", "Footwear & leather"],
+  ]),
+  category("metals", "Metals & Steel", Cog, [
+    ["steel", "Steel & iron"],
+    ["aluminium", "Aluminium"],
+    ["copper", "Copper"],
+    ["scrap", "Scrap metal"],
+    ["products", "Metal products"],
+  ]),
+  category("machinery", "Machinery & Electronics", Cpu, [
+    ["industrial", "Industrial machinery"],
+    ["agricultural", "Agricultural machinery"],
+    ["electronics", "Electronics & components"],
+    ["appliances", "Appliances"],
+  ]),
+  category("vehicles", "Vehicles & Transport", Truck, [
+    ["carsTrucks", "Cars & trucks"],
+    ["parts", "Parts & tyres"],
+    ["shipsRail", "Ships & rail"],
+  ]),
+  category("medical", "Medical & Instruments", Stethoscope, [
+    ["devices", "Medical devices"],
+    ["lab", "Lab & instruments"],
+    ["ppe", "PPE & disposables"],
+  ]),
+  category("home", "Furniture & Construction", Armchair, [
+    ["furniture", "Furniture"],
+    ["building", "Building materials"],
+    ["glass", "Glass & ceramics"],
+    ["stone", "Stone & marble"],
+  ]),
+  category("other", "Other Goods", Package, [
+    ["other", "Other"],
+  ]),
 ];
+
+// Helpers for any consumer that stores or reads the raw values. Each returns
+// a key for the "categories" namespace, to be passed to
+// useTranslations("categories") in a component or getTranslations on the
+// server. Nothing here calls a hook.
+
+/** Find a category by its stored id. */
+export function findCategory(id: string): TradeCategory | undefined {
+  return TRADE_CATEGORIES.find((c) => c.id === id);
+}
+
+/** Message key for a stored category id. Undefined if the id is unknown. */
+export function categoryLabelKey(id: string): string | undefined {
+  return findCategory(id)?.labelKey;
+}
+
+/** Message key for a stored sub-category value. Undefined if unknown. */
+export function subcategoryLabelKey(
+  categoryId: string,
+  subValue: string,
+): string | undefined {
+  return findCategory(categoryId)?.subs.find((s) => s.value === subValue)
+    ?.labelKey;
+}

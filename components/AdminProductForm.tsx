@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveProduct, archiveProduct } from "@/app/admin/products/actions";
+import { saveProduct, archiveProduct } from "@/app/[locale]/admin/products/actions";
 
 interface DbProduct {
   id: string;
@@ -113,7 +113,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           <div>
             <label className="field-label">Category *</label>
             <select name="category_id" className="field" required defaultValue={product?.category_id ?? ""}>
-              <option value="">— choose —</option>
+              <option value="">â€” choose â€”</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -177,7 +177,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           </div>
         </div>
         <div>
-          <label className="field-label">Price tiers (JSON — leave blank if none)</label>
+          <label className="field-label">Price tiers (JSON â€” leave blank if none)</label>
           <textarea name="price_tiers" className="field font-mono text-xs min-h-[100px]" defaultValue={tiersJson} />
         </div>
       </section>
@@ -223,7 +223,7 @@ export default function AdminProductForm({ product, categories }: Props) {
           <label htmlFor="is_configurable" className="text-sm text-cream">Product is configurable (has form fields)</label>
         </div>
         <div>
-          <label className="field-label">Config fields (JSON array — leave blank if not configurable)</label>
+          <label className="field-label">Config fields (JSON array â€” leave blank if not configurable)</label>
           <textarea name="config_fields" className="field font-mono text-xs min-h-[120px]" defaultValue={configJson} />
         </div>
       </section>
@@ -247,12 +247,12 @@ export default function AdminProductForm({ product, categories }: Props) {
             disabled={uploading}
             className="btn-outline h-10 shrink-0"
           >
-            {uploading ? "Uploading…" : "Upload"}
+            {uploading ? "Uploadingâ€¦" : "Upload"}
           </button>
         </div>
         {uploadError && <p className="text-xs text-negative">{uploadError}</p>}
         {previewUrl && !uploading && (
-          <p className="text-xs text-positive">✓ Preview PDF set</p>
+          <p className="text-xs text-positive">âœ“ Preview PDF set</p>
         )}
         <div>
           <label className="field-label">Preview pages to show</label>
@@ -264,7 +264,7 @@ export default function AdminProductForm({ product, categories }: Props) {
       {/* ---- Actions ----------------------------------------------------- */}
       <div className="flex items-center gap-4">
         <button type="submit" disabled={isPending} className="btn-gold">
-          {isPending ? "Saving…" : isEdit ? "Save changes" : "Create product"}
+          {isPending ? "Savingâ€¦" : isEdit ? "Save changes" : "Create product"}
         </button>
         <a href="/admin/products" className="btn-ghost-light">Cancel</a>
         {isEdit && product && (

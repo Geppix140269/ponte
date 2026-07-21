@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   ShieldCheck,
@@ -12,16 +13,17 @@ import {
 // The Ponte process, shown not told. Five nodes, one drawing line,
 // staggered reveals. Copy is deliberately minimal: verb + three words.
 const STEPS = [
-  { icon: FileText, label: "Post", micro: "Your deal, free" },
-  { icon: ShieldCheck, label: "Vet", micro: "AI checks, desk approves" },
-  { icon: Search, label: "Match", micro: "Anonymous on the board" },
-  { icon: Handshake, label: "Connect", micro: "Both agree, free" },
-  { icon: FileSignature, label: "Close", micro: "Desk optional, on fee" },
-];
+  { icon: FileText, key: "post" },
+  { icon: ShieldCheck, key: "vet" },
+  { icon: Search, key: "match" },
+  { icon: Handshake, key: "connect" },
+  { icon: FileSignature, key: "close" },
+] as const;
 
 export default function ProcessFlow() {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const t = useTranslations("process");
 
   useEffect(() => {
     const el = ref.current;
@@ -49,14 +51,14 @@ export default function ProcessFlow() {
         />
         <div className="relative grid grid-cols-5">
           {STEPS.map((s) => (
-            <div key={s.label} className="flow-step flex flex-col items-center text-center">
+            <div key={s.key} className="flow-step flex flex-col items-center text-center">
               <div className="flow-node">
                 <s.icon className="h-5 w-5 text-gold" />
               </div>
               <p className="serif text-white mt-4 text-lg" style={{ fontWeight: 500 }}>
-                {s.label}
+                {t(`steps.${s.key}.label`)}
               </p>
-              <p className="mt-1 text-[12px] text-gray-2">{s.micro}</p>
+              <p className="mt-1 text-[12px] text-gray-2">{t(`steps.${s.key}.micro`)}</p>
             </div>
           ))}
         </div>
@@ -70,13 +72,13 @@ export default function ProcessFlow() {
         />
         <div className="relative space-y-8">
           {STEPS.map((s) => (
-            <div key={s.label} className="flow-step flex items-center gap-5">
+            <div key={s.key} className="flow-step flex items-center gap-5">
               <div className="flow-node shrink-0">
                 <s.icon className="h-5 w-5 text-gold" />
               </div>
               <div>
-                <p className="serif text-white text-lg" style={{ fontWeight: 500 }}>{s.label}</p>
-                <p className="text-[12px] text-gray-2">{s.micro}</p>
+                <p className="serif text-white text-lg" style={{ fontWeight: 500 }}>{t(`steps.${s.key}.label`)}</p>
+                <p className="text-[12px] text-gray-2">{t(`steps.${s.key}.micro`)}</p>
               </div>
             </div>
           ))}

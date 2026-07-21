@@ -1,0 +1,40 @@
+{
+  "pricing": {
+    "meta": {
+      "title": "Fees",
+      "description": "The Ponte marketplace is free: post, get vetted, connect. The desk is optional, on a success fee or a monthly retainer."
+    },
+    "pill": "Fees",
+    "title": "The marketplace is <em>free</em>.",
+    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. You pay only if you ask the desk to work for you.",
+    "marketplace": {
+      "name": "The Marketplace",
+      "price": "Free",
+      "terms": "Always · for everyone",
+      "body": "Post what you sell or what you need. AI and the desk vet every listing before it goes live. You stay anonymous until both sides agree to connect, then you deal directly. Producers, trading companies and brokers all welcome, roles declared up front.",
+      "cta": "Start a listing"
+    },
+    "ai": {
+      "name": "Ponte AI",
+      "period": "/month",
+      "terms": "Or $190/year · cancel anytime",
+      "body": "Your AI on the inside: unlimited listing checks that score and coach every listing before it goes live, a personal AI account manager reading your account daily, and first access to AI match alerts. Try it free, keep it when it pays for itself.",
+      "cta": "Unlock Ponte AI"
+    },
+    "desk": {
+      "name": "The Desk, per deal",
+      "price": "Success fee",
+      "terms": "% agreed in writing · paid on closing",
+      "body": "Want a deal managed end to end? The desk runs verification in depth, NCNDA, negotiation, contracts and closing coordination. The percentage is agreed up front in the fee agreement and is due only when the deal closes. Either side can engage us.",
+      "cta": "Bring us a deal"
+    },
+    "retainer": {
+      "name": "The Desk, on your side",
+      "price": "Retainer",
+      "terms": "Monthly · scoped to the mandate",
+      "body": "Continuous sourcing or selling support: a standing mandate to find, vet and negotiate on your behalf, month after month. For trading teams, producers entering new markets, and buyers with recurring programmes.",
+      "cta": "Scope a mandate"
+    },
+    "footnote": "Fee levels are agreed privately, in writing, before any work starts. No hidden costs, no charge for introductions you make yourselves on the board."
+  }
+}
