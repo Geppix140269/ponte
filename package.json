@@ -10,6 +10,7 @@
     "messages:build": "node scripts/build-messages.mjs",
     "messages:check": "node scripts/check-messages.mjs",
     "check:apis": "node scripts/check-registry-apis.mjs",
+    "sanctions:refresh": "tsx scripts/sanctions-refresh.ts",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
     "verify": "node scripts/check-messages.mjs && tsc --noEmit --incremental false && next build",
@@ -31,14 +32,15 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
-    "adm-zip": "^0.5.10",
     "@types/adm-zip": "^0.5.5",
     "@types/node": "20.14.10",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
+    "adm-zip": "^0.5.10",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
     "tailwindcss": "3.4.6",
+    "tsx": "^4.19.2",
     "typescript": "5.5.3"
   }
 }

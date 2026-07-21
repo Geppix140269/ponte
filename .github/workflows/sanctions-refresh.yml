@@ -1,0 +1,60 @@
+name: Sanctions refresh
+
+# Rebuilds the five published sanctions lists, then re-screens every subject
+# currently holding a clean verdict against the lists as they now stand.
+#
+# This runs here, and not in a Netlify function, because the job takes minutes
+# and Netlify caps a synchronous function in seconds. The previous design
+# called an app route from a scheduled function, which returned HTTP 504 while
+# the work carried on unobserved. A runner has a six hour ceiling, so the
+# timeout is simply gone, and a failure is a red run rather than a 504 nobody
+# reads.
+#
+# To trigger by hand: Actions tab, "Sanctions refresh", "Run workflow".
+
+on:
+  schedule:
+    # 02:00 UTC. Overnight in Europe, when the national feeds are quiet.
+    # GitHub runs scheduled jobs on a best effort basis and can delay one by
+    # several minutes at peak. That is fine for a daily list rebuild and is
+    # the trade for having no timeout.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+# Never two rebuilds at once. Upsert then sweep is safe against a concurrent
+# run, but a second run would still burn the download budget for nothing.
+concurrency:
+  group: sanctions-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # Generous, because five national feeds on a bad day are slow. Still a
+    # ceiling, so a hung fetch cannot sit there for six hours.
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Refresh the lists and re-screen
+        # The script prints counts, timings and source names only. It never
+        # prints a record: these lists name people, and a workflow log is
+        # retained and readable by anyone with repository access.
+        run: npm run sanctions:refresh
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          ADMIN_ALERT_EMAIL: ${{ secrets.ADMIN_ALERT_EMAIL }}
+          NEXT_PUBLIC_APP_URL: https://ponte.trade

@@ -77,6 +77,28 @@ async function findPersistentFailures(
 export async function runRefreshAndRescreen(): Promise<RefreshRunSummary> {
   const startedAt = new Date();
 
+  // Preflight. Without a database the run would download five feeds, tens of
+  // megabytes, fail every source at the load step and then fail to write the
+  // log rows that say so. Better to stop in a second with a reason.
+  try {
+    createAdminClient();
+  } catch (err) {
+    const message = (err as Error).message;
+    console.error(`[ponte] sanctions refresh not configured: ${message}`);
+    await sendAdminNotice({
+      subject: "Sanctions refresh could not start",
+      body: `The scheduled refresh could not reach the database: ${message}. Nothing was fetched and the lists are unchanged.`,
+    });
+    return {
+      ok: false,
+      fatalError: message,
+      lists: [],
+      persistentFailures: [],
+      rescreen: null,
+      rescreenError: null,
+    };
+  }
+
   let lists: RefreshSummary[];
   try {
     lists = await refreshAll();
