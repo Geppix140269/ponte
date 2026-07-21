@@ -178,6 +178,38 @@ export async function sendAdminAlert(data: {
 }
 
 /**
+ * General purpose alert to the desk. Used by the verification pipeline and by
+ * the sanctions refresh, which need to reach a person without inventing a new
+ * template each time.
+ *
+ * Callers must AWAIT this. A fire and forget send is dropped when the
+ * serverless function returns.
+ */
+export async function sendAdminNotice(data: {
+  subject: string;
+  /** HTML fragment. Already inside the branded layout. */
+  body: string;
+  /** Optional path on the site the desk should open, e.g. /admin/verifications */
+  actionPath?: string;
+  actionLabel?: string;
+}): Promise<void> {
+  const admin = process.env.ADMIN_ALERT_EMAIL;
+  if (!admin) return;
+  const action = data.actionPath
+    ? `<p><a href="${APP_URL}${data.actionPath}" style="color:#D08F18">${data.actionLabel ?? "Open"} →</a></p>`
+    : "";
+  await send(
+    admin,
+    data.subject,
+    layout(`
+      <h2 style="margin:0 0 12px">${data.subject}</h2>
+      <div>${data.body}</div>
+      ${action}
+    `),
+  );
+}
+
+/**
  * Sent when admin confirms the slot/delivery date for an authorized order.
  * Customer's card is still held, not charged.
  */
@@ -422,6 +454,105 @@ export async function sendConnectRequest(
       this email: success fee or retainer, agreed in writing first.</p>
     `),
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Verification: decisions taken by a person at the desk                */
+/* ------------------------------------------------------------------ */
+
+export type VerificationDecision = "verified" | "rejected" | "documents";
+
+/**
+ * Tell a member what the desk decided about their verification.
+ *
+ * Every decision this email reports was taken by a person. Nothing here is
+ * ever sent for an automatic verdict.
+ *
+ * Unlike the fire and forget senders above this one throws on a Resend
+ * error, so the caller can log it. The admin action awaits this call before
+ * it returns: a send left dangling on a serverless function is a send that
+ * never happens.
+ */
+export async function sendVerificationDecision(
+  to: string,
+  data: {
+    decision: VerificationDecision;
+    subjectName: string;
+    /** Note written by the reviewer, shown to the member verbatim. */
+    note?: string;
+    /** Passed in so this module stays independent of the pipeline. */
+    disclaimer?: string;
+  },
+): Promise<void> {
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const subjectLine: Record<VerificationDecision, string> = {
+    verified: `Verification confirmed, ${data.subjectName} | Ponte Trade`,
+    rejected: `Verification not confirmed, ${data.subjectName} | Ponte Trade`,
+    documents: `More documents needed, ${data.subjectName} | Ponte Trade`,
+  };
+
+  const heading: Record<VerificationDecision, string> = {
+    verified: "Your verification is confirmed",
+    rejected: "We could not confirm this verification",
+    documents: "We need more from you to finish this",
+  };
+
+  const bodyText: Record<VerificationDecision, string> = {
+    verified:
+      "A member of the desk reviewed the sources and confirmed the record. " +
+      "Your business verification level is now shown on your account.",
+    rejected:
+      "A member of the desk reviewed the sources and could not confirm the " +
+      "record as submitted. This is often about details that do not line up " +
+      "with the public register rather than about the company itself. You " +
+      "can submit a fresh check once the details are corrected.",
+    documents:
+      "A member of the desk read the case and needs more from you before it " +
+      "can be decided. Reply to this email with the documents listed below " +
+      "and the case goes back into the queue.",
+  };
+
+  const noteBlock = data.note
+    ? `<p style="background:#F8FAFC;border-left:3px solid #E8A020;padding:12px 14px;white-space:pre-wrap">${esc(
+        data.note,
+      )}</p>`
+    : "";
+
+  const disclaimerBlock = data.disclaimer
+    ? `<p style="color:#6B7280;font-size:12px;line-height:1.6;border-top:1px solid #E5E7EB;padding-top:14px;margin-top:22px">${esc(
+        data.disclaimer,
+      )}</p>`
+    : "";
+
+  const html = layout(`
+    <h2 style="margin:0 0 12px">${heading[data.decision]}</h2>
+    <p>Subject: <strong>${esc(data.subjectName)}</strong></p>
+    <p>${bodyText[data.decision]}</p>
+    ${noteBlock}
+    <p><a href="${APP_URL}/verify" style="color:#D08F18">Open verification</a></p>
+    ${disclaimerBlock}
+  `);
+
+  if (!isEmailConfigured()) {
+    console.log(
+      `[ponte] email skipped (Resend not configured): "${subjectLine[data.decision]}" -> ${to}`,
+    );
+    return;
+  }
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject: subjectLine[data.decision],
+      html,
+    });
+  } catch (err) {
+    console.error("[ponte] Resend error (verification decision):", err);
+    throw err;
+  }
 }
 
 export async function sendConnectAccepted(

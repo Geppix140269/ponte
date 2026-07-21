@@ -657,5 +657,137 @@
         "micro": "Mesa opcional, com honorários"
       }
     }
+  },
+  "verification": {
+    "meta": {
+      "title": "Verifique uma contraparte comercial",
+      "description": "Como a Ponte verifica uma empresa: o registro público, o IVA UE pelo VIES, o LEI pelo GLEIF e a triagem contra as listas de sanções OFAC, EU, UN e UK OFSI. O que cada nível verifica e o que uma verificação não significa."
+    },
+    "hero": {
+      "pill": "Verificação",
+      "title": "Verifique uma contraparte comercial.",
+      "intro": "Antes que a carga ou o dinheiro se movam, você quer saber que a empresa do contrato existe, continua no registro e não aparece em nenhuma lista de sanções. A Ponte verifica isso em fontes públicas identificadas e registra o que foi encontrado, na data em que foi encontrado. Esta página expõe exatamente o que é verificado em cada nível e o que o resultado não diz."
+    },
+    "levels": {
+      "heading": "Os quatro níveis",
+      "lead": "Cada nível acrescenta evidências ao nível abaixo dele. Um membro tem o nível mais alto que concluiu, e esse nível aparece em todos os lugares onde ele aparece.",
+      "checksLabel": "O que é verificado",
+      "l1": {
+        "badge": "Nível 1",
+        "name": "Identidade",
+        "body": "A pessoa é quem diz ser.",
+        "c1": "Endereço de e-mail confirmado.",
+        "c2": "Um documento de identidade analisado pela mesa."
+      },
+      "l2": {
+        "badge": "Nível 2",
+        "name": "Empresa",
+        "body": "A empresa existe em um registro público, e nem a empresa nem seus administradores aparecem em uma lista de sanções.",
+        "c1": "O registro da empresa: UK Companies House para empresa registrada no Reino Unido, OpenCorporates para as demais jurisdições.",
+        "c2": "O IVA UE pelo VIES, quando um número de IVA é informado.",
+        "c3": "O Identificador de Entidade Jurídica pelo GLEIF, quando um LEI é informado.",
+        "c4": "Triagem de sanções da empresa e de cada administrador nomeado no registro."
+      },
+      "l3": {
+        "badge": "Nível 3",
+        "name": "Atividade",
+        "body": "A empresa negociou, conforme as evidências que ela fornece.",
+        "c1": "Documentos comerciais fornecidos pelo próprio membro.",
+        "c2": "Documentos lidos e cruzados com o registro e com a atividade declarada.",
+        "c3": "Analisados por uma pessoa antes de o nível ser concedido."
+      },
+      "l4": {
+        "badge": "Nível 4",
+        "name": "Institucional",
+        "body": "Manual, mediante acordo.",
+        "c1": "Escopo acordado por escrito antes de qualquer trabalho começar.",
+        "c2": "Para contrapartes, financiadores e seguradoras que precisam de mais do que os níveis acima."
+      }
+    },
+    "sanctions": {
+      "heading": "Triagem de sanções",
+      "lead": "O nome da empresa e o nome de cada administrador são verificados contra quatro listas publicadas:",
+      "l1": "OFAC Specially Designated Nationals (SDN) List e OFAC Consolidated Sanctions List, Departamento do Tesouro dos Estados Unidos.",
+      "l2": "EU Consolidated Financial Sanctions List.",
+      "l3": "United Nations Security Council Consolidated List.",
+      "l4": "UK OFSI Consolidated List of financial sanctions targets.",
+      "matching": "Os nomes são comparados com tolerância de grafia e de transliteração, então uma correspondência possível é motivo para olhar mais de perto, não uma conclusão por si só. Toda correspondência possível é lida por uma pessoa antes de qualquer decisão.",
+      "refresh": "A triagem não é um evento único. Quando essas listas mudam, os membros já verificados são verificados de novo contra as listas atualizadas, e uma nova correspondência possível reabre o caso."
+    },
+    "process": {
+      "heading": "Como um caso é decidido",
+      "auto": "Quando todas as fontes respondem e as respostas coincidem com os dados que o membro declarou, o resultado é registrado sem que uma pessoa precise intervir.",
+      "review": "Quando algo está pouco claro, incompleto ou contraditório, o caso vai para a mesa. O membro recebe o resultado por e-mail.",
+      "human": "Tanto uma aprovação quanto uma recusa são sempre decididas por uma pessoa. Nada é rejeitado automaticamente."
+    },
+    "sources": {
+      "heading": "Em que o resultado se baseia",
+      "body": "Registros de empresas, o serviço de IVA UE VIES, o registro LEI do GLEIF, as listas de sanções publicadas citadas acima e os documentos que o membro fornece sobre a própria atividade. Cada verificação registra a fonte de onde veio e a data em que foi executada, e uma fonte que não pôde ser consultada é reportada como não verificada, em vez de ser tratada como sem apontamentos."
+    },
+    "disclaimer": {
+      "heading": "O que uma verificação não significa"
+    },
+    "cta": {
+      "heading": "Faça uma verificação de empresa",
+      "body": "Uma verificação de Nível 2 é feita com o nome da empresa e o país de registro, com um número de registro ou número de IVA quando você tiver um.",
+      "button": "Verificar uma empresa",
+      "pricing": "Ver os preços"
+    },
+    "request": {
+      "meta": {
+        "title": "Executar uma verificação de empresa",
+        "description": "Verifique uma empresa contra o registro público, o IVA UE, o registro LEI do GLEIF e as listas de sanções publicadas."
+      },
+      "pill": "Nível 2",
+      "heading": "Verificação de empresa",
+      "intro": "Esta verificação lê o registro da empresa, checa o IVA UE pelo VIES e o LEI pelo GLEIF quando você os informa, e verifica a empresa e seus administradores contra as listas de sanções OFAC, EU, UN e UK OFSI.",
+      "explainerLink": "O que cada nível verifica",
+      "signedOut": {
+        "heading": "Entre para fazer uma verificação",
+        "body": "Uma verificação é executada na sua conta, então o resultado e os créditos gastos ficam no seu histórico.",
+        "button": "Entrar"
+      },
+      "balance": {
+        "label": "Seu saldo",
+        "unit": "créditos",
+        "cost": "Uma verificação de empresa custa {cost} créditos.",
+        "short": "Você não tem créditos suficientes para esta verificação.",
+        "topUp": "Ver os preços"
+      },
+      "fields": {
+        "nameLabel": "Nome da empresa",
+        "namePlaceholder": "A razão social, como está escrita no registro",
+        "countryLabel": "País de registro",
+        "countryPlaceholder": "Selecione um país",
+        "regLabel": "Número de registro",
+        "regPlaceholder": "Por exemplo 09876543",
+        "regHint": "Um número de registro é a correspondência mais forte disponível. Informe quando você tiver.",
+        "vatLabel": "Número de IVA",
+        "vatPlaceholder": "Por exemplo DE123456789",
+        "vatHint": "Um número de IVA UE é verificado pelo VIES. Deixe em branco se não houver.",
+        "optional": "Opcional"
+      },
+      "submit": "Fazer a verificação",
+      "working": "Verificação em andamento",
+      "errors": {
+        "name": "Informe o nome da empresa.",
+        "country": "Selecione o país de registro.",
+        "credits": "Você não tem créditos suficientes para esta verificação.",
+        "signIn": "Entre na sua conta e tente de novo.",
+        "rateLimit": "Foram muitas verificações em pouco tempo. Tente de novo mais tarde.",
+        "generic": "Não foi possível concluir a verificação. Tente de novo."
+      },
+      "result": {
+        "verifiedTitle": "Verificado",
+        "verifiedBody": "O registro está ativo, os dados que você informou coincidem com ele e nenhuma correspondência possível de sanções foi encontrada. O resultado está no seu histórico.",
+        "reviewTitle": "Com a mesa para análise",
+        "reviewBody": "Algo nesta verificação precisa ser visto por uma pessoa. Um integrante da mesa vai ler o caso, comparar as fontes e decidir. Você receberá o resultado por e-mail. Nada é decidido automaticamente.",
+        "failedTitle": "A verificação não foi concluída",
+        "failedBody": "A verificação parou antes que um resultado pudesse ser registrado. Quando a falha foi do nosso lado, os créditos voltam para o seu saldo.",
+        "reasonLabel": "Motivo",
+        "again": "Fazer outra verificação"
+      },
+      "disclaimerHeading": "O que este resultado não significa"
+    }
   }
 }

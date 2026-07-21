@@ -657,5 +657,137 @@
         "micro": "Desk optionnel, sur commission"
       }
     }
+  },
+  "verification": {
+    "meta": {
+      "title": "Vérifier une contrepartie commerciale",
+      "description": "Comment Ponte vérifie une société : l’inscription au registre public, la TVA UE via VIES, le LEI via GLEIF, et le filtrage au regard des listes de sanctions OFAC, EU, UN et UK OFSI. Ce que chaque niveau contrôle, et ce qu’une vérification ne signifie pas."
+    },
+    "hero": {
+      "pill": "Vérification",
+      "title": "Vérifiez une contrepartie commerciale.",
+      "intro": "Avant qu’une cargaison ou de l’argent ne bouge, vous voulez savoir que la société inscrite au contrat existe, figure toujours au registre et n’apparaît sur aucune liste de sanctions. Ponte le contrôle au regard de sources publiques nommées et consigne ce qui a été trouvé, à la date où cela a été trouvé. Cette page expose précisément ce qui est contrôlé à chaque niveau, et ce que le résultat ne vous dit pas."
+    },
+    "levels": {
+      "heading": "Les quatre niveaux",
+      "lead": "Chaque niveau ajoute des preuves à celui qui le précède. Un membre détient le niveau le plus élevé qu’il a complété, et ce niveau est affiché partout où il apparaît.",
+      "checksLabel": "Ce qui est contrôlé",
+      "l1": {
+        "badge": "Niveau 1",
+        "name": "Identité",
+        "body": "La personne est bien celle qu’elle prétend être.",
+        "c1": "Adresse e-mail confirmée.",
+        "c2": "Une pièce d’identité examinée par le desk."
+      },
+      "l2": {
+        "badge": "Niveau 2",
+        "name": "Société",
+        "body": "La société existe sur un registre public, et ni la société ni ses dirigeants n’apparaissent sur une liste de sanctions.",
+        "c1": "L’inscription au registre des sociétés : UK Companies House pour une société immatriculée au Royaume-Uni, OpenCorporates pour les autres juridictions.",
+        "c2": "La TVA UE via VIES, lorsqu’un numéro de TVA est fourni.",
+        "c3": "L’identifiant d’entité juridique via GLEIF, lorsqu’un LEI est fourni.",
+        "c4": "Le filtrage de sanctions de la société et de chaque dirigeant nommé au registre."
+      },
+      "l3": {
+        "badge": "Niveau 3",
+        "name": "Activité",
+        "body": "La société a effectivement commercé, au vu des preuves qu’elle fournit.",
+        "c1": "Des documents commerciaux fournis par le membre lui-même.",
+        "c2": "Des documents lus et recoupés avec l’inscription au registre et l’activité déclarée.",
+        "c3": "Examen par une personne avant l’octroi du niveau."
+      },
+      "l4": {
+        "badge": "Niveau 4",
+        "name": "Institutionnel",
+        "body": "Manuel, sur accord préalable.",
+        "c1": "Périmètre convenu par écrit avant tout début de travail.",
+        "c2": "Pour les contreparties, les prêteurs et les assureurs qui ont besoin de plus que les niveaux ci-dessus."
+      }
+    },
+    "sanctions": {
+      "heading": "Filtrage de sanctions",
+      "lead": "Le nom de la société et le nom de chaque dirigeant sont filtrés au regard de quatre listes publiées :",
+      "l1": "OFAC Specially Designated Nationals (SDN) List et OFAC Consolidated Sanctions List, département du Trésor des États-Unis.",
+      "l2": "EU Consolidated Financial Sanctions List.",
+      "l3": "United Nations Security Council Consolidated List.",
+      "l4": "UK OFSI Consolidated List of financial sanctions targets.",
+      "matching": "Les noms sont comparés avec une tolérance d’orthographe et de translittération : une correspondance possible est donc une raison de regarder de plus près, pas un constat en soi. Chaque correspondance possible est lue par une personne avant toute décision.",
+      "refresh": "Le filtrage n’est pas un acte unique. Lorsque ces listes changent, les membres déjà vérifiés sont filtrés à nouveau au regard des listes mises à jour, et une nouvelle correspondance possible rouvre le dossier."
+    },
+    "process": {
+      "heading": "Comment un dossier est décidé",
+      "auto": "Lorsque toutes les sources répondent et que les réponses concordent avec les informations déclarées par le membre, le résultat est consigné sans qu’une personne ait à intervenir.",
+      "review": "Lorsqu’un élément est peu clair, incomplet ou contradictoire, le dossier passe au desk. Le membre est informé du résultat par e-mail.",
+      "human": "Une approbation comme un rejet sont toujours décidés par une personne. Rien n’est jamais rejeté automatiquement."
+    },
+    "sources": {
+      "heading": "Sur quoi le résultat repose",
+      "body": "Les registres des sociétés, le service de TVA UE VIES, l’enregistrement LEI de GLEIF, les listes de sanctions publiées citées ci-dessus, et les documents qu’un membre fournit sur sa propre activité. Chaque contrôle consigne la source dont il provient et la date à laquelle il a été effectué, et une source qui n’a pas pu être atteinte est signalée comme non contrôlée plutôt que considérée comme sans anomalie."
+    },
+    "disclaimer": {
+      "heading": "Ce qu’une vérification ne signifie pas"
+    },
+    "cta": {
+      "heading": "Lancer un contrôle de société",
+      "body": "Un contrôle de niveau 2 s’effectue sur le nom de la société et son pays d’immatriculation, avec un numéro d’immatriculation ou un numéro de TVA lorsque vous en avez un.",
+      "button": "Vérifier une société",
+      "pricing": "Voir les tarifs"
+    },
+    "request": {
+      "meta": {
+        "title": "Lancer une vérification de société",
+        "description": "Contrôlez une société au regard de son inscription au registre public, de la TVA UE, de l’enregistrement LEI de GLEIF et des listes de sanctions publiées."
+      },
+      "pill": "Niveau 2",
+      "heading": "Vérification de société",
+      "intro": "Ce contrôle lit l’inscription au registre des sociétés, vérifie la TVA UE via VIES et le LEI via GLEIF lorsque vous les fournissez, et filtre la société et ses dirigeants au regard des listes de sanctions OFAC, EU, UN et UK OFSI.",
+      "explainerLink": "Ce que chaque niveau contrôle",
+      "signedOut": {
+        "heading": "Connectez-vous pour lancer un contrôle",
+        "body": "Une vérification est rattachée à votre compte, afin que le résultat et les crédits dépensés restent dans votre dossier.",
+        "button": "Se connecter"
+      },
+      "balance": {
+        "label": "Votre solde",
+        "unit": "crédits",
+        "cost": "Un contrôle de société coûte {cost} crédits.",
+        "short": "Vous n’avez pas assez de crédits pour ce contrôle.",
+        "topUp": "Voir les tarifs"
+      },
+      "fields": {
+        "nameLabel": "Nom de la société",
+        "namePlaceholder": "La dénomination immatriculée, telle qu’écrite au registre",
+        "countryLabel": "Pays d’immatriculation",
+        "countryPlaceholder": "Sélectionnez un pays",
+        "regLabel": "Numéro d’immatriculation",
+        "regPlaceholder": "Par exemple 09876543",
+        "regHint": "Un numéro d’immatriculation est la correspondance la plus fiable disponible. Indiquez-le lorsque vous l’avez.",
+        "vatLabel": "Numéro de TVA",
+        "vatPlaceholder": "Par exemple DE123456789",
+        "vatHint": "Un numéro de TVA UE est vérifié via VIES. Laissez ce champ vide s’il n’y en a pas.",
+        "optional": "Facultatif"
+      },
+      "submit": "Lancer le contrôle",
+      "working": "Contrôle en cours",
+      "errors": {
+        "name": "Saisissez le nom de la société.",
+        "country": "Sélectionnez le pays d’immatriculation.",
+        "credits": "Vous n’avez pas assez de crédits pour ce contrôle.",
+        "signIn": "Veuillez vous connecter et réessayer.",
+        "rateLimit": "Cela fait beaucoup de contrôles en peu de temps. Veuillez réessayer plus tard.",
+        "generic": "Le contrôle n’a pas pu être effectué. Veuillez réessayer."
+      },
+      "result": {
+        "verifiedTitle": "Vérifié",
+        "verifiedBody": "L’inscription au registre est active, les informations que vous avez données y correspondent, et aucune correspondance possible avec une liste de sanctions n’a été trouvée. Le résultat figure dans votre dossier.",
+        "reviewTitle": "Au desk pour examen",
+        "reviewBody": "Un élément de ce contrôle demande l’examen d’une personne. Un membre du desk lira le dossier, comparera les sources et le décidera. Vous serez informé du résultat par e-mail. Rien n’est décidé automatiquement.",
+        "failedTitle": "Le contrôle n’a pas abouti",
+        "failedBody": "Le contrôle s’est arrêté avant qu’un résultat puisse être consigné. Lorsque la faute est de notre côté, les crédits sont recrédités sur votre solde.",
+        "reasonLabel": "Motif",
+        "again": "Lancer un autre contrôle"
+      },
+      "disclaimerHeading": "Ce que ce résultat ne signifie pas"
+    }
   }
 }

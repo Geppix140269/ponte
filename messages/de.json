@@ -657,5 +657,137 @@
         "micro": "Desk optional, gegen Honorar"
       }
     }
+  },
+  "verification": {
+    "meta": {
+      "title": "Eine Handelsgegenpartei verifizieren",
+      "description": "Wie Ponte ein Unternehmen verifiziert: der öffentliche Registereintrag, die EU-Umsatzsteuer-Identifikationsnummer über VIES, der LEI über GLEIF und der Abgleich mit den Sanktionslisten von OFAC, EU, UN und UK OFSI. Was auf jeder Stufe geprüft wird, und was eine Verifizierung nicht bedeutet."
+    },
+    "hero": {
+      "pill": "Verifizierung",
+      "title": "Eine Handelsgegenpartei verifizieren.",
+      "intro": "Bevor Ware oder Geld bewegt wird, wollen Sie wissen, dass das Unternehmen im Vertrag existiert, weiterhin im Register geführt wird und auf keiner Sanktionsliste erscheint. Ponte prüft das anhand benannter öffentlicher Quellen und hält fest, was gefunden wurde und zu welchem Datum. Diese Seite legt genau dar, was auf jeder Stufe geprüft wird und was das Ergebnis Ihnen nicht sagt."
+    },
+    "levels": {
+      "heading": "Die vier Stufen",
+      "lead": "Jede Stufe fügt der darunterliegenden weitere Belege hinzu. Ein Mitglied hält die höchste Stufe, die es abgeschlossen hat, und diese Stufe wird überall dort angezeigt, wo das Mitglied erscheint.",
+      "checksLabel": "Was geprüft wird",
+      "l1": {
+        "badge": "Stufe 1",
+        "name": "Identität",
+        "body": "Die Person ist, wer sie zu sein angibt.",
+        "c1": "E-Mail-Adresse bestätigt.",
+        "c2": "Ein Ausweisdokument, das vom Desk geprüft wurde."
+      },
+      "l2": {
+        "badge": "Stufe 2",
+        "name": "Unternehmen",
+        "body": "Das Unternehmen ist in einem öffentlichen Register eingetragen, und weder das Unternehmen noch seine Organe erscheinen auf einer Sanktionsliste.",
+        "c1": "Der Registereintrag des Unternehmens: UK Companies House für ein im Vereinigten Königreich eingetragenes Unternehmen, OpenCorporates für andere Jurisdiktionen.",
+        "c2": "Die EU-Umsatzsteuer-Identifikationsnummer über VIES, sofern eine USt-Nummer angegeben wird.",
+        "c3": "Der Legal Entity Identifier über GLEIF, sofern ein LEI angegeben wird.",
+        "c4": "Sanktionsabgleich des Unternehmens und jedes im Register eingetragenen Organs."
+      },
+      "l3": {
+        "badge": "Stufe 3",
+        "name": "Geschäftstätigkeit",
+        "body": "Das Unternehmen hat gehandelt, nach den von ihm vorgelegten Belegen.",
+        "c1": "Handelsdokumente, die das Mitglied selbst beibringt.",
+        "c2": "Dokumente werden gelesen und mit dem Registereintrag und der angegebenen Geschäftstätigkeit abgeglichen.",
+        "c3": "Von einer Person geprüft, bevor die Stufe vergeben wird."
+      },
+      "l4": {
+        "badge": "Stufe 4",
+        "name": "Institutionell",
+        "body": "Manuell, nach Vereinbarung.",
+        "c1": "Der Umfang wird schriftlich vereinbart, bevor die Arbeit beginnt.",
+        "c2": "Für Gegenparteien, Kreditgeber und Versicherer, die mehr benötigen als die vorstehenden Stufen."
+      }
+    },
+    "sanctions": {
+      "heading": "Sanktionsabgleich",
+      "lead": "Der Name des Unternehmens und der Name jedes Organs werden gegen vier veröffentlichte Listen abgeglichen:",
+      "l1": "OFAC Specially Designated Nationals (SDN) List und OFAC Consolidated Sanctions List, Finanzministerium der Vereinigten Staaten.",
+      "l2": "EU Consolidated Financial Sanctions List.",
+      "l3": "United Nations Security Council Consolidated List.",
+      "l4": "UK OFSI Consolidated List of financial sanctions targets.",
+      "matching": "Namen werden mit einer Toleranz für Schreibweise und Transliteration verglichen, ein möglicher Treffer ist deshalb ein Anlass, genauer hinzusehen, und für sich genommen kein Befund. Jeder mögliche Treffer wird von einer Person gelesen, bevor etwas entschieden wird.",
+      "refresh": "Der Abgleich ist kein einmaliger Vorgang. Ändern sich diese Listen, werden bereits verifizierte Mitglieder erneut gegen die aktualisierten Listen abgeglichen, und ein neuer möglicher Treffer eröffnet den Fall erneut."
+    },
+    "process": {
+      "heading": "Wie ein Fall entschieden wird",
+      "auto": "Antworten alle Quellen und stimmen die Antworten mit den vom Mitglied angegebenen Daten überein, wird das Ergebnis erfasst, ohne dass eine Person eingreifen muss.",
+      "review": "Ist etwas unklar, unvollständig oder widersprüchlich, geht der Fall an den Desk. Das Mitglied erhält das Ergebnis per E-Mail.",
+      "human": "Eine Freigabe und eine Ablehnung werden immer von einer Person entschieden. Nichts wird jemals automatisch abgelehnt."
+    },
+    "sources": {
+      "heading": "Worauf das Ergebnis beruht",
+      "body": "Handelsregister, der EU-Dienst VIES zur Umsatzsteuer-Identifikationsnummer, der GLEIF-LEI-Eintrag, die oben genannten veröffentlichten Sanktionslisten und Dokumente, die ein Mitglied über sein eigenes Unternehmen beibringt. Jede Prüfung hält die Quelle fest, aus der sie stammt, und das Datum, an dem sie durchgeführt wurde, und eine Quelle, die nicht erreichbar war, wird als nicht geprüft ausgewiesen und nicht als unbedenklich behandelt."
+    },
+    "disclaimer": {
+      "heading": "Was eine Verifizierung nicht bedeutet"
+    },
+    "cta": {
+      "heading": "Eine Unternehmensprüfung durchführen",
+      "body": "Eine Prüfung der Stufe 2 läuft über den Namen des Unternehmens und sein Land der Eintragung, mit Registernummer oder USt-Nummer, sofern Sie eine haben.",
+      "button": "Ein Unternehmen verifizieren",
+      "pricing": "Gebühren ansehen"
+    },
+    "request": {
+      "meta": {
+        "title": "Eine Unternehmensverifizierung durchführen",
+        "description": "Prüfen Sie ein Unternehmen anhand seines öffentlichen Registereintrags, der EU-Umsatzsteuer-Identifikationsnummer, des GLEIF-LEI-Eintrags und der veröffentlichten Sanktionslisten."
+      },
+      "pill": "Stufe 2",
+      "heading": "Unternehmensverifizierung",
+      "intro": "Diese Prüfung liest den Registereintrag des Unternehmens, prüft die EU-Umsatzsteuer-Identifikationsnummer über VIES und den LEI über GLEIF, sofern Sie diese angeben, und gleicht das Unternehmen und seine Organe mit den Sanktionslisten von OFAC, EU, UN und UK OFSI ab.",
+      "explainerLink": "Was auf jeder Stufe geprüft wird",
+      "signedOut": {
+        "heading": "Zum Durchführen einer Prüfung anmelden",
+        "body": "Eine Verifizierung läuft über Ihr Konto, damit das Ergebnis und die dafür verbrauchten Credits Ihrem Konto zugeordnet bleiben.",
+        "button": "Anmelden"
+      },
+      "balance": {
+        "label": "Ihr Guthaben",
+        "unit": "Credits",
+        "cost": "Eine Unternehmensprüfung kostet {cost} Credits.",
+        "short": "Sie haben nicht genügend Credits für diese Prüfung.",
+        "topUp": "Gebühren ansehen"
+      },
+      "fields": {
+        "nameLabel": "Firmenname",
+        "namePlaceholder": "Der eingetragene Name, wie er im Register steht",
+        "countryLabel": "Land der Eintragung",
+        "countryPlaceholder": "Land auswählen",
+        "regLabel": "Registernummer",
+        "regPlaceholder": "Zum Beispiel 09876543",
+        "regHint": "Eine Registernummer ist die stärkste verfügbare Zuordnung. Geben Sie sie an, wenn Sie sie haben.",
+        "vatLabel": "USt-Nummer",
+        "vatPlaceholder": "Zum Beispiel DE123456789",
+        "vatHint": "Eine EU-USt-Nummer wird über VIES geprüft. Lassen Sie das Feld leer, wenn keine vorliegt.",
+        "optional": "Optional"
+      },
+      "submit": "Prüfung starten",
+      "working": "Die Prüfung läuft",
+      "errors": {
+        "name": "Geben Sie den Firmennamen ein.",
+        "country": "Wählen Sie das Land der Eintragung.",
+        "credits": "Sie haben nicht genügend Credits für diese Prüfung.",
+        "signIn": "Bitte melden Sie sich an und versuchen Sie es erneut.",
+        "rateLimit": "Das sind viele Prüfungen in kurzer Zeit. Bitte versuchen Sie es später erneut.",
+        "generic": "Die Prüfung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+      },
+      "result": {
+        "verifiedTitle": "Verifiziert",
+        "verifiedBody": "Der Registereintrag ist aktiv, die von Ihnen angegebenen Daten stimmen damit überein, und es wurden keine möglichen Sanktionstreffer gefunden. Das Ergebnis ist in Ihrem Konto verzeichnet.",
+        "reviewTitle": "Beim Desk zur Prüfung",
+        "reviewBody": "Etwas in dieser Prüfung muss von einer Person angesehen werden. Ein Mitarbeiter des Desks liest den Fall, vergleicht die Quellen und entscheidet ihn. Sie erhalten das Ergebnis per E-Mail. Nichts wird automatisch entschieden.",
+        "failedTitle": "Die Prüfung wurde nicht abgeschlossen",
+        "failedBody": "Die Prüfung wurde abgebrochen, bevor ein Ergebnis erfasst werden konnte. Lag der Fehler auf unserer Seite, werden die Credits Ihrem Guthaben wieder gutgeschrieben.",
+        "reasonLabel": "Grund",
+        "again": "Weitere Prüfung durchführen"
+      },
+      "disclaimerHeading": "Was dieses Ergebnis nicht bedeutet"
+    }
   }
 }

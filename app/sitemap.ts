@@ -14,6 +14,9 @@ const PATHS: {
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
   // Marketplace
   { path: "/marketplace", changeFrequency: "weekly", priority: 0.9 },
+  // Verification. Answers "how do I verify a trade counterparty", so it is
+  // crawled at the same weight as the marketplace itself.
+  { path: "/verification", changeFrequency: "monthly", priority: 0.9 },
   // The desk
   { path: "/advisory", changeFrequency: "monthly", priority: 0.8 },
   { path: "/pricing", changeFrequency: "weekly", priority: 0.9 },

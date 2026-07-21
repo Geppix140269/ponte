@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 // /admin/products and /admin/orders if old data ever needs a look.
 const adminNav = [
   { href: "/admin/listings", label: "Listings" },
+  { href: "/admin/verifications", label: "Verifications" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin", label: "Legacy shop" },
 ];

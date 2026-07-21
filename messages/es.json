@@ -657,5 +657,137 @@
         "micro": "Mesa opcional, con comisión"
       }
     }
+  },
+  "verification": {
+    "meta": {
+      "title": "Verificar una contraparte comercial",
+      "description": "Cómo verifica Ponte una empresa: el registro público, el IVA de la UE a través de VIES, el LEI a través de GLEIF y el cotejo con las listas de sanciones de OFAC, EU, UN y UK OFSI. Qué comprueba cada nivel y qué no significa una verificación."
+    },
+    "hero": {
+      "pill": "Verificación",
+      "title": "Verifique una contraparte comercial.",
+      "intro": "Antes de que se mueva la carga o el dinero, usted quiere saber que la empresa que figura en el contrato existe, sigue inscrita en el registro y no aparece en una lista de sanciones. Ponte lo comprueba contra fuentes públicas identificadas y deja constancia de lo que se encontró, con la fecha en que se encontró. Esta página expone exactamente qué se comprueba en cada nivel, y qué no le dice el resultado."
+    },
+    "levels": {
+      "heading": "Los cuatro niveles",
+      "lead": "Cada nivel añade pruebas al nivel inferior. Un miembro tiene el nivel más alto que haya completado, y ese nivel se muestra allí donde aparezca.",
+      "checksLabel": "Qué se comprueba",
+      "l1": {
+        "badge": "Nivel 1",
+        "name": "Identidad",
+        "body": "La persona es quien dice ser.",
+        "c1": "Correo electrónico confirmado.",
+        "c2": "Un documento de identidad revisado por la mesa."
+      },
+      "l2": {
+        "badge": "Nivel 2",
+        "name": "Empresa",
+        "body": "La empresa existe en un registro público, y ni la empresa ni sus administradores aparecen en una lista de sanciones.",
+        "c1": "El asiento registral de la empresa: UK Companies House para una empresa registrada en el Reino Unido, OpenCorporates para otras jurisdicciones.",
+        "c2": "El IVA de la UE a través de VIES, cuando se facilita un número de IVA.",
+        "c3": "El Identificador de Entidad Jurídica a través de GLEIF, cuando se facilita un LEI.",
+        "c4": "Cotejo de la empresa y de cada administrador que consta en el registro con las listas de sanciones."
+      },
+      "l3": {
+        "badge": "Nivel 3",
+        "name": "Actividad",
+        "body": "La empresa ha operado, según las pruebas que ella misma aporta.",
+        "c1": "Documentos comerciales que el propio miembro aporta.",
+        "c2": "Documentos leídos y contrastados con el asiento registral y con la actividad declarada.",
+        "c3": "Revisado por una persona antes de conceder el nivel."
+      },
+      "l4": {
+        "badge": "Nivel 4",
+        "name": "Institucional",
+        "body": "Manual, por acuerdo previo.",
+        "c1": "Alcance acordado por escrito antes de empezar cualquier trabajo.",
+        "c2": "Para contrapartes, prestamistas y aseguradoras que necesitan más que los niveles anteriores."
+      }
+    },
+    "sanctions": {
+      "heading": "Cotejo con listas de sanciones",
+      "lead": "El nombre de la empresa y el de cada administrador se cotejan con cuatro listas publicadas:",
+      "l1": "Lista de Nacionales Especialmente Designados (SDN) de OFAC y Lista Consolidada de Sanciones de OFAC, Departamento del Tesoro de los Estados Unidos.",
+      "l2": "Lista Consolidada de Sanciones Financieras de la UE.",
+      "l3": "Lista Consolidada del Consejo de Seguridad de las Naciones Unidas.",
+      "l4": "Lista Consolidada de objetivos de sanciones financieras de UK OFSI.",
+      "matching": "Los nombres se comparan admitiendo variantes de ortografía y de transliteración, de modo que una coincidencia candidata es un motivo para mirar con más detalle, no un hallazgo por sí misma. Cada candidata la lee una persona antes de decidir nada.",
+      "refresh": "El cotejo no es un acto único. Cuando estas listas cambian, los miembros ya verificados se vuelven a cotejar con las listas actualizadas, y una nueva candidata reabre el caso."
+    },
+    "process": {
+      "heading": "Cómo se decide un caso",
+      "auto": "Cuando todas las fuentes responden y las respuestas coinciden con los datos que el miembro declaró, el resultado se registra sin que sea necesaria la intervención de una persona.",
+      "review": "Cuando algo resulta poco claro, incompleto o contradictorio, el caso pasa a la mesa. Se comunica el resultado al miembro por correo electrónico.",
+      "human": "La aprobación y el rechazo los decide siempre una persona. Nunca se rechaza nada de forma automática."
+    },
+    "sources": {
+      "heading": "En qué se basa el resultado",
+      "body": "Los registros mercantiles, el servicio de IVA VIES de la UE, el registro LEI de GLEIF, las listas de sanciones publicadas que se citan arriba y los documentos que un miembro aporta sobre su propia actividad. Cada comprobación deja constancia de la fuente de la que procede y de la fecha en que se ejecutó, y una fuente a la que no se pudo acceder se informa como no comprobada, en lugar de darse por limpia."
+    },
+    "disclaimer": {
+      "heading": "Qué no significa una verificación"
+    },
+    "cta": {
+      "heading": "Ejecute una comprobación de empresa",
+      "body": "Una comprobación de Nivel 2 se ejecuta sobre el nombre de la empresa y su país de registro, con un número de registro o un número de IVA si dispone de alguno.",
+      "button": "Verificar una empresa",
+      "pricing": "Ver tarifas"
+    },
+    "request": {
+      "meta": {
+        "title": "Ejecutar una verificación de empresa",
+        "description": "Compruebe una empresa contra su asiento registral público, el IVA de la UE, el registro LEI de GLEIF y las listas de sanciones publicadas."
+      },
+      "pill": "Nivel 2",
+      "heading": "Verificación de empresa",
+      "intro": "Esta comprobación lee el asiento registral de la empresa, comprueba el IVA de la UE a través de VIES y el LEI a través de GLEIF cuando usted los facilita, y coteja la empresa y sus administradores con las listas de sanciones de OFAC, EU, UN y UK OFSI.",
+      "explainerLink": "Qué comprueba cada nivel",
+      "signedOut": {
+        "heading": "Inicie sesión para ejecutar una comprobación",
+        "body": "Una verificación se ejecuta con su cuenta, de modo que el resultado y los créditos que consume quedan en su registro.",
+        "button": "Iniciar sesión"
+      },
+      "balance": {
+        "label": "Su saldo",
+        "unit": "créditos",
+        "cost": "Una comprobación de empresa cuesta {cost} créditos.",
+        "short": "No tiene créditos suficientes para esta comprobación.",
+        "topUp": "Ver tarifas"
+      },
+      "fields": {
+        "nameLabel": "Nombre de la empresa",
+        "namePlaceholder": "El nombre registrado, tal como consta en el registro",
+        "countryLabel": "País de registro",
+        "countryPlaceholder": "Seleccione un país",
+        "regLabel": "Número de registro",
+        "regPlaceholder": "Por ejemplo 09876543",
+        "regHint": "El número de registro es la coincidencia más sólida disponible. Indíquelo si dispone de él.",
+        "vatLabel": "Número de IVA",
+        "vatPlaceholder": "Por ejemplo DE123456789",
+        "vatHint": "Un número de IVA de la UE se comprueba a través de VIES. Deje esto en blanco si no hay ninguno.",
+        "optional": "Opcional"
+      },
+      "submit": "Ejecutar la comprobación",
+      "working": "Ejecutando la comprobación",
+      "errors": {
+        "name": "Introduzca el nombre de la empresa.",
+        "country": "Seleccione el país de registro.",
+        "credits": "No tiene créditos suficientes para esta comprobación.",
+        "signIn": "Inicie sesión e inténtelo de nuevo.",
+        "rateLimit": "Son muchas comprobaciones en poco tiempo. Inténtelo de nuevo más tarde.",
+        "generic": "La comprobación no se pudo completar. Inténtelo de nuevo."
+      },
+      "result": {
+        "verifiedTitle": "Verificada",
+        "verifiedBody": "El asiento registral está activo, los datos que facilitó coinciden con él y no se encontraron candidatas en las listas de sanciones. El resultado consta en su registro.",
+        "reviewTitle": "En la mesa para revisión",
+        "reviewBody": "Algo de esta comprobación necesita que lo mire una persona. Un miembro de la mesa leerá el caso, comparará las fuentes y lo decidirá. Le comunicaremos el resultado por correo electrónico. Nada se decide de forma automática.",
+        "failedTitle": "La comprobación no se completó",
+        "failedBody": "La comprobación se detuvo antes de que pudiera registrarse un resultado. Cuando el fallo fue por nuestra parte, los créditos se devuelven a su saldo.",
+        "reasonLabel": "Motivo",
+        "again": "Ejecutar otra comprobación"
+      },
+      "disclaimerHeading": "Qué no significa este resultado"
+    }
   }
 }

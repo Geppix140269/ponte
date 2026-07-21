@@ -657,5 +657,137 @@
         "micro": "Desk opzionale, a commissione"
       }
     }
+  },
+  "verification": {
+    "meta": {
+      "title": "Verificare una controparte commerciale",
+      "description": "Come Ponte verifica una società: la visura del registro pubblico, la partita IVA UE tramite VIES, il LEI tramite GLEIF e lo screening rispetto alle liste sanzionatorie OFAC, EU, UN e UK OFSI. Che cosa viene controllato a ogni livello, e che cosa una verifica non significa."
+    },
+    "hero": {
+      "pill": "Verifica",
+      "title": "Verifichi una controparte commerciale.",
+      "intro": "Prima che la merce o il denaro si muovano, vuole sapere che la società indicata nel contratto esiste, è ancora iscritta al registro e non compare in una lista sanzionatoria. Ponte lo controlla su fonti pubbliche indicate per nome e registra ciò che è stato trovato, con la data in cui è stato trovato. Questa pagina espone esattamente che cosa viene controllato a ogni livello, e che cosa il risultato non Le dice."
+    },
+    "levels": {
+      "heading": "I quattro livelli",
+      "lead": "Ogni livello aggiunge prove a quello sottostante. Un membro ha il livello più alto che ha completato, e quel livello è mostrato ovunque compaia.",
+      "checksLabel": "Che cosa viene controllato",
+      "l1": {
+        "badge": "Livello 1",
+        "name": "Identità",
+        "body": "La persona è chi dichiara di essere.",
+        "c1": "Indirizzo email confermato.",
+        "c2": "Un documento d'identità esaminato dal desk."
+      },
+      "l2": {
+        "badge": "Livello 2",
+        "name": "Società",
+        "body": "La società è iscritta a un registro pubblico, e né la società né i suoi esponenti compaiono in una lista sanzionatoria.",
+        "c1": "La visura del registro delle imprese: UK Companies House per una società registrata nel Regno Unito, OpenCorporates per le altre giurisdizioni.",
+        "c2": "La partita IVA UE tramite VIES, quando viene fornito un numero di partita IVA.",
+        "c3": "Il Legal Entity Identifier tramite GLEIF, quando viene fornito un LEI.",
+        "c4": "Screening sanzionatorio della società e di ogni esponente indicato nel registro."
+      },
+      "l3": {
+        "badge": "Livello 3",
+        "name": "Attività",
+        "body": "La società ha operato, sulla base delle prove che fornisce.",
+        "c1": "Documenti commerciali forniti dal membro stesso.",
+        "c2": "Documenti letti e riscontrati con la visura del registro e con l'attività dichiarata.",
+        "c3": "Esaminati da una persona prima della concessione del livello."
+      },
+      "l4": {
+        "badge": "Livello 4",
+        "name": "Istituzionale",
+        "body": "Manuale, su accordo.",
+        "c1": "Perimetro concordato per iscritto prima dell'inizio di qualsiasi attività.",
+        "c2": "Per controparti, finanziatori e assicuratori che hanno bisogno di più dei livelli precedenti."
+      }
+    },
+    "sanctions": {
+      "heading": "Screening sanzionatorio",
+      "lead": "Il nome della società e il nome di ogni esponente sono confrontati con quattro liste pubblicate:",
+      "l1": "OFAC Specially Designated Nationals (SDN) List e OFAC Consolidated Sanctions List, Dipartimento del Tesoro degli Stati Uniti.",
+      "l2": "EU Consolidated Financial Sanctions List.",
+      "l3": "United Nations Security Council Consolidated List.",
+      "l4": "UK OFSI Consolidated List of financial sanctions targets.",
+      "matching": "I nomi sono confrontati con una tolleranza per grafia e traslitterazione, quindi una corrispondenza possibile è un motivo per guardare più da vicino, non un accertamento in sé. Ogni corrispondenza possibile è letta da una persona prima che si decida qualcosa.",
+      "refresh": "Lo screening non è un evento isolato. Quando queste liste cambiano, i membri già verificati sono sottoposti a un nuovo screening rispetto alle liste aggiornate, e una nuova corrispondenza possibile riapre il caso."
+    },
+    "process": {
+      "heading": "Come si decide un caso",
+      "auto": "Quando tutte le fonti rispondono e le risposte concordano con i dati dichiarati dal membro, il risultato è registrato senza che una persona debba intervenire.",
+      "review": "Quando qualcosa è poco chiaro, incompleto o contraddittorio, il caso passa al desk. Il membro riceve l'esito via email.",
+      "human": "Un'approvazione e un rifiuto sono sempre decisi da una persona. Nulla viene mai rifiutato automaticamente."
+    },
+    "sources": {
+      "heading": "Su che cosa si basa il risultato",
+      "body": "Registri delle imprese, il servizio EU VIES per la partita IVA, la registrazione LEI in GLEIF, le liste sanzionatorie pubblicate indicate sopra, e i documenti che un membro fornisce sulla propria attività. Ogni controllo registra la fonte da cui proviene e la data in cui è stato eseguito, e una fonte che non è stato possibile raggiungere è riportata come non controllata anziché essere considerata pulita."
+    },
+    "disclaimer": {
+      "heading": "Che cosa una verifica non significa"
+    },
+    "cta": {
+      "heading": "Esegua un controllo aziendale",
+      "body": "Un controllo di Livello 2 viene eseguito sul nome della società e sul suo Paese di registrazione, con il numero di registrazione o la partita IVA quando ne dispone.",
+      "button": "Verifichi una società",
+      "pricing": "Consulti le commissioni"
+    },
+    "request": {
+      "meta": {
+        "title": "Esegua una verifica aziendale",
+        "description": "Controlli una società rispetto alla visura del registro pubblico, alla partita IVA UE, alla registrazione LEI in GLEIF e alle liste sanzionatorie pubblicate."
+      },
+      "pill": "Livello 2",
+      "heading": "Verifica aziendale",
+      "intro": "Questo controllo legge la visura del registro della società, verifica la partita IVA UE tramite VIES e il LEI tramite GLEIF quando li fornisce, e confronta la società e i suoi esponenti con le liste sanzionatorie OFAC, EU, UN e UK OFSI.",
+      "explainerLink": "Che cosa viene controllato a ogni livello",
+      "signedOut": {
+        "heading": "Accedi per eseguire un controllo",
+        "body": "Una verifica viene eseguita sul Suo account, così il risultato e i crediti spesi restano registrati nel Suo account.",
+        "button": "Accedi"
+      },
+      "balance": {
+        "label": "Il Suo saldo",
+        "unit": "crediti",
+        "cost": "Un controllo aziendale costa {cost} crediti.",
+        "short": "Non ha crediti sufficienti per questo controllo.",
+        "topUp": "Consulti le commissioni"
+      },
+      "fields": {
+        "nameLabel": "Ragione sociale",
+        "namePlaceholder": "La denominazione registrata, come risulta dal registro",
+        "countryLabel": "Paese di registrazione",
+        "countryPlaceholder": "Selezioni un Paese",
+        "regLabel": "Numero di registrazione",
+        "regPlaceholder": "Per esempio 09876543",
+        "regHint": "Il numero di registrazione è la corrispondenza più solida disponibile. Lo indichi quando ne dispone.",
+        "vatLabel": "Partita IVA",
+        "vatPlaceholder": "Per esempio DE123456789",
+        "vatHint": "Una partita IVA UE viene verificata tramite VIES. Lasci il campo vuoto se non ne esiste una.",
+        "optional": "Facoltativo"
+      },
+      "submit": "Esegua il controllo",
+      "working": "Controllo in corso",
+      "errors": {
+        "name": "Inserisca la ragione sociale.",
+        "country": "Selezioni il Paese di registrazione.",
+        "credits": "Non ha crediti sufficienti per questo controllo.",
+        "signIn": "Acceda e riprovi.",
+        "rateLimit": "Sono molti controlli in poco tempo. Riprovi più tardi.",
+        "generic": "Non è stato possibile completare il controllo. Riprovi."
+      },
+      "result": {
+        "verifiedTitle": "Verificata",
+        "verifiedBody": "La visura del registro è attiva, i dati che ha fornito corrispondono, e non è stata trovata alcuna corrispondenza sanzionatoria possibile. Il risultato è registrato nel Suo account.",
+        "reviewTitle": "In esame presso il desk",
+        "reviewBody": "Qualcosa in questo controllo richiede l'esame di una persona. Un membro del desk leggerà il caso, confronterà le fonti e lo deciderà. Riceverà l'esito via email. Nulla viene deciso automaticamente.",
+        "failedTitle": "Il controllo non è stato completato",
+        "failedBody": "Il controllo si è interrotto prima che un risultato potesse essere registrato. Quando l'errore è stato dalla nostra parte, i crediti vengono restituiti al Suo saldo.",
+        "reasonLabel": "Motivo",
+        "again": "Esegua un altro controllo"
+      },
+      "disclaimerHeading": "Che cosa questo risultato non significa"
+    }
   }
 }

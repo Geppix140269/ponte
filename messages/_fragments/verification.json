@@ -1,0 +1,134 @@
+{
+  "verification": {
+    "meta": {
+      "title": "Verify a trade counterparty",
+      "description": "How Ponte verifies a company: the public registry record, EU VAT through VIES, the LEI through GLEIF, and screening against the OFAC, EU, UN and UK OFSI sanctions lists. What each level checks, and what a verification does not mean."
+    },
+    "hero": {
+      "pill": "Verification",
+      "title": "Verify a trade counterparty.",
+      "intro": "Before cargo or money moves, you want to know that the company on the contract exists, is still on the register, and does not appear on a sanctions list. Ponte checks that against named public sources and records what was found, on the date it was found. This page sets out exactly what is checked at each level, and what the result does not tell you."
+    },
+    "levels": {
+      "heading": "The four levels",
+      "lead": "Each level adds evidence to the one below it. A member holds the highest level they have completed, and that level is shown wherever they appear.",
+      "checksLabel": "What is checked",
+      "l1": {
+        "badge": "Level 1",
+        "name": "Identity",
+        "body": "The person is who they say they are.",
+        "c1": "Email address confirmed.",
+        "c2": "An identity document reviewed by the desk."
+      },
+      "l2": {
+        "badge": "Level 2",
+        "name": "Business",
+        "body": "The company exists on a public register, and neither the company nor its officers appear on a sanctions list.",
+        "c1": "The company registry record: UK Companies House for a company registered in the United Kingdom, OpenCorporates for other jurisdictions.",
+        "c2": "EU VAT through VIES, where a VAT number is supplied.",
+        "c3": "The Legal Entity Identifier through GLEIF, where an LEI is supplied.",
+        "c4": "Sanctions screening of the company and of every officer named on the register."
+      },
+      "l3": {
+        "badge": "Level 3",
+        "name": "Activity",
+        "body": "The company has traded, on the evidence it supplies.",
+        "c1": "Trade documents the member provides themselves.",
+        "c2": "Documents read and cross checked against the registry record and the declared business.",
+        "c3": "Reviewed by a person before the level is granted."
+      },
+      "l4": {
+        "badge": "Level 4",
+        "name": "Institutional",
+        "body": "Manual, by arrangement.",
+        "c1": "Scope agreed in writing before any work starts.",
+        "c2": "For counterparties, lenders and insurers who need more than the levels above."
+      }
+    },
+    "sanctions": {
+      "heading": "Sanctions screening",
+      "lead": "The company name and every officer name are screened against four published lists:",
+      "l1": "OFAC Specially Designated Nationals (SDN) List and the OFAC Consolidated Sanctions List, United States Department of the Treasury.",
+      "l2": "EU Consolidated Financial Sanctions List.",
+      "l3": "United Nations Security Council Consolidated List.",
+      "l4": "UK OFSI Consolidated List of financial sanctions targets.",
+      "matching": "Names are compared with an allowance for spelling and transliteration, so a candidate is a reason to look more closely, not a finding on its own. Every candidate is read by a person before anything is decided.",
+      "refresh": "Screening is not a one time event. When these lists change, members already verified are screened again against the updated lists, and a new candidate reopens the case."
+    },
+    "process": {
+      "heading": "How a case is decided",
+      "auto": "Where every source answers, and the answers agree with the details the member declared, the result is recorded without a person needing to intervene.",
+      "review": "Where anything is unclear, incomplete or contradictory, the case goes to the desk. The member is emailed with the outcome.",
+      "human": "An approval and a rejection are always decided by a person. Nothing is ever rejected automatically."
+    },
+    "sources": {
+      "heading": "What the result is built on",
+      "body": "Company registers, the EU VIES VAT service, the GLEIF LEI record, the published sanctions lists named above, and documents a member supplies about their own business. Every check records the source it came from and the date it was run, and a source that could not be reached is reported as not checked rather than treated as clean."
+    },
+    "disclaimer": {
+      "heading": "What a verification does not mean"
+    },
+    "cta": {
+      "heading": "Run a business check",
+      "body": "A Level 2 check runs on the company name and its country of registration, with a registration number or VAT number where you have one.",
+      "button": "Verify a company",
+      "pricing": "See fees"
+    },
+    "request": {
+      "meta": {
+        "title": "Run a business verification",
+        "description": "Check a company against its public registry record, EU VAT, the GLEIF LEI record and the published sanctions lists."
+      },
+      "pill": "Level 2",
+      "heading": "Business verification",
+      "intro": "This check reads the company registry record, checks EU VAT through VIES and the LEI through GLEIF where you supply them, and screens the company and its officers against the OFAC, EU, UN and UK OFSI sanctions lists.",
+      "explainerLink": "What each level checks",
+      "signedOut": {
+        "heading": "Sign in to run a check",
+        "body": "A verification runs against your account, so the result and the credits it spends stay on your record.",
+        "button": "Sign in"
+      },
+      "balance": {
+        "label": "Your balance",
+        "unit": "credits",
+        "cost": "A business check costs {cost} credits.",
+        "short": "You do not have enough credits for this check.",
+        "topUp": "See fees"
+      },
+      "fields": {
+        "nameLabel": "Company name",
+        "namePlaceholder": "The registered name, as written on the register",
+        "countryLabel": "Country of registration",
+        "countryPlaceholder": "Select a country",
+        "regLabel": "Registration number",
+        "regPlaceholder": "For example 09876543",
+        "regHint": "A registration number is the strongest match available. Give it where you have it.",
+        "vatLabel": "VAT number",
+        "vatPlaceholder": "For example DE123456789",
+        "vatHint": "An EU VAT number is checked through VIES. Leave this blank if there is none.",
+        "optional": "Optional"
+      },
+      "submit": "Run the check",
+      "working": "Running the check",
+      "errors": {
+        "name": "Enter the company name.",
+        "country": "Select the country of registration.",
+        "credits": "You do not have enough credits for this check.",
+        "signIn": "Please sign in and try again.",
+        "rateLimit": "That is a lot of checks in a short time. Please try again later.",
+        "generic": "The check could not be completed. Please try again."
+      },
+      "result": {
+        "verifiedTitle": "Verified",
+        "verifiedBody": "The registry record is active, the details you gave match it, and no sanctions candidates were found. The result is on your record.",
+        "reviewTitle": "With the desk for review",
+        "reviewBody": "Something in this check needs a person to look at it. A member of the desk will read the case, compare the sources, and decide it. You will be emailed with the outcome. Nothing is decided automatically.",
+        "failedTitle": "The check did not complete",
+        "failedBody": "The check stopped before a result could be recorded. Where the fault was on our side, the credits are returned to your balance.",
+        "reasonLabel": "Reason",
+        "again": "Run another check"
+      },
+      "disclaimerHeading": "What this result does not mean"
+    }
+  }
+}
