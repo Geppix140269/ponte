@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, Paperclip, Camera, Eye } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Paperclip, Camera, Eye, AlertCircle, TrendingUp, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TRADE_CATEGORIES } from "@/components/tradeCategories";
 
@@ -75,6 +75,17 @@ export default function ListingForm({
   const [uploadWarning, setUploadWarning] = useState("");
   const [wasDraft, setWasDraft] = useState(false);
   const [restoredNote, setRestoredNote] = useState(false);
+
+  // Instant listing check (free, AI): reciprocity on the preview step.
+  type Assessment = {
+    score: number;
+    headline: string;
+    fix: string[];
+    improve: string[];
+    passed: string[];
+  };
+  const [assess, setAssess] = useState<Assessment | null>(null);
+  const [assessStatus, setAssessStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   // The deal
   const [catId, setCatId] = useState("");
@@ -201,6 +212,44 @@ export default function ListingForm({
     }
     setStep((s) => Math.min(s + 1, LAST));
   }
+
+  async function runAssessment() {
+    if (assessStatus === "loading") return;
+    setAssessStatus("loading");
+    try {
+      const res = await fetch("/api/marketplace/assess", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          type,
+          product: composedProduct,
+          description,
+          quantity: composedVolume,
+          price: composedPriceLine,
+          origin,
+          destination,
+          role: isGoods
+            ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
+            : "",
+          media_count: media.length,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.assessment) throw new Error();
+      setAssess(body.assessment as Assessment);
+      setAssessStatus("done");
+    } catch {
+      setAssessStatus("error");
+    }
+  }
+
+  // Auto-run the check the first time the preview opens.
+  useEffect(() => {
+    if (step === LAST && assessStatus === "idle" && description.trim().length >= 15) {
+      runAssessment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   function stashDraft() {
     try {
@@ -761,6 +810,60 @@ export default function ListingForm({
           is assigned after the desk approves the listing.
           {!isAuthed && " Publishing is free: one click to sign in, no password."}
         </p>
+
+        {/* Instant listing check */}
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              <Sparkles className="h-3.5 w-3.5 text-gold" /> Listing check · free
+            </span>
+            {assessStatus === "done" && assess && (
+              <span className="serif text-gold" style={{ fontSize: 26, fontWeight: 500 }}>
+                {assess.score}<span className="text-[14px] text-gray-2">/100</span>
+              </span>
+            )}
+          </div>
+
+          {assessStatus === "loading" && (
+            <p className="mt-3 text-[13px] text-gray-2">Reading your listing…</p>
+          )}
+          {assessStatus === "error" && (
+            <p className="mt-3 text-[13px] text-gray-2">
+              The check is unavailable right now. You can still publish.
+            </p>
+          )}
+          {assessStatus === "done" && assess && (
+            <div className="mt-2 space-y-2.5">
+              <p className="text-[13px] leading-relaxed text-cream">{assess.headline}</p>
+              {assess.fix.length > 0 && (
+                <div className="flex gap-2 text-[12.5px] leading-relaxed text-red-400">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{assess.fix.join(" · ")}</span>
+                </div>
+              )}
+              {assess.improve.length > 0 && (
+                <div className="flex gap-2 text-[12.5px] leading-relaxed text-gold">
+                  <TrendingUp className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{assess.improve.join(" · ")}</span>
+                </div>
+              )}
+              {assess.passed.length > 0 && (
+                <div className="flex gap-2 text-[12.5px] leading-relaxed text-positive">
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{assess.passed.join(" · ")}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={runAssessment}
+                className="text-[11px] uppercase text-gray-2 hover:text-gold"
+                style={{ letterSpacing: "0.14em" }}
+              >
+                Check again after edits
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-400">{error}</p>}

@@ -197,6 +197,17 @@ export default async function AdminListingsPage() {
               </span>
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-cream">{l.ai_review.summary}</p>
+            {l.ai_review.language && l.ai_review.language !== "en" && l.ai_review.english_details && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+                  English translation · original in {l.ai_review.language}
+                </summary>
+                {l.ai_review.english_product && (
+                  <p className="mt-2 text-[12px] text-cream">{l.ai_review.english_product}</p>
+                )}
+                <p className="mt-1 whitespace-pre-wrap text-[12px] text-gray-2">{l.ai_review.english_details}</p>
+              </details>
+            )}
             {l.ai_review.red_flags?.length > 0 && (
               <p className="mt-2 text-[12px] text-red-400">Flags: {l.ai_review.red_flags.join(" · ")}</p>
             )}

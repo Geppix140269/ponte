@@ -5,6 +5,22 @@ import { ArrowRight, Share2, ShieldCheck } from "lucide-react";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
+import { translateListing } from "@/lib/ai-vet";
+
+// Languages a reader can flip the listing into. Each listing/language pair
+// is translated once by AI and cached in listing_translations.
+const LANGS: { code: string; label: string }[] = [
+  { code: "en", label: "English" },
+  { code: "zh", label: "中文" },
+  { code: "es", label: "Español" },
+  { code: "ar", label: "العربية" },
+  { code: "fr", label: "Français" },
+  { code: "pt", label: "Português" },
+  { code: "ru", label: "Русский" },
+  { code: "de", label: "Deutsch" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "it", label: "Italiano" },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -84,11 +100,53 @@ export async function generateMetadata({
   };
 }
 
-export default async function DealPage({ params }: { params: { ref: string } }) {
+// Serve a cached translation, or translate once and cache it.
+async function getTranslation(
+  deal: Deal,
+  lang: string,
+): Promise<{ product: string; details: string } | null> {
+  const adminSb = createAdminClient();
+  const { data: cached } = await adminSb
+    .from("listing_translations")
+    .select("product, details")
+    .eq("listing_id", deal.id)
+    .eq("lang", lang)
+    .maybeSingle();
+  if (cached) return cached;
+
+  const fresh = await translateListing(
+    { product: deal.product, details: deal.details },
+    lang,
+  );
+  if (!fresh) return null;
+  await adminSb.from("listing_translations").insert({
+    listing_id: deal.id,
+    lang,
+    product: fresh.product.slice(0, 300),
+    details: fresh.details.slice(0, 4000),
+  });
+  return fresh;
+}
+
+export default async function DealPage({
+  params,
+  searchParams,
+}: {
+  params: { ref: string };
+  searchParams: { lang?: string };
+}) {
   const res = await getDeal(params.ref);
   if (!res) notFound();
   const { deal, image } = res;
   const user = await getUser();
+
+  // Optional reader language: the listing shown in THEIR language.
+  const lang = LANGS.some((l) => l.code === searchParams.lang)
+    ? (searchParams.lang as string)
+    : null;
+  const translation = lang ? await getTranslation(deal, lang) : null;
+  const shownProduct = translation?.product ?? deal.product;
+  const shownDetails = translation?.details ?? deal.details;
 
   const shareText = `${deal.product} · vetted listing ${deal.ref} on Ponte\n${APP_URL}/marketplace/l/${deal.ref}`;
   const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
@@ -101,7 +159,7 @@ export default async function DealPage({ params }: { params: { ref: string } }) 
           className="serif text-white mt-6 mb-3 max-w-3xl"
           style={{ fontWeight: 400, fontSize: "clamp(32px, 4.5vw, 54px)", lineHeight: 1.05, letterSpacing: "-0.015em" }}
         >
-          {deal.product}
+          {shownProduct}
         </h1>
         <p className="flex items-center gap-2 text-[13px] text-gray-2">
           <ShieldCheck className="h-4 w-4 text-gold" />
@@ -135,11 +193,38 @@ export default async function DealPage({ params }: { params: { ref: string } }) 
               .join(" · ")}
           </p>
           <p className="mt-4 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-2">
-            {user ? deal.details : teaser(deal.details)}
+            {user ? shownDetails : teaser(shownDetails)}
             {!user && (
               <span className="ml-2 text-gold">Sign in free to read the full listing.</span>
             )}
           </p>
+
+          {/* Read it in your language */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-white/10 pt-4">
+            <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
+              Read in
+            </span>
+            <Link
+              href={`/marketplace/l/${deal.ref}`}
+              className={`text-[12px] ${!lang ? "text-gold" : "text-gray-2 hover:text-cream"}`}
+            >
+              Original
+            </Link>
+            {LANGS.map((l) => (
+              <Link
+                key={l.code}
+                href={`/marketplace/l/${deal.ref}?lang=${l.code}`}
+                className={`text-[12px] ${lang === l.code ? "text-gold" : "text-gray-2 hover:text-cream"}`}
+              >
+                {l.label}
+              </Link>
+            ))}
+            {lang && (
+              <span className="w-full text-[11px] text-gray-2/70">
+                Machine translation. The original wording governs.
+              </span>
+            )}
+          </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             {user ? (
