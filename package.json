@@ -10,6 +10,7 @@
     "messages:build": "node scripts/build-messages.mjs",
     "messages:check": "node scripts/check-messages.mjs",
     "check:apis": "node scripts/check-registry-apis.mjs",
+    "check:data": "tsx scripts/check-datasources.ts",
     "sanctions:refresh": "tsx scripts/sanctions-refresh.ts",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
