@@ -3,11 +3,14 @@
     "metaTitle": "Cross border trade in physical goods, between verified counterparties",
     "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made before an NCNDA is signed. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
     "hero": {
-      "eyebrow": "Vetted trade board",
-      "title": "Cross border trade in physical goods,",
-      "titleAccent": "between verified counterparties.",
-      "lead": "Offers and requirements are written the way a trade is written: quantity and unit, incoterm, origin and destination, payment terms, HS code. Listings circulate anonymously, and no introduction is made until both sides agree and an NCNDA is signed.",
-      "cta": "Post an offer or a requirement",
+      "eyebrow": "Free for every member",
+      "title": "Know who is on",
+      "titleAccent": "the other side.",
+      "lead": "Every counterparty is checked against company registers and sanctions lists before anyone is introduced.",
+      "b1": "Free to post and connect",
+      "b2": "No commission on your deal",
+      "b3": "Anonymous until you both agree",
+      "cta": "Post a listing, free",
       "secondary": "See the board"
     },
     "proof": {

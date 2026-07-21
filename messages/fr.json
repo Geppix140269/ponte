@@ -242,11 +242,14 @@
     "metaTitle": "Commerce transfrontalier de marchandises physiques, entre contreparties vérifiées",
     "metaDescription": "Ponte est un tableau vérifié pour le commerce transfrontalier de marchandises physiques. Les offres et les besoins sont rédigés en termes commerciaux, diffusés anonymement, et aucune mise en relation n'a lieu avant la signature d'un NCNDA. Les membres sont criblés au regard de Companies House, VIES, GLEIF et des listes OFAC, UE, ONU et OFSI.",
     "hero": {
-      "eyebrow": "Tableau commercial vérifié",
-      "title": "Commerce transfrontalier de marchandises physiques,",
-      "titleAccent": "entre contreparties vérifiées.",
-      "lead": "Les offres et les besoins sont rédigés comme se rédige une affaire : quantité et unité, incoterm, origine et destination, conditions de paiement, code HS. Les annonces circulent anonymement, et aucune mise en relation n'a lieu tant que les deux parties n'ont pas donné leur accord et signé un NCNDA.",
-      "cta": "Publiez une offre ou un besoin",
+      "eyebrow": "Gratuit pour tous les membres",
+      "title": "Sachez qui se trouve",
+      "titleAccent": "en face de vous.",
+      "lead": "Chaque contrepartie est vérifiée dans les registres du commerce et les listes de sanctions avant toute mise en relation.",
+      "b1": "Publier et se connecter est gratuit",
+      "b2": "Aucune commission sur votre affaire",
+      "b3": "Anonyme jusqu'à accord des deux parties",
+      "cta": "Publiez une annonce, gratuit",
       "secondary": "Voir le tableau"
     },
     "proof": {

@@ -4,7 +4,7 @@ import ProcessFlow from "@/components/ProcessFlow";
 import Reveal from "@/components/Reveal";
 import { BridgeMark } from "@/components/Logo";
 import { alternatesFor } from "@/lib/seo";
-import { ArrowRight, Info, Landmark, ShieldAlert } from "lucide-react";
+import { ArrowRight, Check, Info, Landmark, ShieldAlert } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -92,9 +92,28 @@ export default async function HomePage({ params }: { params: { locale: string } 
             </em>
           </h1>
 
-          <p className="mt-6 max-w-3xl text-[15px] leading-relaxed text-gray-2">
+          <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-gray-2">
             {t("hero.lead")}
           </p>
+
+          {/*
+            Three benefits, scannable without reading a sentence.
+
+            The first version of this hero opened with quantity and unit,
+            incoterm, origin and destination, payment terms, HS code and NCNDA,
+            before giving anyone a reason to care. That is a definition of the
+            category, not an offer, and a reader who does not yet know what
+            this is leaves during it. The trade vocabulary is not deleted, it
+            is later on the page, where somebody who wants it will look.
+          */}
+          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2.5">
+            {["hero.b1", "hero.b2", "hero.b3"].map((key) => (
+              <li key={key} className="flex items-center gap-2 text-[13.5px] text-cream">
+                <Check className="h-4 w-4 shrink-0 text-gold" strokeWidth={2.5} />
+                {t(key)}
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3">
             <Link href="/marketplace/new" className="btn-gold">

@@ -242,12 +242,15 @@
     "metaTitle": "Comércio transfronteiriço de mercadorias físicas, entre contrapartes verificadas",
     "metaDescription": "Ponte é um mural verificado para o comércio transfronteiriço de mercadorias físicas. Ofertas e demandas são escritas em termos comerciais, circulam de forma anônima e nenhuma apresentação é feita antes da assinatura de um NCNDA. Os membros são checados contra Companies House, VIES, GLEIF e as listas da OFAC, da UE, da ONU e do OFSI.",
     "hero": {
-      "eyebrow": "Mural comercial verificado",
-      "title": "Comércio transfronteiriço de mercadorias físicas,",
-      "titleAccent": "entre contrapartes verificadas.",
-      "lead": "Ofertas e demandas são escritas como se escreve um negócio: quantidade e unidade, incoterm, origem e destino, condições de pagamento, código HS. Os anúncios circulam de forma anônima e nenhuma apresentação é feita até que as duas partes concordem e um NCNDA seja assinado.",
-      "cta": "Publique uma oferta ou uma demanda",
-      "secondary": "Ver o mural"
+      "eyebrow": "Grátis para todos os membros",
+      "title": "Saiba quem está",
+      "titleAccent": "do outro lado.",
+      "lead": "Cada contraparte é checada em registros de empresas e listas de sanções antes de qualquer apresentação.",
+      "b1": "Publicar e se conectar é grátis",
+      "b2": "Sem comissão sobre o seu negócio",
+      "b3": "Anônimo até os dois concordarem",
+      "cta": "Publique um anúncio, grátis",
+      "secondary": "Ver o painel"
     },
     "proof": {
       "eyebrow": "Verificação de contraparte",

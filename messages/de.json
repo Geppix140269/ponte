@@ -242,12 +242,15 @@
     "metaTitle": "Grenzüberschreitender Handel mit physischen Waren, zwischen geprüften Kontrahenten",
     "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der Unterzeichnung eines NCNDA erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
     "hero": {
-      "eyebrow": "Geprüftes Handelsboard",
-      "title": "Grenzüberschreitender Handel mit physischen Waren,",
-      "titleAccent": "zwischen geprüften Kontrahenten.",
-      "lead": "Angebote und Gesuche werden so erfasst, wie ein Geschäft geschrieben wird: Menge und Einheit, Incoterm, Ursprung und Bestimmung, Zahlungsbedingungen, HS-Code. Inserate zirkulieren anonym, und es erfolgt keine Vermittlung, bevor beide Seiten zustimmen und ein NCNDA unterzeichnet ist.",
-      "cta": "Angebot oder Gesuch einstellen",
-      "secondary": "Board ansehen"
+      "eyebrow": "Kostenlos für jedes Mitglied",
+      "title": "Wissen Sie, wer",
+      "titleAccent": "auf der anderen Seite steht.",
+      "lead": "Jede Gegenpartei wird gegen Handelsregister und Sanktionslisten geprüft, bevor jemand vorgestellt wird.",
+      "b1": "Einstellen und verbinden ist kostenlos",
+      "b2": "Keine Provision auf Ihr Geschäft",
+      "b3": "Anonym, bis beide Seiten zustimmen",
+      "cta": "Inserat einstellen, kostenlos",
+      "secondary": "Zur Tafel"
     },
     "proof": {
       "eyebrow": "Prüfung der Gegenpartei",
