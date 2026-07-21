@@ -9,6 +9,7 @@
     "lint": "next lint",
     "messages:build": "node scripts/build-messages.mjs",
     "messages:check": "node scripts/check-messages.mjs",
+    "check:apis": "node scripts/check-registry-apis.mjs",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
     "verify": "node scripts/check-messages.mjs && tsc --noEmit --incremental false && next build",
