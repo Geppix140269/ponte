@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · denominazione commerciale di 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Marketplace verificato e gratuito per il commercio di merci",
-    "metaDescription": "Pubblichi un'offerta o una richiesta su una bacheca commerciale gratuita e verificata. Resti anonimo finché entrambe le parti non accettano, poi il contatto è diretto. Il supporto del desk è opzionale, a commissione di successo o a retainer.",
+    "metaTitle": "Commercio transfrontaliero di merci fisiche, tra controparti verificate",
+    "metaDescription": "Ponte è una bacheca verificata per il commercio transfrontaliero di merci fisiche. Offerte e richieste sono redatte in termini commerciali, circolano in forma anonima e nessuna presentazione avviene prima della firma di un NCNDA. I membri sono controllati su Companies House, VIES, GLEIF e sulle liste di OFAC, UE, ONU e OFSI.",
     "hero": {
-      "title": "Vendere. Trovare.",
-      "titleAccent": "Concluso."
+      "eyebrow": "Bacheca commerciale verificata",
+      "title": "Commercio transfrontaliero di merci fisiche,",
+      "titleAccent": "tra controparti verificate.",
+      "lead": "Offerte e richieste sono redatte come si redige un'operazione: quantità e unità, incoterm, origine e destinazione, condizioni di pagamento, codice HS. Gli annunci circolano in forma anonima e nessuna presentazione avviene finché entrambe le parti non acconsentono e non è firmato un NCNDA.",
+      "cta": "Pubblichi un'offerta o una richiesta",
+      "secondary": "Guarda la bacheca"
     },
-    "trust": {
-      "vetted": "Verificato",
-      "ncnda": "Prima l'NCNDA",
-      "successFee": "Commissione solo in caso di successo"
+    "proof": {
+      "eyebrow": "Verifica della controparte",
+      "heading": "I membri sono controllati su fonti pubbliche indicate per nome.",
+      "lead": "Una verifica interroga le fonti qui sotto, registra ciò che ciascuna ha restituito e registra la data della consultazione. Una fonte non raggiungibile è riportata come non controllata, mai come pulita.",
+      "registriesLabel": "Registri e identificativi",
+      "sanctionsLabel": "Liste sanzionatorie controllate",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "Visura del registro, stato della società e amministratori"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "Partita IVA validata alla fonte"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "Legal Entity Identifier, quando esiste"
+      },
+      "s1": {
+        "name": "Liste SDN e Consolidated di OFAC",
+        "note": "Dipartimento del Tesoro degli Stati Uniti"
+      },
+      "s2": {
+        "name": "Elenco consolidato delle sanzioni finanziarie dell'UE",
+        "note": "Unione europea"
+      },
+      "s3": {
+        "name": "Elenco consolidato del Consiglio di sicurezza dell'ONU",
+        "note": "Nazioni Unite"
+      },
+      "s4": {
+        "name": "Elenco consolidato dell'OFSI del Regno Unito",
+        "note": "HM Treasury, soggetti colpiti da sanzioni finanziarie"
+      },
+      "refresh": "Il controllo non è un atto unico. Quando queste liste cambiano, i membri già verificati sono ricontrollati sulle liste aggiornate e una nuova corrispondenza riapre la pratica.",
+      "caveat": "Una verifica registra ciò che una fonte indicata per nome ha pubblicato il giorno della consultazione. È prova di identità e di stato, non garanzia di adempimento.",
+      "link": "Che cosa controlla ogni livello"
     },
-    "sell": {
-      "titleLine1": "Ho qualcosa",
-      "titleLine2": "da vendere",
-      "body": "La pubblichi in 3 clic. Foto, video, fatto.",
-      "cta": "Pubblica l'offerta"
+    "shape": {
+      "eyebrow": "Che cosa si muove qui",
+      "heading": "Le operazioni sono redatte in termini commerciali.",
+      "lead": "Ogni annuncio porta gli stessi campi: codice HS, quantità e unità, incoterm, origine e destinazione, condizioni di pagamento, il ruolo della controparte nell'operazione e quanti intermediari la separano dal principale.",
+      "sampleLabel": "Esempi di formato. Mostrano come si redige un'operazione su Ponte. Non sono annunci attivi e non implicano alcun volume.",
+      "cta": "Guarda la bacheca",
+      "type": {
+        "offer": "Offerta",
+        "requirement": "Richiesta"
+      },
+      "fields": {
+        "hs": "Codice HS",
+        "incoterm": "Incoterm",
+        "corridor": "Corridoio",
+        "corridorValue": "da {from} a {to}",
+        "payment": "Pagamento",
+        "role": "Ruolo"
+      },
+      "e1": {
+        "product": "Zucchero bianco raffinato, ICUMSA 45",
+        "quantity": "25.000 MT",
+        "frequency": "Una spedizione",
+        "payment": "Credito documentario irrevocabile a vista, confermato",
+        "role": "Società di trading titolare della merce"
+      },
+      "e2": {
+        "product": "Urea 46%, granulare",
+        "quantity": "12.000 MT",
+        "frequency": "Mensile, dodici mesi",
+        "payment": "Credito documentario a vista contro documenti di spedizione",
+        "role": "Acquirente finale"
+      },
+      "e3": {
+        "product": "Lingotto di alluminio A7, 99,7%",
+        "quantity": "1.000 MT",
+        "frequency": "Mensile, rinnovabile",
+        "payment": "30% di anticipo, saldo contro documenti",
+        "role": "Produttore, diretto"
+      }
     },
-    "source": {
-      "titleLine1": "Mi serve",
-      "titleLine2": "un prodotto",
-      "body": "Dica al desk cosa sta cercando. La rete risponde.",
-      "cta": "Pubblica la richiesta"
+    "flow": {
+      "eyebrow": "Come avanza un'operazione",
+      "heading": "Formalizzato prima della presentazione."
     },
-    "board": {
-      "link": "Guarda la bacheca live"
-    },
-    "process": {
-      "eyebrow": "Come funziona"
-    },
-    "closing": {
-      "title": "Formalizzato prima della presentazione. Pagato solo a operazione conclusa.",
-      "postDeal": "Pubblica un'operazione",
-      "seeBoard": "Guarda la bacheca"
+    "desk": {
+      "eyebrow": "Il desk",
+      "heading": "La bacheca è gratuita. Il desk è opzionale.",
+      "free": {
+        "title": "Il marketplace",
+        "terms": "Gratuito, per ogni membro",
+        "body": "Pubblicare un'offerta o una richiesta, passare la verifica, leggere la bacheca e mettersi in contatto con una controparte non costa nulla. Le operazioni concluse direttamente tra le parti non portano alcuna commissione.",
+        "cta": "Pubblichi un'offerta o una richiesta"
+      },
+      "mandate": {
+        "title": "Il desk",
+        "terms": "Commissione di successo o retainer mensile",
+        "body": "Se desidera che l'operazione sia condotta per suo conto, il desk assume la verifica approfondita, l'NCNDA, la negoziazione, il contratto e il coordinamento della chiusura. Le condizioni sono concordate per iscritto prima di iniziare qualsiasi lavoro, e una commissione di successo matura solo alla conclusione dell'operazione.",
+        "cta": "Guarda le tariffe"
+      },
+      "currency": "Tutti i compensi sono quotati e regolati in USD."
     }
   },
   "legal": {
@@ -515,11 +590,16 @@
       "signInFull": "Accedi per gli annunci completi",
       "empty": "La bacheca apre appena i primi annunci verificati passano il desk. Gli invii sono già aperti, e i primi annunci ricevono più attenzione al momento del lancio.",
       "signInToRespond": "Accedi per rispondere",
-      "signInToRead": "Accedi per leggere l'annuncio completo."
-    },
-    "card": {
-      "origin": "Origine: {value}",
-      "destination": "Destinazione: {value}"
+      "signInToRead": "Accedi per leggere l'annuncio completo.",
+      "headingLive": "Annunci verificati, live sulla bacheca.",
+      "open": "Apri l'annuncio {ref}",
+      "columns": {
+        "quantity": "Quantità",
+        "terms": "Condizioni",
+        "corridor": "Corridoio",
+        "product": "Prodotto e riferimento",
+        "posted": "Pubblicato"
+      }
     },
     "ai": {
       "label": "Il Suo account manager",
@@ -579,7 +659,31 @@
       "interested": "Sono interessato",
       "shareWhatsApp": "Condividi su WhatsApp",
       "shareText": "{product} · annuncio verificato {ref} su Ponte",
-      "footer": "Ha anche Lei qualcosa da vendere o da cercare? <link>Crei il Suo annuncio in tre passaggi</link>, senza account fino alla pubblicazione."
+      "footer": "Ha anche Lei qualcosa da vendere o da cercare? <link>Crei il Suo annuncio in tre passaggi</link>, senza account fino alla pubblicazione.",
+      "terms": {
+        "heading": "Condizioni commerciali",
+        "quantity": "Quantità",
+        "unit": "Unità",
+        "incoterm": "Incoterm",
+        "origin": "Origine",
+        "destination": "Destinazione",
+        "payment": "Condizioni di pagamento",
+        "hsCode": "Codice HS",
+        "frequency": "Frequenza",
+        "timing": "Tempistiche",
+        "role": "Ruolo della controparte",
+        "chain": "Posizione nella catena",
+        "posted": "Pubblicato"
+      },
+      "verificationLink": "Che cosa verifica ogni livello"
+    },
+    "notStated": "non indicato",
+    "trust": {
+      "none": "Non verificato",
+      "level1": "Identità verificata",
+      "level2": "Azienda verificata",
+      "level3": "Attività verificata",
+      "level4": "Istituzionale"
     }
   },
   "meta": {
@@ -594,7 +698,13 @@
     "fees": "Commissioni",
     "contact": "Contatti",
     "account": "Account",
-    "menuAriaLabel": "Menu"
+    "menuAriaLabel": "Menu",
+    "marketplaceShort": "Mercato",
+    "home": "Home",
+    "post": "Pubblica",
+    "postAriaLabel": "Pubblica un annuncio",
+    "verify": "Verifica",
+    "primaryAriaLabel": "Navigazione principale"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Pubblica",
-        "micro": "La Sua operazione, gratis"
+        "label": "Presentata",
+        "micro": "Offerta o richiesta, gratis"
       },
       "vet": {
-        "label": "Verifica",
-        "micro": "L'AI controlla, il desk approva"
+        "label": "Verificata",
+        "micro": "Dal desk, prima di circolare"
       },
       "match": {
-        "label": "Match",
-        "micro": "Anonimo sulla bacheca"
+        "label": "Circolata",
+        "micro": "In forma anonima, sulla bacheca"
       },
       "connect": {
-        "label": "Contatto",
-        "micro": "Entrambi d'accordo, gratis"
+        "label": "Collegate",
+        "micro": "NCNDA firmato, poi la presentazione"
       },
       "close": {
         "label": "Chiusura",
         "micro": "Desk opzionale, a commissione"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "Aggiungi Ponte alla schermata Home",
+    "installBody": "Apri il tabellone e pubblica dal telefono, senza un browser di mezzo.",
+    "installAction": "Installa",
+    "installDismiss": "Non ora",
+    "iosBody": "Tocca il pulsante di condivisione in Safari, poi scegli Aggiungi a Home.",
+    "offlineTitle": "Sei offline",
+    "offlineBody": "Ponte ha bisogno di una connessione per mostrare gli annunci in tempo reale e per eseguire una verifica. Non è andato perso nulla di quello che stavi facendo. Riconnettiti e prosegui.",
+    "offlineRetry": "Riprova",
+    "offlineHint": "Questa pagina era salvata sul tuo dispositivo"
   },
   "verification": {
     "meta": {

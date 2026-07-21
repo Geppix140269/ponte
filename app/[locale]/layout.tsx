@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -6,6 +6,9 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import "../globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import BottomNav from "@/components/BottomNav";
+import InstallPrompt from "@/components/InstallPrompt";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { isRtl, locales, type Locale } from "@/i18n/routing";
 import { alternatesFor, APP_URL } from "@/lib/seo";
 
@@ -35,6 +38,19 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+// viewportFit "cover" is what lets the page run edge to edge under a notch and
+// a home indicator once installed. It is only safe because every fixed element
+// pads itself with env(safe-area-inset-*): see the bottom bar rules in
+// globals.css. themeColor paints the Android status bar and the iOS splash to
+// match the page, so an installed launch has no white flash.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#07101B",
+  colorScheme: "dark",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -50,6 +66,19 @@ export async function generateMetadata({
     },
     description: t("siteDescription"),
     alternates: alternatesFor("/", params.locale),
+    manifest: "/manifest.webmanifest",
+    // Installed on iOS: no Safari chrome, and the status bar runs over the
+    // page. The header reserves that strip through a display-mode rule in
+    // globals.css.
+    appleWebApp: {
+      capable: true,
+      title: "Ponte",
+      statusBarStyle: "black-translucent",
+    },
+    // No icons block here on purpose. app/icon.png and app/apple-icon.png
+    // already drive the link tags through Next's file convention, and the
+    // apple icon is the 180x180 iOS wants. Declaring icons in metadata would
+    // override that convention rather than add to it.
     openGraph: {
       title: t("siteTitle"),
       description: t("ogDescription"),
@@ -118,7 +147,12 @@ export default async function LocaleLayout({
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
+          {/* Mobile only. The room they need at the foot of the page is
+              reserved by a body rule in globals.css, not by a spacer here. */}
+          <BottomNav />
+          <InstallPrompt />
         </NextIntlClientProvider>
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

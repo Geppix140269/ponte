@@ -1,0 +1,13 @@
+{
+  "pwa": {
+    "installTitle": "Add Ponte to your home screen",
+    "installBody": "Open the board and post from your phone, with no browser in the way.",
+    "installAction": "Install",
+    "installDismiss": "Not now",
+    "iosBody": "Tap the share button in Safari, then choose Add to Home Screen.",
+    "offlineTitle": "You are offline",
+    "offlineBody": "Ponte needs a connection to show live listings and to run a verification. Nothing you were doing has been lost. Reconnect and carry on.",
+    "offlineRetry": "Try again",
+    "offlineHint": "This page was saved on your device"
+  }
+}

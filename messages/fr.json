@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · nom commercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Place de marché vérifiée et gratuite pour le commerce de marchandises",
-    "metaDescription": "Publiez une offre ou un besoin sur un tableau commercial vérifié et gratuit. Restez anonyme jusqu’à l’accord des deux parties, puis entrez en relation directe. L’appui du desk est optionnel, sur commission de réussite ou forfait mensuel.",
+    "metaTitle": "Commerce transfrontalier de marchandises physiques, entre contreparties vérifiées",
+    "metaDescription": "Ponte est un tableau vérifié pour le commerce transfrontalier de marchandises physiques. Les offres et les besoins sont rédigés en termes commerciaux, diffusés anonymement, et aucune mise en relation n'a lieu avant la signature d'un NCNDA. Les membres sont criblés au regard de Companies House, VIES, GLEIF et des listes OFAC, UE, ONU et OFSI.",
     "hero": {
-      "title": "Vendez-le. Trouvez-le.",
-      "titleAccent": "Conclu."
+      "eyebrow": "Tableau commercial vérifié",
+      "title": "Commerce transfrontalier de marchandises physiques,",
+      "titleAccent": "entre contreparties vérifiées.",
+      "lead": "Les offres et les besoins sont rédigés comme se rédige une affaire : quantité et unité, incoterm, origine et destination, conditions de paiement, code HS. Les annonces circulent anonymement, et aucune mise en relation n'a lieu tant que les deux parties n'ont pas donné leur accord et signé un NCNDA.",
+      "cta": "Publiez une offre ou un besoin",
+      "secondary": "Voir le tableau"
     },
-    "trust": {
-      "vetted": "Vérifié",
-      "ncnda": "NCNDA d’abord",
-      "successFee": "Commission uniquement en cas de réussite"
+    "proof": {
+      "eyebrow": "Vérification des contreparties",
+      "heading": "Les membres sont contrôlés au regard de sources publiques nommées.",
+      "lead": "Une vérification consulte les sources ci-dessous, consigne ce que chacune a renvoyé et consigne la date de la consultation. Une source injoignable est signalée comme non vérifiée, jamais comme conforme.",
+      "registriesLabel": "Registres et identifiants",
+      "sanctionsLabel": "Listes de sanctions criblées",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "Extrait du registre, statut de la société et dirigeants"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "Numéro de TVA validé à la source"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "Identifiant d'entité juridique, lorsqu'il existe"
+      },
+      "s1": {
+        "name": "Listes SDN et Consolidated de l'OFAC",
+        "note": "Département du Trésor des États-Unis"
+      },
+      "s2": {
+        "name": "Liste consolidée des sanctions financières de l'UE",
+        "note": "Union européenne"
+      },
+      "s3": {
+        "name": "Liste récapitulative du Conseil de sécurité de l'ONU",
+        "note": "Nations unies"
+      },
+      "s4": {
+        "name": "Liste consolidée de l'OFSI du Royaume-Uni",
+        "note": "HM Treasury, cibles de sanctions financières"
+      },
+      "refresh": "Le criblage n'est pas un acte unique. Lorsque ces listes évoluent, les membres déjà vérifiés sont criblés de nouveau au regard des listes mises à jour, et une nouvelle correspondance rouvre le dossier.",
+      "caveat": "Une vérification consigne ce qu'une source nommée a publié le jour de sa consultation. C'est une preuve d'identité et de situation, non une garantie de bonne exécution.",
+      "link": "Ce que contrôle chaque niveau"
     },
-    "sell": {
-      "titleLine1": "J’ai quelque chose",
-      "titleLine2": "à vendre",
-      "body": "Publiez en 3 clics. Photos, vidéos, terminé.",
-      "cta": "Publier l’offre"
+    "shape": {
+      "eyebrow": "Ce qui se traite ici",
+      "heading": "Les affaires sont rédigées en termes commerciaux.",
+      "lead": "Chaque annonce porte les mêmes champs : code HS, quantité et unité, incoterm, origine et destination, conditions de paiement, le rôle de la contrepartie dans l'affaire, et le nombre d'intermédiaires qui la séparent du principal.",
+      "sampleLabel": "Exemples de format. Ils montrent comment une affaire est rédigée sur Ponte. Ce ne sont pas des annonces en ligne et aucun volume n'est sous-entendu.",
+      "cta": "Voir le tableau",
+      "type": {
+        "offer": "Offre",
+        "requirement": "Besoin"
+      },
+      "fields": {
+        "hs": "Code HS",
+        "incoterm": "Incoterm",
+        "corridor": "Corridor",
+        "corridorValue": "{from} vers {to}",
+        "payment": "Paiement",
+        "role": "Rôle"
+      },
+      "e1": {
+        "product": "Sucre blanc raffiné, ICUMSA 45",
+        "quantity": "25 000 MT",
+        "frequency": "Un embarquement",
+        "payment": "Crédit documentaire irrévocable à vue, confirmé",
+        "role": "Société de négoce détenant la propriété"
+      },
+      "e2": {
+        "product": "Urée 46 %, granulée",
+        "quantity": "12 000 MT",
+        "frequency": "Mensuel, douze mois",
+        "payment": "Crédit documentaire à vue contre documents d'expédition",
+        "role": "Acheteur final"
+      },
+      "e3": {
+        "product": "Lingot d'aluminium A7, 99,7 %",
+        "quantity": "1 000 MT",
+        "frequency": "Mensuel, reconductible",
+        "payment": "30 % d'acompte, solde contre documents",
+        "role": "Producteur, en direct"
+      }
     },
-    "source": {
-      "titleLine1": "Je cherche",
-      "titleLine2": "un produit",
-      "body": "Dites au desk ce que vous cherchez. Le réseau répond.",
-      "cta": "Publier la demande"
+    "flow": {
+      "eyebrow": "Comment une affaire avance",
+      "heading": "Contrats signés avant toute mise en relation."
     },
-    "board": {
-      "link": "Voir le tableau en direct"
-    },
-    "process": {
-      "eyebrow": "Comment ça marche"
-    },
-    "closing": {
-      "title": "Contrats signés avant toute mise en relation. Payé uniquement en cas de réussite.",
-      "postDeal": "Publier une affaire",
-      "seeBoard": "Voir le tableau"
+    "desk": {
+      "eyebrow": "Le desk",
+      "heading": "Le tableau est gratuit. Le desk est optionnel.",
+      "free": {
+        "title": "La place de marché",
+        "terms": "Gratuit, pour tous les membres",
+        "body": "Publier une offre ou un besoin, passer la vérification, consulter le tableau et entrer en relation avec une contrepartie ne coûte rien. Les affaires que vous concluez entre vous ne portent aucune commission.",
+        "cta": "Publiez une offre ou un besoin"
+      },
+      "mandate": {
+        "title": "Le desk",
+        "terms": "Commission de réussite ou forfait mensuel",
+        "body": "Si vous souhaitez que l'affaire soit menée pour vous, le desk prend en charge la vérification approfondie, le NCNDA, la négociation, le contrat et la coordination du closing. Les conditions sont arrêtées par écrit avant tout travail, et une commission de réussite n'est due qu'à la conclusion de l'affaire.",
+        "cta": "Voir les tarifs"
+      },
+      "currency": "Tous les honoraires sont libellés et réglés en USD."
     }
   },
   "legal": {
@@ -515,11 +590,16 @@
       "signInFull": "Se connecter pour voir les annonces complètes",
       "empty": "Le tableau ouvrira dès que les premières annonces auront été validées par le desk. Les soumissions sont ouvertes dès maintenant, et les premières annonces recevront le plus d’attention à l’ouverture.",
       "signInToRespond": "Se connecter pour répondre",
-      "signInToRead": "Connectez-vous pour lire l’annonce complète."
-    },
-    "card": {
-      "origin": "Origine : {value}",
-      "destination": "Destination : {value}"
+      "signInToRead": "Connectez-vous pour lire l’annonce complète.",
+      "headingLive": "Annonces vérifiées, en direct sur le tableau.",
+      "open": "Ouvrir l’annonce {ref}",
+      "columns": {
+        "quantity": "Quantité",
+        "terms": "Conditions",
+        "corridor": "Corridor",
+        "product": "Produit et référence",
+        "posted": "Publiée"
+      }
     },
     "ai": {
       "label": "Votre gestionnaire de compte",
@@ -579,7 +659,31 @@
       "interested": "Cette annonce m’intéresse",
       "shareWhatsApp": "Partager sur WhatsApp",
       "shareText": "{product} · annonce vérifiée {ref} sur Ponte",
-      "footer": "Vous avez vous-même quelque chose à vendre ou à sourcer ? <link>Construisez votre annonce en trois étapes</link>, aucun compte n’est requis avant la publication."
+      "footer": "Vous avez vous-même quelque chose à vendre ou à sourcer ? <link>Construisez votre annonce en trois étapes</link>, aucun compte n’est requis avant la publication.",
+      "terms": {
+        "heading": "Conditions commerciales",
+        "quantity": "Quantité",
+        "unit": "Unité",
+        "incoterm": "Incoterm",
+        "origin": "Origine",
+        "destination": "Destination",
+        "payment": "Conditions de paiement",
+        "hsCode": "Code HS",
+        "frequency": "Fréquence",
+        "timing": "Délais",
+        "role": "Rôle de la contrepartie",
+        "chain": "Position dans la chaîne",
+        "posted": "Publiée"
+      },
+      "verificationLink": "Ce que vérifie chaque niveau"
+    },
+    "notStated": "non précisé",
+    "trust": {
+      "none": "Non vérifié",
+      "level1": "Identité vérifiée",
+      "level2": "Entreprise vérifiée",
+      "level3": "Activité vérifiée",
+      "level4": "Institutionnel"
     }
   },
   "meta": {
@@ -594,7 +698,13 @@
     "fees": "Tarifs",
     "contact": "Contact",
     "account": "Compte",
-    "menuAriaLabel": "Menu"
+    "menuAriaLabel": "Menu",
+    "marketplaceShort": "Marché",
+    "home": "Accueil",
+    "post": "Publier",
+    "postAriaLabel": "Publier une annonce",
+    "verify": "Vérifier",
+    "primaryAriaLabel": "Navigation principale"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Publier",
-        "micro": "Votre affaire, gratuit"
+        "label": "Déposée",
+        "micro": "Offre ou besoin, gratuit"
       },
       "vet": {
-        "label": "Vérifier",
-        "micro": "L’IA contrôle, le desk valide"
+        "label": "Vérifiée",
+        "micro": "Par le desk, avant diffusion"
       },
       "match": {
-        "label": "Rapprocher",
-        "micro": "Anonyme sur le tableau"
+        "label": "Diffusée",
+        "micro": "Anonymement, sur le tableau"
       },
       "connect": {
-        "label": "Mettre en relation",
-        "micro": "Accord des deux, gratuit"
+        "label": "Mise en relation",
+        "micro": "NCNDA signé, puis présentation"
       },
       "close": {
-        "label": "Conclure",
+        "label": "Closing",
         "micro": "Desk optionnel, sur commission"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "Ajoutez Ponte à votre écran d'accueil",
+    "installBody": "Consultez le tableau et publiez depuis votre téléphone, sans navigateur entre les deux.",
+    "installAction": "Installer",
+    "installDismiss": "Pas maintenant",
+    "iosBody": "Touchez le bouton de partage dans Safari, puis choisissez Sur l'écran d'accueil.",
+    "offlineTitle": "Vous êtes hors ligne",
+    "offlineBody": "Ponte a besoin d'une connexion pour afficher les annonces en direct et pour lancer une vérification. Rien de ce que vous faisiez n'a été perdu. Reconnectez-vous et poursuivez.",
+    "offlineRetry": "Réessayer",
+    "offlineHint": "Cette page était enregistrée sur votre appareil"
   },
   "verification": {
     "meta": {

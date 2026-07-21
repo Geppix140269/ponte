@@ -8,6 +8,20 @@ import { createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
 import { translateListing } from "@/lib/ai-vet";
 import { alternatesFor } from "@/lib/seo";
+import {
+  corridorEnd,
+  extractTiming,
+  formatPosted,
+  formatQuantity,
+  labelFor,
+  parseVolume,
+  verificationKey,
+  CHAIN_KEYS,
+  FREQUENCY_KEYS,
+  ROLE_KEYS,
+  TIMING_KEYS,
+  UNIT_KEYS,
+} from "@/lib/listing-terms";
 import type { Locale } from "@/i18n/routing";
 
 // Languages a reader can flip the listing into. Each listing/language pair
@@ -31,25 +45,34 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ponte.trade";
 
 type Deal = {
   id: string;
+  user_id: string;
   ref: string;
   type: string;
   product: string;
+  hs_code: string | null;
   origin: string | null;
   destination: string | null;
   volume: string | null;
   incoterm: string | null;
+  submitter_role: string | null;
+  chain_depth: string | null;
   details: string;
+  created_at: string;
 };
 
 // Public, shareable page for ONE approved listing. This is the link members
 // forward on WhatsApp: OG tags carry the product photo and teaser, and the
 // page converts visitors into members. Anything not approved 404s.
-async function getDeal(ref: string): Promise<{ deal: Deal; image: string | null } | null> {
+async function getDeal(
+  ref: string,
+): Promise<{ deal: Deal; image: string | null; trustLevel: number | null } | null> {
   if (!isSupabaseConfigured()) return null;
   const adminSb = createAdminClient();
   const { data } = await adminSb
     .from("listings")
-    .select("id, ref, type, product, origin, destination, volume, incoterm, details")
+    .select(
+      "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, submitter_role, chain_depth, details, created_at",
+    )
     .eq("ref", ref.toUpperCase())
     .eq("status", "approved")
     .maybeSingle();
@@ -65,7 +88,22 @@ async function getDeal(ref: string): Promise<{ deal: Deal; image: string | null 
   const image = media?.[0]
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-media/${media[0].path}`
     : null;
-  return { deal: data as Deal, image };
+
+  // The counterparty stays anonymous. Their verification level does not
+  // identify them, and it is the fact that decides whether to spend time here.
+  // No answer means unknown, which is not the same as unverified, so the
+  // badge is left off rather than made up.
+  const { data: profile } = await adminSb
+    .from("profiles")
+    .select("verification_level")
+    .eq("id", data.user_id)
+    .maybeSingle();
+
+  return {
+    deal: data as Deal,
+    image,
+    trustLevel: profile ? Number(profile.verification_level ?? 0) : null,
+  };
 }
 
 function teaser(details: string, max = 160): string {
@@ -166,11 +204,14 @@ export default async function DealPage({
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("marketplace");
+  // The option labels the member picked in the listing form, in the reader's
+  // language. Same source, so the page cannot drift from the form.
+  const tf = await getTranslations("listingForm");
   const locale = await getLocale();
 
   const res = await getDeal(params.ref);
   if (!res) notFound();
-  const { deal, image } = res;
+  const { deal, image, trustLevel } = res;
   const user = await getUser();
 
   // Optional reader language: the listing shown in THEIR language.
@@ -195,6 +236,56 @@ export default async function DealPage({
   const shareText = `${t("detail.shareText", { product: deal.product, ref: deal.ref })}\n${APP_URL}/marketplace/l/${deal.ref}`;
   const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
+  // ---- The trade terms, as a trader would ask for them ----------------
+  // Timing is read out of the ORIGINAL details, never the translation: the
+  // listing form writes that line in English on every listing.
+  const vol = parseVolume(deal.volume);
+  const from = corridorEnd(deal.origin);
+  const to = corridorEnd(deal.destination);
+  const place = (end: { code: string | null; text: string | null }) =>
+    end.text ? (end.code ? `${end.text} (${end.code})` : end.text) : null;
+
+  const terms: { label: string; value: string | null; mono?: boolean }[] = [
+    {
+      label: t("detail.terms.quantity"),
+      value: vol.quantity
+        ? vol.quantityNumeric !== null
+          ? formatQuantity(vol.quantityNumeric, locale)
+          : vol.quantity
+        : null,
+      mono: true,
+    },
+    { label: t("detail.terms.unit"), value: labelFor(vol.unit, UNIT_KEYS, tf), mono: true },
+    { label: t("detail.terms.incoterm"), value: deal.incoterm, mono: true },
+    { label: t("detail.terms.origin"), value: place(from) },
+    { label: t("detail.terms.destination"), value: place(to) },
+    // No column carries payment terms today, so this is honestly empty
+    // rather than filled from the free text and hoped for.
+    { label: t("detail.terms.payment"), value: null },
+    { label: t("detail.terms.hsCode"), value: deal.hs_code, mono: true },
+    {
+      label: t("detail.terms.frequency"),
+      value: labelFor(vol.frequency, FREQUENCY_KEYS, tf),
+    },
+    {
+      label: t("detail.terms.timing"),
+      value: labelFor(extractTiming(deal.details), TIMING_KEYS, tf),
+    },
+    {
+      label: t("detail.terms.role"),
+      value: labelFor(deal.submitter_role, ROLE_KEYS, tf),
+    },
+    {
+      label: t("detail.terms.chain"),
+      value: labelFor(deal.chain_depth, CHAIN_KEYS, tf),
+    },
+    {
+      label: t("detail.terms.posted"),
+      value: formatPosted(deal.created_at, locale) || null,
+      mono: true,
+    },
+  ];
+
   return (
     <>
       <header className="container-px pt-14 pb-8 md:pt-20">
@@ -213,34 +304,146 @@ export default async function DealPage({
 
       <section className="container-px pb-24">
         <div className="glass max-w-3xl p-6 md:p-8">
-          {image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt={deal.product}
-              className="mb-6 h-64 w-full rounded-xl object-cover"
-            />
-          )}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span
+              className="badge"
+              style={
+                deal.type === "offer"
+                  ? { background: "var(--gold)", color: "#0D1B2A", fontWeight: 600 }
+                  : deal.type === "requirement"
+                    ? { border: "1px solid rgba(245,240,232,0.5)", color: "#F5F0E8" }
+                    : { border: "1px solid rgba(255,255,255,0.18)", color: "#9CA3AF" }
+              }
+            >
+              {typeLabel(t, deal.type)}
+            </span>
             <span className="mono text-[12px] text-gold">{deal.ref}</span>
-            <span className="badge uppercase">{typeLabel(t, deal.type)}</span>
           </div>
-          <p className="mono mt-3 text-[12px] leading-relaxed text-gray-2">
-            {[
-              deal.origin && t("card.origin", { value: deal.origin }),
-              deal.destination && t("card.destination", { value: deal.destination }),
-              deal.volume,
-              deal.incoterm,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+
+          {/* The trade line: the same four facts the board row leads with. */}
+          <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-3">
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              {vol.quantity ? (
+                <>
+                  <span
+                    className="mono tabular-nums text-cream"
+                    style={{ fontSize: 30, letterSpacing: "-0.02em" }}
+                  >
+                    {vol.quantityNumeric !== null
+                      ? formatQuantity(vol.quantityNumeric, locale)
+                      : vol.quantity}
+                  </span>
+                  {vol.unit && (
+                    <span className="mono text-[14px] text-gray-2">
+                      {labelFor(vol.unit, UNIT_KEYS, tf)}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-[14px] text-gray-2/55">{t("notStated")}</span>
+              )}
+            </span>
+            {deal.incoterm && (
+              <span
+                className="mono inline-flex items-center rounded-[6px] px-2.5 py-1 text-[13px] text-gold"
+                style={{
+                  background: "rgba(201,151,58,0.12)",
+                  border: "1px solid rgba(201,151,58,0.4)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {deal.incoterm}
+              </span>
+            )}
+            <span
+              dir="ltr"
+              className="flex flex-wrap items-center gap-x-2 gap-y-1"
+              title={[from.text, to.text].filter(Boolean).join(" > ")}
+            >
+              {from.code ? (
+                <span className="mono text-[16px] text-cream">{from.code}</span>
+              ) : from.text ? (
+                <span className="text-[14px] text-cream">{from.text}</span>
+              ) : (
+                <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
+              )}
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-gold/70" />
+              {to.code ? (
+                <span className="mono text-[16px] text-cream">{to.code}</span>
+              ) : to.text ? (
+                <span className="text-[14px] text-cream">{to.text}</span>
+              ) : (
+                <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
+              )}
+            </span>
+          </div>
+
+          {/* Specification. Every term the desk holds, stated or not stated. */}
+          <p
+            className="mt-7 text-[10px] uppercase text-gray-2/70"
+            style={{ letterSpacing: "0.18em" }}
+          >
+            {t("detail.terms.heading")}
           </p>
-          <p className="mt-4 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-2">
+          <dl className="mt-1 grid grid-cols-2 gap-x-6 sm:grid-cols-3">
+            {terms.map((row) => (
+              <div key={row.label} className="border-t border-white/10 py-3">
+                <dt
+                  className="text-[10px] uppercase text-gray-2/70"
+                  style={{ letterSpacing: "0.14em" }}
+                >
+                  {row.label}
+                </dt>
+                <dd
+                  className={
+                    row.value
+                      ? `mt-1 text-[14px] leading-snug text-cream ${row.mono ? "mono tabular-nums" : ""}`
+                      : "mt-1 text-[13px] leading-snug text-gray-2/55"
+                  }
+                >
+                  {row.value ?? t("notStated")}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          {/* Who is on the other side, to the extent it can be said. */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/10 pt-4">
+            {trustLevel !== null && (
+              <span
+                className={`inline-flex items-center gap-1.5 text-[11px] uppercase ${trustLevel > 0 ? "text-cream" : "text-gray-2/70"}`}
+                style={{ letterSpacing: "0.14em" }}
+              >
+                <ShieldCheck
+                  className={`h-3.5 w-3.5 ${trustLevel > 0 ? "text-gold" : "text-gray-2/50"}`}
+                />
+                {t(verificationKey(trustLevel))}
+              </span>
+            )}
+            <Link
+              href="/verification"
+              className="text-[12px] text-gold hover:text-cream"
+            >
+              {t("detail.verificationLink")}
+            </Link>
+          </div>
+
+          <p className="mt-6 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-2">
             {user ? shownDetails : teaser(shownDetails)}
             {!user && (
               <span className="ml-2 text-gold">{t("detail.signInToRead")}</span>
             )}
           </p>
+
+          {image && (
+            // The photo is context, not the decision. It sits under the terms.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={deal.product}
+              className="mt-5 h-40 w-full rounded-xl object-cover md:w-2/3"
+            />
+          )}
 
           {/* Read it in your language */}
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-white/10 pt-4">

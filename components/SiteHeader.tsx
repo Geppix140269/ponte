@@ -8,11 +8,19 @@ import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 // One nav, one story: the marketplace, what it costs, how to reach the desk.
+//
+// inBottomNav marks the links the mobile bottom bar already owns. They stay in
+// the desktop header, where there is no bottom bar, and drop out of the mobile
+// drawer. Offering the same destination twice on one screen is what makes a
+// phone feel like a shrunken desktop, and it also makes the drawer look like
+// the real navigation when it is not.
 const navLinks = [
-  { href: "/marketplace", key: "marketplace" },
-  { href: "/pricing", key: "fees" },
-  { href: "/contact", key: "contact" },
+  { href: "/marketplace", key: "marketplace", inBottomNav: true },
+  { href: "/pricing", key: "fees", inBottomNav: false },
+  { href: "/contact", key: "contact", inBottomNav: false },
 ] as const;
+
+const drawerLinks = navLinks.filter((link) => !link.inBottomNav);
 
 export default function SiteHeader() {
   const pathname = usePathname();
@@ -49,7 +57,7 @@ export default function SiteHeader() {
           <LanguageSwitcher />
           <Link
             href="/account"
-            className="hidden rounded-full p-2 text-gray-2 hover:bg-white/5 hover:text-gold sm:inline-flex"
+            className="hidden rounded-full p-2 text-gray-2 hover:bg-white/5 hover:text-gold md:inline-flex"
             aria-label={t("account")}
           >
             <User className="h-5 w-5" />
@@ -69,7 +77,7 @@ export default function SiteHeader() {
       {open && (
         <div className="border-t border-white/10 bg-[rgba(7,16,27,0.85)] md:hidden">
           <div className="container-px flex flex-col py-3">
-            {navLinks.map((link) => (
+            {drawerLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -79,13 +87,6 @@ export default function SiteHeader() {
                 {t(link.key)}
               </Link>
             ))}
-            <Link
-              href="/account"
-              className="py-2.5 text-sm uppercase text-cream"
-              style={{ letterSpacing: "0.18em" }}
-            >
-              {t("account")}
-            </Link>
             <div className="py-2.5">
               <LanguageSwitcher />
             </div>

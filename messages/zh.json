@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · 1402 Celsius Ltd 的商号 · ponte.trade"
   },
   "home": {
-    "metaTitle": "面向实物贸易的免费已审核交易市场",
-    "metaDescription": "在免费的已审核贸易看板上发布供应或求购信息。在双方同意之前保持匿名，之后直接建立联系。交易台支持为可选项，按成交佣金或顾问月费计费。",
+    "metaTitle": "实物货物的跨境贸易，在经核验的交易对手之间",
+    "metaDescription": "Ponte 是面向实物货物跨境贸易的已审核交易看板。供应与求购按贸易条款书写，匿名流转，在签署 NCNDA 之前不作任何引荐。会员会对照 Companies House、VIES、GLEIF 以及 OFAC、欧盟、联合国和 OFSI 名单进行筛查。",
     "hero": {
-      "title": "卖出货物。找到货源。",
-      "titleAccent": "成交。"
+      "eyebrow": "已审核贸易看板",
+      "title": "实物货物的跨境贸易，",
+      "titleAccent": "在经核验的交易对手之间。",
+      "lead": "供应与求购按贸易的写法书写：数量与单位、incoterm、起运地与目的地、付款条件、HS 编码。挂牌信息匿名流转，在双方同意并签署 NCNDA 之前，不作任何引荐。",
+      "cta": "发布供应或求购",
+      "secondary": "查看看板"
     },
-    "trust": {
-      "vetted": "已审核",
-      "ncnda": "先签 NCNDA",
-      "successFee": "成交才收费"
+    "proof": {
+      "eyebrow": "交易对手核验",
+      "heading": "会员对照具名的公开来源进行核查。",
+      "lead": "一次核验会读取下列来源，记录每一个来源返回的内容，并记录读取日期。无法访问的来源报告为未核查，绝不报告为无风险。",
+      "registriesLabel": "登记机构与识别码",
+      "sanctionsLabel": "已筛查的制裁名单",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "登记记录、公司状态与董事"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "增值税号在来源端验证"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "法人识别编码，若已持有"
+      },
+      "s1": {
+        "name": "OFAC SDN 与 Consolidated 名单",
+        "note": "美国财政部"
+      },
+      "s2": {
+        "name": "欧盟金融制裁统一名单",
+        "note": "欧洲联盟"
+      },
+      "s3": {
+        "name": "联合国安理会统一名单",
+        "note": "联合国"
+      },
+      "s4": {
+        "name": "英国 OFSI 统一名单",
+        "note": "HM Treasury，金融制裁对象"
+      },
+      "refresh": "筛查不是一次性的事。这些名单变更时，已核验的会员会按更新后的名单重新筛查，出现新的疑似匹配即重新开卷。",
+      "caveat": "核验记录的是具名来源在读取当日所公布的内容。它是身份与存续状态的证据，不是履约的保证。",
+      "link": "各级别核查什么"
     },
-    "sell": {
-      "titleLine1": "我有商品",
-      "titleLine2": "要出售",
-      "body": "三次点击即可发布。照片、视频，完成。",
-      "cta": "发布供应信息"
+    "shape": {
+      "eyebrow": "这里流转什么",
+      "heading": "交易按贸易条款书写。",
+      "lead": "每一条挂牌都带同样的字段：HS 编码、数量与单位、incoterm、起运地与目的地、付款条件、交易对手在这笔交易中的角色，以及其与委托方之间有几层中间商。",
+      "sampleLabel": "格式示例。它们展示在 Ponte 上如何书写一笔交易，并非在线挂牌，也不暗示任何成交量。",
+      "cta": "查看看板",
+      "type": {
+        "offer": "供应",
+        "requirement": "求购"
+      },
+      "fields": {
+        "hs": "HS 编码",
+        "incoterm": "Incoterm",
+        "corridor": "贸易走廊",
+        "corridorValue": "{from} 至 {to}",
+        "payment": "付款",
+        "role": "角色"
+      },
+      "e1": {
+        "product": "精炼白砂糖，ICUMSA 45",
+        "quantity": "25,000 MT",
+        "frequency": "单批装运",
+        "payment": "不可撤销即期信用证，保兑",
+        "role": "持有货权的贸易公司"
+      },
+      "e2": {
+        "product": "尿素 46%，颗粒",
+        "quantity": "12,000 MT",
+        "frequency": "按月，十二个月",
+        "payment": "即期信用证，凭装运单据付款",
+        "role": "最终买家"
+      },
+      "e3": {
+        "product": "铝锭 A7，99.7%",
+        "quantity": "1,000 MT",
+        "frequency": "按月，滚动",
+        "payment": "预付 30%，余款凭单据支付",
+        "role": "生产商，直接"
+      }
     },
-    "source": {
-      "titleLine1": "我需要",
-      "titleLine2": "一种商品",
-      "body": "告诉交易台你在采购什么。网络会给出回应。",
-      "cta": "发布求购信息"
+    "flow": {
+      "eyebrow": "一笔交易如何推进",
+      "heading": "先签文件，后作引荐。"
     },
-    "board": {
-      "link": "查看实时看板"
-    },
-    "process": {
-      "eyebrow": "运作方式"
-    },
-    "closing": {
-      "title": "先签文件，后作介绍。成交才付费。",
-      "postDeal": "发布交易",
-      "seeBoard": "查看看板"
+    "desk": {
+      "eyebrow": "交易台",
+      "heading": "看板免费。交易台可选。",
+      "free": {
+        "title": "交易市场",
+        "terms": "免费，对每一位会员",
+        "body": "发布供应或求购、通过审核、查看看板并与交易对手建立联系，均不收费。双方自行成交的交易不收取佣金。",
+        "cta": "发布供应或求购"
+      },
+      "mandate": {
+        "title": "交易台",
+        "terms": "成交佣金或按月顾问费",
+        "body": "若您希望由我们代为推进交易，交易台承担深度核验、NCNDA、谈判、合同与交割协调。条件在任何工作开始前以书面约定，成交佣金仅在交易成交时到期应付。",
+        "cta": "查看费用"
+      },
+      "currency": "所有费用均以 USD 报价并结算。"
     }
   },
   "legal": {
@@ -515,11 +590,16 @@
       "signInFull": "登录查看完整挂牌信息",
       "empty": "首批挂牌信息通过交易台审核后，看板即会开放。现在已开放提交，看板上线时最早的挂牌信息会获得最多关注。",
       "signInToRespond": "登录后回应",
-      "signInToRead": "登录后阅读完整挂牌信息。"
-    },
-    "card": {
-      "origin": "产地：{value}",
-      "destination": "目的地：{value}"
+      "signInToRead": "登录后阅读完整挂牌信息。",
+      "headingLive": "看板上的已审核挂牌信息。",
+      "open": "打开挂牌信息 {ref}",
+      "columns": {
+        "quantity": "数量",
+        "terms": "条款",
+        "corridor": "贸易走廊",
+        "product": "商品与编号",
+        "posted": "发布时间"
+      }
     },
     "ai": {
       "label": "你的客户经理",
@@ -579,7 +659,31 @@
       "interested": "我有意向",
       "shareWhatsApp": "分享到 WhatsApp",
       "shareText": "{product} · Ponte 上的已审核挂牌信息 {ref}",
-      "footer": "你自己也有东西要卖或要采购？<link>三步构建你的挂牌信息</link>，发布前无需账户。"
+      "footer": "你自己也有东西要卖或要采购？<link>三步构建你的挂牌信息</link>，发布前无需账户。",
+      "terms": {
+        "heading": "交易条款",
+        "quantity": "数量",
+        "unit": "单位",
+        "incoterm": "Incoterm",
+        "origin": "产地",
+        "destination": "目的地",
+        "payment": "付款条件",
+        "hsCode": "HS 编码",
+        "frequency": "频次",
+        "timing": "时间安排",
+        "role": "交易对手角色",
+        "chain": "在链条中的位置",
+        "posted": "发布时间"
+      },
+      "verificationLink": "每个级别核查什么"
+    },
+    "notStated": "未说明",
+    "trust": {
+      "none": "未验证",
+      "level1": "身份已验证",
+      "level2": "企业已验证",
+      "level3": "经营活动已验证",
+      "level4": "机构级"
     }
   },
   "meta": {
@@ -594,7 +698,13 @@
     "fees": "费用",
     "contact": "联系",
     "account": "账户",
-    "menuAriaLabel": "菜单"
+    "menuAriaLabel": "菜单",
+    "marketplaceShort": "市场",
+    "home": "首页",
+    "post": "发布",
+    "postAriaLabel": "发布一条挂牌信息",
+    "verify": "核验",
+    "primaryAriaLabel": "主导航"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "发布",
-        "micro": "你的交易，免费"
+        "label": "已提交",
+        "micro": "供应或求购，免费"
       },
       "vet": {
-        "label": "审核",
-        "micro": "AI 检查，交易台批准"
+        "label": "已审核",
+        "micro": "由交易台审核，流转之前"
       },
       "match": {
-        "label": "匹配",
-        "micro": "在看板上匿名"
+        "label": "已流转",
+        "micro": "匿名，在看板上"
       },
       "connect": {
-        "label": "联系",
-        "micro": "双方同意，免费"
+        "label": "已对接",
+        "micro": "先签 NCNDA，再作引荐"
       },
       "close": {
-        "label": "成交",
-        "micro": "交易台可选，按佣金计"
+        "label": "交割",
+        "micro": "交易台可选，按佣金"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "将 Ponte 添加到主屏幕",
+    "installBody": "在手机上直接打开交易板并发布信息，无需经过浏览器。",
+    "installAction": "安装",
+    "installDismiss": "暂不",
+    "iosBody": "在 Safari 中点按分享按钮，然后选择“添加到主屏幕”。",
+    "offlineTitle": "你已离线",
+    "offlineBody": "Ponte 需要网络连接才能显示实时挂牌信息并执行核验。你正在做的事没有丢失。恢复连接后即可继续。",
+    "offlineRetry": "重试",
+    "offlineHint": "此页面已保存在你的设备上"
   },
   "verification": {
     "meta": {

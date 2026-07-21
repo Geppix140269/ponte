@@ -406,3 +406,182 @@ select option {
   background-color: #0F1E3C;
   color: #F5EFE2;
 }
+
+/* ======================================================================
+   Installed app, and the mobile bottom bar.
+
+   Everything here is written with logical properties, inset-inline rather
+   than left and right, so Arabic gets a correct mirror for free. The gold
+   indicator slides to the other end of the bar in an RTL layout without a
+   single direction specific rule.
+   ====================================================================== */
+
+:root {
+  --bottom-nav-h: 58px;
+}
+
+/* Room for the bar, plus whatever the phone reserves for its own home
+   indicator. Without this the last row of the board sits under the glass and
+   cannot be tapped. */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Installed on iOS the status bar is translucent and the page runs underneath
+   it, which is most of what makes an installed app feel native rather than
+   like a browser tab. The header has to reserve that strip itself, or the
+   logo sits under the clock. */
+@media (display-mode: standalone) {
+  .nav-glass {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  body {
+    /* No rubber band bounce revealing white behind the page. */
+    overscroll-behavior-y: none;
+  }
+}
+
+.bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 60;
+  background: rgba(7, 16, 27, 0.86);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transition: transform 0.34s cubic-bezier(0.2, 0.7, 0.3, 1);
+  -webkit-touch-callout: none;
+}
+
+.bottom-nav[data-hidden="true"] {
+  transform: translateY(100%);
+}
+
+/*
+ * One fifth of the bar, parked over the active slot, and the only gold on this
+ * edge. A gold hairline ran the full width here first and the two cancelled
+ * each other out: a strip that is gold everywhere says nothing about where you
+ * are. Gold is the signal colour in this brand, so it gets spent once.
+ */
+.bottom-nav-indicator {
+  position: absolute;
+  top: 0;
+  inset-inline-start: calc(var(--slot, 0) * 20%);
+  width: 20%;
+  height: 3px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gold) 18%,
+    var(--gold) 82%,
+    transparent
+  );
+  transition:
+    inset-inline-start 0.4s cubic-bezier(0.2, 0.8, 0.25, 1),
+    opacity 0.2s ease;
+}
+.bottom-nav-indicator[data-visible="true"] {
+  opacity: 1;
+}
+.bottom-nav-indicator::after {
+  content: "";
+  position: absolute;
+  inset-inline: 14%;
+  top: 0;
+  height: 22px;
+  background: radial-gradient(
+    ellipse at top,
+    rgba(201, 151, 58, 0.34),
+    transparent 72%
+  );
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: var(--bottom-nav-h);
+  color: var(--gray-2);
+  transition:
+    color 0.2s ease,
+    transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav-item:active {
+  transform: scale(0.93);
+}
+.bottom-nav-item[data-active="true"] {
+  color: var(--gold);
+}
+
+.bottom-nav-icon {
+  position: relative;
+  display: inline-flex;
+}
+.bottom-nav-item[data-active="true"] .bottom-nav-icon::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(201, 151, 58, 0.22),
+    transparent 70%
+  );
+}
+
+.bottom-nav-label {
+  max-width: 100%;
+  padding-inline: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* The one action that puts something into the market. Solid gold, flush with
+   the bar. A raised circle here would read as a consumer app. */
+.bottom-nav-post {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--gold);
+  color: var(--navy-deep);
+  box-shadow: 0 6px 18px -6px rgba(201, 151, 58, 0.8);
+  transition: background 0.2s ease;
+}
+.bottom-nav-item[data-active="true"] .bottom-nav-post {
+  background: var(--gold-soft);
+}
+
+/* Sits above the bar, clear of the home indicator. */
+.install-bar {
+  position: fixed;
+  inset-inline: 12px;
+  bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav,
+  .bottom-nav-indicator,
+  .bottom-nav-item,
+  .bottom-nav-post {
+    transition: none;
+  }
+}

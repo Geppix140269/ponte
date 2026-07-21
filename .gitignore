@@ -45,5 +45,8 @@ ponte-backups/
 *.ndjson
 
 
+# Build transcripts written during verification. Never part of the source.
 build.log
+build-verify.log
+*.build.log
 

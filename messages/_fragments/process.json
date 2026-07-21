@@ -2,23 +2,23 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Post",
-        "micro": "Your deal, free"
+        "label": "Submitted",
+        "micro": "Offer or requirement, free"
       },
       "vet": {
-        "label": "Vet",
-        "micro": "AI checks, desk approves"
+        "label": "Vetted",
+        "micro": "By the desk, before circulation"
       },
       "match": {
-        "label": "Match",
-        "micro": "Anonymous on the board"
+        "label": "Circulated",
+        "micro": "Anonymously, on the board"
       },
       "connect": {
-        "label": "Connect",
-        "micro": "Both agree, free"
+        "label": "Connected",
+        "micro": "NCNDA signed, then introduced"
       },
       "close": {
-        "label": "Close",
+        "label": "Closing",
         "micro": "Desk optional, on fee"
       }
     }

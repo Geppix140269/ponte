@@ -9,6 +9,14 @@
       "requirement": "requirement",
       "service": "service"
     },
+    "notStated": "not stated",
+    "trust": {
+      "none": "Not verified",
+      "level1": "Identity verified",
+      "level2": "Business verified",
+      "level3": "Activity verified",
+      "level4": "Institutional"
+    },
     "hero": {
       "pill": "Marketplace",
       "heading": "Every listing <em>vetted</em>. Every deal papered.",
@@ -37,15 +45,20 @@
     "board": {
       "eyebrow": "Live now",
       "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
+      "headingLive": "Vetted listings, live on the board.",
       "headingEmpty": "The board opens soon.",
       "signInFull": "Sign in for full listings",
       "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
       "signInToRespond": "Sign in to respond",
-      "signInToRead": "Sign in to read the full listing."
-    },
-    "card": {
-      "origin": "Origin: {value}",
-      "destination": "Destination: {value}"
+      "signInToRead": "Sign in to read the full listing.",
+      "open": "Open listing {ref}",
+      "columns": {
+        "quantity": "Quantity",
+        "terms": "Terms",
+        "corridor": "Corridor",
+        "product": "Product and reference",
+        "posted": "Posted"
+      }
     },
     "ai": {
       "label": "Your account manager",
@@ -98,6 +111,22 @@
       },
       "pill": "Vetted listing",
       "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "terms": {
+        "heading": "Trade terms",
+        "quantity": "Quantity",
+        "unit": "Unit",
+        "incoterm": "Incoterm",
+        "origin": "Origin",
+        "destination": "Destination",
+        "payment": "Payment terms",
+        "hsCode": "HS code",
+        "frequency": "Frequency",
+        "timing": "Timing",
+        "role": "Counterparty role",
+        "chain": "Position in the chain",
+        "posted": "Posted"
+      },
+      "verificationLink": "What each level checks",
       "signInToRead": "Sign in free to read the full listing.",
       "readIn": "Read in",
       "original": "Original",

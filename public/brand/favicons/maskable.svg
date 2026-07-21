@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Ponte">
+  <title>Ponte maskable icon</title>
+  <!--
+    Maskable icon. Android crops an installed icon to whatever shape the launcher
+    uses, so the mark has to sit inside the safe zone: a centred circle of 80% of
+    the canvas. The android-chrome PNGs are edge to edge and would lose the legs
+    of the bridge to a circular mask, which is why this exists separately.
+
+    The mark is drawn in the same 120 unit space as logo-icon.svg, then centred
+    on its own bounding box (60, 66.5) and scaled 3.4x. That puts the content
+    inside a 379px circle, comfortably within the 409.6px safe zone.
+  -->
+  <rect width="512" height="512" fill="#07101B"/>
+  <g transform="translate(256 256) scale(3.4) translate(-60 -66.5)">
+    <path d="M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="miter"/>
+    <line x1="14" y1="98" x2="106" y2="98" stroke="#FFFFFF" stroke-width="3"/>
+    <circle cx="60" cy="42" r="6.5" fill="#C9973A"/>
+  </g>
+</svg>

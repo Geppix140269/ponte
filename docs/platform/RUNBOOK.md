@@ -46,6 +46,40 @@ Confirm at least: `/`, `/marketplace`, `/pricing`, `/about`. After an i18n
 change also check a prefixed locale, for example `/es/marketplace`, and that
 `/cart` still returns a permanent redirect rather than a page.
 
+## The service worker
+
+`public/sw.js`. Registered only in production, by
+`components/ServiceWorkerRegistrar.tsx`. It is not active under `npm run dev`,
+where it would fight hot reload, so test it with `npx next build && npx next
+start` and open the site over `localhost`, which browsers treat as a secure
+origin.
+
+**Check it is doing its job.** Chrome DevTools, Application, Service Workers:
+the worker should be activated and running. Then Network, tick Offline, and
+reload. You should get the Ponte offline page in the language you were reading,
+not the browser's dinosaur.
+
+**A service worker is the one deploy that can outlive a rollback.** Reverting a
+bad commit does not remove a worker already installed on someone's phone. That
+is why `sw.js` never caches a page, and it is why the kill switch exists.
+
+**Kill switch.** If the worker misbehaves in the wild, replace the body of
+`public/sw.js` with the self unregistering snippet written at the top of that
+file, and deploy. It reaches every browser because `sw.js` is excluded from the
+worker's own caches and is registered with `updateViaCache: "none"`, so it is
+revalidated on every visit. Do not simply delete the file: a 404 leaves the
+installed worker in place.
+
+**After changing what is cached,** bump `VERSION` in `sw.js`. Activation
+deletes every `ponte-` cache that is not on the current list, so a bump is how
+old entries are cleared.
+
+**Two paths that must never be locale prefixed:** `/manifest.webmanifest` and
+`/sw.js`. Both are named in the `middleware.ts` matcher. A worker served from
+anywhere other than the root cannot control the whole origin, and a manifest
+redirected to `/en/manifest.webmanifest` is a 404, which kills the install
+prompt silently.
+
 ## Sanctions list refresh
 
 The five published lists (OFAC SDN, OFAC consolidated, EU CFSL, UN Security

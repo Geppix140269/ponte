@@ -88,6 +88,12 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Run on app routes, skipping static assets and image files.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    //
+    // manifest.webmanifest and sw.js are excluded by name because neither is
+    // a page: the locale middleware would rewrite /manifest.webmanifest to
+    // /en/manifest.webmanifest, which is a 404, and the install prompt would
+    // never appear. A service worker also has to be served from the root to
+    // control the whole origin, so it must not be moved or prefixed.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · nome comercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Marketplace verificado e gratuito para o comércio físico",
-    "metaDescription": "Publique uma oferta ou uma demanda em um mural de negócios gratuito e verificado. Fique anônimo até as duas partes concordarem, depois conecte-se direto. O apoio da mesa é opcional, por taxa de sucesso ou contrato mensal.",
+    "metaTitle": "Comércio transfronteiriço de mercadorias físicas, entre contrapartes verificadas",
+    "metaDescription": "Ponte é um mural verificado para o comércio transfronteiriço de mercadorias físicas. Ofertas e demandas são escritas em termos comerciais, circulam de forma anônima e nenhuma apresentação é feita antes da assinatura de um NCNDA. Os membros são checados contra Companies House, VIES, GLEIF e as listas da OFAC, da UE, da ONU e do OFSI.",
     "hero": {
-      "title": "Venda. Encontre.",
-      "titleAccent": "Fechado."
+      "eyebrow": "Mural comercial verificado",
+      "title": "Comércio transfronteiriço de mercadorias físicas,",
+      "titleAccent": "entre contrapartes verificadas.",
+      "lead": "Ofertas e demandas são escritas como se escreve um negócio: quantidade e unidade, incoterm, origem e destino, condições de pagamento, código HS. Os anúncios circulam de forma anônima e nenhuma apresentação é feita até que as duas partes concordem e um NCNDA seja assinado.",
+      "cta": "Publique uma oferta ou uma demanda",
+      "secondary": "Ver o mural"
     },
-    "trust": {
-      "vetted": "Verificado",
-      "ncnda": "NCNDA primeiro",
-      "successFee": "Taxa apenas no sucesso"
+    "proof": {
+      "eyebrow": "Verificação de contraparte",
+      "heading": "Os membros são checados contra fontes públicas nomeadas.",
+      "lead": "Uma verificação consulta as fontes abaixo, registra o que cada uma retornou e registra a data da consulta. Uma fonte que não pode ser alcançada é reportada como não checada, nunca como limpa.",
+      "registriesLabel": "Registros e identificadores",
+      "sanctionsLabel": "Listas de sanções checadas",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "Registro da empresa, situação e administradores"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "Número de IVA validado na fonte"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "Legal Entity Identifier, quando existe"
+      },
+      "s1": {
+        "name": "Listas SDN e Consolidated da OFAC",
+        "note": "Departamento do Tesouro dos Estados Unidos"
+      },
+      "s2": {
+        "name": "Lista Consolidada de Sanções Financeiras da UE",
+        "note": "União Europeia"
+      },
+      "s3": {
+        "name": "Lista Consolidada do Conselho de Segurança da ONU",
+        "note": "Nações Unidas"
+      },
+      "s4": {
+        "name": "Lista Consolidada do OFSI do Reino Unido",
+        "note": "HM Treasury, alvos de sanções financeiras"
+      },
+      "refresh": "A checagem não é um ato único. Quando essas listas mudam, membros já verificados são checados de novo contra as listas atualizadas, e uma nova coincidência reabre o caso.",
+      "caveat": "Uma verificação registra o que uma fonte nomeada publicou no dia da consulta. É prova de identidade e situação, não garantia de cumprimento.",
+      "link": "O que cada nível checa"
     },
-    "sell": {
-      "titleLine1": "Tenho algo",
-      "titleLine2": "para vender",
-      "body": "Publique em 3 cliques. Fotos, vídeos, pronto.",
-      "cta": "Publicar a oferta"
+    "shape": {
+      "eyebrow": "O que se move aqui",
+      "heading": "Os negócios são escritos em termos comerciais.",
+      "lead": "Todo anúncio carrega os mesmos campos: código HS, quantidade e unidade, incoterm, origem e destino, condições de pagamento, o papel da contraparte no negócio e quantos intermediários estão entre ela e o principal.",
+      "sampleLabel": "Exemplos de formato. Mostram como um negócio é escrito na Ponte. Não são anúncios ativos e não implicam volume algum.",
+      "cta": "Ver o mural",
+      "type": {
+        "offer": "Oferta",
+        "requirement": "Demanda"
+      },
+      "fields": {
+        "hs": "Código HS",
+        "incoterm": "Incoterm",
+        "corridor": "Corredor",
+        "corridorValue": "{from} para {to}",
+        "payment": "Pagamento",
+        "role": "Papel"
+      },
+      "e1": {
+        "product": "Açúcar branco refinado, ICUMSA 45",
+        "quantity": "25.000 MT",
+        "frequency": "Um embarque",
+        "payment": "Carta de crédito irrevogável à vista, confirmada",
+        "role": "Trading detentora da mercadoria"
+      },
+      "e2": {
+        "product": "Ureia 46%, granulada",
+        "quantity": "12.000 MT",
+        "frequency": "Mensal, doze meses",
+        "payment": "Carta de crédito à vista contra documentos de embarque",
+        "role": "Comprador final"
+      },
+      "e3": {
+        "product": "Lingote de alumínio A7, 99,7%",
+        "quantity": "1.000 MT",
+        "frequency": "Mensal, rotativo",
+        "payment": "30% adiantado, saldo contra documentos",
+        "role": "Produtor, direto"
+      }
     },
-    "source": {
-      "titleLine1": "Preciso de",
-      "titleLine2": "um produto",
-      "body": "Diga à mesa o que você procura. A rede responde.",
-      "cta": "Publicar a demanda"
+    "flow": {
+      "eyebrow": "Como um negócio avança",
+      "heading": "Documentado antes de apresentar."
     },
-    "board": {
-      "link": "Ver o mural ao vivo"
-    },
-    "process": {
-      "eyebrow": "Como funciona"
-    },
-    "closing": {
-      "title": "Documentado antes de apresentar. Pago só no sucesso.",
-      "postDeal": "Publicar um negócio",
-      "seeBoard": "Ver o mural"
+    "desk": {
+      "eyebrow": "A mesa",
+      "heading": "O mural é gratuito. A mesa é opcional.",
+      "free": {
+        "title": "O marketplace",
+        "terms": "Gratuito, para todo membro",
+        "body": "Publicar uma oferta ou uma demanda, passar pela verificação, ler o mural e conectar com uma contraparte não custa nada. Negócios fechados diretamente entre as partes não têm comissão.",
+        "cta": "Publique uma oferta ou uma demanda"
+      },
+      "mandate": {
+        "title": "A mesa",
+        "terms": "Taxa de sucesso ou contrato mensal",
+        "body": "Se você quiser o negócio conduzido para você, a mesa assume a verificação em profundidade, o NCNDA, a negociação, o contrato e a coordenação do fechamento. As condições são acordadas por escrito antes de qualquer trabalho, e a taxa de sucesso só é devida quando o negócio fecha.",
+        "cta": "Ver tarifas"
+      },
+      "currency": "Todos os honorários são cotados e liquidados em USD."
     }
   },
   "legal": {
@@ -515,11 +590,16 @@
       "signInFull": "Entre para ver os anúncios completos",
       "empty": "O mural abre assim que os primeiros anúncios verificados passarem pela mesa. Os envios já estão abertos, e os primeiros anúncios recebem mais atenção quando ele entrar no ar.",
       "signInToRespond": "Entre para responder",
-      "signInToRead": "Entre para ler o anúncio completo."
-    },
-    "card": {
-      "origin": "Origem: {value}",
-      "destination": "Destino: {value}"
+      "signInToRead": "Entre para ler o anúncio completo.",
+      "headingLive": "Anúncios verificados, ao vivo no mural.",
+      "open": "Abrir o anúncio {ref}",
+      "columns": {
+        "quantity": "Quantidade",
+        "terms": "Condições",
+        "corridor": "Corredor",
+        "product": "Produto e referência",
+        "posted": "Publicado"
+      }
     },
     "ai": {
       "label": "Seu gerente de conta",
@@ -579,7 +659,31 @@
       "interested": "Tenho interesse",
       "shareWhatsApp": "Compartilhar no WhatsApp",
       "shareText": "{product} · anúncio verificado {ref} na Ponte",
-      "footer": "Tem algo para vender ou para procurar? <link>Monte seu anúncio em três etapas</link>, sem precisar de conta até publicar."
+      "footer": "Tem algo para vender ou para procurar? <link>Monte seu anúncio em três etapas</link>, sem precisar de conta até publicar.",
+      "terms": {
+        "heading": "Condições comerciais",
+        "quantity": "Quantidade",
+        "unit": "Unidade",
+        "incoterm": "Incoterm",
+        "origin": "Origem",
+        "destination": "Destino",
+        "payment": "Condições de pagamento",
+        "hsCode": "Código HS",
+        "frequency": "Frequência",
+        "timing": "Prazos",
+        "role": "Papel da contraparte",
+        "chain": "Posição na cadeia",
+        "posted": "Publicado"
+      },
+      "verificationLink": "O que cada nível verifica"
+    },
+    "notStated": "não informado",
+    "trust": {
+      "none": "Não verificado",
+      "level1": "Identidade verificada",
+      "level2": "Empresa verificada",
+      "level3": "Atividade verificada",
+      "level4": "Institucional"
     }
   },
   "meta": {
@@ -594,7 +698,13 @@
     "fees": "Preços",
     "contact": "Contato",
     "account": "Conta",
-    "menuAriaLabel": "Menu"
+    "menuAriaLabel": "Menu",
+    "marketplaceShort": "Mercado",
+    "home": "Início",
+    "post": "Publicar",
+    "postAriaLabel": "Publicar um anúncio",
+    "verify": "Verificar",
+    "primaryAriaLabel": "Navegação principal"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Publicar",
-        "micro": "Seu negócio, grátis"
+        "label": "Enviado",
+        "micro": "Oferta ou demanda, grátis"
       },
       "vet": {
-        "label": "Verificar",
-        "micro": "A IA analisa, a mesa aprova"
+        "label": "Verificado",
+        "micro": "Pela mesa, antes de circular"
       },
       "match": {
-        "label": "Combinar",
-        "micro": "Anônimo no mural"
+        "label": "Circulado",
+        "micro": "De forma anônima, no mural"
       },
       "connect": {
-        "label": "Conectar",
-        "micro": "Os dois concordam, grátis"
+        "label": "Conectados",
+        "micro": "NCNDA assinado, depois a apresentação"
       },
       "close": {
-        "label": "Fechar",
-        "micro": "Mesa opcional, com honorários"
+        "label": "Fechamento",
+        "micro": "Mesa opcional, com taxa"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "Adicione a Ponte à sua tela inicial",
+    "installBody": "Abra o painel e publique pelo celular, sem um navegador no meio do caminho.",
+    "installAction": "Instalar",
+    "installDismiss": "Agora não",
+    "iosBody": "Toque no botão de compartilhar no Safari e escolha Adicionar à Tela de Início.",
+    "offlineTitle": "Você está offline",
+    "offlineBody": "A Ponte precisa de conexão para mostrar anúncios ao vivo e para rodar uma verificação. Nada do que você estava fazendo foi perdido. Reconecte e continue.",
+    "offlineRetry": "Tentar de novo",
+    "offlineHint": "Esta página estava salva no seu aparelho"
   },
   "verification": {
     "meta": {

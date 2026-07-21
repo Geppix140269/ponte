@@ -2,9 +2,15 @@
   "nav": {
     "homeAriaLabel": "Ponte Trade home",
     "marketplace": "Marketplace",
+    "marketplaceShort": "Market",
     "fees": "Fees",
     "contact": "Contact",
     "account": "Account",
-    "menuAriaLabel": "Menu"
+    "home": "Home",
+    "post": "Post",
+    "postAriaLabel": "Post a listing",
+    "verify": "Verify",
+    "menuAriaLabel": "Menu",
+    "primaryAriaLabel": "Primary"
   }
 }

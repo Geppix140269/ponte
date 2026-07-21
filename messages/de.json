@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · ein Handelsname der 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Kostenloser geprüfter Marktplatz für den physischen Handel",
-    "metaDescription": "Stellen Sie ein Angebot oder ein Gesuch auf ein kostenloses, geprüftes Handelsboard. Bleiben Sie anonym, bis beide Seiten zustimmen, und nehmen Sie dann direkt Kontakt auf. Die Unterstützung durch den Desk ist optional, gegen Erfolgshonorar oder Retainer.",
+    "metaTitle": "Grenzüberschreitender Handel mit physischen Waren, zwischen geprüften Kontrahenten",
+    "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der Unterzeichnung eines NCNDA erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
     "hero": {
-      "title": "Verkaufen. Beschaffen.",
-      "titleAccent": "Abgeschlossen."
+      "eyebrow": "Geprüftes Handelsboard",
+      "title": "Grenzüberschreitender Handel mit physischen Waren,",
+      "titleAccent": "zwischen geprüften Kontrahenten.",
+      "lead": "Angebote und Gesuche werden so erfasst, wie ein Geschäft geschrieben wird: Menge und Einheit, Incoterm, Ursprung und Bestimmung, Zahlungsbedingungen, HS-Code. Inserate zirkulieren anonym, und es erfolgt keine Vermittlung, bevor beide Seiten zustimmen und ein NCNDA unterzeichnet ist.",
+      "cta": "Angebot oder Gesuch einstellen",
+      "secondary": "Board ansehen"
     },
-    "trust": {
-      "vetted": "Geprüft",
-      "ncnda": "NCNDA zuerst",
-      "successFee": "Honorar nur bei Erfolg"
+    "proof": {
+      "eyebrow": "Prüfung der Gegenpartei",
+      "heading": "Mitglieder werden gegen namentlich genannte öffentliche Quellen geprüft.",
+      "lead": "Eine Prüfung liest die unten genannten Quellen, hält fest, was jede einzelne zurückgegeben hat, und hält das Datum der Abfrage fest. Eine nicht erreichbare Quelle wird als nicht geprüft ausgewiesen, niemals als unbedenklich.",
+      "registriesLabel": "Register und Kennungen",
+      "sanctionsLabel": "Geprüfte Sanktionslisten",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "Registerauszug, Status der Gesellschaft und Organe"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "Umsatzsteuer-Identifikationsnummer an der Quelle validiert"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "Legal Entity Identifier, sofern vorhanden"
+      },
+      "s1": {
+        "name": "OFAC SDN und Consolidated Lists",
+        "note": "Finanzministerium der Vereinigten Staaten"
+      },
+      "s2": {
+        "name": "Konsolidierte Liste der Finanzsanktionen der EU",
+        "note": "Europäische Union"
+      },
+      "s3": {
+        "name": "Konsolidierte Liste des UN-Sicherheitsrats",
+        "note": "Vereinte Nationen"
+      },
+      "s4": {
+        "name": "Konsolidierte Liste des UK OFSI",
+        "note": "HM Treasury, Ziele von Finanzsanktionen"
+      },
+      "refresh": "Das Screening ist kein einmaliger Vorgang. Ändern sich diese Listen, werden bereits geprüfte Mitglieder erneut gegen die aktualisierten Listen geprüft, und ein neuer Treffer öffnet den Vorgang wieder.",
+      "caveat": "Eine Prüfung hält fest, was eine namentlich genannte Quelle am Tag der Abfrage veröffentlicht hat. Sie ist ein Nachweis von Identität und Status, keine Garantie für die Erfüllung.",
+      "link": "Was jede Stufe prüft"
     },
-    "sell": {
-      "titleLine1": "Ich habe etwas",
-      "titleLine2": "zu verkaufen",
-      "body": "In 3 Klicks eingestellt. Fotos, Videos, fertig.",
-      "cta": "Angebot einstellen"
+    "shape": {
+      "eyebrow": "Was hier gehandelt wird",
+      "heading": "Geschäfte werden in Handelsbegriffen erfasst.",
+      "lead": "Jedes Inserat trägt dieselben Felder: HS-Code, Menge und Einheit, Incoterm, Ursprung und Bestimmung, Zahlungsbedingungen, die Rolle der Gegenpartei im Geschäft und die Zahl der Zwischenhändler zwischen ihr und dem Prinzipal.",
+      "sampleLabel": "Formatbeispiele. Sie zeigen, wie ein Geschäft auf Ponte erfasst wird. Es sind keine aktiven Inserate, und es wird kein Volumen impliziert.",
+      "cta": "Board ansehen",
+      "type": {
+        "offer": "Angebot",
+        "requirement": "Gesuch"
+      },
+      "fields": {
+        "hs": "HS-Code",
+        "incoterm": "Incoterm",
+        "corridor": "Korridor",
+        "corridorValue": "{from} nach {to}",
+        "payment": "Zahlung",
+        "role": "Rolle"
+      },
+      "e1": {
+        "product": "Raffinierter Weißzucker, ICUMSA 45",
+        "quantity": "25.000 MT",
+        "frequency": "Eine Verschiffung",
+        "payment": "Unwiderrufliches Akkreditiv bei Sicht, bestätigt",
+        "role": "Handelshaus mit Eigentum an der Ware"
+      },
+      "e2": {
+        "product": "Harnstoff 46 %, granuliert",
+        "quantity": "12.000 MT",
+        "frequency": "Monatlich, zwölf Monate",
+        "payment": "Akkreditiv bei Sicht gegen Versanddokumente",
+        "role": "Endabnehmer"
+      },
+      "e3": {
+        "product": "Aluminiumbarren A7, 99,7 %",
+        "quantity": "1.000 MT",
+        "frequency": "Monatlich, fortlaufend",
+        "payment": "30 % Anzahlung, Rest gegen Dokumente",
+        "role": "Produzent, direkt"
+      }
     },
-    "source": {
-      "titleLine1": "Ich brauche",
-      "titleLine2": "ein Produkt",
-      "body": "Sagen Sie dem Desk, was Sie beschaffen. Das Netzwerk antwortet.",
-      "cta": "Gesuch einstellen"
+    "flow": {
+      "eyebrow": "Wie ein Geschäft läuft",
+      "heading": "Schriftlich geregelt vor der Vermittlung."
     },
-    "board": {
-      "link": "Live-Board ansehen"
-    },
-    "process": {
-      "eyebrow": "So funktioniert es"
-    },
-    "closing": {
-      "title": "Schriftlich geregelt vor der Vermittlung. Bezahlt nur bei Erfolg.",
-      "postDeal": "Geschäft einstellen",
-      "seeBoard": "Board ansehen"
+    "desk": {
+      "eyebrow": "Der Desk",
+      "heading": "Das Board ist kostenlos. Der Desk ist optional.",
+      "free": {
+        "title": "Der Marktplatz",
+        "terms": "Kostenlos, für jedes Mitglied",
+        "body": "Ein Angebot oder Gesuch einzustellen, die Prüfung zu durchlaufen, das Board zu lesen und mit einer Gegenpartei in Kontakt zu treten, kostet nichts. Geschäfte, die Sie untereinander abschließen, tragen keine Provision.",
+        "cta": "Angebot oder Gesuch einstellen"
+      },
+      "mandate": {
+        "title": "Der Desk",
+        "terms": "Erfolgshonorar oder monatlicher Retainer",
+        "body": "Wenn Sie ein Geschäft führen lassen möchten, übernimmt der Desk die vertiefte Prüfung, das NCNDA, die Verhandlung, den Vertrag und die Koordination des Abschlusses. Die Konditionen werden vor Arbeitsbeginn schriftlich vereinbart, und ein Erfolgshonorar wird erst mit dem Abschluss fällig.",
+        "cta": "Gebühren ansehen"
+      },
+      "currency": "Alle Honorare werden in USD ausgewiesen und beglichen."
     }
   },
   "legal": {
@@ -515,11 +590,16 @@
       "signInFull": "Für vollständige Inserate anmelden",
       "empty": "Das Board öffnet, sobald die ersten geprüften Inserate den Desk passiert haben. Einreichungen sind ab sofort möglich, und frühe Inserate erhalten zum Start die meiste Aufmerksamkeit.",
       "signInToRespond": "Zum Antworten anmelden",
-      "signInToRead": "Melden Sie sich an, um das vollständige Inserat zu lesen."
-    },
-    "card": {
-      "origin": "Herkunft: {value}",
-      "destination": "Bestimmungsort: {value}"
+      "signInToRead": "Melden Sie sich an, um das vollständige Inserat zu lesen.",
+      "headingLive": "Geprüfte Inserate, live auf dem Board.",
+      "open": "Inserat {ref} öffnen",
+      "columns": {
+        "quantity": "Menge",
+        "terms": "Konditionen",
+        "corridor": "Korridor",
+        "product": "Produkt und Referenz",
+        "posted": "Eingestellt"
+      }
     },
     "ai": {
       "label": "Ihr Account-Manager",
@@ -579,7 +659,31 @@
       "interested": "Ich habe Interesse",
       "shareWhatsApp": "Auf WhatsApp teilen",
       "shareText": "{product} · geprüftes Inserat {ref} auf Ponte",
-      "footer": "Haben Sie selbst etwas zu verkaufen oder zu beschaffen? <link>Erstellen Sie Ihr Inserat in drei Schritten</link>, ein Konto brauchen Sie erst beim Veröffentlichen."
+      "footer": "Haben Sie selbst etwas zu verkaufen oder zu beschaffen? <link>Erstellen Sie Ihr Inserat in drei Schritten</link>, ein Konto brauchen Sie erst beim Veröffentlichen.",
+      "terms": {
+        "heading": "Handelskonditionen",
+        "quantity": "Menge",
+        "unit": "Einheit",
+        "incoterm": "Incoterm",
+        "origin": "Herkunft",
+        "destination": "Bestimmungsort",
+        "payment": "Zahlungsbedingungen",
+        "hsCode": "HS-Code",
+        "frequency": "Frequenz",
+        "timing": "Zeitrahmen",
+        "role": "Rolle der Gegenpartei",
+        "chain": "Position in der Kette",
+        "posted": "Eingestellt"
+      },
+      "verificationLink": "Was jede Stufe prüft"
+    },
+    "notStated": "nicht angegeben",
+    "trust": {
+      "none": "Nicht geprüft",
+      "level1": "Identität geprüft",
+      "level2": "Unternehmen geprüft",
+      "level3": "Aktivität geprüft",
+      "level4": "Institutionell"
     }
   },
   "meta": {
@@ -594,7 +698,13 @@
     "fees": "Gebühren",
     "contact": "Kontakt",
     "account": "Konto",
-    "menuAriaLabel": "Menü"
+    "menuAriaLabel": "Menü",
+    "marketplaceShort": "Markt",
+    "home": "Start",
+    "post": "Einstellen",
+    "postAriaLabel": "Ein Inserat einstellen",
+    "verify": "Prüfen",
+    "primaryAriaLabel": "Hauptnavigation"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Einstellen",
-        "micro": "Ihr Geschäft, kostenlos"
+        "label": "Eingereicht",
+        "micro": "Angebot oder Gesuch, kostenlos"
       },
       "vet": {
-        "label": "Prüfen",
-        "micro": "KI prüft, Desk gibt frei"
+        "label": "Geprüft",
+        "micro": "Vom Desk, vor der Verbreitung"
       },
       "match": {
-        "label": "Finden",
-        "micro": "Anonym auf dem Board"
+        "label": "Verbreitet",
+        "micro": "Anonym, auf dem Board"
       },
       "connect": {
-        "label": "Verbinden",
-        "micro": "Beide stimmen zu, kostenlos"
+        "label": "Verbunden",
+        "micro": "NCNDA unterzeichnet, dann Vermittlung"
       },
       "close": {
-        "label": "Abschließen",
+        "label": "Abschluss",
         "micro": "Desk optional, gegen Honorar"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "Ponte zum Startbildschirm hinzufügen",
+    "installBody": "Die Tafel öffnen und vom Telefon aus einstellen, ohne Browser dazwischen.",
+    "installAction": "Installieren",
+    "installDismiss": "Jetzt nicht",
+    "iosBody": "Tippen Sie in Safari auf die Teilen-Taste und wählen Sie Zum Home-Bildschirm.",
+    "offlineTitle": "Sie sind offline",
+    "offlineBody": "Ponte braucht eine Verbindung, um aktuelle Inserate zu zeigen und eine Prüfung durchzuführen. Nichts von dem, was Sie getan haben, ist verloren. Stellen Sie die Verbindung wieder her und machen Sie weiter.",
+    "offlineRetry": "Erneut versuchen",
+    "offlineHint": "Diese Seite war auf Ihrem Gerät gespeichert"
   },
   "verification": {
     "meta": {

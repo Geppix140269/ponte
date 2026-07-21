@@ -239,39 +239,114 @@
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Free vetted marketplace for physical trade",
-    "metaDescription": "Post an offer or a requirement on a free, vetted trade board. Stay anonymous until both sides agree, then connect direct. Desk support is optional, on a success fee or retainer.",
+    "metaTitle": "Cross border trade in physical goods, between verified counterparties",
+    "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made before an NCNDA is signed. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
     "hero": {
-      "title": "Sell it. Source it.",
-      "titleAccent": "Closed."
+      "eyebrow": "Vetted trade board",
+      "title": "Cross border trade in physical goods,",
+      "titleAccent": "between verified counterparties.",
+      "lead": "Offers and requirements are written the way a trade is written: quantity and unit, incoterm, origin and destination, payment terms, HS code. Listings circulate anonymously, and no introduction is made until both sides agree and an NCNDA is signed.",
+      "cta": "Post an offer or a requirement",
+      "secondary": "See the board"
     },
-    "trust": {
-      "vetted": "Vetted",
-      "ncnda": "NCNDA first",
-      "successFee": "Fee only on success"
+    "proof": {
+      "eyebrow": "Counterparty verification",
+      "heading": "Members are checked against named public sources.",
+      "lead": "A verification reads the sources below, records what each one returned, and records the date it was read. A source that cannot be reached is reported as not checked, never as clean.",
+      "registriesLabel": "Registers and identifiers",
+      "sanctionsLabel": "Sanctions lists screened",
+      "reg1": {
+        "name": "UK Companies House",
+        "note": "Registry record, company status and officers"
+      },
+      "reg2": {
+        "name": "EU VIES",
+        "note": "VAT number validated at source"
+      },
+      "reg3": {
+        "name": "GLEIF",
+        "note": "Legal Entity Identifier, where one is held"
+      },
+      "s1": {
+        "name": "OFAC SDN and Consolidated lists",
+        "note": "United States Department of the Treasury"
+      },
+      "s2": {
+        "name": "EU Consolidated Financial Sanctions List",
+        "note": "European Union"
+      },
+      "s3": {
+        "name": "UN Security Council Consolidated List",
+        "note": "United Nations"
+      },
+      "s4": {
+        "name": "UK OFSI Consolidated List",
+        "note": "HM Treasury, financial sanctions targets"
+      },
+      "refresh": "Screening is not a one time event. When these lists change, members already verified are screened again against the updated lists, and a new candidate reopens the case.",
+      "caveat": "A verification records what a named source published on the day it was read. It is evidence of identity and standing, not a guarantee of performance.",
+      "link": "What each level checks"
     },
-    "sell": {
-      "titleLine1": "I have something",
-      "titleLine2": "to sell",
-      "body": "Post it in 3 clicks. Photos, videos, done.",
-      "cta": "Post the offer"
+    "shape": {
+      "eyebrow": "What moves here",
+      "heading": "Deals are written in trade terms.",
+      "lead": "Every listing carries the same fields: HS code, quantity and unit, incoterm, origin and destination, payment terms, the role the counterparty holds in the deal, and how many intermediaries stand between them and the principal.",
+      "sampleLabel": "Format examples. They show how a deal is written on Ponte. They are not live listings and no volume is implied.",
+      "cta": "See the board",
+      "type": {
+        "offer": "Offer",
+        "requirement": "Requirement"
+      },
+      "fields": {
+        "hs": "HS code",
+        "incoterm": "Incoterm",
+        "corridor": "Corridor",
+        "corridorValue": "{from} to {to}",
+        "payment": "Payment",
+        "role": "Role"
+      },
+      "e1": {
+        "product": "Refined white sugar, ICUMSA 45",
+        "quantity": "25,000 MT",
+        "frequency": "One shipment",
+        "payment": "Irrevocable LC at sight, confirmed",
+        "role": "Trading company holding title"
+      },
+      "e2": {
+        "product": "Urea 46%, granular",
+        "quantity": "12,000 MT",
+        "frequency": "Monthly, twelve months",
+        "payment": "LC at sight against shipping documents",
+        "role": "End buyer"
+      },
+      "e3": {
+        "product": "Aluminium ingot A7, 99.7%",
+        "quantity": "1,000 MT",
+        "frequency": "Monthly, rolling",
+        "payment": "30% advance, balance against documents",
+        "role": "Producer, direct"
+      }
     },
-    "source": {
-      "titleLine1": "I need",
-      "titleLine2": "a product",
-      "body": "Tell the desk what you are sourcing. The network answers.",
-      "cta": "Post the request"
+    "flow": {
+      "eyebrow": "How a deal moves",
+      "heading": "Papered before introduced."
     },
-    "board": {
-      "link": "See the live board"
-    },
-    "process": {
-      "eyebrow": "How it works"
-    },
-    "closing": {
-      "title": "Papered before introduced. Paid only on success.",
-      "postDeal": "Post a deal",
-      "seeBoard": "See the board"
+    "desk": {
+      "eyebrow": "The desk",
+      "heading": "The board is free. The desk is optional.",
+      "free": {
+        "title": "The marketplace",
+        "terms": "Free, for every member",
+        "body": "Submitting an offer or a requirement, being vetted, reading the board and connecting with a counterparty cost nothing. Deals you close between yourselves carry no commission.",
+        "cta": "Post an offer or a requirement"
+      },
+      "mandate": {
+        "title": "The desk",
+        "terms": "Success fee or monthly retainer",
+        "body": "Where you want a deal run for you, the desk takes verification in depth, NCNDA, negotiation, contract and closing coordination. Terms are agreed in writing before any work starts, and a success fee falls due only when the deal closes.",
+        "cta": "See fees"
+      },
+      "currency": "All fees are quoted and settled in USD."
     }
   },
   "legal": {
@@ -483,6 +558,14 @@
       "requirement": "requirement",
       "service": "service"
     },
+    "notStated": "not stated",
+    "trust": {
+      "none": "Not verified",
+      "level1": "Identity verified",
+      "level2": "Business verified",
+      "level3": "Activity verified",
+      "level4": "Institutional"
+    },
     "hero": {
       "pill": "Marketplace",
       "heading": "Every listing <em>vetted</em>. Every deal papered.",
@@ -511,15 +594,20 @@
     "board": {
       "eyebrow": "Live now",
       "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
+      "headingLive": "Vetted listings, live on the board.",
       "headingEmpty": "The board opens soon.",
       "signInFull": "Sign in for full listings",
       "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
       "signInToRespond": "Sign in to respond",
-      "signInToRead": "Sign in to read the full listing."
-    },
-    "card": {
-      "origin": "Origin: {value}",
-      "destination": "Destination: {value}"
+      "signInToRead": "Sign in to read the full listing.",
+      "open": "Open listing {ref}",
+      "columns": {
+        "quantity": "Quantity",
+        "terms": "Terms",
+        "corridor": "Corridor",
+        "product": "Product and reference",
+        "posted": "Posted"
+      }
     },
     "ai": {
       "label": "Your account manager",
@@ -572,6 +660,22 @@
       },
       "pill": "Vetted listing",
       "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "terms": {
+        "heading": "Trade terms",
+        "quantity": "Quantity",
+        "unit": "Unit",
+        "incoterm": "Incoterm",
+        "origin": "Origin",
+        "destination": "Destination",
+        "payment": "Payment terms",
+        "hsCode": "HS code",
+        "frequency": "Frequency",
+        "timing": "Timing",
+        "role": "Counterparty role",
+        "chain": "Position in the chain",
+        "posted": "Posted"
+      },
+      "verificationLink": "What each level checks",
       "signInToRead": "Sign in free to read the full listing.",
       "readIn": "Read in",
       "original": "Original",
@@ -591,10 +695,16 @@
   "nav": {
     "homeAriaLabel": "Ponte Trade home",
     "marketplace": "Marketplace",
+    "marketplaceShort": "Market",
     "fees": "Fees",
     "contact": "Contact",
     "account": "Account",
-    "menuAriaLabel": "Menu"
+    "home": "Home",
+    "post": "Post",
+    "postAriaLabel": "Post a listing",
+    "verify": "Verify",
+    "menuAriaLabel": "Menu",
+    "primaryAriaLabel": "Primary"
   },
   "pricing": {
     "meta": {
@@ -637,26 +747,37 @@
   "process": {
     "steps": {
       "post": {
-        "label": "Post",
-        "micro": "Your deal, free"
+        "label": "Submitted",
+        "micro": "Offer or requirement, free"
       },
       "vet": {
-        "label": "Vet",
-        "micro": "AI checks, desk approves"
+        "label": "Vetted",
+        "micro": "By the desk, before circulation"
       },
       "match": {
-        "label": "Match",
-        "micro": "Anonymous on the board"
+        "label": "Circulated",
+        "micro": "Anonymously, on the board"
       },
       "connect": {
-        "label": "Connect",
-        "micro": "Both agree, free"
+        "label": "Connected",
+        "micro": "NCNDA signed, then introduced"
       },
       "close": {
-        "label": "Close",
+        "label": "Closing",
         "micro": "Desk optional, on fee"
       }
     }
+  },
+  "pwa": {
+    "installTitle": "Add Ponte to your home screen",
+    "installBody": "Open the board and post from your phone, with no browser in the way.",
+    "installAction": "Install",
+    "installDismiss": "Not now",
+    "iosBody": "Tap the share button in Safari, then choose Add to Home Screen.",
+    "offlineTitle": "You are offline",
+    "offlineBody": "Ponte needs a connection to show live listings and to run a verification. Nothing you were doing has been lost. Reconnect and carry on.",
+    "offlineRetry": "Try again",
+    "offlineHint": "This page was saved on your device"
   },
   "verification": {
     "meta": {

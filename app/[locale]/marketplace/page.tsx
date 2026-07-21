@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck, Share2, Sparkles } from "lucide-react";
 import { accountBrief, isAiConfigured, type AccountBrief } from "@/lib/ai-vet";
@@ -10,6 +10,16 @@ import { submitDraftAction, connectDecisionAction } from "./actions";
 import Reveal from "@/components/Reveal";
 import ProcessFlow from "@/components/ProcessFlow";
 import { alternatesFor } from "@/lib/seo";
+import {
+  corridorEnd,
+  formatPosted,
+  formatQuantity,
+  labelFor,
+  parseVolume,
+  verificationKey,
+  FREQUENCY_KEYS,
+  UNIT_KEYS,
+} from "@/lib/listing-terms";
 import type { Locale } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +64,31 @@ const RULES = [
   { icon: BadgeCheck, key: "free" },
 ] as const;
 
+// An offer and a requirement have to be told apart from across the room. The
+// rail down the left of the row carries the same signal as the badge.
+const TYPE_RAIL: Record<string, string> = {
+  offer: "var(--gold)",
+  requirement: "rgba(245,240,232,0.55)",
+  service: "rgba(255,255,255,0.14)",
+};
+
+const TYPE_BADGE: Record<string, React.CSSProperties> = {
+  offer: { background: "var(--gold)", color: "#0D1B2A", fontWeight: 600 },
+  requirement: {
+    border: "1px solid rgba(245,240,232,0.5)",
+    color: "#F5F0E8",
+  },
+  service: { border: "1px solid rgba(255,255,255,0.18)", color: "#9CA3AF" },
+};
+
+// One grid, used by the column header and by every row, so the board lines up.
+const BOARD_GRID =
+  "md:grid md:grid-cols-[10.5rem_6rem_11rem_minmax(0,1fr)_10.5rem] md:gap-x-5";
+
+// A number on the board is data, never decoration.
+const COLUMN_LABEL = "text-[10px] uppercase text-gray-2/70";
+const COLUMN_LABEL_STYLE = { letterSpacing: "0.18em" } as const;
+
 export default async function MarketplacePage({
   params,
 }: {
@@ -61,6 +96,11 @@ export default async function MarketplacePage({
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("marketplace");
+  const locale = await getLocale();
+  // Units, frequencies and the rest are the very options the member picked in
+  // the listing form. Reading their labels back out of that namespace shows
+  // the reader the same words, already translated, with no second copy.
+  const tf = await getTranslations("listingForm");
 
   // Status and type labels come from the message file, with the raw database
   // value as the fallback so an unknown value still renders.
@@ -177,27 +217,38 @@ export default async function MarketplacePage({
   // server-rendered teaser only (the browser never receives the rest).
   type BoardItem = {
     id: string;
+    user_id: string;
     ref: string;
     type: string;
     product: string;
+    hs_code: string | null;
     origin: string | null;
     destination: string | null;
     volume: string | null;
     incoterm: string | null;
     details: string;
+    created_at: string;
     full: boolean;
   };
+  const BOARD_COLUMNS =
+    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, details, created_at";
   // The board stays hidden from EVERYONE until it has real inventory.
   const BOARD_MIN = Number(process.env.BOARD_MIN_LISTINGS ?? 3);
+  // A live count is a claim about size. It is only made once the board is
+  // genuinely a board. Below this, the heading carries no number at all.
+  const COUNT_MIN = 8;
   let board: BoardItem[] = [];
   let approvedCount = 0;
-  const mediaByListing = new Map<string, string>();
+  // Verification level of whoever posted each listing. The level is a fact
+  // about the counterparty, and it is the only thing about them the board
+  // shows: the member stays anonymous until both sides agree to connect.
+  const trustByUser = new Map<string, number>();
   if (isSupabaseConfigured()) {
     if (user) {
       const supabase = createClient();
       const { data } = await supabase
         .from("listings")
-        .select("id, ref, type, product, origin, destination, volume, incoterm, details")
+        .select(BOARD_COLUMNS)
         .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -206,7 +257,7 @@ export default async function MarketplacePage({
       const adminSb = createAdminClient();
       const { data } = await adminSb
         .from("listings")
-        .select("id, ref, type, product, origin, destination, volume, incoterm, details")
+        .select(BOARD_COLUMNS)
         .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -221,20 +272,14 @@ export default async function MarketplacePage({
       board = [];
     } else {
       const adminSb = createAdminClient();
-      const { data: media } = await adminSb
-        .from("listing_media")
-        .select("listing_id, path, kind")
-        .in("listing_id", board.map((b) => b.id))
-        .eq("kind", "image")
-        .order("created_at", { ascending: true });
-      const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      for (const m of media ?? []) {
-        if (!mediaByListing.has(m.listing_id)) {
-          mediaByListing.set(
-            m.listing_id,
-            `${base}/storage/v1/object/public/listing-media/${m.path}`,
-          );
-        }
+      const { data: levels } = await adminSb
+        .from("profiles")
+        .select("id, verification_level")
+        .in("id", Array.from(new Set(board.map((b) => b.user_id))));
+      // A level that cannot be read is unknown, not zero. Rows without an
+      // answer show no badge rather than claiming "not verified".
+      for (const p of levels ?? []) {
+        trustByUser.set(p.id, Number(p.verification_level ?? 0));
       }
     }
   }
@@ -302,9 +347,11 @@ export default async function MarketplacePage({
           <div>
             <p className="eyebrow text-gold">{t("board.eyebrow")}</p>
             <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>
-              {board.length > 0
-                ? t("board.heading", { count: board.length })
-                : t("board.headingEmpty")}
+              {board.length === 0
+                ? t("board.headingEmpty")
+                : approvedCount >= COUNT_MIN
+                  ? t("board.heading", { count: approvedCount })
+                  : t("board.headingLive")}
             </h2>
           </div>
           {!user && board.length > 0 && (
@@ -319,48 +366,197 @@ export default async function MarketplacePage({
             {t("board.empty")}
           </div>
         ) : (
-          <div className="space-y-3">
-            {board.map((b) => (
-              <div key={b.id} className="glass p-5 md:p-6 md:flex md:gap-6">
-                {mediaByListing.has(b.id) && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={mediaByListing.get(b.id)}
-                    alt={b.product}
-                    className="mb-4 h-40 w-full rounded-lg object-cover md:mb-0 md:h-32 md:w-48 md:shrink-0"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <span className="mono text-[12px] text-gold">{b.ref}</span>
-                  <span className="badge uppercase">{TYPE_LABEL[b.type] ?? b.type}</span>
-                  <span className="flex-1 text-[15px] text-cream">{b.product}</span>
-                  {user ? (
-                    <InterestButton refCode={b.ref} />
-                  ) : (
+          <div className="glass overflow-hidden">
+            {/* Column header. The four things a trader scans for, named. */}
+            <div
+              className={`hidden border-b border-white/10 px-5 py-3 ${BOARD_GRID}`}
+            >
+              <span className={COLUMN_LABEL} style={COLUMN_LABEL_STYLE}>
+                {t("board.columns.quantity")}
+              </span>
+              <span className={COLUMN_LABEL} style={COLUMN_LABEL_STYLE}>
+                {t("board.columns.terms")}
+              </span>
+              <span className={COLUMN_LABEL} style={COLUMN_LABEL_STYLE}>
+                {t("board.columns.corridor")}
+              </span>
+              <span className={COLUMN_LABEL} style={COLUMN_LABEL_STYLE}>
+                {t("board.columns.product")}
+              </span>
+              <span
+                className={`${COLUMN_LABEL} md:text-right`}
+                style={COLUMN_LABEL_STYLE}
+              >
+                {t("board.columns.posted")}
+              </span>
+            </div>
+
+            <div className="divide-y divide-white/8">
+              {board.map((b) => {
+                const vol = parseVolume(b.volume);
+                const unit = labelFor(vol.unit, UNIT_KEYS, tf);
+                const freq = labelFor(vol.frequency, FREQUENCY_KEYS, tf);
+                const from = corridorEnd(b.origin);
+                const to = corridorEnd(b.destination);
+                const level = trustByUser.get(b.user_id);
+
+                return (
+                  <div
+                    key={b.id}
+                    className={`relative px-5 py-4 transition-colors hover:bg-white/[0.035] ${BOARD_GRID} md:items-start`}
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-0 h-full w-[3px]"
+                      style={{ background: TYPE_RAIL[b.type] ?? TYPE_RAIL.service }}
+                    />
+                    {/* The whole row opens the listing. Controls sit above it. */}
                     <Link
-                      href="/login?next=/marketplace"
-                      className="text-[11px] uppercase text-gold hover:text-cream"
-                      style={{ letterSpacing: "0.16em" }}
+                      href={`/marketplace/l/${b.ref}`}
+                      aria-label={t("board.open", { ref: b.ref })}
+                      className="absolute inset-0 z-0"
+                    />
+
+                    {/* 1 · Quantity: the first thing the eye hits */}
+                    <div className="min-w-0">
+                      <span
+                        className="badge"
+                        style={TYPE_BADGE[b.type] ?? TYPE_BADGE.service}
+                      >
+                        {TYPE_LABEL[b.type] ?? b.type}
+                      </span>
+                      <p className="mt-2 flex flex-wrap items-baseline gap-x-1.5">
+                        {vol.quantity ? (
+                          <>
+                            <span
+                              className="mono tabular-nums text-cream"
+                              style={{ fontSize: 23, letterSpacing: "-0.02em" }}
+                            >
+                              {vol.quantityNumeric !== null
+                                ? formatQuantity(vol.quantityNumeric, locale)
+                                : vol.quantity}
+                            </span>
+                            {unit && (
+                              <span className="mono text-[12px] text-gray-2">
+                                {unit}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[13px] text-gray-2/55">
+                            {t("notStated")}
+                          </span>
+                        )}
+                      </p>
+                      {freq && (
+                        <p className="mt-0.5 text-[11px] text-gray-2/80">{freq}</p>
+                      )}
+                    </div>
+
+                    {/* 2 · Incoterm */}
+                    <div className="mt-3 md:mt-0">
+                      {b.incoterm ? (
+                        <span
+                          className="mono inline-flex items-center rounded-[6px] px-2.5 py-1 text-[12px] text-gold"
+                          style={{
+                            background: "rgba(201,151,58,0.12)",
+                            border: "1px solid rgba(201,151,58,0.4)",
+                            letterSpacing: "0.06em",
+                          }}
+                        >
+                          {b.incoterm}
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-gray-2/55">
+                          {t("notStated")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 3 · Corridor. Codes are data, so they stay left to right. */}
+                    <div
+                      dir="ltr"
+                      className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 md:mt-0"
+                      title={[from.text, to.text].filter(Boolean).join(" > ")}
                     >
-                      {t("board.signInToRespond")}
-                    </Link>
-                  )}
-                </div>
-                <p className="mono mt-3 text-[12px] leading-relaxed text-gray-2">
-                  {[b.origin && t("card.origin", { value: b.origin }), b.destination && t("card.destination", { value: b.destination }), b.volume, b.incoterm]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                <p className={`mt-2 text-[13px] leading-relaxed ${b.full ? "text-gray-2" : "text-gray-2/70"}`}>
-                  {b.details}
-                  {!b.full && (
-                    <span className="ml-2 text-gold">{t("board.signInToRead")}</span>
-                  )}
-                </p>
-                </div>
-              </div>
-            ))}
+                      {from.code ? (
+                        <span className="mono text-[14px] text-cream">
+                          {from.code}
+                        </span>
+                      ) : from.text ? (
+                        <span className="text-[12.5px] text-cream">{from.text}</span>
+                      ) : (
+                        <span className="text-[11px] text-gray-2/55">
+                          {t("notStated")}
+                        </span>
+                      )}
+                      <ArrowRight className="h-3 w-3 shrink-0 text-gold/70" />
+                      {to.code ? (
+                        <span className="mono text-[14px] text-cream">{to.code}</span>
+                      ) : to.text ? (
+                        <span className="text-[12.5px] text-cream">{to.text}</span>
+                      ) : (
+                        <span className="text-[11px] text-gray-2/55">
+                          {t("notStated")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 4 · What it is, and how to quote it */}
+                    <div className="mt-3 min-w-0 md:mt-0">
+                      <p className="line-clamp-2 text-[15px] leading-snug text-cream">
+                        {b.product}
+                      </p>
+                      <p className="mono mt-1 flex flex-wrap items-center gap-x-3 text-[11px]">
+                        <span className="text-gold">{b.ref}</span>
+                        {b.hs_code && (
+                          <span className="text-gray-2">HS {b.hs_code}</span>
+                        )}
+                      </p>
+                      <p
+                        className={`mt-1.5 line-clamp-1 text-[12px] ${b.full ? "text-gray-2/85" : "text-gray-2/65"}`}
+                      >
+                        {b.details}
+                        {!b.full && (
+                          <span className="ml-1.5 text-gold">
+                            {t("board.signInToRead")}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* 5 · When it was posted, who posted it, what to do next */}
+                    <div className="relative z-10 mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 md:mt-0 md:flex-col md:items-end md:gap-1.5">
+                      <span className="mono tabular-nums text-[11px] text-gray-2/85">
+                        {formatPosted(b.created_at, locale)}
+                      </span>
+                      {level !== undefined && (
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] uppercase ${level > 0 ? "text-gray-2" : "text-gray-2/55"}`}
+                          style={{ letterSpacing: "0.12em" }}
+                        >
+                          <ShieldCheck
+                            className={`h-3 w-3 shrink-0 ${level > 0 ? "text-gold" : "text-gray-2/50"}`}
+                          />
+                          {t(verificationKey(level))}
+                        </span>
+                      )}
+                      {user ? (
+                        <InterestButton refCode={b.ref} />
+                      ) : (
+                        <Link
+                          href="/login?next=/marketplace"
+                          className="text-[11px] uppercase text-gold hover:text-cream"
+                          style={{ letterSpacing: "0.16em" }}
+                        >
+                          {t("board.signInToRespond")}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </section>
