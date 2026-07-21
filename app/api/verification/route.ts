@@ -22,6 +22,12 @@ function clean(v: unknown, max: number): string {
  * member can pay, and hands the case to the pipeline, which spends the
  * credits, runs the checks and applies the rules. A case that is not fully
  * clean comes back as "review" and waits for a person.
+ *
+ * One outcome is not a verdict at all: "needs_selection" means the name matched
+ * several companies and the run is paused on the member saying which one they
+ * meant. It carries the candidates back with it. The member answers through
+ * /api/verification/select, which finishes THIS case and spends nothing
+ * further, because this route already took the payment for it.
  */
 export async function POST(req: NextRequest) {
   const user = await getUser();

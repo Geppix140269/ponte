@@ -777,6 +777,29 @@
         "rateLimit": "Cela fait beaucoup de contrôles en peu de temps. Veuillez réessayer plus tard.",
         "generic": "Le contrôle n’a pas pu être effectué. Veuillez réessayer."
       },
+      "select": {
+        "title": "Plusieurs sociétés correspondent à ce nom",
+        "body": "Le registre contient plusieurs sociétés sous le nom que vous avez saisi, le sujet n’est donc pas encore identifié. Choisissez celle que vous visez et le contrôle se poursuivra sur cette société : inscription au registre, TVA, LEI, et criblage de la société et de ses dirigeants au regard des sanctions.",
+        "noCharge": "Ce contrôle est déjà payé. Choisir une société l’achève et ne consomme aucun crédit supplémentaire.",
+        "count": "{count} sociétés correspondent.",
+        "capped": "Le registre annonce {total} correspondances et les {shown} premières sont listées ici. Si la société recherchée n’y figure pas, relancez le contrôle avec son numéro d’immatriculation.",
+        "numberLabel": "Numéro",
+        "statusLabel": "Statut",
+        "incorporatedLabel": "Immatriculée le",
+        "addressLabel": "Siège social",
+        "unknown": "Non indiqué",
+        "noNumber": "Aucun numéro d’immatriculation n’est publié pour cette correspondance, elle ne peut donc pas être contrôlée. Relancez le contrôle avec le numéro.",
+        "continue": "Poursuivre le contrôle",
+        "working": "Poursuite du contrôle",
+        "startOver": "Lancer un autre contrôle",
+        "errors": {
+          "pick": "Choisissez une société pour continuer.",
+          "notFound": "Ce contrôle est introuvable sur votre compte.",
+          "notSelectable": "Ce contrôle n’attend plus le choix d’une société.",
+          "unknownCandidate": "Cette société ne figurait pas parmi les correspondances proposées. Choisissez-en une dans la liste.",
+          "generic": "Le contrôle n’a pas pu être poursuivi. Veuillez réessayer."
+        }
+      },
       "result": {
         "verifiedTitle": "Vérifié",
         "verifiedBody": "L’inscription au registre est active, les informations que vous avez données y correspondent, et aucune correspondance possible avec une liste de sanctions n’a été trouvée. Le résultat figure dans votre dossier.",

@@ -777,6 +777,29 @@
         "rateLimit": "Foram muitas verificações em pouco tempo. Tente de novo mais tarde.",
         "generic": "Não foi possível concluir a verificação. Tente de novo."
       },
+      "select": {
+        "title": "Mais de uma empresa corresponde a esse nome",
+        "body": "O registro tem várias empresas com o nome que você informou, então a empresa verificada ainda não está identificada. Escolha a que você quer e a verificação continua nela: registro, IVA, LEI e triagem de sanções da empresa e dos seus administradores.",
+        "noCharge": "Esta verificação já está paga. Escolher uma empresa conclui a verificação e não gasta créditos adicionais.",
+        "count": "{count} empresas correspondem.",
+        "capped": "O registro informa {total} correspondências e as {shown} primeiras estão listadas aqui. Se a empresa que você quer não estiver entre elas, refaça a verificação com o número de registro dela.",
+        "numberLabel": "Número",
+        "statusLabel": "Situação",
+        "incorporatedLabel": "Constituída em",
+        "addressLabel": "Endereço registrado",
+        "unknown": "Não informado",
+        "noNumber": "Esta correspondência não traz número de registro publicado, então não é possível verificá-la. Refaça a verificação informando o número.",
+        "continue": "Continuar a verificação",
+        "working": "Continuando a verificação",
+        "startOver": "Fazer outra verificação",
+        "errors": {
+          "pick": "Escolha uma empresa para continuar.",
+          "notFound": "Não foi possível encontrar essa verificação na sua conta.",
+          "notSelectable": "Essa verificação não está mais esperando a escolha de uma empresa.",
+          "unknownCandidate": "Essa empresa não estava entre as correspondências oferecidas. Escolha uma da lista.",
+          "generic": "Não foi possível continuar a verificação. Tente de novo."
+        }
+      },
       "result": {
         "verifiedTitle": "Verificado",
         "verifiedBody": "O registro está ativo, os dados que você informou coincidem com ele e nenhuma correspondência possível de sanções foi encontrada. O resultado está no seu histórico.",

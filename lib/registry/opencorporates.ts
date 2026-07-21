@@ -160,10 +160,15 @@ export async function searchCompany(
     return { source: SOURCE, available: true, matches: [], attribution: ATTRIBUTION, checkedAt };
   }
 
+  // OpenCorporates reports the full size of the result set alongside the page
+  // it returned. Carried up so a truncated list can be described honestly.
+  const totalCount = asRecord(asRecord(res.body)?.results)?.total_count;
+
   return {
     source: SOURCE,
     available: true,
     matches: readSearchMatches(res.body, checkedAt),
+    total: typeof totalCount === "number" ? totalCount : undefined,
     attribution: ATTRIBUTION,
     checkedAt,
   };

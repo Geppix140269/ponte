@@ -777,6 +777,29 @@
         "rateLimit": "That is a lot of checks in a short time. Please try again later.",
         "generic": "The check could not be completed. Please try again."
       },
+      "select": {
+        "title": "More than one company matches that name",
+        "body": "The register holds several companies under the name you entered, so the subject is not identified yet. Choose the one you mean and the check will continue on that company: registry record, VAT, LEI, and sanctions screening of the company and its officers.",
+        "noCharge": "This check is already paid for. Choosing a company finishes it and spends no further credits.",
+        "count": "{count} companies match.",
+        "capped": "The register reports {total} matches and the first {shown} are listed here. If the company you want is not among them, run the check again with its registration number.",
+        "numberLabel": "Number",
+        "statusLabel": "Status",
+        "incorporatedLabel": "Incorporated",
+        "addressLabel": "Registered address",
+        "unknown": "Not stated",
+        "noNumber": "No registration number was published for this match, so it cannot be checked. Run the check again with the number.",
+        "continue": "Continue the check",
+        "working": "Continuing the check",
+        "startOver": "Start a different check",
+        "errors": {
+          "pick": "Choose a company to continue.",
+          "notFound": "That check could not be found on your account.",
+          "notSelectable": "That check is no longer waiting for a company to be chosen.",
+          "unknownCandidate": "That company was not one of the matches offered. Choose one from the list.",
+          "generic": "The check could not be continued. Please try again."
+        }
+      },
       "result": {
         "verifiedTitle": "Verified",
         "verifiedBody": "The registry record is active, the details you gave match it, and no sanctions candidates were found. The result is on your record.",

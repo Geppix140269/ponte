@@ -74,6 +74,9 @@ const FIELD =
 const STATUS_TONE: Record<string, string> = {
   review: "text-gold",
   pending: "text-gray-2",
+  // Not with the desk: several companies matched the name and the case is
+  // paused on the member choosing which one they meant. Nothing to decide here.
+  needs_selection: "text-gray-2",
   auto_verified: "text-positive",
   verified: "text-positive",
   rejected: "text-negative",

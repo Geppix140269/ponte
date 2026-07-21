@@ -154,7 +154,12 @@ export async function searchCompany(name: string): Promise<RegistrySearchResult>
     return { source: SOURCE, available: true, matches: [], checkedAt };
   }
 
-  const items = arr(asRecord(res.body)?.items);
+  const searchBody = asRecord(res.body) ?? {};
+  const items = arr(searchBody.items);
+  // The register reports how many it holds, which is normally larger than the
+  // page returned. Carried up so a truncated list can be described honestly.
+  const total =
+    typeof searchBody.total_results === "number" ? searchBody.total_results : undefined;
   const matches: RegistryResult[] = items.map((item) => {
     const row = asRecord(item) ?? {};
     return {
@@ -171,7 +176,7 @@ export async function searchCompany(name: string): Promise<RegistrySearchResult>
     };
   });
 
-  return { source: SOURCE, available: true, matches, checkedAt };
+  return { source: SOURCE, available: true, matches, total, checkedAt };
 }
 
 // ---------------------------------------------------------------------------

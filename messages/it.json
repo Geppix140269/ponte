@@ -777,6 +777,29 @@
         "rateLimit": "Sono molti controlli in poco tempo. Riprovi più tardi.",
         "generic": "Non è stato possibile completare il controllo. Riprovi."
       },
+      "select": {
+        "title": "Più società corrispondono a quel nome",
+        "body": "Il registro contiene diverse società con il nome che ha inserito, quindi il soggetto non è ancora identificato. Scelga quella che intende e il controllo proseguirà su quella società: visura del registro, IVA, LEI e screening sanzionatorio della società e dei suoi amministratori.",
+        "noCharge": "Questo controllo è già pagato. Scegliere una società lo completa e non comporta ulteriori crediti.",
+        "count": "{count} società corrispondono.",
+        "capped": "Il registro riporta {total} corrispondenze e qui sono elencate le prime {shown}. Se la società che cerca non è tra queste, esegua di nuovo il controllo indicando il numero di registrazione.",
+        "numberLabel": "Numero",
+        "statusLabel": "Stato",
+        "incorporatedLabel": "Costituita",
+        "addressLabel": "Sede legale",
+        "unknown": "Non indicato",
+        "noNumber": "Per questa corrispondenza non è pubblicato alcun numero di registrazione, quindi non può essere controllata. Esegua di nuovo il controllo indicando il numero.",
+        "continue": "Prosegua il controllo",
+        "working": "Controllo in corso",
+        "startOver": "Avvii un altro controllo",
+        "errors": {
+          "pick": "Scelga una società per proseguire.",
+          "notFound": "Non è stato possibile trovare quel controllo nel Suo account.",
+          "notSelectable": "Quel controllo non è più in attesa della scelta di una società.",
+          "unknownCandidate": "Quella società non era tra le corrispondenze proposte. Ne scelga una dall'elenco.",
+          "generic": "Non è stato possibile proseguire il controllo. Riprovi."
+        }
+      },
       "result": {
         "verifiedTitle": "Verificata",
         "verifiedBody": "La visura del registro è attiva, i dati che ha fornito corrispondono, e non è stata trovata alcuna corrispondenza sanzionatoria possibile. Il risultato è registrato nel Suo account.",

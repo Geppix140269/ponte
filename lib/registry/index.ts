@@ -40,6 +40,25 @@ export type RegistryOfficer = {
   appointedOn?: string;
 };
 
+/**
+ * One name match, reduced to the fields a person needs to tell twenty
+ * similarly named companies apart.
+ *
+ * Deliberately a flat, plain object: it is stored inside `verifications.registry`
+ * as jsonb and read back by the member facing picker, so it must survive a JSON
+ * round trip without losing meaning. No officers here: a search hit is not a
+ * screened company.
+ */
+export type RegistryCandidate = {
+  companyName?: string;
+  regNumber?: string;
+  status?: string;
+  incorporationDate?: string;
+  address?: string;
+  /** OpenCorporates jurisdiction code, where the source supplies one. */
+  jurisdiction?: string;
+};
+
 export type RegistryResult = {
   source: string;
   available: boolean;
@@ -50,6 +69,18 @@ export type RegistryResult = {
   incorporationDate?: string;
   address?: string;
   officers?: RegistryOfficer[];
+  /**
+   * Set only when a name search matched more than one company. The subject is
+   * not identified yet, so `available` is false and the pipeline asks the
+   * member which one they meant instead of guessing.
+   */
+  candidates?: RegistryCandidate[];
+  /**
+   * How many the source said it holds, which can be larger than
+   * `candidates.length` when the list was capped. Shown to the member so a cap
+   * is stated rather than applied silently.
+   */
+  candidateTotal?: number;
   attribution?: string;
   checkedAt: string;
   raw?: unknown;
@@ -62,9 +93,20 @@ export type RegistrySearchResult = {
   available: boolean;
   reason?: string;
   matches: RegistryResult[];
+  /** What the source reported it holds in total, when it says. May exceed matches.length. */
+  total?: number;
   attribution?: string;
   checkedAt: string;
 };
+
+/**
+ * How many candidates travel back to the member.
+ *
+ * The sources are already asked for a page of twenty, so this is a ceiling and
+ * not usually a cut. It exists so a source that one day returns hundreds
+ * cannot push an unbounded list into a jsonb column and onto a page.
+ */
+export const MAX_REGISTRY_CANDIDATES = 25;
 
 export type RegistryLookupInput = {
   country?: string | null;
@@ -93,9 +135,9 @@ export function isUkCountry(country?: string | null): boolean {
  * Country GB or UK goes to Companies House, everything else goes to
  * OpenCorporates. A registration number is used when present. With a name
  * only, the source is searched: a single match is looked up in full so the
- * officers come back too, several matches return available:false because
- * picking between them is a judgement call and this module does not make
- * judgements.
+ * officers come back too, several matches return available:false with the
+ * candidates attached, because picking between them is a judgement call and
+ * this module does not make judgements. It hands the choice up instead.
  */
 export async function lookupRegistry(
   input: RegistryLookupInput,
@@ -149,14 +191,20 @@ export async function lookupRegistry(
   }
 
   if (search.matches.length > 1) {
+    const candidates = search.matches
+      .slice(0, MAX_REGISTRY_CANDIDATES)
+      .map(candidateSummary);
+    const total = Math.max(search.total ?? 0, search.matches.length);
     return {
       source: search.source,
       available: false,
-      reason: `${search.matches.length} companies match that name in ${sourceLabel(search.source)}, a registration number is needed to identify the subject`,
+      reason: `${total} companies match that name in ${sourceLabel(search.source)}, so the subject is not identified yet`,
       companyName: name,
+      candidates,
+      candidateTotal: total,
       attribution: search.attribution,
       checkedAt: search.checkedAt,
-      raw: { candidates: search.matches.map(candidateSummary) },
+      raw: { candidates },
     };
   }
 
@@ -215,12 +263,57 @@ function sourceLabel(source: string): string {
   return source;
 }
 
-function candidateSummary(match: RegistryResult) {
+function candidateSummary(match: RegistryResult): RegistryCandidate {
+  const raw = match.raw as { jurisdictionCode?: unknown } | undefined;
+  const jurisdiction =
+    typeof raw?.jurisdictionCode === "string" ? raw.jurisdictionCode : undefined;
   return {
     companyName: match.companyName,
     regNumber: match.regNumber,
     status: match.status,
     incorporationDate: match.incorporationDate,
     address: match.address,
+    jurisdiction,
   };
+}
+
+/**
+ * Read a candidate list back out of a stored `verifications.registry` blob.
+ *
+ * The column is jsonb, so what comes back is untyped. Everything is checked
+ * rather than cast: a stored blob is data, and a picker that trusts it would
+ * be trusting whatever a past run happened to write.
+ */
+export function readCandidates(registry: unknown): RegistryCandidate[] {
+  const list = (registry as { candidates?: unknown } | null)?.candidates;
+  if (!Array.isArray(list)) return [];
+  const out: RegistryCandidate[] = [];
+  for (const entry of list.slice(0, MAX_REGISTRY_CANDIDATES)) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const row = entry as Record<string, unknown>;
+    const text = (value: unknown) =>
+      typeof value === "string" && value.trim() ? value.trim() : undefined;
+    out.push({
+      companyName: text(row.companyName),
+      regNumber: text(row.regNumber),
+      status: text(row.status),
+      incorporationDate: text(row.incorporationDate),
+      address: text(row.address),
+      jurisdiction: text(row.jurisdiction),
+    });
+  }
+  return out;
+}
+
+/**
+ * Compare two registration numbers the way a register would: ignoring case,
+ * spaces, punctuation and leading zeros, which members and sources both write
+ * inconsistently. Used to confirm a chosen number really is one that was
+ * offered, so this has to be forgiving about format and nothing else.
+ */
+export function sameRegNumber(a?: string | null, b?: string | null): boolean {
+  const norm = (v?: string | null) =>
+    (v ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^0+/, "");
+  const left = norm(a);
+  return Boolean(left) && left === norm(b);
 }

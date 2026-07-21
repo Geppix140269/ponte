@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { AlertCircle, BadgeCheck, Clock, ShieldCheck } from "lucide-react";
+import { AlertCircle, BadgeCheck, Clock, ListChecks, ShieldCheck } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 
 const FIELD =
@@ -12,11 +12,50 @@ const FIELD =
 const LABEL = "block text-[11px] uppercase text-gray-2";
 const LABEL_STYLE = { letterSpacing: "0.16em" } as const;
 
+/** One of the companies that matched the name. Mirrors RegistryCandidate. */
+type Candidate = {
+  companyName?: string;
+  regNumber?: string;
+  status?: string;
+  incorporationDate?: string;
+  address?: string;
+  jurisdiction?: string;
+};
+
 type Outcome = {
   id: string;
-  status: "auto_verified" | "review" | "failed";
+  status: "auto_verified" | "review" | "failed" | "needs_selection";
   reason: string;
+  candidates?: Candidate[];
+  candidateTotal?: number;
 };
+
+/**
+ * One labelled fact about a candidate. A missing value is written out as not
+ * stated rather than hidden, because a blank field and an unpublished one look
+ * the same to a member and only one of them is a reason to pick a different
+ * company.
+ */
+function Detail({
+  label,
+  value,
+  fallback,
+  mono,
+}: {
+  label: string;
+  value?: string;
+  fallback: string;
+  mono?: boolean;
+}) {
+  return (
+    <p className="text-[12.5px] leading-relaxed text-gray-2">
+      <span className="text-gray-2/70">{label}: </span>
+      <span className={mono ? "mono text-cream" : "text-cream"}>
+        {value || fallback}
+      </span>
+    </p>
+  );
+}
 
 export default function VerifyForm({
   balance,
@@ -35,6 +74,11 @@ export default function VerifyForm({
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState("");
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+
+  // The company the member picked when several matched the name, held as the
+  // registration number because that is what identifies it to the register.
+  const [picked, setPicked] = useState("");
+  const [resuming, setResuming] = useState(false);
 
   const short = balance !== null && balance < cost;
 
@@ -83,14 +127,180 @@ export default function VerifyForm({
     }
   }
 
+  /**
+   * The member picked which company they meant. This FINISHES the verification
+   * they already paid for: it carries the existing verification id, and the
+   * server resumes that same case rather than opening a new one. No credits are
+   * spent, which is why nothing here looks at the balance.
+   */
+  async function onSelect() {
+    if (resuming || !outcome) return;
+    if (!picked) {
+      setError(t("request.select.errors.pick"));
+      return;
+    }
+
+    setError("");
+    setResuming(true);
+    try {
+      const res = await fetch("/api/verification/select", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ verificationId: outcome.id, regNumber: picked }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (res.status === 401) throw new Error(t("request.errors.signIn"));
+      if (res.status === 429) throw new Error(t("request.errors.rateLimit"));
+      if (res.status === 404) throw new Error(t("request.select.errors.notFound"));
+      if (res.status === 409)
+        throw new Error(t("request.select.errors.notSelectable"));
+      if (res.status === 400 && body?.error === "unknown_candidate") {
+        throw new Error(t("request.select.errors.unknownCandidate"));
+      }
+      if (!res.ok || !body?.id) throw new Error(t("request.select.errors.generic"));
+
+      setPicked("");
+      setOutcome(body as Outcome);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : t("request.select.errors.generic"),
+      );
+    } finally {
+      setResuming(false);
+    }
+  }
+
   function reset() {
     setOutcome(null);
     setStatus("idle");
     setError("");
+    setPicked("");
     setName("");
     setCountry("");
     setRegNumber("");
     setVat("");
+  }
+
+  // Several companies carry that name, so the check is paused on the member's
+  // answer rather than sent to the desk. Everything needed to tell twenty
+  // similar names apart is on the screen: name, number, status, incorporation
+  // date and registered address.
+  if (status === "done" && outcome?.status === "needs_selection") {
+    const candidates = outcome.candidates ?? [];
+    const total = outcome.candidateTotal ?? candidates.length;
+    const capped = total > candidates.length;
+
+    return (
+      <div className="glass p-8">
+        <ListChecks className="h-8 w-8 text-gold" />
+        <h2
+          className="serif text-white mt-5"
+          style={{ fontSize: 26, fontWeight: 500 }}
+        >
+          {t("request.select.title")}
+        </h2>
+        <p className="mt-3 text-[14px] leading-relaxed text-gray-2">
+          {t("request.select.body")}
+        </p>
+        <p className="mt-3 text-[13px] leading-relaxed text-gold">
+          {t("request.select.noCharge")}
+        </p>
+
+        <p className="mt-5 text-[12.5px] text-gray-2">
+          {capped
+            ? t("request.select.capped", { total, shown: candidates.length })
+            : t("request.select.count", { count: total })}
+        </p>
+
+        <ul className="mt-5 grid gap-3">
+          {candidates.map((c, i) => {
+            const usable = Boolean(c.regNumber);
+            const chosen = usable && picked === c.regNumber;
+            return (
+              <li key={`${c.regNumber ?? "no-number"}-${i}`}>
+                <label
+                  className={`flex gap-3 rounded-xl border p-4 ${
+                    usable ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+                  } ${
+                    chosen
+                      ? "border-gold bg-gold/10"
+                      : "border-white/10 bg-white/[0.03]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="candidate"
+                    className="mt-1 accent-gold"
+                    value={c.regNumber ?? ""}
+                    checked={chosen}
+                    disabled={!usable}
+                    onChange={() => {
+                      setPicked(c.regNumber ?? "");
+                      setError("");
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14.5px] leading-snug text-cream">
+                      {c.companyName ?? t("request.select.unknown")}
+                    </p>
+                    <div className="mt-2 grid gap-1">
+                      <Detail
+                        label={t("request.select.numberLabel")}
+                        value={c.regNumber}
+                        fallback={t("request.select.unknown")}
+                        mono
+                      />
+                      <Detail
+                        label={t("request.select.statusLabel")}
+                        value={c.status?.replace(/[-_]/g, " ")}
+                        fallback={t("request.select.unknown")}
+                      />
+                      <Detail
+                        label={t("request.select.incorporatedLabel")}
+                        value={c.incorporationDate}
+                        fallback={t("request.select.unknown")}
+                      />
+                      <Detail
+                        label={t("request.select.addressLabel")}
+                        value={c.address}
+                        fallback={t("request.select.unknown")}
+                      />
+                    </div>
+                    {!usable && (
+                      <p className="mt-2 text-[11.5px] leading-relaxed text-gray-2">
+                        {t("request.select.noNumber")}
+                      </p>
+                    )}
+                  </div>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+
+        {error && <p className="mt-5 text-sm text-red-400">{error}</p>}
+
+        <div className="mt-7 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={onSelect}
+            disabled={resuming || !picked}
+            className="btn-gold disabled:opacity-60"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            {resuming
+              ? t("request.select.working")
+              : t("request.select.continue")}
+          </button>
+          <button type="button" onClick={reset} className="btn-ghost-light">
+            {t("request.select.startOver")}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (status === "done" && outcome) {

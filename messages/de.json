@@ -777,6 +777,29 @@
         "rateLimit": "Das sind viele Prüfungen in kurzer Zeit. Bitte versuchen Sie es später erneut.",
         "generic": "Die Prüfung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
       },
+      "select": {
+        "title": "Mehrere Unternehmen tragen diesen Namen",
+        "body": "Das Register führt mehrere Unternehmen unter dem von Ihnen eingegebenen Namen, das geprüfte Unternehmen steht damit noch nicht fest. Wählen Sie das gemeinte aus, dann wird die Prüfung an diesem Unternehmen fortgesetzt: Registereintrag, Umsatzsteuer, LEI sowie Sanktionsprüfung des Unternehmens und seiner Organe.",
+        "noCharge": "Diese Prüfung ist bereits bezahlt. Die Auswahl eines Unternehmens schließt sie ab und kostet keine weiteren Credits.",
+        "count": "{count} Unternehmen stimmen überein.",
+        "capped": "Das Register meldet {total} Treffer, hier stehen die ersten {shown}. Ist das gesuchte Unternehmen nicht darunter, starten Sie die Prüfung erneut mit dessen Registernummer.",
+        "numberLabel": "Nummer",
+        "statusLabel": "Status",
+        "incorporatedLabel": "Gegründet",
+        "addressLabel": "Eingetragener Sitz",
+        "unknown": "Nicht angegeben",
+        "noNumber": "Zu diesem Treffer ist keine Registernummer veröffentlicht, er kann daher nicht geprüft werden. Starten Sie die Prüfung erneut mit der Nummer.",
+        "continue": "Prüfung fortsetzen",
+        "working": "Prüfung wird fortgesetzt",
+        "startOver": "Andere Prüfung starten",
+        "errors": {
+          "pick": "Wählen Sie ein Unternehmen aus, um fortzufahren.",
+          "notFound": "Diese Prüfung wurde in Ihrem Konto nicht gefunden.",
+          "notSelectable": "Diese Prüfung wartet nicht mehr auf die Auswahl eines Unternehmens.",
+          "unknownCandidate": "Dieses Unternehmen war keiner der angebotenen Treffer. Wählen Sie eines aus der Liste.",
+          "generic": "Die Prüfung konnte nicht fortgesetzt werden. Bitte versuchen Sie es erneut."
+        }
+      },
       "result": {
         "verifiedTitle": "Verifiziert",
         "verifiedBody": "Der Registereintrag ist aktiv, die von Ihnen angegebenen Daten stimmen damit überein, und es wurden keine möglichen Sanktionstreffer gefunden. Das Ergebnis ist in Ihrem Konto verzeichnet.",

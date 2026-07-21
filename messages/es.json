@@ -777,6 +777,29 @@
         "rateLimit": "Son muchas comprobaciones en poco tiempo. Inténtelo de nuevo más tarde.",
         "generic": "La comprobación no se pudo completar. Inténtelo de nuevo."
       },
+      "select": {
+        "title": "Más de una empresa coincide con ese nombre",
+        "body": "El registro contiene varias empresas con el nombre que introdujo, por lo que el sujeto aún no está identificado. Elija la que corresponde y la comprobación continuará sobre esa empresa: asiento registral, IVA, LEI y cribado de sanciones de la empresa y de sus administradores.",
+        "noCharge": "Esta comprobación ya está pagada. Elegir una empresa la finaliza y no consume créditos adicionales.",
+        "count": "{count} empresas coinciden.",
+        "capped": "El registro indica {total} coincidencias y aquí se enumeran las {shown} primeras. Si la empresa que busca no está entre ellas, ejecute la comprobación de nuevo con su número de registro.",
+        "numberLabel": "Número",
+        "statusLabel": "Situación",
+        "incorporatedLabel": "Constituida",
+        "addressLabel": "Domicilio social",
+        "unknown": "No consta",
+        "noNumber": "Esta coincidencia no publica número de registro, por lo que no puede comprobarse. Ejecute la comprobación de nuevo indicando el número.",
+        "continue": "Continuar la comprobación",
+        "working": "Continuando la comprobación",
+        "startOver": "Iniciar otra comprobación",
+        "errors": {
+          "pick": "Elija una empresa para continuar.",
+          "notFound": "No se encontró esa comprobación en su cuenta.",
+          "notSelectable": "Esa comprobación ya no está a la espera de que se elija una empresa.",
+          "unknownCandidate": "Esa empresa no figuraba entre las coincidencias ofrecidas. Elija una de la lista.",
+          "generic": "No se pudo continuar la comprobación. Inténtelo de nuevo."
+        }
+      },
       "result": {
         "verifiedTitle": "Verificada",
         "verifiedBody": "El asiento registral está activo, los datos que facilitó coinciden con él y no se encontraron candidatas en las listas de sanciones. El resultado consta en su registro.",
