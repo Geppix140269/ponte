@@ -85,7 +85,7 @@ export default function ListingForm({
     passed: string[];
   };
   const [assess, setAssess] = useState<Assessment | null>(null);
-  const [assessStatus, setAssessStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [assessStatus, setAssessStatus] = useState<"idle" | "loading" | "done" | "error" | "upgrade">("idle");
 
   // The deal
   const [catId, setCatId] = useState("");
@@ -235,6 +235,10 @@ export default function ListingForm({
         }),
       });
       const body = await res.json().catch(() => ({}));
+      if (res.status === 402) {
+        setAssessStatus("upgrade");
+        return;
+      }
       if (!res.ok || !body.assessment) throw new Error();
       setAssess(body.assessment as Assessment);
       setAssessStatus("done");
@@ -831,6 +835,21 @@ export default function ListingForm({
             <p className="mt-3 text-[13px] text-gray-2">
               The check is unavailable right now. You can still publish.
             </p>
+          )}
+          {assessStatus === "upgrade" && (
+            <div className="mt-3">
+              <p className="text-[13px] leading-relaxed text-gray-2">
+                You have used your free checks. Ponte AI gives you unlimited
+                listing checks and your personal AI account manager for
+                <span className="text-gold"> $19/month</span>.
+              </p>
+              <a
+                href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/pricing"}
+                className="btn-gold mt-3 inline-flex"
+              >
+                Unlock Ponte AI
+              </a>
+            </div>
           )}
           {assessStatus === "done" && assess && (
             <div className="mt-2 space-y-2.5">

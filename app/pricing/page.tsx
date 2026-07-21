@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Store, Briefcase, CalendarClock } from "lucide-react";
+import { ArrowRight, Store, Briefcase, CalendarClock, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Fees",
@@ -26,7 +26,7 @@ export default function PricingPage() {
       </section>
 
       <section className="container-px pb-12">
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {/* Free marketplace */}
           <div className="glass p-7 flex flex-col ring-1 ring-gold/40">
             <Store className="h-5 w-5 text-gold" />
@@ -41,6 +41,26 @@ export default function PricingPage() {
               front.
             </p>
             <Link href="/marketplace/new" className="btn-gold mt-6">Start a listing <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+
+          {/* Ponte AI */}
+          <div className="glass p-7 flex flex-col">
+            <Sparkles className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Ponte AI</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>$19<span className="text-[15px] text-gray-2">/month</span></div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Or $190/year · cancel anytime</p>
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
+              Your AI on the inside: unlimited listing checks that score and
+              coach every listing before it goes live, a personal AI account
+              manager reading your account daily, and first access to AI
+              match alerts. Try it free, keep it when it pays for itself.
+            </p>
+            <a
+              href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/contact?engagement=ai"}
+              className="btn-gold mt-6"
+            >
+              Unlock Ponte AI <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
 
           {/* Success fee */}

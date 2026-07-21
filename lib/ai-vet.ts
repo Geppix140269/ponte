@@ -258,3 +258,83 @@ plain commercial language. Return STRICT JSON only:
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2: the AI account manager. Reads a member's whole account and
+// produces a short brief: where things stand, what to do next, and a
+// nudge email draft the desk can send. Cached in account_briefs, one
+// generation per member per day at most.
+
+export type AccountBrief = {
+  summary: string;
+  next_actions: string[]; // max 4, imperative, member-facing
+  nudge_email_draft: string; // desk-facing draft to re-engage this member
+};
+
+const ACCOUNT_SYSTEM = `You are the account manager of Ponte (ponte.trade),
+a free vetted marketplace for physical trade with an optional paid desk
+(success fee or retainer) for managed deals.
+
+You are given a member's account: their listings with statuses, drafts,
+and pending connection requests. Return STRICT JSON only:
+{
+  "summary": "<2 sentences, warm and concrete, on where their account
+    stands. Address the member as 'you'.>",
+  "next_actions": ["<imperative, specific next step, e.g. 'Accept or
+    decline the pending connection request on PT-0104', 'Add photos to
+    your draft before submitting', 'Your listing PT-0101 has been live 30
+    days: confirm it is still available'>", ...],
+  "nudge_email_draft": "<short friendly email the desk could send this
+    member to re-engage them, plain text, no subject line>"
+}
+
+Rules: max 4 next_actions, most valuable first. Ground every point in the
+data given, never invent listings. Statuses: draft (only they see it),
+submitted (in vetting), approved (live on the board), rejected, closed.
+Pending connection requests are other members wanting to connect: urgent.
+Mention the optional desk only when a deal looks big or stuck. Plain
+language, never em dashes.`;
+
+export async function accountBrief(input: {
+  listings: {
+    ref: string;
+    type: string;
+    product: string;
+    status: string;
+    days_old: number;
+  }[];
+  pending_connection_requests: number;
+}): Promise<AccountBrief | null> {
+  if (!isAiConfigured()) return null;
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: process.env.AI_VET_MODEL || DEFAULT_MODEL,
+      max_tokens: 700,
+      system: ACCOUNT_SYSTEM,
+      messages: [
+        { role: "user", content: `This member's account:\n${JSON.stringify(input, null, 2)}` },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    console.error("[ponte] AI account brief API error:", res.status);
+    return null;
+  }
+  const data = await res.json();
+  const text: string = data?.content?.[0]?.text ?? "";
+  const jsonText = text.replace(/^```(json)?/m, "").replace(/```\s*$/m, "").trim();
+  try {
+    const parsed = JSON.parse(jsonText) as AccountBrief;
+    if (!parsed.summary || !Array.isArray(parsed.next_actions)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}

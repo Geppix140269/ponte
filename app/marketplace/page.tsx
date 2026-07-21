@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck, Share2 } from "lucide-react";
+import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck, Share2, Sparkles } from "lucide-react";
+import { accountBrief, isAiConfigured, type AccountBrief } from "@/lib/ai-vet";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
@@ -93,6 +94,65 @@ export default async function MarketplacePage() {
         arr.push({ id: c.id });
         pendingByListing.set(c.listing_id, arr);
       }
+    }
+  }
+
+  // Phase 2: the AI account manager. One cached brief per member,
+  // regenerated at most daily or when the listing count changes.
+  // Freemium: free on the first listing; Ponte AI after that.
+  let brief: AccountBrief | null = null;
+  let briefLocked = false;
+  if (user && listings.length > 0 && isAiConfigured()) {
+    const adminSb = createAdminClient();
+    const { data: aiProfile } = await adminSb
+      .from("profiles")
+      .select("ai_member")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!aiProfile?.ai_member && listings.length > 1) {
+      briefLocked = true;
+    }
+    const totalPending = Array.from(pendingByListing.values()).reduce(
+      (a, b) => a + b.length,
+      0,
+    );
+    const { data: cached } = await adminSb
+      .from("account_briefs")
+      .select("brief, listing_count, generated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const stale =
+      !cached ||
+      cached.listing_count !== listings.length ||
+      Date.now() - new Date(cached.generated_at).getTime() > 24 * 3600 * 1000;
+    if (briefLocked) {
+      // no generation for locked accounts: the upsell panel shows instead
+    } else if (stale) {
+      const fresh = await accountBrief({
+        listings: listings.map((l) => ({
+          ref: l.ref,
+          type: l.type,
+          product: l.product,
+          status: l.status,
+          days_old: Math.floor(
+            (Date.now() - new Date(l.created_at).getTime()) / 86400000,
+          ),
+        })),
+        pending_connection_requests: totalPending,
+      });
+      if (fresh) {
+        brief = fresh;
+        await adminSb.from("account_briefs").upsert({
+          user_id: user.id,
+          brief: fresh,
+          listing_count: listings.length,
+          generated_at: new Date().toISOString(),
+        });
+      } else if (cached) {
+        brief = cached.brief as AccountBrief;
+      }
+    } else {
+      brief = cached.brief as AccountBrief;
     }
   }
 
@@ -306,6 +366,43 @@ export default async function MarketplacePage() {
               New listing <FilePlus2 className="h-4 w-4" />
             </Link>
           </div>
+
+          {briefLocked && (
+            <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
+              <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
+                <Sparkles className="h-3.5 w-3.5" /> Your account manager
+              </p>
+              <p className="mt-3 text-[14px] leading-relaxed text-gray-2">
+                Your AI account manager reads your whole account daily: what
+                to answer, what to refresh, what to fix, and drafts the next
+                move. Unlimited listing checks included.{" "}
+                <span className="text-gold">Ponte AI · $19/month.</span>
+              </p>
+              <a
+                href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/pricing"}
+                className="btn-gold mt-4 inline-flex"
+              >
+                Unlock Ponte AI <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          )}
+          {brief && !briefLocked && (
+            <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
+              <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
+                <Sparkles className="h-3.5 w-3.5" /> Your account manager
+              </p>
+              <p className="mt-3 text-[14px] leading-relaxed text-cream">{brief.summary}</p>
+              {brief.next_actions.length > 0 && (
+                <div className="mt-3 space-y-1.5">
+                  {brief.next_actions.map((a) => (
+                    <p key={a} className="flex gap-2 text-[13px] leading-relaxed text-gray-2">
+                      <span className="text-gold">→</span> {a}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {listings.length === 0 ? (
             <div className="glass p-8 text-[14px] text-gray-2">
