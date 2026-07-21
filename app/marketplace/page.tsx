@@ -166,9 +166,6 @@ export default async function MarketplacePage() {
               <Link href="/login?next=/marketplace/new" className="btn-gold">
                 Sign in to submit <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/network" className="btn-ghost-light">
-                Get the weekly digest
-              </Link>
             </>
           )}
         </div>

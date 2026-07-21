@@ -396,3 +396,13 @@
 @media (prefers-reduced-motion: reduce) {
   .flow-step, .flow-line, .reveal { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
 }
+
+/* Native select popups must follow the dark theme; without this the OS
+   renders cream text on a light panel and options are illegible. */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: #0F1E3C;
+  color: #F5EFE2;
+}

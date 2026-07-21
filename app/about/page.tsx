@@ -49,18 +49,6 @@ const offer = [
     href: "/marketplace",
     cta: "Bring us a deal",
   },
-  {
-    title: "The Deal Sheet",
-    body: "A weekly, anonymized circulation of live opportunities to a vetted network.",
-    href: "/network",
-    cta: "Request access",
-  },
-  {
-    title: "The Analyst Desk",
-    body: "Senior analyst calls, strategy intensives and retainers when a decision needs evidence first.",
-    href: "/advisory",
-    cta: "Book a call",
-  },
 ];
 
 export default function AboutPage() {
@@ -137,10 +125,10 @@ export default function AboutPage() {
         <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-10">
           <div className="num-italic">— 03 / The desk</div>
           <h2 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
-            Three doors, one house.
+            One door. One process.
           </h2>
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 max-w-xl">
           {offer.map((o) => (
             <Link key={o.title} href={o.href} className="card group p-7">
               <h3 className="serif text-white text-lg" style={{ fontWeight: 500 }}>{o.title}</h3>
@@ -189,7 +177,6 @@ export default function AboutPage() {
             <Link href="/marketplace" className="btn-gold">
               Submit a deal <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/network" className="btn-ghost-light">Join the Deal Sheet</Link>
           </div>
         </div>
       </section>

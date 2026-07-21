@@ -10,9 +10,9 @@ export default function SiteFooter() {
             <div className="md:col-span-5 md:pr-6">
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
-                Independent trade brokerage and senior-led advisory. Bring a
-                deal to the desk, join the weekly Deal Sheet, or book an
-                analyst. Success fees and engagements, never subscriptions.
+                The vetted marketplace for global trade. List what you sell,
+                post what you need, papered before introduced. Success fee
+                only.
               </p>
             </div>
 
@@ -27,16 +27,6 @@ export default function SiteFooter() {
                 <li>
                   <Link href="/marketplace" className="text-sm text-gray-2 transition-colors hover:text-gold">
                     The Marketplace
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/network" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    The Deal Sheet
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/advisory" className="text-sm text-gray-2 transition-colors hover:text-gold">
-                    The Analyst Desk
                   </Link>
                 </li>
                 <li>

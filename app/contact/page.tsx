@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Phone, Mail, FileText } from "lucide-react";
+import { ArrowRight, Mail, FileText } from "lucide-react";
 
 // Calendly account link (same as the Analyst Desk). Point at a dedicated
 // Stripe-enabled "Analyst Call" event for one-step payment when ready.
@@ -54,17 +54,6 @@ export default function ContactPage({
             <Link href="/marketplace" className="btn-gold mt-6">
               Go to the marketplace <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-
-          <div className="glass p-8 flex flex-col">
-            <Phone className="h-5 w-5 text-gold" />
-            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>Book an analyst call</h3>
-            <p className="mt-2 flex-1 text-[14px] leading-relaxed text-gray-2">
-              Sixty minutes with a senior analyst on one decision, with a written recap. $500.
-            </p>
-            <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost-light mt-6">
-              Book a call <ArrowRight className="h-4 w-4" />
-            </a>
           </div>
 
           <div className="glass p-8 flex flex-col">

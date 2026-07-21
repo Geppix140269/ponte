@@ -7,7 +7,6 @@ import {
   PackageSearch,
   PackageCheck,
   LayoutGrid,
-  Phone,
   ShieldCheck,
   FileSignature,
   BadgePercent,
@@ -85,16 +84,11 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Secondary doors, small */}
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 max-w-4xl">
+          {/* Secondary door */}
+          <div className="mt-5 max-w-4xl">
             <Link href="/marketplace" className="group flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-4 transition-colors hover:border-gold/50">
               <LayoutGrid className="h-5 w-5 text-gold" />
               <span className="flex-1 text-[14px] text-cream">See the live board</span>
-              <ArrowRight className="h-4 w-4 text-gray-2 transition-transform group-hover:translate-x-1 group-hover:text-gold" />
-            </Link>
-            <Link href="/advisory" className="group flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-6 py-4 transition-colors hover:border-gold/50">
-              <Phone className="h-5 w-5 text-gold" />
-              <span className="flex-1 text-[14px] text-cream">Talk to a senior analyst</span>
               <ArrowRight className="h-4 w-4 text-gray-2 transition-transform group-hover:translate-x-1 group-hover:text-gold" />
             </Link>
           </div>

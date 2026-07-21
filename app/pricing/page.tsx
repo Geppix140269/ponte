@@ -5,15 +5,10 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "Fees",
   description:
-    "Brokerage on success fee only. Deal Sheet membership free for vetted members. Analyst calls from $500. No subscriptions.",
+    "Brokerage on success fee only. No listing fees, no subscriptions.",
   alternates: { canonical: "/pricing" },
 };
 
-const ANALYST_TIERS = [
-  { name: "Analyst Call", price: "$500", meta: "60 min · written recap", note: "One decision, a senior analyst, a one-page follow-up." },
-  { name: "Strategy Intensive", price: "$2,000", meta: "Half-day · brief included", note: "A decision with moving parts, with a written brief.", featured: true },
-  { name: "Trade Desk Retainer", price: "from $2,500", meta: "Per month · senior-led", note: "A standing analyst, priority turnaround, quarterly review." },
-];
 
 export default function PricingPage() {
   return (
@@ -24,8 +19,7 @@ export default function PricingPage() {
           Fees, not subscriptions.
         </h1>
         <p className="text-[17px] text-gray-2 max-w-xl">
-          Brokerage on success fee. Membership free. Intelligence by the
-          engagement. No subscriptions, ever. All prices in USD.
+          Brokerage on success fee. No subscriptions, ever. All prices in USD.
         </p>
       </section>
 
@@ -38,7 +32,7 @@ export default function PricingPage() {
           </div>
           <Link href="/marketplace" className="btn-ghost-light">Visit the marketplace <ArrowRight className="h-4 w-4" /></Link>
         </div>
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 max-w-2xl">
           <div className="glass p-7 flex flex-col ring-1 ring-gold/40">
             <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Desk</h3>
             <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Success fee only</div>
@@ -50,39 +44,6 @@ export default function PricingPage() {
             </p>
             <Link href="/marketplace" className="btn-gold mt-6">Submit a deal <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="glass p-7 flex flex-col">
-            <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Sheet</h3>
-            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Free</div>
-            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Vetted members · weekly email</p>
-            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
-              One email a week with live, anonymized offers and requirements.
-              Free for approved members. Introductions run under signed NCNDA
-              and fee terms.
-            </p>
-            <Link href="/network" className="btn-ghost-light mt-6">Request access <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Route 1: The Analyst Desk */}
-      <section className="container-px pb-12">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
-          <div>
-            <p className="eyebrow text-gold">The Analyst Desk</p>
-            <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>Senior analyst access</h2>
-          </div>
-          <Link href="/advisory" className="btn-ghost-light">Explore the Analyst Desk <ArrowRight className="h-4 w-4" /></Link>
-        </div>
-        <div className="grid gap-5 md:grid-cols-3">
-          {ANALYST_TIERS.map((t) => (
-            <div key={t.name} className={`glass p-7 flex flex-col ${t.featured ? "ring-1 ring-gold/40" : ""}`}>
-              <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>{t.name}</h3>
-              <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>{t.price}</div>
-              <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>{t.meta}</p>
-              <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">{t.note}</p>
-              <Link href="/advisory" className="btn-gold mt-6">Book <ArrowRight className="h-4 w-4" /></Link>
-            </div>
-          ))}
         </div>
       </section>
 
