@@ -46,6 +46,75 @@ Confirm at least: `/`, `/marketplace`, `/pricing`, `/about`. After an i18n
 change also check a prefixed locale, for example `/es/marketplace`, and that
 `/cart` still returns a permanent redirect rather than a page.
 
+## Sanctions list refresh
+
+The five published lists (OFAC SDN, OFAC consolidated, EU CFSL, UN Security
+Council, UK OFSI) are rebuilt nightly, and every subject holding a clean
+verdict is re-screened against the result.
+
+**Where it runs.** GitHub Actions, workflow `Sanctions refresh`
+(`.github/workflows/sanctions-refresh.yml`), at 02:00 UTC. It runs
+`npm run sanctions:refresh`, which is `scripts/sanctions-refresh.ts`, which
+calls `runRefreshAndRescreen()` in `lib/sanctions/refresh-run.ts`.
+
+**Why not a function.** A full refresh takes minutes. Netlify caps a
+synchronous function at roughly 10 to 26 seconds, so the old scheduled
+function returned HTTP 504 while the work carried on server side, or did not,
+with no way to tell which. The route carried `maxDuration = 300`, which is a
+Vercel setting and did nothing here. A runner has a six hour ceiling, so the
+timeout is gone rather than raised.
+
+**Trigger it by hand.** GitHub, Actions tab, `Sanctions refresh`, `Run
+workflow`. That is the supported manual path and it is the same code as the
+scheduled run.
+
+There is also `POST /api/cron/sanctions-refresh` with the
+`x-refresh-secret` header, kept for an operator with a shell but no GitHub
+access. **It will return 504 on a full refresh.** Read that as "no result",
+never as "failed", and confirm the outcome in `sanctions_refresh_log`.
+
+**Check it worked.**
+
+| Question | Where |
+|---|---|
+| Did last night's run pass? | Actions tab, `Sanctions refresh`, last run |
+| What did each list load? | `sanctions_refresh_log`, one row per source per run |
+| How many rows are live? | `select source_list, count(*) from sanctions_entries group by 1` |
+
+Roughly 30,000 rows across the five lists is the normal total.
+
+**When it fails.**
+
+- A single source failing once is normal, a national feed blips. The run is
+  marked failed, that list keeps its previous copy, and the other four still
+  reload.
+- A source failing **twice in a row** emails `ADMIN_ALERT_EMAIL`. That means
+  screening is running against a stale copy of that list, usually because the
+  feed changed shape and the parser in `lib/sanctions/refresh.ts` needs
+  adjusting.
+- A red workflow run also emails whoever owns the repository, through GitHub's
+  own notifications. That is the backstop if the job cannot even start, for
+  example a missing secret, when no code of ours runs to send an email.
+
+A partial run is safe. Loading is upsert then sweep, and the sweep only runs
+after every chunk has landed, so a run that dies half way leaves a superset of
+the correct list and never a subset. **Do not change this to delete then
+insert.** That leaves a window where a concurrent screening sees an empty
+table and reports a subject clean, which is silent and looks identical to a
+real result.
+
+**Secrets the workflow needs**, set under Settings, Secrets and variables,
+Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
+`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ADMIN_ALERT_EMAIL`. Rotating any of
+these means updating both Netlify and here, or the nightly run starts failing
+while the site stays up.
+
+**Two GitHub scheduling caveats.** Scheduled runs can be delayed by several
+minutes at peak, which does not matter for a daily rebuild. And GitHub
+disables scheduled workflows in a repository with no activity for 60 days, so
+if the refresh silently stops, check that the workflow is still enabled before
+looking at the code.
+
 ## Back up
 
 The source of truth is GitHub. Local bundles are a second line, useful if the
