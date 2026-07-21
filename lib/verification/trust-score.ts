@@ -7,7 +7,9 @@
 //
 // Maximum is 100. Components are additive and capped.
 
-import { createAdminClient } from "@/lib/supabase/server";
+// From lib/supabase/admin, not lib/supabase/server: the scheduled re-screen
+// reaches this file outside Next. See the note in lib/supabase/admin.ts.
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type TrustComponent =
   | "identity"

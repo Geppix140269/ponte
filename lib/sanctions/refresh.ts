@@ -22,7 +22,10 @@
 // for that one source, which is caught by the entry count guard below and
 // logged, rather than a hard crash that takes the other three lists with it.
 
-import { createAdminClient } from "@/lib/supabase/server";
+// Imported from lib/supabase/admin, not lib/supabase/server: this file runs in
+// the scheduled Node job as well as in Next, and server.ts pulls in
+// next/headers on import.
+import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeName } from "./normalize";
 
 export type SourceList =

@@ -10,7 +10,9 @@
 // because being newly similar to a listed name is not the same as being that
 // entity.
 
-import { createAdminClient } from "@/lib/supabase/server";
+// From lib/supabase/admin, not lib/supabase/server: this runs in the scheduled
+// Node job. See the note in lib/supabase/admin.ts.
+import { createAdminClient } from "@/lib/supabase/admin";
 import { screenSubject } from "@/lib/sanctions/screen";
 import { clearComponent } from "@/lib/verification/trust-score";
 import { sendAdminNotice } from "@/lib/email";

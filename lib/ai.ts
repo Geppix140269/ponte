@@ -9,7 +9,9 @@
 //   ANTHROPIC_API_KEY   required
 //   AI_VET_MODEL        optional, overrides the default working model
 
-import { createAdminClient } from "@/lib/supabase/server";
+// From lib/supabase/admin, not lib/supabase/server: the scheduled re-screen
+// reaches this file outside Next. See the note in lib/supabase/admin.ts.
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const API_URL = "https://api.anthropic.com/v1/messages";
 const API_VERSION = "2023-06-01";

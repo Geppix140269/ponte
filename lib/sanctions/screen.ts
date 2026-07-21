@@ -12,7 +12,9 @@
 // only: no customs data, no third party trade data.
 
 import { callAiJson, MODEL_FAST } from "@/lib/ai";
-import { createAdminClient } from "@/lib/supabase/server";
+// From lib/supabase/admin, not lib/supabase/server: the scheduled re-screen
+// loads this file outside Next. See the note in lib/supabase/admin.ts.
+import { createAdminClient } from "@/lib/supabase/admin";
 import { nameVariants, normalizeName } from "./normalize";
 
 /** At or above this, a row is a candidate and goes to triage. */
