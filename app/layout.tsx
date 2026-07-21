@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     template: "%s | Ponte Trade",
   },
   description:
-    "The vetted marketplace for physical trade. Post what you sell or what you need in three steps; the desk verifies every listing before it circulates, and introductions happen only under NCNDA and agreed fee terms. Success fee only. Operated by 1402 Celsius Ltd.",
+    "The free, vetted marketplace for physical trade. Post what you sell or what you need; AI and the desk verify every listing; connect directly, anonymous until both sides agree, at no cost. The Ponte desk manages deals end to end only on request, on a success fee or retainer. Operated by 1402 Celsius Ltd.",
   openGraph: {
     title: "Ponte. The bridge between buyer and seller.",
     description:
-      "Every listing vetted. Every deal papered. Post an offer or a requirement in three steps; the desk does the rest.",
+      "Every listing vetted. Every connection free. Post an offer or a requirement in three steps; bring in the desk only when you want the deal managed.",
     url: APP_URL,
     siteName: "Ponte",
     type: "website",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ponte. The bridge between buyer and seller.",
     description:
-      "Every listing vetted. Every deal papered. The marketplace for physical trade, success fee only.",
+      "The free, vetted marketplace for physical trade. Desk-managed deals optional, on success fee or retainer.",
   },
 };
 
@@ -62,7 +62,7 @@ const organizationJsonLd = {
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "Ponte is a vetted marketplace and brokerage desk for physical goods and trade services, operated by 1402 Celsius Ltd. Every listing is reviewed by the desk before circulation, counterparties stay anonymous, and introductions are made only under signed NCNDA and agreed fee terms.",
+    "Ponte is the free, vetted marketplace for physical goods and trade services, operated by 1402 Celsius Ltd. Every listing is verified by AI and a human desk before circulation; members connect directly at no cost, anonymous until both sides agree. The Ponte desk manages deals end to end on request, on a success fee or retainer.",
 };
 
 const websiteJsonLd = {

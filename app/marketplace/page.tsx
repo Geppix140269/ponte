@@ -4,7 +4,7 @@ import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck, Share2 } from "
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
-import { submitDraftAction } from "./actions";
+import { submitDraftAction, connectDecisionAction } from "./actions";
 import Reveal from "@/components/Reveal";
 import ProcessFlow from "@/components/ProcessFlow";
 
@@ -53,8 +53,8 @@ const RULES = [
   },
   {
     icon: BadgeCheck,
-    title: "Success fee only",
-    body: "Submitting and listing cost nothing. The desk earns an agreed fee only when your deal closes.",
+    title: "Free to trade",
+    body: "Posting, browsing and connecting cost nothing. Bring in the desk only if you want the deal managed end to end, on a success fee or retainer.",
   },
 ];
 
@@ -71,6 +71,8 @@ export default async function MarketplacePage() {
     decision_note: string | null;
   }[] = [];
 
+  // Pending connection requests on the member's own listings.
+  const pendingByListing = new Map<string, { id: string }[]>();
   if (user) {
     const supabase = createClient();
     const { data } = await supabase
@@ -79,6 +81,19 @@ export default async function MarketplacePage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     listings = data ?? [];
+
+    if (listings.length > 0) {
+      const { data: conns } = await supabase
+        .from("listing_connections")
+        .select("id, listing_id")
+        .eq("status", "pending")
+        .in("listing_id", listings.map((l) => l.id));
+      for (const c of conns ?? []) {
+        const arr = pendingByListing.get(c.listing_id) ?? [];
+        arr.push({ id: c.id });
+        pendingByListing.set(c.listing_id, arr);
+      }
+    }
   }
 
   // The live board. Members get the full listing; visitors get a
@@ -161,10 +176,11 @@ export default async function MarketplacePage() {
           Every deal papered.
         </h1>
         <p className="text-[18px] text-gray-2 leading-relaxed max-w-2xl">
-          Submit your offers and requirements from your account. The desk
-          verifies the facts and the documents before anything reaches the
-          network, and introductions happen only under signed NCNDA and fee
-          terms.
+          Post what you sell or what you need, free. AI and the desk verify
+          every listing before it goes live, you stay anonymous until both
+          sides agree to connect, and connecting costs nothing. Want the deal
+          managed end to end? The desk steps in on a success fee or retainer,
+          only when you ask.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {user ? (
@@ -336,6 +352,27 @@ export default async function MarketplacePage() {
                       <Share2 className="h-3.5 w-3.5" /> Share on WhatsApp
                     </a>
                   )}
+                  {(pendingByListing.get(l.id) ?? []).map((c, i) => (
+                    <div
+                      key={c.id}
+                      className="mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-4 py-3"
+                      style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
+                    >
+                      <span className="flex-1 text-[13px] text-cream">
+                        A vetted member wants to connect{(pendingByListing.get(l.id) ?? []).length > 1 ? ` (${i + 1})` : ""}.
+                        Accept and you both receive each other&apos;s contact. Free.
+                      </span>
+                      <form action={connectDecisionAction} className="flex gap-2">
+                        <input type="hidden" name="id" value={c.id} />
+                        <button name="decision" value="accepted" className="btn-gold !px-4 !py-2 text-[12px]">
+                          Accept
+                        </button>
+                        <button name="decision" value="declined" className="btn-ghost-light !px-4 !py-2 text-[12px]">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

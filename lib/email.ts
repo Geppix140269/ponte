@@ -402,3 +402,45 @@ export async function sendListingDecision(
     `),
   );
 }
+
+export async function sendConnectRequest(
+  to: string,
+  data: { ref: string; product: string },
+): Promise<void> {
+  await send(
+    to,
+    `A member wants to connect · ${data.ref} | Ponte`,
+    layout(`
+      <h2 style="margin:0 0 12px">Someone wants to connect.</h2>
+      <p>A vetted member has requested to connect on your listing
+      <strong>${data.ref}</strong> · ${data.product}.</p>
+      <p>You stay anonymous to each other until you accept. Accept and both
+      of you receive each other's contact details; connecting is free.</p>
+      <p><a href="${APP_URL}/marketplace" style="color:#D08F18">Review the request →</a></p>
+      <p style="color:#64748B;font-size:13px">Prefer the desk to run the deal
+      end to end (verification, NCNDA, papers, negotiation)? Just reply to
+      this email: success fee or retainer, agreed in writing first.</p>
+    `),
+  );
+}
+
+export async function sendConnectAccepted(
+  to: string,
+  data: { ref: string; product: string; otherEmail: string },
+): Promise<void> {
+  await send(
+    to,
+    `You are connected · ${data.ref} | Ponte`,
+    layout(`
+      <h2 style="margin:0 0 12px">You are connected.</h2>
+      <p>Both sides agreed to connect on <strong>${data.ref}</strong> ·
+      ${data.product}.</p>
+      <p>Your counterparty: <a href="mailto:${data.otherEmail}" style="color:#D08F18">${data.otherEmail}</a>.
+      Reach out directly; connecting through Ponte is free.</p>
+      <p style="color:#64748B;font-size:13px">Want the desk on your side of
+      the table? Verification, NCNDA, contracts and negotiation, managed end
+      to end on a success fee or retainer. Reply to this email and we scope
+      it with you.</p>
+    `),
+  );
+}

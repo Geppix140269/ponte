@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { sendBrokerageSubmission } from "@/lib/email";
+import { sendConnectRequest, sendBrokerageSubmission } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// A member requests to connect on an approved listing. The owner decides;
+// identities are revealed only when both sides agree. Free, always.
 export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) {
@@ -33,23 +35,49 @@ export async function POST(req: NextRequest) {
   const supabase = createClient();
   const { data: listing } = await supabase
     .from("listings")
-    .select("ref, type, product, origin, destination")
+    .select("id, ref, type, product, user_id")
     .eq("ref", ref)
     .eq("status", "approved")
     .maybeSingle();
   if (!listing) {
     return NextResponse.json({ error: "Listing not found." }, { status: 404 });
   }
+  if (listing.user_id === user.id) {
+    return NextResponse.json({ error: "This is your own listing." }, { status: 400 });
+  }
 
-  await sendBrokerageSubmission({
-    type: "requirement",
-    name: user.email ?? user.id,
-    company: `Interest in ${listing.ref}`,
-    email: user.email ?? "unknown@ponte.trade",
-    country: "-",
-    product: listing.product,
-    details: `Member ${user.email ?? user.id} expressed interest in ${listing.ref} (${listing.type} · ${listing.product}). Next step: verify fit, then NCNDA and fee terms before any introduction.`,
+  // One request per member per listing; a repeat click is a no-op.
+  const { error: insertErr } = await supabase.from("listing_connections").insert({
+    listing_id: listing.id,
+    requester_id: user.id,
+    status: "pending",
   });
+  if (insertErr && !insertErr.message?.includes("duplicate")) {
+    console.error("[ponte] connection request failed:", insertErr);
+    return NextResponse.json({ error: "Could not send the request." }, { status: 500 });
+  }
+
+  if (!insertErr) {
+    // Notify the listing owner (the requester's identity is NOT revealed
+    // yet) and keep the desk in the loop.
+    const adminSb = createAdminClient();
+    const { data: owner } = await adminSb.auth.admin.getUserById(listing.user_id);
+    const ownerEmail = owner?.user?.email;
+    await Promise.allSettled([
+      ownerEmail
+        ? sendConnectRequest(ownerEmail, { ref: listing.ref, product: listing.product })
+        : Promise.resolve(),
+      sendBrokerageSubmission({
+        type: "requirement",
+        name: user.email ?? user.id,
+        company: `Connection request on ${listing.ref}`,
+        email: user.email ?? "unknown@ponte.trade",
+        country: "-",
+        product: listing.product,
+        details: `${user.email ?? user.id} requested to connect on ${listing.ref} (${listing.type} · ${listing.product}). Owner notified; awaiting owner decision. Desk involvement is optional under the free-connect model.`,
+      }),
+    ]);
+  }
 
   return NextResponse.json({ ok: true });
 }

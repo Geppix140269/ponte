@@ -59,11 +59,13 @@ export default function TermsPage() {
           </p>
           <p>
             Submitting an offer or requirement through the marketplace creates
-            no obligation on either side. We circulate opportunities on an
-            anonymized basis and do not disclose counterparty identities
-            before the paperwork above is in place. Our brokerage
-            remuneration is a success fee agreed in writing per transaction;
-            no fee is payable for submitting or browsing opportunities.
+            no obligation on either side. Listings circulate on an anonymized
+            basis; counterparty identities are disclosed only when both sides
+            agree to connect, and connecting through the marketplace is free
+            of charge. Where a party engages the desk to manage a deal, our
+            remuneration is a success fee or retainer agreed in writing before
+            any work starts; no fee is ever payable for submitting, browsing,
+            or connecting.
           </p>
 
           <h2>2. The Deal Sheet</h2>

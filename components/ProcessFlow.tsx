@@ -12,11 +12,11 @@ import {
 // The Ponte process, shown not told. Five nodes, one drawing line,
 // staggered reveals. Copy is deliberately minimal: verb + three words.
 const STEPS = [
-  { icon: FileText, label: "Submit", micro: "Your deal, your documents" },
-  { icon: ShieldCheck, label: "Vet", micro: "Facts and papers verified" },
-  { icon: Search, label: "Match", micro: "Anonymized to the network" },
-  { icon: FileSignature, label: "Paper", micro: "NCNDA and fee terms" },
-  { icon: Handshake, label: "Close", micro: "Fee only on success" },
+  { icon: FileText, label: "Post", micro: "Your deal, free" },
+  { icon: ShieldCheck, label: "Vet", micro: "AI checks, desk approves" },
+  { icon: Search, label: "Match", micro: "Anonymous on the board" },
+  { icon: Handshake, label: "Connect", micro: "Both agree, free" },
+  { icon: FileSignature, label: "Close", micro: "Desk optional, on fee" },
 ];
 
 export default function ProcessFlow() {

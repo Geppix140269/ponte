@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Store, Briefcase, CalendarClock } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Fees",
   description:
-    "Brokerage on success fee only. No listing fees, no subscriptions.",
+    "The Ponte marketplace is free: post, get vetted, connect. The desk is optional, on a success fee or a monthly retainer.",
   alternates: { canonical: "/pricing" },
 };
-
 
 export default function PricingPage() {
   return (
@@ -16,50 +15,69 @@ export default function PricingPage() {
       <section className="container-px pt-16 pb-10">
         <span className="pill">Fees</span>
         <h1 className="serif text-white mt-6 mb-4 max-w-2xl" style={{ fontWeight: 400, fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 1.0, letterSpacing: "-0.015em" }}>
-          Fees, not subscriptions.
+          The marketplace is{" "}
+          <em className="text-gold italic" style={{ fontWeight: 400 }}>free</em>.
         </h1>
         <p className="text-[17px] text-gray-2 max-w-xl">
-          Brokerage on success fee. No subscriptions, ever. All prices in USD.
+          Post, get vetted, connect: no listing fees, no subscriptions, no
+          commission on deals you close yourselves. You pay only if you ask
+          the desk to work for you.
         </p>
       </section>
 
-      {/* Route 0: The Brokerage */}
       <section className="container-px pb-12">
-        <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
-          <div>
-            <p className="eyebrow text-gold">The Brokerage</p>
-            <h2 className="serif text-white mt-2" style={{ fontSize: 26, fontWeight: 500 }}>Deals and the network</h2>
-          </div>
-          <Link href="/marketplace" className="btn-ghost-light">Visit the marketplace <ArrowRight className="h-4 w-4" /></Link>
-        </div>
-        <div className="grid gap-5 max-w-2xl">
+        <div className="grid gap-5 md:grid-cols-3">
+          {/* Free marketplace */}
           <div className="glass p-7 flex flex-col ring-1 ring-gold/40">
-            <h3 className="serif text-white text-xl" style={{ fontWeight: 500 }}>The Deal Desk</h3>
-            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Success fee only</div>
-            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Agreed in writing · paid on closing</p>
+            <Store className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>The Marketplace</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Free</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Always · for everyone</p>
             <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
-              Bring an offer or a requirement. No retainer, no listing fee.
-              The commission is agreed up front in the fee agreement and is
-              due only when your deal closes.
+              Post what you sell or what you need. AI and the desk vet every
+              listing before it goes live. You stay anonymous until both
+              sides agree to connect, then you deal directly. Producers,
+              trading companies and brokers all welcome, roles declared up
+              front.
             </p>
-            <Link href="/marketplace" className="btn-gold mt-6">Submit a deal <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/marketplace/new" className="btn-gold mt-6">Start a listing <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+
+          {/* Success fee */}
+          <div className="glass p-7 flex flex-col">
+            <Briefcase className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>The Desk, per deal</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Success fee</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>% agreed in writing · paid on closing</p>
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
+              Want a deal managed end to end? The desk runs verification in
+              depth, NCNDA, negotiation, contracts and closing coordination.
+              The percentage is agreed up front in the fee agreement and is
+              due only when the deal closes. Either side can engage us.
+            </p>
+            <Link href="/contact?engagement=desk" className="btn-ghost-light mt-6">Bring us a deal <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+
+          {/* Retainer */}
+          <div className="glass p-7 flex flex-col">
+            <CalendarClock className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>The Desk, on your side</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>Retainer</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Monthly · scoped to the mandate</p>
+            <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
+              Continuous sourcing or selling support: a standing mandate to
+              find, vet and negotiate on your behalf, month after month.
+              For trading teams, producers entering new markets, and buyers
+              with recurring programmes.
+            </p>
+            <Link href="/contact?engagement=retainer" className="btn-ghost-light mt-6">Scope a mandate <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
-      </section>
-
-      {/* Enterprise / retainers */}
-      <section className="container-px pb-24 border-t border-white/8 pt-12">
-        <div className="glass p-8 md:p-10">
-          <p className="eyebrow text-gold">For teams and trade bodies</p>
-          <h2 className="serif text-white mt-2 mb-3" style={{ fontSize: 26, fontWeight: 500 }}>Retainers and recurring briefings</h2>
-          <p className="text-[15px] leading-relaxed text-gray-2 max-w-2xl">
-            Standing advisory engagements, recurring market briefings for
-            members or boards, and desk arrangements for trade bodies and
-            trading teams. Scoped to the mandate, billed as a retainer or per
-            engagement.
-          </p>
-          <Link href="/contact?engagement=enterprise" className="btn-ghost-light mt-6">Talk to us <ArrowRight className="h-4 w-4" /></Link>
-        </div>
+        <p className="mt-6 text-[12px] text-gray-2 max-w-2xl">
+          Fee levels are agreed privately, in writing, before any work
+          starts. No hidden costs, no charge for introductions you make
+          yourselves on the board.
+        </p>
       </section>
     </>
   );

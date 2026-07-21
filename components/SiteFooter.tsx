@@ -11,8 +11,8 @@ export default function SiteFooter() {
               <Logo reversed size="lg" />
               <p className="mt-5 text-sm leading-relaxed text-gray-2 max-w-md">
                 The vetted marketplace for global trade. List what you sell,
-                post what you need, papered before introduced. Success fee
-                only.
+                post what you need, connect free. The desk manages your deal
+                only when you ask, on a success fee or retainer.
               </p>
             </div>
 

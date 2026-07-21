@@ -24,7 +24,7 @@ export default function InterestButton({ refCode }: { refCode: string }) {
   if (status === "sent") {
     return (
       <span className="inline-flex items-center gap-1.5 text-[11px] uppercase text-positive" style={{ letterSpacing: "0.16em" }}>
-        <CheckCircle2 className="h-3.5 w-3.5" /> Desk notified
+        <CheckCircle2 className="h-3.5 w-3.5" /> Request sent
       </span>
     );
   }
@@ -37,7 +37,7 @@ export default function InterestButton({ refCode }: { refCode: string }) {
       className="inline-flex items-center gap-1.5 text-[11px] uppercase text-gold hover:text-cream disabled:opacity-60"
       style={{ letterSpacing: "0.16em" }}
     >
-      {status === "sending" ? "Sending…" : status === "error" ? "Failed, try again" : "I am interested"}
+      {status === "sending" ? "Sending…" : status === "error" ? "Failed, try again" : "Request to connect"}
       <ArrowRight className="h-3.5 w-3.5" />
     </button>
   );

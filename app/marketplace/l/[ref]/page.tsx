@@ -106,7 +106,7 @@ export default async function DealPage({ params }: { params: { ref: string } }) 
         <p className="flex items-center gap-2 text-[13px] text-gray-2">
           <ShieldCheck className="h-4 w-4 text-gold" />
           Reviewed by the Ponte desk before going live. Counterparties stay
-          anonymous until NCNDA and fee terms are signed.
+          anonymous until both sides agree to connect; connecting is free.
         </p>
       </header>
 
