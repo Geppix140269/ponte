@@ -32,16 +32,23 @@ GitHub (source of truth)  |
 | OpenAI | AI listing checks, translation | API account | Giuseppe |
 | Google Cloud | OAuth client for sign in | OAuth client ID | Giuseppe |
 
-## Open question to confirm
+## Hosting
 
-The repository contains `netlify.toml` and the `@netlify/plugin-nextjs` plugin,
-and the current working brief says the site deploys to Netlify on push to
-`main`. A separate note in the operator's records says the Netlify account was
-suspended and sites were moved to Vercel.
+**Netlify.** Confirmed by the owner on 21 July 2026: the account was suspended
+for a period and has since been restored, and Netlify serves ponte.trade today.
+Any older note saying the site moved to Vercel is out of date.
 
-**Both cannot be true.** Confirm which host actually serves ponte.trade today,
-then correct this file and delete the config for the host that is not used.
-Until then, a deploy can silently go to a service nobody is watching.
+- Build config: `netlify.toml`, using `@netlify/plugin-nextjs`
+- Build command: `npm run build`, publish directory `.next`
+- Deploys automatically on push to `main`
+- Environment variables are set in the Netlify dashboard, not in the repository
+
+**After a routing change, deploy without cache.** The durable cache has served
+stale prerenders before. This applies to the locale routing change in
+particular.
+
+A failed build does not take the site down: Netlify keeps serving the last
+successful deploy. So a broken push costs a deploy, not an outage.
 
 ## Data and storage
 

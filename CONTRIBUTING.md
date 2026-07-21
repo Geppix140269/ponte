@@ -2,19 +2,34 @@
 
 ## The one rule
 
-**Nothing reaches `main` except through a pull request that passed CI.**
-
-That single rule is what prevents the failure this project actually had, where
-three stale clones on one machine each pushed a different version of the site
-and the live site served three eras at once.
+**One repository, one branch, one deploy path.** `main` on
+`github.com/Geppix140269/ponte` is the only real copy, and Netlify deploys from
+it. The failure this project actually had was three stale clones on one machine
+each pushing a different version of the site, so the live site served three eras
+at once. The fix is that only one working copy can publish, not that changes
+have to take a slow route.
 
 ## Change control
 
-1. Work on a branch. Never commit to `main`.
-2. Open a pull request. CI must be green: build, typecheck, locale validation,
-   no committed secrets, no committed env or stray files.
-3. Merge. The host deploys from `main` automatically.
-4. Update the matching file in `docs/platform` in the same pull request.
+By the owner's decision, work commits straight to `main` and deploys. There is
+no branch and pull request step.
+
+1. Commit to `main`.
+2. Push. Netlify builds and deploys.
+3. Update the matching file in `docs/platform` in the same commit.
+
+Before pushing anything substantial, run the same gates CI runs:
+
+```
+npm run verify        # locale validation, typecheck, production build
+```
+
+A failed Netlify build does not take the site down: the last successful deploy
+keeps serving. A broken push costs a deploy, not an outage.
+
+CI still runs on every push to `main`, so a break is reported rather than
+discovered later. The pre-commit hook still refuses secrets, env files and
+stray working files, because those cannot be undone once they are in history.
 
 ## About "only Claude Code may change the code"
 
