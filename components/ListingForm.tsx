@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, Paperclip, Camera } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Paperclip, Camera, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { TRADE_CATEGORIES } from "@/components/tradeCategories";
 
@@ -42,16 +42,27 @@ const ROLES: Record<"offer" | "requirement", { v: string; label: string }[]> = {
 const NEEDS_CHAIN = new Set(["mandated_broker", "intermediary"]);
 
 const STEPS: Record<ListingType, string[]> = {
-  offer: ["The product", "The terms", "Photos & files"],
-  requirement: ["What you need", "Delivery", "Files"],
-  service: ["The service", "Scope", "Files"],
+  offer: ["The product", "The terms", "Photos & files", "Preview"],
+  requirement: ["What you need", "Delivery", "Files", "Preview"],
+  service: ["The service", "Scope", "Files", "Preview"],
 };
+
+const LAST = 3;
+const DRAFT_KEY = "ponte_draft";
 
 function safeName(name: string): string {
   return name.replace(/[^\w.\-]+/g, "_").slice(-80);
 }
 
-export default function ListingForm({ initialType = "offer" }: { initialType?: ListingType }) {
+export default function ListingForm({
+  initialType = "offer",
+  isAuthed = false,
+  restoreDraft = false,
+}: {
+  initialType?: ListingType;
+  isAuthed?: boolean;
+  restoreDraft?: boolean;
+}) {
   const router = useRouter();
   const [type, setType] = useState<ListingType>(initialType);
   const [step, setStep] = useState(0);
@@ -62,6 +73,8 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
   const [docs, setDocs] = useState<File[]>([]);
   const [ref, setRef] = useState("");
   const [uploadWarning, setUploadWarning] = useState("");
+  const [wasDraft, setWasDraft] = useState(false);
+  const [restoredNote, setRestoredNote] = useState(false);
 
   // The deal
   const [catId, setCatId] = useState("");
@@ -88,6 +101,61 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
   const cat = TRADE_CATEGORIES.find((c) => c.id === catId);
   const isGoods = type !== "service";
   const stepsForType = STEPS[type];
+
+  // Restore a draft stashed before the sign-in round-trip (text only:
+  // browsers cannot persist chosen files across navigation).
+  useEffect(() => {
+    if (!restoreDraft) return;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.type === "offer" || d.type === "requirement" || d.type === "service") setType(d.type);
+      if (typeof d.catId === "string") setCatId(d.catId);
+      if (typeof d.sub === "string") setSub(d.sub);
+      if (typeof d.serviceName === "string") setServiceName(d.serviceName);
+      if (typeof d.description === "string") setDescription(d.description);
+      if (typeof d.qty === "string") setQty(d.qty);
+      if (typeof d.unit === "string") setUnit(d.unit);
+      if (typeof d.freq === "string") setFreq(d.freq);
+      if (typeof d.price === "string") setPrice(d.price);
+      if (d.priceBasis === "unit" || d.priceBasis === "deal") setPriceBasis(d.priceBasis);
+      if (typeof d.role === "string") setRole(d.role);
+      if (typeof d.chain === "string") setChain(d.chain);
+      if (typeof d.origin === "string") setOrigin(d.origin);
+      if (typeof d.destination === "string") setDestination(d.destination);
+      if (typeof d.incoterm === "string") setIncoterm(d.incoterm);
+      if (typeof d.timing === "string") setTiming(d.timing);
+      if (typeof d.extraTerms === "string") setExtraTerms(d.extraTerms);
+      sessionStorage.removeItem(DRAFT_KEY);
+      setStep(2);
+      setRestoredNote(true);
+    } catch {
+      // ignore a corrupt stash
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoreDraft]);
+
+  // Object URLs for the photo previews on the preview step.
+  const previewUrls = useMemo(
+    () => media.filter((f) => IMAGE_TYPES.has(f.type)).slice(0, 4).map((f) => URL.createObjectURL(f)),
+    [media],
+  );
+  useEffect(() => {
+    return () => previewUrls.forEach((u) => URL.revokeObjectURL(u));
+  }, [previewUrls]);
+
+  // Composed exactly as the submit payload composes them, so the preview
+  // is honest.
+  const composedProduct = isGoods
+    ? `${cat?.label ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
+    : serviceName.trim();
+  const composedVolume = qty.trim()
+    ? `${qty.trim()} ${unit}${freq !== "One-off" ? ` ${freq.toLowerCase()}` : ""}`
+    : "";
+  const composedPriceLine = price
+    ? `Price indication: USD ${price} ${priceBasis === "unit" ? `per ${unit}` : "for the deal"}`
+    : "";
 
   function switchType(t: ListingType) {
     setType(t);
@@ -131,7 +199,22 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
         return;
       }
     }
-    setStep((s) => Math.min(s + 1, 2));
+    setStep((s) => Math.min(s + 1, LAST));
+  }
+
+  function stashDraft() {
+    try {
+      sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          type, catId, sub, serviceName, description, qty, unit, freq,
+          price, priceBasis, role, chain, origin, destination, incoterm,
+          timing, extraTerms,
+        }),
+      );
+    } catch {
+      // storage full or blocked: they just retype
+    }
   }
 
   function onMediaChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -182,27 +265,37 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (step < 2) {
+    if (step < LAST) {
       next();
       return;
     }
-    // Photos: required for offers (buyers must see the product), optional otherwise.
-    if (type === "offer" && !media.some((f) => IMAGE_TYPES.has(f.type))) {
-      setError("At least one photo of the product is required for an offer.");
+    await publish(false);
+  }
+
+  async function publish(asDraft: boolean) {
+    // Guests: stash the text, sign in, come back to the same spot.
+    if (!isAuthed) {
+      stashDraft();
+      router.push(
+        `/login?next=${encodeURIComponent(`/marketplace/new?type=${type}&restore=1`)}`,
+      );
+      return;
+    }
+    // Photos: required to publish an offer (buyers must see the product);
+    // drafts can wait.
+    if (!asDraft && type === "offer" && !media.some((f) => IMAGE_TYPES.has(f.type))) {
+      setError("At least one photo of the product is required to publish an offer.");
       return;
     }
 
     setStatus("sending");
     setError("");
     setUploadWarning("");
+    setWasDraft(asDraft);
 
     // Compose the payload from the structured inputs.
-    const product = isGoods
-      ? `${cat?.label ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
-      : serviceName.trim();
-    const volume = qty.trim()
-      ? `${qty.trim()} ${unit}${freq !== "One-off" ? ` ${freq.toLowerCase()}` : ""}`
-      : "";
+    const product = composedProduct;
+    const volume = composedVolume;
     const priceNum = Number(price);
     const qtyNum = Number(qty.replace(/[, ]/g, ""));
     const totalValue =
@@ -213,9 +306,7 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
             ? priceNum * qtyNum
             : null
         : null;
-    const priceLine = price
-      ? `Price indication: USD ${price} ${priceBasis === "unit" ? `per ${unit}` : "for the deal"}`
-      : "";
+    const priceLine = composedPriceLine;
     const timingLine = isGoods
       ? `${type === "offer" ? "Availability" : "Needed"}: ${timing}`
       : "";
@@ -241,6 +332,7 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
             ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
             : "",
           chain_depth: isGoods ? chain : "",
+          draft: asDraft,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -305,11 +397,12 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
       <div className="glass p-8 text-center">
         <CheckCircle2 className="mx-auto h-8 w-8 text-positive" />
         <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>
-          Submitted{ref ? ` · ${ref}` : ""}.
+          {wasDraft ? "Saved as draft" : "Submitted"}{ref ? ` · ${ref}` : ""}.
         </h3>
         <p className="mt-2 text-[14px] text-gray-2">
-          Your listing is with the desk for vetting. You will be notified by
-          email either way, usually within two business days.
+          {wasDraft
+            ? "Your draft is safe under Your listings on the marketplace page. Submit it for vetting whenever you are ready."
+            : "Your listing is with the desk for vetting. You will be notified by email either way, usually within two business days."}
         </p>
         {uploadWarning && <p className="mt-3 text-[13px] text-gold">{uploadWarning}</p>}
         <button type="button" onClick={() => router.push("/marketplace")} className="btn-gold mt-6">
@@ -607,6 +700,67 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
         <p className="mt-2 text-[11px] leading-relaxed text-gray-2">
           Documents are visible only to the desk, never to counterparties.
         </p>
+        {restoredNote && (
+          <p className="mt-3 rounded-[10px] px-4 py-3 text-[12px] text-gold" style={{ background: "rgba(232,160,32,0.12)", border: "1px solid rgba(232,160,32,0.35)" }}>
+            Welcome back, your draft was restored. Photos cannot survive the
+            sign-in trip, so re-attach them here before publishing.
+          </p>
+        )}
+      </div>
+
+      {/* ============ STEP 4: PREVIEW ============ */}
+      <div className={step === LAST ? "" : "hidden"}>
+        <p className="mb-3 flex items-center gap-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+          <Eye className="h-3.5 w-3.5 text-gold" /> This is how it appears on the board
+        </p>
+
+        <div className="rounded-2xl border border-gold/25 bg-white/[0.04] p-5 md:flex md:gap-6">
+          {previewUrls.length > 0 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrls[0]}
+              alt="Your product"
+              className="mb-4 h-40 w-full rounded-lg object-cover md:mb-0 md:h-32 md:w-48 md:shrink-0"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="mono text-[12px] text-gold">PT-····</span>
+              <span className="badge uppercase">{type}</span>
+              <span className="flex-1 text-[15px] text-cream">
+                {composedProduct || "Your product"}
+              </span>
+            </div>
+            <p className="mono mt-3 text-[12px] leading-relaxed text-gray-2">
+              {[
+                type !== "requirement" && origin && `Origin: ${origin}`,
+                type === "requirement" && destination && `Destination: ${destination}`,
+                composedVolume,
+                isGoods && incoterm !== "To discuss" ? incoterm : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-gray-2">
+              {[description.trim(), composedPriceLine].filter(Boolean).join("\n") ||
+                "Your description appears here."}
+            </p>
+            {previewUrls.length > 1 && (
+              <div className="mt-3 flex gap-2">
+                {previewUrls.slice(1).map((u) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={u} src={u} alt="" className="h-14 w-20 rounded-md object-cover" />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="mt-4 text-[12px] leading-relaxed text-gray-2">
+          Your name and contact details are never shown. The reference number
+          is assigned after the desk approves the listing.
+          {!isAuthed && " Publishing is free: one click to sign in, no password."}
+        </p>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
@@ -629,9 +783,27 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
           disabled={status === "sending"}
           className="btn-gold flex-1 justify-center disabled:opacity-60"
         >
-          {step < 2 ? "Continue" : status === "sending" ? "Working…" : "Submit for vetting"}
+          {step < 2
+            ? "Continue"
+            : step === 2
+              ? "Preview my listing"
+              : status === "sending"
+                ? "Working…"
+                : isAuthed
+                  ? "Publish for vetting"
+                  : "Sign in and publish (free)"}
           <ArrowRight className="h-4 w-4" />
         </button>
+        {step === LAST && isAuthed && (
+          <button
+            type="button"
+            onClick={() => publish(true)}
+            disabled={status === "sending"}
+            className="btn-ghost-light disabled:opacity-60"
+          >
+            Save as draft
+          </button>
+        )}
       </div>
 
       <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-2">

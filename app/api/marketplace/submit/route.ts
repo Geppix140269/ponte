@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
   const details = clean(body.details, 3000);
   const valueRaw = clean(body.indicative_value_usd, 20);
   const value = valueRaw ? Number(valueRaw) : null;
+  const isDraft = body.draft === true;
 
   if (!TYPES.has(type) || !product || !details) {
     return NextResponse.json(
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
       submitter_role: clean(body.submitter_role, 60) || null,
       chain_depth: clean(body.chain_depth, 60) || null,
       details,
-      status: "submitted",
+      status: isDraft ? "draft" : "submitted",
     })
     .select("id, ref")
     .single();
@@ -82,6 +83,11 @@ export async function POST(req: NextRequest) {
       { error: "Could not save your listing. Please try again." },
       { status: 500 },
     );
+  }
+
+  // Drafts are private: no desk alert, no confirmation email.
+  if (isDraft) {
+    return NextResponse.json({ ok: true, ref: listing.ref, id: listing.id });
   }
 
   const memberEmail = user.email ?? "";

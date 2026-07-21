@@ -7,20 +7,21 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "New listing",
-  description: "Submit an offer or requirement for vetting by the Ponte desk.",
+  description:
+    "Build your offer or requirement, preview it as it will appear on the board, then publish for vetting by the Ponte desk.",
   alternates: { canonical: "/marketplace/new" },
 };
 
 export default async function NewListingPage({
   searchParams,
 }: {
-  searchParams: { type?: string };
+  searchParams: { type?: string; restore?: string };
 }) {
   const t = searchParams.type;
   const initialType = t === "requirement" || t === "service" ? t : "offer";
   if (!isSupabaseConfigured()) redirect("/marketplace");
+  // No sign-in required to build and preview. The account comes at publish.
   const user = await getUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(`/marketplace/new?type=${initialType}`)}`);
 
   return (
     <>
@@ -30,17 +31,21 @@ export default async function NewListingPage({
           className="serif text-white mt-6 mb-5 max-w-3xl"
           style={{ fontWeight: 400, fontSize: "clamp(36px, 5vw, 60px)", lineHeight: 1.02, letterSpacing: "-0.015em" }}
         >
-          Three steps. The desk does the rest.
+          Build it. See it. Publish it.
         </h1>
         <p className="text-[16px] text-gray-2 leading-relaxed max-w-2xl">
-          One deal per listing, photos included. Vetting usually takes two
-          business days.
+          No account needed to build your listing and preview it exactly as it
+          will appear on the board. You sign in only when you publish.
         </p>
       </header>
 
       <section className="container-px pb-24">
         <div className="max-w-2xl">
-          <ListingForm initialType={initialType} />
+          <ListingForm
+            initialType={initialType}
+            isAuthed={Boolean(user)}
+            restoreDraft={searchParams.restore === "1"}
+          />
         </div>
       </section>
     </>

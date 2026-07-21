@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck } from "lucide-react";
+import { ArrowRight, FilePlus2, ShieldCheck, EyeOff, BadgeCheck, Share2 } from "lucide-react";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
+import { submitDraftAction } from "./actions";
 import Reveal from "@/components/Reveal";
 import ProcessFlow from "@/components/ProcessFlow";
 
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
+  draft: "text-gray-2",
   submitted: "text-gold",
   approved: "text-positive",
   rejected: "text-red-400",
@@ -24,11 +26,19 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  draft: "Draft · only you see this",
   submitted: "In vetting",
   approved: "Approved · live with the desk",
   rejected: "Not approved",
   closed: "Closed",
 };
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ponte.trade";
+
+function waShareUrl(product: string, ref: string): string {
+  const text = `${product} · vetted listing ${ref} on Ponte\n${APP_URL}/marketplace/l/${encodeURIComponent(ref)}`;
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
 
 const RULES = [
   {
@@ -306,6 +316,25 @@ export default async function MarketplacePage() {
                     <p className="mt-3 border-l-2 border-gold/40 pl-3 text-[13px] leading-relaxed text-gray-2">
                       {l.decision_note}
                     </p>
+                  )}
+                  {l.status === "draft" && (
+                    <form action={submitDraftAction} className="mt-3">
+                      <input type="hidden" name="id" value={l.id} />
+                      <button className="text-[11px] uppercase text-gold hover:text-cream" style={{ letterSpacing: "0.16em" }}>
+                        Submit for vetting →
+                      </button>
+                    </form>
+                  )}
+                  {l.status === "approved" && (
+                    <a
+                      href={waShareUrl(l.product, l.ref)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-2 text-[11px] uppercase text-gold hover:text-cream"
+                      style={{ letterSpacing: "0.16em" }}
+                    >
+                      <Share2 className="h-3.5 w-3.5" /> Share on WhatsApp
+                    </a>
                   )}
                 </div>
               ))}
