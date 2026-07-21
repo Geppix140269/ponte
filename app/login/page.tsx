@@ -58,12 +58,16 @@ export default function LoginPage() {
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [linkError, setLinkError] = useState(false);
   const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
   // Step 1: generate the nonce pair once on mount.
   useEffect(() => {
     generateNoncePair().then(setNonces);
+    if (new URLSearchParams(window.location.search).get("error") === "auth") {
+      setLinkError(true);
+    }
   }, []);
 
   // Step 2: once the GSI script is loaded AND we have a nonce, init + render.
@@ -112,10 +116,12 @@ export default function LoginPage() {
     setStatus("sending");
     try {
       const supabase = createClient();
+      // The email template links to /auth/confirm (token_hash flow) and
+      // forwards this URL as the post-verification destination.
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext())}`,
+          emailRedirectTo: `${window.location.origin}${safeNext()}`,
         },
       });
       if (error) {
@@ -138,6 +144,12 @@ export default function LoginPage() {
           <span className="pill">Members</span>
           <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>One door. One login.</h1>
           <p className="text-gray-2 text-[14px] mb-7">No passwords. New here? Signing in creates your account. Members post deals and see the board.</p>
+
+          {linkError && (
+            <div className="mb-5 rounded-[10px] px-4 py-3 text-[13px] text-gold" style={{ background: "rgba(232,160,32,0.12)", border: "1px solid rgba(232,160,32,0.35)" }}>
+              That link expired or was already used. Enter your email below and we will send a fresh one.
+            </div>
+          )}
 
           {!configured ? (
             <div className="glass-tight p-6 text-[13px] text-gray-2 leading-relaxed">

@@ -11,10 +11,16 @@ export async function GET(request: Request) {
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/account";
 
   if (code && isSupabaseConfigured()) {
-    const supabase = createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error) {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+      console.error("[ponte] auth callback failed:", error.message);
+    } catch (e) {
+      // Never 500 on a bad or reused link: send the member back to login.
+      console.error("[ponte] auth callback crashed:", e);
     }
   }
 
