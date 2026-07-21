@@ -7,6 +7,29 @@ Format: date, what changed, why, and anything that needs watching afterwards.
 
 ---
 
+## 21 July 2026, CI fixed
+
+CI failed on its first three runs, in about 14 seconds each, before it reached
+the build. Two defects, both introduced with the i18n work:
+
+1. **`package-lock.json` did not contain `next-intl`.** The dependency was
+   added to `package.json` by hand after the original `npm install` timed out,
+   so the lock was never regenerated. `npm ci` refuses to install when the two
+   disagree, which is exactly what it is for. Fixed with
+   `npm install --package-lock-only`.
+2. **The `prepare` script could fail an install.** It ran `git config
+   core.hooksPath`, which cannot create its lock file inside OneDrive, so every
+   `npm install` here exited 255. It now runs `scripts/install-hooks.mjs`,
+   which warns and continues. A guard that breaks the build it is meant to
+   protect is worse than no guard.
+
+Production was never affected: Netlify installs differently from `npm ci`, so
+the deploy kept working while CI was red.
+
+**Known warning, not yet failing:** GitHub is deprecating Node 20 for
+`actions/checkout@v4` and `actions/setup-node@v4`. They still run. Bump the
+action versions before that becomes an error.
+
 ## 21 July 2026, database and storage backup
 
 **Status:** shipped and running.
