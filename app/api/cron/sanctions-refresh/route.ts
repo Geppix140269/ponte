@@ -1,17 +1,30 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { refreshAll } from "@/lib/sanctions/refresh";
-import { rescreenVerified } from "@/lib/verification/rescreen";
-import { sendAdminNotice } from "@/lib/email";
+import { runRefreshAndRescreen } from "@/lib/sanctions/refresh-run";
 
 export const dynamic = "force-dynamic";
-// Fetching and parsing four national lists is slow. Netlify allows a longer
-// budget on a background invocation than on a page request.
-export const maxDuration = 300;
 
-// Rebuilds the sanctions tables, then re-screens everyone already verified
-// against what changed. Triggered daily by the scheduled function in
-// netlify/functions/sanctions-refresh.mts.
+// Manual trigger for the sanctions rebuild. NOT the scheduler.
+//
+// THIS ROUTE WILL TIME OUT. A full five source refresh takes minutes and the
+// host caps a synchronous function at roughly 10 to 26 seconds, so a caller
+// gets HTTP 504 while the work carries on server side, or does not, with no
+// way to tell which from the response. That is exactly what happened in
+// production: a manual trigger returned 504, the load happened to finish, and
+// the result looked like a failure.
+//
+// There used to be an `export const maxDuration = 300` here. It is a Vercel
+// setting and this app is on Netlify, where it does nothing at all. It has
+// been removed rather than corrected, because no per-route number makes a
+// minutes long job fit in a request.
+//
+// The scheduled run is .github/workflows/sanctions-refresh.yml, which runs
+// scripts/sanctions-refresh.ts on a GitHub Actions runner with no serverless
+// timeout. To trigger a refresh by hand, run that workflow: Actions tab,
+// "Sanctions refresh", "Run workflow". See docs/platform/RUNBOOK.md.
+//
+// This route is kept for the case where an operator has no GitHub access and
+// needs to kick a rebuild from a shell. Treat a 504 from it as "no result",
+// not as "failed", and confirm the outcome in sanctions_refresh_log.
 //
 // Protected by a shared secret rather than an admin session, because it is
 // called by a machine. Without the secret this endpoint refuses, so a rebuild
@@ -28,68 +41,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const startedAt = new Date();
+  const result = await runRefreshAndRescreen();
 
-  let results;
-  try {
-    results = await refreshAll();
-  } catch (err) {
-    await sendAdminNotice({
-      subject: "Sanctions refresh failed outright",
-      body: `The refresh did not complete: ${(err as Error).message}. Screening is running against the previous copy of the lists.`,
-      actionPath: "/admin/verifications",
-      actionLabel: "Open the review queue",
-    });
+  if (result.fatalError) {
     return NextResponse.json({ error: "refresh_failed" }, { status: 500 });
   }
 
-  const failed = results.filter((r) => r.status !== "ok");
-
-  // Alert only on a second consecutive failure for the same list. A single
-  // blip in a national feed is normal and does not need a human at 2am.
-  if (failed.length > 0) {
-    const sb = createAdminClient();
-    const persistent: string[] = [];
-
-    for (const item of failed) {
-      const { data: recent } = await sb
-        .from("sanctions_refresh_log")
-        .select("status")
-        .eq("source_list", item.source)
-        .order("fetched_at", { ascending: false })
-        .limit(2);
-      // The row for this run is already written by refreshAll, so two failures
-      // here means it also failed the time before.
-      if ((recent ?? []).length === 2 && recent!.every((r: any) => r.status !== "ok")) {
-        persistent.push(item.source);
-      }
-    }
-
-    if (persistent.length > 0) {
-      await sendAdminNotice({
-        subject: `Sanctions list refresh failing: ${persistent.join(", ")}`,
-        body:
-          `These lists have now failed twice in a row, so screening is running ` +
-          `against a stale copy of them: <strong>${persistent.join(", ")}</strong>.` +
-          `<br><br>Errors: ${failed.map((f) => `${f.source}: ${f.error}`).join("<br>")}`,
-      });
-    }
-  }
-
-  // Re-screen everyone already verified, against entries this run touched.
-  let rescreen = null;
-  try {
-    rescreen = await rescreenVerified(startedAt);
-  } catch (err) {
-    await sendAdminNotice({
-      subject: "Sanctions re-screen failed",
-      body: `Lists refreshed, but re-screening existing members failed: ${(err as Error).message}`,
-    });
-  }
-
   return NextResponse.json({
-    ok: failed.length === 0,
-    lists: results,
-    rescreen,
+    ok: result.ok,
+    lists: result.lists,
+    persistentFailures: result.persistentFailures,
+    rescreen: result.rescreen,
+    rescreenError: result.rescreenError,
   });
 }
