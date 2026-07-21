@@ -16,6 +16,8 @@ type Listing = {
   volume: string | null;
   incoterm: string | null;
   indicative_value_usd: number | null;
+  submitter_role: string | null;
+  chain_depth: string | null;
   details: string;
   status: string;
   admin_notes: string | null;
@@ -88,6 +90,7 @@ export default async function AdminListingsPage() {
         ref: l.ref, type: l.type, product: l.product, details: l.details,
         origin: l.origin, destination: l.destination, volume: l.volume,
         incoterm: l.incoterm, indicative_value_usd: l.indicative_value_usd,
+        submitter_role: l.submitter_role, chain_depth: l.chain_depth,
         media_count: (mediaByListing.get(l.id) ?? []).length,
         doc_count: (docsByListing.get(l.id) ?? []).length,
       });
@@ -117,6 +120,12 @@ export default async function AdminListingsPage() {
 
         <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
           <span>From: {emailById.get(l.user_id) ?? l.user_id.slice(0, 8)}</span>
+          {l.submitter_role && (
+            <span className="text-gold">
+              {l.submitter_role}
+              {l.chain_depth ? ` · ${l.chain_depth}` : ""}
+            </span>
+          )}
           {l.hs_code && <span>HS: {l.hs_code}</span>}
           {l.origin && <span>Origin: {l.origin}</span>}
           {l.destination && <span>Destination: {l.destination}</span>}

@@ -90,6 +90,7 @@ export async function runAiVetAction(formData: FormData): Promise<void> {
     ref: l.ref, type: l.type, product: l.product, details: l.details,
     origin: l.origin, destination: l.destination, volume: l.volume,
     incoterm: l.incoterm, indicative_value_usd: l.indicative_value_usd,
+    submitter_role: l.submitter_role, chain_depth: l.chain_depth,
     media_count: mediaCount ?? 0, doc_count: docCount ?? 0,
   });
   if (review) {

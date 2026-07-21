@@ -22,6 +22,25 @@ const DOC_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/
 
 const INCOTERMS = ["To discuss", "EXW", "FOB", "CIF", "CFR", "DAP", "DDP"];
 
+// Who is submitting: the single most important vetting fact in physical
+// trade. Sellers and buyers get their own wording.
+const ROLES: Record<"offer" | "requirement", { v: string; label: string }[]> = {
+  offer: [
+    { v: "producer", label: "Producer / owner of the goods" },
+    { v: "trading_co", label: "Trading company holding title" },
+    { v: "mandated_broker", label: "Broker with a seller mandate" },
+    { v: "intermediary", label: "Intermediary (no mandate)" },
+  ],
+  requirement: [
+    { v: "end_buyer", label: "End buyer" },
+    { v: "trading_co", label: "Trading company" },
+    { v: "mandated_broker", label: "Broker with a buyer mandate" },
+    { v: "intermediary", label: "Intermediary (no mandate)" },
+  ],
+};
+
+const NEEDS_CHAIN = new Set(["mandated_broker", "intermediary"]);
+
 const STEPS: Record<ListingType, string[]> = {
   offer: ["The product", "The terms", "Photos & files"],
   requirement: ["What you need", "Delivery", "Files"],
@@ -55,6 +74,10 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
   const [price, setPrice] = useState("");
   const [priceBasis, setPriceBasis] = useState<"unit" | "deal">("unit");
 
+  // Who you are in this deal
+  const [role, setRole] = useState("");
+  const [chain, setChain] = useState("");
+
   // Terms
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -69,6 +92,8 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
   function switchType(t: ListingType) {
     setType(t);
     setTiming(t === "requirement" ? "As soon as possible" : "Ready now");
+    setRole("");
+    setChain("");
     setError("");
   }
 
@@ -93,6 +118,16 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
             ? "Describe what you need: specs, grade, quality."
             : "Describe it in a few lines: variety, grade, specs.",
         );
+        return;
+      }
+    }
+    if (step === 1 && isGoods) {
+      if (!role) {
+        setError("One tap: who are you in this deal?");
+        return;
+      }
+      if (NEEDS_CHAIN.has(role) && !chain) {
+        setError("One more tap: how close are you to the deal?");
         return;
       }
     }
@@ -202,6 +237,10 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
           destination: type === "requirement" ? destination : "",
           incoterm: isGoods && incoterm !== "To discuss" ? incoterm : "",
           indicative_value_usd: totalValue ? String(totalValue) : "",
+          submitter_role: isGoods
+            ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
+            : "",
+          chain_depth: isGoods ? chain : "",
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -446,6 +485,47 @@ export default function ListingForm({ initialType = "offer" }: { initialType?: L
 
       {/* ============ STEP 2 ============ */}
       <div className={step === 1 ? "" : "hidden"}>
+        {isGoods && (
+          <>
+            {/* Who are you in this deal: role + chain distance */}
+            <p className="mb-3 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Who are you in this deal? *
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ROLES[type === "offer" ? "offer" : "requirement"].map((r) => (
+                <button
+                  key={r.v}
+                  type="button"
+                  onClick={() => { setRole(r.v); if (!NEEDS_CHAIN.has(r.v)) setChain(""); }}
+                  className={`rounded-full border px-4 py-2 text-[12px] transition-colors ${
+                    role === r.v
+                      ? "border-gold bg-gold text-navy font-semibold"
+                      : "border-white/15 text-gray-2 hover:border-gold/60 hover:text-cream"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            {NEEDS_CHAIN.has(role) && (
+              <div className="mt-3">
+                <select value={chain} onChange={(e) => setChain(e.target.value)} className={FIELD}>
+                  <option value="">How close are you to the deal? *</option>
+                  <option>{type === "offer" ? "Direct to the producer" : "Direct to the end buyer"}</option>
+                  <option>One intermediary between</option>
+                  <option>Two or more intermediaries</option>
+                  <option>Not sure</option>
+                </select>
+                {role === "mandated_broker" && (
+                  <p className="mt-2 text-[11px] text-gray-2">
+                    Upload the mandate with your documents in the next step. It speeds up vetting.
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="my-5 h-px bg-white/10" />
+          </>
+        )}
         {type === "offer" && (
           <div className="grid gap-4 sm:grid-cols-2">
             <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder="Origin (country/region)" className={FIELD} />

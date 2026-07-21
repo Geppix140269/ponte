@@ -68,6 +68,8 @@ export async function POST(req: NextRequest) {
       incoterm: clean(body.incoterm, 20) || null,
       indicative_value_usd:
         value && Number.isFinite(value) && value > 0 ? value : null,
+      submitter_role: clean(body.submitter_role, 60) || null,
+      chain_depth: clean(body.chain_depth, 60) || null,
       details,
       status: "submitted",
     })

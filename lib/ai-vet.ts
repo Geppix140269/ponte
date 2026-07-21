@@ -53,7 +53,16 @@ around it, with exactly these keys:
 Rules: judge only what is written, do not invent facts. Prices you doubt are a
 flag, not a verdict. "caution" is for compliance sensitivities or signs of
 unseriousness, not for mere incompleteness. Use plain trade language, never
-em dashes. Arrays empty when nothing applies.`;
+em dashes. Arrays empty when nothing applies.
+
+Chain position matters. submitter_role and chain_depth say who is submitting
+and how many hands sit between them and the goods (sellers) or the money
+(buyers). A producer or end buyer direct is strongest. A broker with a mandate
+is fine if the mandate is uploaded; if not, put the mandate in missing_info.
+An intermediary two or more steps out, or unsure of their chain, is a classic
+daisy chain: flag it and have the questions email ask for proof of proximity
+(mandate, title, or a direct line to the principal). Role missing on a goods
+listing goes in missing_info.`;
 
 export async function vetListing(listing: {
   ref: string;
@@ -65,6 +74,8 @@ export async function vetListing(listing: {
   volume: string | null;
   incoterm: string | null;
   indicative_value_usd: number | null;
+  submitter_role?: string | null;
+  chain_depth?: string | null;
   media_count?: number;
   doc_count?: number;
 }): Promise<AiReview | null> {
