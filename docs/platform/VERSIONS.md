@@ -7,6 +7,100 @@ Format: date, what changed, why, and anything that needs watching afterwards.
 
 ---
 
+# Open items
+
+State as at 21 July 2026. Written down so it does not live in one person's
+head or one chat session. Delete an item when it is genuinely done, not when
+it is started.
+
+## Do these first
+
+**1. Rotate the Supabase personal access token.** A PAT was pasted into a chat
+transcript on 21 July to apply migrations. It grants **account level** access,
+not just this project, and a transcript is permanent. Revoke and reissue in
+Supabase account settings. This is the only item on this page that cannot be
+undone later.
+
+**2. Set the GitHub Actions secrets, or the nightly sanctions refresh never
+runs.** The scheduled refresh moved from a Netlify function to GitHub Actions
+(see the entry below for why). It needs, under Settings, Secrets and variables,
+Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
+`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ADMIN_ALERT_EMAIL`. Until these exist
+the workflow fails on its first run. The lists currently hold roughly 30,000
+rows from a manual load, so screening works today and will simply go stale.
+
+**3. Copy `C:\Users\gfuna\ponte-backups` off the machine.** A backup on the
+same disk as the original is not a backup. See [BACKUP.md](BACKUP.md).
+
+## Measured, and not yet measured
+
+**Cost of one Level 2 verification, measured on a real run:** 1 model call,
+`claude-sonnet-4-6`, about **2,560 input and 480 output tokens**, 8 to 10
+seconds. Roughly $0.015 to $0.02. Against a 2 credit charge that is comfortable.
+
+**Not yet measured:** the fuller path. That run stopped early because the
+company name was ambiguous, so **no sanctions triage calls fired**. A case that
+reaches screening adds a Haiku call per batch of 8 candidates. Haiku is far
+cheaper than Sonnet so it should stay well inside 2 credits, but that is
+reasoning, not a measurement. To get it, run a check with a registration
+number supplied, then:
+
+```sql
+select feature, model, input_tokens, output_tokens
+from ai_calls where ref = '<verification id>';
+```
+
+**Deliberate deviation:** reconciliation runs on Sonnet, where the brief
+specified Haiku. Sonnet is the better judgement for reconciling a whole case
+and the cost difference at 3,000 tokens is immaterial.
+
+## For counsel, not for engineering
+
+- **The verification disclaimer renders in English on all ten locales.** It is
+  a TypeScript constant, not a message string. Consistent with Terms and
+  Privacy staying English, but a limitation of liability a reader cannot read
+  arguably protects nobody. Legal judgement, not a technical one.
+- **The terms page has not been updated** with the verification disclaimer.
+  The exact text is `VERIFICATION_DISCLAIMER` in
+  `lib/verification/pipeline.ts`. Inserting liability language into a live
+  contract was deliberately left for a person.
+
+## Built but not yet exercised
+
+- **Certificate PDF** (`lib/verification/certificate.ts`) has never been
+  rendered end to end. No verification has reached a verified state yet.
+- **Level 3 activity verification.** The `verification-docs` private bucket
+  exists, the schema exists, the upload flow does not.
+- **Guest certificate checkout**, deferred on purpose. The pipeline already
+  supports a guest by email plus a ledger id; the Stripe product is unbuilt.
+  Price is USD, not EUR.
+
+## Decided, so nobody re-opens them by accident
+
+- **OpenCorporates: not purchased.** Cheapest tier is £2,250 a year, about
+  £4.50 a lookup at full use. Non-UK companies route to human review instead,
+  which never falsely passes. UK is covered by Companies House, the EU by VIES
+  (a valid VAT number returns the registered name and address), and anyone with
+  an LEI by GLEIF. Revisit only when the review queue costs real hours, and
+  price a free national registry adapter such as France's INSEE Sirene first.
+- **Phone OTP: dropped.** An SMS cost and a second signup step, on a free
+  marketplace with 3 members. The Level 1 queue sits behind an interface so
+  Stripe Identity drops in later without a rewrite.
+
+## Known weaknesses
+
+- **The working copy is inside OneDrive.** The Bash tool cannot create files
+  there at all, so git and npm must be run from PowerShell, and builds crawl.
+  Moving the clone out removes the problem entirely. See
+  [SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md).
+- **No independent export of the database exists beyond `npm run backup`**,
+  which writes to the same machine. See item 3 above.
+- **CI is on deprecated action versions.** GitHub is forcing
+  `actions/checkout@v4` and `actions/setup-node@v4` onto Node 24. They still
+  run. Bump before it becomes an error.
+
+---
+
 ## 21 July 2026, CI fixed
 
 CI failed on its first three runs, in about 14 seconds each, before it reached
