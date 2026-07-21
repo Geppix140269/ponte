@@ -30,11 +30,22 @@ create table if not exists sanctions_entries (
   unique (source_list, entry_id)
 );
 
+-- Postgres refuses a non IMMUTABLE function in an index expression, and
+-- array_to_string is only STABLE. This wrapper asserts immutability, which is
+-- true here: the input is a text array and the separator is constant, so the
+-- result cannot change for the same input.
+create or replace function aliases_text(text[])
+returns text
+language sql
+immutable
+parallel safe
+as $$ select array_to_string($1, ' ') $$;
+
 -- Trigram indexes are what make fuzzy name matching fast enough to run inline.
 create index if not exists sanctions_name_trgm
   on sanctions_entries using gin (normalized_name gin_trgm_ops);
 create index if not exists sanctions_alias_trgm
-  on sanctions_entries using gin (array_to_string(normalized_aliases, ' ') gin_trgm_ops);
+  on sanctions_entries using gin (aliases_text(normalized_aliases) gin_trgm_ops);
 create index if not exists sanctions_source_idx on sanctions_entries (source_list);
 create index if not exists sanctions_imported_idx on sanctions_entries (imported_at desc);
 

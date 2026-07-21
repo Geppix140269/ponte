@@ -40,10 +40,14 @@ returns table (
 language sql
 stable
 security definer
--- Pinned so the prefilter behaves the same whatever the caller's session did.
--- 0.3 is deliberately looser than the 0.4 candidate threshold: the index is
--- used to narrow, the score in the WHERE below is what actually decides.
-set pg_trgm.similarity_threshold = 0.3
+-- The % prefilter uses pg_trgm.similarity_threshold, whose default is 0.3.
+-- That default is deliberately looser than the 0.4 candidate threshold: the
+-- index narrows, and the explicit score in the WHERE below is what decides.
+--
+-- The threshold is NOT pinned here. Supabase refuses a function level SET on
+-- that parameter (it needs superuser), and pinning it is unnecessary because
+-- nothing decides on it: a caller with a looser session threshold gets more
+-- rows into the prefilter, and the score comparison still rejects them.
 set search_path = public
 as $$
   with scored as (
