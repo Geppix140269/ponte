@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { decideListingAction } from "./actions";
+import { decideListingAction, runAiVetAction } from "./actions";
+import { vetListing, isAiConfigured, type AiReview } from "@/lib/ai-vet";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,8 @@ type Listing = {
   admin_notes: string | null;
   decision_note: string | null;
   created_at: string;
+  ai_review: AiReview | null;
+  ai_reviewed_at: string | null;
 };
 
 type Doc = { id: string; listing_id: string; filename: string; path: string };
@@ -75,6 +78,28 @@ export default async function AdminListingsPage() {
 
   const pending = all.filter((l) => l.status === "submitted");
   const rest = all.filter((l) => l.status !== "submitted");
+
+  // AI co-pilot: vet up to 2 unreviewed pending listings per page load so
+  // the queue self-prepares without blocking too long.
+  if (isAiConfigured()) {
+    const unvetted = pending.filter((l) => !l.ai_review).slice(0, 2);
+    for (const l of unvetted) {
+      const review = await vetListing({
+        ref: l.ref, type: l.type, product: l.product, details: l.details,
+        origin: l.origin, destination: l.destination, volume: l.volume,
+        incoterm: l.incoterm, indicative_value_usd: l.indicative_value_usd,
+        media_count: (mediaByListing.get(l.id) ?? []).length,
+        doc_count: (docsByListing.get(l.id) ?? []).length,
+      });
+      if (review) {
+        await adminSb.from("listings").update({
+          ai_review: review,
+          ai_reviewed_at: new Date().toISOString(),
+        }).eq("id", l.id);
+        l.ai_review = review;
+      }
+    }
+  }
 
   function Card({ l }: { l: Listing }) {
     const ldocs = docsByListing.get(l.id) ?? [];
@@ -148,6 +173,45 @@ export default async function AdminListingsPage() {
             ))}
           </div>
         )}
+
+        {l.ai_review && (
+          <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[10px] uppercase text-gold" style={{ letterSpacing: "0.18em" }}>
+                AI co-pilot
+              </span>
+              <span className={`text-[12px] font-bold ${
+                l.ai_review.verdict === "looks_solid" ? "text-positive"
+                : l.ai_review.verdict === "caution" ? "text-red-400" : "text-gold"
+              }`}>
+                {l.ai_review.verdict.replace("_", " ")} · {l.ai_review.score}/100
+              </span>
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed text-cream">{l.ai_review.summary}</p>
+            {l.ai_review.red_flags?.length > 0 && (
+              <p className="mt-2 text-[12px] text-red-400">Flags: {l.ai_review.red_flags.join(" · ")}</p>
+            )}
+            {l.ai_review.compliance_notes?.length > 0 && (
+              <p className="mt-1 text-[12px] text-red-400">Compliance: {l.ai_review.compliance_notes.join(" · ")}</p>
+            )}
+            {l.ai_review.missing_info?.length > 0 && (
+              <p className="mt-1 text-[12px] text-gray-2">Missing: {l.ai_review.missing_info.join(" · ")}</p>
+            )}
+            <details className="mt-2">
+              <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+                Drafts (questions email · decision note)
+              </summary>
+              <p className="mt-2 whitespace-pre-wrap text-[12px] text-gray-2">{l.ai_review.questions_email_draft}</p>
+              <p className="mt-2 whitespace-pre-wrap border-t border-white/10 pt-2 text-[12px] text-gray-2">{l.ai_review.decision_note_draft}</p>
+            </details>
+          </div>
+        )}
+        <form action={runAiVetAction} className="mt-3">
+          <input type="hidden" name="id" value={l.id} />
+          <button className="text-[11px] uppercase text-gold hover:text-cream" style={{ letterSpacing: "0.14em" }}>
+            {l.ai_review ? "Re-run AI vetting" : "Run AI vetting"}
+          </button>
+        </form>
 
         <form action={decideListingAction} className="mt-5 grid gap-3">
           <input type="hidden" name="id" value={l.id} />

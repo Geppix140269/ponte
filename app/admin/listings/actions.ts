@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendListingDecision } from "@/lib/email";
+import { vetListing, isAiConfigured } from "@/lib/ai-vet";
 
 async function requireAdmin(): Promise<boolean> {
   const user = await getUser();
@@ -68,4 +69,34 @@ export async function decideListingAction(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/listings");
   revalidatePath("/marketplace");
+}
+
+
+/** Run (or re-run) the AI vetting co-pilot on one listing. */
+export async function runAiVetAction(formData: FormData): Promise<void> {
+  if (!(await requireAdmin())) return;
+  if (!isAiConfigured()) return;
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+
+  const adminSb = createAdminClient();
+  const { data: l } = await adminSb.from("listings").select("*").eq("id", id).maybeSingle();
+  if (!l) return;
+  const [{ count: mediaCount }, { count: docCount }] = await Promise.all([
+    adminSb.from("listing_media").select("*", { count: "exact", head: true }).eq("listing_id", id),
+    adminSb.from("listing_documents").select("*", { count: "exact", head: true }).eq("listing_id", id),
+  ]);
+  const review = await vetListing({
+    ref: l.ref, type: l.type, product: l.product, details: l.details,
+    origin: l.origin, destination: l.destination, volume: l.volume,
+    incoterm: l.incoterm, indicative_value_usd: l.indicative_value_usd,
+    media_count: mediaCount ?? 0, doc_count: docCount ?? 0,
+  });
+  if (review) {
+    await adminSb.from("listings").update({
+      ai_review: review,
+      ai_reviewed_at: new Date().toISOString(),
+    }).eq("id", id);
+  }
+  revalidatePath("/admin/listings");
 }
