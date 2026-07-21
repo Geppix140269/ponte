@@ -1,0 +1,14 @@
+# Every change needs the owner's review before it can reach main.
+# Combine this with branch protection on main: Settings, Branches,
+# "Require a pull request before merging" and "Require review from Code Owners".
+
+*       @Geppix140269
+
+# Anything that can lose money, leak data, or take the site down.
+/.github/                 @Geppix140269
+/docs/platform/           @Geppix140269
+/supabase/migrations/     @Geppix140269
+/middleware.ts            @Geppix140269
+/next.config.mjs          @Geppix140269
+/netlify.toml             @Geppix140269
+/package.json             @Geppix140269

@@ -1,0 +1,42 @@
+#!/bin/sh
+# Ponte pre-commit guard. Installed by `npm install` via the prepare script,
+# which sets core.hooksPath to .githooks.
+#
+# Catches, before anything enters history:
+#   1. real credentials
+#   2. env files
+#   3. OneDrive lock workarounds and editor backups
+#   4. commits made directly on main
+#
+# History is permanent. A secret removed in a later commit is still in the
+# repository forever, so the only useful place to stop it is here.
+
+fail() { echo "pre-commit: $1" >&2; exit 1; }
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+# 1. Secret shaped strings, in added lines only.
+if git diff --cached -U0 --diff-filter=ACM -- . ':!*.md' \
+  | grep -E '^\+' \
+  | grep -Eq 'sk_live_[0-9a-zA-Z]{10,}|rk_live_[0-9a-zA-Z]{10,}|eyJhbGciOi[0-9a-zA-Z._-]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY'; then
+  fail "a secret shaped string is staged. Rotate it at the provider, then remove it from the change."
+fi
+
+# 2. Env files. Only the template belongs in git.
+if echo "$staged" | grep -E '^\.env($|\.)' | grep -qv '^\.env\.example$'; then
+  fail "an env file is staged. Only .env.example belongs in git."
+fi
+
+# 3. Stray working files. Both of these have been committed here by accident.
+if echo "$staged" | grep -Eq '(_to_delete|\.clean$|\.orig$|\.rej$)'; then
+  fail "a stray lock or backup file is staged. Remove it from the change."
+fi
+
+# 4. Direct commits to main. Changes reach main through a pull request.
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [ "$branch" = "main" ]; then
+  fail "commit on main is blocked. Branch first: git checkout -b <name>. See CONTRIBUTING.md."
+fi
+
+exit 0

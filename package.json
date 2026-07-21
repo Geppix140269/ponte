@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "messages:build": "node scripts/build-messages.mjs",
+    "messages:check": "node scripts/check-messages.mjs",
+    "verify": "node scripts/check-messages.mjs && tsc --noEmit --incremental false && next build",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",

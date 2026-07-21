@@ -1,0 +1,75 @@
+name: CI
+
+# Every change to main arrives through a pull request, and every pull request
+# has to pass this. That is what stops a stale clone or a hand edit from
+# quietly publishing a different version of the site.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: No secret values in the repository
+        run: |
+          # A repository is cloned, mirrored and backed up. A key committed
+          # here should be assumed public, so fail the build rather than
+          # discover it later. Matches key shapes, not the word "key".
+          if git grep -I -n -E \
+            'sk_live_[0-9a-zA-Z]{10,}|rk_live_[0-9a-zA-Z]{10,}|eyJhbGciOi[0-9a-zA-Z._-]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY' \
+            -- . ':!*.md' ; then
+            echo "::error::A secret shaped string is committed. Rotate it, then remove it."
+            exit 1
+          fi
+          echo "No secret shaped strings found."
+
+      - name: No committed env files
+        run: |
+          if git ls-files | grep -E '^\.env($|\.)' | grep -v '^\.env\.example$'; then
+            echo "::error::An env file is committed. Only .env.example belongs in git."
+            exit 1
+          fi
+          echo "Only .env.example is tracked."
+
+      - name: No stray lock or backup files
+        run: |
+          # OneDrive lock workarounds and .clean backups have both been
+          # committed by accident before.
+          if git ls-files | grep -E '(_to_delete|\.clean$|\.orig$|\.rej$)'; then
+            echo "::error::Stray working files are committed. Remove them."
+            exit 1
+          fi
+          echo "No stray files."
+
+      - name: Messages are complete and consistent
+        run: node scripts/check-messages.mjs
+
+      - name: Messages are in sync with their fragments
+        run: |
+          node scripts/build-messages.mjs
+          if ! git diff --quiet -- messages/en.json; then
+            echo "::error::messages/en.json is stale. Run node scripts/build-messages.mjs and commit."
+            exit 1
+          fi
+          echo "en.json matches its fragments."
+
+      - name: Typecheck
+        run: npx tsc --noEmit --incremental false
+
+      - name: Build
+        run: npx next build
+        env:
+          NEXT_PUBLIC_APP_URL: https://ponte.trade
