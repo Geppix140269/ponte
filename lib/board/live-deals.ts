@@ -86,7 +86,11 @@ export const COUNT_MIN = 8;
  * early cannot break the homepage.
  */
 function radarIsPublic(): boolean {
-  return process.env.DESK_RADAR_PUBLIC === "1";
+  // Defaults ON as of the CSV import: the sourcing risk was reviewed and
+  // accepted on 2026-07-22 and the collection is loaded, so the switch has
+  // served its purpose. Set DESK_RADAR_PUBLIC=0 to pull the section without
+  // a deploy.
+  return process.env.DESK_RADAR_PUBLIC !== "0";
 }
 
 const LISTING_COLUMNS =
