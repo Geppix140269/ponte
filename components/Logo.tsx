@@ -1,19 +1,19 @@
 /**
- * Ponte Brand v3 — the mark.
+ * Ponte Brand v3: the mark.
  *
  * Three anatomies of one mark:
  *
- *   1. <BridgeMark />          — the full mark (arch + node + baseline)
+ *   1. <BridgeMark />          is the full mark (arch + node + baseline)
  *                                for ≥48 px contexts
- *   2. <BridgeMark compact />  — filled silhouette + node only,
+ *   2. <BridgeMark compact />  is a filled silhouette + node only,
  *                                for ≤32 px contexts (favicons, tight UI)
- *   3. <BridgeMark animate />  — Span Traversal motion, fires on real
+ *   3. <BridgeMark animate />  adds Span Traversal motion, fires on real
  *                                data events (report ready, sync,
  *                                download complete). Respects
  *                                prefers-reduced-motion.
  *
  * Anything that draws the bridge anywhere else in the app must import
- * this — the path data is the brand IP.
+ * this. The path data is the brand IP.
  */
 
 type BridgeMarkProps = {
@@ -45,7 +45,7 @@ export function BridgeMark({
 }: BridgeMarkProps) {
   // Compact variant: filled silhouette on a 32-unit grid.
   // Baseline is implied by the flat bottom of the solid mass.
-  // No motion variant — compact never animates.
+  // No motion variant: compact never animates.
   if (compact) {
     return (
       <svg
@@ -64,7 +64,7 @@ export function BridgeMark({
     );
   }
 
-  // Animated variant: Span Traversal — light travels left pillar to apex
+  // Animated variant: Span Traversal, where light travels left pillar to apex
   // and the node fires on arrival. CSS lives in globals.css under
   // .mark-anim. The dim "arch-base" path stays visible at low opacity,
   // the "arch-active" path fills via stroke-dashoffset, the traveller

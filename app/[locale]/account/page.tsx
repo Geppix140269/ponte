@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { UserCircle2 } from "lucide-react";
@@ -77,7 +77,7 @@ export default async function AccountPage() {
 
       {/* Marketplace listings */}
       <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">â€” 01 / Marketplace</div>
+        <div className="num-italic">01 / Marketplace</div>
         <h2
           className="serif text-white"
           style={{ fontSize: 28, fontWeight: 500 }}

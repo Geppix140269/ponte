@@ -25,8 +25,15 @@
 -- NOT APPLIED, AND DELIBERATELY SO. Decision of 2026-07-22: this waits until
 -- after the August 1 launch. Dropping eight tables buys nothing before launch,
 -- because nothing reads them, and an irreversible schema change in the ten days
--- before a launch is a risk taken for no return. It sits here as a pending
--- migration so the intent is recorded and the file is ready.
+-- before a launch is a risk taken for no return.
+--
+-- It lives in supabase/pending/ rather than supabase/migrations/ for a reason
+-- that was not known when it was written: the Supabase GitHub integration
+-- applies everything in migrations/ to the PRODUCTION database on every merge
+-- to main. This file sorts last by filename, so in that folder it would have
+-- been the final statement run against production the moment the branch
+-- merged, in direct contradiction of the decision to defer it. See
+-- supabase/pending/README.md.
 --
 -- WHEN IT IS RUN, POST-LAUNCH: take a FRESH backup first, do not rely on the
 -- 2026-07-22_1204 one referenced below. `npm run backup` writes every table and

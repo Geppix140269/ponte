@@ -1,10 +1,10 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
   title: "What Is Trade Data? Transaction-Level Customs Intelligence Explained",
   description:
-    "Transaction-level trade data reveals the actual shipments behind global trade flows â€” importer, exporter, HS code, quantity and unit price from real customs declarations. Learn what it is, where it comes from, and how to use it.",
+    "Transaction-level trade data reveals the actual shipments behind global trade flows: importer, exporter, HS code, quantity and unit price from real customs declarations. Learn what it is, where it comes from, and how to use it.",
   alternates: { canonical: "/learn/trade-data" },
   openGraph: {
     title: "What Is Trade Data? | Ponte Trade",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "What Is Trade Data? Transaction-Level Customs Intelligence Explained",
     description:
-      "Transaction-level customs data vs. aggregated statistics â€” what it is, where it comes from, how to use it.",
+      "Transaction-level customs data vs. aggregated statistics. What it is, where it comes from, how to use it.",
   },
 };
 
@@ -39,7 +39,7 @@ const faqJsonLd = {
       name: "What is the difference between trade data and UN Comtrade data?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "UN Comtrade provides aggregated statistics: the total value of a country's exports or imports of a given HS code in a given year. Transaction-level trade data shows you the individual shipments that make up those totals â€” including the actual company names, quantities per shipment, and unit prices. Statistical data answers 'how much was traded'; transaction data answers 'who traded what, with whom, at what price, and when'.",
+        text: "UN Comtrade provides aggregated statistics: the total value of a country's exports or imports of a given HS code in a given year. Transaction-level trade data shows you the individual shipments that make up those totals, including the actual company names, quantities per shipment, and unit prices. Statistical data answers 'how much was traded'; transaction data answers 'who traded what, with whom, at what price, and when'.",
       },
     },
     {
@@ -63,7 +63,7 @@ const faqJsonLd = {
       name: "Why is there no transaction-level trade data for the EU?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "The EU operates as a single customs territory. Goods moving between EU member states â€” say, from Germany to France â€” cross no customs border and therefore generate no customs declaration. This means there is no transaction-level data for intra-EU trade. EU imports from outside the bloc (e.g., China to Germany) do generate customs declarations, but these are not published at transaction level in most EU member states. Ponte uses price extrapolation methodology to estimate unit values on these routes.",
+        text: "The EU operates as a single customs territory. Goods moving between EU member states, say from Germany to France, cross no customs border and therefore generate no customs declaration. This means there is no transaction-level data for intra-EU trade. EU imports from outside the bloc (e.g., China to Germany) do generate customs declarations, but these are not published at transaction level in most EU member states. Ponte uses price extrapolation methodology to estimate unit values on these routes.",
       },
     },
   ],
@@ -87,7 +87,7 @@ const COVERAGE = [
   { region: "Vietnam", level: "Strong", note: "Import and export data, named parties" },
   { region: "Sub-Saharan Africa", level: "Strong", note: "Most countries publish declaration-level data" },
   { region: "Latin America", level: "Strong", note: "Most countries publish declaration-level data" },
-  { region: "Intra-EU Trade", level: "Limited", note: "No customs declarations between member states â€” extrapolated" },
+  { region: "Intra-EU Trade", level: "Limited", note: "No customs declarations between member states, so extrapolated" },
   { region: "China (exports)", level: "Limited", note: "Export declarations not published at transaction level" },
   { region: "Japan / South Korea", level: "Limited", note: "Aggregated data only; no named-party records" },
   { region: "Australia / New Zealand", level: "Limited", note: "Restricted publication of named-party data" },
@@ -96,11 +96,11 @@ const COVERAGE = [
 const USE_CASES = [
   {
     title: "Find verified suppliers",
-    body: "Identify which companies are actively exporting your product category, the volumes they handle, and who their existing customers are â€” all from actual shipment records, not self-reported directories.",
+    body: "Identify which companies are actively exporting your product category, the volumes they handle, and who their existing customers are, all from actual shipment records, not self-reported directories.",
   },
   {
     title: "Benchmark your pricing",
-    body: "Unit values from customs declarations reveal what buyers are actually paying â€” not list prices, but the CIF or FOB values declared at the border. Essential for pricing strategy and contract negotiation.",
+    body: "Unit values from customs declarations reveal what buyers are actually paying: not list prices, but the CIF or FOB values declared at the border. Essential for pricing strategy and contract negotiation.",
   },
   {
     title: "Map trade corridors",
@@ -112,7 +112,7 @@ const USE_CASES = [
   },
   {
     title: "Market entry prospecting",
-    body: "Identify active buyers in your target market â€” companies already importing your product category â€” and approach them with a credible, data-backed pitch.",
+    body: "Identify active buyers in your target market, companies already importing your product category, and approach them with a credible, data-backed pitch.",
   },
   {
     title: "Due diligence on counterparties",
@@ -141,7 +141,7 @@ export default function LearnTradeDataPage() {
             Trade intelligence fundamentals
           </p>
           <h1 className="heading-xl mb-6 max-w-3xl">
-            What is transaction-level trade data â€” and why does it matter?
+            What is transaction-level trade data, and why does it matter?
           </h1>
           <p className="body-lg max-w-2xl text-muted">
             Behind every trade statistic is a customs declaration: a record of
@@ -157,8 +157,8 @@ export default function LearnTradeDataPage() {
             Statistical data vs. transaction-level data
           </h2>
           <p className="body-md text-muted max-w-2xl mb-8">
-            Most publicly available trade data â€” UN Comtrade, World Bank WITS,
-            Eurostat â€” is <strong className="text-cream">aggregated statistical data</strong>.
+            Most publicly available trade data, whether UN Comtrade, World Bank WITS
+            or Eurostat, is <strong className="text-cream">aggregated statistical data</strong>.
             It tells you how much was traded between two countries in a given year.
             Transaction-level data is different: it shows you the individual shipments
             that make up those totals.
@@ -249,8 +249,8 @@ export default function LearnTradeDataPage() {
             </table>
           </div>
           <p className="mt-4 text-xs text-muted max-w-2xl">
-            For routes with limited direct coverage, Ponte uses price extrapolation methodology
-            â€” deriving unit values from comparable origin-destination pairs with strong data coverage.
+            For routes with limited direct coverage, Ponte uses price extrapolation methodology,
+            deriving unit values from comparable origin-destination pairs with strong data coverage.
             All extrapolated values are flagged in reports.
           </p>
         </section>

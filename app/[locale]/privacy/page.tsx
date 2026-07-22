@@ -103,8 +103,8 @@ export default function PrivacyPage({
 
           <h2>Processors</h2>
           <p>
-            We share data only with the providers that run the service —
-            including Supabase (database, auth, storage), Stripe (payments),
+            We share data only with the providers that run the service,
+            namely Supabase (database, auth, storage), Stripe (payments),
             and Resend (email), and where required by law.
           </p>
 

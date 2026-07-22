@@ -43,9 +43,9 @@ export default async function AdminUsers() {
             <tbody className="divide-y divide-white/10">
               {(users ?? []).map((u: any) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 text-cream">{u.full_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-2">{u.company ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-2">{u.country ?? "—"}</td>
+                  <td className="px-4 py-3 text-cream">{u.full_name ?? "not given"}</td>
+                  <td className="px-4 py-3 text-gray-2">{u.company ?? "not given"}</td>
+                  <td className="px-4 py-3 text-gray-2">{u.country ?? "not given"}</td>
                   <td className="px-4 py-3 capitalize text-gold">
                     {u.role ?? "customer"}
                   </td>
