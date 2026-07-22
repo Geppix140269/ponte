@@ -220,7 +220,30 @@ export async function runLevel2Checks(
       const reason =
         registry.reason ??
         `${candidates.length} companies match that name, so the subject is not identified yet`;
-      await sb
+
+      /*
+       * THE PAUSE ONLY EXISTS IF THE DATABASE ACCEPTED IT.
+       *
+       * This write is what makes the pause real: it stores the candidate list
+       * and moves the row to 'needs_selection', and the resume route refuses
+       * any case not sitting on that status. If it fails and we return the
+       * picker anyway, the member gets a list of companies, picks one, and is
+       * told the check is no longer waiting. Every time. The screen looks
+       * perfect and the button cannot work, which is the worst shape a bug
+       * can take, because it looks like the member did something wrong.
+       *
+       * That is not hypothetical. It shipped: migration 20260721i adds
+       * 'needs_selection' to the status check constraint, the migration was
+       * not applied to production, every one of these updates was rejected
+       * with 23514, and the error went unread because nothing looked at it.
+       *
+       * So the error is read now, and a pause that cannot be recorded falls
+       * back to the behaviour that existed before the picker: the case goes to
+       * the desk with the candidates in its reason, where a person can finish
+       * it. The member waits, which is honest, instead of clicking a button
+       * that is guaranteed to refuse them.
+       */
+      const { error: pauseError } = await sb
         .from("verifications")
         .update({
           status: "needs_selection",
@@ -229,13 +252,35 @@ export async function runLevel2Checks(
           decided_at: null,
         })
         .eq("id", id);
-      return {
-        id,
-        status: "needs_selection",
-        reason,
-        candidates,
-        candidateTotal: registry.candidateTotal ?? candidates.length,
-      };
+
+      if (!pauseError) {
+        return {
+          id,
+          status: "needs_selection",
+          reason,
+          candidates,
+          candidateTotal: registry.candidateTotal ?? candidates.length,
+        };
+      }
+
+      console.error(
+        `[ponte] could not pause verification ${id} at needs_selection, ` +
+          `falling back to review: ${pauseError.message}`,
+      );
+
+      const fallbackReason =
+        `${reason}. The choice could not be offered, so this is with the desk.`;
+      await sb
+        .from("verifications")
+        .update({
+          status: "review",
+          registry,
+          verdict_reason: fallbackReason,
+          decided_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      return { id, status: "review", reason: fallbackReason };
     }
 
     // 4. VAT and LEI, only where the member supplied one.
