@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Über uns",
+      "description": "Ponte ist ein geprüftes Netzwerk für den grenzüberschreitenden Handel, betrieben von 1402 Celsius Ltd. Lesen ist kostenlos, Einstellen ist kostenlos, Verbinden ist kostenlos."
+    },
+    "pill": "Über Ponte",
+    "hero": {
+      "title": "Ponte heißt",
+      "titleAccent": "Brücke.",
+      "lead": "Es ist ein geprüftes Netzwerk für den grenzüberschreitenden Handel. Mitglieder stellen Angebote und Bedarfe kostenlos ein, der Desk prüft, wer dahintersteht, und beide Seiten sprechen direkt miteinander."
+    },
+    "what": {
+      "label": "01 / Was es ist",
+      "body": "Ein öffentliches Board geprüfter Geschäfte. Jeder kann es lesen, ohne Konto. Mitglieder stellen ein Angebot oder einen Bedarf ein, der Desk prüft es vor der Veröffentlichung, und die Gegenseite, die sprechen möchte, fragt eine Verbindung an. Niemand zahlt dafür, vorgestellt zu werden, und niemand zahlt dafür, gefunden zu werden."
+    },
+    "principles": {
+      "label": "02 / Grundsätze",
+      "heading": "Drei Regeln, und sie halten.",
+      "i": {
+        "n": "i.",
+        "title": "Kostenlos, wo es zählt",
+        "body": "Nichts, was Liquidität schafft, liegt hinter einer Bezahlschranke. Lesen, Einstellen und Verbinden sind kostenlos. Credits bezahlen die Prüfung von Gegenparteien und Rechercheleistungen, und jeder Preis steht auf der Schaltfläche, bevor Sie sie drücken."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Belege vor Meinung",
+        "body": "Gegenparteien werden gegen Handelsregister und Sanktionslisten geprüft. Quellen werden benannt und datiert. Ist eine Quelle nicht erreichbar, halten wir fest, dass sie nicht geprüft wurde, niemals, dass sie sauber war."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Erklärt, nicht verborgen",
+        "body": "Jeder Einstellende erklärt seine Rolle und wie weit er vom Prinzipal entfernt sitzt. Ketten sind willkommen, wenn sie erklärt sind. Eine nach der Veröffentlichung entdeckte Kette nimmt das Inserat vom Board."
+      }
+    },
+    "desk": {
+      "label": "03 / Der Desk",
+      "heading": "Ein Mensch liest jedes Inserat.",
+      "body": "Hinter Ponte stehen drei Jahrzehnte internationaler Handel: Handelsgeschäfte führen, Organisationen für Handelsinformationen leiten und zwischen Käufern und Verkäufern auf vier Kontinenten sitzen. Diese Erfahrung prüft, was auf das Board kommt. Sie ist außerdem für ein einzelnes Geschäft verfügbar, gegen Erfolgshonorar, wenn ein Mitglied das will. Das ist eine Option, nie eine Maut.",
+      "cta": "Mit dem Desk sprechen"
+    },
+    "company": {
+      "label": "04 / Das Unternehmen",
+      "body": "Ponte ist ein Handelsname der 1402 Celsius Ltd, einer in Bulgarien eingetragenen Gesellschaft (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), Teil derselben Gruppe wie die 1402 Celsius Ltd, Vereinigtes Königreich (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Wo der Desk an einem Geschäft beteiligt ist, handelt er ausschließlich als Vermittler, nie als Prinzipal, und wird über ein Erfolgshonorar auf abgeschlossene Geschäfte vergütet. Zahlungen werden von Stripe abgewickelt. Korrespondenz:"
+    },
+    "cta": {
+      "heading": "Ein Geschäft zu platzieren?",
+      "body": "Stellen Sie es selbst ein. Es kostet nichts, und der Desk liest es vor allen anderen.",
+      "action": "Inserat einstellen"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Getreide & Körnerfrüchte",
@@ -234,7 +284,7 @@
         "registration": "Reg.-Nr. 12475013 · USt-Nr. GB 343 1702 32"
       }
     },
-    "disclaimer": "Unabhängige Handelsvermittlung und Beratung, gestützt auf Belege und amtliche Quellen. Ponte handelt als Makler und Vermittler, niemals als Eigenhändler. Kontaktvermittlungen erfolgen ausschließlich auf Grundlage unterzeichneter NCNDA und Honorarvereinbarungen.",
+    "disclaimer": "Ein geprüftes Netzwerk für den grenzüberschreitenden Handel, gestützt auf offizielle Quellen. Jedes Inserat wird vor der Veröffentlichung vom Desk geprüft. Wo der Desk an einem Geschäft beteiligt ist, handelt er ausschließlich als Vermittler, nie als Prinzipal.",
     "copyright": "© {year} Ponte · ein Handelsname der 1402 Celsius Ltd · ponte.trade"
   },
   "home": {

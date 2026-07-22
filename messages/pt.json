@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Sobre",
+      "description": "A Ponte é uma rede verificada para o comércio transfronteiriço, operada pela 1402 Celsius Ltd. Consultar é grátis, publicar é grátis, ligar é grátis."
+    },
+    "pill": "Sobre a Ponte",
+    "hero": {
+      "title": "Ponte significa",
+      "titleAccent": "ponte.",
+      "lead": "É uma rede verificada para o comércio transfronteiriço. Os membros publicam ofertas e procuras gratuitamente, a mesa verifica quem está por trás, e os dois lados falam diretamente."
+    },
+    "what": {
+      "label": "01 / O que é",
+      "body": "Um quadro público de negócios verificados. Qualquer pessoa o pode ler, sem conta. Os membros publicam uma oferta ou uma procura, a mesa revê-a antes de ficar visível, e a contraparte que quer falar pede uma ligação. Ninguém paga para ser apresentado e ninguém paga para ser encontrado."
+    },
+    "principles": {
+      "label": "02 / Princípios",
+      "heading": "Três regras, e cumprem-se.",
+      "i": {
+        "n": "i.",
+        "title": "Grátis onde conta",
+        "body": "Nada que crie liquidez fica atrás de uma barreira de pagamento. Consultar, publicar e ligar são gratuitos. Os créditos pagam a verificação de contrapartes e o trabalho de informação, e cada preço está impresso no botão antes de o premir."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Prova acima de opinião",
+        "body": "As contrapartes são confrontadas com registos comerciais e listas de sanções. As fontes são nomeadas e datadas. Se uma fonte não puder ser consultada, registamos que não foi verificada, nunca que estava limpa."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Declarado, não escondido",
+        "body": "Cada anunciante declara o seu papel e a que distância está do principal. As cadeias são bem-vindas quando declaradas. Uma cadeia descoberta depois da publicação retira o anúncio."
+      }
+    },
+    "desk": {
+      "label": "03 / A mesa",
+      "heading": "Uma pessoa lê cada anúncio.",
+      "body": "Por trás da Ponte estão três décadas de comércio internacional: gerir operações de trading, liderar organizações de informação comercial e sentar-se entre compradores e vendedores em quatro continentes. Essa experiência revê o que vai para o quadro. Está também disponível sobre um negócio, com honorários de êxito, quando um membro o pede. É uma opção, nunca uma portagem.",
+      "cta": "Falar com a mesa"
+    },
+    "company": {
+      "label": "04 / A empresa",
+      "body": "Ponte é um nome comercial da 1402 Celsius Ltd, sociedade constituída na Bulgária (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), do mesmo grupo que a 1402 Celsius Ltd, Reino Unido (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Quando a mesa intervém num negócio, atua apenas como intermediária, nunca como principal, e é remunerada por honorários de êxito sobre negócios fechados. Os pagamentos são processados pela Stripe. Correspondência:"
+    },
+    "cta": {
+      "heading": "Tem um negócio para colocar?",
+      "body": "Publique-o você mesmo. Não custa nada, e a mesa lê-o antes de todos.",
+      "action": "Publicar um anúncio"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Grãos e cereais",
@@ -234,7 +284,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "Corretagem e consultoria independentes em comércio internacional, com base em evidências e fontes oficiais. A Ponte atua como corretora e intermediária, nunca como parte principal. As apresentações são feitas sob NCNDA e acordos de honorários assinados.",
+    "disclaimer": "Uma rede verificada para o comércio transfronteiriço, assente em fontes oficiais. Cada anúncio é revisto pela mesa antes de ficar visível. Quando a mesa intervém num negócio, atua apenas como intermediária, nunca como principal.",
     "copyright": "© {year} Ponte · nome comercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {

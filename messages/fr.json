@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "À propos",
+      "description": "Ponte est un réseau vérifié pour le commerce transfrontalier, exploité par 1402 Celsius Ltd. Consultation gratuite, publication gratuite, mise en relation gratuite."
+    },
+    "pill": "À propos de Ponte",
+    "hero": {
+      "title": "Ponte signifie",
+      "titleAccent": "pont.",
+      "lead": "C'est un réseau vérifié pour le commerce transfrontalier. Les membres publient offres et demandes gratuitement, le desk vérifie qui se trouve derrière, et les deux parties se parlent directement."
+    },
+    "what": {
+      "label": "01 / Ce que c'est",
+      "body": "Un tableau public d'affaires vérifiées. N'importe qui peut le lire, sans compte. Les membres publient une offre ou une demande, le desk la contrôle avant sa mise en ligne, et la contrepartie qui souhaite discuter demande une mise en relation. Personne ne paie pour être présenté et personne ne paie pour être trouvé."
+    },
+    "principles": {
+      "label": "02 / Principes",
+      "heading": "Trois règles, et elles tiennent.",
+      "i": {
+        "n": "i.",
+        "title": "Gratuit là où cela compte",
+        "body": "Rien de ce qui crée de la liquidité ne se trouve derrière un péage. Consulter, publier et se mettre en relation sont gratuits. Les crédits paient la vérification des contreparties et le travail d'intelligence, et chaque prix est imprimé sur le bouton avant que vous ne le pressiez."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "La preuve avant l'opinion",
+        "body": "Les contreparties sont confrontées aux registres du commerce et aux listes de sanctions. Les sources sont nommées et datées. Si une source est injoignable, nous consignons qu'elle n'a pas été vérifiée, jamais qu'elle était saine."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Déclaré, pas dissimulé",
+        "body": "Chaque annonceur déclare son rôle et sa distance au donneur d'ordre. Les chaînes sont les bienvenues dès lors qu'elles sont déclarées. Une chaîne découverte après publication fait retirer l'annonce."
+      }
+    },
+    "desk": {
+      "label": "03 / Le desk",
+      "heading": "Un humain lit chaque annonce.",
+      "body": "Derrière Ponte, trois décennies de commerce international : diriger des opérations de négoce, piloter des organisations d'intelligence commerciale, et s'asseoir entre acheteurs et vendeurs sur quatre continents. Cette expérience contrôle ce qui arrive sur le tableau. Elle est aussi disponible sur une affaire, au succès, quand un membre le demande. C'est une option, jamais un péage.",
+      "cta": "Parler au desk"
+    },
+    "company": {
+      "label": "04 / La société",
+      "body": "Ponte est un nom commercial de 1402 Celsius Ltd, société constituée en Bulgarie (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), du même groupe que 1402 Celsius Ltd, Royaume-Uni (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Lorsque le desk intervient sur une affaire, il agit uniquement comme intermédiaire, jamais comme contrepartie, et se rémunère par une commission de succès sur les affaires conclues. Les paiements sont traités par Stripe. Correspondance :"
+    },
+    "cta": {
+      "heading": "Une affaire à placer ?",
+      "body": "Publiez-la vous-même. Cela ne coûte rien, et le desk la lit avant tout le monde.",
+      "action": "Publier une annonce"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Grains et céréales",
@@ -234,7 +284,7 @@
         "registration": "Enreg. 12475013 · TVA GB 343 1702 32"
       }
     },
-    "disclaimer": "Courtage et conseil indépendants en commerce international, fondés sur des preuves et des sources officielles. Ponte agit comme courtier et intermédiaire, jamais comme contrepartie. Les mises en relation se font sous NCNDA et accords de commission signés.",
+    "disclaimer": "Un réseau vérifié pour le commerce transfrontalier, adossé à des sources officielles. Chaque annonce est contrôlée par le desk avant sa mise en ligne. Lorsque le desk intervient sur une affaire, il agit uniquement comme intermédiaire, jamais comme contrepartie.",
     "copyright": "© {year} Ponte · nom commercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {

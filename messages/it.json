@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Chi siamo",
+      "description": "Ponte è una rete verificata per il commercio transfrontaliero, gestita da 1402 Celsius Ltd. Consultare è gratis, pubblicare è gratis, mettersi in contatto è gratis."
+    },
+    "pill": "Chi è Ponte",
+    "hero": {
+      "title": "Ponte significa",
+      "titleAccent": "ponte.",
+      "lead": "È una rete verificata per il commercio transfrontaliero. I membri pubblicano offerte e richieste gratuitamente, il desk verifica chi c'è dietro, e le due parti si parlano direttamente."
+    },
+    "what": {
+      "label": "01 / Che cos'è",
+      "body": "Una bacheca pubblica di affari verificati. Chiunque può leggerla, senza un account. I membri pubblicano un'offerta o una richiesta, il desk la controlla prima che diventi pubblica, e la controparte che vuole parlare chiede un contatto. Nessuno paga per essere presentato e nessuno paga per essere trovato."
+    },
+    "principles": {
+      "label": "02 / Principi",
+      "heading": "Tre regole, e tengono.",
+      "i": {
+        "n": "i.",
+        "title": "Gratis dove conta",
+        "body": "Nulla di ciò che crea liquidità sta dietro un muro a pagamento. Consultare, pubblicare e mettersi in contatto sono gratis. I crediti pagano la verifica delle controparti e il lavoro di intelligence, e ogni prezzo è stampato sul pulsante prima che lo si prema."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Prove prima delle opinioni",
+        "body": "Le controparti sono confrontate con i registri delle imprese e le liste sanzionatorie. Le fonti sono nominate e datate. Se una fonte non è raggiungibile registriamo che non è stata verificata, mai che era pulita."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Dichiarato, non nascosto",
+        "body": "Chi pubblica dichiara il proprio ruolo e quanto dista dal principale. Le catene sono benvenute quando sono dichiarate. Una catena scoperta dopo la pubblicazione fa ritirare l'annuncio."
+      }
+    },
+    "desk": {
+      "label": "03 / Il desk",
+      "heading": "Una persona legge ogni annuncio.",
+      "body": "Dietro Ponte ci sono tre decenni di commercio internazionale: gestire operazioni di trading, guidare organizzazioni di intelligence commerciale e sedersi tra compratori e venditori su quattro continenti. Quell'esperienza controlla ciò che finisce in bacheca. È disponibile anche su un singolo affare, a success fee, quando un membro lo chiede. È un'opzione, mai un pedaggio.",
+      "cta": "Parla con il desk"
+    },
+    "company": {
+      "label": "04 / La società",
+      "body": "Ponte è un nome commerciale di 1402 Celsius Ltd, società costituita in Bulgaria (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), dello stesso gruppo di 1402 Celsius Ltd, Regno Unito (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Quando il desk interviene su un affare agisce solo come intermediario, mai come principale, ed è remunerato con una success fee sugli affari conclusi. I pagamenti sono elaborati da Stripe. Corrispondenza:"
+    },
+    "cta": {
+      "heading": "Hai un affare da collocare?",
+      "body": "Pubblicalo tu stesso. Non costa nulla, e il desk lo legge prima di chiunque altro.",
+      "action": "Pubblica un annuncio"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Cereali e granaglie",
@@ -234,7 +284,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "Intermediazione e consulenza indipendenti per il commercio internazionale, fondate su prove e fonti ufficiali. Ponte agisce come broker e intermediario, mai come parte principale. Le presentazioni avvengono previa firma di NCNDA e accordi sulle commissioni.",
+    "disclaimer": "Una rete verificata per il commercio transfrontaliero, fondata su fonti ufficiali. Ogni annuncio è controllato dal desk prima di diventare pubblico. Quando il desk interviene su un affare agisce solo come intermediario, mai come principale.",
     "copyright": "© {year} Ponte · denominazione commerciale di 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
