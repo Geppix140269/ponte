@@ -16,7 +16,8 @@
     "restore": "node scripts/restore.mjs",
     "verify": "node scripts/check-messages.mjs && node scripts/check-encoding.mjs && tsc --noEmit --incremental false && next build",
     "prepare": "node scripts/install-hooks.mjs",
-    "encoding:check": "node scripts/check-encoding.mjs"
+    "encoding:check": "node scripts/check-encoding.mjs",
+    "hs:import": "tsx scripts/import-hs-codes.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",

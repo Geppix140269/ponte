@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendListingReceived, sendBrokerageSubmission } from "@/lib/email";
+import { getHsCode, isHsCatalogReady } from "@/lib/hs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,6 +56,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // An HS code is either a row in the official HS 2022 catalog or it is
+  // nothing. The shape check alone would happily accept 999999, and a board
+  // filtered by classification is worth nothing if the classifications are
+  // invented. This is the guard the HS brief calls non-negotiable.
+  //
+  // The catalog is applied by hand, so a window exists where the table is
+  // absent. In that window a code cannot be verified, so it is dropped rather
+  // than trusted: a null classification is honest, an unverified one is not.
+  let hsCode: string | null = null;
+  const rawHs = clean(body.hs_code, 12).replace(/\D/g, "");
+  if (rawHs) {
+    const found = await getHsCode(rawHs);
+    if (found) {
+      hsCode = found.code;
+    } else if (await isHsCatalogReady()) {
+      return NextResponse.json(
+        {
+          error: `${rawHs} is not a valid HS 2022 code. Pick one from the catalog.`,
+          field: "hs_code",
+        },
+        { status: 422 },
+      );
+    } else {
+      console.warn(`[ponte] hs_codes absent, dropping unverified code ${rawHs}`);
+    }
+  }
+
   const supabase = createClient();
   const { data: listing, error: insertErr } = await supabase
     .from("listings")
@@ -62,7 +90,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       type,
       product,
-      hs_code: clean(body.hs_code, 12) || null,
+      hs_code: hsCode,
       origin: clean(body.origin, 80) || null,
       destination: clean(body.destination, 80) || null,
       volume: clean(body.volume, 120) || null,
