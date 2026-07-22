@@ -1048,5 +1048,53 @@
     "actionFailed": "Non è andata a buon fine. Puoi completarla dal tuo account.",
     "working": "Completamento...",
     "failedTitle": "Non è andata a buon fine"
+  },
+  "landing": {
+    "eyebrow": "Bacheca live",
+    "h1": "A un ponte di distanza.",
+    "sub": "Controparti verificate. Trattative reali. Iscriversi e trattare è gratis.",
+    "ctaPrimary": "Vedi la bacheca live",
+    "ctaSecondary": "Come funziona la verifica",
+    "stage": {
+      "match": "Corrispondenza",
+      "counterparty": "Controparte",
+      "trustLabel": "Indice di fiducia",
+      "clear": "Registri e sanzioni senza rilievi",
+      "readOn": "letto il {date}",
+      "openRoom": "Apri una sala trattativa",
+      "sampleNote": "Esempio di formato. Mostra come si scrive una trattativa su Ponte. Non è un annuncio live."
+    },
+    "verify": {
+      "heading": "Verificato prima di presentare.",
+      "trustLabel": "Indice di fiducia",
+      "registers": "Registri delle imprese",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanzioni, quattro liste",
+      "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
+      "identifiers": "IVA e LEI",
+      "identifiersDetail": "VIES, GLEIF, datati alla lettura",
+      "anonymous": "Anonimo fino all'NCNDA",
+      "anonymousDetail": "Documentato prima di presentare",
+      "cta": "Cosa verifica ogni livello"
+    },
+    "ai": {
+      "heading": "Fatti dentro. Trattativa fuori.",
+      "provenance": "Redatto dall'IA, rivisto dal desk",
+      "body": "Inserisci i fatti che hai. Il testo interpreta solo quelli, non inventa mai, e una persona lo legge prima della pubblicazione.",
+      "descriptionLabel": "Descrizione",
+      "sample": "Partita di zucchero bancabile con credito confermato, specifica export standard, pronta per un compratore dell'area di Rotterdam.",
+      "publish": "Pubblica"
+    },
+    "pricing": {
+      "heading": "Iscriversi è gratis. Nessuna commissione sulle trattative che chiudi da solo.",
+      "body": "Pubblicare un'offerta o una richiesta, leggere la bacheca e metterti in contatto con una controparte non costano nulla. Verifica e intelligence si pagano in crediti, e il desk viene pagato solo se gli chiedi di intermediare.",
+      "verify": "Verificare una controparte",
+      "room": "Assistenza in sala",
+      "report": "Rapporto approfondito",
+      "credits": "{n} crediti",
+      "credit": "{n} credito",
+      "desk": "L'intermediazione del desk è a success fee o a retainer, concordata per iscritto prima di iniziare.",
+      "cta": "Inizia gratis"
+    }
   }
 }

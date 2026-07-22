@@ -1048,5 +1048,53 @@
     "actionFailed": "Não foi concluído. Pode terminar a partir da sua conta.",
     "working": "A concluir...",
     "failedTitle": "Não foi concluído"
+  },
+  "landing": {
+    "eyebrow": "Quadro ao vivo",
+    "h1": "A uma ponte de distância.",
+    "sub": "Contrapartes verificadas. Negócios reais. Aderir e negociar é grátis.",
+    "ctaPrimary": "Ver o quadro ao vivo",
+    "ctaSecondary": "Como funciona a verificação",
+    "stage": {
+      "match": "Correspondência",
+      "counterparty": "Contraparte",
+      "trustLabel": "Índice de confiança",
+      "clear": "Registos e sanções sem ocorrências",
+      "readOn": "lido em {date}",
+      "openRoom": "Abrir uma sala de negócio",
+      "sampleNote": "Exemplo de formato. Mostra como um negócio se escreve na Ponte. Não é um anúncio ao vivo."
+    },
+    "verify": {
+      "heading": "Verificado antes de apresentar.",
+      "trustLabel": "Índice de confiança",
+      "registers": "Registos comerciais",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanções, quatro listas",
+      "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
+      "identifiers": "IVA e LEI",
+      "identifiersDetail": "VIES, GLEIF, datados na leitura",
+      "anonymous": "Anónimo até ao NCNDA",
+      "anonymousDetail": "Documentado antes de apresentar",
+      "cta": "O que cada nível verifica"
+    },
+    "ai": {
+      "heading": "Factos dentro. Negócio fora.",
+      "provenance": "Redigido por IA, revisto pela mesa",
+      "body": "Introduz os factos que tem. O texto interpreta apenas esses, nunca inventa, e uma pessoa lê-o antes de publicar.",
+      "descriptionLabel": "Descrição",
+      "sample": "Lote de açúcar financiável com crédito documentário confirmado, especificação padrão de exportação, pronto para um comprador da região de Roterdão.",
+      "publish": "Publicar"
+    },
+    "pricing": {
+      "heading": "Aderir é grátis. Sem comissão nos negócios que fechar sozinho.",
+      "body": "Publicar uma oferta ou uma procura, ler o quadro e ligar-se a uma contraparte não custam nada. A verificação e a informação pagam-se em créditos, e a mesa só é paga se lhe pedir para intermediar um negócio.",
+      "verify": "Verificar uma contraparte",
+      "room": "Apoio em sala",
+      "report": "Relatório aprofundado",
+      "credits": "{n} créditos",
+      "credit": "{n} crédito",
+      "desk": "A intermediação da mesa é por comissão de êxito ou avença, acordada por escrito antes de começar.",
+      "cta": "Começar grátis"
+    }
   }
 }

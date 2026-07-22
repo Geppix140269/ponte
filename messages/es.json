@@ -1048,5 +1048,53 @@
     "actionFailed": "No se pudo completar. Puede terminarlo desde su cuenta.",
     "working": "Finalizando...",
     "failedTitle": "No se pudo completar"
+  },
+  "landing": {
+    "eyebrow": "Tablón en vivo",
+    "h1": "A un puente de distancia.",
+    "sub": "Contrapartes verificadas. Operaciones reales. Unirse y operar es gratis.",
+    "ctaPrimary": "Ver el tablón en vivo",
+    "ctaSecondary": "Cómo funciona la verificación",
+    "stage": {
+      "match": "Coincidencia",
+      "counterparty": "Contraparte",
+      "trustLabel": "Índice de confianza",
+      "clear": "Registros y sanciones sin incidencias",
+      "readOn": "leído el {date}",
+      "openRoom": "Abrir una sala de operación",
+      "sampleNote": "Ejemplo de formato. Muestra cómo se escribe una operación en Ponte. No es un anuncio en vivo."
+    },
+    "verify": {
+      "heading": "Comprobado antes de presentar.",
+      "trustLabel": "Índice de confianza",
+      "registers": "Registros mercantiles",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanciones, cuatro listas",
+      "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
+      "identifiers": "IVA y LEI",
+      "identifiersDetail": "VIES, GLEIF, con fecha de lectura",
+      "anonymous": "Anónimo hasta el NCNDA",
+      "anonymousDetail": "Documentado antes de presentar",
+      "cta": "Qué comprueba cada nivel"
+    },
+    "ai": {
+      "heading": "Datos dentro. Operación fuera.",
+      "provenance": "Redactado por IA, revisado por la mesa",
+      "body": "Usted introduce los datos que tiene. La redacción interpreta solo esos, nunca inventa, y una persona la lee antes de publicar.",
+      "descriptionLabel": "Descripción",
+      "sample": "Partida de azúcar bancable con carta de crédito confirmada, especificación estándar de exportación, lista para un comprador de la región de Róterdam.",
+      "publish": "Publicar"
+    },
+    "pricing": {
+      "heading": "Unirse es gratis. Sin comisión en las operaciones que cierre usted mismo.",
+      "body": "Publicar una oferta o una demanda, leer el tablón y conectar con una contraparte no cuestan nada. La verificación y la inteligencia se pagan en créditos, y la mesa cobra solo si le pide que intermedie una operación.",
+      "verify": "Verificar una contraparte",
+      "room": "Asistencia en sala",
+      "report": "Informe profundo",
+      "credits": "{n} créditos",
+      "credit": "{n} crédito",
+      "desk": "La intermediación de la mesa se cobra por éxito o por retainer, acordado por escrito antes de empezar.",
+      "cta": "Empezar gratis"
+    }
   }
 }

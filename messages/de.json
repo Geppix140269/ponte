@@ -1048,5 +1048,53 @@
     "actionFailed": "Das hat nicht geklappt. Sie können es in Ihrem Konto abschließen.",
     "working": "Wird abgeschlossen...",
     "failedTitle": "Das hat nicht geklappt"
+  },
+  "landing": {
+    "eyebrow": "Live-Board",
+    "h1": "Eine Brücke entfernt.",
+    "sub": "Geprüfte Gegenparteien. Echte Geschäfte. Beitritt und Handel kostenlos.",
+    "ctaPrimary": "Live-Board ansehen",
+    "ctaSecondary": "So funktioniert die Prüfung",
+    "stage": {
+      "match": "Treffer",
+      "counterparty": "Gegenpartei",
+      "trustLabel": "Vertrauenswert",
+      "clear": "Register und Sanktionslisten ohne Befund",
+      "readOn": "gelesen am {date}",
+      "openRoom": "Deal-Room öffnen",
+      "sampleNote": "Formatbeispiel. Es zeigt, wie ein Geschäft auf Ponte geschrieben wird. Kein aktives Inserat."
+    },
+    "verify": {
+      "heading": "Geprüft, bevor vorgestellt wird.",
+      "trustLabel": "Vertrauenswert",
+      "registers": "Handelsregister",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanktionen, vier Listen",
+      "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
+      "identifiers": "USt-IdNr. und LEI",
+      "identifiersDetail": "VIES, GLEIF, mit Lesedatum",
+      "anonymous": "Anonym bis zum NCNDA",
+      "anonymousDetail": "Papiere vor der Vorstellung",
+      "cta": "Was jede Stufe prüft"
+    },
+    "ai": {
+      "heading": "Fakten rein. Geschäft raus.",
+      "provenance": "KI-Entwurf, vom Desk geprüft",
+      "body": "Sie geben die Fakten ein, die Sie haben. Der Text deutet nur diese, erfindet nie etwas, und ein Mensch liest ihn vor der Veröffentlichung.",
+      "descriptionLabel": "Beschreibung",
+      "sample": "Bankfähige Zuckerpartie unter bestätigtem Akkreditiv, Standard-Exportspezifikation, bereit für einen Käufer im Raum Rotterdam.",
+      "publish": "Veröffentlichen"
+    },
+    "pricing": {
+      "heading": "Beitritt kostenlos. Keine Provision auf Geschäfte, die Sie selbst abschließen.",
+      "body": "Ein Angebot oder ein Gesuch einstellen, das Board lesen und eine Gegenpartei kontaktieren kosten nichts. Prüfung und Intelligence werden in Credits bezahlt, und das Desk nur, wenn Sie es mit der Vermittlung beauftragen.",
+      "verify": "Gegenpartei prüfen",
+      "room": "Deal-Room-Unterstützung",
+      "report": "Tiefenbericht",
+      "credits": "{n} Credits",
+      "credit": "{n} Credit",
+      "desk": "Die Vermittlung durch das Desk erfolgt gegen Erfolgshonorar oder Retainer, schriftlich vereinbart, bevor Arbeit beginnt.",
+      "cta": "Kostenlos starten"
+    }
   }
 }
