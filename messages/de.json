@@ -191,23 +191,22 @@
   "contact": {
     "meta": {
       "title": "Kontakt",
-      "description": "Sprechen Sie mit Ponte. Bringen Sie ein Geschäft an den Desk, buchen Sie einen Senior-Analysten oder umreißen Sie ein Strategie-Intensiv oder ein Retainer-Mandat."
+      "description": "Sprechen Sie mit Ponte. Stellen Sie ein Geschäft selbst auf das Board, oder geben Sie es an den Desk."
     },
     "pill": "Kontakt",
     "title": "Sprechen wir darüber.",
     "lead": {
-      "default": "Erzählen Sie uns von dem Geschäft auf Ihrem Tisch oder von der Entscheidung, die Sie abwägen. Der Desk antwortet innerhalb eines Werktags.",
-      "strategyIntensive": "Sie möchten ein Strategie-Intensiv: ein halber Tag mit einem Senior-Analysten und ein schriftliches Briefing. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "default": "Ein Geschäft einzustellen braucht uns nicht: das Board ist kostenlos und offen. Schreiben Sie, wenn Sie den Desk einbinden wollen oder wenn etwas nicht funktioniert. Wir antworten innerhalb eines Werktags.",
       "retainer": "Sie erwägen ein Trade-Desk-Retainer: ein fest zugeordneter Analyst auf Abruf. Nennen Sie uns den Rhythmus und die Art der Fragen, die Sie erwarten, und wir schlagen ein monatliches Kontingent vor."
     },
     "deal": {
-      "title": "Bringen Sie uns ein Geschäft",
-      "body": "Ein Angebot oder ein Bedarf, Waren oder Handelsdienstleistungen. Nur Fakten, schriftlich geregelt vor jeder Kontaktvermittlung.",
+      "title": "Stellen Sie ein Geschäft selbst ein",
+      "body": "Ein Angebot oder ein Bedarf, Waren oder Handelsdienstleistungen. Kostenlos einzustellen, vom Desk geprüft, bevor es öffentlich wird.",
       "cta": "Zum Marktplatz"
     },
     "email": {
       "title": "Schreiben Sie uns",
-      "body": "Für Intensivformate, Retainer oder alles Maßgeschneiderte. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "body": "Für alles, was das Board nicht abdeckt: Mandate, Retainer, oder ein Geschäft, das Sie lieber nicht öffentlich machen.",
       "subject": "Anfrage: {topic}"
     }
   },

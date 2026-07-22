@@ -191,23 +191,22 @@
   "contact": {
     "meta": {
       "title": "Contato",
-      "description": "Fale com a Ponte. Traga um negócio para a mesa, agende um analista sênior ou defina o escopo de um intensivo de estratégia ou de um contrato mensal."
+      "description": "Fale com a Ponte. Publique você mesmo um negócio no quadro, ou traga-o à mesa."
     },
     "pill": "Contato",
     "title": "Vamos conversar.",
     "lead": {
-      "default": "Conte o negócio que está na sua mesa, ou a decisão que você está avaliando. A mesa responde em até um dia útil.",
-      "strategyIntensive": "Você quer um Intensivo de Estratégia: meio dia com um analista sênior e um relatório escrito. Diga qual é a decisão e definimos o escopo.",
+      "default": "Publicar um negócio não precisa de nós: o quadro é gratuito e aberto. Escreva quando quiser a mesa envolvida, ou quando algo não estiver a funcionar. Respondemos num dia útil.",
       "retainer": "Você está considerando um Contrato Mensal com a Mesa: um analista fixo à disposição. Diga a frequência e o tipo de pergunta que você espera, e propomos um bloco mensal."
     },
     "deal": {
-      "title": "Traga um negócio",
-      "body": "Uma oferta ou uma demanda, mercadorias ou serviços de comércio. Só fatos, documentados antes de qualquer apresentação.",
+      "title": "Publique você mesmo um negócio",
+      "body": "Uma oferta ou uma procura, mercadorias ou serviços de comércio. Publicação gratuita, verificada pela mesa antes de ficar visível.",
       "cta": "Ir para o marketplace"
     },
     "email": {
       "title": "Envie um e-mail",
-      "body": "Para intensivos, contratos mensais ou algo sob medida. Diga qual é a decisão e definimos o escopo.",
+      "body": "Para o que o quadro não cobre: mandatos, avenças, ou um negócio que prefira não tornar público.",
       "subject": "Consulta: {topic}"
     }
   },

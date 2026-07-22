@@ -191,23 +191,22 @@
   "contact": {
     "meta": {
       "title": "Contacto",
-      "description": "Hable con Ponte. Traiga una operación a la mesa, reserve un analista sénior o defina un Intensivo de Estrategia o un retainer."
+      "description": "Habla con Ponte. Publica tú mismo una operación en el tablón, o tráela a la mesa."
     },
     "pill": "Contacto",
     "title": "Hablemos.",
     "lead": {
-      "default": "Cuéntenos la operación que tiene sobre la mesa, o la decisión que está valorando. La mesa responde en un día hábil.",
-      "strategyIntensive": "Busca un Intensivo de Estrategia: media jornada con un analista sénior y un informe escrito. Díganos la decisión y lo definimos.",
+      "default": "Publicar una operación no nos necesita: el tablón es gratuito y abierto. Escríbenos cuando quieras que la mesa intervenga, o cuando algo no funcione. Respondemos en un día hábil.",
       "retainer": "Está considerando un Retainer de la Mesa: un analista disponible de forma permanente. Díganos la cadencia y el tipo de preguntas que espera plantear, y le propondremos un bloque mensual."
     },
     "deal": {
-      "title": "Traiga una operación",
-      "body": "Una oferta o una necesidad, bienes o servicios comerciales. Solo hechos, documentado antes de cualquier presentación.",
+      "title": "Publica tú mismo una operación",
+      "body": "Una oferta o una demanda, mercancías o servicios comerciales. Publicar es gratis, y la mesa la revisa antes de que salga en público.",
       "cta": "Ir al marketplace"
     },
     "email": {
       "title": "Escríbanos",
-      "body": "Para intensivos, retainers o cualquier encargo a medida. Díganos la decisión y lo definimos.",
+      "body": "Para lo que el tablón no cubre: mandatos, retainers, o una operación que prefieras no hacer pública.",
       "subject": "Consulta: {topic}"
     }
   },

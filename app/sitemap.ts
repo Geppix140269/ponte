@@ -4,8 +4,8 @@ import { localeAlternates, localeUrl } from "@/lib/seo";
 
 // Paths worth indexing, with their crawl hints. Legacy shop and Deal Desk
 // routes (catalogue, category, product, cart, checkout, order-success,
-// brokerage, network, methodology, why-ponte) are permanent redirects in
-// middleware.ts, so they are deliberately not listed.
+// brokerage, network, methodology, why-ponte, advisory) are permanent
+// redirects in middleware.ts, so they are deliberately not listed.
 const PATHS: {
   path: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
@@ -17,8 +17,7 @@ const PATHS: {
   // Verification. Answers "how do I verify a trade counterparty", so it is
   // crawled at the same weight as the marketplace itself.
   { path: "/verification", changeFrequency: "monthly", priority: 0.9 },
-  // The desk
-  { path: "/advisory", changeFrequency: "monthly", priority: 0.8 },
+  // Fees
   { path: "/pricing", changeFrequency: "weekly", priority: 0.9 },
   // Company
   { path: "/about", changeFrequency: "monthly", priority: 0.6 },

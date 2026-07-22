@@ -5,10 +5,6 @@ import { ArrowRight, Mail, FileText } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 
-// Calendly account link (same as the Analyst Desk). Point at a dedicated
-// Stripe-enabled "Analyst Call" event for one-step payment when ready.
-const CALENDLY_URL = "https://calendly.com/hello-giuseppefunaro";
-
 export async function generateMetadata({
   params,
 }: {
@@ -36,13 +32,11 @@ export default async function ContactPage({
   setRequestLocale(params.locale);
   const t = await getTranslations("contact");
 
+  // The Analyst Desk's strategy intensive went with /advisory. The retainer
+  // did not: it is still an engagement on /pricing, so it still gets its own
+  // opening line here.
   const key = searchParams.engagement ?? searchParams.product ?? "";
-  const lead =
-    key === "strategy-intensive"
-      ? t("lead.strategyIntensive")
-      : key === "retainer"
-        ? t("lead.retainer")
-        : t("lead.default");
+  const lead = key === "retainer" ? t("lead.retainer") : t("lead.default");
 
   return (
     <>
@@ -58,7 +52,7 @@ export default async function ContactPage({
       </header>
 
       <section className="container-px pb-24">
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2">
           <div className="glass p-8 flex flex-col ring-1 ring-gold/40">
             <FileText className="h-5 w-5 text-gold" />
             <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>{t("deal.title")}</h3>

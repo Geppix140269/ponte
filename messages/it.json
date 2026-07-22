@@ -191,23 +191,22 @@
   "contact": {
     "meta": {
       "title": "Contatti",
-      "description": "Parli con Ponte. Porti un'operazione al desk, prenoti un analista senior, oppure definisca uno Strategy Intensive o un retainer."
+      "description": "Parla con Ponte. Pubblica tu stesso un affare sulla bacheca, oppure portalo al desk."
     },
     "pill": "Contatti",
     "title": "Parliamone.",
     "lead": {
-      "default": "Ci dica quale operazione ha sul tavolo, o quale decisione sta valutando. Il desk risponde entro un giorno lavorativo.",
-      "strategyIntensive": "Le interessa uno Strategy Intensive: mezza giornata con un analista senior e un documento scritto. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "default": "Pubblicare un affare non richiede noi: la bacheca è gratuita e aperta. Scrivici quando vuoi coinvolgere il desk, o quando qualcosa non funziona. Rispondiamo entro un giorno lavorativo.",
       "retainer": "Sta valutando un Trade Desk Retainer: un analista sempre a disposizione. Ci indichi la frequenza e il tipo di domande che prevede, e Le proporremo un pacchetto mensile."
     },
     "deal": {
-      "title": "Ci porti un'operazione",
-      "body": "Un'offerta o una richiesta, merci o servizi per il commercio. Solo fatti, formalizzati per iscritto prima di ogni presentazione.",
+      "title": "Pubblica tu stesso un affare",
+      "body": "Un'offerta o una richiesta, merci o servizi commerciali. Pubblicare è gratis, e il desk la verifica prima che diventi pubblica.",
       "cta": "Vai al marketplace"
     },
     "email": {
       "title": "Ci scriva",
-      "body": "Per gli Strategy Intensive, i retainer o qualsiasi esigenza su misura. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "body": "Per ciò che la bacheca non copre: mandati, retainer, o un affare che preferisci non rendere pubblico.",
       "subject": "Richiesta di informazioni: {topic}"
     }
   },

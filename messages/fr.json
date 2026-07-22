@@ -191,23 +191,22 @@
   "contact": {
     "meta": {
       "title": "Contact",
-      "description": "Parlez à Ponte. Confiez une affaire au desk, réservez un analyste senior, ou cadrez un Intensif Stratégie ou un forfait mensuel."
+      "description": "Parlez à Ponte. Publiez vous-même une affaire sur le tableau, ou confiez-la au desk."
     },
     "pill": "Contact",
     "title": "Parlons-en.",
     "lead": {
-      "default": "Dites-nous l’affaire que vous avez en main, ou la décision que vous pesez. Le desk répond sous un jour ouvré.",
-      "strategyIntensive": "Vous cherchez un Intensif Stratégie : une demi-journée avec un analyste senior et une note écrite. Dites-nous la décision, nous la cadrons.",
+      "default": "Publier une affaire ne nous demande rien : le tableau est gratuit et ouvert. Écrivez-nous quand vous voulez impliquer le desk, ou quand quelque chose ne fonctionne pas. Nous répondons sous un jour ouvré.",
       "retainer": "Vous envisagez un forfait mensuel avec le desk : un analyste à disposition en permanence. Dites-nous la cadence et le type de questions attendues, nous proposerons un volume mensuel."
     },
     "deal": {
-      "title": "Confiez-nous une affaire",
-      "body": "Une offre ou un besoin, marchandises ou services liés au commerce. Des faits uniquement, contrats signés avant toute mise en relation.",
+      "title": "Publiez vous-même une affaire",
+      "body": "Une offre ou une demande, marchandises ou services commerciaux. Publication gratuite, vérifiée par le desk avant mise en ligne.",
       "cta": "Aller à la place de marché"
     },
     "email": {
       "title": "Écrivez-nous",
-      "body": "Pour les intensifs, les forfaits mensuels ou toute demande sur mesure. Dites-nous la décision, nous la cadrons.",
+      "body": "Pour tout ce que le tableau ne couvre pas : mandats, forfaits mensuels, ou une affaire que vous préférez ne pas rendre publique.",
       "subject": "Demande : {topic}"
     }
   },
