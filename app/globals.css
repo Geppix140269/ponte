@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ======================================================================
-   Ponte Brand v2 — Trade intelligence. Delivered.
+   Ponte Brand v2. The verified network for cross-border trade.
    Glass over navy-deep. Gold reserved for live data. One blur,
    one border weight, one shadow. The discipline is in restraint.
    ====================================================================== */
@@ -260,7 +260,7 @@
 }
 
 /* ======================================================================
-   Brand v3 — Span Traversal motion.
+   Brand v3: Span Traversal motion.
    Used by <BridgeMark animate /> for real data-arrival moments only
    (report ready, sync, download complete). Never on hover, scroll, or
    page load. Respects prefers-reduced-motion.

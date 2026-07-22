@@ -36,7 +36,7 @@ not inferred.
 | `/learn/duties`, `/learn/trade-data` | `app/[locale]/learn/*` | KEEP | SEO content, indexed, no conflict with the new story. Reskin later, Priority 3. |
 | `/privacy`, `/terms` | `app/[locale]/*` | KEEP | Legal. `LegalOriginalNotice` handles the English-original rule. |
 | `/offline` | `app/[locale]/offline/page.tsx` | KEEP | PWA offline fallback. |
-| `/advisory` | `app/[locale]/advisory/page.tsx` | **RETIRE** | $500 analyst call / $2,000 intensive / $2,500 retainer, Calendly link, hardcoded English, mojibake (`Â·`). This is the Deal Desk generation still live **and still in `sitemap.ts` at priority 0.8**. See flag F3. |
+| `/advisory` | `app/[locale]/advisory/page.tsx` | **RETIRE** | $500 analyst call / $2,000 intensive / $2,500 retainer, Calendly link, hardcoded English, and a cp1252-mangled middle dot in the copy. This is the Deal Desk generation still live **and still in `sitemap.ts` at priority 0.8**. See flag F3. |
 | `/methodology` | `app/[locale]/methodology/page.tsx` | **RETIRE** | Already 308s in `middleware.ts`. The page file is unreachable dead code. |
 | `/why-ponte` | `app/[locale]/why-ponte/page.tsx` | **RETIRE** | Same: 308 exists, file is dead. |
 | `/brokerage` | `app/[locale]/brokerage/page.tsx` | **RETIRE** | Same: 308 exists, file is dead. |
