@@ -2,7 +2,9 @@
 //
 // Run by .github/workflows/sanctions-refresh.yml on a GitHub Actions runner,
 // which has no serverless timeout, because a five source refresh takes minutes
-// and a Netlify function is capped in seconds.
+// and a serverless function is capped well below that on any host. Vercel's
+// ceiling is higher than Netlify's was, but it is still minutes at best and
+// still a request, so this stayed on a runner through the move.
 //
 // Deliberately thin. Everything it does lives in lib/sanctions/refresh-run.ts,
 // which is inside the tsconfig include and therefore typechecked by CI. This

@@ -39,7 +39,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Same major as CI and as "engines" in package.json. This job screens
+          # real people against sanctions lists, so it is the last place to
+          # want a runtime that nothing else exercises.
+          node-version: 22
           cache: npm
 
       - name: Install

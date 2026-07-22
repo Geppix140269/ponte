@@ -6,7 +6,7 @@
 //   3. To get your chat ID: send any message to the bot, then visit
 //      https://api.telegram.org/bot<TOKEN>/getUpdates
 //      Look for "chat":{"id":NNNNNN,...} — that NNNNNN is your chat ID.
-//   4. In Netlify, set:
+//   4. In the Vercel project env, set:
 //        TELEGRAM_BOT_TOKEN=<token from BotFather>
 //        TELEGRAM_OPS_CHAT_ID=<your chat ID>
 //

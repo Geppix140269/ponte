@@ -35,14 +35,16 @@ Tap the link to confirm/capture/void from your phone.
    (replace `<YOUR_TOKEN>` with the token from step 1)
 4. Look for `"chat":{"id":NNNNNN,...` in the JSON response. That number is your chat ID. Copy it.
 
-### 3. Drop into Netlify (1 min)
+### 3. Drop into Vercel (1 min)
 
-1. Open Netlify → Site → Site configuration → Environment variables
-2. Add:
+1. Open Vercel → the `ponte` project → Settings → Environment Variables
+2. Add, ticking Production, Preview and Development:
    - `TELEGRAM_BOT_TOKEN` = your bot token from step 1
    - `TELEGRAM_OPS_CHAT_ID` = your chat ID from step 2
    - `OPS_EMAIL` = `ops@ponte.trade` (or any address you want consolidated order alerts to land in)
-3. Save. Netlify will redeploy automatically.
+3. Save, then redeploy. Unlike Netlify, Vercel does **not** rebuild by itself
+   when an environment variable changes: the running deployment keeps the old
+   values until the next deploy. Trigger one from the Deployments tab.
 
 ### 4. Test
 
@@ -51,8 +53,9 @@ Place a test order in production with a $1 SKU (or use Stripe test mode). Within
 ## Troubleshooting
 
 **No message arrives:**
-- Check Netlify env vars saved correctly (no trailing spaces)
-- Check Netlify build logs for `[ponte] telegram sendMessage failed:` — that tells you what Telegram rejected
+- Check the Vercel env vars saved correctly (no trailing spaces), and that a deploy has happened since
+- Check the Vercel runtime logs for `[ponte] telegram sendMessage failed:` — that tells you what Telegram rejected. Runtime logs, not build logs: this fires when a submission comes in, long after the build
+- Remember both vars must be present. With either one missing the wrapper is a silent no-op by design, so no error appears anywhere
 - Most common: chat ID is wrong (must be the integer from `chat.id`, not your username)
 
 **Multiple chats / group:**

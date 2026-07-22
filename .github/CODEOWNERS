@@ -10,5 +10,5 @@
 /supabase/migrations/     @Geppix140269
 /middleware.ts            @Geppix140269
 /next.config.mjs          @Geppix140269
-/netlify.toml             @Geppix140269
+/vercel.json              @Geppix140269
 /package.json             @Geppix140269

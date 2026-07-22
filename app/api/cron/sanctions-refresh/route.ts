@@ -5,17 +5,21 @@ export const dynamic = "force-dynamic";
 
 // Manual trigger for the sanctions rebuild. NOT the scheduler.
 //
-// THIS ROUTE WILL TIME OUT. A full five source refresh takes minutes and the
-// host caps a synchronous function at roughly 10 to 26 seconds, so a caller
-// gets HTTP 504 while the work carries on server side, or does not, with no
-// way to tell which from the response. That is exactly what happened in
-// production: a manual trigger returned 504, the load happened to finish, and
-// the result looked like a failure.
+// THIS ROUTE WILL PROBABLY TIME OUT. A full five source refresh takes minutes
+// and a synchronous function is capped well below that, so a caller gets HTTP
+// 504 while the work carries on server side, or does not, with no way to tell
+// which from the response. That is exactly what happened in production: a
+// manual trigger returned 504, the load happened to finish, and the result
+// looked like a failure.
 //
-// There used to be an `export const maxDuration = 300` here. It is a Vercel
-// setting and this app is on Netlify, where it does nothing at all. It has
-// been removed rather than corrected, because no per-route number makes a
-// minutes long job fit in a request.
+// There used to be an `export const maxDuration = 300` here, removed while the
+// app was on Netlify because the setting is a Vercel one and did nothing
+// there. The app is on Vercel now, so that line would take effect if restored.
+// It is still deliberately absent. The original reason holds and is not about
+// which host: no per-route number makes a minutes long job fit inside a
+// request, and a limit high enough to sometimes pass turns a reliable failure
+// into an intermittent one, which is harder to operate against than a 504 that
+// always means "go and read the log".
 //
 // The scheduled run is .github/workflows/sanctions-refresh.yml, which runs
 // scripts/sanctions-refresh.ts on a GitHub Actions runner with no serverless

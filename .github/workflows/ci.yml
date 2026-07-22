@@ -17,7 +17,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Must match "engines" in package.json, which is what Vercel reads
+          # when it builds. Unpinned, CI validated on one major and the host
+          # built on another, which is how a green CI ships a broken deploy.
+          node-version: 22
           cache: npm
 
       - name: Install
