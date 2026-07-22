@@ -104,22 +104,51 @@ as $$
   select
     h.code, h.display, h.description, h.short_title,
     h.chapter, h.chapter_title, h.heading,
+    -- Ranking, in the order a trader means it.
+    --
+    -- word_similarity alone is not enough. It answers "does this word appear",
+    -- which for "sugar" is true of every milk product whose description ends
+    -- "not containing added sugar", and those sort first on code because
+    -- chapter 04 precedes chapter 17. The trader meant chapter 17.
+    --
+    -- WCO wording is written "Commodity; qualifier", so what the code IS
+    -- comes before the first semicolon and what it is LIKE comes after. That
+    -- structure is the signal: a description opening with the query is the
+    -- commodity itself, a description merely containing it is a neighbour.
     case
-      when h.code like regexp_replace(q, '\D', '', 'g') || '%'
-       and regexp_replace(q, '\D', '', 'g') <> '' then 1.0::real
-      else similarity(
-        coalesce(h.short_title, '') || ' ' || h.description || ' ' || h.heading_title,
-        q
-      )
+      when regexp_replace(q, '\D', '', 'g') <> ''
+       and h.code like regexp_replace(q, '\D', '', 'g') || '%' then 1.00::real
+      when h.description ilike q || '%'                        then 0.95::real
+      when split_part(h.description, ';', 1) ilike '%' || q || '%' then 0.90::real
+      when h.heading_title ilike '%' || q || '%'                then 0.85::real
+      when coalesce(h.short_title, '') ilike '%' || q || '%'    then 0.80::real
+      -- Scaled to sit BELOW every curated tier above, which is the whole
+      -- point and was got wrong first time round. word_similarity returns
+      -- exactly 1.0 whenever the query appears as a word anywhere at all, so
+      -- unscaled it outranks the 0.95 given to a description that OPENS with
+      -- the query. That is how a search for "sugar" returned sugar-beet seed,
+      -- sugar-manufacturing machinery and cocoa containing added sugar, and
+      -- pushed chapter 17 off the first page entirely.
+      else word_similarity(
+        q,
+        coalesce(h.short_title, '') || ' ' || h.description || ' ' || h.heading_title
+      ) * 0.75::real
     end as score
   from hs_codes h
   where h.is_active
     and (
       (regexp_replace(q, '\D', '', 'g') <> ''
         and h.code like regexp_replace(q, '\D', '', 'g') || '%')
-      or coalesce(h.short_title, '') || ' ' || h.description || ' ' || h.heading_title % q
+      -- Parenthesised deliberately: the trigram operators bind tighter than
+      -- ||, so without these brackets Postgres reads this as a concatenation
+      -- with (heading_title <% q) on the end and rejects it as "argument of
+      -- OR must be type boolean".
+      or q <% (coalesce(h.short_title, '') || ' ' || h.description || ' ' || h.heading_title)
     )
-  order by score desc, h.code
+  -- Shorter description before longer at equal score: WCO writes the plain
+  -- commodity tersely and its exceptions at length, so the short one is
+  -- almost always the row somebody meant.
+  order by score desc, length(h.description), h.code
   limit least(coalesce(lim, 20), 50);
 $$;
 
