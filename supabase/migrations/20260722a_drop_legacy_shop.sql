@@ -22,9 +22,16 @@
 -- product copy for reports that were never sold and cannot be, because there
 -- is no checkout, no fulfilment and no PDF pipeline left to serve them.
 --
--- BEFORE RUNNING THIS: take a backup. `npm run backup` writes every table and
--- bucket to C:\Users\gfuna\ponte-backups. The run of 2026-07-22_1204 contains
--- all 97 rows and is the reason this migration is safe to apply.
+-- NOT APPLIED, AND DELIBERATELY SO. Decision of 2026-07-22: this waits until
+-- after the August 1 launch. Dropping eight tables buys nothing before launch,
+-- because nothing reads them, and an irreversible schema change in the ten days
+-- before a launch is a risk taken for no return. It sits here as a pending
+-- migration so the intent is recorded and the file is ready.
+--
+-- WHEN IT IS RUN, POST-LAUNCH: take a FRESH backup first, do not rely on the
+-- 2026-07-22_1204 one referenced below. `npm run backup` writes every table and
+-- bucket to C:\Users\gfuna\ponte-backups, and as of commit 11171e9 it finally
+-- covers all twenty-four tables rather than fifteen.
 --
 -- Run in the Supabase SQL Editor. Safe to re-run.
 
