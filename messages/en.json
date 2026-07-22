@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "About",
+      "description": "Ponte is a verified network for cross-border trade, operated by 1402 Celsius Ltd. Free to browse, free to post, free to connect."
+    },
+    "pill": "About Ponte",
+    "hero": {
+      "title": "Ponte means",
+      "titleAccent": "bridge.",
+      "lead": "It is a verified network for cross-border trade. Members post offers and requirements for free, the desk checks who is behind them, and the two sides talk to each other directly."
+    },
+    "what": {
+      "label": "01 / What it is",
+      "body": "A public board of vetted deals. Anyone can read it, without an account. Members post an offer or a requirement, the desk reviews it before it goes live, and a counterparty who wants to talk asks for a connection. Nobody pays to be introduced and nobody pays to be found."
+    },
+    "principles": {
+      "label": "02 / Principles",
+      "heading": "Three rules, and they hold.",
+      "i": {
+        "n": "i.",
+        "title": "Free where it counts",
+        "body": "Nothing that creates liquidity sits behind a paywall. Browsing, posting and connecting are free. Credits pay for counterparty verification and intelligence work, and every price is printed on the button before you press it."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Evidence over opinion",
+        "body": "Counterparties are checked against company registers and sanctions lists. Sources are named and dated. If a source cannot be reached we record that it was not checked, never that it was clean."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Declared, not hidden",
+        "body": "Every poster declares their role and how far they sit from the principal. Chains are welcome when they are declared. A chain discovered after publication pulls the listing."
+      }
+    },
+    "desk": {
+      "label": "03 / The desk",
+      "heading": "A human reads every listing.",
+      "body": "Behind Ponte sit three decades in international trade: running trading operations, leading trade intelligence organisations, and sitting between buyers and sellers on four continents. That experience reviews what goes on the board. It is also available on a deal, on a success fee, when a member wants it. That is an option, never a toll.",
+      "cta": "Talk to the desk"
+    },
+    "company": {
+      "label": "04 / The company",
+      "body": "Ponte is a trading name of 1402 Celsius Ltd, a company incorporated in Bulgaria (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), part of the same group as 1402 Celsius Ltd, United Kingdom (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Where the desk is engaged on a deal it acts as intermediary only, never as principal, and is remunerated by success fee on closed deals. Payments are processed by Stripe. Correspondence:"
+    },
+    "cta": {
+      "heading": "Have a deal to place?",
+      "body": "Post it yourself. It costs nothing, and the desk reads it before anyone else does.",
+      "action": "Post a listing"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Grains & Cereals",
@@ -191,23 +241,22 @@
   "contact": {
     "meta": {
       "title": "Contact",
-      "description": "Talk to Ponte. Bring a deal to the desk, book a senior analyst, or scope a strategy intensive or retainer."
+      "description": "Talk to Ponte. Post a deal on the board yourself, or bring one to the desk."
     },
     "pill": "Contact",
     "title": "Let’s talk.",
     "lead": {
-      "default": "Tell us the deal on your desk, or the decision you are weighing. The desk replies within one business day.",
-      "strategyIntensive": "You are after a Strategy Intensive: a half-day with a senior analyst and a written brief. Tell us the decision and we will scope it.",
+      "default": "Posting a deal does not need us: the board is free and open. Write when you want the desk involved, or when something is not working. We reply within one business day.",
       "retainer": "You are considering a Trade Desk Retainer: a standing analyst on call. Tell us the cadence and the kinds of questions you expect, and we will propose a monthly block."
     },
     "deal": {
-      "title": "Bring us a deal",
-      "body": "An offer or a requirement, goods or trade services. Facts only, papered before any introduction.",
+      "title": "Post a deal yourself",
+      "body": "An offer or a requirement, goods or trade services. Free to post, vetted by the desk before it goes live.",
       "cta": "Go to the marketplace"
     },
     "email": {
       "title": "Email us",
-      "body": "For intensives, retainers, or anything bespoke. Tell us the decision and we will scope it.",
+      "body": "For anything the board does not cover: mandates, retainers, or a deal you would rather not put in public.",
       "subject": "Enquiry: {topic}"
     }
   },
@@ -235,7 +284,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "Independent trade brokerage and advisory, grounded in evidence and official sources. Ponte acts as broker and intermediary, never as principal. Introductions are made under signed NCNDA and fee agreements.",
+    "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
@@ -486,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Reading your listing…",
       "unavailable": "The check is unavailable right now. You can still publish.",
-      "upgrade": "You have used your free checks. Ponte AI gives you unlimited listing checks and your personal AI account manager for <price>$19/month</price>.",
-      "upgradeCta": "Unlock Ponte AI",
       "runAgain": "Check again after edits"
     },
     "actions": {
@@ -613,10 +660,7 @@
       }
     },
     "ai": {
-      "label": "Your account manager",
-      "lockedBody": "Your AI account manager reads your whole account daily: what to answer, what to refresh, what to fix, and drafts the next move. Unlimited listing checks included.",
-      "lockedPrice": "Ponte AI · $19/month.",
-      "unlock": "Unlock Ponte AI"
+      "label": "Your account manager"
     },
     "mine": {
       "eyebrow": "Your listings",
@@ -716,7 +760,7 @@
     },
     "pill": "Fees",
     "title": "The marketplace is <em>free</em>.",
-    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. You pay only if you ask the desk to work for you.",
+    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. Credits pay for checking a counterparty. The desk is there if you want it.",
     "marketplace": {
       "name": "The Marketplace",
       "price": "Free",
@@ -724,12 +768,12 @@
       "body": "Post what you sell or what you need. AI and the desk vet every listing before it goes live. You stay anonymous until both sides agree to connect, then you deal directly. Producers, trading companies and brokers all welcome, roles declared up front.",
       "cta": "Start a listing"
     },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/month",
-      "terms": "Or $190/year · cancel anytime",
-      "body": "Your AI on the inside: unlimited listing checks that score and coach every listing before it goes live, a personal AI account manager reading your account daily, and first access to AI match alerts. Try it free, keep it when it pays for itself.",
-      "cta": "Unlock Ponte AI"
+    "credits": {
+      "name": "Credits",
+      "price": "2 credits",
+      "terms": "Per counterparty check",
+      "body": "Checking who you are dealing with is the one thing on Ponte that costs money. A check reads the company registers and the OFAC, EU, UN and UK sanctions lists, names every source and dates it, and a person reviews anything that is not clean. Listing checks, write-ups and match alerts stay free.",
+      "cta": "See what a check covers"
     },
     "desk": {
       "name": "The Desk, per deal",

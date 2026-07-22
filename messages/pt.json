@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Sobre",
+      "description": "A Ponte é uma rede verificada para o comércio transfronteiriço, operada pela 1402 Celsius Ltd. Consultar é grátis, publicar é grátis, ligar é grátis."
+    },
+    "pill": "Sobre a Ponte",
+    "hero": {
+      "title": "Ponte significa",
+      "titleAccent": "ponte.",
+      "lead": "É uma rede verificada para o comércio transfronteiriço. Os membros publicam ofertas e procuras gratuitamente, a mesa verifica quem está por trás, e os dois lados falam diretamente."
+    },
+    "what": {
+      "label": "01 / O que é",
+      "body": "Um quadro público de negócios verificados. Qualquer pessoa o pode ler, sem conta. Os membros publicam uma oferta ou uma procura, a mesa revê-a antes de ficar visível, e a contraparte que quer falar pede uma ligação. Ninguém paga para ser apresentado e ninguém paga para ser encontrado."
+    },
+    "principles": {
+      "label": "02 / Princípios",
+      "heading": "Três regras, e cumprem-se.",
+      "i": {
+        "n": "i.",
+        "title": "Grátis onde conta",
+        "body": "Nada que crie liquidez fica atrás de uma barreira de pagamento. Consultar, publicar e ligar são gratuitos. Os créditos pagam a verificação de contrapartes e o trabalho de informação, e cada preço está impresso no botão antes de o premir."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Prova acima de opinião",
+        "body": "As contrapartes são confrontadas com registos comerciais e listas de sanções. As fontes são nomeadas e datadas. Se uma fonte não puder ser consultada, registamos que não foi verificada, nunca que estava limpa."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Declarado, não escondido",
+        "body": "Cada anunciante declara o seu papel e a que distância está do principal. As cadeias são bem-vindas quando declaradas. Uma cadeia descoberta depois da publicação retira o anúncio."
+      }
+    },
+    "desk": {
+      "label": "03 / A mesa",
+      "heading": "Uma pessoa lê cada anúncio.",
+      "body": "Por trás da Ponte estão três décadas de comércio internacional: gerir operações de trading, liderar organizações de informação comercial e sentar-se entre compradores e vendedores em quatro continentes. Essa experiência revê o que vai para o quadro. Está também disponível sobre um negócio, com honorários de êxito, quando um membro o pede. É uma opção, nunca uma portagem.",
+      "cta": "Falar com a mesa"
+    },
+    "company": {
+      "label": "04 / A empresa",
+      "body": "Ponte é um nome comercial da 1402 Celsius Ltd, sociedade constituída na Bulgária (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), do mesmo grupo que a 1402 Celsius Ltd, Reino Unido (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Quando a mesa intervém num negócio, atua apenas como intermediária, nunca como principal, e é remunerada por honorários de êxito sobre negócios fechados. Os pagamentos são processados pela Stripe. Correspondência:"
+    },
+    "cta": {
+      "heading": "Tem um negócio para colocar?",
+      "body": "Publique-o você mesmo. Não custa nada, e a mesa lê-o antes de todos.",
+      "action": "Publicar um anúncio"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Grãos e cereais",
@@ -191,23 +241,22 @@
   "contact": {
     "meta": {
       "title": "Contato",
-      "description": "Fale com a Ponte. Traga um negócio para a mesa, agende um analista sênior ou defina o escopo de um intensivo de estratégia ou de um contrato mensal."
+      "description": "Fale com a Ponte. Publique você mesmo um negócio no quadro, ou traga-o à mesa."
     },
     "pill": "Contato",
     "title": "Vamos conversar.",
     "lead": {
-      "default": "Conte o negócio que está na sua mesa, ou a decisão que você está avaliando. A mesa responde em até um dia útil.",
-      "strategyIntensive": "Você quer um Intensivo de Estratégia: meio dia com um analista sênior e um relatório escrito. Diga qual é a decisão e definimos o escopo.",
+      "default": "Publicar um negócio não precisa de nós: o quadro é gratuito e aberto. Escreva quando quiser a mesa envolvida, ou quando algo não estiver a funcionar. Respondemos num dia útil.",
       "retainer": "Você está considerando um Contrato Mensal com a Mesa: um analista fixo à disposição. Diga a frequência e o tipo de pergunta que você espera, e propomos um bloco mensal."
     },
     "deal": {
-      "title": "Traga um negócio",
-      "body": "Uma oferta ou uma demanda, mercadorias ou serviços de comércio. Só fatos, documentados antes de qualquer apresentação.",
+      "title": "Publique você mesmo um negócio",
+      "body": "Uma oferta ou uma procura, mercadorias ou serviços de comércio. Publicação gratuita, verificada pela mesa antes de ficar visível.",
       "cta": "Ir para o marketplace"
     },
     "email": {
       "title": "Envie um e-mail",
-      "body": "Para intensivos, contratos mensais ou algo sob medida. Diga qual é a decisão e definimos o escopo.",
+      "body": "Para o que o quadro não cobre: mandatos, avenças, ou um negócio que prefira não tornar público.",
       "subject": "Consulta: {topic}"
     }
   },
@@ -235,7 +284,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "Corretagem e consultoria independentes em comércio internacional, com base em evidências e fontes oficiais. A Ponte atua como corretora e intermediária, nunca como parte principal. As apresentações são feitas sob NCNDA e acordos de honorários assinados.",
+    "disclaimer": "Uma rede verificada para o comércio transfronteiriço, assente em fontes oficiais. Cada anúncio é revisto pela mesa antes de ficar visível. Quando a mesa intervém num negócio, atua apenas como intermediária, nunca como principal.",
     "copyright": "© {year} Ponte · nome comercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
@@ -486,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lendo seu anúncio…",
       "unavailable": "A análise está indisponível no momento. Você ainda pode publicar.",
-      "upgrade": "Você usou suas análises gratuitas. O Ponte AI dá análises ilimitadas de anúncios e o seu gerente de conta com IA por <price>$19/mês</price>.",
-      "upgradeCta": "Desbloquear o Ponte AI",
       "runAgain": "Analisar de novo após editar"
     },
     "actions": {
@@ -605,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Seu gerente de conta",
-      "lockedBody": "Seu gerente de conta com IA lê toda a sua conta todo dia: o que responder, o que atualizar, o que corrigir, e já rascunha o próximo passo. Análises de anúncio ilimitadas incluídas.",
-      "lockedPrice": "Ponte AI · $19/mês.",
-      "unlock": "Desbloquear o Ponte AI"
+      "label": "Seu gerente de conta"
     },
     "mine": {
       "eyebrow": "Seus anúncios",
@@ -716,20 +760,13 @@
     },
     "pill": "Preços",
     "title": "O marketplace é <em>gratuito</em>.",
-    "intro": "Publique, passe pela verificação, conecte-se: sem taxa de anúncio, sem assinatura, sem comissão sobre os negócios que vocês fecharem sozinhos. Você paga só se pedir que a mesa trabalhe para você.",
+    "intro": "Publicar, passar na verificação, ligar: sem taxas de anúncio, sem subscrições, sem comissão nos negócios que fechar sozinho. Os créditos pagam a verificação de uma contraparte. A mesa está lá se a quiser.",
     "marketplace": {
       "name": "O Marketplace",
       "price": "Grátis",
       "terms": "Sempre · para todos",
       "body": "Publique o que você vende ou o que você precisa. A IA e a mesa verificam cada anúncio antes de ele entrar no ar. Você fica anônimo até as duas partes concordarem em se conectar, depois negociam direto. Produtores, empresas de trading e corretores são todos bem-vindos, com o papel de cada um declarado desde o início.",
       "cta": "Criar um anúncio"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mês",
-      "terms": "Ou $190/ano · cancele quando quiser",
-      "body": "Sua IA por dentro: análises ilimitadas que pontuam e orientam cada anúncio antes de ele entrar no ar, um gerente de conta com IA lendo sua conta todo dia e acesso prioritário aos alertas de correspondência da IA. Teste grátis e continue quando ele se pagar.",
-      "cta": "Desbloquear o Ponte AI"
     },
     "desk": {
       "name": "A Mesa, por negócio",
@@ -745,7 +782,14 @@
       "body": "Apoio contínuo de compra ou de venda: um mandato permanente para encontrar, verificar e negociar em seu nome, mês após mês. Para equipes de trading, produtores entrando em novos mercados e compradores com programas recorrentes.",
       "cta": "Definir um mandato"
     },
-    "footnote": "Os percentuais são acordados em privado, por escrito, antes de qualquer trabalho começar. Sem custos ocultos, sem cobrança pelas apresentações que vocês mesmos fizerem no mural."
+    "footnote": "Os percentuais são acordados em privado, por escrito, antes de qualquer trabalho começar. Sem custos ocultos, sem cobrança pelas apresentações que vocês mesmos fizerem no mural.",
+    "credits": {
+      "name": "Créditos",
+      "price": "2 créditos",
+      "terms": "Por verificação de contraparte",
+      "body": "Verificar com quem está a negociar é a única coisa paga na Ponte. Uma verificação lê os registos comerciais e as listas de sanções da OFAC, da UE, da ONU e do Reino Unido, nomeia e data cada fonte, e uma pessoa revê tudo o que não sair limpo. As verificações de anúncios, as redações e os alertas continuam gratuitos.",
+      "cta": "Ver o que cobre uma verificação"
+    }
   },
   "process": {
     "steps": {

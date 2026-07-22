@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "À propos",
+      "description": "Ponte est un réseau vérifié pour le commerce transfrontalier, exploité par 1402 Celsius Ltd. Consultation gratuite, publication gratuite, mise en relation gratuite."
+    },
+    "pill": "À propos de Ponte",
+    "hero": {
+      "title": "Ponte signifie",
+      "titleAccent": "pont.",
+      "lead": "C'est un réseau vérifié pour le commerce transfrontalier. Les membres publient offres et demandes gratuitement, le desk vérifie qui se trouve derrière, et les deux parties se parlent directement."
+    },
+    "what": {
+      "label": "01 / Ce que c'est",
+      "body": "Un tableau public d'affaires vérifiées. N'importe qui peut le lire, sans compte. Les membres publient une offre ou une demande, le desk la contrôle avant sa mise en ligne, et la contrepartie qui souhaite discuter demande une mise en relation. Personne ne paie pour être présenté et personne ne paie pour être trouvé."
+    },
+    "principles": {
+      "label": "02 / Principes",
+      "heading": "Trois règles, et elles tiennent.",
+      "i": {
+        "n": "i.",
+        "title": "Gratuit là où cela compte",
+        "body": "Rien de ce qui crée de la liquidité ne se trouve derrière un péage. Consulter, publier et se mettre en relation sont gratuits. Les crédits paient la vérification des contreparties et le travail d'intelligence, et chaque prix est imprimé sur le bouton avant que vous ne le pressiez."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "La preuve avant l'opinion",
+        "body": "Les contreparties sont confrontées aux registres du commerce et aux listes de sanctions. Les sources sont nommées et datées. Si une source est injoignable, nous consignons qu'elle n'a pas été vérifiée, jamais qu'elle était saine."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Déclaré, pas dissimulé",
+        "body": "Chaque annonceur déclare son rôle et sa distance au donneur d'ordre. Les chaînes sont les bienvenues dès lors qu'elles sont déclarées. Une chaîne découverte après publication fait retirer l'annonce."
+      }
+    },
+    "desk": {
+      "label": "03 / Le desk",
+      "heading": "Un humain lit chaque annonce.",
+      "body": "Derrière Ponte, trois décennies de commerce international : diriger des opérations de négoce, piloter des organisations d'intelligence commerciale, et s'asseoir entre acheteurs et vendeurs sur quatre continents. Cette expérience contrôle ce qui arrive sur le tableau. Elle est aussi disponible sur une affaire, au succès, quand un membre le demande. C'est une option, jamais un péage.",
+      "cta": "Parler au desk"
+    },
+    "company": {
+      "label": "04 / La société",
+      "body": "Ponte est un nom commercial de 1402 Celsius Ltd, société constituée en Bulgarie (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), du même groupe que 1402 Celsius Ltd, Royaume-Uni (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Lorsque le desk intervient sur une affaire, il agit uniquement comme intermédiaire, jamais comme contrepartie, et se rémunère par une commission de succès sur les affaires conclues. Les paiements sont traités par Stripe. Correspondance :"
+    },
+    "cta": {
+      "heading": "Une affaire à placer ?",
+      "body": "Publiez-la vous-même. Cela ne coûte rien, et le desk la lit avant tout le monde.",
+      "action": "Publier une annonce"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Grains et céréales",
@@ -191,23 +241,22 @@
   "contact": {
     "meta": {
       "title": "Contact",
-      "description": "Parlez à Ponte. Confiez une affaire au desk, réservez un analyste senior, ou cadrez un Intensif Stratégie ou un forfait mensuel."
+      "description": "Parlez à Ponte. Publiez vous-même une affaire sur le tableau, ou confiez-la au desk."
     },
     "pill": "Contact",
     "title": "Parlons-en.",
     "lead": {
-      "default": "Dites-nous l’affaire que vous avez en main, ou la décision que vous pesez. Le desk répond sous un jour ouvré.",
-      "strategyIntensive": "Vous cherchez un Intensif Stratégie : une demi-journée avec un analyste senior et une note écrite. Dites-nous la décision, nous la cadrons.",
+      "default": "Publier une affaire ne nous demande rien : le tableau est gratuit et ouvert. Écrivez-nous quand vous voulez impliquer le desk, ou quand quelque chose ne fonctionne pas. Nous répondons sous un jour ouvré.",
       "retainer": "Vous envisagez un forfait mensuel avec le desk : un analyste à disposition en permanence. Dites-nous la cadence et le type de questions attendues, nous proposerons un volume mensuel."
     },
     "deal": {
-      "title": "Confiez-nous une affaire",
-      "body": "Une offre ou un besoin, marchandises ou services liés au commerce. Des faits uniquement, contrats signés avant toute mise en relation.",
+      "title": "Publiez vous-même une affaire",
+      "body": "Une offre ou une demande, marchandises ou services commerciaux. Publication gratuite, vérifiée par le desk avant mise en ligne.",
       "cta": "Aller à la place de marché"
     },
     "email": {
       "title": "Écrivez-nous",
-      "body": "Pour les intensifs, les forfaits mensuels ou toute demande sur mesure. Dites-nous la décision, nous la cadrons.",
+      "body": "Pour tout ce que le tableau ne couvre pas : mandats, forfaits mensuels, ou une affaire que vous préférez ne pas rendre publique.",
       "subject": "Demande : {topic}"
     }
   },
@@ -235,7 +284,7 @@
         "registration": "Enreg. 12475013 · TVA GB 343 1702 32"
       }
     },
-    "disclaimer": "Courtage et conseil indépendants en commerce international, fondés sur des preuves et des sources officielles. Ponte agit comme courtier et intermédiaire, jamais comme contrepartie. Les mises en relation se font sous NCNDA et accords de commission signés.",
+    "disclaimer": "Un réseau vérifié pour le commerce transfrontalier, adossé à des sources officielles. Chaque annonce est contrôlée par le desk avant sa mise en ligne. Lorsque le desk intervient sur une affaire, il agit uniquement comme intermédiaire, jamais comme contrepartie.",
     "copyright": "© {year} Ponte · nom commercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
@@ -486,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lecture de votre annonce…",
       "unavailable": "Le contrôle est indisponible pour le moment. Vous pouvez publier malgré tout.",
-      "upgrade": "Vous avez utilisé vos contrôles gratuits. Ponte AI vous donne des contrôles d’annonce illimités et votre gestionnaire de compte IA personnel pour <price>$19/mois</price>.",
-      "upgradeCta": "Débloquer Ponte AI",
       "runAgain": "Relancer le contrôle après modification"
     },
     "actions": {
@@ -605,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Votre gestionnaire de compte",
-      "lockedBody": "Votre gestionnaire de compte IA lit l’ensemble de votre compte chaque jour : ce qu’il faut répondre, actualiser, corriger, et rédige la prochaine action. Contrôles d’annonce illimités inclus.",
-      "lockedPrice": "Ponte AI · $19/mois.",
-      "unlock": "Débloquer Ponte AI"
+      "label": "Votre gestionnaire de compte"
     },
     "mine": {
       "eyebrow": "Vos annonces",
@@ -716,20 +760,13 @@
     },
     "pill": "Tarifs",
     "title": "La place de marché est <em>gratuite</em>.",
-    "intro": "Publiez, faites-vous vérifier, entrez en relation : pas de frais d’annonce, pas d’abonnement, pas de commission sur les affaires que vous concluez vous-mêmes. Vous ne payez que si vous demandez au desk de travailler pour vous.",
+    "intro": "Publier, passer la vérification, se mettre en relation : pas de frais d'annonce, pas d'abonnement, pas de commission sur les affaires que vous concluez vous-même. Les crédits paient la vérification d'une contrepartie. Le desk est là si vous le voulez.",
     "marketplace": {
       "name": "La place de marché",
       "price": "Gratuit",
       "terms": "Toujours · pour tous",
       "body": "Publiez ce que vous vendez ou ce que vous cherchez. L’IA et le desk vérifient chaque annonce avant sa mise en ligne. Vous restez anonyme jusqu’à l’accord des deux parties, puis vous traitez en direct. Producteurs, sociétés de négoce et courtiers sont les bienvenus, avec un rôle déclaré dès le départ.",
       "cta": "Créer une annonce"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mois",
-      "terms": "Ou $190/an · résiliable à tout moment",
-      "body": "Votre IA à l’intérieur : des contrôles d’annonce illimités qui notent et améliorent chaque annonce avant sa mise en ligne, un gestionnaire de compte IA personnel qui lit votre compte chaque jour, et l’accès prioritaire aux alertes de correspondance IA. Essayez gratuitement, gardez-la quand elle se rembourse.",
-      "cta": "Débloquer Ponte AI"
     },
     "desk": {
       "name": "Le desk, à l’affaire",
@@ -745,7 +782,14 @@
       "body": "Un appui continu à l’achat ou à la vente : un mandat permanent pour trouver, vérifier et négocier pour votre compte, mois après mois. Pour les équipes de négoce, les producteurs qui entrent sur de nouveaux marchés, et les acheteurs avec des programmes récurrents.",
       "cta": "Cadrer un mandat"
     },
-    "footnote": "Les niveaux de commission sont convenus en privé, par écrit, avant tout début de travail. Pas de coûts cachés, aucun frais pour les mises en relation que vous réalisez vous-mêmes sur le tableau."
+    "footnote": "Les niveaux de commission sont convenus en privé, par écrit, avant tout début de travail. Pas de coûts cachés, aucun frais pour les mises en relation que vous réalisez vous-mêmes sur le tableau.",
+    "credits": {
+      "name": "Crédits",
+      "price": "2 crédits",
+      "terms": "Par vérification de contrepartie",
+      "body": "Vérifier avec qui vous traitez est la seule chose payante sur Ponte. Une vérification lit les registres du commerce et les listes de sanctions de l'OFAC, de l'UE, de l'ONU et du Royaume-Uni, nomme et date chaque source, et une personne examine tout ce qui ne ressort pas net. Les contrôles d'annonce, les rédactions et les alertes restent gratuits.",
+      "cta": "Voir ce que couvre une vérification"
+    }
   },
   "process": {
     "steps": {

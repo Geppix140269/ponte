@@ -154,21 +154,16 @@ export default async function MarketplacePage({
     }
   }
 
-  // Phase 2: the AI account manager. One cached brief per member,
-  // regenerated at most daily or when the listing count changes.
-  // Freemium: free on the first listing; Ponte AI after that.
+  // The AI account manager. One cached brief per member, regenerated at most
+  // daily or when the listing count changes.
+  //
+  // This used to be free on the first listing and then locked behind a $19
+  // subscription. That subscription is gone: credits pay for counterparty
+  // verification and nothing else is metered, so every member gets the brief.
+  // The daily cache is what keeps that affordable, not a paywall.
   let brief: AccountBrief | null = null;
-  let briefLocked = false;
   if (user && listings.length > 0 && isAiConfigured()) {
     const adminSb = createAdminClient();
-    const { data: aiProfile } = await adminSb
-      .from("profiles")
-      .select("ai_member")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (!aiProfile?.ai_member && listings.length > 1) {
-      briefLocked = true;
-    }
     const totalPending = Array.from(pendingByListing.values()).reduce(
       (a, b) => a + b.length,
       0,
@@ -182,9 +177,7 @@ export default async function MarketplacePage({
       !cached ||
       cached.listing_count !== listings.length ||
       Date.now() - new Date(cached.generated_at).getTime() > 24 * 3600 * 1000;
-    if (briefLocked) {
-      // no generation for locked accounts: the upsell panel shows instead
-    } else if (stale) {
+    if (stale) {
       const fresh = await accountBrief({
         listings: listings.map((l) => ({
           ref: l.ref,
@@ -576,24 +569,7 @@ export default async function MarketplacePage({
             </Link>
           </div>
 
-          {briefLocked && (
-            <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
-              <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
-                <Sparkles className="h-3.5 w-3.5" /> {t("ai.label")}
-              </p>
-              <p className="mt-3 text-[14px] leading-relaxed text-gray-2">
-                {t("ai.lockedBody")}{" "}
-                <span className="text-gold">{t("ai.lockedPrice")}</span>
-              </p>
-              <a
-                href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/pricing"}
-                className="btn-gold mt-4 inline-flex"
-              >
-                {t("ai.unlock")} <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-          )}
-          {brief && !briefLocked && (
+          {brief && (
             <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
               <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
                 <Sparkles className="h-3.5 w-3.5" /> {t("ai.label")}

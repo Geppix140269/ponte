@@ -130,8 +130,6 @@
       "scoreSuffix": "/100",
       "loading": "Reading your listing…",
       "unavailable": "The check is unavailable right now. You can still publish.",
-      "upgrade": "You have used your free checks. Ponte AI gives you unlimited listing checks and your personal AI account manager for <price>$19/month</price>.",
-      "upgradeCta": "Unlock Ponte AI",
       "runAgain": "Check again after edits"
     },
     "actions": {

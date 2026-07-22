@@ -61,10 +61,7 @@
       }
     },
     "ai": {
-      "label": "Your account manager",
-      "lockedBody": "Your AI account manager reads your whole account daily: what to answer, what to refresh, what to fix, and drafts the next move. Unlimited listing checks included.",
-      "lockedPrice": "Ponte AI · $19/month.",
-      "unlock": "Unlock Ponte AI"
+      "label": "Your account manager"
     },
     "mine": {
       "eyebrow": "Your listings",

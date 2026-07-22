@@ -158,7 +158,7 @@ export default function ListingForm({
     passed: string[];
   };
   const [assess, setAssess] = useState<Assessment | null>(null);
-  const [assessStatus, setAssessStatus] = useState<"idle" | "loading" | "done" | "error" | "upgrade">("idle");
+  const [assessStatus, setAssessStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   // The deal
   const [catId, setCatId] = useState("");
@@ -329,10 +329,6 @@ export default function ListingForm({
         }),
       });
       const body = await res.json().catch(() => ({}));
-      if (res.status === 402) {
-        setAssessStatus("upgrade");
-        return;
-      }
       if (!res.ok || !body.assessment) throw new Error();
       setAssess(body.assessment as Assessment);
       setAssessStatus("done");
@@ -919,21 +915,6 @@ export default function ListingForm({
             <p className="mt-3 text-[13px] text-gray-2">
               {t("check.unavailable")}
             </p>
-          )}
-          {assessStatus === "upgrade" && (
-            <div className="mt-3">
-              <p className="text-[13px] leading-relaxed text-gray-2">
-                {t.rich("check.upgrade", {
-                  price: (chunks) => <span className="text-gold">{chunks}</span>,
-                })}
-              </p>
-              <a
-                href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/pricing"}
-                className="btn-gold mt-3 inline-flex"
-              >
-                {t("check.upgradeCta")}
-              </a>
-            </div>
           )}
           {assessStatus === "done" && assess && (
             <div className="mt-2 space-y-2.5">

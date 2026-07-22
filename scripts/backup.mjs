@@ -37,11 +37,23 @@ import { join, dirname } from "node:path";
 // Keep in sync with supabase/migrations. A table listed here that does not
 // exist is a hard failure, so a rename is caught instead of silently
 // producing an incomplete backup.
+//
+// The reverse mistake is the dangerous one and it already happened: a table
+// that exists but is NOT listed here is skipped in silence, and the run still
+// prints "Backup OK". Between 20260721f and 20260721j this file was never
+// updated, so nine tables went unbacked up, among them credit_ledger, which is
+// the only record of what anyone paid for, and verifications, which is the
+// only record of what the desk decided. Anything added to supabase/migrations
+// belongs in this list in the same commit.
 const TABLES = [
   "account_briefs",
+  "ai_calls",
   "ai_usage",
   "bundle_items",
   "categories",
+  "credit_ledger",
+  "data_source_cache",
+  "data_sources",
   "listing_connections",
   "listing_documents",
   "listing_media",
@@ -53,6 +65,11 @@ const TABLES = [
   "orders",
   "products",
   "profiles",
+  "sanctions_entries",
+  "sanctions_refresh_log",
+  "trust_score_components",
+  "verification_documents",
+  "verifications",
 ];
 
 const BUCKETS = [

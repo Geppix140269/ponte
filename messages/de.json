@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Über uns",
+      "description": "Ponte ist ein geprüftes Netzwerk für den grenzüberschreitenden Handel, betrieben von 1402 Celsius Ltd. Lesen ist kostenlos, Einstellen ist kostenlos, Verbinden ist kostenlos."
+    },
+    "pill": "Über Ponte",
+    "hero": {
+      "title": "Ponte heißt",
+      "titleAccent": "Brücke.",
+      "lead": "Es ist ein geprüftes Netzwerk für den grenzüberschreitenden Handel. Mitglieder stellen Angebote und Bedarfe kostenlos ein, der Desk prüft, wer dahintersteht, und beide Seiten sprechen direkt miteinander."
+    },
+    "what": {
+      "label": "01 / Was es ist",
+      "body": "Ein öffentliches Board geprüfter Geschäfte. Jeder kann es lesen, ohne Konto. Mitglieder stellen ein Angebot oder einen Bedarf ein, der Desk prüft es vor der Veröffentlichung, und die Gegenseite, die sprechen möchte, fragt eine Verbindung an. Niemand zahlt dafür, vorgestellt zu werden, und niemand zahlt dafür, gefunden zu werden."
+    },
+    "principles": {
+      "label": "02 / Grundsätze",
+      "heading": "Drei Regeln, und sie halten.",
+      "i": {
+        "n": "i.",
+        "title": "Kostenlos, wo es zählt",
+        "body": "Nichts, was Liquidität schafft, liegt hinter einer Bezahlschranke. Lesen, Einstellen und Verbinden sind kostenlos. Credits bezahlen die Prüfung von Gegenparteien und Rechercheleistungen, und jeder Preis steht auf der Schaltfläche, bevor Sie sie drücken."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Belege vor Meinung",
+        "body": "Gegenparteien werden gegen Handelsregister und Sanktionslisten geprüft. Quellen werden benannt und datiert. Ist eine Quelle nicht erreichbar, halten wir fest, dass sie nicht geprüft wurde, niemals, dass sie sauber war."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Erklärt, nicht verborgen",
+        "body": "Jeder Einstellende erklärt seine Rolle und wie weit er vom Prinzipal entfernt sitzt. Ketten sind willkommen, wenn sie erklärt sind. Eine nach der Veröffentlichung entdeckte Kette nimmt das Inserat vom Board."
+      }
+    },
+    "desk": {
+      "label": "03 / Der Desk",
+      "heading": "Ein Mensch liest jedes Inserat.",
+      "body": "Hinter Ponte stehen drei Jahrzehnte internationaler Handel: Handelsgeschäfte führen, Organisationen für Handelsinformationen leiten und zwischen Käufern und Verkäufern auf vier Kontinenten sitzen. Diese Erfahrung prüft, was auf das Board kommt. Sie ist außerdem für ein einzelnes Geschäft verfügbar, gegen Erfolgshonorar, wenn ein Mitglied das will. Das ist eine Option, nie eine Maut.",
+      "cta": "Mit dem Desk sprechen"
+    },
+    "company": {
+      "label": "04 / Das Unternehmen",
+      "body": "Ponte ist ein Handelsname der 1402 Celsius Ltd, einer in Bulgarien eingetragenen Gesellschaft (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), Teil derselben Gruppe wie die 1402 Celsius Ltd, Vereinigtes Königreich (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Wo der Desk an einem Geschäft beteiligt ist, handelt er ausschließlich als Vermittler, nie als Prinzipal, und wird über ein Erfolgshonorar auf abgeschlossene Geschäfte vergütet. Zahlungen werden von Stripe abgewickelt. Korrespondenz:"
+    },
+    "cta": {
+      "heading": "Ein Geschäft zu platzieren?",
+      "body": "Stellen Sie es selbst ein. Es kostet nichts, und der Desk liest es vor allen anderen.",
+      "action": "Inserat einstellen"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Getreide & Körnerfrüchte",
@@ -191,23 +241,22 @@
   "contact": {
     "meta": {
       "title": "Kontakt",
-      "description": "Sprechen Sie mit Ponte. Bringen Sie ein Geschäft an den Desk, buchen Sie einen Senior-Analysten oder umreißen Sie ein Strategie-Intensiv oder ein Retainer-Mandat."
+      "description": "Sprechen Sie mit Ponte. Stellen Sie ein Geschäft selbst auf das Board, oder geben Sie es an den Desk."
     },
     "pill": "Kontakt",
     "title": "Sprechen wir darüber.",
     "lead": {
-      "default": "Erzählen Sie uns von dem Geschäft auf Ihrem Tisch oder von der Entscheidung, die Sie abwägen. Der Desk antwortet innerhalb eines Werktags.",
-      "strategyIntensive": "Sie möchten ein Strategie-Intensiv: ein halber Tag mit einem Senior-Analysten und ein schriftliches Briefing. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "default": "Ein Geschäft einzustellen braucht uns nicht: das Board ist kostenlos und offen. Schreiben Sie, wenn Sie den Desk einbinden wollen oder wenn etwas nicht funktioniert. Wir antworten innerhalb eines Werktags.",
       "retainer": "Sie erwägen ein Trade-Desk-Retainer: ein fest zugeordneter Analyst auf Abruf. Nennen Sie uns den Rhythmus und die Art der Fragen, die Sie erwarten, und wir schlagen ein monatliches Kontingent vor."
     },
     "deal": {
-      "title": "Bringen Sie uns ein Geschäft",
-      "body": "Ein Angebot oder ein Bedarf, Waren oder Handelsdienstleistungen. Nur Fakten, schriftlich geregelt vor jeder Kontaktvermittlung.",
+      "title": "Stellen Sie ein Geschäft selbst ein",
+      "body": "Ein Angebot oder ein Bedarf, Waren oder Handelsdienstleistungen. Kostenlos einzustellen, vom Desk geprüft, bevor es öffentlich wird.",
       "cta": "Zum Marktplatz"
     },
     "email": {
       "title": "Schreiben Sie uns",
-      "body": "Für Intensivformate, Retainer oder alles Maßgeschneiderte. Nennen Sie uns die Entscheidung, wir umreißen den Umfang.",
+      "body": "Für alles, was das Board nicht abdeckt: Mandate, Retainer, oder ein Geschäft, das Sie lieber nicht öffentlich machen.",
       "subject": "Anfrage: {topic}"
     }
   },
@@ -235,7 +284,7 @@
         "registration": "Reg.-Nr. 12475013 · USt-Nr. GB 343 1702 32"
       }
     },
-    "disclaimer": "Unabhängige Handelsvermittlung und Beratung, gestützt auf Belege und amtliche Quellen. Ponte handelt als Makler und Vermittler, niemals als Eigenhändler. Kontaktvermittlungen erfolgen ausschließlich auf Grundlage unterzeichneter NCNDA und Honorarvereinbarungen.",
+    "disclaimer": "Ein geprüftes Netzwerk für den grenzüberschreitenden Handel, gestützt auf offizielle Quellen. Jedes Inserat wird vor der Veröffentlichung vom Desk geprüft. Wo der Desk an einem Geschäft beteiligt ist, handelt er ausschließlich als Vermittler, nie als Prinzipal.",
     "copyright": "© {year} Ponte · ein Handelsname der 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
@@ -486,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Ihr Inserat wird gelesen…",
       "unavailable": "Die Prüfung ist derzeit nicht verfügbar. Sie können trotzdem veröffentlichen.",
-      "upgrade": "Sie haben Ihre kostenlosen Prüfungen aufgebraucht. Ponte AI gibt Ihnen unbegrenzte Inseratsprüfungen und Ihren persönlichen KI-Account-Manager für <price>$19/Monat</price>.",
-      "upgradeCta": "Ponte AI freischalten",
       "runAgain": "Nach Änderungen erneut prüfen"
     },
     "actions": {
@@ -605,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Ihr Account-Manager",
-      "lockedBody": "Ihr KI-Account-Manager liest täglich Ihr gesamtes Konto: was zu beantworten, was zu aktualisieren, was zu korrigieren ist, und entwirft den nächsten Schritt. Unbegrenzte Inseratsprüfungen inklusive.",
-      "lockedPrice": "Ponte AI · $19/Monat.",
-      "unlock": "Ponte AI freischalten"
+      "label": "Ihr Account-Manager"
     },
     "mine": {
       "eyebrow": "Ihre Inserate",
@@ -716,20 +760,13 @@
     },
     "pill": "Gebühren",
     "title": "Der Marktplatz ist <em>kostenlos</em>.",
-    "intro": "Einstellen, prüfen lassen, Kontakt aufnehmen: keine Inseratsgebühren, keine Abonnements, keine Provision auf Geschäfte, die Sie selbst abschließen. Sie zahlen nur, wenn Sie den Desk für sich arbeiten lassen.",
+    "intro": "Einstellen, geprüft werden, verbinden: keine Inseratsgebühren, keine Abonnements, keine Provision auf Geschäfte, die Sie selbst abschließen. Credits bezahlen die Prüfung einer Gegenpartei. Der Desk ist da, wenn Sie ihn wollen.",
     "marketplace": {
       "name": "Der Marktplatz",
       "price": "Kostenlos",
       "terms": "Immer · für alle",
       "body": "Stellen Sie ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk prüfen jedes Inserat, bevor es online geht. Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, danach handeln Sie direkt. Erzeuger, Handelsunternehmen und Makler sind gleichermaßen willkommen, die Rolle wird vorab angegeben.",
       "cta": "Inserat beginnen"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/Monat",
-      "terms": "Oder $190/Jahr · jederzeit kündbar",
-      "body": "Ihre KI auf der Innenseite: unbegrenzte Inseratsprüfungen, die jedes Inserat vor der Veröffentlichung bewerten und verbessern, ein persönlicher KI-Account-Manager, der Ihr Konto täglich liest, und Erstzugriff auf KI-Match-Benachrichtigungen. Kostenlos testen, behalten, sobald es sich rechnet.",
-      "cta": "Ponte AI freischalten"
     },
     "desk": {
       "name": "Der Desk, pro Geschäft",
@@ -745,7 +782,14 @@
       "body": "Laufende Unterstützung bei Beschaffung oder Verkauf: ein Dauermandat, um in Ihrem Namen zu finden, zu prüfen und zu verhandeln, Monat für Monat. Für Handelsteams, Erzeuger auf dem Weg in neue Märkte und Käufer mit wiederkehrenden Programmen.",
       "cta": "Mandat umreißen"
     },
-    "footnote": "Die Honorarhöhe wird vorab vertraulich und schriftlich vereinbart. Keine versteckten Kosten, keine Gebühr für Kontakte, die Sie selbst auf dem Board knüpfen."
+    "footnote": "Die Honorarhöhe wird vorab vertraulich und schriftlich vereinbart. Keine versteckten Kosten, keine Gebühr für Kontakte, die Sie selbst auf dem Board knüpfen.",
+    "credits": {
+      "name": "Credits",
+      "price": "2 Credits",
+      "terms": "Pro Prüfung einer Gegenpartei",
+      "body": "Zu prüfen, mit wem Sie es zu tun haben, ist das Einzige, was auf Ponte Geld kostet. Eine Prüfung liest die Handelsregister und die Sanktionslisten von OFAC, EU, UN und Vereinigtem Königreich, benennt und datiert jede Quelle, und ein Mensch sieht sich alles an, was nicht sauber ist. Inseratsprüfungen, Texte und Match-Benachrichtigungen bleiben kostenlos.",
+      "cta": "Was eine Prüfung abdeckt"
+    }
   },
   "process": {
     "steps": {

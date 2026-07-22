@@ -34,6 +34,11 @@ const LEGACY_EXACT: Record<string, string> = {
   "/why-ponte": "/about",
   "/brokerage": "/marketplace",
   "/network": "/marketplace",
+  // The Analyst Desk generation. Its three engagements (analyst call, strategy
+  // intensive, retainer) priced the platform as consultancy, which is the
+  // opposite of what the board now says. The desk itself survives as the
+  // success-fee option on /pricing, so that is where the URL lands.
+  "/advisory": "/pricing",
 };
 
 const LEGACY_PREFIX: { test: RegExp; to: string }[] = [

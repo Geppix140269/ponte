@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight, Store, Briefcase, CalendarClock, Sparkles } from "lucide-react";
+import { ArrowRight, Store, Briefcase, CalendarClock, ShieldCheck } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 
@@ -60,21 +60,18 @@ export default async function PricingPage({
             <Link href="/marketplace/new" className="btn-gold mt-6">{t("marketplace.cta")} <ArrowRight className="h-4 w-4" /></Link>
           </div>
 
-          {/* Ponte AI */}
+          {/* Credits. The only thing on the platform that is paid for. */}
           <div className="glass p-7 flex flex-col">
-            <Sparkles className="h-5 w-5 text-gold" />
-            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>{t("ai.name")}</h3>
-            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>$19<span className="text-[15px] text-gray-2">{t("ai.period")}</span></div>
-            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>{t("ai.terms")}</p>
+            <ShieldCheck className="h-5 w-5 text-gold" />
+            <h3 className="serif text-white text-xl mt-4" style={{ fontWeight: 500 }}>{t("credits.name")}</h3>
+            <div className="mt-2 serif text-gold" style={{ fontSize: 30, fontWeight: 500 }}>{t("credits.price")}</div>
+            <p className="mt-1 mono text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>{t("credits.terms")}</p>
             <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
-              {t("ai.body")}
+              {t("credits.body")}
             </p>
-            <a
-              href={process.env.NEXT_PUBLIC_AI_PAYMENT_LINK || "/contact?engagement=ai"}
-              className="btn-gold mt-6"
-            >
-              {t("ai.cta")} <ArrowRight className="h-4 w-4" />
-            </a>
+            <Link href="/verification" className="btn-ghost-light mt-6">
+              {t("credits.cta")} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
           {/* Success fee */}

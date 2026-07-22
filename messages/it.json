@@ -1,4 +1,54 @@
 {
+  "about": {
+    "meta": {
+      "title": "Chi siamo",
+      "description": "Ponte è una rete verificata per il commercio transfrontaliero, gestita da 1402 Celsius Ltd. Consultare è gratis, pubblicare è gratis, mettersi in contatto è gratis."
+    },
+    "pill": "Chi è Ponte",
+    "hero": {
+      "title": "Ponte significa",
+      "titleAccent": "ponte.",
+      "lead": "È una rete verificata per il commercio transfrontaliero. I membri pubblicano offerte e richieste gratuitamente, il desk verifica chi c'è dietro, e le due parti si parlano direttamente."
+    },
+    "what": {
+      "label": "01 / Che cos'è",
+      "body": "Una bacheca pubblica di affari verificati. Chiunque può leggerla, senza un account. I membri pubblicano un'offerta o una richiesta, il desk la controlla prima che diventi pubblica, e la controparte che vuole parlare chiede un contatto. Nessuno paga per essere presentato e nessuno paga per essere trovato."
+    },
+    "principles": {
+      "label": "02 / Principi",
+      "heading": "Tre regole, e tengono.",
+      "i": {
+        "n": "i.",
+        "title": "Gratis dove conta",
+        "body": "Nulla di ciò che crea liquidità sta dietro un muro a pagamento. Consultare, pubblicare e mettersi in contatto sono gratis. I crediti pagano la verifica delle controparti e il lavoro di intelligence, e ogni prezzo è stampato sul pulsante prima che lo si prema."
+      },
+      "ii": {
+        "n": "ii.",
+        "title": "Prove prima delle opinioni",
+        "body": "Le controparti sono confrontate con i registri delle imprese e le liste sanzionatorie. Le fonti sono nominate e datate. Se una fonte non è raggiungibile registriamo che non è stata verificata, mai che era pulita."
+      },
+      "iii": {
+        "n": "iii.",
+        "title": "Dichiarato, non nascosto",
+        "body": "Chi pubblica dichiara il proprio ruolo e quanto dista dal principale. Le catene sono benvenute quando sono dichiarate. Una catena scoperta dopo la pubblicazione fa ritirare l'annuncio."
+      }
+    },
+    "desk": {
+      "label": "03 / Il desk",
+      "heading": "Una persona legge ogni annuncio.",
+      "body": "Dietro Ponte ci sono tre decenni di commercio internazionale: gestire operazioni di trading, guidare organizzazioni di intelligence commerciale e sedersi tra compratori e venditori su quattro continenti. Quell'esperienza controlla ciò che finisce in bacheca. È disponibile anche su un singolo affare, a success fee, quando un membro lo chiede. È un'opzione, mai un pedaggio.",
+      "cta": "Parla con il desk"
+    },
+    "company": {
+      "label": "04 / La società",
+      "body": "Ponte è un nome commerciale di 1402 Celsius Ltd, società costituita in Bulgaria (Reg. 207314767, VAT BG207314767, 1A Aton Street, Building 6, Plovdiv 4002), dello stesso gruppo di 1402 Celsius Ltd, Regno Unito (Reg. 12475013, VAT GB 343 1702 32, 20-22 Wenlock Road, London N1 7GU). Quando il desk interviene su un affare agisce solo come intermediario, mai come principale, ed è remunerato con una success fee sugli affari conclusi. I pagamenti sono elaborati da Stripe. Corrispondenza:"
+    },
+    "cta": {
+      "heading": "Hai un affare da collocare?",
+      "body": "Pubblicalo tu stesso. Non costa nulla, e il desk lo legge prima di chiunque altro.",
+      "action": "Pubblica un annuncio"
+    }
+  },
   "categories": {
     "grains": {
       "label": "Cereali e granaglie",
@@ -191,23 +241,22 @@
   "contact": {
     "meta": {
       "title": "Contatti",
-      "description": "Parli con Ponte. Porti un'operazione al desk, prenoti un analista senior, oppure definisca uno Strategy Intensive o un retainer."
+      "description": "Parla con Ponte. Pubblica tu stesso un affare sulla bacheca, oppure portalo al desk."
     },
     "pill": "Contatti",
     "title": "Parliamone.",
     "lead": {
-      "default": "Ci dica quale operazione ha sul tavolo, o quale decisione sta valutando. Il desk risponde entro un giorno lavorativo.",
-      "strategyIntensive": "Le interessa uno Strategy Intensive: mezza giornata con un analista senior e un documento scritto. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "default": "Pubblicare un affare non richiede noi: la bacheca è gratuita e aperta. Scrivici quando vuoi coinvolgere il desk, o quando qualcosa non funziona. Rispondiamo entro un giorno lavorativo.",
       "retainer": "Sta valutando un Trade Desk Retainer: un analista sempre a disposizione. Ci indichi la frequenza e il tipo di domande che prevede, e Le proporremo un pacchetto mensile."
     },
     "deal": {
-      "title": "Ci porti un'operazione",
-      "body": "Un'offerta o una richiesta, merci o servizi per il commercio. Solo fatti, formalizzati per iscritto prima di ogni presentazione.",
+      "title": "Pubblica tu stesso un affare",
+      "body": "Un'offerta o una richiesta, merci o servizi commerciali. Pubblicare è gratis, e il desk la verifica prima che diventi pubblica.",
       "cta": "Vai al marketplace"
     },
     "email": {
       "title": "Ci scriva",
-      "body": "Per gli Strategy Intensive, i retainer o qualsiasi esigenza su misura. Ci dica la decisione da prendere e ne definiamo il perimetro.",
+      "body": "Per ciò che la bacheca non copre: mandati, retainer, o un affare che preferisci non rendere pubblico.",
       "subject": "Richiesta di informazioni: {topic}"
     }
   },
@@ -235,7 +284,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "Intermediazione e consulenza indipendenti per il commercio internazionale, fondate su prove e fonti ufficiali. Ponte agisce come broker e intermediario, mai come parte principale. Le presentazioni avvengono previa firma di NCNDA e accordi sulle commissioni.",
+    "disclaimer": "Una rete verificata per il commercio transfrontaliero, fondata su fonti ufficiali. Ogni annuncio è controllato dal desk prima di diventare pubblico. Quando il desk interviene su un affare agisce solo come intermediario, mai come principale.",
     "copyright": "© {year} Ponte · denominazione commerciale di 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
@@ -486,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lettura del Suo annuncio…",
       "unavailable": "Il controllo non è disponibile al momento. Può comunque pubblicare.",
-      "upgrade": "Ha esaurito i controlli gratuiti. Ponte AI Le offre controlli illimitati degli annunci e il Suo account manager AI personale per <price>$19/mese</price>.",
-      "upgradeCta": "Attiva Ponte AI",
       "runAgain": "Controlla di nuovo dopo le modifiche"
     },
     "actions": {
@@ -605,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Il Suo account manager",
-      "lockedBody": "Il Suo account manager AI legge ogni giorno l'intero account: cosa rispondere, cosa aggiornare, cosa correggere, e prepara la mossa successiva. Controlli illimitati degli annunci inclusi.",
-      "lockedPrice": "Ponte AI · $19/mese.",
-      "unlock": "Attiva Ponte AI"
+      "label": "Il Suo account manager"
     },
     "mine": {
       "eyebrow": "I Suoi annunci",
@@ -716,20 +760,13 @@
     },
     "pill": "Commissioni",
     "title": "Il marketplace è <em>gratuito</em>.",
-    "intro": "Pubblicare, essere verificati, entrare in contatto: nessun costo di inserzione, nessun abbonamento, nessuna commissione sulle operazioni che chiude da solo. Paga solo se chiede al desk di lavorare per Lei.",
+    "intro": "Pubblicare, passare la verifica, mettersi in contatto: nessun costo di annuncio, nessun abbonamento, nessuna commissione sugli affari che chiudi da solo. I crediti pagano la verifica di una controparte. Il desk c'è se lo vuoi.",
     "marketplace": {
       "name": "Il Marketplace",
       "price": "Gratis",
       "terms": "Sempre · per tutti",
       "body": "Pubblichi ciò che vende o ciò che Le serve. L'AI e il desk verificano ogni annuncio prima della pubblicazione. Resta anonimo finché entrambe le parti non accettano il contatto, poi tratta direttamente. Produttori, società di trading e broker sono tutti benvenuti, con il ruolo dichiarato fin dall'inizio.",
       "cta": "Crea un annuncio"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mese",
-      "terms": "Oppure $190/anno · disdetta in qualsiasi momento",
-      "body": "La Sua AI all'interno: controlli illimitati che valutano e migliorano ogni annuncio prima della pubblicazione, un account manager AI personale che legge il Suo account ogni giorno, e accesso prioritario agli avvisi di match AI. Lo provi gratis, lo tenga quando si ripaga da solo.",
-      "cta": "Attiva Ponte AI"
     },
     "desk": {
       "name": "Il Desk, per operazione",
@@ -745,7 +782,14 @@
       "body": "Supporto continuativo all'acquisto o alla vendita: un mandato permanente per trovare, verificare e negoziare per Suo conto, mese dopo mese. Per team di trading, produttori che entrano in nuovi mercati e acquirenti con programmi ricorrenti.",
       "cta": "Definisci un mandato"
     },
-    "footnote": "I livelli di commissione sono concordati in privato, per iscritto, prima dell'inizio di qualsiasi attività. Nessun costo nascosto, nessun addebito per le presentazioni che realizza da solo sulla bacheca."
+    "footnote": "I livelli di commissione sono concordati in privato, per iscritto, prima dell'inizio di qualsiasi attività. Nessun costo nascosto, nessun addebito per le presentazioni che realizza da solo sulla bacheca.",
+    "credits": {
+      "name": "Crediti",
+      "price": "2 crediti",
+      "terms": "Per verifica di una controparte",
+      "body": "Verificare con chi stai trattando è l'unica cosa a pagamento su Ponte. Una verifica legge i registri delle imprese e le liste sanzionatorie di OFAC, UE, ONU e Regno Unito, nomina e data ogni fonte, e una persona esamina tutto ciò che non risulta pulito. I controlli sugli annunci, i testi e gli avvisi di corrispondenza restano gratis.",
+      "cta": "Cosa copre una verifica"
+    }
   },
   "process": {
     "steps": {
