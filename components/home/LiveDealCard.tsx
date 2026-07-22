@@ -57,10 +57,8 @@ export default function LiveDealCard({
   className?: string;
 }) {
   const radar = deal.source === "radar";
-  // Codes only. `originText` and `destinationText` are whatever was typed or
-  // scraped and belong in the tooltip, not in a two-letter chip.
-  const originIso = deal.originCode;
-  const destIso = deal.destinationCode;
+  const from = deal.originCode ?? deal.originText;
+  const to = deal.destinationCode ?? deal.destinationText;
   // A tier badge is a claim about a verified member. Radar items never carry
   // one, and an unread level is unknown rather than zero, so it shows nothing.
   const tier =
@@ -115,46 +113,25 @@ export default function LiveDealCard({
         ) : null}
       </div>
 
-      {/*
-        The corridor, always left to right: codes are data, not prose.
-
-        Only ISO codes go in a chip. A chip is 26px of space for two letters,
-        and the desk collection is full of destinations like "Busan, South
-        Korea (Republic Of Korea)" and "Asia, Other-Not Shown" that do not
-        resolve to a country. Those get no chip rather than a chip the width of
-        the card.
-
-        Where only one end is known, and on a desk-sourced requirement that is
-        most of them, one pier is drawn and no span. A bridge needs two ends,
-        and inventing the far one to make the graphic work is inventing a fact.
-      */}
-      {originIso && destIso ? (
-        <div dir="ltr" className="mt-3 flex items-center gap-2">
-          <span className="flag-chip">{originIso}</span>
-          <svg viewBox="0 0 120 16" className="h-3 flex-1" aria-hidden="true">
-            <path
-              d="M4 12 C 42 3, 78 3, 116 12"
-              fill="none"
-              stroke={radar ? "rgba(255,255,255,.22)" : "#8B6BFF"}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <circle cx="4" cy="12" r="2.4" fill={radar ? "#8A93A2" : "#CBFB5E"} />
-            <circle cx="116" cy="12" r="2.4" fill={radar ? "#8A93A2" : "#3FE0C5"} />
-          </svg>
-          <span className="flag-chip">{destIso}</span>
-        </div>
-      ) : destIso ? (
-        <div dir="ltr" className="mt-3 flex items-center gap-1.5">
-          <Icon name="request" size={13} className="text-muted" />
-          <span className="flag-chip">{destIso}</span>
-        </div>
-      ) : originIso ? (
-        <div dir="ltr" className="mt-3 flex items-center gap-1.5">
-          <Icon name="offer" size={13} className="text-muted" />
-          <span className="flag-chip">{originIso}</span>
-        </div>
-      ) : null}
+      {/* The corridor, always left to right: codes are data, not prose. */}
+      <div dir="ltr" className="mt-3 flex items-center gap-2">
+        {/* An end that names no country says so, in words. A placeholder like
+            "??" reads as broken data rather than as absent data, and plenty of
+            real listings are posted with only one end of the route known. */}
+        <span className="flag-chip">{from ?? labels.notStated}</span>
+        <svg viewBox="0 0 120 16" className="h-3 flex-1" aria-hidden="true">
+          <path
+            d="M4 12 C 42 3, 78 3, 116 12"
+            fill="none"
+            stroke={radar ? "rgba(255,255,255,.22)" : "#8B6BFF"}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <circle cx="4" cy="12" r="2.4" fill={radar ? "#8A93A2" : "#CBFB5E"} />
+          <circle cx="116" cy="12" r="2.4" fill={radar ? "#8A93A2" : "#3FE0C5"} />
+        </svg>
+        <span className="flag-chip">{to ?? labels.notStated}</span>
+      </div>
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-hairline-soft pt-2.5">
         <span className="text-[10.5px] text-muted">

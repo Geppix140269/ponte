@@ -1,16 +1,11 @@
 # Claude Code — work instructions for Ponte Trade
 
 A playbook for Claude Code, run locally inside the repository at
-`C:\dev\ponte`. Do the tasks in order. Stop for review between
+`C:\Users\gfuna\GitHub\ponte`. Do the tasks in order. Stop for review between
 Task 1 and Task 2, and between every dashboard phase.
 
-This file used to name `C:\Users\gfuna\GitHub\ponte`. That is a retired clone
-which held its own `.env.local` with eighteen live keys, and it is one of the
-three copies that put three eras of the product on the live site at once. Do
-not work there. See `docs/platform/SOURCE-OF-TRUTH.md`.
-
 Stack: Next.js 14 App Router · TypeScript · Tailwind · Supabase · Stripe ·
-Resend. Hosted on Vercel since 22 July 2026, on Netlify before that.
+Resend. Hosted on Netlify.
 
 ---
 

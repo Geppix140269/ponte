@@ -5,7 +5,7 @@
 // approves or rejects a listing on its own.
 //
 // Env:
-//   ANTHROPIC_API_KEY  required (set in the Vercel project env)
+//   ANTHROPIC_API_KEY  required (set in Netlify)
 //   AI_VET_MODEL       optional model override
 
 const API_URL = "https://api.anthropic.com/v1/messages";

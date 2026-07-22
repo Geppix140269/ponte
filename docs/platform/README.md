@@ -13,7 +13,6 @@ agreed.
 | [FEATURES.md](FEATURES.md) | What the product currently does |
 | [RUNBOOK.md](RUNBOOK.md) | Deploy, back up, restore, and what to do in an incident |
 | [BACKUP.md](BACKUP.md) | How the database and storage are backed up, and how to restore |
-| [VERCEL-MIGRATION.md](VERCEL-MIGRATION.md) | The move off Netlify: env inventory, rotation order, cutover and rollback. Open until cutover is signed off. |
 
 ## The two rules
 

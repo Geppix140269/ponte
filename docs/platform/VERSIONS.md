@@ -136,57 +136,6 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
-## 22 July 2026, Netlify to Vercel
-
-**Status: repository ready, not cut over.** `ponte.trade` still resolves to
-Netlify. Full plan and checklist in
-[VERCEL-MIGRATION.md](VERCEL-MIGRATION.md).
-
-The platform turned out not to be coupled to Netlify at all: no `_headers` or
-`_redirects`, no Netlify Function, no code branching on a host variable. The
-four things that could have broken were each checked rather than assumed.
-Middleware still runs ahead of the origin, so the 308 legacy redirects survive.
-`x-forwarded-for` has the same shape, so the rate limiter is untouched. There
-is no `next/image` in the codebase, so there was no image pipeline to port. The
-nightly sanctions refresh runs on a GitHub Actions runner and never involved
-the host.
-
-**Three things the audit turned up that were not about hosting at all:**
-
-1. **Six environment variables in use were missing from `.env.example`**, so
-   the file everyone treats as the inventory was not one. `TELEGRAM_BOT_TOKEN`
-   and `TELEGRAM_OPS_CHAT_ID` are the dangerous pair: with either missing,
-   `lib/telegram.ts` is a deliberate no-op, so losing them in a host move
-   stops ops alerts with no error anywhere.
-2. **OpenAI is not a dependency and has not been one for some time.** No
-   shipped code reads `OPENAI_API_KEY`. Three documents still demanded it,
-   including the HS import runbook, whose script reads two Supabase variables
-   and makes no model call. The key is being revoked rather than migrated.
-3. **Two documents still pointed at retired clones**, one of them
-   `C:\Users\gfuna\GitHub\ponte`, the copy that held its own `.env.local` with
-   eighteen live keys.
-
-**Two behaviour changes to watch.** `maxDuration = 120` on the two verification
-routes was inert on Netlify and takes effect on Vercel, so those routes get
-longer than they used to have, and 120 needs a Pro plan. And Vercel does not
-rebuild when an environment variable is saved, which Netlify did, so an env
-change now needs a manual redeploy to take.
-
-**Node is pinned to 22** in `package.json` and in CI. It was unpinned, so CI
-validated on 20 while Vercel would have built on its own default, which is the
-gap that lets a green CI ship a broken deploy. It also clears the deprecation
-warning under known weaknesses above, and Node 20 was end of life in April
-2026.
-
-**The sequencing trap, written down because it is counter-intuitive.** The
-exposed keys want rotating and Netlify is the rollback. Revoking an old key
-kills Netlify's copy of it, so rotating before cutover destroys the rollback.
-The plan issues a second credential per provider where two can be live at once,
-and leaves the single valued ones, Supabase above all, until after Netlify is
-decommissioned.
-
----
-
 ## 22 July 2026, the migration nobody checked
 
 **The bug.** Picking a company from the ambiguous match list always answered

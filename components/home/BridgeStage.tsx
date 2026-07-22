@@ -109,18 +109,34 @@ export default function BridgeStage({
 
   return (
     <div className="relative">
-      {/*
-        The cards are deliberately narrow and the middle column is deliberately
-        wide. In the design the two cards are 334 and 314 wide inside an 1185
-        stage, and the span has the whole middle to cross. Built with the cards
-        at half the width each, as this was first, there is no middle left and
-        the arc draws straight through the card text.
+      {/* The span. Horizontal from md up, vertical on a phone, and the same
+          draw either way. aria-hidden: it is the picture of the sentence the
+          two cards already say. */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 600 120"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-x-0 top-1/2 hidden h-[120px] -translate-y-1/2 md:block"
+      >
+        <defs>
+          <linearGradient id="stage-arc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#CBFB5E" />
+            <stop offset="0.5" stopColor="#8B6BFF" />
+            <stop offset="1" stopColor="#3FE0C5" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M40 96 C 190 8, 410 8, 560 96"
+          fill="none"
+          stroke="url(#stage-arc)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="arc-draw"
+          style={{ ["--len" as string]: 620 }}
+        />
+      </svg>
 
-        The arc therefore lives IN the middle grid cell rather than absolutely
-        positioned across the stage. It cannot overlap a card because it has
-        nowhere to overlap from.
-      */}
-      <div className="relative grid items-center gap-4 md:grid-cols-[minmax(0,340px)_minmax(80px,1fr)_minmax(0,340px)] md:gap-5">
+      <div className="relative grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6">
         {/* ===== The deal ===== */}
         <article className="rounded-glass border border-hairline bg-glass p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2">
@@ -174,59 +190,28 @@ export default function BridgeStage({
           ) : null}
         </article>
 
-        {/* The span, in the gap that belongs to it. Horizontal from md up,
-            vertical on a phone, same draw either way. */}
-        <div className="flex items-center justify-center">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 40 80"
-            className="h-12 w-10 md:hidden"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="stage-arc-v" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#CBFB5E" />
-                <stop offset="0.5" stopColor="#8B6BFF" />
-                <stop offset="1" stopColor="#3FE0C5" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M20 4 C 6 28, 34 52, 20 76"
-              fill="none"
-              stroke="url(#stage-arc-v)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              className="arc-draw"
-              style={{ ["--len" as string]: 90 }}
-            />
-          </svg>
+        {/* The vertical span, phone only. */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 40 80"
+          className="mx-auto h-12 w-10 md:hidden"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M20 4 C 6 28, 34 52, 20 76"
+            fill="none"
+            stroke="url(#stage-arc)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            className="arc-draw"
+            style={{ ["--len" as string]: 90 }}
+          />
+        </svg>
 
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 240 80"
-            preserveAspectRatio="none"
-            className="hidden h-20 w-full md:block"
-          >
-            <defs>
-              <linearGradient id="stage-arc" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#CBFB5E" />
-                <stop offset="0.5" stopColor="#8B6BFF" />
-                <stop offset="1" stopColor="#3FE0C5" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M6 64 C 70 6, 170 6, 234 64"
-              fill="none"
-              stroke="url(#stage-arc)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              className="arc-draw"
-              style={{ ["--len" as string]: 260 }}
-            />
-            <circle cx="6" cy="64" r="4" fill="#CBFB5E" />
-            <circle cx="234" cy="64" r="4" fill="#3FE0C5" />
-          </svg>
-        </div>
+        {/* The far pier, desktop only: on a phone this is the chip above. */}
+        <span className="hidden md:flex md:flex-col md:items-center md:gap-1.5">
+          {hasCorridor && <span className="flag-chip">{to}</span>}
+        </span>
 
         {/* ===== Who is on the other side ===== */}
         <article className="rounded-glass border border-hairline bg-glass p-4 sm:p-5">
