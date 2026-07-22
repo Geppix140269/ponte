@@ -1,22 +1,22 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 
 export const metadata: Metadata = {
-  title: "Import Duties and Tariffs Explained â€” HS Codes, MFN Rates, FTAs",
+  title: "Import Duties and Tariffs Explained: HS Codes, MFN Rates, FTAs",
   description:
     "A complete guide to import duties: how they are calculated, the six duty types (ad valorem, specific, compound, ADD, CVD, safeguard), MFN rates, FTA preferences, and how to minimise your landed cost legally.",
   alternates: { canonical: "/learn/duties" },
   openGraph: {
     title: "Import Duties and Tariffs Explained | Ponte Trade",
     description:
-      "HS codes, MFN rates, anti-dumping duties, FTAs and landed cost â€” explained from first principles with worked examples.",
+      "HS codes, MFN rates, anti-dumping duties, FTAs and landed cost, explained from first principles with worked examples.",
     url: "/learn/duties",
     siteName: "Ponte Trade",
     type: "article",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Import Duties and Tariffs Explained â€” HS Codes, MFN Rates, FTAs",
+    title: "Import Duties and Tariffs Explained: HS Codes, MFN Rates, FTAs",
     description:
       "Complete guide to import duties: how they work, the six types, FTA preferences, and legal cost reduction strategies.",
   },
@@ -39,7 +39,7 @@ const faqJsonLd = {
       name: "What is an MFN tariff rate?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "MFN stands for Most Favoured Nation. The MFN rate is the standard import duty rate that WTO member countries apply to goods from all other WTO members unless a preferential trade agreement (FTA) provides a lower rate. With 164 WTO members, MFN rates apply to the vast majority of world trade. The MFN rate is the baseline â€” the starting point before FTA preferences or additional duties (anti-dumping, safeguards) are applied.",
+        text: "MFN stands for Most Favoured Nation. The MFN rate is the standard import duty rate that WTO member countries apply to goods from all other WTO members unless a preferential trade agreement (FTA) provides a lower rate. With 164 WTO members, MFN rates apply to the vast majority of world trade. The MFN rate is the baseline, the starting point before FTA preferences or additional duties (anti-dumping, safeguards) are applied.",
       },
     },
     {
@@ -47,7 +47,7 @@ const faqJsonLd = {
       name: "What is the difference between ad valorem and specific duties?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ad valorem duties are expressed as a percentage of the customs value of the goods â€” for example, 5% of the CIF value. They rise and fall with the price of the goods. Specific duties are expressed as a fixed monetary amount per unit of quantity â€” for example, $0.68 per kilogram of sugar. Specific duties do not change with the price of the goods. Compound duties combine both: a percentage rate plus a fixed amount per unit.",
+        text: "Ad valorem duties are expressed as a percentage of the customs value of the goods, for example 5% of the CIF value. They rise and fall with the price of the goods. Specific duties are expressed as a fixed monetary amount per unit of quantity, for example $0.68 per kilogram of sugar. Specific duties do not change with the price of the goods. Compound duties combine both: a percentage rate plus a fixed amount per unit.",
       },
     },
     {
@@ -55,7 +55,7 @@ const faqJsonLd = {
       name: "What is an anti-dumping duty?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "An anti-dumping duty (ADD) is an additional import tariff imposed on specific goods from specific countries where those goods are found to be exported at prices below their normal value (i.e., below the domestic price in the exporting country or below the cost of production). ADDs are on top of the standard MFN rate and can be very high â€” commonly 20-200%. They are product- and origin-specific: the same HS code imported from a different country will not be subject to the ADD.",
+        text: "An anti-dumping duty (ADD) is an additional import tariff imposed on specific goods from specific countries where those goods are found to be exported at prices below their normal value (i.e., below the domestic price in the exporting country or below the cost of production). ADDs are on top of the standard MFN rate and can be very high, commonly 20 to 200%. They are product- and origin-specific: the same HS code imported from a different country will not be subject to the ADD.",
       },
     },
     {
@@ -63,7 +63,7 @@ const faqJsonLd = {
       name: "How do free trade agreements reduce import duties?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Free trade agreements (FTAs) create preferential tariff rates between member countries â€” typically 0% for qualifying goods. To benefit from an FTA rate, the goods must meet the 'rules of origin' requirements specified in the agreement. Rules of origin define how much of the product's content or transformation must occur within an FTA member country to qualify. Documentation requirements (typically a certificate of origin or exporter's declaration) must also be met at the time of import.",
+        text: "Free trade agreements (FTAs) create preferential tariff rates between member countries, typically 0% for qualifying goods. To benefit from an FTA rate, the goods must meet the 'rules of origin' requirements specified in the agreement. Rules of origin define how much of the product's content or transformation must occur within an FTA member country to qualify. Documentation requirements (typically a certificate of origin or exporter's declaration) must also be met at the time of import.",
       },
     },
     {
@@ -71,7 +71,7 @@ const faqJsonLd = {
       name: "What is a landed cost?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "The landed cost is the total cost of getting a product to its destination country, including: the cost of the goods (ex-works or FOB), international freight and insurance, import duty, VAT or GST applied on import, customs processing fees, and any other import-related charges (e.g., the US Harbor Maintenance Fee). Landed cost is the correct denominator for margin calculations â€” not just the purchase price of the goods.",
+        text: "The landed cost is the total cost of getting a product to its destination country, including: the cost of the goods (ex-works or FOB), international freight and insurance, import duty, VAT or GST applied on import, customs processing fees, and any other import-related charges (e.g., the US Harbor Maintenance Fee). Landed cost is the correct denominator for margin calculations, not just the purchase price of the goods.",
       },
     },
   ],
@@ -91,7 +91,7 @@ const DUTY_TYPES = [
   {
     type: "Ad valorem",
     definition: "A percentage of the customs value of the goods.",
-    example: "TV worth $500, 5% rate â†’ $25 duty",
+    example: "TV worth $500, 5% rate → $25 duty",
     where: "Most goods in most countries",
   },
   {
@@ -110,19 +110,19 @@ const DUTY_TYPES = [
     type: "Anti-dumping (ADD)",
     definition: "An additional duty on goods exported below normal value (dumping). Applied on top of MFN rate.",
     example: "Chinese steel: MFN 3% + ADD 62.5% = 65.5% total",
-    where: "Steel, aluminium, chemicals, consumer goods â€” varies by country and product",
+    where: "Steel, aluminium, chemicals, consumer goods. Varies by country and product",
   },
   {
     type: "Countervailing (CVD)",
     definition: "A duty to offset government subsidies in the exporting country. Applied on top of MFN rate.",
     example: "Subsidised solar panels: MFN 2.5% + CVD 15% = 17.5%",
-    where: "Any product where foreign subsidy is proven â€” commonly solar, steel, agriculture",
+    where: "Any product where foreign subsidy is proven. Commonly solar, steel, agriculture",
   },
   {
     type: "Safeguard",
     definition: "A temporary duty imposed when a surge in imports threatens domestic industry.",
     example: "US washing machines: 20% safeguard duty for 3 years",
-    where: "Typically short-term, any sector facing import surge â€” politically driven",
+    where: "Typically short-term, any sector facing import surge. Politically driven",
   },
 ];
 
@@ -131,7 +131,7 @@ const FTAS = [
   { name: "EU Single Market", members: "27 EU member states", note: "Zero duties on all intra-EU trade. Common External Tariff (CET) applies to imports from outside the EU." },
   { name: "RCEP", members: "15 Asia-Pacific nations incl. China, Japan, ASEAN", note: "World's largest FTA by trade volume. Gradual tariff elimination over 10-20 years depending on product." },
   { name: "CPTPP", members: "11 Pacific nations incl. Japan, Canada, Australia, Vietnam", note: "High-standard agreement. Eliminates tariffs on 95%+ of goods. UK acceded in 2023." },
-  { name: "AfCFTA", members: "54 African Union member states", note: "Aims to eliminate 97% of tariff lines. Phased implementation â€” check current schedules by member state." },
+  { name: "AfCFTA", members: "54 African Union member states", note: "Aims to eliminate 97% of tariff lines. Phased implementation, so check current schedules by member state." },
   { name: "UK-EU TCA", members: "UK and EU", note: "Zero tariffs on qualifying goods with UK or EU origin. Rules of origin require substantial transformation within the TCA area." },
 ];
 
@@ -156,11 +156,11 @@ export default function LearnDutiesPage() {
             Trade intelligence fundamentals
           </p>
           <h1 className="heading-xl mb-6 max-w-3xl">
-            Import duties and tariffs explained â€” from HS codes to landed cost.
+            Import duties and tariffs explained, from HS codes to landed cost.
           </h1>
           <p className="body-lg max-w-2xl text-muted">
-            Every import is subject to duty. Understanding how that duty is calculated â€”
-            and how to legally minimise it â€” can determine whether a trade corridor is
+            Every import is subject to duty. Understanding how that duty is calculated,
+            and how to legally minimise it, can determine whether a trade corridor is
             profitable. This guide covers everything from the basics to FTA optimisation.
           </p>
         </section>
@@ -174,8 +174,8 @@ export default function LearnDutiesPage() {
           </p>
           <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mb-10">
             {[
-              { n: "01", label: "HS Code", body: "The Harmonised System code classifies your product and determines which duty rate applies. An incorrect classification can mean paying the wrong rate â€” higher or lower than the legal obligation." },
-              { n: "02", label: "Customs value", body: "Usually the CIF value â€” cost of goods plus insurance plus freight to the port of destination. If you trade on FOB terms, the importer adds insurance and freight to derive CIF." },
+              { n: "01", label: "HS Code", body: "The Harmonised System code classifies your product and determines which duty rate applies. An incorrect classification can mean paying the wrong rate, higher or lower than the legal obligation." },
+              { n: "02", label: "Customs value", body: "Usually the CIF value: cost of goods plus insurance plus freight to the port of destination. If you trade on FOB terms, the importer adds insurance and freight to derive CIF." },
               { n: "03", label: "Duty rate", body: "The applicable rate from the destination country's tariff schedule. May be MFN (standard), preferential (FTA), or a combination with ADD, CVD or safeguard duties on top." },
             ].map((item) => (
               <div key={item.n} className="rounded-xl border border-white/10 bg-navy/40 p-5 space-y-2">
@@ -190,7 +190,7 @@ export default function LearnDutiesPage() {
           <div className="rounded-xl border border-gold/40 bg-gold/5 p-6 max-w-3xl">
             <p className="text-[11px] uppercase tracking-widest text-gold mb-3">Worked example</p>
             <p className="text-cream text-lg font-medium leading-snug mb-4">
-              Laptop (HS 8471.30), customs value $1,000, imported China â†’ US
+              Laptop (HS 8471.30), customs value $1,000, imported China → US
             </p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between border-b border-white/10 pb-2">
@@ -199,11 +199,11 @@ export default function LearnDutiesPage() {
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-muted">Section 301 tariff (China-specific)</span>
-                <span className="text-cream">25% â†’ $250</span>
+                <span className="text-cream">25% → $250</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-muted">Merchandise Processing Fee</span>
-                <span className="text-cream">0.3464% â†’ $3.46</span>
+                <span className="text-cream">0.3464% → $3.46</span>
               </div>
               <div className="flex justify-between pt-1">
                 <span className="font-semibold text-cream">Total duty + fees on $1,000 shipment</span>
@@ -220,9 +220,9 @@ export default function LearnDutiesPage() {
             The Most Favoured Nation (MFN) rate is the standard duty applied to imports
             from any WTO member country in the absence of a preferential trade agreement.
             With 164 WTO members, MFN rates cover the vast majority of global trade.
-            Every country&apos;s MFN schedule is published and legally binding â€”
+            Every country&apos;s MFN schedule is published and legally binding, so
             you can look up any rate for any HS code in any country. MFN is the
-            starting point. Everything else â€” FTA preferences, anti-dumping, safeguards â€”
+            starting point. Everything else, whether FTA preferences, anti-dumping or safeguards,
             is a modification of the MFN baseline.
           </p>
         </section>
@@ -254,7 +254,7 @@ export default function LearnDutiesPage() {
         <section className="container-px py-12 border-t border-white/10">
           <h2 className="heading-lg mb-4 max-w-2xl">Free trade agreements and preferential rates</h2>
           <p className="body-md text-muted max-w-2xl mb-4">
-            An FTA creates a preferential tariff rate â€” often 0% â€” between member countries.
+            An FTA creates a preferential tariff rate, often 0%, between member countries.
             To benefit, your goods must satisfy the &ldquo;rules of origin&rdquo; requirement:
             a minimum level of production or transformation must occur within an FTA member country.
           </p>
@@ -310,7 +310,7 @@ export default function LearnDutiesPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-4xl">
             {[
               { label: "VAT / GST on import", body: "Applied on the duty-inclusive customs value. UK: 20%. EU standard: varies 17-27%. Australia: 10% GST. US: no federal VAT." },
-              { label: "Customs processing fee", body: "US: Merchandise Processing Fee (MPF) â€” 0.3464% of value, min $31.67. EU: no equivalent but broker fees apply." },
+              { label: "Customs processing fee", body: "US: Merchandise Processing Fee (MPF) at 0.3464% of value, min $31.67. EU: no equivalent but broker fees apply." },
               { label: "Harbor Maintenance Fee (US)", body: "0.125% of cargo value on sea freight imports into US. Paid by importer." },
               { label: "Excise duties", body: "Additional consumption taxes on alcohol, tobacco, fuel, and certain goods. Applied at import by many countries." },
             ].map((item) => (

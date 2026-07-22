@@ -57,6 +57,12 @@ jobs:
       - name: Messages are complete and consistent
         run: node scripts/check-messages.mjs
 
+      - name: No BOM, no mojibake, no em dashes
+        # A member saw a cp1252-mangled em dash on their account page on
+        # 2026-07-22. messages/ was the only tree being checked, so that is
+        # the only tree that stayed clean.
+        run: node scripts/check-encoding.mjs
+
       - name: Messages are in sync with their fragments
         run: |
           node scripts/build-messages.mjs

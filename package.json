@@ -14,8 +14,9 @@
     "sanctions:refresh": "tsx scripts/sanctions-refresh.ts",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
-    "verify": "node scripts/check-messages.mjs && tsc --noEmit --incremental false && next build",
-    "prepare": "node scripts/install-hooks.mjs"
+    "verify": "node scripts/check-messages.mjs && node scripts/check-encoding.mjs && tsc --noEmit --incremental false && next build",
+    "prepare": "node scripts/install-hooks.mjs",
+    "encoding:check": "node scripts/check-encoding.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
