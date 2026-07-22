@@ -535,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lendo seu anúncio…",
       "unavailable": "A análise está indisponível no momento. Você ainda pode publicar.",
-      "upgrade": "Você usou suas análises gratuitas. O Ponte AI dá análises ilimitadas de anúncios e o seu gerente de conta com IA por <price>$19/mês</price>.",
-      "upgradeCta": "Desbloquear o Ponte AI",
       "runAgain": "Analisar de novo após editar"
     },
     "actions": {
@@ -654,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Seu gerente de conta",
-      "lockedBody": "Seu gerente de conta com IA lê toda a sua conta todo dia: o que responder, o que atualizar, o que corrigir, e já rascunha o próximo passo. Análises de anúncio ilimitadas incluídas.",
-      "lockedPrice": "Ponte AI · $19/mês.",
-      "unlock": "Desbloquear o Ponte AI"
+      "label": "Seu gerente de conta"
     },
     "mine": {
       "eyebrow": "Seus anúncios",
@@ -765,20 +760,13 @@
     },
     "pill": "Preços",
     "title": "O marketplace é <em>gratuito</em>.",
-    "intro": "Publique, passe pela verificação, conecte-se: sem taxa de anúncio, sem assinatura, sem comissão sobre os negócios que vocês fecharem sozinhos. Você paga só se pedir que a mesa trabalhe para você.",
+    "intro": "Publicar, passar na verificação, ligar: sem taxas de anúncio, sem subscrições, sem comissão nos negócios que fechar sozinho. Os créditos pagam a verificação de uma contraparte. A mesa está lá se a quiser.",
     "marketplace": {
       "name": "O Marketplace",
       "price": "Grátis",
       "terms": "Sempre · para todos",
       "body": "Publique o que você vende ou o que você precisa. A IA e a mesa verificam cada anúncio antes de ele entrar no ar. Você fica anônimo até as duas partes concordarem em se conectar, depois negociam direto. Produtores, empresas de trading e corretores são todos bem-vindos, com o papel de cada um declarado desde o início.",
       "cta": "Criar um anúncio"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mês",
-      "terms": "Ou $190/ano · cancele quando quiser",
-      "body": "Sua IA por dentro: análises ilimitadas que pontuam e orientam cada anúncio antes de ele entrar no ar, um gerente de conta com IA lendo sua conta todo dia e acesso prioritário aos alertas de correspondência da IA. Teste grátis e continue quando ele se pagar.",
-      "cta": "Desbloquear o Ponte AI"
     },
     "desk": {
       "name": "A Mesa, por negócio",
@@ -794,7 +782,14 @@
       "body": "Apoio contínuo de compra ou de venda: um mandato permanente para encontrar, verificar e negociar em seu nome, mês após mês. Para equipes de trading, produtores entrando em novos mercados e compradores com programas recorrentes.",
       "cta": "Definir um mandato"
     },
-    "footnote": "Os percentuais são acordados em privado, por escrito, antes de qualquer trabalho começar. Sem custos ocultos, sem cobrança pelas apresentações que vocês mesmos fizerem no mural."
+    "footnote": "Os percentuais são acordados em privado, por escrito, antes de qualquer trabalho começar. Sem custos ocultos, sem cobrança pelas apresentações que vocês mesmos fizerem no mural.",
+    "credits": {
+      "name": "Créditos",
+      "price": "2 créditos",
+      "terms": "Por verificação de contraparte",
+      "body": "Verificar com quem está a negociar é a única coisa paga na Ponte. Uma verificação lê os registos comerciais e as listas de sanções da OFAC, da UE, da ONU e do Reino Unido, nomeia e data cada fonte, e uma pessoa revê tudo o que não sair limpo. As verificações de anúncios, as redações e os alertas continuam gratuitos.",
+      "cta": "Ver o que cobre uma verificação"
+    }
   },
   "process": {
     "steps": {

@@ -6,7 +6,7 @@
     },
     "pill": "Fees",
     "title": "The marketplace is <em>free</em>.",
-    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. You pay only if you ask the desk to work for you.",
+    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. Credits pay for checking a counterparty. The desk is there if you want it.",
     "marketplace": {
       "name": "The Marketplace",
       "price": "Free",
@@ -14,12 +14,12 @@
       "body": "Post what you sell or what you need. AI and the desk vet every listing before it goes live. You stay anonymous until both sides agree to connect, then you deal directly. Producers, trading companies and brokers all welcome, roles declared up front.",
       "cta": "Start a listing"
     },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/month",
-      "terms": "Or $190/year · cancel anytime",
-      "body": "Your AI on the inside: unlimited listing checks that score and coach every listing before it goes live, a personal AI account manager reading your account daily, and first access to AI match alerts. Try it free, keep it when it pays for itself.",
-      "cta": "Unlock Ponte AI"
+    "credits": {
+      "name": "Credits",
+      "price": "2 credits",
+      "terms": "Per counterparty check",
+      "body": "Checking who you are dealing with is the one thing on Ponte that costs money. A check reads the company registers and the OFAC, EU, UN and UK sanctions lists, names every source and dates it, and a person reviews anything that is not clean. Listing checks, write-ups and match alerts stay free.",
+      "cta": "See what a check covers"
     },
     "desk": {
       "name": "The Desk, per deal",

@@ -535,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lecture de votre annonce…",
       "unavailable": "Le contrôle est indisponible pour le moment. Vous pouvez publier malgré tout.",
-      "upgrade": "Vous avez utilisé vos contrôles gratuits. Ponte AI vous donne des contrôles d’annonce illimités et votre gestionnaire de compte IA personnel pour <price>$19/mois</price>.",
-      "upgradeCta": "Débloquer Ponte AI",
       "runAgain": "Relancer le contrôle après modification"
     },
     "actions": {
@@ -654,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Votre gestionnaire de compte",
-      "lockedBody": "Votre gestionnaire de compte IA lit l’ensemble de votre compte chaque jour : ce qu’il faut répondre, actualiser, corriger, et rédige la prochaine action. Contrôles d’annonce illimités inclus.",
-      "lockedPrice": "Ponte AI · $19/mois.",
-      "unlock": "Débloquer Ponte AI"
+      "label": "Votre gestionnaire de compte"
     },
     "mine": {
       "eyebrow": "Vos annonces",
@@ -765,20 +760,13 @@
     },
     "pill": "Tarifs",
     "title": "La place de marché est <em>gratuite</em>.",
-    "intro": "Publiez, faites-vous vérifier, entrez en relation : pas de frais d’annonce, pas d’abonnement, pas de commission sur les affaires que vous concluez vous-mêmes. Vous ne payez que si vous demandez au desk de travailler pour vous.",
+    "intro": "Publier, passer la vérification, se mettre en relation : pas de frais d'annonce, pas d'abonnement, pas de commission sur les affaires que vous concluez vous-même. Les crédits paient la vérification d'une contrepartie. Le desk est là si vous le voulez.",
     "marketplace": {
       "name": "La place de marché",
       "price": "Gratuit",
       "terms": "Toujours · pour tous",
       "body": "Publiez ce que vous vendez ou ce que vous cherchez. L’IA et le desk vérifient chaque annonce avant sa mise en ligne. Vous restez anonyme jusqu’à l’accord des deux parties, puis vous traitez en direct. Producteurs, sociétés de négoce et courtiers sont les bienvenus, avec un rôle déclaré dès le départ.",
       "cta": "Créer une annonce"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mois",
-      "terms": "Ou $190/an · résiliable à tout moment",
-      "body": "Votre IA à l’intérieur : des contrôles d’annonce illimités qui notent et améliorent chaque annonce avant sa mise en ligne, un gestionnaire de compte IA personnel qui lit votre compte chaque jour, et l’accès prioritaire aux alertes de correspondance IA. Essayez gratuitement, gardez-la quand elle se rembourse.",
-      "cta": "Débloquer Ponte AI"
     },
     "desk": {
       "name": "Le desk, à l’affaire",
@@ -794,7 +782,14 @@
       "body": "Un appui continu à l’achat ou à la vente : un mandat permanent pour trouver, vérifier et négocier pour votre compte, mois après mois. Pour les équipes de négoce, les producteurs qui entrent sur de nouveaux marchés, et les acheteurs avec des programmes récurrents.",
       "cta": "Cadrer un mandat"
     },
-    "footnote": "Les niveaux de commission sont convenus en privé, par écrit, avant tout début de travail. Pas de coûts cachés, aucun frais pour les mises en relation que vous réalisez vous-mêmes sur le tableau."
+    "footnote": "Les niveaux de commission sont convenus en privé, par écrit, avant tout début de travail. Pas de coûts cachés, aucun frais pour les mises en relation que vous réalisez vous-mêmes sur le tableau.",
+    "credits": {
+      "name": "Crédits",
+      "price": "2 crédits",
+      "terms": "Par vérification de contrepartie",
+      "body": "Vérifier avec qui vous traitez est la seule chose payante sur Ponte. Une vérification lit les registres du commerce et les listes de sanctions de l'OFAC, de l'UE, de l'ONU et du Royaume-Uni, nomme et date chaque source, et une personne examine tout ce qui ne ressort pas net. Les contrôles d'annonce, les rédactions et les alertes restent gratuits.",
+      "cta": "Voir ce que couvre une vérification"
+    }
   },
   "process": {
     "steps": {

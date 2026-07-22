@@ -535,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Ihr Inserat wird gelesen…",
       "unavailable": "Die Prüfung ist derzeit nicht verfügbar. Sie können trotzdem veröffentlichen.",
-      "upgrade": "Sie haben Ihre kostenlosen Prüfungen aufgebraucht. Ponte AI gibt Ihnen unbegrenzte Inseratsprüfungen und Ihren persönlichen KI-Account-Manager für <price>$19/Monat</price>.",
-      "upgradeCta": "Ponte AI freischalten",
       "runAgain": "Nach Änderungen erneut prüfen"
     },
     "actions": {
@@ -654,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Ihr Account-Manager",
-      "lockedBody": "Ihr KI-Account-Manager liest täglich Ihr gesamtes Konto: was zu beantworten, was zu aktualisieren, was zu korrigieren ist, und entwirft den nächsten Schritt. Unbegrenzte Inseratsprüfungen inklusive.",
-      "lockedPrice": "Ponte AI · $19/Monat.",
-      "unlock": "Ponte AI freischalten"
+      "label": "Ihr Account-Manager"
     },
     "mine": {
       "eyebrow": "Ihre Inserate",
@@ -765,20 +760,13 @@
     },
     "pill": "Gebühren",
     "title": "Der Marktplatz ist <em>kostenlos</em>.",
-    "intro": "Einstellen, prüfen lassen, Kontakt aufnehmen: keine Inseratsgebühren, keine Abonnements, keine Provision auf Geschäfte, die Sie selbst abschließen. Sie zahlen nur, wenn Sie den Desk für sich arbeiten lassen.",
+    "intro": "Einstellen, geprüft werden, verbinden: keine Inseratsgebühren, keine Abonnements, keine Provision auf Geschäfte, die Sie selbst abschließen. Credits bezahlen die Prüfung einer Gegenpartei. Der Desk ist da, wenn Sie ihn wollen.",
     "marketplace": {
       "name": "Der Marktplatz",
       "price": "Kostenlos",
       "terms": "Immer · für alle",
       "body": "Stellen Sie ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk prüfen jedes Inserat, bevor es online geht. Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, danach handeln Sie direkt. Erzeuger, Handelsunternehmen und Makler sind gleichermaßen willkommen, die Rolle wird vorab angegeben.",
       "cta": "Inserat beginnen"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/Monat",
-      "terms": "Oder $190/Jahr · jederzeit kündbar",
-      "body": "Ihre KI auf der Innenseite: unbegrenzte Inseratsprüfungen, die jedes Inserat vor der Veröffentlichung bewerten und verbessern, ein persönlicher KI-Account-Manager, der Ihr Konto täglich liest, und Erstzugriff auf KI-Match-Benachrichtigungen. Kostenlos testen, behalten, sobald es sich rechnet.",
-      "cta": "Ponte AI freischalten"
     },
     "desk": {
       "name": "Der Desk, pro Geschäft",
@@ -794,7 +782,14 @@
       "body": "Laufende Unterstützung bei Beschaffung oder Verkauf: ein Dauermandat, um in Ihrem Namen zu finden, zu prüfen und zu verhandeln, Monat für Monat. Für Handelsteams, Erzeuger auf dem Weg in neue Märkte und Käufer mit wiederkehrenden Programmen.",
       "cta": "Mandat umreißen"
     },
-    "footnote": "Die Honorarhöhe wird vorab vertraulich und schriftlich vereinbart. Keine versteckten Kosten, keine Gebühr für Kontakte, die Sie selbst auf dem Board knüpfen."
+    "footnote": "Die Honorarhöhe wird vorab vertraulich und schriftlich vereinbart. Keine versteckten Kosten, keine Gebühr für Kontakte, die Sie selbst auf dem Board knüpfen.",
+    "credits": {
+      "name": "Credits",
+      "price": "2 Credits",
+      "terms": "Pro Prüfung einer Gegenpartei",
+      "body": "Zu prüfen, mit wem Sie es zu tun haben, ist das Einzige, was auf Ponte Geld kostet. Eine Prüfung liest die Handelsregister und die Sanktionslisten von OFAC, EU, UN und Vereinigtem Königreich, benennt und datiert jede Quelle, und ein Mensch sieht sich alles an, was nicht sauber ist. Inseratsprüfungen, Texte und Match-Benachrichtigungen bleiben kostenlos.",
+      "cta": "Was eine Prüfung abdeckt"
+    }
   },
   "process": {
     "steps": {

@@ -535,8 +535,6 @@
       "scoreSuffix": "/100",
       "loading": "Lettura del Suo annuncio…",
       "unavailable": "Il controllo non è disponibile al momento. Può comunque pubblicare.",
-      "upgrade": "Ha esaurito i controlli gratuiti. Ponte AI Le offre controlli illimitati degli annunci e il Suo account manager AI personale per <price>$19/mese</price>.",
-      "upgradeCta": "Attiva Ponte AI",
       "runAgain": "Controlla di nuovo dopo le modifiche"
     },
     "actions": {
@@ -654,10 +652,7 @@
       }
     },
     "ai": {
-      "label": "Il Suo account manager",
-      "lockedBody": "Il Suo account manager AI legge ogni giorno l'intero account: cosa rispondere, cosa aggiornare, cosa correggere, e prepara la mossa successiva. Controlli illimitati degli annunci inclusi.",
-      "lockedPrice": "Ponte AI · $19/mese.",
-      "unlock": "Attiva Ponte AI"
+      "label": "Il Suo account manager"
     },
     "mine": {
       "eyebrow": "I Suoi annunci",
@@ -765,20 +760,13 @@
     },
     "pill": "Commissioni",
     "title": "Il marketplace è <em>gratuito</em>.",
-    "intro": "Pubblicare, essere verificati, entrare in contatto: nessun costo di inserzione, nessun abbonamento, nessuna commissione sulle operazioni che chiude da solo. Paga solo se chiede al desk di lavorare per Lei.",
+    "intro": "Pubblicare, passare la verifica, mettersi in contatto: nessun costo di annuncio, nessun abbonamento, nessuna commissione sugli affari che chiudi da solo. I crediti pagano la verifica di una controparte. Il desk c'è se lo vuoi.",
     "marketplace": {
       "name": "Il Marketplace",
       "price": "Gratis",
       "terms": "Sempre · per tutti",
       "body": "Pubblichi ciò che vende o ciò che Le serve. L'AI e il desk verificano ogni annuncio prima della pubblicazione. Resta anonimo finché entrambe le parti non accettano il contatto, poi tratta direttamente. Produttori, società di trading e broker sono tutti benvenuti, con il ruolo dichiarato fin dall'inizio.",
       "cta": "Crea un annuncio"
-    },
-    "ai": {
-      "name": "Ponte AI",
-      "period": "/mese",
-      "terms": "Oppure $190/anno · disdetta in qualsiasi momento",
-      "body": "La Sua AI all'interno: controlli illimitati che valutano e migliorano ogni annuncio prima della pubblicazione, un account manager AI personale che legge il Suo account ogni giorno, e accesso prioritario agli avvisi di match AI. Lo provi gratis, lo tenga quando si ripaga da solo.",
-      "cta": "Attiva Ponte AI"
     },
     "desk": {
       "name": "Il Desk, per operazione",
@@ -794,7 +782,14 @@
       "body": "Supporto continuativo all'acquisto o alla vendita: un mandato permanente per trovare, verificare e negoziare per Suo conto, mese dopo mese. Per team di trading, produttori che entrano in nuovi mercati e acquirenti con programmi ricorrenti.",
       "cta": "Definisci un mandato"
     },
-    "footnote": "I livelli di commissione sono concordati in privato, per iscritto, prima dell'inizio di qualsiasi attività. Nessun costo nascosto, nessun addebito per le presentazioni che realizza da solo sulla bacheca."
+    "footnote": "I livelli di commissione sono concordati in privato, per iscritto, prima dell'inizio di qualsiasi attività. Nessun costo nascosto, nessun addebito per le presentazioni che realizza da solo sulla bacheca.",
+    "credits": {
+      "name": "Crediti",
+      "price": "2 crediti",
+      "terms": "Per verifica di una controparte",
+      "body": "Verificare con chi stai trattando è l'unica cosa a pagamento su Ponte. Una verifica legge i registri delle imprese e le liste sanzionatorie di OFAC, UE, ONU e Regno Unito, nomina e data ogni fonte, e una persona esamina tutto ciò che non risulta pulito. I controlli sugli annunci, i testi e gli avvisi di corrispondenza restano gratis.",
+      "cta": "Cosa copre una verifica"
+    }
   },
   "process": {
     "steps": {
