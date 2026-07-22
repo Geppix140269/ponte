@@ -751,6 +751,12 @@
       "level2": "Unternehmen geprüft",
       "level3": "Aktivität geprüft",
       "level4": "Institutionell"
+    },
+    "interest": {
+      "request": "Kontakt anfragen",
+      "sending": "Wird gesendet...",
+      "sent": "Anfrage gesendet",
+      "failed": "Fehlgeschlagen, erneut versuchen"
     }
   },
   "meta": {
@@ -1000,5 +1006,45 @@
       },
       "disclaimerHeading": "Was dieses Ergebnis nicht bedeutet"
     }
+  },
+  "gate": {
+    "title": {
+      "inquiry": "Erstellen Sie Ihr kostenloses Konto, um diese Anfrage zu senden.",
+      "publish": "Erstellen Sie Ihr kostenloses Konto, um zu veröffentlichen.",
+      "alert": "Erstellen Sie Ihr kostenloses Konto, um diesen Alarm zu speichern.",
+      "verify": "Erstellen Sie Ihr kostenloses Konto, um diese Prüfung zu starten."
+    },
+    "body": {
+      "inquiry": "Ihre Nachricht ist gespeichert. Eine E-Mail, kein Passwort.",
+      "publish": "Ihr Inserat und sein Text sind gespeichert. Eine E-Mail, kein Passwort.",
+      "alert": "Ihr Alarm ist gespeichert. Eine E-Mail, kein Passwort.",
+      "verify": "Ihre Suche ist gespeichert. Eine E-Mail, kein Passwort."
+    },
+    "profile": {
+      "heading": "Zwei Angaben und Sie sind drin",
+      "body": "Mehr fragen wir vorerst nicht. Der Rest kann warten.",
+      "nameLabel": "Vollständiger Name",
+      "companyLabel": "Firma",
+      "countryLabel": "Land",
+      "countryUnset": "Land auswählen",
+      "submit": "Fertig",
+      "saving": "Wird gespeichert..."
+    },
+    "credits": "Sie haben {balance} Credits. Eine Gegenpartei zu prüfen kostet {cost}.",
+    "done": {
+      "inquiry": "Anfrage gesendet",
+      "publish": "Inserat eingereicht",
+      "alert": "Alarm gespeichert",
+      "verify": "Prüfung gestartet"
+    },
+    "doneBody": {
+      "inquiry": "Ihre Anfrage liegt bei der Gegenseite. Wir melden uns, sobald geantwortet wird.",
+      "publish": "Ihr Inserat liegt beim Desk zur Prüfung. Wir mailen Ihnen, sobald es live ist.",
+      "alert": "Wir mailen Ihnen, sobald etwas am Board dazu passt.",
+      "verify": "Der Bericht erscheint in Ihrem Konto, sobald er fertig ist."
+    },
+    "doneCta": "Fertig",
+    "close": "Schließen",
+    "actionFailed": "Das hat nicht geklappt. Sie können es in Ihrem Konto abschließen."
   }
 }

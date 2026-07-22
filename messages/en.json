@@ -287,6 +287,46 @@
     "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
+  "gate": {
+    "title": {
+      "inquiry": "Create your free account to send this inquiry.",
+      "publish": "Create your free account to publish.",
+      "alert": "Create your free account to save this alert.",
+      "verify": "Create your free account to run this check."
+    },
+    "body": {
+      "inquiry": "Your message is saved. One email, no password.",
+      "publish": "Your listing and its write-up are saved. One email, no password.",
+      "alert": "Your alert is saved. One email, no password.",
+      "verify": "Your search is saved. One email, no password."
+    },
+    "profile": {
+      "heading": "Two details and you are in",
+      "body": "This is all we ask for now. The rest can wait until you need it.",
+      "nameLabel": "Full name",
+      "companyLabel": "Company",
+      "countryLabel": "Country",
+      "countryUnset": "Select a country",
+      "submit": "Finish",
+      "saving": "Saving..."
+    },
+    "credits": "You have {balance} credits. Verifying a counterparty costs {cost}.",
+    "done": {
+      "inquiry": "Inquiry sent",
+      "publish": "Listing submitted",
+      "alert": "Alert saved",
+      "verify": "Check started"
+    },
+    "doneBody": {
+      "inquiry": "Your inquiry is with the other side. You will be notified when they respond.",
+      "publish": "Your listing is with the desk for vetting. You will be emailed when it goes live.",
+      "alert": "We will email you when something on the board matches it.",
+      "verify": "The report appears in your account as soon as it is ready."
+    },
+    "doneCta": "Done",
+    "close": "Close",
+    "actionFailed": "That did not go through. You can finish it from your account."
+  },
   "home": {
     "metaTitle": "Cross border trade in physical goods, between verified counterparties",
     "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made before an NCNDA is signed. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
@@ -751,6 +791,12 @@
       "shareWhatsApp": "Share on WhatsApp",
       "shareText": "{product} · vetted listing {ref} on Ponte",
       "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
+    },
+    "interest": {
+      "request": "Request to connect",
+      "sending": "Sending...",
+      "sent": "Request sent",
+      "failed": "Failed, try again"
     }
   },
   "meta": {

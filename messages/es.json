@@ -751,6 +751,12 @@
       "level2": "Empresa verificada",
       "level3": "Actividad verificada",
       "level4": "Institucional"
+    },
+    "interest": {
+      "request": "Solicitar contacto",
+      "sending": "Enviando...",
+      "sent": "Solicitud enviada",
+      "failed": "Error, inténtelo de nuevo"
     }
   },
   "meta": {
@@ -1000,5 +1006,45 @@
       },
       "disclaimerHeading": "Qué no significa este resultado"
     }
+  },
+  "gate": {
+    "title": {
+      "inquiry": "Cree su cuenta gratuita para enviar esta consulta.",
+      "publish": "Cree su cuenta gratuita para publicar.",
+      "alert": "Cree su cuenta gratuita para guardar esta alerta.",
+      "verify": "Cree su cuenta gratuita para ejecutar esta comprobación."
+    },
+    "body": {
+      "inquiry": "Su mensaje está guardado. Un correo, sin contraseña.",
+      "publish": "Su anuncio y su redacción están guardados. Un correo, sin contraseña.",
+      "alert": "Su alerta está guardada. Un correo, sin contraseña.",
+      "verify": "Su búsqueda está guardada. Un correo, sin contraseña."
+    },
+    "profile": {
+      "heading": "Dos datos y ya está dentro",
+      "body": "Es todo lo que pedimos por ahora. El resto puede esperar.",
+      "nameLabel": "Nombre completo",
+      "companyLabel": "Empresa",
+      "countryLabel": "País",
+      "countryUnset": "Seleccione un país",
+      "submit": "Finalizar",
+      "saving": "Guardando..."
+    },
+    "credits": "Tiene {balance} créditos. Verificar una contraparte cuesta {cost}.",
+    "done": {
+      "inquiry": "Consulta enviada",
+      "publish": "Anuncio enviado",
+      "alert": "Alerta guardada",
+      "verify": "Comprobación iniciada"
+    },
+    "doneBody": {
+      "inquiry": "Su consulta está con la otra parte. Le avisaremos cuando responda.",
+      "publish": "Su anuncio está con la mesa para su revisión. Le escribiremos cuando se publique.",
+      "alert": "Le enviaremos un correo cuando algo del tablón coincida.",
+      "verify": "El informe aparecerá en su cuenta en cuanto esté listo."
+    },
+    "doneCta": "Listo",
+    "close": "Cerrar",
+    "actionFailed": "No se pudo completar. Puede terminarlo desde su cuenta."
   }
 }

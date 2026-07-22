@@ -751,6 +751,12 @@
       "level2": "Empresa verificada",
       "level3": "Atividade verificada",
       "level4": "Institucional"
+    },
+    "interest": {
+      "request": "Solicitar contacto",
+      "sending": "A enviar...",
+      "sent": "Pedido enviado",
+      "failed": "Falhou, tente novamente"
     }
   },
   "meta": {
@@ -1000,5 +1006,45 @@
       },
       "disclaimerHeading": "O que este resultado não significa"
     }
+  },
+  "gate": {
+    "title": {
+      "inquiry": "Crie a sua conta gratuita para enviar esta consulta.",
+      "publish": "Crie a sua conta gratuita para publicar.",
+      "alert": "Crie a sua conta gratuita para guardar este alerta.",
+      "verify": "Crie a sua conta gratuita para executar esta verificação."
+    },
+    "body": {
+      "inquiry": "A sua mensagem está guardada. Um e-mail, sem palavra-passe.",
+      "publish": "O seu anúncio e o seu texto estão guardados. Um e-mail, sem palavra-passe.",
+      "alert": "O seu alerta está guardado. Um e-mail, sem palavra-passe.",
+      "verify": "A sua pesquisa está guardada. Um e-mail, sem palavra-passe."
+    },
+    "profile": {
+      "heading": "Dois dados e está dentro",
+      "body": "É tudo o que pedimos por agora. O resto pode esperar.",
+      "nameLabel": "Nome completo",
+      "companyLabel": "Empresa",
+      "countryLabel": "País",
+      "countryUnset": "Selecione um país",
+      "submit": "Concluir",
+      "saving": "A guardar..."
+    },
+    "credits": "Tem {balance} créditos. Verificar uma contraparte custa {cost}.",
+    "done": {
+      "inquiry": "Consulta enviada",
+      "publish": "Anúncio submetido",
+      "alert": "Alerta guardado",
+      "verify": "Verificação iniciada"
+    },
+    "doneBody": {
+      "inquiry": "A sua consulta chegou à outra parte. Avisamos quando responderem.",
+      "publish": "O seu anúncio está na mesa para revisão. Enviamos e-mail quando ficar ativo.",
+      "alert": "Enviamos um e-mail quando algo no quadro corresponder.",
+      "verify": "O relatório aparece na sua conta assim que estiver pronto."
+    },
+    "doneCta": "Concluído",
+    "close": "Fechar",
+    "actionFailed": "Não foi concluído. Pode terminar a partir da sua conta."
   }
 }
