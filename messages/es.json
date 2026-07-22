@@ -1045,6 +1045,8 @@
     },
     "doneCta": "Listo",
     "close": "Cerrar",
-    "actionFailed": "No se pudo completar. Puede terminarlo desde su cuenta."
+    "actionFailed": "No se pudo completar. Puede terminarlo desde su cuenta.",
+    "working": "Finalizando...",
+    "failedTitle": "No se pudo completar"
   }
 }

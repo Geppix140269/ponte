@@ -1045,6 +1045,8 @@
     },
     "doneCta": "Concluído",
     "close": "Fechar",
-    "actionFailed": "Não foi concluído. Pode terminar a partir da sua conta."
+    "actionFailed": "Não foi concluído. Pode terminar a partir da sua conta.",
+    "working": "A concluir...",
+    "failedTitle": "Não foi concluído"
   }
 }

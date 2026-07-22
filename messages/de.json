@@ -1045,6 +1045,8 @@
     },
     "doneCta": "Fertig",
     "close": "Schließen",
-    "actionFailed": "Das hat nicht geklappt. Sie können es in Ihrem Konto abschließen."
+    "actionFailed": "Das hat nicht geklappt. Sie können es in Ihrem Konto abschließen.",
+    "working": "Wird abgeschlossen...",
+    "failedTitle": "Das hat nicht geklappt"
   }
 }

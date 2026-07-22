@@ -95,6 +95,11 @@ export default function AccountGate({
   const [saving, setSaving] = useState(false);
   const [balance, setBalance] = useState<{ credits: number; cost: number } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // The done panel used to announce "Inquiry sent" the moment sign-in
+  // finished, before the send had been attempted. An end to end run caught it
+  // saying exactly that above the words "Failed, try again". The heading now
+  // waits for the outcome it is describing.
+  const [outcome, setOutcome] = useState<"running" | "ok" | "failed">("running");
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
 
@@ -114,6 +119,7 @@ export default function AccountGate({
     ran.current = true;
     setStep("done");
     setActionError(null);
+    setOutcome("running");
 
     // Real numbers or no numbers. If the balance cannot be read the line is
     // omitted rather than guessed at, because "You have 3 credits" is a claim
@@ -132,7 +138,9 @@ export default function AccountGate({
 
     try {
       await onComplete();
+      setOutcome("ok");
     } catch (e: unknown) {
+      setOutcome("failed");
       setActionError(e instanceof Error ? e.message : t("actionFailed"));
     }
   }, [onComplete, t]);
@@ -328,7 +336,11 @@ export default function AccountGate({
           <div className="flex items-start justify-between gap-4">
             <h2 id="gate-title" className="display text-[22px] leading-tight text-ink">
               {step === "done"
-                ? t(`done.${context}`)
+                ? outcome === "ok"
+                  ? t(`done.${context}`)
+                  : outcome === "failed"
+                    ? t("failedTitle")
+                    : t("working")
                 : step === "profile"
                   ? t("profile.heading")
                   : step === "code"
@@ -512,12 +524,15 @@ export default function AccountGate({
           {/* ===== Done: the action is finished, and what they now have ===== */}
           {step === "done" && (
             <div className="mt-3 space-y-4">
-              <p className="flex items-start gap-2 text-[13.5px] leading-relaxed text-ink">
-                <Icon name="check" size={16} className="mt-0.5 shrink-0 text-lime" />
-                {t(`doneBody.${context}`)}
-              </p>
+              {outcome === "ok" && (
+                <p className="flex items-start gap-2 text-[13.5px] leading-relaxed text-ink">
+                  <Icon name="check" size={16} className="mt-0.5 shrink-0 text-lime" />
+                  {t(`doneBody.${context}`)}
+                </p>
+              )}
 
-              {/* Real balance, real price, or the line does not appear. */}
+              {/* The account exists either way, so the balance is still true
+                  and still worth saying even when the action itself failed. */}
               {balance && (
                 <p className="rounded-field border border-hairline bg-white/[0.04] px-4 py-3 text-[13px] text-slate">
                   {t("credits", {

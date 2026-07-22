@@ -1045,6 +1045,8 @@
     },
     "doneCta": "Terminé",
     "close": "Fermer",
-    "actionFailed": "Cela n'a pas abouti. Vous pouvez terminer depuis votre compte."
+    "actionFailed": "Cela n'a pas abouti. Vous pouvez terminer depuis votre compte.",
+    "working": "Finalisation...",
+    "failedTitle": "Cela n'a pas abouti"
   }
 }

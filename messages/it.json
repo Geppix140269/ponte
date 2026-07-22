@@ -1045,6 +1045,8 @@
     },
     "doneCta": "Fatto",
     "close": "Chiudi",
-    "actionFailed": "Non è andata a buon fine. Puoi completarla dal tuo account."
+    "actionFailed": "Non è andata a buon fine. Puoi completarla dal tuo account.",
+    "working": "Completamento...",
+    "failedTitle": "Non è andata a buon fine"
   }
 }

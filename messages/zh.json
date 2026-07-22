@@ -1045,6 +1045,8 @@
     },
     "doneCta": "完成",
     "close": "关闭",
-    "actionFailed": "未能完成。您可以在账户中继续。"
+    "actionFailed": "未能完成。您可以在账户中继续。",
+    "working": "正在完成...",
+    "failedTitle": "未能完成"
   }
 }
