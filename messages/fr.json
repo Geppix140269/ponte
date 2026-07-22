@@ -1045,6 +1045,56 @@
     },
     "doneCta": "Terminé",
     "close": "Fermer",
-    "actionFailed": "Cela n'a pas abouti. Vous pouvez terminer depuis votre compte."
+    "actionFailed": "Cela n'a pas abouti. Vous pouvez terminer depuis votre compte.",
+    "working": "Finalisation...",
+    "failedTitle": "Cela n'a pas abouti"
+  },
+  "landing": {
+    "eyebrow": "Tableau en direct",
+    "h1": "À un pont de distance.",
+    "sub": "Des contreparties vérifiées. De vraies affaires. Adhésion et négoce gratuits.",
+    "ctaPrimary": "Voir le tableau en direct",
+    "ctaSecondary": "Comment fonctionne la vérification",
+    "stage": {
+      "match": "Correspondance",
+      "counterparty": "Contrepartie",
+      "trustLabel": "Indice de confiance",
+      "clear": "Registres et sanctions sans réserve",
+      "readOn": "lu le {date}",
+      "openRoom": "Ouvrir une salle de négociation",
+      "sampleNote": "Exemple de format. Il montre comment une affaire s'écrit sur Ponte. Ce n'est pas une annonce en direct."
+    },
+    "verify": {
+      "heading": "Vérifié avant d'être présenté.",
+      "trustLabel": "Indice de confiance",
+      "registers": "Registres d'entreprises",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanctions, quatre listes",
+      "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
+      "identifiers": "TVA et LEI",
+      "identifiersDetail": "VIES, GLEIF, datés à la lecture",
+      "anonymous": "Anonyme jusqu'au NCNDA",
+      "anonymousDetail": "Documenté avant présentation",
+      "cta": "Ce que vérifie chaque niveau"
+    },
+    "ai": {
+      "heading": "Des faits entrent. Une affaire sort.",
+      "provenance": "Rédigé par IA, revu par le desk",
+      "body": "Vous saisissez les faits dont vous disposez. Le texte n'interprète que ceux-là, n'invente jamais, et une personne le lit avant toute publication.",
+      "descriptionLabel": "Description",
+      "sample": "Lot de sucre bancable sous crédit documentaire confirmé, spécification export standard, prêt pour un acheteur de la région de Rotterdam.",
+      "publish": "Publier"
+    },
+    "pricing": {
+      "heading": "Adhésion gratuite. Aucune commission sur les affaires que vous concluez vous-même.",
+      "body": "Publier une offre ou une demande, lire le tableau et entrer en relation avec une contrepartie ne coûtent rien. La vérification et l'intelligence se paient en crédits, et le desk n'est rémunéré que si vous lui demandez d'intermédier.",
+      "verify": "Vérifier une contrepartie",
+      "room": "Assistance en salle",
+      "report": "Rapport approfondi",
+      "credits": "{n} crédits",
+      "credit": "{n} crédit",
+      "desk": "L'intermédiation du desk se rémunère par commission de succès ou par forfait, convenu par écrit avant tout travail.",
+      "cta": "Commencer gratuitement"
+    }
   }
 }

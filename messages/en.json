@@ -325,7 +325,9 @@
     },
     "doneCta": "Done",
     "close": "Close",
-    "actionFailed": "That did not go through. You can finish it from your account."
+    "actionFailed": "That did not go through. You can finish it from your account.",
+    "working": "Finishing...",
+    "failedTitle": "That did not go through"
   },
   "home": {
     "metaTitle": "Cross border trade in physical goods, between verified counterparties",
@@ -448,6 +450,54 @@
       "all": "All",
       "seeAll": "See all live deals",
       "deskSourced": "Desk-sourced opportunity"
+    }
+  },
+  "landing": {
+    "eyebrow": "Live board",
+    "h1": "One bridge away.",
+    "sub": "Verified counterparties. Real deals. Free to join, free to trade.",
+    "ctaPrimary": "See the live board",
+    "ctaSecondary": "How verification works",
+    "stage": {
+      "match": "Match",
+      "counterparty": "Counterparty",
+      "trustLabel": "Trust score",
+      "clear": "Registry and sanctions clear",
+      "readOn": "read {date}",
+      "openRoom": "Open a deal room",
+      "sampleNote": "Format example. It shows how a deal is written on Ponte. It is not a live listing."
+    },
+    "verify": {
+      "heading": "Checked before introduced.",
+      "trustLabel": "Trust score",
+      "registers": "Company registers",
+      "registersDetail": "Companies House, OpenCorporates",
+      "sanctions": "Sanctions, four lists",
+      "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
+      "identifiers": "VAT and LEI",
+      "identifiersDetail": "VIES, GLEIF, dated at read",
+      "anonymous": "Anonymous until NCNDA",
+      "anonymousDetail": "Papered before introduced",
+      "cta": "What each level checks"
+    },
+    "ai": {
+      "heading": "Facts in. Deal out.",
+      "provenance": "AI-drafted, desk-reviewed",
+      "body": "You enter the facts you have. The write-up interprets only those, never invents, and a person reads it before anything publishes.",
+      "descriptionLabel": "Description",
+      "sample": "Bankable sugar parcel on confirmed LC, standard export spec, ready for a Rotterdam-region buyer.",
+      "publish": "Publish"
+    },
+    "pricing": {
+      "heading": "Free to join. No commission on deals you close yourselves.",
+      "body": "Posting an offer or a requirement, reading the board and connecting with a counterparty cost nothing. Verification and intelligence are paid in credits, and the desk is paid only if you ask it to broker a deal.",
+      "verify": "Verify a counterparty",
+      "room": "Deal room assist",
+      "report": "Deep report",
+      "credits": "{n} credits",
+      "credit": "{n} credit",
+      "desk": "Desk brokerage is a success fee or a retainer, agreed in writing before any work starts.",
+      "cta": "Start free"
     }
   },
   "legal": {

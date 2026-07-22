@@ -483,6 +483,14 @@
   }
 }
 
+/* The hero span. Slower than a card's route arc on purpose: this one is the
+   page's opening gesture and it has the whole width to cross. */
+.arc-draw {
+  stroke-dasharray: var(--len, 600);
+  stroke-dashoffset: var(--len, 600);
+  animation: route-draw 2200ms cubic-bezier(0.25, 0.6, 0.3, 1) forwards;
+}
+
 /* Trust dial sweep, 113 being the circumference of the r=18 dial. */
 .dial-sweep {
   animation: dial-sweep 1500ms ease-out forwards;
@@ -551,6 +559,7 @@
 @media (prefers-reduced-motion: reduce) {
   .rise,
   .route-draw,
+  .arc-draw,
   .dial-sweep,
   .pulse-dot,
   .shimmer::after,

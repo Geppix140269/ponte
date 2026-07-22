@@ -61,29 +61,33 @@ export default function InterestButton({ refCode }: { refCode: string }) {
     }
   }
 
-  if (status === "sent") {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-label text-cyan">
-        <Icon name="check" size={14} /> {t("sent")}
-      </span>
-    );
-  }
-
+  // The gate stays mounted whatever the button does. It used to sit after an
+  // early return for the sent state, so the moment the inquiry succeeded the
+  // whole gate unmounted and took its own confirmation with it: the member
+  // never got to read "Inquiry sent" or how many credits they now had. The
+  // panel that reports the outcome cannot be a child of the thing whose
+  // outcome it is reporting.
   return (
     <>
-      <button
-        type="button"
-        onClick={onClick}
-        aria-busy={status === "sending"}
-        className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-label text-lime hover:text-ink aria-[busy=true]:opacity-60"
-      >
-        {status === "sending"
-          ? t("sending")
-          : status === "error"
-            ? t("failed")
-            : t("request")}
-        <Icon name="chevron" size={14} />
-      </button>
+      {status === "sent" ? (
+        <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-label text-cyan">
+          <Icon name="check" size={14} /> {t("sent")}
+        </span>
+      ) : (
+        <button
+          type="button"
+          onClick={onClick}
+          aria-busy={status === "sending"}
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-label text-lime hover:text-ink aria-[busy=true]:opacity-60"
+        >
+          {status === "sending"
+            ? t("sending")
+            : status === "error"
+              ? t("failed")
+              : t("request")}
+          <Icon name="chevron" size={14} />
+        </button>
+      )}
 
       <AccountGate
         open={gateOpen}

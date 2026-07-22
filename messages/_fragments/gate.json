@@ -37,6 +37,8 @@
     },
     "doneCta": "Done",
     "close": "Close",
-    "actionFailed": "That did not go through. You can finish it from your account."
+    "actionFailed": "That did not go through. You can finish it from your account.",
+    "working": "Finishing...",
+    "failedTitle": "That did not go through"
   }
 }

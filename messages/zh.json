@@ -1045,6 +1045,56 @@
     },
     "doneCta": "完成",
     "close": "关闭",
-    "actionFailed": "未能完成。您可以在账户中继续。"
+    "actionFailed": "未能完成。您可以在账户中继续。",
+    "working": "正在完成...",
+    "failedTitle": "未能完成"
+  },
+  "landing": {
+    "eyebrow": "实时交易板",
+    "h1": "一桥之隔。",
+    "sub": "经核实的交易对手。真实的交易。加入免费，交易免费。",
+    "ctaPrimary": "查看实时交易板",
+    "ctaSecondary": "核实如何进行",
+    "stage": {
+      "match": "匹配",
+      "counterparty": "交易对手",
+      "trustLabel": "信任评分",
+      "clear": "登记与制裁核查无异常",
+      "readOn": "读取于 {date}",
+      "openRoom": "开启交易室",
+      "sampleNote": "格式示例。它展示交易在 Ponte 上如何书写，并非实时挂牌。"
+    },
+    "verify": {
+      "heading": "先核实，再引荐。",
+      "trustLabel": "信任评分",
+      "registers": "公司登记机构",
+      "registersDetail": "Companies House、OpenCorporates",
+      "sanctions": "制裁名单，共四份",
+      "sanctionsDetail": "OFAC、EU、UN、UK OFSI",
+      "identifiers": "增值税号与 LEI",
+      "identifiersDetail": "VIES、GLEIF，读取当日标注",
+      "anonymous": "签署 NCNDA 前保持匿名",
+      "anonymousDetail": "先落文件，再作引荐",
+      "cta": "各级别核查内容"
+    },
+    "ai": {
+      "heading": "输入事实，产出交易。",
+      "provenance": "AI 起草，交易台复核",
+      "body": "您录入已掌握的事实。撰写稿只解读这些事实，绝不臆造，并且在发布前由人工审阅。",
+      "descriptionLabel": "描述",
+      "sample": "凭已确认信用证的可融资糖货，标准出口规格，可供鹿特丹地区买家。",
+      "publish": "发布"
+    },
+    "pricing": {
+      "heading": "加入免费。自行达成的交易不收佣金。",
+      "body": "发布报盘或求购、浏览交易板、与交易对手建立联系均不收费。核实与情报以额度支付，交易台仅在您委托其居间撮合时收费。",
+      "verify": "核实交易对手",
+      "room": "交易室协助",
+      "report": "深度报告",
+      "credits": "{n} 个额度",
+      "credit": "{n} 个额度",
+      "desk": "交易台居间服务按成功费或聘用费计，开始工作前以书面约定。",
+      "cta": "免费开始"
+    }
   }
 }
