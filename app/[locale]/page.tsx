@@ -151,14 +151,21 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </Link>
             </div>
 
+            {/*
+              Three across even at 390, so the deal card clears the fold on a
+              phone the way it does in the bundle. The strings here run much
+              longer than the bundle's own ("Anonymous until you both agree"
+              against "NCNDA first") and have to survive another +30% for
+              i18n, so the tiles wrap and grow rather than truncate.
+            */}
             <ul
-              className="mt-9 grid gap-2.5 sm:grid-cols-3 rise"
+              className="mt-8 grid grid-cols-3 gap-2 rise"
               style={{ ["--i" as string]: 5 }}
             >
               {BENEFITS.map((b) => (
-                <li key={b.key} className="glass-tight px-3.5 py-3.5">
-                  <Icon name={b.icon} size={17} className="text-lime" />
-                  <p className="mt-2.5 text-[12.5px] font-semibold leading-snug text-ink">
+                <li key={b.key} className="glass-tight px-3 py-3">
+                  <Icon name={b.icon} size={16} className="text-lime" />
+                  <p className="mt-2 text-[11.5px] font-semibold leading-snug text-ink sm:text-[12.5px]">
                     {t(b.key)}
                   </p>
                 </li>
