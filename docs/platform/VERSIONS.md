@@ -136,6 +136,39 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
+## 22 July 2026, the migration nobody checked
+
+**The bug.** Picking a company from the ambiguous match list always answered
+"that check is no longer waiting for a company to be chosen". Every time, for
+every member, since the picker shipped.
+
+**The cause.** Migration `20260721i` adds `needs_selection` to the
+`verifications` status check constraint. It was never applied: the Supabase
+token was rotated mid session and the migration was written down as done
+without being run. Postgres rejected every write of that status with 23514.
+Because the failing update set the status AND stored the candidate list in one
+statement, the row stayed at `pending` with no candidates saved.
+
+**Why it looked like it worked.** The candidates in the API response come from
+the object in memory, not from the row, so the picker rendered perfectly from a
+write that had not happened. The error was sitting in the return value and
+nothing read it.
+
+**Fixed.** Both migrations are now applied and verified by probe rather than by
+assertion: `needs_selection` is accepted and read back, `data_sources` and
+`data_source_cache` exist and round trip a row. The pipeline now reads the
+error from that update, and a pause the database refuses falls back to the
+review queue instead of offering a picker guaranteed to fail.
+
+**The rule this earns:** a migration is applied when a query proves it, not
+when the tool says 200 and not when this file says so. `alter table` through
+the Management API returns success for a statement inside a `do $$` block that
+did nothing. Probe the behaviour afterwards, every time.
+
+**Second lesson, cheaper:** an unchecked `.update()` on a table with a check
+constraint is a silent failure waiting for a schema drift. Read the error, or
+do not write the row.
+
 ## 21 July 2026, CI fixed
 
 CI failed on its first three runs, in about 14 seconds each, before it reached
