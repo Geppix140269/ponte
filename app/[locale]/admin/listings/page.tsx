@@ -1,8 +1,49 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { decideListingAction, runAiVetAction } from "./actions";
+import { decideListingAction, runAiVetAction, saveListingNotesAction } from "./actions";
 import { vetListing, isAiConfigured, type AiReview } from "@/lib/ai-vet";
+import { draftListingNotes } from "@/lib/listings/decision-notes";
 
 export const dynamic = "force-dynamic";
+
+/* What the last click did. See the same map on the verifications queue. */
+const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
+  approved: { tone: "good", text: "Approved. The member has been emailed and the listing is on the board." },
+  rejected: { tone: "good", text: "Rejected. The member has been emailed." },
+  closed: { tone: "good", text: "Closed. No email was sent, which is what closing means." },
+  note_saved: { tone: "good", text: "Internal note saved. Nothing was sent and no status changed." },
+  ai_done: { tone: "good", text: "AI vetting finished." },
+  ai_failed: { tone: "bad", text: "AI vetting returned nothing. The listing is untouched." },
+  ai_off: { tone: "bad", text: "AI vetting is not configured, so nothing ran." },
+  not_admin: { tone: "bad", text: "Nothing was written: your session is not signed in as an admin." },
+  no_id: { tone: "bad", text: "Nothing was written: the form arrived without a listing id." },
+  no_decision: { tone: "bad", text: "Nothing was written: the form arrived without a valid decision." },
+  no_listing: { tone: "bad", text: "Nothing was written: that listing no longer exists." },
+  db_error: { tone: "bad", text: "The database refused the write, so nothing was decided." },
+};
+
+const DETAIL: Record<string, string> = {
+  no_address: "The decision is saved, but the member has no email address on file, so they have NOT been told.",
+  send_failed: "The decision is saved, but the email did not send. Tell the member another way.",
+};
+
+function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
+  if (!r) return null;
+  const known = OUTCOME[r];
+  const tone = known?.tone ?? "bad";
+  const detail = m ? (DETAIL[m] ?? m) : null;
+  return (
+    <div
+      className={`mb-6 rounded-xl border p-4 text-[13px] leading-relaxed ${
+        tone === "good"
+          ? "border-positive/40 bg-positive/10 text-cream"
+          : "border-negative/40 bg-negative/10 text-cream"
+      }`}
+    >
+      <p>{known?.text ?? `Outcome: ${r}`}</p>
+      {detail && <p className="mono mt-2 text-[12px] text-gray-2">{detail}</p>}
+    </div>
+  );
+}
 
 type Listing = {
   id: string;
@@ -33,7 +74,11 @@ type Media = { id: string; listing_id: string; path: string; kind: string };
 const FIELD =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
 
-export default async function AdminListingsPage() {
+export default async function AdminListingsPage({
+  searchParams,
+}: {
+  searchParams: { r?: string; m?: string };
+}) {
   const adminSb = createAdminClient();
 
   const [{ data: listings }, { data: docs }, { data: mediaRows }] = await Promise.all([
@@ -107,6 +152,7 @@ export default async function AdminListingsPage() {
   function Card({ l }: { l: Listing }) {
     const ldocs = docsByListing.get(l.id) ?? [];
     const lmedia = mediaByListing.get(l.id) ?? [];
+    const drafts = draftListingNotes(l);
     return (
       <div className="glass p-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -160,7 +206,7 @@ export default async function AdminListingsPage() {
                   rel="noopener noreferrer"
                   className="badge-gold text-[11px] hover:opacity-80"
                 >
-                  ▶ video
+                  video
                 </a>
               ),
             )}
@@ -233,44 +279,80 @@ export default async function AdminListingsPage() {
           </button>
         </form>
 
-        <form action={decideListingAction} className="mt-5 grid gap-3">
+        {/* One form per decision, because one shared note box cannot hold two
+            different messages. Each box arrives already written, drafted from
+            this listing's own fields and the co-pilot's findings, and it is a
+            default value: type over it, or empty it, and that is what the
+            member reads. A note already saved on the row wins over the draft,
+            since somebody wrote it on purpose. */}
+        <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-2">
+          <form action={decideListingAction} className="grid gap-2">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="approved" />
+            <textarea
+              name="decisionNote"
+              rows={8}
+              maxLength={1500}
+              defaultValue={l.decision_note ?? drafts.approve}
+              placeholder="Note to the member, sent with the approval."
+              className={FIELD}
+            />
+            <button className="btn-gold justify-center">Approve</button>
+          </form>
+
+          <form action={decideListingAction} className="grid gap-2">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="rejected" />
+            <textarea
+              name="decisionNote"
+              rows={8}
+              maxLength={1500}
+              defaultValue={l.decision_note ?? drafts.reject}
+              placeholder="Reason for the rejection. Sent to the member."
+              className={FIELD}
+            />
+            <button className="btn-ghost-light justify-center">Reject</button>
+          </form>
+        </div>
+
+        {/* The internal note is not a decision, so it saves on its own and
+            emails nobody. It used to ride along inside the single decision
+            form, which now means it would only be saved if you happened to
+            press the button it shared a form with. */}
+        <form action={saveListingNotesAction} className="mt-4 grid gap-2">
           <input type="hidden" name="id" value={l.id} />
-          <textarea
-            name="decisionNote"
-            rows={2}
-            maxLength={1500}
-            defaultValue={l.decision_note ?? ""}
-            placeholder="Note to the member (sent with the decision email)"
-            className={FIELD}
-          />
           <textarea
             name="adminNotes"
             rows={2}
             maxLength={2000}
             defaultValue={l.admin_notes ?? ""}
-            placeholder="Internal notes (never shown to the member)"
+            placeholder="Internal note, never shown to the member."
             className={FIELD}
           />
-          <div className="flex flex-wrap gap-3">
-            <button name="decision" value="approved" className="btn-gold">
-              Approve
+          <div>
+            <button
+              className="text-[11px] uppercase text-gold hover:text-cream"
+              style={{ letterSpacing: "0.14em" }}
+            >
+              Save internal note
             </button>
-            <button name="decision" value="rejected" className="btn-ghost-light">
-              Reject
-            </button>
-            {l.status === "approved" && (
-              <button name="decision" value="closed" className="btn-ghost-light">
-                Close
-              </button>
-            )}
           </div>
         </form>
+
+        {l.status === "approved" && (
+          <form action={decideListingAction} className="mt-3">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="closed" />
+            <button className="btn-ghost-light">Close this listing</button>
+          </form>
+        )}
       </div>
     );
   }
 
   return (
     <div>
+      <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
         Listings
       </h1>

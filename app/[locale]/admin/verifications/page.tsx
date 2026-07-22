@@ -1,5 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import {
+  draftVerificationNotes,
+  type RegistryJson,
+  type ViesJson,
+  type GleifJson,
+  type SanctionsJson,
+} from "@/lib/verification/decision-notes";
+import {
   approveVerificationAction,
   rejectVerificationAction,
   requestDocumentsAction,
@@ -49,10 +56,10 @@ type VerificationRow = {
   subject_lei: string | null;
   level_requested: number;
   status: string;
-  registry: Record<string, unknown> | null;
-  vies: Record<string, unknown> | null;
-  gleif: Record<string, unknown> | null;
-  sanctions_hits: Record<string, unknown> | null;
+  registry: RegistryJson | null;
+  vies: ViesJson | null;
+  gleif: GleifJson | null;
+  sanctions_hits: SanctionsJson | null;
   ai_summary: AiSummary;
   verdict_reason: string | null;
   reviewed_by: string | null;
@@ -131,7 +138,54 @@ function Fact({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-export default async function AdminVerificationsPage() {
+/*
+ * What the last click did, in words.
+ *
+ * The actions redirect here with `r` set, so every outcome including a refusal
+ * arrives as something the reviewer can read. Anything not in this map is shown
+ * raw rather than swallowed: an unknown code is still information.
+ */
+const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
+  verified: { tone: "good", text: "Approved. The member has been emailed and the level is on their account." },
+  rejected: { tone: "good", text: "Rejected. The member has been emailed." },
+  documents: { tone: "good", text: "Documents requested. The member has been emailed and the case stays open." },
+  not_admin: { tone: "bad", text: "Nothing was written: your session is not signed in as an admin. Sign in again." },
+  no_id: { tone: "bad", text: "Nothing was written: the form arrived without a case id." },
+  no_case: { tone: "bad", text: "Nothing was written: that case no longer exists." },
+  not_open: { tone: "bad", text: "Nothing was written: that case is not open for review any more." },
+  db_error: { tone: "bad", text: "The database refused the write, so nothing was decided." },
+};
+
+/** Extra detail the action passed alongside the outcome. */
+const DETAIL: Record<string, string> = {
+  no_address: "The decision is saved, but no email address could be resolved, so the member has NOT been told.",
+  send_failed: "The decision is saved, but the email did not send. Tell the member another way.",
+};
+
+function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
+  if (!r) return null;
+  const known = OUTCOME[r];
+  const tone = known?.tone ?? "bad";
+  const detail = m ? (DETAIL[m] ?? m) : null;
+  return (
+    <div
+      className={`mb-6 rounded-xl border p-4 text-[13px] leading-relaxed ${
+        tone === "good"
+          ? "border-positive/40 bg-positive/10 text-cream"
+          : "border-negative/40 bg-negative/10 text-cream"
+      }`}
+    >
+      <p>{known?.text ?? `Outcome: ${r}`}</p>
+      {detail && <p className="mono mt-2 text-[12px] text-gray-2">{detail}</p>}
+    </div>
+  );
+}
+
+export default async function AdminVerificationsPage({
+  searchParams,
+}: {
+  searchParams: { r?: string; m?: string };
+}) {
   const adminSb = createAdminClient();
 
   const [{ data: rows }, { data: docRows }] = await Promise.all([
@@ -185,6 +239,7 @@ export default async function AdminVerificationsPage() {
       ? ((sanctions as { screened: unknown[] }).screened as string[])
       : [];
     const open = v.status === "review";
+    const drafts = draftVerificationNotes(v);
 
     return (
       <div className="glass p-6">
@@ -374,14 +429,21 @@ export default async function AdminVerificationsPage() {
         )}
 
         {/* Three decisions, three forms, each with its own note. Every one of
-            them is taken by the person reading this page. */}
+            them is taken by the person reading this page.
+
+            Each box arrives already written, drafted from this case's own
+            stored sources by lib/verification/decision-notes. It is a draft and
+            nothing more: it is the box's default value, so typing over it or
+            emptying it works exactly as it did before, and whatever is left in
+            the box at the moment of the click is what the member reads. */}
         <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-3">
           <form action={approveVerificationAction} className="grid gap-2">
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
-              rows={2}
+              rows={8}
               maxLength={1500}
+              defaultValue={open ? drafts.approve : ""}
               placeholder="Note to the member, optional. Sent with the approval."
               className={FIELD}
             />
@@ -394,8 +456,9 @@ export default async function AdminVerificationsPage() {
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
-              rows={2}
+              rows={8}
               maxLength={1500}
+              defaultValue={open ? drafts.reject : ""}
               placeholder="Reason for the rejection. Sent to the member."
               className={FIELD}
             />
@@ -408,8 +471,9 @@ export default async function AdminVerificationsPage() {
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
-              rows={2}
+              rows={8}
               maxLength={1500}
+              defaultValue={open ? drafts.documents : ""}
               placeholder="What is missing. Sent to the member, the case stays open."
               className={FIELD}
             />
@@ -430,6 +494,7 @@ export default async function AdminVerificationsPage() {
 
   return (
     <div>
+      <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <h1 className="serif text-white mb-2" style={{ fontSize: 32, fontWeight: 500 }}>
         Verifications
       </h1>

@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
@@ -13,7 +14,35 @@ import { companyAgePoints, setComponent } from "@/lib/verification/trust-score";
  * Every action in this file is a HUMAN decision. There is no automatic
  * approval and no automatic rejection here, and none may ever be added: the
  * pipeline can route a case to review, it can never close one.
+ *
+ * EVERY PATH OUT OF THIS FILE SAYS WHAT HAPPENED.
+ *
+ * These actions used to end every failure with a bare `return`. A click that
+ * was refused looked exactly like a click that worked: the page came back
+ * unchanged and the reviewer had to go and read the row to find out which. That
+ * is not a small thing on a screen whose only job is deciding cases, so each
+ * action now finishes at `finish()`, which puts the outcome in the URL and the
+ * page renders it. A refusal is now something you can see and quote.
  */
+
+/** Where the desk lands after a decision, with the outcome in the query. */
+const QUEUE = "/admin/verifications";
+
+/**
+ * End the action by sending the reviewer back to the queue with a result.
+ *
+ * `redirect` throws by design, so nothing after a call to this runs. It is
+ * always the last statement on its path.
+ *
+ * The path is deliberately unprefixed: the admin area is written in English
+ * only, and the locale middleware sends a bare /admin to the reader's own
+ * prefix anyway.
+ */
+function finish(result: string, detail?: string): never {
+  const params = new URLSearchParams({ r: result });
+  if (detail) params.set("m", detail.slice(0, 300));
+  redirect(`${QUEUE}?${params.toString()}`);
+}
 
 type Admin = { id: string } | null;
 
@@ -72,18 +101,22 @@ async function recipientFor(row: CaseRow): Promise<string | null> {
  * is cancelled with the serverless invocation, which is how sends get quietly
  * lost. A failure is logged, never swallowed silently, and never allowed to
  * roll back a decision that is already written.
+ *
+ * Returns what to tell the reviewer. The decision stands either way, but a
+ * reviewer who thinks the member was told and was not will wait for a reply
+ * that is never coming.
  */
 async function notify(
   row: CaseRow,
   decision: "verified" | "rejected" | "documents",
   note: string,
-): Promise<void> {
+): Promise<"sent" | "no_address" | "send_failed"> {
   const to = await recipientFor(row);
   if (!to) {
     console.error(
       `[ponte] verification ${row.id} decided but no recipient address could be resolved`,
     );
-    return;
+    return "no_address";
   }
   try {
     await sendVerificationDecision(to, {
@@ -92,8 +125,10 @@ async function notify(
       note: note || undefined,
       disclaimer: VERIFICATION_DISCLAIMER,
     });
+    return "sent";
   } catch (err) {
     console.error("[ponte] verification decision email failed:", err);
+    return "send_failed";
   }
 }
 
@@ -130,114 +165,79 @@ async function grantLevel(row: CaseRow): Promise<void> {
     .eq("id", row.user_id);
 }
 
-/** Approve. Always a human decision. */
-export async function approveVerificationAction(
-  formData: FormData,
-): Promise<void> {
+/**
+ * The three actions share every step except the status they write, the trust
+ * they grant and the email they send, so they share one body. Keeping them as
+ * three exported actions matters for the form wiring; keeping one code path
+ * matters so an approval and a rejection can never drift into behaving
+ * differently under failure.
+ */
+type Decision = "verified" | "rejected" | "documents";
+
+async function decide(formData: FormData, decision: Decision): Promise<never> {
   const admin = await requireAdmin();
-  if (!admin) return;
+  if (!admin) finish("not_admin");
 
   const id = String(formData.get("id") || "");
   const note = String(formData.get("note") || "").trim().slice(0, 1500);
-  if (!id) return;
+  if (!id) finish("no_id");
 
   const row = await loadCase(id);
-  if (!row) return;
+  if (!row) finish("no_case");
+
+  // Only an open case can be decided. Without this, a second click on a
+  // stale page silently re-decides a closed case and re-sends its email.
+  if (row.status !== "review") finish("not_open", row.status);
+
+  const status = decision === "documents" ? "review" : decision;
+  const fallbackReason: Record<Decision, string> = {
+    verified: "approved by the desk after review of the sources",
+    rejected: "not confirmed by the desk after review of the sources",
+    documents: "documents requested by the desk",
+  };
 
   const adminSb = createAdminClient();
   const { error } = await adminSb
     .from("verifications")
     .update({
-      status: "verified",
+      status,
       reviewed_by: admin.id,
-      decided_at: new Date().toISOString(),
-      verdict_reason: note || "approved by the desk after review of the sources",
+      // A document request is not a decision. It is waiting on the member, so
+      // the queue must keep showing it as open work.
+      decided_at: decision === "documents" ? null : new Date().toISOString(),
+      verdict_reason:
+        decision === "documents" && note
+          ? `documents requested: ${note}`
+          : note || fallbackReason[decision],
     })
     .eq("id", id);
+
   if (error) {
-    console.error("[ponte] verification approve failed:", error.message);
-    return;
+    console.error(`[ponte] verification ${decision} failed:`, error.message);
+    finish("db_error", error.message);
   }
 
-  await grantLevel(row);
-  await notify(row, "verified", note);
+  // Trust and level only on an approval. A rejection grants nothing, and a
+  // document request has decided nothing yet.
+  if (decision === "verified") await grantLevel(row);
 
-  revalidatePath("/admin/verifications");
+  const mail = await notify(row, decision, note);
+
+  revalidatePath(QUEUE);
+  finish(decision, mail === "sent" ? undefined : mail);
+}
+
+/** Approve. Always a human decision. */
+export async function approveVerificationAction(formData: FormData): Promise<void> {
+  await decide(formData, "verified");
 }
 
 /** Reject. Always a human decision. */
-export async function rejectVerificationAction(
-  formData: FormData,
-): Promise<void> {
-  const admin = await requireAdmin();
-  if (!admin) return;
-
-  const id = String(formData.get("id") || "");
-  const note = String(formData.get("note") || "").trim().slice(0, 1500);
-  if (!id) return;
-
-  const row = await loadCase(id);
-  if (!row) return;
-
-  const adminSb = createAdminClient();
-  const { error } = await adminSb
-    .from("verifications")
-    .update({
-      status: "rejected",
-      reviewed_by: admin.id,
-      decided_at: new Date().toISOString(),
-      verdict_reason: note || "not confirmed by the desk after review of the sources",
-    })
-    .eq("id", id);
-  if (error) {
-    console.error("[ponte] verification reject failed:", error.message);
-    return;
-  }
-
-  // No trust components and no level. A rejection grants nothing.
-  await notify(row, "rejected", note);
-
-  revalidatePath("/admin/verifications");
+export async function rejectVerificationAction(formData: FormData): Promise<void> {
+  await decide(formData, "rejected");
 }
 
-/**
- * Ask the member for more documents.
- *
- * The case stays in `review`, because it is not decided: it is waiting on the
- * member. `decided_at` is written as null for the same reason, so the queue
- * keeps showing the case as open work.
- */
-export async function requestDocumentsAction(
-  formData: FormData,
-): Promise<void> {
-  const admin = await requireAdmin();
-  if (!admin) return;
-
-  const id = String(formData.get("id") || "");
-  const note = String(formData.get("note") || "").trim().slice(0, 1500);
-  if (!id) return;
-
-  const row = await loadCase(id);
-  if (!row) return;
-
-  const adminSb = createAdminClient();
-  const { error } = await adminSb
-    .from("verifications")
-    .update({
-      status: "review",
-      reviewed_by: admin.id,
-      decided_at: null,
-      verdict_reason: note
-        ? `documents requested: ${note}`
-        : "documents requested by the desk",
-    })
-    .eq("id", id);
-  if (error) {
-    console.error("[ponte] verification document request failed:", error.message);
-    return;
-  }
-
-  await notify(row, "documents", note);
-
-  revalidatePath("/admin/verifications");
+/** Ask the member for more documents. The case stays open. */
+export async function requestDocumentsAction(formData: FormData): Promise<void> {
+  await decide(formData, "documents");
 }
