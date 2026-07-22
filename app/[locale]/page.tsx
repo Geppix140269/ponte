@@ -1,17 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Icon, type SystemIconName } from "@/components/icons";
-import BridgeStage, { type StageLabels } from "@/components/home/BridgeStage";
+import HeroBridge, { type HeroLabels } from "@/components/home/HeroBridge";
 import LiveDealsStrip from "@/components/home/LiveDealsStrip";
-import LiveDealsGrid from "@/components/home/LiveDealsGrid";
 import type { DealLabels } from "@/components/home/LiveDealCard";
-import {
-  COUNT_MIN,
-  SHOWCASE_MIN,
-  countriesIn,
-  getLiveDeals,
-  type LiveDeal,
-} from "@/lib/board/live-deals";
+import { formatPosted } from "@/lib/listing-terms";
+import { getLiveDeals, type LiveDeal } from "@/lib/board/live-deals";
 import { alternatesFor } from "@/lib/seo";
 
 export const revalidate = 60;
@@ -26,38 +20,39 @@ export async function generateMetadata({ params }: { params: { locale: any } }) 
 }
 
 /**
- * The front door, rebuilt to Ponte_Landing_design.html.
+ * The landing page, ported from the design source.
  *
  * ---------------------------------------------------------------------------
- * What was adapted, and why
+ * Ported, not reconstructed
  * ---------------------------------------------------------------------------
- * The design is desktop only. It carries no media queries at all, just a
- * clamped heading, and at 390px 192 of its elements sit outside the viewport.
- * Every section here is therefore laid out mobile first and allowed to become
- * the design's desktop composition from `md` up, rather than being scaled
- * down into it. Traders open these links from WhatsApp, on a phone.
+ * The first attempt at this measured the rendered design through the DOM and
+ * rebuilt from the measurements. That produced a page with the right sections
+ * in the right order and almost none of the design in it: left aligned instead
+ * of centred, a bordered pill where the design has a bare pulsing dot, no
+ * coloured full stops, and no bridge.
+ *
+ * This is taken from the unpacked source instead. The bundle is inline styled
+ * throughout, so the design IS its markup, and the geometry, timings and
+ * colours below are the design's own values.
+ *
+ * Three things carry the identity and all three were missing before:
+ *   - the hero is a literal suspension bridge, drawn over 2.2s, with a dot
+ *     crossing it every seven seconds
+ *   - every section heading ends in a coloured full stop: lime, cyan, violet
+ *   - the write-up panel types itself, on a five second loop
  *
  * ---------------------------------------------------------------------------
- * "Free", used accurately
+ * Where it departs from the design, and why
  * ---------------------------------------------------------------------------
- * The design says "Free." on the hero and "Free platform. No commission." over
- * the price list. Both are too broad to be true. Free is the marketplace:
- * joining, browsing, posting an offer or a requirement, connecting with a
- * counterparty, and closing a deal yourself without commission. Not free:
- * verification and intelligence, which cost credits, and the desk, which is a
- * success fee or a retainer. The copy here says the first and never implies
- * the second.
+ * Copy: the design says "Free." and "Free platform. No commission." Free is
+ * the marketplace only, so the wording states what is free and then says
+ * plainly that verification costs credits and the desk costs a fee.
  *
- * ---------------------------------------------------------------------------
- * Real deals, or labelled examples
- * ---------------------------------------------------------------------------
- * The design is drawn with a full board of sample cards. Ours has one approved
- * listing. Every deal surface below reads `getLiveDeals()` and falls back to a
- * labelled format example, never to a sample dressed as inventory. The strip
- * and grid appear once there is a market to show.
+ * Data: the design is drawn with sample deals. Every deal surface here reads
+ * the real board. Claims the data cannot support are dropped rather than
+ * mocked: no match percentage, and no trust dial without a real score.
  */
 
-/** The four things a verification reads, in the order the design lists them. */
 const CHECKS: { key: string; icon: SystemIconName }[] = [
   { key: "registers", icon: "registry" },
   { key: "sanctions", icon: "scan" },
@@ -65,17 +60,13 @@ const CHECKS: { key: string; icon: SystemIconName }[] = [
   { key: "anonymous", icon: "lock" },
 ];
 
-/** Credit-priced actions. Prices come from one place, never retyped. */
-const PRICES = [
-  { key: "verify", n: 2 },
-  { key: "room", n: 1 },
-  { key: "report", n: 60 },
-] as const;
+const PRICES: { key: string; n: number; icon: SystemIconName }[] = [
+  { key: "verify", n: 2, icon: "verify" },
+  { key: "room", n: 1, icon: "room" },
+  { key: "report", n: 60, icon: "doc" },
+];
 
-/**
- * The format example the hero falls back to before the board fills. Same
- * notation a real listing uses, and labelled as an example wherever it shows.
- */
+/** Shown until the board carries a deal of its own. Labelled wherever it renders. */
 const EXAMPLE_DEAL: LiveDeal = {
   id: "example",
   ref: null,
@@ -88,6 +79,7 @@ const EXAMPLE_DEAL: LiveDeal = {
   quantity: "25,000",
   unit: "MT",
   incoterm: "CIF",
+  payment: "LC at sight",
   originText: "Brazil",
   destinationText: "Netherlands",
   originCode: "BR",
@@ -97,6 +89,33 @@ const EXAMPLE_DEAL: LiveDeal = {
   href: null,
 };
 
+/** A heading with the design's coloured full stop. */
+function Heading({
+  text,
+  dot,
+  size = "clamp(30px, 3.4vw, 44px)",
+  tracking = "-1.4px",
+}: {
+  text: string;
+  dot: string;
+  size?: string;
+  tracking?: string;
+}) {
+  // The design ends every heading with a coloured stop. Where a translation
+  // already ends in a full stop, that character becomes the coloured one
+  // rather than gaining a second.
+  const stripped = text.replace(/[.。।]\s*$/, "");
+  return (
+    <h2
+      className="display text-ink"
+      style={{ fontSize: size, lineHeight: 1.08, letterSpacing: tracking }}
+    >
+      {stripped}
+      <span style={{ color: dot }}>.</span>
+    </h2>
+  );
+}
+
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("landing");
@@ -104,14 +123,15 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const tm = await getTranslations("marketplace");
 
   const deals = await getLiveDeals();
-  const showcaseLive = deals.length >= SHOWCASE_MIN;
-  const countries = countriesIn(deals);
-  const showCount = deals.length >= COUNT_MIN && countries.length > 0;
-
-  // The hero carries a real deal the moment there is one. Until then it
-  // carries the example, and says so.
   const heroDeal = deals[0] ?? EXAMPLE_DEAL;
   const heroIsReal = deals.length > 0;
+
+  const tier = {
+    1: tm("trust.level1"),
+    2: tm("trust.level2"),
+    3: tm("trust.level3"),
+    4: tm("trust.level4"),
+  };
 
   const dealLabels: DealLabels = {
     offer: tm("type.offer"),
@@ -119,263 +139,267 @@ export default async function HomePage({ params }: { params: { locale: string } 
     service: tm("type.service"),
     notStated: tm("notStated"),
     deskSourced: th("showcase.deskSourced"),
-    tier: {
-      1: tm("trust.level1"),
-      2: tm("trust.level2"),
-      3: tm("trust.level3"),
-      4: tm("trust.level4"),
-    },
+    tier,
   };
 
-  const stageLabels: StageLabels = {
+  const heroLabels: HeroLabels = {
     offer: tm("type.offer"),
     requirement: tm("type.requirement"),
-    notStated: tm("notStated"),
     counterparty: t("stage.counterparty"),
-    trustLabel: t("stage.trustLabel"),
     clear: t("stage.clear"),
     unverified: tm("trust.none"),
-    anonymous: t("verify.anonymousDetail"),
     readOn: t("stage.readOn", { date: "{date}" }),
     openRoom: t("stage.openRoom"),
     sampleNote: heroIsReal ? null : t("stage.sampleNote"),
-    tier: dealLabels.tier,
+    tier,
   };
 
   return (
-    <>
+    <div className="relative overflow-hidden">
+      {/* The design's two blooms. Static: no infinite blur loop. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-[140px] -top-[220px] h-[640px] w-[640px] rounded-full"
+        style={{
+          filter: "blur(70px)",
+          background: "radial-gradient(circle, rgba(139,107,255,.34), transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-[200px] top-[340px] h-[520px] w-[520px] rounded-full"
+        style={{
+          filter: "blur(70px)",
+          background: "radial-gradient(circle, rgba(203,251,94,.14), transparent 70%)",
+        }}
+      />
+
       {/* ============ HERO ============ */}
-      <header className="container-px relative overflow-hidden pb-10 pt-10 sm:pb-14 sm:pt-14">
-        {/* Static glows. The design's two blooms, no infinite blur loop. */}
+      <header className="relative mx-auto max-w-[1240px] px-[18px] pb-7 pt-14 text-center sm:px-6 lg:px-10">
+        <p
+          className="rise inline-flex items-center gap-[7px] text-[11px] font-bold uppercase tracking-[0.8px] text-lime"
+          style={{ ["--i" as string]: 0 }}
+        >
+          <span className="pulse-dot h-2 w-2 rounded-full bg-lime" />
+          {t("eyebrow")}
+        </p>
+
+        <h1
+          className="display rise mt-4 text-ink"
+          style={{
+            ["--i" as string]: 1,
+            fontSize: "clamp(40px, 7.5vw, 92px)",
+            lineHeight: 1.02,
+            letterSpacing: "-0.033em",
+          }}
+        >
+          {t("h1").replace(/[.。।]\s*$/, "")}
+          <span className="text-lime">.</span>
+        </h1>
+
+        <p
+          className="rise mx-auto mt-4 max-w-2xl text-[15px] font-medium text-muted sm:text-[17px]"
+          style={{ ["--i" as string]: 2 }}
+        >
+          {t("sub")}
+        </p>
+
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-40 -top-64 h-[640px] w-[640px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(139,107,255,.20), transparent 70%)" }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-40 top-40 h-[520px] w-[520px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(203,251,94,.08), transparent 70%)" }}
-        />
-
-        <div className="relative">
-          <p className="pill rise" style={{ ["--i" as string]: 0 }}>
-            {t("eyebrow")}
-          </p>
-
-          <h1
-            className="display mt-4 text-ink rise"
-            style={{
-              ["--i" as string]: 1,
-              // The design's 89.6px at 1265, down to something a 390 screen
-              // can actually hold a line of.
-              fontSize: "clamp(40px, 7.2vw, 90px)",
-              lineHeight: 0.98,
-              letterSpacing: "-0.034em",
-            }}
+          className="rise mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap"
+          style={{ ["--i" as string]: 3 }}
+        >
+          <Link
+            href="/marketplace"
+            className="inline-flex items-center justify-center gap-2 rounded-[15px] bg-lime px-6 py-[15px] text-[15px] font-bold text-obsidian shadow-lime transition-transform hover:-translate-y-px"
           >
-            {t("h1")}
-          </h1>
-
-          <p
-            className="mt-4 max-w-xl text-[15px] font-medium leading-relaxed text-muted rise sm:text-[17px]"
-            style={{ ["--i" as string]: 2 }}
+            {t("ctaPrimary")}
+            <Icon name="chevron" size={16} />
+          </Link>
+          <Link
+            href="/verification"
+            className="inline-flex items-center justify-center rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink transition-colors hover:bg-white/10"
           >
-            {t("sub")}
-          </p>
-
-          {/* Full-width stacked buttons on a phone: a 44px target you can hit
-              with a thumb beats two side by side that you cannot. */}
-          <div
-            className="mt-7 flex flex-col gap-2.5 rise sm:flex-row sm:flex-wrap sm:items-center"
-            style={{ ["--i" as string]: 3 }}
-          >
-            <Link href="/marketplace" className="btn-primary w-full justify-center sm:w-auto">
-              {t("ctaPrimary")}
-              <Icon name="chevron" size={16} />
-            </Link>
-            <Link href="/verification" className="btn-ghost w-full justify-center sm:w-auto">
-              {t("ctaSecondary")}
-            </Link>
-          </div>
+            {t("ctaSecondary")}
+          </Link>
         </div>
       </header>
 
-      {/* ============ THE STAGE ============ */}
-      <section className="container-px pb-12 sm:pb-16">
-        <div className="rise" style={{ ["--i" as string]: 4 }}>
-          <BridgeStage
-            deal={heroDeal}
-            labels={stageLabels}
-            locale={params.locale}
-            trustScore={null}
-          />
-        </div>
-      </section>
+      {/* ============ THE BRIDGE ============ */}
+      <HeroBridge
+        deal={heroDeal}
+        labels={heroLabels}
+        postedLabel={formatPosted(heroDeal.postedAt, params.locale)}
+        trustScore={null}
+      />
 
-      {/* ============ THE BOARD, MOVING ============
-          Real approved inventory only, and only once there is a market. */}
-      {showcaseLive && (
-        <section className="border-y border-hairline-soft bg-white/[0.015] py-8">
-          <div className="container-px mb-5 flex flex-wrap items-baseline justify-between gap-3">
-            <p className="eyebrow">{th("showcase.eyebrow")}</p>
-            {showCount && (
-              <p className="text-[12.5px] text-muted">
-                {th("showcase.count", {
-                  deals: deals.length,
-                  countries: countries.length,
-                })}
-              </p>
-            )}
-          </div>
+      {/* ============ THE BOARD, MOVING ============ */}
+      {deals.length > 0 && (
+        <section
+          id="board"
+          className="relative border-y border-hairline-soft bg-white/[0.016] py-[22px]"
+        >
           <LiveDealsStrip deals={deals} labels={dealLabels} locale={params.locale} />
         </section>
       )}
 
       {/* ============ VERIFICATION ============ */}
-      <section className="container-px py-12 sm:py-16">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14">
-          <div>
-            <h2
-              className="display text-ink"
-              style={{ fontSize: "clamp(28px, 4vw, 44px)", lineHeight: 1.05, letterSpacing: "-0.032em" }}
-            >
-              {t("verify.heading")}
-            </h2>
-
-            <ul className="mt-6 space-y-0">
-              {CHECKS.map((c) => (
-                <li
-                  key={c.key}
-                  className="flex items-start gap-3 border-b border-hairline-soft py-3.5 last:border-0"
-                >
-                  <span className="mt-0.5 shrink-0 text-cyan">
-                    <Icon name={c.icon} size={17} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[14px] font-semibold text-ink">
-                      {t(`verify.${c.key}`)}
-                    </span>
-                    <span className="block text-[12.5px] leading-snug text-muted">
-                      {t(`verify.${c.key}Detail`)}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/verification"
-              className="eyebrow mt-5 inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
-            >
-              {t("verify.cta")} <Icon name="chevron" size={13} />
-            </Link>
+      <section
+        id="verify"
+        className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-[18px] py-[70px] sm:px-6 lg:grid-cols-2 lg:gap-x-[60px] lg:px-10 lg:py-[90px]"
+      >
+        <div className="order-2 rounded-[20px] border border-hairline bg-glass p-6 lg:order-1">
+          <p className="label">{t("verify.trustLabel")}</p>
+          <div className="mt-4 space-y-2.5">
+            {([1, 2, 3, 4] as const).map((lvl) => (
+              <div key={lvl} className="flex items-center gap-3">
+                <span className={`tier tier-${lvl} shrink-0`}>L{lvl}</span>
+                <span className="text-[13px] text-slate">{tier[lvl]}</span>
+              </div>
+            ))}
           </div>
+          <p className="mt-5 border-t border-hairline-soft pt-4 text-[12px] leading-relaxed text-muted">
+            {th("proof.caveat")}
+          </p>
+        </div>
 
-          {/* The tier ramp. On a phone it sits under the list, not beside it. */}
-          <div className="rounded-glass border border-hairline bg-glass p-5 sm:p-7">
-            <p className="label">{t("verify.trustLabel")}</p>
-            <div className="mt-4 space-y-2.5">
-              {([1, 2, 3, 4] as const).map((lvl) => (
-                <div key={lvl} className="flex items-center gap-3">
-                  <span className={`tier tier-${lvl} shrink-0`}>L{lvl}</span>
-                  <span className="text-[13px] text-slate">{dealLabels.tier[lvl]}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-5 border-t border-hairline-soft pt-4 text-[12px] leading-relaxed text-muted">
-              {th("proof.caveat")}
-            </p>
-          </div>
+        <div className="order-1 lg:order-2">
+          <Heading text={t("verify.heading")} dot="#3FE0C5" />
+          <ul className="mt-6">
+            {CHECKS.map((c) => (
+              <li
+                key={c.key}
+                className="flex items-start gap-3 border-b border-hairline-soft py-3.5 last:border-0"
+              >
+                <span className="mt-0.5 shrink-0 text-cyan">
+                  <Icon name={c.icon} size={17} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[14px] font-semibold text-ink">
+                    {t(`verify.${c.key}`)}
+                  </span>
+                  <span className="block text-[12.5px] leading-snug text-muted">
+                    {t(`verify.${c.key}Detail`)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/verification"
+            className="eyebrow mt-5 inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
+          >
+            {t("verify.cta")} <Icon name="chevron" size={13} />
+          </Link>
         </div>
       </section>
 
       {/* ============ THE WRITE-UP ============ */}
-      <section className="container-px border-t border-hairline-soft py-12 sm:py-16">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14">
-          <div>
-            <h2
-              className="display text-ink"
-              style={{ fontSize: "clamp(28px, 4vw, 44px)", lineHeight: 1.05, letterSpacing: "-0.032em" }}
-            >
-              {t("ai.heading")}
-            </h2>
-            <p className="prov mt-4">
-              <Icon name="ai" size={13} />
-              {t("ai.provenance")}
-            </p>
-            <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-muted">
-              {t("ai.body")}
-            </p>
+      <section className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-[18px] py-[70px] sm:px-6 lg:grid-cols-2 lg:gap-x-[60px] lg:px-10 lg:py-[90px]">
+        <div>
+          <Heading text={t("ai.heading")} dot="#8B6BFF" />
+          <p className="prov mt-4">
+            <Icon name="ai" size={13} />
+            {t("ai.provenance")}
+          </p>
+          <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-muted">
+            {t("ai.body")}
+          </p>
+        </div>
+
+        {/* The panel writes itself: three bars filling on a stagger, then the
+            finished card fading in. Purely decorative, so it is hidden from
+            assistive tech and stops under prefers-reduced-motion. */}
+        <div
+          aria-hidden="true"
+          className="rounded-[20px] border border-hairline bg-white/[0.03] p-4"
+        >
+          <p className="label">{t("ai.descriptionLabel")}</p>
+          <div className="mt-3 space-y-2">
+            {[
+              { w: "60%", d: "0s", lime: false },
+              { w: "45%", d: "0.4s", lime: true },
+              { w: "52%", d: "0.8s", lime: false },
+            ].map((bar, i) => (
+              <div key={i} className="relative h-6 rounded-md bg-white/[0.04]">
+                <span
+                  className="type-in absolute bottom-2 left-3 top-2 rounded-[5px]"
+                  style={{
+                    ["--type-w" as string]: bar.w,
+                    width: bar.w,
+                    animationDelay: bar.d,
+                    background: bar.lime
+                      ? "rgba(203,251,94,.3)"
+                      : "rgba(255,255,255,.14)",
+                  }}
+                />
+              </div>
+            ))}
           </div>
 
-          <div className="rounded-glass border border-hairline bg-white/[0.03] p-5 sm:p-6">
-            <p className="label">{t("ai.descriptionLabel")}</p>
-            <p className="mt-3 text-[13.5px] leading-relaxed text-ink">{t("ai.sample")}</p>
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-hairline-soft pt-4">
-              <span className="prov">
-                <Icon name="ai" size={12} />
-                {t("ai.provenance")}
-              </span>
-              <span className="btn-primary pointer-events-none !min-h-0 !px-4 !py-2 text-[12px]">
-                {t("ai.publish")}
-              </span>
-            </div>
+          <div
+            className="fade-cycle mt-3 rounded-[14px] p-3.5"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(139,107,255,.16), rgba(255,255,255,.02))",
+              border: "1px solid rgba(139,107,255,.3)",
+            }}
+          >
+            <p className="text-[12.5px] leading-relaxed text-ink">{t("ai.sample")}</p>
+            <p className="mt-3 flex h-8 items-center justify-center rounded-[9px] bg-lime text-[11.5px] font-bold text-obsidian">
+              {t("ai.publish")}
+            </p>
           </div>
         </div>
       </section>
 
       {/* ============ WHAT IS FREE, AND WHAT IS NOT ============ */}
-      <section className="container-px border-t border-hairline-soft py-12 sm:py-16">
-        <h2
-          className="display max-w-3xl text-ink"
-          style={{ fontSize: "clamp(26px, 3.4vw, 38px)", lineHeight: 1.08, letterSpacing: "-0.028em" }}
-        >
-          {t("pricing.heading")}
-        </h2>
-        <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-muted">
-          {t("pricing.body")}
-        </p>
+      <section
+        id="fees"
+        className="relative border-t border-hairline-soft px-[18px] py-[70px] text-center sm:px-6 lg:px-10"
+      >
+        <div className="mx-auto max-w-[900px]">
+          <Heading
+            text={t("pricing.heading")}
+            dot="#CBFB5E"
+            size="clamp(26px, 3vw, 38px)"
+            tracking="-1px"
+          />
+          <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-relaxed text-muted">
+            {t("pricing.body")}
+          </p>
 
-        {/* The price list. Every credit action prints its own price, so a
-            button can never guess one. */}
-        <ul className="mt-7 grid gap-2.5 sm:grid-cols-3">
-          {PRICES.map((p) => (
-            <li
-              key={p.key}
-              className="flex items-center justify-between gap-3 rounded-field border border-hairline bg-glass px-4 py-3"
+          <ul className="mt-7 flex flex-wrap justify-center gap-2.5">
+            {PRICES.map((p) => (
+              <li
+                key={p.key}
+                className="inline-flex items-center gap-2 rounded-field border border-hairline bg-glass px-4 py-3 text-[13px] text-slate"
+              >
+                <Icon name={p.icon} size={15} className="text-violet-ink" />
+                {t(`pricing.${p.key}`)} ·{" "}
+                <b className="display text-ink">
+                  {p.n === 1
+                    ? t("pricing.credit", { n: p.n })
+                    : t("pricing.credits", { n: p.n })}
+                </b>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mx-auto mt-4 max-w-2xl text-[12.5px] leading-relaxed text-muted">
+            {t("pricing.desk")}
+          </p>
+
+          <div className="mt-7">
+            <Link
+              href="/marketplace/new"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-[15px] bg-lime px-7 py-[15px] text-[15px] font-bold text-obsidian shadow-lime transition-transform hover:-translate-y-px sm:w-auto"
             >
-              <span className="text-[13px] text-ink">{t(`pricing.${p.key}`)}</span>
-              <span className="shrink-0 text-[12.5px] font-semibold text-violet-ink">
-                {p.n === 1 ? t("pricing.credit", { n: p.n }) : t("pricing.credits", { n: p.n })}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-4 text-[12.5px] leading-relaxed text-muted">{t("pricing.desk")}</p>
-
-        <div className="mt-7">
-          <Link href="/marketplace/new" className="btn-primary w-full justify-center sm:w-auto">
-            {t("pricing.cta")}
-            <Icon name="chevron" size={16} />
-          </Link>
+              {t("pricing.cta")}
+              <Icon name="chevron" size={16} />
+            </Link>
+          </div>
         </div>
       </section>
-
-      {/* ============ BROWSE ============ */}
-      {showcaseLive && (
-        <section className="container-px border-t border-hairline-soft py-12 sm:py-16">
-          <h2 className="display text-[20px] text-ink">{th("showcase.gridHeading")}</h2>
-          <LiveDealsGrid
-            deals={deals}
-            labels={dealLabels}
-            locale={params.locale}
-            allLabel={th("showcase.all")}
-            seeAllLabel={th("showcase.seeAll")}
-          />
-        </section>
-      )}
-    </>
+    </div>
   );
 }

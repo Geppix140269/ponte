@@ -39,6 +39,8 @@ export type LiveDeal = {
   quantity: string | null;
   unit: string | null;
   incoterm: string | null;
+  /** Payment terms as posted, e.g. "LC at sight". */
+  payment: string | null;
   /** Free text as posted, kept for the tooltip and the fallback label. */
   originText: string | null;
   destinationText: string | null;
@@ -139,6 +141,9 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         quantity: vol.quantity,
         unit: vol.unit,
         incoterm: l.incoterm,
+        // Member listings keep payment terms inside the composed details for
+        // now; the v4 column exists but the composer does not write it yet.
+        payment: null,
         originText: l.origin,
         destinationText: l.destination,
         originCode: isoCode(l.origin),
@@ -205,7 +210,7 @@ async function readRadar(
     const { data, error } = await sb
       .from("desk_radar")
       .select(
-        "id, side, product, hs_code, qty, unit, incoterms, origin, destination, spotted_at, valid_until, status",
+        "id, side, product, hs_code, qty, unit, incoterms, payment, origin, destination, spotted_at, valid_until, status",
       )
       .in("status", ["live", "under_pursuit"])
       .order("spotted_at", { ascending: false })
@@ -227,6 +232,7 @@ async function readRadar(
         quantity: r.qty === null || r.qty === undefined ? null : String(r.qty),
         unit: r.unit,
         incoterm: r.incoterms,
+        payment: r.payment,
         originText: r.origin,
         destinationText: r.destination,
         originCode: isoCode(r.origin),

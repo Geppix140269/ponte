@@ -390,6 +390,7 @@ const SAMPLE_DEALS: LiveDeal[] = [
     quantity: quantity as string,
     unit: unit as string,
     incoterm: incoterm as string,
+    payment: null,
     originText: from as string,
     destinationText: to as string,
     originCode: from as string,
