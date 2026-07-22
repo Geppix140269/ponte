@@ -33,10 +33,28 @@ export function isAiConfigured(): boolean {
  */
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+/**
+ * A system prompt split so the stable part can be cached.
+ *
+ * Anthropic caches a prefix up to an explicit breakpoint. Put the breakpoint
+ * on the LAST STATIC block and never on anything that varies: a breakpoint on
+ * varying content writes a fresh cache entry on every call and never reads
+ * one, which is the documented way to pay more for caching than not caching.
+ *
+ * Haiku will not cache a prefix under 4,096 tokens, so a short instruction
+ * block gains nothing by asking.
+ */
+export type SystemBlock = {
+  text: string;
+  /** True on the last stable block, and on nothing else. */
+  cache?: boolean;
+};
+
 export type AiCallOptions = {
   /** Short stable name, used for cost reporting. e.g. "verification_reconcile" */
   feature: string;
-  system: string;
+  /** A plain string, or blocks when part of the prompt should be cached. */
+  system: string | SystemBlock[];
   user: string;
   model?: string;
   maxTokens?: number;
@@ -56,7 +74,26 @@ export type AiResult = {
   inputTokens: number;
   outputTokens: number;
   durationMs: number;
+  /** Tokens served from the prompt cache. Zero means the cache did not hit. */
+  cacheReadTokens: number;
+  /** Tokens written to the cache on this call. */
+  cacheWriteTokens: number;
 };
+
+/**
+ * Anthropic wants the system prompt as a string or as content blocks. Blocks
+ * are only worth the shape when one of them carries a cache breakpoint.
+ */
+function buildSystem(
+  system: string | SystemBlock[],
+): string | { type: "text"; text: string; cache_control?: { type: "ephemeral" } }[] {
+  if (typeof system === "string") return system;
+  return system.map((block) => ({
+    type: "text" as const,
+    text: block.text,
+    ...(block.cache ? { cache_control: { type: "ephemeral" as const } } : {}),
+  }));
+}
 
 // Metering must never be the reason a feature breaks, so a failure to record
 // is logged and swallowed. The call itself has already happened either way.
@@ -107,7 +144,7 @@ export async function callAi(opts: AiCallOptions): Promise<AiResult> {
         model,
         max_tokens: opts.maxTokens ?? 1200,
         temperature: opts.temperature ?? 0,
-        system: opts.system,
+        system: buildSystem(opts.system),
         messages: [{ role: "user", content: opts.user }],
       }),
       signal: controller.signal,
@@ -156,7 +193,12 @@ export async function callAi(opts: AiCallOptions): Promise<AiResult> {
 
   const json = (await res.json()) as {
     content?: { type: string; text?: string }[];
-    usage?: { input_tokens?: number; output_tokens?: number };
+    usage?: {
+      input_tokens?: number;
+      output_tokens?: number;
+      cache_read_input_tokens?: number;
+      cache_creation_input_tokens?: number;
+    };
   };
 
   const text =
@@ -180,7 +222,15 @@ export async function callAi(opts: AiCallOptions): Promise<AiResult> {
     ref: opts.ref ?? null,
   });
 
-  return { text, model, inputTokens, outputTokens, durationMs };
+  return {
+    text,
+    model,
+    inputTokens,
+    outputTokens,
+    durationMs,
+    cacheReadTokens: json.usage?.cache_read_input_tokens ?? 0,
+    cacheWriteTokens: json.usage?.cache_creation_input_tokens ?? 0,
+  };
 }
 
 /**
@@ -190,10 +240,19 @@ export async function callAi(opts: AiCallOptions): Promise<AiResult> {
 export async function callAiJson<T>(
   opts: AiCallOptions,
 ): Promise<{ data: T; usage: AiResult }> {
-  const usage = await callAi({
-    ...opts,
-    system: `${opts.system}\n\nReturn raw JSON only. No prose, no code fence, no commentary.`,
-  });
+  const jsonRule = "Return raw JSON only. No prose, no code fence, no commentary.";
+
+  // Appended as its own trailing block when the system prompt is blocks, not
+  // interpolated into it. Interpolating would stringify the array to
+  // "[object Object]", and it would also land the rule after the cache
+  // breakpoint, which is where varying content belongs and stable content
+  // does not.
+  const system: AiCallOptions["system"] =
+    typeof opts.system === "string"
+      ? `${opts.system}\n\n${jsonRule}`
+      : [...opts.system, { text: jsonRule }];
+
+  const usage = await callAi({ ...opts, system });
 
   const cleaned = usage.text
     .replace(/^\s*```(?:json)?\s*/i, "")
