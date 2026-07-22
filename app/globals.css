@@ -483,12 +483,58 @@
   }
 }
 
-/* The hero span. Slower than a card's route arc on purpose: this one is the
-   page's opening gesture and it has the whole width to cross. */
+/* ======================================================================
+   The landing animations, taken from the design source rather than
+   reconstructed from what they looked like. Same names, same timings.
+   ====================================================================== */
+
+/* The hero span drawing itself. The path sets --len to its own length. */
 .arc-draw {
-  stroke-dasharray: var(--len, 600);
-  stroke-dashoffset: var(--len, 600);
-  animation: route-draw 2200ms cubic-bezier(0.25, 0.6, 0.3, 1) forwards;
+  stroke-dasharray: var(--len, 1400);
+  stroke-dashoffset: var(--len, 1400);
+  animation: arcDraw 2200ms ease 300ms both;
+}
+@keyframes arcDraw {
+  from {
+    stroke-dashoffset: var(--len, 1400);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The write-up panel writing itself: three bars filling on a stagger. The
+   widths are set per bar; this only animates from nothing to that width. */
+.type-in {
+  animation: typeIn 5s ease-in-out infinite;
+}
+@keyframes typeIn {
+  0%,
+  15% {
+    width: 0;
+  }
+  60%,
+  100% {
+    width: var(--type-w, 100%);
+  }
+}
+
+/* The card that appears once the write-up has been written. */
+.fade-cycle {
+  animation: fadeCycle 5s ease-in-out infinite;
+}
+@keyframes fadeCycle {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  22%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Trust dial sweep, 113 being the circumference of the r=18 dial. */
@@ -566,7 +612,10 @@
   .reveal,
   .flow-step,
   .flow-line,
-  .marquee-track {
+  .marquee-track,
+  .arc-draw,
+  .type-in,
+  .fade-cycle {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
