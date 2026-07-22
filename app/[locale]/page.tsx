@@ -2,9 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ProcessFlow from "@/components/ProcessFlow";
 import Reveal from "@/components/Reveal";
-import { BridgeMark } from "@/components/Logo";
+import { Icon, type SystemIconName } from "@/components/icons";
 import { alternatesFor } from "@/lib/seo";
-import { ArrowRight, Check, Info, Landmark, ShieldAlert } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -26,6 +25,11 @@ export async function generateMetadata({ params }: { params: { locale: any } }) 
  *   - The deal cards below are format examples, labelled as such in the copy
  *     and in the markup. They demonstrate the notation a listing is written
  *     in. They are never presented as live inventory.
+ *
+ * The second rule is why the hero card carries the format-example label
+ * rather than the bundle's "Top match, 94% fit" chip: the match engine is not
+ * wired yet, and a fabricated match score is exactly the claim this page
+ * refuses to make. The card is otherwise the bundle's, route arc included.
  */
 
 /** Registers and identifiers read by a verification. Names stay untranslated
@@ -62,216 +66,274 @@ const EXAMPLES = [
   },
 ] as const;
 
+/** The three things a visitor gets, keyed to the hero benefit strings. */
+const BENEFITS: { key: string; icon: SystemIconName }[] = [
+  { key: "hero.b1", icon: "post" },
+  { key: "hero.b2", icon: "credit" },
+  { key: "hero.b3", icon: "lock" },
+];
+
+/**
+ * The signature element: two piers and a span, drawn once on load. Origin
+ * pier lime, destination pier cyan, exactly as the mark is built.
+ */
+function RouteArc({ from, to }: { from: string; to: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flag-chip">{from}</span>
+      <svg viewBox="0 0 180 22" className="h-[18px] flex-1" aria-hidden="true">
+        <path
+          d="M6 16 C 64 3, 116 3, 174 16"
+          fill="none"
+          stroke="#8B6BFF"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          className="route-draw"
+          style={{ ["--len" as string]: 172 }}
+        />
+        <circle cx="6" cy="16" r="3" fill="#CBFB5E" />
+        <circle cx="174" cy="16" r="3" fill="#3FE0C5" />
+      </svg>
+      <span className="flag-chip">{to}</span>
+    </div>
+  );
+}
+
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("home");
+  const hero = EXAMPLES[0];
 
   return (
     <>
       {/* ============ 1. WHAT THIS IS ============ */}
-      <header className="container-px pt-12 pb-9 md:pt-16 relative overflow-hidden">
-        <div className="pointer-events-none absolute -right-28 -top-24 opacity-[0.06] hidden lg:block">
-          <BridgeMark className="h-[440px] w-[440px]" />
-        </div>
+      <header className="container-px pb-12 pt-12 md:pt-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)] lg:items-center lg:gap-14">
+          <div className="max-w-2xl">
+            <p className="pill rise" style={{ ["--i" as string]: 0 }}>
+              {t("hero.eyebrow")}
+            </p>
 
-        <div className="relative max-w-4xl">
-          <p className="eyebrow">{t("hero.eyebrow")}</p>
+            <h1
+              className="display mt-5 text-ink rise"
+              style={{
+                ["--i" as string]: 1,
+                fontSize: "clamp(34px, 5vw, 58px)",
+                lineHeight: 1.02,
+                letterSpacing: "-0.045em",
+              }}
+            >
+              {t("hero.title")} {t("hero.titleAccent")}
+            </h1>
 
-          <h1
-            className="serif text-white mt-4"
-            style={{
-              fontWeight: 400,
-              fontSize: "clamp(34px, 4.6vw, 60px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.015em",
-            }}
-          >
-            {t("hero.title")}{" "}
-            <em className="text-gold italic" style={{ fontWeight: 400 }}>
-              {t("hero.titleAccent")}
-            </em>
-          </h1>
+            <p
+              className="mt-5 max-w-xl text-[16px] leading-relaxed text-muted rise"
+              style={{ ["--i" as string]: 2 }}
+            >
+              {t("hero.lead")}
+            </p>
 
-          <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-gray-2">
-            {t("hero.lead")}
-          </p>
+            {/*
+              The board first, posting second. A visitor who has not seen a
+              listing has no reason to write one, and the bundle's hero puts
+              the lime on "explore" for exactly that reason.
+            */}
+            <div
+              className="mt-8 flex flex-wrap items-center gap-3 rise"
+              style={{ ["--i" as string]: 3 }}
+            >
+              <Link href="/marketplace" className="btn-primary">
+                {t("hero.secondary")}
+                <Icon name="chevron" size={16} />
+              </Link>
+              <Link href="/marketplace/new" className="btn-ghost">
+                {t("hero.cta")}
+              </Link>
+            </div>
+
+            <ul
+              className="mt-9 grid gap-2.5 sm:grid-cols-3 rise"
+              style={{ ["--i" as string]: 5 }}
+            >
+              {BENEFITS.map((b) => (
+                <li key={b.key} className="glass-tight px-3.5 py-3.5">
+                  <Icon name={b.icon} size={17} className="text-lime" />
+                  <p className="mt-2.5 text-[12.5px] font-semibold leading-snug text-ink">
+                    {t(b.key)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/*
-            Three benefits, scannable without reading a sentence.
-
-            The first version of this hero opened with quantity and unit,
-            incoterm, origin and destination, payment terms, HS code and NCNDA,
-            before giving anyone a reason to care. That is a definition of the
-            category, not an offer, and a reader who does not yet know what
-            this is leaves during it. The trade vocabulary is not deleted, it
-            is later on the page, where somebody who wants it will look.
+            The shape of a listing, as one card, above the fold. Same data as
+            the format examples below and carrying the same label.
           */}
-          <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2.5">
-            {["hero.b1", "hero.b2", "hero.b3"].map((key) => (
-              <li key={key} className="flex items-center gap-2 text-[13.5px] text-cream">
-                <Check className="h-4 w-4 shrink-0 text-gold" strokeWidth={2.5} />
-                {t(key)}
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3">
-            <Link href="/marketplace/new" className="btn-gold">
-              {t("hero.cta")} <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/marketplace"
-              className="text-[13px] text-cream underline decoration-white/25 underline-offset-4 transition-colors hover:text-gold"
+          <div className="rise" style={{ ["--i" as string]: 4 }}>
+            <article
+              className="rounded-glass border border-violet/40 bg-glass p-5"
+              aria-label={t("shape.sampleLabel")}
             >
-              {t("hero.secondary")}
-            </Link>
+              <div className="flex items-center justify-between gap-3">
+                <span className="fx fx-fixed">
+                  <Icon name="offer" size={12} />
+                  {t(`shape.type.${hero.type}`).toUpperCase()}
+                </span>
+                <span className="text-[11px] text-muted">
+                  {t("shape.fields.hs")} {hero.hs}
+                </span>
+              </div>
+
+              <h2 className="mt-3 text-[15px] font-semibold text-ink">
+                {t(`shape.${hero.key}.product`)}
+              </h2>
+
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+                <span className="display text-[26px] font-bold text-ink">
+                  {t(`shape.${hero.key}.quantity`)}
+                </span>
+                <span className="text-[12px] text-muted">
+                  {hero.incoterm} · {t(`shape.${hero.key}.payment`)}
+                </span>
+              </div>
+
+              <div className="mt-4">
+                <RouteArc from={hero.origin} to={hero.destination} />
+              </div>
+
+              <p className="mt-4 border-t border-hairline-soft pt-3 text-[10.5px] leading-relaxed text-muted">
+                {t("shape.sampleLabel")}
+              </p>
+            </article>
           </div>
         </div>
       </header>
 
       {/* ============ 2. WHO IS ON THE OTHER SIDE ============ */}
-      <section className="container-px border-t border-white/10 py-11">
+      <section className="container-px border-t border-hairline-soft py-12">
         <div className="grid gap-9 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-12">
           <div>
             <p className="eyebrow">{t("proof.eyebrow")}</p>
             <h2
-              className="serif text-white mt-3"
-              style={{ fontSize: "clamp(23px, 2.3vw, 31px)", fontWeight: 500, lineHeight: 1.12 }}
+              className="display mt-3 text-ink"
+              style={{ fontSize: "clamp(23px, 2.3vw, 31px)", lineHeight: 1.12 }}
             >
               {t("proof.heading")}
             </h2>
-            <p className="mt-4 text-[14px] leading-relaxed text-gray-2">{t("proof.lead")}</p>
-            <p className="mt-4 text-[13.5px] leading-relaxed text-cream">{t("proof.refresh")}</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-muted">{t("proof.lead")}</p>
+            <p className="mt-4 text-[13.5px] leading-relaxed text-ink">{t("proof.refresh")}</p>
             <Link
               href="/verification"
-              className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase text-gold transition-colors hover:text-gold-400"
-              style={{ letterSpacing: "0.18em" }}
+              className="eyebrow mt-6 inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
             >
-              {t("proof.link")} <ArrowRight className="h-3.5 w-3.5" />
+              {t("proof.link")} <Icon name="chevron" size={13} />
             </Link>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="glass-tight p-5">
-              <div className="flex items-center gap-2.5">
-                <Landmark className="h-4 w-4 text-gold" />
-                <p
-                  className="mono text-[10px] uppercase text-gray-2"
-                  style={{ letterSpacing: "0.2em" }}
-                >
-                  {t("proof.registriesLabel")}
-                </p>
+            {[
+              { icon: "registry" as const, label: "proof.registriesLabel", keys: REGISTRIES },
+              { icon: "scan" as const, label: "proof.sanctionsLabel", keys: SANCTIONS },
+            ].map((col) => (
+              <div key={col.label} className="glass-tight p-5">
+                <div className="flex items-center gap-2.5">
+                  <Icon name={col.icon} size={16} className="text-cyan" />
+                  <p className="label">{t(col.label)}</p>
+                </div>
+                <ul className="mt-4 space-y-3.5">
+                  {col.keys.map((k) => (
+                    <li key={k}>
+                      <span className="block text-[13.5px] leading-snug text-ink">
+                        {t(`proof.${k}.name`)}
+                      </span>
+                      <span className="block text-[11.5px] leading-snug text-muted">
+                        {t(`proof.${k}.note`)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-4 space-y-3.5">
-                {REGISTRIES.map((k) => (
-                  <li key={k}>
-                    <span className="block text-[13.5px] leading-snug text-cream">
-                      {t(`proof.${k}.name`)}
-                    </span>
-                    <span className="block text-[11.5px] leading-snug text-gray-2">
-                      {t(`proof.${k}.note`)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="glass-tight p-5">
-              <div className="flex items-center gap-2.5">
-                <ShieldAlert className="h-4 w-4 text-gold" />
-                <p
-                  className="mono text-[10px] uppercase text-gray-2"
-                  style={{ letterSpacing: "0.2em" }}
-                >
-                  {t("proof.sanctionsLabel")}
-                </p>
-              </div>
-              <ul className="mt-4 space-y-3.5">
-                {SANCTIONS.map((k) => (
-                  <li key={k}>
-                    <span className="block text-[13.5px] leading-snug text-cream">
-                      {t(`proof.${k}.name`)}
-                    </span>
-                    <span className="block text-[11.5px] leading-snug text-gray-2">
-                      {t(`proof.${k}.note`)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            ))}
           </div>
         </div>
 
-        <p className="mt-7 max-w-4xl text-[12px] leading-relaxed text-gray-2">
+        <p className="mt-7 max-w-4xl text-[12px] leading-relaxed text-muted">
           {t("proof.caveat")}
         </p>
       </section>
 
       {/* ============ 3. THE SHAPE OF A DEAL ============ */}
-      <section className="container-px border-t border-white/10 py-11">
+      <section className="container-px border-t border-hairline-soft py-12">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-3xl">
             <p className="eyebrow">{t("shape.eyebrow")}</p>
             <h2
-              className="serif text-white mt-3"
-              style={{ fontSize: "clamp(23px, 2.3vw, 31px)", fontWeight: 500, lineHeight: 1.12 }}
+              className="display mt-3 text-ink"
+              style={{ fontSize: "clamp(23px, 2.3vw, 31px)", lineHeight: 1.12 }}
             >
               {t("shape.heading")}
             </h2>
-            <p className="mt-4 text-[14px] leading-relaxed text-gray-2">{t("shape.lead")}</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-muted">{t("shape.lead")}</p>
           </div>
-          <Link href="/marketplace" className="btn-ghost-light">
-            {t("shape.cta")} <ArrowRight className="h-4 w-4" />
+          <Link href="/marketplace" className="btn-ghost">
+            {t("shape.cta")} <Icon name="chevron" size={16} />
           </Link>
         </div>
 
         {/* Said in the copy and said in the markup: these are not listings. */}
-        <p className="mt-8 flex items-start gap-2 text-[11px] uppercase leading-relaxed text-gray-2" style={{ letterSpacing: "0.12em" }}>
-          <Info className="mt-[1px] h-3.5 w-3.5 shrink-0 text-gold" />
+        <p className="mt-8 flex items-start gap-2 text-[11px] leading-relaxed text-muted">
+          <Icon name="doc" size={14} className="mt-[1px] shrink-0 text-muted" />
           <span>{t("shape.sampleLabel")}</span>
         </p>
 
         <Reveal>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             {EXAMPLES.map((ex) => (
-              <article key={ex.key} className="glass-tight p-6" aria-label={t("shape.sampleLabel")}>
+              <article
+                key={ex.key}
+                className="glass-tight p-5"
+                aria-label={t("shape.sampleLabel")}
+              >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="badge-navy">{t(`shape.type.${ex.type}`)}</span>
-                  <span className="mono text-[11px] tabular-nums text-gray-2">
+                  <span className={`fx ${ex.type === "offer" ? "fx-fixed" : "fx-neg"}`}>
+                    <Icon name={ex.type === "offer" ? "offer" : "request"} size={12} />
+                    {t(`shape.type.${ex.type}`).toUpperCase()}
+                  </span>
+                  <span className="text-[11px] text-muted">
                     {t("shape.fields.hs")} {ex.hs}
                   </span>
                 </div>
 
-                <h3 className="serif text-white mt-4 text-[19px] leading-snug" style={{ fontWeight: 500 }}>
+                <h3 className="mt-3.5 text-[15px] font-semibold leading-snug text-ink">
                   {t(`shape.${ex.key}.product`)}
                 </h3>
 
-                <p
-                  className="mono text-gold mt-4 tabular-nums"
-                  style={{ fontSize: "clamp(26px, 2.5vw, 32px)", lineHeight: 1, letterSpacing: "-0.02em" }}
-                >
-                  {t(`shape.${ex.key}.quantity`)}
-                </p>
-                <p className="mt-1.5 text-[12px] text-gray-2">{t(`shape.${ex.key}.frequency`)}</p>
+                <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                  <span className="display text-[24px] font-bold text-ink">
+                    {t(`shape.${ex.key}.quantity`)}
+                  </span>
+                  <span className="text-[11.5px] text-muted">
+                    {t(`shape.${ex.key}.frequency`)}
+                  </span>
+                </div>
 
-                <dl className="mt-5 border-t border-white/10 text-[12.5px]">
-                  <div className="flex justify-between gap-4 border-b border-white/10 py-2.5">
-                    <dt className="shrink-0 text-gray-2">{t("shape.fields.incoterm")}</dt>
-                    <dd className="mono text-right text-cream">{ex.incoterm}</dd>
+                <div className="mt-4">
+                  <RouteArc from={ex.origin} to={ex.destination} />
+                </div>
+
+                <dl className="mt-4 border-t border-hairline-soft text-[12.5px]">
+                  <div className="flex justify-between gap-4 border-b border-hairline-soft py-2.5">
+                    <dt className="shrink-0 text-muted">{t("shape.fields.incoterm")}</dt>
+                    <dd className="text-right text-ink">{ex.incoterm}</dd>
                   </div>
-                  <div className="flex justify-between gap-4 border-b border-white/10 py-2.5">
-                    <dt className="shrink-0 text-gray-2">{t("shape.fields.corridor")}</dt>
-                    <dd className="mono text-right text-cream">
-                      {t("shape.fields.corridorValue", { from: ex.origin, to: ex.destination })}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-4 border-b border-white/10 py-2.5">
-                    <dt className="shrink-0 text-gray-2">{t("shape.fields.payment")}</dt>
-                    <dd className="text-right text-cream">{t(`shape.${ex.key}.payment`)}</dd>
+                  <div className="flex justify-between gap-4 border-b border-hairline-soft py-2.5">
+                    <dt className="shrink-0 text-muted">{t("shape.fields.payment")}</dt>
+                    <dd className="text-right text-ink">{t(`shape.${ex.key}.payment`)}</dd>
                   </div>
                   <div className="flex justify-between gap-4 py-2.5">
-                    <dt className="shrink-0 text-gray-2">{t("shape.fields.role")}</dt>
-                    <dd className="text-right text-cream">{t(`shape.${ex.key}.role`)}</dd>
+                    <dt className="shrink-0 text-muted">{t("shape.fields.role")}</dt>
+                    <dd className="text-right text-ink">{t(`shape.${ex.key}.role`)}</dd>
                   </div>
                 </dl>
               </article>
@@ -281,12 +343,12 @@ export default async function HomePage({ params }: { params: { locale: string } 
       </section>
 
       {/* ============ 4. HOW A DEAL MOVES ============ */}
-      <section className="container-px border-t border-white/10 py-11">
+      <section className="container-px border-t border-hairline-soft py-12">
         <Reveal>
           <p className="eyebrow">{t("flow.eyebrow")}</p>
           <h2
-            className="serif text-white mt-3"
-            style={{ fontSize: "clamp(23px, 2.3vw, 31px)", fontWeight: 500, lineHeight: 1.12 }}
+            className="display mt-3 text-ink"
+            style={{ fontSize: "clamp(23px, 2.3vw, 31px)", lineHeight: 1.12 }}
           >
             {t("flow.heading")}
           </h2>
@@ -297,58 +359,46 @@ export default async function HomePage({ params }: { params: { locale: string } 
       </section>
 
       {/* ============ 5. THE DESK ============ */}
-      <section className="container-px border-t border-white/10 py-11 pb-20">
+      <section className="container-px border-t border-hairline-soft py-12 pb-20">
         <p className="eyebrow">{t("desk.eyebrow")}</p>
         <h2
-          className="serif text-white mt-3 max-w-3xl"
-          style={{ fontSize: "clamp(23px, 2.3vw, 31px)", fontWeight: 500, lineHeight: 1.12 }}
+          className="display mt-3 max-w-3xl text-ink"
+          style={{ fontSize: "clamp(23px, 2.3vw, 31px)", lineHeight: 1.12 }}
         >
           {t("desk.heading")}
         </h2>
 
         <div className="mt-7 grid gap-4 md:grid-cols-2">
-          <div className="glass flex flex-col p-7">
-            <h3 className="serif text-white text-[20px]" style={{ fontWeight: 500 }}>
-              {t("desk.free.title")}
-            </h3>
-            <p
-              className="mono mt-2 text-[10px] uppercase text-gold"
-              style={{ letterSpacing: "0.2em" }}
-            >
-              {t("desk.free.terms")}
-            </p>
-            <p className="mt-4 flex-1 text-[13.5px] leading-relaxed text-gray-2">
+          <div className="glass flex flex-col p-6">
+            <h3 className="display text-[20px] text-ink">{t("desk.free.title")}</h3>
+            <p className="eyebrow mt-2">{t("desk.free.terms")}</p>
+            <p className="mt-4 flex-1 text-[13.5px] leading-relaxed text-muted">
               {t("desk.free.body")}
             </p>
             <div className="mt-6">
-              <Link href="/marketplace/new" className="btn-gold">
-                {t("desk.free.cta")} <ArrowRight className="h-4 w-4" />
+              <Link href="/marketplace/new" className="btn-primary">
+                {t("desk.free.cta")} <Icon name="chevron" size={16} />
               </Link>
             </div>
           </div>
 
-          <div className="glass flex flex-col p-7">
-            <h3 className="serif text-white text-[20px]" style={{ fontWeight: 500 }}>
-              {t("desk.mandate.title")}
-            </h3>
-            <p
-              className="mono mt-2 text-[10px] uppercase text-gold"
-              style={{ letterSpacing: "0.2em" }}
-            >
+          <div className="glass flex flex-col p-6">
+            <h3 className="display text-[20px] text-ink">{t("desk.mandate.title")}</h3>
+            <p className="label mt-2 normal-case tracking-normal">
               {t("desk.mandate.terms")}
             </p>
-            <p className="mt-4 flex-1 text-[13.5px] leading-relaxed text-gray-2">
+            <p className="mt-4 flex-1 text-[13.5px] leading-relaxed text-muted">
               {t("desk.mandate.body")}
             </p>
             <div className="mt-6">
-              <Link href="/pricing" className="btn-ghost-light">
-                {t("desk.mandate.cta")} <ArrowRight className="h-4 w-4" />
+              <Link href="/pricing" className="btn-ghost">
+                {t("desk.mandate.cta")} <Icon name="chevron" size={16} />
               </Link>
             </div>
           </div>
         </div>
 
-        <p className="mt-5 text-[12px] text-gray-2">{t("desk.currency")}</p>
+        <p className="mt-5 text-[12px] text-muted">{t("desk.currency")}</p>
       </section>
     </>
   );

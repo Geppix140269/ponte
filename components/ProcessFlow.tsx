@@ -2,23 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  FileText,
-  ShieldCheck,
-  Search,
-  FileSignature,
-  Handshake,
-} from "lucide-react";
+import { Icon, type SystemIconName } from "@/components/icons";
 
 // The Ponte process, shown not told. Five nodes, one drawing line,
 // staggered reveals. Copy is deliberately minimal: verb + three words.
-const STEPS = [
-  { icon: FileText, key: "post" },
-  { icon: ShieldCheck, key: "vet" },
-  { icon: Search, key: "match" },
-  { icon: Handshake, key: "connect" },
-  { icon: FileSignature, key: "close" },
-] as const;
+const STEPS: { icon: SystemIconName; key: string }[] = [
+  { icon: "post", key: "post" },
+  { icon: "verify", key: "vet" },
+  { icon: "ai", key: "match" },
+  { icon: "room", key: "connect" },
+  { icon: "check", key: "close" },
+];
 
 export default function ProcessFlow() {
   const ref = useRef<HTMLDivElement>(null);
@@ -53,12 +47,12 @@ export default function ProcessFlow() {
           {STEPS.map((s) => (
             <div key={s.key} className="flow-step flex flex-col items-center text-center">
               <div className="flow-node">
-                <s.icon className="h-5 w-5 text-gold" />
+                <Icon name={s.icon} size={20} />
               </div>
-              <p className="serif text-white mt-4 text-lg" style={{ fontWeight: 500 }}>
+              <p className="display mt-4 text-lg text-ink">
                 {t(`steps.${s.key}.label`)}
               </p>
-              <p className="mt-1 text-[12px] text-gray-2">{t(`steps.${s.key}.micro`)}</p>
+              <p className="mt-1 text-[12px] text-muted">{t(`steps.${s.key}.micro`)}</p>
             </div>
           ))}
         </div>
@@ -74,11 +68,11 @@ export default function ProcessFlow() {
           {STEPS.map((s) => (
             <div key={s.key} className="flow-step flex items-center gap-5">
               <div className="flow-node shrink-0">
-                <s.icon className="h-5 w-5 text-gold" />
+                <Icon name={s.icon} size={20} />
               </div>
               <div>
-                <p className="serif text-white text-lg" style={{ fontWeight: 500 }}>{t(`steps.${s.key}.label`)}</p>
-                <p className="text-[12px] text-gray-2">{t(`steps.${s.key}.micro`)}</p>
+                <p className="display text-lg text-ink">{t(`steps.${s.key}.label`)}</p>
+                <p className="text-[12px] text-muted">{t(`steps.${s.key}.micro`)}</p>
               </div>
             </div>
           ))}
