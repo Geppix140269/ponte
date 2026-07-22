@@ -586,17 +586,28 @@
     "pill": "Members",
     "title": "One door. One login.",
     "subtitle": "No passwords. New here? Signing in creates your account. Members post deals and see the board.",
-    "linkExpired": "That link expired or was already used. Enter your email below and we will send a fresh one.",
-    "notConfigured": "Sign-in becomes available once Supabase Auth is connected. Add your Supabase keys to enable magic-link and Google login.",
-    "checkInbox": "Check your inbox for a magic sign-in link.",
+    "linkExpired": "That code expired or was already used. Enter your email below and we will send a fresh one.",
+    "notConfigured": "Sign-in becomes available once Supabase Auth is connected. Add your Supabase keys to enable email and Google login.",
     "googleDisabled": "Google sign-in disabled (no client ID configured).",
     "or": "or",
     "emailLabel": "Email address",
     "emailPlaceholder": "you@company.com",
     "sending": "Sending...",
-    "submit": "Email me a magic link",
+    "submit": "Email me a code",
     "errorFallback": "Something went wrong. Try again.",
-    "errorUnknown": "Unknown error"
+    "errorUnknown": "Unknown error",
+    "code": {
+      "heading": "Enter your code",
+      "sentTo": "We sent a six digit code to {email}. It expires in 10 minutes.",
+      "label": "Digit",
+      "verifying": "Checking...",
+      "wrong": "That code is not right. Check the email and try again.",
+      "expired": "That code expired. Send yourself a new one.",
+      "resend": "Send a new code",
+      "resent": "New code sent.",
+      "changeEmail": "Use a different email",
+      "switched": "You were signed in as someone else. That session has been replaced."
+    }
   },
   "marketplace": {
     "meta": {

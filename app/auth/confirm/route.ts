@@ -5,12 +5,20 @@ import { isSupabaseConfigured } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// Email link verification via token_hash. Unlike the PKCE `code` flow,
-// this works even when the link is opened in a different browser or
-// device than the one that requested it (webmail, phones, scanners).
+// Email link verification via token_hash.
 //
-// Supabase email templates must link to:
+// Sign-in moved to six digit codes on 2026-07-22, so nothing sends links to
+// this route any more. It stays for two reasons: links already sitting in
+// inboxes, and password recovery, which is still a link flow if it is ever
+// switched on.
+//
+// Supabase email templates that DO use it must link to:
 //   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink&redirect_to={{ .RedirectTo }}
+//
+// A template pointing anywhere else is how the wrong-account bug happened: the
+// default template sent members to /account carrying the session in a URL
+// fragment, /account is a Server Component with no browser client on it, the
+// fragment was never read, and the browser's previous session rendered instead.
 
 const TYPES = new Set(["signup", "invite", "magiclink", "recovery", "email_change", "email"]);
 
@@ -36,6 +44,10 @@ export async function GET(request: Request) {
   if (tokenHash && TYPES.has(type) && isSupabaseConfigured()) {
     try {
       const supabase = createClient();
+      // Whoever was signed in on this browser does not get to survive somebody
+      // else confirming their email on it. Verifying on top of a live session
+      // is what let a new member land on the previous member's account.
+      await supabase.auth.signOut();
       const { error } = await supabase.auth.verifyOtp({
         type: type as EmailOtpType,
         token_hash: tokenHash,

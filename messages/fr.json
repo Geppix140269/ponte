@@ -586,17 +586,28 @@
     "pill": "Membres",
     "title": "Une porte. Un identifiant.",
     "subtitle": "Pas de mot de passe. Nouveau ici ? La connexion crée votre compte. Les membres publient des affaires et consultent le tableau.",
-    "linkExpired": "Ce lien a expiré ou a déjà été utilisé. Saisissez votre e-mail ci-dessous et nous en enverrons un nouveau.",
-    "notConfigured": "La connexion sera disponible une fois Supabase Auth raccordé. Ajoutez vos clés Supabase pour activer le lien magique et la connexion Google.",
-    "checkInbox": "Consultez votre boîte de réception : un lien de connexion magique vous attend.",
+    "linkExpired": "Ce code a expiré ou a déjà servi. Saisissez votre e-mail ci-dessous et nous en enverrons un nouveau.",
+    "notConfigured": "La connexion s'active une fois Supabase Auth relié. Ajoutez vos clés Supabase pour activer la connexion par e-mail et par Google.",
     "googleDisabled": "Connexion Google désactivée (aucun client ID configuré).",
     "or": "ou",
     "emailLabel": "Adresse e-mail",
     "emailPlaceholder": "you@company.com",
     "sending": "Envoi...",
-    "submit": "Recevoir un lien magique par e-mail",
+    "submit": "Envoyez-moi un code",
     "errorFallback": "Une erreur est survenue. Réessayez.",
-    "errorUnknown": "Erreur inconnue"
+    "errorUnknown": "Erreur inconnue",
+    "code": {
+      "heading": "Saisissez votre code",
+      "sentTo": "Nous avons envoyé un code à six chiffres à {email}. Il expire dans 10 minutes.",
+      "label": "Chiffre",
+      "verifying": "Vérification...",
+      "wrong": "Ce code n'est pas le bon. Vérifiez l'e-mail et réessayez.",
+      "expired": "Ce code a expiré. Demandez-en un nouveau.",
+      "resend": "Envoyer un nouveau code",
+      "resent": "Nouveau code envoyé.",
+      "changeEmail": "Utiliser une autre adresse",
+      "switched": "Vous étiez connecté sous un autre compte. Cette session a été remplacée."
+    }
   },
   "marketplace": {
     "meta": {

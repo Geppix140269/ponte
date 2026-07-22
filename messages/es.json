@@ -586,17 +586,28 @@
     "pill": "Miembros",
     "title": "Una puerta. Un acceso.",
     "subtitle": "Sin contraseñas. ¿Es nuevo aquí? Al iniciar sesión se crea su cuenta. Los miembros publican operaciones y ven el tablero.",
-    "linkExpired": "Ese enlace ha caducado o ya se ha usado. Introduzca su correo electrónico abajo y le enviaremos uno nuevo.",
-    "notConfigured": "El inicio de sesión estará disponible cuando se conecte Supabase Auth. Añada sus claves de Supabase para habilitar el enlace mágico y el acceso con Google.",
-    "checkInbox": "Revise su bandeja de entrada: le hemos enviado un enlace mágico de acceso.",
+    "linkExpired": "Ese código expiró o ya se usó. Escribe tu correo abajo y te enviamos uno nuevo.",
+    "notConfigured": "El acceso se activa cuando Supabase Auth esté conectado. Añade tus claves de Supabase para habilitar el login por correo y con Google.",
     "googleDisabled": "Acceso con Google desactivado (no hay client ID configurado).",
     "or": "o",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "you@company.com",
     "sending": "Enviando...",
-    "submit": "Envíeme un enlace mágico",
+    "submit": "Envíame un código",
     "errorFallback": "Algo ha fallado. Inténtelo de nuevo.",
-    "errorUnknown": "Error desconocido"
+    "errorUnknown": "Error desconocido",
+    "code": {
+      "heading": "Introduce tu código",
+      "sentTo": "Enviamos un código de seis dígitos a {email}. Caduca en 10 minutos.",
+      "label": "Dígito",
+      "verifying": "Comprobando...",
+      "wrong": "Ese código no es correcto. Revisa el correo e inténtalo de nuevo.",
+      "expired": "Ese código ha caducado. Pide uno nuevo.",
+      "resend": "Enviar un código nuevo",
+      "resent": "Código nuevo enviado.",
+      "changeEmail": "Usar otro correo",
+      "switched": "Habías iniciado sesión como otra persona. Esa sesión ha sido reemplazada."
+    }
   },
   "marketplace": {
     "meta": {
