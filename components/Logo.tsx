@@ -1,156 +1,206 @@
 /**
- * Ponte Brand v3: the mark.
+ * Ponte: the mark.
  *
- * Three anatomies of one mark:
+ * A suspension bridge. The lime pier is one party, the cyan pier the other,
+ * and the span runs lime through violet to cyan: the two sides bridged. The
+ * lime pier always leads, which on an LTR page means it sits left.
  *
- *   1. <BridgeMark />          is the full mark (arch + node + baseline)
- *                                for ≥48 px contexts
- *   2. <BridgeMark compact />  is a filled silhouette + node only,
- *                                for ≤32 px contexts (favicons, tight UI)
- *   3. <BridgeMark animate />  adds Span Traversal motion, fires on real
- *                                data events (report ready, sync,
- *                                download complete). Respects
- *                                prefers-reduced-motion.
+ * Construction and geometry are transcribed from
+ * design_handoff_ponte/Ponte Logo.dc.html and Brand Book.dc.html, on the
+ * bundle's 76x50 grid.
  *
- * Anything that draws the bridge anywhere else in the app must import
- * this. The path data is the brand IP.
+ * Usage rules, from the brand book, enforced by the shape of this API:
+ *   - Never recolour the piers. That is why there is no pier colour prop:
+ *     pick a `variant` instead.
+ *   - Never rotate or stretch the mark.
+ *   - Never put the gradient mark on a busy photo. Use variant="mono".
+ *   - Clear space equals one pier diameter.
  */
+
+type Variant = "gradient" | "mono" | "on-light";
+
+/**
+ * One shared gradient id, and every instance carries its own identical
+ * `<defs>`. Two instances therefore declare the same id, which is what lets
+ * any one of them be unmounted without breaking the others' `url(#...)`
+ * reference. A per-instance id would need `useId`, and that would make the
+ * mark a client component for no gain.
+ */
+const ARC_GRADIENT_ID = "ponte-bridge-arc";
+
+const SPAN = "M10 40 C 28 6, 48 6, 66 40";
 
 type BridgeMarkProps = {
   className?: string;
-  stroke?: string;
-  node?: string;
-  showBaseline?: boolean;
+  variant?: Variant;
+  /** The deck line under the span. Dropped at favicon sizes. */
+  showDeck?: boolean;
+  /** The three suspenders. Dropped below roughly 32px, where they blur out. */
+  showSuspenders?: boolean;
   /**
-   * If true, renders the v3 compact silhouette variant. Use at sizes ≤32 px
-   * where the stroked outline disappears. Auto-selects when size="sm".
-   */
-  compact?: boolean;
-  /**
-   * If true, renders the canonical Span Traversal motion. Use only on real
-   * data-arrival moments (report delivered, counter tick, download ready).
-   * Never on hover, page load, or scroll. Automatically pauses when the
-   * user has prefers-reduced-motion enabled.
+   * Draws the span on mount, 1500ms. Reserve it for real arrival moments
+   * (a report lands, a verification completes), never hover or scroll.
+   * Switched off under prefers-reduced-motion by the rule in globals.css.
    */
   animate?: boolean;
+  title?: string;
 };
 
 export function BridgeMark({
   className,
-  stroke = "#FFFFFF",
-  node = "#C9973A",
-  showBaseline = true,
-  compact = false,
+  variant = "gradient",
+  showDeck = true,
+  showSuspenders = true,
   animate = false,
+  title,
 }: BridgeMarkProps) {
-  // Compact variant: filled silhouette on a 32-unit grid.
-  // Baseline is implied by the flat bottom of the solid mass.
-  // No motion variant: compact never animates.
-  if (compact) {
-    return (
-      <svg
-        viewBox="0 0 32 32"
-        className={className}
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M 4 28 L 4 16 C 4 8 28 8 28 16 L 28 28 L 23 28 L 23 18 C 23 12 9 12 9 18 L 9 28 Z"
-          fill={stroke}
-          fillRule="evenodd"
-        />
-        <circle cx="16" cy="11" r="3" fill={node} />
-      </svg>
-    );
-  }
+  const mono = variant !== "gradient";
+  const onLight = variant === "on-light";
 
-  // Animated variant: Span Traversal, where light travels left pillar to apex
-  // and the node fires on arrival. CSS lives in globals.css under
-  // .mark-anim. The dim "arch-base" path stays visible at low opacity,
-  // the "arch-active" path fills via stroke-dashoffset, the traveller
-  // dot rides the offset-path, and the apex ring pulses once per cycle.
-  if (animate) {
-    const archPath =
-      "M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98";
-    return (
-      <svg
-        viewBox="0 0 120 120"
-        className={`${className ?? ""} mark-anim`.trim()}
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d={archPath}
-          className="arch-base"
-          strokeWidth="9"
-          strokeLinejoin="miter"
-        />
-        {showBaseline && (
-          <line
-            x1="14"
-            y1="98"
-            x2="106"
-            y2="98"
-            stroke="rgba(255,255,255,0.4)"
-            strokeWidth="3"
-          />
-        )}
-        <path
-          d={archPath}
-          className="arch-active"
-          strokeWidth="9"
-          strokeLinejoin="miter"
-        />
-        <circle
-          cx="60"
-          cy="42"
-          r="6.5"
-          className="apex-pulse"
-          fill="none"
-          stroke={node}
-          strokeWidth="2"
-        />
-        <circle
-          r="3.5"
-          className="traveller"
-          style={{
-            offsetPath: `path('${archPath}')`,
-          }}
-        />
-        <circle cx="60" cy="42" r="6.5" fill={node} />
-      </svg>
-    );
-  }
+  const spanStroke = onLight
+    ? "#0A0C11"
+    : mono
+      ? "#FFFFFF"
+      : `url(#${ARC_GRADIENT_ID})`;
+  const pierLeft = onLight ? "#0A0C11" : mono ? "#FFFFFF" : "#CBFB5E";
+  const pierRight = onLight ? "#0A0C11" : mono ? "#FFFFFF" : "#3FE0C5";
+  const deck = onLight ? "rgba(10,12,17,.25)" : "rgba(255,255,255,.28)";
+  const suspender = onLight ? "rgba(10,12,17,.2)" : "rgba(255,255,255,.18)";
 
-  // Standard mark: full anatomy (arch + baseline + node).
   return (
     <svg
-      viewBox="0 0 120 120"
+      viewBox="0 0 76 50"
       className={className}
       fill="none"
-      aria-hidden="true"
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+      focusable="false"
     >
-      <path
-        d="M 22 98 L 22 60 C 22 35 98 35 98 60 L 98 98"
-        stroke={stroke}
-        strokeWidth="9"
-        strokeLinejoin="miter"
-      />
-      {showBaseline && (
-        <line
-          x1="14"
-          y1="98"
-          x2="106"
-          y2="98"
-          stroke={stroke}
-          strokeWidth="3"
+      {title ? <title>{title}</title> : null}
+      {!mono && (
+        <defs>
+          <linearGradient id={ARC_GRADIENT_ID} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#CBFB5E" />
+            <stop offset="0.5" stopColor="#8B6BFF" />
+            <stop offset="1" stopColor="#3FE0C5" />
+          </linearGradient>
+        </defs>
+      )}
+
+      {showDeck && (
+        <path d="M8 42 H68" stroke={deck} strokeWidth="2" strokeLinecap="round" />
+      )}
+      {showSuspenders && (
+        <path
+          d="M22 21 V42 M38 15 V42 M54 21 V42"
+          stroke={suspender}
+          strokeWidth="1.4"
         />
       )}
-      <circle cx="60" cy="42" r="6.5" fill={node} />
+      <path
+        d={SPAN}
+        stroke={spanStroke}
+        strokeWidth="3.6"
+        strokeLinecap="round"
+        className={animate ? "route-draw" : undefined}
+        style={animate ? { ["--len" as string]: 72 } : undefined}
+      />
+      <circle cx="10" cy="40" r="5" fill={pierLeft} />
+      <circle cx="66" cy="40" r="5" fill={pierRight} />
     </svg>
   );
 }
 
+/**
+ * The app icon: the mark on a rounded-squircle tile with a violet bloom in
+ * the corner. One centre suspender only, because three do not survive at
+ * 60px.
+ */
+export function AppIcon({ size = 88, className }: { size?: number; className?: string }) {
+  return (
+    <span
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        borderRadius: Math.round(size * 0.27),
+        background: "linear-gradient(150deg,#20242F,#0A0C11)",
+        boxShadow: "inset 0 0 0 1px rgba(255,255,255,.09)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: -size * 0.23,
+          right: -size * 0.18,
+          width: size * 0.9,
+          height: size * 0.9,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle,rgba(139,107,255,.6),transparent 70%)",
+        }}
+      />
+      <svg
+        viewBox="0 0 76 50"
+        width={size * 0.66}
+        fill="none"
+        aria-hidden="true"
+        style={{ position: "relative" }}
+      >
+        <defs>
+          <linearGradient id={ARC_GRADIENT_ID} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#CBFB5E" />
+            <stop offset="0.5" stopColor="#8B6BFF" />
+            <stop offset="1" stopColor="#3FE0C5" />
+          </linearGradient>
+        </defs>
+        <path d="M38 15 V41" stroke="rgba(255,255,255,.2)" strokeWidth="1.5" />
+        <path
+          d={SPAN}
+          stroke={`url(#${ARC_GRADIENT_ID})`}
+          strokeWidth="4.4"
+          strokeLinecap="round"
+        />
+        <circle cx="10" cy="40" r="5.6" fill="#CBFB5E" />
+        <circle cx="66" cy="40" r="5.6" fill="#3FE0C5" />
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * The wordmark. Lowercase, Space Grotesk 700, tight tracking, and a lime
+ * full stop. The stop is the only coloured glyph and it is not optional:
+ * it is what makes the word a mark.
+ */
+export function Wordmark({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span className={`display ${className}`} style={{ fontWeight: 700, ...style }}>
+      ponte<span style={{ color: "#CBFB5E" }}>.</span>
+    </span>
+  );
+}
+
+/**
+ * The horizontal lockup: mark plus wordmark, with one pier diameter of clear
+ * space between them.
+ *
+ * `reversed` is kept from the v2 API because the header and footer pass it.
+ * On an obsidian canvas everything is reversed, so it now only decides
+ * whether the wordmark is ink or obsidian.
+ */
 export default function Logo({
   reversed = false,
   className = "",
@@ -160,31 +210,26 @@ export default function Logo({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const dims =
-    size === "sm" ? "h-6 w-6" : size === "lg" ? "h-10 w-10" : "h-8 w-8";
-  const text =
-    size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-xl";
-
-  const stroke = reversed ? "#FFFFFF" : "#0D1B2A";
-  const wordColor = reversed ? "text-white" : "text-navy";
-
-  // Auto-select compact variant for sm to keep the silhouette crisp.
-  const useCompact = size === "sm";
+  const markH = size === "sm" ? "h-5" : size === "lg" ? "h-8" : "h-6";
+  const text = size === "sm" ? "text-lg" : size === "lg" ? "text-[28px]" : "text-[22px]";
 
   return (
-    <span className={`inline-flex items-center gap-[10px] ${className}`}>
+    <span className={`inline-flex items-center gap-2 ${className}`}>
       <BridgeMark
-        className={dims}
-        stroke={stroke}
-        node="#C9973A"
-        compact={useCompact}
+        className={`${markH} w-auto`}
+        variant={reversed ? "gradient" : "on-light"}
+        // Suspenders disappear into the deck line at header scale.
+        showSuspenders={size === "lg"}
+        title="Ponte"
       />
-      <span
-        className={`serif font-medium tracking-[3px] ${text} ${wordColor}`}
-        style={{ letterSpacing: "3px" }}
-      >
-        Ponte
-      </span>
+      <Wordmark
+        className={text}
+        style={{
+          color: reversed ? "#EEF1F5" : "#0A0C11",
+          letterSpacing: "-0.045em",
+          lineHeight: 1,
+        }}
+      />
     </span>
   );
 }
