@@ -94,6 +94,14 @@ export const config = {
     // /en/manifest.webmanifest, which is a 404, and the install prompt would
     // never appear. A service worker also has to be served from the root to
     // control the whole origin, so it must not be moved or prefixed.
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // html is in the extension list because a static file served straight out
+    // of public/ is not a page and must not be locale routed. Without it,
+    // /preview/a.html was rewritten to /en/preview/a.html and answered 404,
+    // the same fault that would have silently killed the manifest. No App
+    // Router route ends in .html, so nothing real is excluded by adding it.
+    // Deliberately NOT adding xml or json here: sitemap.xml and robots.txt are
+    // generated routes, and excluding a route to fix a static file is how you
+    // trade one silent 404 for another.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|html)$).*)",
   ],
 };
