@@ -3,28 +3,61 @@
 @tailwind utilities;
 
 /* ======================================================================
-   Ponte Brand v2. The verified network for cross-border trade.
-   Glass over navy-deep. Gold reserved for live data. One blur,
-   one border weight, one shadow. The discipline is in restraint.
+   Ponte design system. Rebranding 21st July handoff, brand book v1.
+
+   Obsidian canvas. Lime is the only "go". Violet is trust and AI, cyan is
+   verified, gold is the institutional tier, and coral is alerts and nothing
+   else. Elevation is a border, a background shift and a soft coloured glow,
+   never a hard drop shadow. Whitespace is the luxury signal.
+
+   The legacy block at the end of :root keeps the v2 navy/gold variable names
+   alive, re-pointed at new-system values, for the routes still waiting on U2.
    ====================================================================== */
 
 :root {
-  --navy: #0D1B2A;
-  --navy-2: #142336;
-  --navy-3: #1B2E47;
-  --navy-deep: #07101B;
-  --gold: #C9973A;
-  --gold-soft: #D9AC55;
-  --cream: #F5F0E8;
-  --gray: #6B7280;
-  --gray-2: #9CA3AF;
-  --line: rgba(255, 255, 255, 0.12);
-  --line-strong: rgba(255, 255, 255, 0.20);
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-strong: rgba(255, 255, 255, 0.10);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --positive: #4AC09A;
-  --negative: #E07A5F;
+  /* Ground */
+  --obsidian: #0a0c11;
+  --obsidian-deep: #06070a;
+  --surface: #1b2029;
+
+  /* Text */
+  --ink: #eef1f5;
+  --muted: #8a93a2;
+  --slate: #c2ccd8;
+
+  /* Signal */
+  --lime: #cbfb5e;
+  --violet: #8b6bff;
+  --violet-lift: #a98bff;
+  --violet-ink: #b6a2ff;
+  --cyan: #3fe0c5;
+  --gold: #f5c542;
+  --coral: #ff6b5c;
+
+  /* Glass and hairlines */
+  --glass: rgba(255, 255, 255, 0.05);
+  --hairline-soft: rgba(255, 255, 255, 0.08);
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-strong: rgba(255, 255, 255, 0.12);
+
+  /* The bridge. Lime pier leads, cyan pier closes. */
+  --bridge: linear-gradient(90deg, #cbfb5e, #8b6bff, #3fe0c5);
+  --violet-cta: linear-gradient(120deg, #8b6bff, #a98bff);
+
+  /* Legacy v2 aliases. Deprecated, removed at the end of U2. */
+  --cream: #eef1f5;
+  --gray-2: #8a93a2;
+  --navy: #0a0c11;
+  --navy-2: #1b2029;
+  --navy-3: #232936;
+  --navy-deep: #06070a;
+  --gold-soft: #f7d268;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --glass-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --positive: #3fe0c5;
+  --negative: #ff6b5c;
 }
 
 @layer base {
@@ -32,284 +65,512 @@
     scroll-behavior: smooth;
   }
   body {
-    background: var(--navy-deep);
-    color: var(--cream);
-    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+    background: var(--obsidian);
+    color: var(--ink);
+    font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+    /* The bundle sets tabular figures globally so every number in the product
+       lines up in a column without each callsite remembering to ask. */
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
   }
-  h1, h2, h3, h4 {
-    font-family: var(--font-playfair), Georgia, serif;
-    color: #FFFFFF;
-    letter-spacing: -0.01em;
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  ::selection {
+    background: rgba(203, 251, 94, 0.25);
+  }
+  :focus-visible {
+    outline: 2px solid var(--lime);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
-/* ============ AMBIENT BACKGROUND ============ */
+/* ============ AMBIENT BACKGROUND ============
+   Static by design. An infinite blur loop is the most expensive thing a page
+   can animate and the bundle's motion table rules it out explicitly. */
 .bg-ambient {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--navy-deep);
+  background: var(--obsidian);
   overflow: hidden;
   pointer-events: none;
 }
 .bg-ambient::before {
   content: "";
   position: absolute;
-  inset: -20% -10% -10% -10%;
-  background:
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,151,58,0.18), transparent 60%),
-    radial-gradient(ellipse 50% 60% at 20% 30%, rgba(31, 62, 110, 0.55), transparent 65%),
-    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(13, 27, 42, 0.9), transparent 70%);
-  filter: blur(20px);
-}
-.bg-ambient::after {
-  content: "";
-  position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 24px 24px;
-  opacity: 0.6;
-  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      ellipse 46% 34% at 82% 4%,
+      rgba(139, 107, 255, 0.26),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 6% 30%,
+      rgba(203, 251, 94, 0.09),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 50% 104%,
+      rgba(63, 224, 197, 0.07),
+      transparent 70%
+    );
 }
 
 @layer components {
   /* ===== Layout primitives ===== */
   .container-px {
-    @apply mx-auto w-full px-5 sm:px-6 lg:px-10;
+    @apply mx-auto w-full px-[18px] sm:px-6 lg:px-10;
     max-width: 1320px;
   }
-  .serif {
-    font-family: var(--font-playfair), Georgia, serif;
+  /* `.serif` and `.mono` are v2 names. Playfair and JetBrains no longer ship,
+     so both resolve into the new pairing rather than falling back to Georgia. */
+  .serif,
+  .display {
+    font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+    letter-spacing: -0.03em;
   }
   .mono {
-    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* ===== Glass primitives ===== */
+  /* ===== Glass primitives =====
+     One fill, one border weight. The restraint is the point. */
   .glass {
-    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,0.12) inset,
-      0 24px 60px -20px rgba(0,0,0,0.55),
-      0 0 0 0.5px rgba(255,255,255,0.04);
+    background: var(--glass);
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
   }
   .glass-tight {
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 14px;
+    background: var(--glass);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 16px;
   }
   .nav-glass {
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
-    background: rgba(7, 16, 27, 0.55);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(10, 12, 17, 0.72);
+    border-bottom: 1px solid var(--hairline-soft);
   }
 
   /* ===== Pills and eyebrows ===== */
   .pill {
-    @apply inline-flex items-center gap-[10px] px-4 py-2 rounded-full text-[11px] uppercase text-cream;
-    letter-spacing: 0.22em;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.16);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--lime);
+    background: rgba(203, 251, 94, 0.1);
+    border: 1px solid rgba(203, 251, 94, 0.22);
   }
   .pill::before {
     content: "";
     width: 6px;
     height: 6px;
     border-radius: 999px;
-    background: var(--gold);
-    box-shadow: 0 0 12px var(--gold);
+    background: var(--lime);
   }
   .eyebrow {
-    @apply text-[11px] uppercase text-gold;
-    letter-spacing: 0.22em;
-    font-weight: 500;
+    @apply text-[10px] uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--lime);
   }
+  .label {
+    @apply text-[10px] uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  /* Section numerals. The v2 name kept its callsites; the Playfair italic it
+     used to be is now the display face, because nothing in this system is
+     italic. Deprecated, folds into .display at the end of U2. */
   .num-italic {
-    font-family: var(--font-playfair), Georgia, serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: 22px;
-    color: var(--gold);
+    font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    color: var(--lime);
   }
 
-  /* ===== Buttons ===== */
+  /* ===== Buttons =====
+     Primary is solid lime on obsidian text. Premium is the violet gradient.
+     Ghost is glass. Credit prices print inside the button, never beside it. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-[22px] py-[13px] text-[13px] font-medium transition-all duration-200;
-    letter-spacing: 0.06em;
+    @apply inline-flex items-center justify-center gap-2 rounded-btn px-[18px] py-[12px] text-[13px] transition-all duration-200;
+    font-weight: 700;
+    min-height: 44px;
   }
-  .btn-gold {
-    @apply btn text-navy;
-    background: var(--gold);
-    border: 1px solid var(--gold);
-    box-shadow: 0 10px 30px -10px rgba(201,151,58,0.6);
+  .btn-primary {
+    @apply btn;
+    background: var(--lime);
+    color: var(--obsidian);
+    border: 1px solid var(--lime);
+    box-shadow: 0 10px 26px -10px rgba(203, 251, 94, 0.7);
   }
-  .btn-gold:hover {
+  .btn-primary:hover {
     transform: translateY(-1px);
-    background: var(--gold-soft);
+    background: #d6ff77;
   }
-  .btn-navy {
-    @apply btn text-cream;
-    background: var(--navy);
-    border: 1px solid var(--glass-border);
+  .btn-premium {
+    @apply btn text-white;
+    background: var(--violet-cta);
+    border: 1px solid transparent;
+    box-shadow: 0 10px 26px -10px rgba(139, 107, 255, 0.7);
   }
-  .btn-navy:hover { background: var(--navy-2); }
+  .btn-premium:hover {
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    @apply btn;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--hairline-strong);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  /* The price segment inside a credit-priced button. */
+  .btn-credit {
+    font-weight: 600;
+    opacity: 0.9;
+    border-left: 1px solid rgba(0, 0, 0, 0.28);
+    padding-left: 7px;
+    margin-left: 1px;
+  }
+  .btn-premium .btn-credit {
+    border-left-color: rgba(255, 255, 255, 0.32);
+  }
+  /* Legacy v2 button names, mapped onto the three above. Deprecated. */
+  .btn-gold {
+    @apply btn-primary;
+  }
+  .btn-navy,
   .btn-outline,
   .btn-ghost-light {
-    @apply btn text-cream;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.16);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-  .btn-outline:hover,
-  .btn-ghost-light:hover {
-    background: rgba(255,255,255,0.10);
+    @apply btn-ghost;
   }
 
   /* ===== Cards ===== */
   .card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025));
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
+    background: var(--glass);
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
     @apply flex flex-col transition-all duration-200;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,0.12) inset,
-      0 24px 60px -20px rgba(0,0,0,0.55);
   }
   .card:hover {
-    border-color: rgba(201,151,58,0.3);
-    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.18);
   }
 
-  /* ===== Badges ===== */
+  /* ===== Badges and tier chips ===== */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] uppercase;
-    letter-spacing: 0.22em;
-    font-weight: 500;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px];
+    letter-spacing: 0.02em;
+    font-weight: 700;
   }
+  /* Generic accent badge. Gold is reserved for the L4 tier, so the accent
+     badge is lime: see .tier-4 below for the real institutional colour. */
   .badge-gold {
-    @apply badge text-gold;
-    background: rgba(201,151,58,0.15);
-    border: 1px solid rgba(201,151,58,0.35);
+    @apply badge;
+    color: var(--lime);
+    background: rgba(203, 251, 94, 0.13);
+    border: 1px solid rgba(203, 251, 94, 0.24);
   }
   .badge-navy {
-    @apply badge text-cream;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.14);
+    @apply badge;
+    color: var(--slate);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--hairline-soft);
+  }
+
+  /* Verification tier ramp: L1 slate, L2 cyan, L3 violet, L4 gold. */
+  .tier {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px];
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .tier-1 {
+    background: rgba(154, 167, 184, 0.16);
+    color: var(--slate);
+  }
+  .tier-2 {
+    background: rgba(63, 224, 197, 0.15);
+    color: var(--cyan);
+  }
+  .tier-3 {
+    background: rgba(139, 107, 255, 0.2);
+    color: var(--violet-ink);
+  }
+  .tier-4 {
+    background: rgba(245, 197, 66, 0.16);
+    color: var(--gold);
+  }
+
+  /* Flexibility: Fixed / Negotiable / Open. Square tags, not pills. */
+  .fx {
+    @apply inline-flex items-center gap-1 rounded-tag px-2 py-[3px] text-[10px];
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .fx-fixed {
+    background: rgba(203, 251, 94, 0.14);
+    color: var(--lime);
+  }
+  .fx-neg {
+    background: rgba(139, 107, 255, 0.16);
+    color: var(--violet-ink);
+  }
+  .fx-open {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--muted);
+  }
+
+  /* AI-drafted, desk-reviewed. The disclosure is never optional. */
+  .prov {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px];
+    font-weight: 600;
+    color: var(--violet-ink);
+    background: rgba(139, 107, 255, 0.1);
+    border: 1px solid rgba(139, 107, 255, 0.3);
+  }
+
+  /* Country code chip. Real flags replace these in production. */
+  .flag-chip {
+    @apply inline-flex items-center justify-center rounded-[5px] px-1.5 text-[9.5px];
+    min-width: 26px;
+    height: 19px;
+    font-weight: 700;
+    color: var(--slate);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--hairline-strong);
   }
 
   /* ===== Form fields ===== */
   .field {
-    @apply w-full rounded-[10px] px-4 py-3 text-[14px] outline-none transition-colors;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #FFFFFF;
+    @apply w-full rounded-field px-4 py-3 text-[14px] outline-none transition-colors;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink);
+    min-height: 44px;
   }
-  .field::placeholder { color: var(--gray-2); }
-  .field:focus { border-color: var(--gold); }
+  .field::placeholder {
+    color: var(--muted);
+  }
+  .field:focus {
+    border-color: var(--lime);
+  }
   .field-label {
     @apply mb-2 block text-[10px] uppercase;
-    color: var(--gray-2);
-    letter-spacing: 0.22em;
-    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    font-weight: 600;
   }
 
   /* ===== Legal prose ===== */
   .prose-legal {
     @apply text-sm leading-relaxed;
-    color: var(--gray-2);
+    color: var(--muted);
   }
   .prose-legal h2 {
     @apply mb-3 mt-9 text-xl;
-    color: #FFFFFF;
-    font-family: var(--font-playfair), Georgia, serif;
-    font-weight: 500;
+    color: var(--ink);
+    font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
-  .prose-legal p { @apply mb-4; }
-  .prose-legal ul { @apply mb-4 list-disc space-y-2 pl-5; }
+  .prose-legal p {
+    @apply mb-4;
+  }
+  .prose-legal ul {
+    @apply mb-4 list-disc space-y-2 pl-5;
+  }
   .prose-legal a {
-    color: var(--gold);
+    color: var(--lime);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-  .prose-legal a:hover { color: var(--gold-soft); }
-}
-
-/* ===== Pulse for live signals ===== */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-.pulse-dot {
-  animation: pulse-dot 2.4s infinite;
+  .prose-legal a:hover {
+    color: #fff;
+  }
 }
 
 /* ======================================================================
-   Brand v3: Span Traversal motion.
-   Used by <BridgeMark animate /> for real data-arrival moments only
-   (report ready, sync, download complete). Never on hover, scroll, or
-   page load. Respects prefers-reduced-motion.
+   MOTION
+   Durations and easings come from the bundle's motion table. Everything
+   here is switched off wholesale under prefers-reduced-motion at the foot
+   of this block.
    ====================================================================== */
-.mark-anim .arch-base {
-  stroke: rgba(255, 255, 255, 0.18);
-}
-.mark-anim .arch-active {
-  stroke: #FFFFFF;
-  stroke-dasharray: 156;
-  stroke-dashoffset: 156;
-  animation: arch-fill 3.4s cubic-bezier(.6,.05,.3,1) infinite;
-}
-.mark-anim .apex-pulse {
-  transform-origin: 60px 42px;
-  animation: apex-pulse 3.4s ease-out infinite;
+
+/* Entrance rise, staggered. Set --i on each child for its delay step. */
+.rise {
   opacity: 0;
+  animation: rise 600ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
 }
-.mark-anim .traveller {
-  fill: var(--gold);
-  animation: traverse 3.4s cubic-bezier(.55,.05,.4,1) infinite;
-  opacity: 0;
-}
-@keyframes arch-fill {
-  0%   { stroke-dashoffset: 156; }
-  55%  { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 0; }
-}
-@keyframes traverse {
-  0%   { offset-distance: 0%;   opacity: 0; }
-  8%   { opacity: 1; }
-  50%  { offset-distance: 50%; }
-  55%  { offset-distance: 50%; opacity: 1; }
-  62%  { opacity: 0; }
-  100% { offset-distance: 100%; opacity: 0; }
-}
-@keyframes apex-pulse {
-  0%, 50% { opacity: 0;   transform: scale(1); }
-  55%     { opacity: 0.9; transform: scale(1); }
-  85%     { opacity: 0;   transform: scale(2.8); }
-  100%    { opacity: 0;   transform: scale(2.8); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mark-anim .arch-active,
-  .mark-anim .traveller,
-  .mark-anim .apex-pulse {
-    animation: none;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
-  .mark-anim .arch-active { stroke-dashoffset: 0; }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bridge route draw. The path sets --len to its own measured length. */
+.route-draw {
+  stroke-dasharray: var(--len, 200);
+  stroke-dashoffset: var(--len, 200);
+  animation: route-draw 1500ms ease forwards;
+}
+@keyframes route-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The live deals strip.
+   The track holds the cards twice and shifts by exactly half its width, so
+   the loop has no seam. Hover pauses it, because a card someone is reaching
+   for should stop when they go for it. */
+.marquee {
+  overflow: hidden;
+  /* Fade both ends so cards enter and leave rather than being guillotined. */
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+}
+.marquee-track {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    /* Half the track is the second copy, so this lands exactly on the seam.
+       The gap is subtracted because one sits between the two halves too. */
+    transform: translateX(calc(-50% - 7px));
+  }
+}
+
+/* Trust dial sweep, 113 being the circumference of the r=18 dial. */
+.dial-sweep {
+  animation: dial-sweep 1500ms ease-out forwards;
+}
+@keyframes dial-sweep {
+  from {
+    stroke-dashoffset: 113;
+  }
+}
+
+/* Live pulse. An expanding ring, not an opacity blink. */
+.pulse-dot {
+  animation: pulse-ring 1800ms ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(203, 251, 94, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(203, 251, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(203, 251, 94, 0);
+  }
+}
+
+/* Write-up regenerate. A block-level sheen over content that keeps its box,
+   because the one thing this must never do is reflow the panel under the
+   reader's eyes. */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.07),
+    transparent
+  );
+  animation: shimmer 1400ms ease-in-out infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Generic scroll reveal, driven by <Reveal>. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .route-draw,
+  .dial-sweep,
+  .pulse-dot,
+  .shimmer::after,
+  .reveal,
+  .flow-step,
+  .flow-line,
+  .marquee-track {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  /* The strip stops moving, so it has to become something a reader can move
+     themselves, or the deals past the fold are unreachable. */
+  .marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 /* ============ Process flow (How it works) ============ */
@@ -321,40 +582,51 @@
 }
 .flow-line {
   position: absolute;
-  background: linear-gradient(90deg, var(--gold), rgba(232,160,32,0.25));
+  background: var(--bridge);
   transform-origin: left center;
   transform: scaleX(0);
 }
 .flow.in-view .flow-line {
-  animation: flow-draw 1.8s cubic-bezier(.65,.05,.35,1) forwards;
+  animation: flow-draw 1.5s cubic-bezier(0.65, 0.05, 0.35, 1) forwards;
 }
 .flow-line--v {
   transform: scaleY(0);
-  background: linear-gradient(180deg, var(--gold), rgba(232,160,32,0.25));
+  background: linear-gradient(180deg, #cbfb5e, #8b6bff, #3fe0c5);
 }
 .flow.in-view .flow-line--v {
-  animation: flow-draw-v 1.8s cubic-bezier(.65,.05,.35,1) forwards;
+  animation: flow-draw-v 1.5s cubic-bezier(0.65, 0.05, 0.35, 1) forwards;
 }
 @keyframes flow-draw {
-  to { transform: scaleX(1); }
+  to {
+    transform: scaleX(1);
+  }
 }
 @keyframes flow-draw-v {
-  to { transform: scaleY(1); }
+  to {
+    transform: scaleY(1);
+  }
 }
 .flow-step {
   opacity: 0;
   transform: translateY(14px);
 }
 .flow.in-view .flow-step {
-  animation: flow-rise 0.6s cubic-bezier(.2,.7,.3,1) forwards;
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
-.flow.in-view .flow-step:nth-child(1) { animation-delay: calc(var(--step-delay) * 0); }
-.flow.in-view .flow-step:nth-child(2) { animation-delay: calc(var(--step-delay) * 1); }
-.flow.in-view .flow-step:nth-child(3) { animation-delay: calc(var(--step-delay) * 2); }
-.flow.in-view .flow-step:nth-child(4) { animation-delay: calc(var(--step-delay) * 3); }
-.flow.in-view .flow-step:nth-child(5) { animation-delay: calc(var(--step-delay) * 4); }
-@keyframes flow-rise {
-  to { opacity: 1; transform: translateY(0); }
+.flow.in-view .flow-step:nth-child(1) {
+  animation-delay: calc(var(--step-delay) * 0);
+}
+.flow.in-view .flow-step:nth-child(2) {
+  animation-delay: calc(var(--step-delay) * 1);
+}
+.flow.in-view .flow-step:nth-child(3) {
+  animation-delay: calc(var(--step-delay) * 2);
+}
+.flow.in-view .flow-step:nth-child(4) {
+  animation-delay: calc(var(--step-delay) * 3);
+}
+.flow.in-view .flow-step:nth-child(5) {
+  animation-delay: calc(var(--step-delay) * 4);
 }
 .flow-node {
   position: relative;
@@ -364,54 +636,33 @@
   width: 52px;
   height: 52px;
   border-radius: 9999px;
-  border: 1px solid rgba(232,160,32,0.4);
-  background: rgba(232,160,32,0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid rgba(203, 251, 94, 0.3);
+  background: rgba(203, 251, 94, 0.08);
+  color: var(--lime);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 .flow-step:hover .flow-node {
-  transform: scale(1.12);
-  box-shadow: 0 0 24px rgba(232,160,32,0.35);
-}
-.flow.in-view .flow-step:nth-child(1) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 0 + 0.2s); }
-.flow.in-view .flow-step:nth-child(2) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 1 + 0.2s); }
-.flow.in-view .flow-step:nth-child(3) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 2 + 0.2s); }
-.flow.in-view .flow-step:nth-child(4) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 3 + 0.2s); }
-.flow.in-view .flow-step:nth-child(5) .flow-node { animation: node-glow 0.9s ease calc(var(--step-delay) * 4 + 0.2s); }
-@keyframes node-glow {
-  0%   { box-shadow: 0 0 0 0 rgba(232,160,32,0.5); }
-  60%  { box-shadow: 0 0 0 16px rgba(232,160,32,0); }
-  100% { box-shadow: 0 0 0 0 rgba(232,160,32,0); }
-}
-
-/* Generic scroll reveal */
-.reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(.2,.7,.3,1);
-}
-.reveal.in-view {
-  opacity: 1;
-  transform: translateY(0);
-}
-@media (prefers-reduced-motion: reduce) {
-  .flow-step, .flow-line, .reveal { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
+  transform: scale(1.1);
+  box-shadow: 0 0 24px rgba(203, 251, 94, 0.3);
 }
 
 /* Native select popups must follow the dark theme; without this the OS
-   renders cream text on a light panel and options are illegible. */
+   renders light-on-light and the options are illegible. */
 select {
   color-scheme: dark;
 }
 select option {
-  background-color: #0F1E3C;
-  color: #F5EFE2;
+  background-color: #1b2029;
+  color: #eef1f5;
 }
 
 /* ======================================================================
    Installed app, and the mobile bottom bar.
 
    Everything here is written with logical properties, inset-inline rather
-   than left and right, so Arabic gets a correct mirror for free. The gold
+   than left and right, so Arabic gets a correct mirror for free. The active
    indicator slides to the other end of the bar in an RTL layout without a
    single direction specific rule.
    ====================================================================== */
@@ -448,10 +699,10 @@ select option {
   inset-inline: 0;
   bottom: 0;
   z-index: 60;
-  background: rgba(7, 16, 27, 0.86);
+  background: rgba(10, 12, 17, 0.88);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--hairline-soft);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   transition: transform 0.34s cubic-bezier(0.2, 0.7, 0.3, 1);
   -webkit-touch-callout: none;
@@ -462,10 +713,10 @@ select option {
 }
 
 /*
- * One fifth of the bar, parked over the active slot, and the only gold on this
- * edge. A gold hairline ran the full width here first and the two cancelled
- * each other out: a strip that is gold everywhere says nothing about where you
- * are. Gold is the signal colour in this brand, so it gets spent once.
+ * One fifth of the bar, parked over the active slot, and the only lime on this
+ * edge. A hairline ran the full width here first and the two cancelled each
+ * other out: a strip that is lit everywhere says nothing about where you are.
+ * Lime is the signal colour in this brand, so it gets spent once.
  */
 .bottom-nav-indicator {
   position: absolute;
@@ -478,8 +729,8 @@ select option {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--gold) 18%,
-    var(--gold) 82%,
+    var(--lime) 18%,
+    var(--lime) 82%,
     transparent
   );
   transition:
@@ -497,7 +748,7 @@ select option {
   height: 22px;
   background: radial-gradient(
     ellipse at top,
-    rgba(201, 151, 58, 0.34),
+    rgba(203, 251, 94, 0.3),
     transparent 72%
   );
 }
@@ -509,7 +760,7 @@ select option {
   justify-content: center;
   gap: 5px;
   height: var(--bottom-nav-h);
-  color: var(--gray-2);
+  color: var(--muted);
   transition:
     color 0.2s ease,
     transform 0.12s ease;
@@ -519,7 +770,7 @@ select option {
   transform: scale(0.93);
 }
 .bottom-nav-item[data-active="true"] {
-  color: var(--gold);
+  color: var(--lime);
 }
 
 .bottom-nav-icon {
@@ -533,7 +784,7 @@ select option {
   border-radius: 9999px;
   background: radial-gradient(
     circle,
-    rgba(201, 151, 58, 0.22),
+    rgba(203, 251, 94, 0.2),
     transparent 70%
   );
 }
@@ -546,12 +797,12 @@ select option {
   text-overflow: ellipsis;
   font-size: 9px;
   line-height: 1;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
-/* The one action that puts something into the market. Solid gold, flush with
+/* The one action that puts something into the market. Solid lime, flush with
    the bar. A raised circle here would read as a consumer app. */
 .bottom-nav-post {
   display: inline-flex;
@@ -560,13 +811,13 @@ select option {
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: var(--gold);
-  color: var(--navy-deep);
-  box-shadow: 0 6px 18px -6px rgba(201, 151, 58, 0.8);
+  background: var(--lime);
+  color: var(--obsidian);
+  box-shadow: 0 6px 18px -6px rgba(203, 251, 94, 0.8);
   transition: background 0.2s ease;
 }
 .bottom-nav-item[data-active="true"] .bottom-nav-post {
-  background: var(--gold-soft);
+  background: #d6ff77;
 }
 
 /* Sits above the bar, clear of the home indicator. */

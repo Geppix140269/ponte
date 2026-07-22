@@ -292,14 +292,13 @@
     "metaDescription": "Ponte es un tablero verificado para el comercio transfronterizo de mercancías físicas. Las ofertas y las necesidades se redactan en términos comerciales, circulan de forma anónima y no se hace ninguna presentación antes de firmar un NCNDA. Los miembros se contrastan con Companies House, VIES, GLEIF y las listas de OFAC, la UE, la ONU y OFSI.",
     "hero": {
       "eyebrow": "Gratis para todos los miembros",
-      "title": "Descubre quién está",
-      "titleAccent": "al otro lado.",
+      "title": "Compre y venda materias primas físicas en todo el mundo",
       "lead": "Cada contraparte se comprueba contra registros mercantiles y listas de sanciones antes de presentar a nadie.",
       "b1": "Publicar y conectar es gratis",
       "b2": "Sin comisión sobre tu operación",
       "b3": "Anónimo hasta que ambos aceptéis",
-      "cta": "Publica un anuncio, gratis",
-      "secondary": "Ver el tablón"
+      "ctaPrimary": "Ver operaciones en vivo",
+      "ctaSecondary": "Publica un anuncio, gratis"
     },
     "proof": {
       "eyebrow": "Verificación de contrapartes",
@@ -399,6 +398,16 @@
         "cta": "Ver tarifas"
       },
       "currency": "Todos los honorarios se cotizan y se liquidan en USD."
+    },
+    "showcase": {
+      "eyebrow": "En vivo en el tablón",
+      "heading": "Operaciones en marcha ahora mismo.",
+      "count": "{deals} operaciones en vivo en {countries} países",
+      "mapCaption": "Cada arco es un corredor activo en el tablón.",
+      "gridHeading": "Explora lo que está activo",
+      "all": "Todo",
+      "seeAll": "Ver todas las operaciones en vivo",
+      "deskSourced": "Oportunidad localizada por la mesa"
     }
   },
   "legal": {

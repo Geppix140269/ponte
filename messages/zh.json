@@ -292,14 +292,13 @@
     "metaDescription": "Ponte 是面向实物货物跨境贸易的已审核交易看板。供应与求购按贸易条款书写，匿名流转，在签署 NCNDA 之前不作任何引荐。会员会对照 Companies House、VIES、GLEIF 以及 OFAC、欧盟、联合国和 OFSI 名单进行筛查。",
     "hero": {
       "eyebrow": "所有会员均免费",
-      "title": "清楚知道",
-      "titleAccent": "对方是谁。",
+      "title": "全球买卖实物大宗商品",
       "lead": "在任何一方被引荐之前，每一个交易对手都会对照公司登记册和制裁名单接受核查。",
       "b1": "发布和建立联系均免费",
       "b2": "你的成交不收佣金",
       "b3": "双方同意前保持匿名",
-      "cta": "免费发布信息",
-      "secondary": "查看交易板"
+      "ctaPrimary": "查看实时交易",
+      "ctaSecondary": "免费发布信息"
     },
     "proof": {
       "eyebrow": "交易对手核验",
@@ -399,6 +398,16 @@
         "cta": "查看费用"
       },
       "currency": "所有费用均以 USD 报价并结算。"
+    },
+    "showcase": {
+      "eyebrow": "交易板实时动态",
+      "heading": "正在流转的交易。",
+      "count": "{countries} 个国家的 {deals} 笔实时交易",
+      "mapCaption": "每一条弧线都是交易板上的实时贸易通道。",
+      "gridHeading": "浏览实时交易",
+      "all": "全部",
+      "seeAll": "查看所有实时交易",
+      "deskSourced": "交易台发掘的机会"
     }
   },
   "legal": {

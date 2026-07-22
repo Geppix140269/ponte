@@ -2,17 +2,14 @@
 
 ## Daily development
 
-The working copy is inside OneDrive, which breaks some tooling. Until it is
-moved out (see [SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md)):
+The working copy is `C:\dev\ponte`. It was moved out of OneDrive on
+22 July 2026; see [SOURCE-OF-TRUTH.md](SOURCE-OF-TRUTH.md).
 
-- **Use PowerShell for git, `npm install`, and anything that creates files.**
-  A Bash shell cannot create files in this folder and every git write fails
-  with `Unable to create .git/index.lock`. This is a OneDrive artifact, not
-  repository corruption.
-- If git reports `unable to unlink .git/index.lock` or `HEAD.lock`, do not
-  force. Rename the lock out of the way and retry the same command:
-  `ren .git\index.lock _to_delete_lock1`. Never commit a `_to_delete*` file.
-- `unable to unlink tmp_obj_...` warnings during a commit are harmless.
+Bash and PowerShell both work for git, `npm install` and anything else that
+writes files. The old PowerShell-only rule, and the `.git/index.lock` dance
+that went with it, were OneDrive symptoms and no longer apply. If you find
+yourself renaming lock files, check you are not working in the retired
+OneDrive folder by mistake.
 
 ```
 git checkout -b <branch>
@@ -155,7 +152,7 @@ The source of truth is GitHub. Local bundles are a second line, useful if the
 GitHub account is ever lost.
 
 ```
-cd C:\Users\gfuna\OneDrive\Documents\GitHub\ponte
+cd C:\dev\ponte
 git bundle create C:\Users\gfuna\ponte-backups\<date>-ponte.bundle --all
 ```
 

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
-import { Home, LayoutList, Plus, ShieldCheck, User } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { Icon, type SystemIconName } from "@/components/icons";
 
 /*
  * The five things a member does on a phone, in the order they do them.
@@ -18,15 +18,20 @@ import { Link, usePathname } from "@/i18n/navigation";
  * most. It is flush with the bar rather than a raised circle: the protruding
  * centre button belongs to consumer apps, and this reads as an instrument.
  */
-const ITEMS = [
-  { href: "/", key: "home", Icon: Home },
+const ITEMS: {
+  href: string;
+  key: string;
+  icon: SystemIconName;
+  accent?: boolean;
+}[] = [
+  { href: "/", key: "home", icon: "home" },
   // marketplaceShort, not marketplace: a slot is a fifth of a phone, and
   // "Place de marché" or "Маркетплейс" would arrive as an ellipsis.
-  { href: "/marketplace", key: "marketplaceShort", Icon: LayoutList },
-  { href: "/marketplace/new", key: "post", Icon: Plus, accent: true },
-  { href: "/verify", key: "verify", Icon: ShieldCheck },
-  { href: "/account", key: "account", Icon: User },
-] as const;
+  { href: "/marketplace", key: "marketplaceShort", icon: "board" },
+  { href: "/marketplace/new", key: "post", icon: "post", accent: true },
+  { href: "/verify", key: "verify", icon: "verify" },
+  { href: "/account", key: "account", icon: "user" },
+];
 
 // The longest matching href wins, so /marketplace/new lights Post rather than
 // the board it lives under. Home matches only itself.
@@ -114,7 +119,6 @@ export default function BottomNav() {
       <ul className="grid grid-cols-5">
         {ITEMS.map((item, index) => {
           const isActive = index === active;
-          const { Icon } = item;
 
           return (
             <li key={item.href}>
@@ -123,17 +127,15 @@ export default function BottomNav() {
                 className="bottom-nav-item"
                 data-active={isActive}
                 aria-current={isActive ? "page" : undefined}
-                aria-label={
-                  "accent" in item && item.accent ? t("postAriaLabel") : undefined
-                }
+                aria-label={item.accent ? t("postAriaLabel") : undefined}
               >
-                {"accent" in item && item.accent ? (
+                {item.accent ? (
                   <span className="bottom-nav-post">
-                    <Icon className="h-[17px] w-[17px]" strokeWidth={2.5} />
+                    <Icon name={item.icon} size={17} strokeWidth={2.4} />
                   </span>
                 ) : (
                   <span className="bottom-nav-icon">
-                    <Icon className="h-[19px] w-[19px]" strokeWidth={1.75} />
+                    <Icon name={item.icon} size={19} />
                   </span>
                 )}
                 <span className="bottom-nav-label">{t(item.key)}</span>

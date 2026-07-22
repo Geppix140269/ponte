@@ -292,14 +292,13 @@
     "metaDescription": "Ponte é um mural verificado para o comércio transfronteiriço de mercadorias físicas. Ofertas e demandas são escritas em termos comerciais, circulam de forma anônima e nenhuma apresentação é feita antes da assinatura de um NCNDA. Os membros são checados contra Companies House, VIES, GLEIF e as listas da OFAC, da UE, da ONU e do OFSI.",
     "hero": {
       "eyebrow": "Grátis para todos os membros",
-      "title": "Saiba quem está",
-      "titleAccent": "do outro lado.",
+      "title": "Compre e venda commodities físicas em todo o mundo",
       "lead": "Cada contraparte é checada em registros de empresas e listas de sanções antes de qualquer apresentação.",
       "b1": "Publicar e se conectar é grátis",
       "b2": "Sem comissão sobre o seu negócio",
       "b3": "Anônimo até os dois concordarem",
-      "cta": "Publique um anúncio, grátis",
-      "secondary": "Ver o painel"
+      "ctaPrimary": "Ver negócios ao vivo",
+      "ctaSecondary": "Publique um anúncio, grátis"
     },
     "proof": {
       "eyebrow": "Verificação de contraparte",
@@ -399,6 +398,16 @@
         "cta": "Ver tarifas"
       },
       "currency": "Todos os honorários são cotados e liquidados em USD."
+    },
+    "showcase": {
+      "eyebrow": "Ao vivo no quadro",
+      "heading": "Negócios em movimento agora.",
+      "count": "{deals} negócios ao vivo em {countries} países",
+      "mapCaption": "Cada arco é um corredor ativo no quadro.",
+      "gridHeading": "Explore o que está ativo",
+      "all": "Tudo",
+      "seeAll": "Ver todos os negócios ao vivo",
+      "deskSourced": "Oportunidade localizada pela mesa"
     }
   },
   "legal": {

@@ -3,7 +3,7 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Menu, X, User } from "lucide-react";
+import { Icon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -41,12 +41,9 @@ export default function SiteHeader() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-[12px] uppercase transition-colors ${
-                pathname === link.href
-                  ? "text-gold"
-                  : "text-gray-2 hover:text-gold"
+              className={`text-[11px] font-semibold uppercase tracking-label transition-colors ${
+                pathname === link.href ? "text-lime" : "text-muted hover:text-ink"
               }`}
-              style={{ letterSpacing: "0.18em" }}
             >
               {t(link.key)}
             </Link>
@@ -57,32 +54,31 @@ export default function SiteHeader() {
           <LanguageSwitcher />
           <Link
             href="/account"
-            className="hidden rounded-full p-2 text-gray-2 hover:bg-white/5 hover:text-gold md:inline-flex"
+            className="hidden rounded-full p-2 text-muted hover:bg-white/5 hover:text-ink md:inline-flex"
             aria-label={t("account")}
           >
-            <User className="h-5 w-5" />
+            <Icon name="user" size={20} />
           </Link>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex rounded-full p-2 text-cream hover:bg-white/5 md:hidden"
+            className="inline-flex rounded-full p-2 text-ink hover:bg-white/5 md:hidden"
             aria-label={t("menuAriaLabel")}
             aria-expanded={open}
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <Icon name={open ? "close" : "menu"} size={20} />
           </button>
         </div>
       </nav>
 
       {open && (
-        <div className="border-t border-white/10 bg-[rgba(7,16,27,0.85)] md:hidden">
+        <div className="border-t border-hairline-soft bg-[rgba(10,12,17,0.92)] md:hidden">
           <div className="container-px flex flex-col py-3">
             {drawerLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="py-2.5 text-sm uppercase text-cream"
-                style={{ letterSpacing: "0.18em" }}
+                className="py-2.5 text-[12px] font-semibold uppercase tracking-label text-ink"
               >
                 {t(link.key)}
               </Link>

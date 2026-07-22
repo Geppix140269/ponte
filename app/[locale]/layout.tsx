@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -12,25 +12,21 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { isRtl, locales, type Locale } from "@/i18n/routing";
 import { alternatesFor, APP_URL } from "@/lib/seo";
 
+// Inter carries the interface and every figure. The bundle uses 400 through
+// 800; 800 is what the hero numbers need to hold their weight against the
+// display face.
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-inter",
   display: "swap",
 });
 
-const playfair = Playfair_Display({
+// Space Grotesk is display only: headings, hero numbers, the wordmark.
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-jetbrains",
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
@@ -47,7 +43,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#07101B",
+  themeColor: "#0A0C11",
   colorScheme: "dark",
 };
 
@@ -133,7 +129,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${inter.variable} ${playfair.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
     >
       <body className="flex min-h-screen flex-col">
         <script
