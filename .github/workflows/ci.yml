@@ -72,6 +72,9 @@ jobs:
           fi
           echo "en.json matches its fragments."
 
+      - name: Unit tests
+        run: npm test
+
       - name: Typecheck
         run: npx tsc --noEmit --incremental false
 

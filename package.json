@@ -14,10 +14,11 @@
     "sanctions:refresh": "tsx scripts/sanctions-refresh.ts",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
-    "verify": "node scripts/check-messages.mjs && node scripts/check-encoding.mjs && tsc --noEmit --incremental false && next build",
+    "verify": "node scripts/check-messages.mjs && node scripts/check-encoding.mjs && npm test && tsc --noEmit --incremental false && next build",
     "prepare": "node scripts/install-hooks.mjs",
     "encoding:check": "node scripts/check-encoding.mjs",
-    "hs:import": "tsx scripts/import-hs-codes.ts"
+    "hs:import": "tsx scripts/import-hs-codes.ts",
+    "test": "tsx lib/writeup/__tests__/completeness.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
