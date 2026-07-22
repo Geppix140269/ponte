@@ -132,6 +132,12 @@
       "shareWhatsApp": "Share on WhatsApp",
       "shareText": "{product} · vetted listing {ref} on Ponte",
       "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
+    },
+    "interest": {
+      "request": "Request to connect",
+      "sending": "Sending...",
+      "sent": "Request sent",
+      "failed": "Failed, try again"
     }
   }
 }

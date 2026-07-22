@@ -3,33 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
-import { Mail, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useOtp } from "@/lib/auth/use-otp";
 import OtpInput from "@/components/OtpInput";
+import { Icon } from "@/components/icons";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            nonce: string;
-            use_fedcm_for_prompt?: boolean;
-          }) => void;
-          renderButton: (
-            parent: HTMLElement,
-            options: Record<string, unknown>,
-          ) => void;
-        };
-      };
-    };
-  }
-}
 
 /** Where to go after sign-in. Only same-site paths are honoured. */
 function safeNext(): string {
@@ -52,42 +32,25 @@ async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
 }
 
 /**
- * Sign in with a six digit code.
+ * The full-page door, for somebody who came to sign in rather than to do
+ * something. The gate modal is the other door and it is the one most members
+ * will meet, since it opens at the moment they try to act.
  *
- * This replaced a magic link, and it was a bug fix rather than a preference.
- * The link flow put the session in a redirect: Supabase verified the token and
- * sent the member to /account carrying the result in a URL fragment, and
- * /account is a Server Component with no browser Supabase client on it, so
- * nothing ever read that fragment. The session was never established, the
- * server rendered whatever cookie the browser already held, and a member who
- * signed up on a machine where someone else was signed in landed on the other
- * person's account. Nothing crossed accounts over the wire, but the member was
- * acting as somebody else, and a listing posted then belongs to the wrong name.
- *
- * A code has no redirect and no fragment. It is typed into the page that asked
- * for it, and verifyOtp establishes the session in that page's own context,
- * where the browser client is right there to receive it.
- *
- * Two further guards, because the failure above was silent:
- *   - any existing session is signed out before a code is requested, so the
- *     old cookie cannot survive into the new sign-in
- *   - after verifying, the session's email is compared with the one that was
- *     typed, and a mismatch is treated as a failure rather than a success
+ * Both use `useOtp`, which is where the reasoning about codes, sessions and
+ * the guards around them now lives. Read that before changing anything here.
  */
 export default function LoginPage() {
   const t = useTranslations("login");
-  const [step, setStep] = useState<"email" | "code">("email");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "sending" | "verifying" | "error"
-  >("idle");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [linkError, setLinkError] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
+
+  const onVerified = useCallback(() => {
+    window.location.href = safeNext();
+  }, []);
+  const otp = useOtp({ onVerified });
 
   useEffect(() => {
     generateNoncePair().then(setNonces);
@@ -97,7 +60,8 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (!scriptLoaded || !nonces || !GOOGLE_CLIENT_ID || !buttonRef.current || !window.google) return;
+    if (!scriptLoaded || !nonces || !GOOGLE_CLIENT_ID || !buttonRef.current) return;
+    if (!window.google) return;
 
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
@@ -115,14 +79,12 @@ export default function LoginPage() {
             nonce: nonces.raw,
           });
           if (error) {
-            setErrorMsg(error.message);
-            setStatus("error");
+            setGoogleError(error.message);
             return;
           }
           window.location.href = safeNext();
         } catch (e: unknown) {
-          setErrorMsg(e instanceof Error ? e.message : t("errorUnknown"));
-          setStatus("error");
+          setGoogleError(e instanceof Error ? e.message : t("errorUnknown"));
         }
       },
     });
@@ -139,88 +101,14 @@ export default function LoginPage() {
     });
   }, [scriptLoaded, nonces, t]);
 
-  async function requestCode(address: string, resending = false) {
-    setStatus("sending");
-    setErrorMsg(null);
-    setNotice(null);
-    try {
-      const supabase = createClient();
-
-      // Clear whatever session this browser is holding BEFORE asking for a
-      // code. This is the guard that makes signing in as a second person on a
-      // shared machine behave the way anyone would expect.
-      const { data: existing } = await supabase.auth.getUser();
-      const hadOther =
-        existing.user?.email && existing.user.email.toLowerCase() !== address.toLowerCase();
-      await supabase.auth.signOut();
-
-      // No emailRedirectTo: there is no link to follow. The template carries
-      // {{ .Token }} and the member types what it says.
-      const { error } = await supabase.auth.signInWithOtp({ email: address });
-      if (error) {
-        setErrorMsg(error.message);
-        setStatus("error");
-        return;
-      }
-
-      setCode("");
-      setStep("code");
-      setStatus("idle");
-      setNotice(resending ? t("code.resent") : hadOther ? t("code.switched") : null);
-    } catch (e: unknown) {
-      setErrorMsg(e instanceof Error ? e.message : t("errorUnknown"));
-      setStatus("error");
-    }
-  }
-
-  async function onEmailSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    await requestCode(email);
-  }
-
-  const verify = useCallback(
-    async (token: string) => {
-      setStatus("verifying");
-      setErrorMsg(null);
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: "email",
-        });
-
-        if (error) {
-          setStatus("error");
-          setCode("");
-          setErrorMsg(
-            /expired/i.test(error.message) ? t("code.expired") : t("code.wrong"),
-          );
-          return;
-        }
-
-        // The session that came back must belong to the address that was
-        // typed. If it does not, something is wrong in a way that should stop
-        // here rather than land somebody on another person's dashboard, which
-        // is the exact failure this rewrite exists to end.
-        const signedInAs = data.user?.email?.toLowerCase();
-        if (!signedInAs || signedInAs !== email.trim().toLowerCase()) {
-          await supabase.auth.signOut();
-          setStatus("error");
-          setCode("");
-          setErrorMsg(t("errorFallback"));
-          return;
-        }
-
-        window.location.href = safeNext();
-      } catch (e: unknown) {
-        setStatus("error");
-        setCode("");
-        setErrorMsg(e instanceof Error ? e.message : t("errorUnknown"));
-      }
-    },
-    [email, t],
-  );
+  const errorCopy =
+    otp.errorKind === "expired"
+      ? t("code.expired")
+      : otp.errorKind === "wrong"
+        ? t("code.wrong")
+        : otp.errorKind === "mismatch"
+          ? t("errorFallback")
+          : otp.errorDetail ?? t("errorFallback");
 
   return (
     <>
@@ -230,76 +118,67 @@ export default function LoginPage() {
         onLoad={() => setScriptLoaded(true)}
       />
       <section className="container-px py-20">
-        <div className="glass mx-auto max-w-md p-10">
+        <div className="glass mx-auto max-w-md p-8 sm:p-10">
           <span className="pill">{t("pill")}</span>
-          <h1 className="serif text-white mt-6 mb-2" style={{ fontSize: 36, fontWeight: 500 }}>
-            {step === "code" ? t("code.heading") : t("title")}
+          <h1 className="display mt-6 mb-2 text-[32px] text-ink">
+            {otp.step === "code" ? t("code.heading") : t("title")}
           </h1>
-          <p className="mb-7 text-[14px] text-gray-2">
-            {step === "code" ? t("code.sentTo", { email }) : t("subtitle")}
+          <p className="mb-7 text-[14px] text-muted">
+            {otp.step === "code"
+              ? t("code.sentTo", { email: otp.email })
+              : t("subtitle")}
           </p>
 
-          {linkError && step === "email" && (
-            <div
-              className="mb-5 rounded-[10px] px-4 py-3 text-[13px] text-gold"
-              style={{ background: "rgba(232,160,32,0.12)", border: "1px solid rgba(232,160,32,0.35)" }}
-            >
+          {linkError && otp.step === "email" && (
+            <div className="mb-5 rounded-field border border-lime/35 bg-lime/10 px-4 py-3 text-[13px] text-lime">
               {t("linkExpired")}
             </div>
           )}
 
           {!configured ? (
-            <div className="glass-tight p-6 text-[13px] leading-relaxed text-gray-2">
+            <div className="glass-tight p-6 text-[13px] leading-relaxed text-muted">
               {t("notConfigured")}
             </div>
-          ) : step === "code" ? (
+          ) : otp.step === "code" ? (
             <div className="space-y-5">
-              {notice && (
-                <div className="flex items-center gap-2 rounded-[10px] px-4 py-3 text-[13px] text-positive"
-                  style={{ background: "rgba(74,192,154,0.15)", border: "1px solid rgba(74,192,154,0.35)" }}>
-                  <Mail className="h-4 w-4" /> {notice}
+              {otp.notice && (
+                <div className="flex items-center gap-2 rounded-field border border-cyan/35 bg-cyan/10 px-4 py-3 text-[13px] text-cyan">
+                  <Icon name="inbox" size={16} />
+                  {otp.notice === "resent" ? t("code.resent") : t("code.switched")}
                 </div>
               )}
 
               <OtpInput
-                value={code}
-                onChange={setCode}
-                onComplete={verify}
-                disabled={status === "verifying"}
-                invalid={status === "error"}
+                value={otp.code}
+                onChange={otp.setCode}
+                onComplete={otp.verify}
+                disabled={otp.status === "verifying"}
+                invalid={otp.status === "error"}
                 label={t("code.label")}
               />
 
-              {status === "verifying" && (
-                <p className="text-[13px] text-gray-2">{t("code.verifying")}</p>
+              {otp.status === "verifying" && (
+                <p className="text-[13px] text-muted">{t("code.verifying")}</p>
               )}
-              {status === "error" && errorMsg && (
-                <p className="text-sm text-negative">{errorMsg}</p>
+              {otp.status === "error" && (
+                <p className="text-sm text-coral">{errorCopy}</p>
               )}
 
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => requestCode(email, true)}
-                  disabled={status === "sending" || status === "verifying"}
-                  className="text-[11px] uppercase text-gold hover:text-cream disabled:opacity-50"
-                  style={{ letterSpacing: "0.16em" }}
+                  onClick={() => otp.requestCode(otp.email, true)}
+                  disabled={otp.status === "sending" || otp.status === "verifying"}
+                  className="text-[11px] uppercase tracking-label text-lime disabled:opacity-50"
                 >
-                  {status === "sending" ? t("sending") : t("code.resend")}
+                  {otp.status === "sending" ? t("sending") : t("code.resend")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setStep("email");
-                    setCode("");
-                    setStatus("idle");
-                    setErrorMsg(null);
-                    setNotice(null);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-[11px] uppercase text-gray-2 hover:text-cream"
-                  style={{ letterSpacing: "0.16em" }}
+                  onClick={otp.backToEmail}
+                  className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-label text-muted hover:text-ink"
                 >
-                  <ArrowLeft className="h-3 w-3" /> {t("code.changeEmail")}
+                  {t("code.changeEmail")}
                 </button>
               </div>
             </div>
@@ -308,20 +187,24 @@ export default function LoginPage() {
               {GOOGLE_CLIENT_ID ? (
                 <div ref={buttonRef} className="flex justify-center" />
               ) : (
-                <div className="glass-tight p-4 text-[12px] text-gray-2">
+                <div className="glass-tight p-4 text-[12px] text-muted">
                   {t("googleDisabled")}
                 </div>
               )}
+              {googleError && <p className="text-sm text-coral">{googleError}</p>}
 
-              <div
-                className="flex items-center gap-3 text-[10px] uppercase text-gray-2"
-                style={{ letterSpacing: "0.22em" }}
-              >
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-label text-muted">
                 <span className="h-px flex-1 bg-white/10" /> {t("or")}{" "}
                 <span className="h-px flex-1 bg-white/10" />
               </div>
 
-              <form onSubmit={onEmailSubmit} className="space-y-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  otp.requestCode(otp.email);
+                }}
+                className="space-y-3"
+              >
                 <div>
                   <label htmlFor="email" className="field-label">
                     {t("emailLabel")}
@@ -331,21 +214,21 @@ export default function LoginPage() {
                     type="email"
                     required
                     autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={otp.email}
+                    onChange={(e) => otp.setEmail(e.target.value)}
                     className="field"
                     placeholder={t("emailPlaceholder")}
                   />
                 </div>
                 <button
                   type="submit"
-                  disabled={status === "sending"}
-                  className="btn-gold w-full disabled:opacity-60"
+                  disabled={otp.status === "sending"}
+                  className="btn-primary w-full disabled:opacity-60"
                 >
-                  {status === "sending" ? t("sending") : t("submit")}
+                  {otp.status === "sending" ? t("sending") : t("submit")}
                 </button>
-                {status === "error" && (
-                  <p className="text-sm text-negative">{errorMsg ?? t("errorFallback")}</p>
+                {otp.status === "error" && (
+                  <p className="text-sm text-coral">{errorCopy}</p>
                 )}
               </form>
             </div>

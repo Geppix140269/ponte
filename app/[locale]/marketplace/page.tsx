@@ -534,17 +534,16 @@ export default async function MarketplacePage({
                           {t(verificationKey(level))}
                         </span>
                       )}
-                      {user ? (
-                        <InterestButton refCode={b.ref} />
-                      ) : (
-                        <Link
-                          href="/login?next=/marketplace"
-                          className="text-[11px] uppercase text-gold hover:text-cream"
-                          style={{ letterSpacing: "0.16em" }}
-                        >
-                          {t("board.signInToRespond")}
-                        </Link>
-                      )}
+                      {/*
+                        Everyone gets the button, signed in or not. An
+                        anonymous visitor presses it and meets the account
+                        gate at that moment, which is the trigger map's whole
+                        shape: go as deep as possible anonymously, and be
+                        asked who you are only at the point of action. The
+                        "sign in to respond" link that used to sit here was
+                        the wall that rule exists to remove.
+                      */}
+                      <InterestButton refCode={b.ref} />
                     </div>
                   </div>
                 );

@@ -751,6 +751,12 @@
       "level2": "Azienda verificata",
       "level3": "Attività verificata",
       "level4": "Istituzionale"
+    },
+    "interest": {
+      "request": "Richiedi contatto",
+      "sending": "Invio...",
+      "sent": "Richiesta inviata",
+      "failed": "Non riuscito, riprova"
     }
   },
   "meta": {
@@ -1000,5 +1006,45 @@
       },
       "disclaimerHeading": "Che cosa questo risultato non significa"
     }
+  },
+  "gate": {
+    "title": {
+      "inquiry": "Crea il tuo account gratuito per inviare questa richiesta.",
+      "publish": "Crea il tuo account gratuito per pubblicare.",
+      "alert": "Crea il tuo account gratuito per salvare questo avviso.",
+      "verify": "Crea il tuo account gratuito per avviare questa verifica."
+    },
+    "body": {
+      "inquiry": "Il tuo messaggio è salvato. Una email, nessuna password.",
+      "publish": "Il tuo annuncio e il suo testo sono salvati. Una email, nessuna password.",
+      "alert": "Il tuo avviso è salvato. Una email, nessuna password.",
+      "verify": "La tua ricerca è salvata. Una email, nessuna password."
+    },
+    "profile": {
+      "heading": "Due dati e sei dentro",
+      "body": "Per ora chiediamo solo questo. Il resto può aspettare.",
+      "nameLabel": "Nome completo",
+      "companyLabel": "Azienda",
+      "countryLabel": "Paese",
+      "countryUnset": "Seleziona un paese",
+      "submit": "Concludi",
+      "saving": "Salvataggio..."
+    },
+    "credits": "Hai {balance} crediti. Verificare una controparte costa {cost}.",
+    "done": {
+      "inquiry": "Richiesta inviata",
+      "publish": "Annuncio inviato",
+      "alert": "Avviso salvato",
+      "verify": "Verifica avviata"
+    },
+    "doneBody": {
+      "inquiry": "La tua richiesta è arrivata all'altra parte. Ti avvisiamo quando risponde.",
+      "publish": "Il tuo annuncio è al desk per la revisione. Ti scriviamo quando sarà online.",
+      "alert": "Ti scriviamo quando sulla bacheca comparirà qualcosa che corrisponde.",
+      "verify": "Il rapporto comparirà nel tuo account appena sarà pronto."
+    },
+    "doneCta": "Fatto",
+    "close": "Chiudi",
+    "actionFailed": "Non è andata a buon fine. Puoi completarla dal tuo account."
   }
 }

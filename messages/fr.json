@@ -751,6 +751,12 @@
       "level2": "Entreprise vérifiée",
       "level3": "Activité vérifiée",
       "level4": "Institutionnel"
+    },
+    "interest": {
+      "request": "Demander une mise en relation",
+      "sending": "Envoi...",
+      "sent": "Demande envoyée",
+      "failed": "Échec, réessayez"
     }
   },
   "meta": {
@@ -1000,5 +1006,45 @@
       },
       "disclaimerHeading": "Ce que ce résultat ne signifie pas"
     }
+  },
+  "gate": {
+    "title": {
+      "inquiry": "Créez votre compte gratuit pour envoyer cette demande.",
+      "publish": "Créez votre compte gratuit pour publier.",
+      "alert": "Créez votre compte gratuit pour enregistrer cette alerte.",
+      "verify": "Créez votre compte gratuit pour lancer cette vérification."
+    },
+    "body": {
+      "inquiry": "Votre message est enregistré. Un e-mail, sans mot de passe.",
+      "publish": "Votre annonce et son texte sont enregistrés. Un e-mail, sans mot de passe.",
+      "alert": "Votre alerte est enregistrée. Un e-mail, sans mot de passe.",
+      "verify": "Votre recherche est enregistrée. Un e-mail, sans mot de passe."
+    },
+    "profile": {
+      "heading": "Deux informations et vous y êtes",
+      "body": "C'est tout ce que nous demandons pour l'instant. Le reste peut attendre.",
+      "nameLabel": "Nom complet",
+      "companyLabel": "Société",
+      "countryLabel": "Pays",
+      "countryUnset": "Choisissez un pays",
+      "submit": "Terminer",
+      "saving": "Enregistrement..."
+    },
+    "credits": "Vous avez {balance} crédits. Vérifier une contrepartie coûte {cost}.",
+    "done": {
+      "inquiry": "Demande envoyée",
+      "publish": "Annonce soumise",
+      "alert": "Alerte enregistrée",
+      "verify": "Vérification lancée"
+    },
+    "doneBody": {
+      "inquiry": "Votre demande est parvenue à l'autre partie. Vous serez prévenu de sa réponse.",
+      "publish": "Votre annonce est au desk pour vérification. Vous serez averti par e-mail à sa mise en ligne.",
+      "alert": "Nous vous écrirons dès qu'une annonce du tableau y correspondra.",
+      "verify": "Le rapport apparaîtra dans votre compte dès qu'il sera prêt."
+    },
+    "doneCta": "Terminé",
+    "close": "Fermer",
+    "actionFailed": "Cela n'a pas abouti. Vous pouvez terminer depuis votre compte."
   }
 }
