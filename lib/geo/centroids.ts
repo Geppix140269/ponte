@@ -1,0 +1,188 @@
+/**
+ * Country centroids, for plotting a corridor on the trade-route map.
+ *
+ * Approximate geographic centres in decimal degrees, rounded to one place.
+ * A trade route is drawn country to country, so a centroid is the honest
+ * resolution: we know a deal moves from Brazil to the Netherlands, we do not
+ * know which port, and the map must not imply we do.
+ *
+ * Coverage matches the country list `isoCode()` in lib/listing-terms.ts can
+ * resolve. A code with no entry here simply is not drawn, which is the right
+ * failure: no invented geography.
+ */
+
+export type Centroid = { lat: number; lon: number };
+
+export const CENTROIDS: Record<string, Centroid> = {
+  AE: { lat: 24.0, lon: 54.0 },
+  AF: { lat: 33.9, lon: 67.7 },
+  AL: { lat: 41.2, lon: 20.2 },
+  AM: { lat: 40.1, lon: 45.0 },
+  AO: { lat: -11.2, lon: 17.9 },
+  AR: { lat: -38.4, lon: -63.6 },
+  AT: { lat: 47.5, lon: 14.6 },
+  AU: { lat: -25.3, lon: 133.8 },
+  AZ: { lat: 40.1, lon: 47.6 },
+  BA: { lat: 43.9, lon: 17.7 },
+  BD: { lat: 23.7, lon: 90.4 },
+  BE: { lat: 50.5, lon: 4.5 },
+  BF: { lat: 12.2, lon: -1.6 },
+  BG: { lat: 42.7, lon: 25.5 },
+  BH: { lat: 26.1, lon: 50.6 },
+  BJ: { lat: 9.3, lon: 2.3 },
+  BO: { lat: -16.3, lon: -63.6 },
+  BR: { lat: -14.2, lon: -51.9 },
+  BW: { lat: -22.3, lon: 24.7 },
+  BY: { lat: 53.7, lon: 27.9 },
+  CA: { lat: 56.1, lon: -106.3 },
+  CD: { lat: -4.0, lon: 21.8 },
+  CG: { lat: -0.2, lon: 15.8 },
+  CH: { lat: 46.8, lon: 8.2 },
+  CI: { lat: 7.5, lon: -5.5 },
+  CL: { lat: -35.7, lon: -71.5 },
+  CM: { lat: 7.4, lon: 12.4 },
+  CN: { lat: 35.9, lon: 104.2 },
+  CO: { lat: 4.6, lon: -74.3 },
+  CR: { lat: 9.7, lon: -83.8 },
+  CU: { lat: 21.5, lon: -77.8 },
+  CY: { lat: 35.1, lon: 33.4 },
+  CZ: { lat: 49.8, lon: 15.5 },
+  DE: { lat: 51.2, lon: 10.5 },
+  DK: { lat: 56.3, lon: 9.5 },
+  DO: { lat: 18.7, lon: -70.2 },
+  DZ: { lat: 28.0, lon: 1.7 },
+  EC: { lat: -1.8, lon: -78.2 },
+  EE: { lat: 58.6, lon: 25.0 },
+  EG: { lat: 26.8, lon: 30.8 },
+  ES: { lat: 40.5, lon: -3.7 },
+  ET: { lat: 9.1, lon: 40.5 },
+  FI: { lat: 61.9, lon: 25.7 },
+  FR: { lat: 46.2, lon: 2.2 },
+  GA: { lat: -0.8, lon: 11.6 },
+  GB: { lat: 54.0, lon: -2.5 },
+  GE: { lat: 42.3, lon: 43.4 },
+  GH: { lat: 7.9, lon: -1.0 },
+  GN: { lat: 9.9, lon: -11.3 },
+  GR: { lat: 39.1, lon: 21.8 },
+  GT: { lat: 15.8, lon: -90.2 },
+  HK: { lat: 22.3, lon: 114.2 },
+  HN: { lat: 15.2, lon: -86.2 },
+  HR: { lat: 45.1, lon: 15.2 },
+  HU: { lat: 47.2, lon: 19.5 },
+  ID: { lat: -2.5, lon: 118.0 },
+  IE: { lat: 53.4, lon: -8.2 },
+  IL: { lat: 31.0, lon: 34.9 },
+  IN: { lat: 20.6, lon: 79.0 },
+  IQ: { lat: 33.2, lon: 43.7 },
+  IR: { lat: 32.4, lon: 53.7 },
+  IS: { lat: 65.0, lon: -19.0 },
+  IT: { lat: 41.9, lon: 12.6 },
+  JM: { lat: 18.1, lon: -77.3 },
+  JO: { lat: 30.6, lon: 36.2 },
+  JP: { lat: 36.2, lon: 138.3 },
+  KE: { lat: -0.0, lon: 37.9 },
+  KG: { lat: 41.2, lon: 74.8 },
+  KH: { lat: 12.6, lon: 105.0 },
+  KR: { lat: 35.9, lon: 127.8 },
+  KW: { lat: 29.3, lon: 47.5 },
+  KZ: { lat: 48.0, lon: 66.9 },
+  LA: { lat: 19.9, lon: 102.5 },
+  LB: { lat: 33.9, lon: 35.9 },
+  LK: { lat: 7.9, lon: 80.8 },
+  LR: { lat: 6.4, lon: -9.4 },
+  LT: { lat: 55.2, lon: 23.9 },
+  LU: { lat: 49.8, lon: 6.1 },
+  LV: { lat: 56.9, lon: 24.6 },
+  LY: { lat: 26.3, lon: 17.2 },
+  MA: { lat: 31.8, lon: -7.1 },
+  MD: { lat: 47.4, lon: 28.4 },
+  ME: { lat: 42.7, lon: 19.4 },
+  MG: { lat: -18.8, lon: 46.9 },
+  MK: { lat: 41.6, lon: 21.7 },
+  ML: { lat: 17.6, lon: -4.0 },
+  MM: { lat: 21.9, lon: 95.96 },
+  MN: { lat: 46.9, lon: 103.8 },
+  MR: { lat: 21.0, lon: -10.9 },
+  MT: { lat: 35.9, lon: 14.4 },
+  MU: { lat: -20.3, lon: 57.6 },
+  MW: { lat: -13.3, lon: 34.3 },
+  MX: { lat: 23.6, lon: -102.6 },
+  MY: { lat: 4.2, lon: 101.98 },
+  MZ: { lat: -18.7, lon: 35.5 },
+  NA: { lat: -22.96, lon: 18.5 },
+  NE: { lat: 17.6, lon: 8.1 },
+  NG: { lat: 9.1, lon: 8.7 },
+  NI: { lat: 12.9, lon: -85.2 },
+  NL: { lat: 52.1, lon: 5.3 },
+  NO: { lat: 60.5, lon: 8.5 },
+  NP: { lat: 28.4, lon: 84.1 },
+  NZ: { lat: -40.9, lon: 174.9 },
+  OM: { lat: 21.5, lon: 55.9 },
+  PA: { lat: 8.5, lon: -80.8 },
+  PE: { lat: -9.2, lon: -75.0 },
+  PG: { lat: -6.3, lon: 143.96 },
+  PH: { lat: 12.9, lon: 121.8 },
+  PK: { lat: 30.4, lon: 69.3 },
+  PL: { lat: 51.9, lon: 19.1 },
+  PT: { lat: 39.4, lon: -8.2 },
+  PY: { lat: -23.4, lon: -58.4 },
+  QA: { lat: 25.4, lon: 51.2 },
+  RO: { lat: 45.9, lon: 25.0 },
+  RS: { lat: 44.0, lon: 21.0 },
+  RU: { lat: 61.5, lon: 90.0 },
+  RW: { lat: -1.9, lon: 29.9 },
+  SA: { lat: 23.9, lon: 45.1 },
+  SD: { lat: 12.9, lon: 30.2 },
+  SE: { lat: 60.1, lon: 18.6 },
+  SG: { lat: 1.35, lon: 103.8 },
+  SI: { lat: 46.2, lon: 15.0 },
+  SK: { lat: 48.7, lon: 19.7 },
+  SN: { lat: 14.5, lon: -14.5 },
+  SO: { lat: 5.2, lon: 46.2 },
+  SV: { lat: 13.8, lon: -88.9 },
+  SY: { lat: 34.8, lon: 39.0 },
+  TG: { lat: 8.6, lon: 0.8 },
+  TH: { lat: 15.9, lon: 101.0 },
+  TM: { lat: 38.97, lon: 59.6 },
+  TN: { lat: 33.9, lon: 9.5 },
+  TR: { lat: 39.0, lon: 35.2 },
+  TT: { lat: 10.7, lon: -61.2 },
+  TW: { lat: 23.7, lon: 121.0 },
+  TZ: { lat: -6.4, lon: 34.9 },
+  UA: { lat: 48.4, lon: 31.2 },
+  UG: { lat: 1.4, lon: 32.3 },
+  US: { lat: 39.8, lon: -98.6 },
+  UY: { lat: -32.5, lon: -55.8 },
+  UZ: { lat: 41.4, lon: 64.6 },
+  VE: { lat: 6.4, lon: -66.6 },
+  VN: { lat: 14.06, lon: 108.3 },
+  YE: { lat: 15.6, lon: 48.5 },
+  ZA: { lat: -30.6, lon: 22.9 },
+  ZM: { lat: -13.1, lon: 27.8 },
+  ZW: { lat: -19.0, lon: 29.2 },
+};
+
+/**
+ * Equirectangular projection into a viewBox.
+ *
+ * Latitude is squeezed to `latSpan` because the map only ever carries trade
+ * routes, and there is no trade in Antarctica: cropping the empty polar bands
+ * buys real estate for the arcs instead of spending it on ice.
+ */
+export function project(
+  { lat, lon }: Centroid,
+  width: number,
+  height: number,
+  latSpan = 150,
+): { x: number; y: number } {
+  const clamped = Math.max(-latSpan / 2, Math.min(latSpan / 2, lat));
+  return {
+    x: ((lon + 180) / 360) * width,
+    y: ((latSpan / 2 - clamped) / latSpan) * height,
+  };
+}
+
+export function centroidOf(code: string | null | undefined): Centroid | null {
+  if (!code) return null;
+  return CENTROIDS[code.toUpperCase()] ?? null;
+}

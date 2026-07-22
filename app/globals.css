@@ -443,6 +443,46 @@
   }
 }
 
+/* The live deals strip.
+   The track holds the cards twice and shifts by exactly half its width, so
+   the loop has no seam. Hover pauses it, because a card someone is reaching
+   for should stop when they go for it. */
+.marquee {
+  overflow: hidden;
+  /* Fade both ends so cards enter and leave rather than being guillotined. */
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+}
+.marquee-track {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    /* Half the track is the second copy, so this lands exactly on the seam.
+       The gap is subtracted because one sits between the two halves too. */
+    transform: translateX(calc(-50% - 7px));
+  }
+}
+
 /* Trust dial sweep, 113 being the circumference of the r=18 dial. */
 .dial-sweep {
   animation: dial-sweep 1500ms ease-out forwards;
@@ -516,12 +556,20 @@
   .shimmer::after,
   .reveal,
   .flow-step,
-  .flow-line {
+  .flow-line,
+  .marquee-track {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
     stroke-dashoffset: 0 !important;
+  }
+  /* The strip stops moving, so it has to become something a reader can move
+     themselves, or the deals past the fold are unreachable. */
+  .marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
 

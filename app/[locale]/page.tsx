@@ -3,8 +3,22 @@ import { Link } from "@/i18n/navigation";
 import ProcessFlow from "@/components/ProcessFlow";
 import Reveal from "@/components/Reveal";
 import { Icon, type SystemIconName } from "@/components/icons";
+import TradeRouteMap from "@/components/home/TradeRouteMap";
+import LiveDealsStrip from "@/components/home/LiveDealsStrip";
+import LiveDealsGrid from "@/components/home/LiveDealsGrid";
+import type { DealLabels } from "@/components/home/LiveDealCard";
+import {
+  COUNT_MIN,
+  SHOWCASE_MIN,
+  countriesIn,
+  getLiveDeals,
+  routesIn,
+} from "@/lib/board/live-deals";
 import { alternatesFor } from "@/lib/seo";
 
+// The showcase reads the board, so the page cannot be fully static. A minute
+// is close enough to live for a homepage and keeps it off the database on
+// every request.
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { locale: any } }) {
@@ -20,16 +34,28 @@ export async function generateMetadata({ params }: { params: { locale: any } }) 
  * The front door for a commodity trader.
  *
  * Two rules govern this page and they are not stylistic:
- *   - No volume, member count or deal value is stated anywhere. The board is
- *     thin and pretending otherwise is the fastest way to lose a trader.
- *   - The deal cards below are format examples, labelled as such in the copy
- *     and in the markup. They demonstrate the notation a listing is written
- *     in. They are never presented as live inventory.
+ *   - No volume, member count or deal value is stated unless it is real. The
+ *     live count appears only above COUNT_MIN, and never as an estimate.
+ *   - The example cards are format examples, labelled as such in the copy and
+ *     in the markup. They demonstrate the notation a listing is written in.
+ *     They are never presented as live inventory.
  *
- * The second rule is why the hero card carries the format-example label
- * rather than the bundle's "Top match, 94% fit" chip: the match engine is not
- * wired yet, and a fabricated match score is exactly the claim this page
- * refuses to make. The card is otherwise the bundle's, route arc included.
+ * ---------------------------------------------------------------------------
+ * The two states of this page
+ * ---------------------------------------------------------------------------
+ * The showcase (route map, live strip, preview grid) is driven entirely by
+ * real approved deals. Below SHOWCASE_MIN there is no market to show, so:
+ *
+ *   Board thin  ->  hero shows the format-example card, the format-examples
+ *                   section explains how a listing is written, no showcase.
+ *   Board live  ->  hero shows the real trade-route map, the strip and grid
+ *                   carry real deals, and the format-examples section stands
+ *                   down because real deals demonstrate the format better
+ *                   than invented ones.
+ *
+ * The page moves between those states on its own as deals are approved or
+ * imported. Nothing here is ever seeded to make the board look busier than
+ * it is: an empty showcase is correct output, not a bug to paper over.
  */
 
 /** Registers and identifiers read by a verification. Names stay untranslated
@@ -102,7 +128,33 @@ function RouteArc({ from, to }: { from: string; to: string }) {
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("home");
+  // Side, tier and "not stated" already exist in ten languages under the
+  // marketplace namespace, because the board says the same words. Reusing
+  // them means the showcase added one new string to translate, not nine.
+  const tm = await getTranslations("marketplace");
   const hero = EXAMPLES[0];
+
+  const deals = await getLiveDeals();
+  const showcaseLive = deals.length >= SHOWCASE_MIN;
+  const routes = routesIn(deals);
+  const countries = countriesIn(deals);
+  // A count is a claim about size. Printed only when it is real and worth
+  // printing, and it needs both numbers to be a sentence.
+  const showCount = deals.length >= COUNT_MIN && countries.length > 0;
+
+  const dealLabels: DealLabels = {
+    offer: tm("type.offer"),
+    requirement: tm("type.requirement"),
+    service: tm("type.service"),
+    notStated: tm("notStated"),
+    deskSourced: t("showcase.deskSourced"),
+    tier: {
+      1: tm("trust.level1"),
+      2: tm("trust.level2"),
+      3: tm("trust.level3"),
+      4: tm("trust.level4"),
+    },
+  };
 
   return (
     <>
@@ -123,7 +175,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 letterSpacing: "-0.045em",
               }}
             >
-              {t("hero.title")} {t("hero.titleAccent")}
+              {t("hero.title")}
             </h1>
 
             <p
@@ -143,11 +195,11 @@ export default async function HomePage({ params }: { params: { locale: string } 
               style={{ ["--i" as string]: 3 }}
             >
               <Link href="/marketplace" className="btn-primary">
-                {t("hero.secondary")}
+                {t("hero.ctaPrimary")}
                 <Icon name="chevron" size={16} />
               </Link>
               <Link href="/marketplace/new" className="btn-ghost">
-                {t("hero.cta")}
+                {t("hero.ctaSecondary")}
               </Link>
             </div>
 
@@ -174,9 +226,25 @@ export default async function HomePage({ params }: { params: { locale: string } 
           </div>
 
           {/*
-            The shape of a listing, as one card, above the fold. Same data as
-            the format examples below and carrying the same label.
+            The hero visual, in its two states.
+
+            Live board: the real corridors, drawn. It is the strongest thing
+            this page can say, because every arc is a deal somebody actually
+            posted.
+
+            Thin board: the shape of a listing as one card, same data as the
+            format examples below and carrying the same label. Not a
+            placeholder for the map, a different and honest answer to "what is
+            this", for when there is no market to draw yet.
           */}
+          {showcaseLive && routes.length > 0 ? (
+            <div className="rise" style={{ ["--i" as string]: 4 }}>
+              <TradeRouteMap routes={routes} className="w-full" />
+              <p className="mt-2 text-center text-[11px] text-muted">
+                {t("showcase.mapCaption")}
+              </p>
+            </div>
+          ) : (
           <div className="rise" style={{ ["--i" as string]: 4 }}>
             <article
               className="rounded-glass border border-violet/40 bg-glass p-5"
@@ -214,8 +282,58 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </p>
             </article>
           </div>
+          )}
         </div>
       </header>
+
+      {/* ============ 1b. THE BOARD, MOVING ============
+          Everything in this block is real approved inventory. It renders only
+          when there is a market to show, and disappears again if the board
+          empties. Nothing in it is ever seeded. */}
+      {showcaseLive && (
+        <section className="border-t border-hairline-soft py-12">
+          <div className="container-px">
+            <p className="eyebrow">{t("showcase.eyebrow")}</p>
+            <h2
+              className="display mt-3 text-ink"
+              style={{ fontSize: "clamp(23px, 2.3vw, 31px)", lineHeight: 1.12 }}
+            >
+              {t("showcase.heading")}
+            </h2>
+            {showCount && (
+              <p className="mt-3 text-[14px] text-muted">
+                {t("showcase.count", {
+                  deals: deals.length,
+                  countries: countries.length,
+                })}
+              </p>
+            )}
+          </div>
+
+          {/* Full bleed: the strip should run off both edges, because a board
+              that ends tidily inside a container does not read as moving. */}
+          <div className="mt-7">
+            <LiveDealsStrip
+              deals={deals}
+              labels={dealLabels}
+              locale={params.locale}
+            />
+          </div>
+
+          <div className="container-px mt-12">
+            <h3 className="display text-[20px] text-ink">
+              {t("showcase.gridHeading")}
+            </h3>
+            <LiveDealsGrid
+              deals={deals}
+              labels={dealLabels}
+              locale={params.locale}
+              allLabel={t("showcase.all")}
+              seeAllLabel={t("showcase.seeAll")}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ============ 2. WHO IS ON THE OTHER SIDE ============ */}
       <section className="container-px border-t border-hairline-soft py-12">
@@ -270,7 +388,11 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </p>
       </section>
 
-      {/* ============ 3. THE SHAPE OF A DEAL ============ */}
+      {/* ============ 3. THE SHAPE OF A DEAL ============
+          Stands down once the showcase is live. Three invented cards under a
+          grid of real ones is not teaching, it is noise, and the real deals
+          demonstrate the notation better than the examples ever did. */}
+      {!showcaseLive && (
       <section className="container-px border-t border-hairline-soft py-12">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-3xl">
@@ -348,6 +470,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
           </div>
         </Reveal>
       </section>
+      )}
 
       {/* ============ 4. HOW A DEAL MOVES ============ */}
       <section className="container-px border-t border-hairline-soft py-12">

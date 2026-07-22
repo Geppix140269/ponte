@@ -292,14 +292,13 @@
     "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der Unterzeichnung eines NCNDA erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
     "hero": {
       "eyebrow": "Kostenlos für jedes Mitglied",
-      "title": "Wissen Sie, wer",
-      "titleAccent": "auf der anderen Seite steht.",
+      "title": "Physische Rohstoffe weltweit kaufen und verkaufen",
       "lead": "Jede Gegenpartei wird gegen Handelsregister und Sanktionslisten geprüft, bevor jemand vorgestellt wird.",
       "b1": "Einstellen und verbinden ist kostenlos",
       "b2": "Keine Provision auf Ihr Geschäft",
       "b3": "Anonym, bis beide Seiten zustimmen",
-      "cta": "Inserat einstellen, kostenlos",
-      "secondary": "Zur Tafel"
+      "ctaPrimary": "Aktuelle Geschäfte ansehen",
+      "ctaSecondary": "Inserat einstellen, kostenlos"
     },
     "proof": {
       "eyebrow": "Prüfung der Gegenpartei",
@@ -399,6 +398,16 @@
         "cta": "Gebühren ansehen"
       },
       "currency": "Alle Honorare werden in USD ausgewiesen und beglichen."
+    },
+    "showcase": {
+      "eyebrow": "Live am Board",
+      "heading": "Geschäfte, die gerade laufen.",
+      "count": "{deals} laufende Geschäfte in {countries} Ländern",
+      "mapCaption": "Jeder Bogen ist ein aktiver Korridor am Board.",
+      "gridHeading": "Ansehen, was live ist",
+      "all": "Alle",
+      "seeAll": "Alle laufenden Geschäfte ansehen",
+      "deskSourced": "Vom Desk gefundene Gelegenheit"
     }
   },
   "legal": {

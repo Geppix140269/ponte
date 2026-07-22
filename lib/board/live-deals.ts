@@ -1,0 +1,296 @@
+import { createAdminClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/auth";
+import { isoCode, parseVolume } from "@/lib/listing-terms";
+
+/**
+ * The live board, as one list, for any surface that wants to show real
+ * activity without caring where a deal came from.
+ *
+ * Two sources, deliberately not merged into one shape at the database level:
+ *
+ *   - `listings`, status `approved`. Real member listings. Carry a
+ *     verification level, because a member has one.
+ *   - `desk_radar`, status `live`. Opportunities the desk identified in the
+ *     open market. They carry NO verification level and no identity, ever,
+ *     because nobody behind them is a Ponte member. See
+ *     Ponte_Desk_Radar_Spec_2026-07-22.md section 2.
+ *
+ * Nothing here invents a deal. If both sources are empty the caller gets an
+ * empty array and every surface that renders it hides itself. There is no
+ * demo mode and there must never be one: a fabricated deal on a trading board
+ * is the fastest way to lose a trader, and it is the one thing every brief
+ * for this product says twice.
+ */
+
+export type DealSource = "member" | "radar";
+
+export type LiveDeal = {
+  id: string;
+  /** Board reference for a member listing. Radar items have their own id. */
+  ref: string | null;
+  source: DealSource;
+  /** "offer" | "requirement" | "service" for members; radar uses side. */
+  type: string;
+  product: string;
+  hsCode: string | null;
+  /** HS chapter, two digits, for the category chips. */
+  chapter: string | null;
+  chapterTitle: string | null;
+  quantity: string | null;
+  unit: string | null;
+  incoterm: string | null;
+  /** Free text as posted, kept for the tooltip and the fallback label. */
+  originText: string | null;
+  destinationText: string | null;
+  /** ISO-2, only where the text actually names a country. */
+  originCode: string | null;
+  destinationCode: string | null;
+  postedAt: string;
+  /**
+   * Verification level of the member who posted. `null` for radar items and
+   * for a level that could not be read: unknown is not zero, and a radar item
+   * must never render a tier badge.
+   */
+  verificationLevel: number | null;
+  /** Where the deal opens. Radar items have no public detail page yet. */
+  href: string | null;
+};
+
+/**
+ * Below this the showcase does not render at all. Same floor the board uses,
+ * for the same reason: three rows is not a market, and a near-empty
+ * centrepiece says "nothing happens here" louder than no centrepiece.
+ */
+export const SHOWCASE_MIN = 3;
+
+/**
+ * A count is a claim about size. It is only printed once it is genuinely a
+ * number worth printing, and only when it is real.
+ */
+export const COUNT_MIN = 8;
+
+/**
+ * Launch switch for the public Desk Radar section, not a legal gate.
+ *
+ * Spec section 7 raised a counsel question on the sourcing risk. Giuseppe
+ * reviewed it on 2026-07-22 and decided to proceed with the radar public,
+ * accepting that risk, so this flag exists only to hold the section back
+ * until the CSV import has actually run. Set DESK_RADAR_PUBLIC=1 to light it.
+ *
+ * What the decision did NOT relax, and what this module still enforces: no
+ * counterparty identity, no tier badge, no source platform named, and only
+ * the paraphrased description ever rendered. Those are in section 2 and they
+ * are the reason the radar is publishable at all.
+ *
+ * The read fails soft while the table does not exist, so flipping the flag
+ * early cannot break the homepage.
+ */
+function radarIsPublic(): boolean {
+  return process.env.DESK_RADAR_PUBLIC === "1";
+}
+
+const LISTING_COLUMNS =
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, created_at";
+
+/** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
+function chapterOf(hsCode: string | null): string | null {
+  if (!hsCode) return null;
+  const digits = hsCode.replace(/\D/g, "");
+  return digits.length >= 2 ? digits.slice(0, 2) : null;
+}
+
+/**
+ * The live board, newest first.
+ *
+ * Reads with the admin client because the homepage serves anonymous visitors
+ * and RLS would hand them nothing. Only teaser-safe columns are selected:
+ * `details`, the member's identity and every internal radar field stay out of
+ * the query entirely, so they cannot reach the client even by accident.
+ */
+export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  try {
+    const sb = createAdminClient();
+
+    const { data: rows, error } = await sb
+      .from("listings")
+      .select(LISTING_COLUMNS)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+
+    const deals: LiveDeal[] = (rows ?? []).map((l) => {
+      const vol = parseVolume(l.volume);
+      return {
+        id: l.id,
+        ref: l.ref,
+        source: "member" as const,
+        type: l.type,
+        product: l.product,
+        hsCode: l.hs_code,
+        chapter: chapterOf(l.hs_code),
+        chapterTitle: null,
+        quantity: vol.quantity,
+        unit: vol.unit,
+        incoterm: l.incoterm,
+        originText: l.origin,
+        destinationText: l.destination,
+        originCode: isoCode(l.origin),
+        destinationCode: isoCode(l.destination),
+        postedAt: l.created_at,
+        verificationLevel: null,
+        href: `/marketplace/l/${l.ref}`,
+      };
+    });
+
+    // Verification level is a fact about the counterparty and the only thing
+    // about them the board shows. A level that cannot be read stays null, so
+    // the card shows no badge rather than claiming "not verified".
+    const memberIds = Array.from(
+      new Set((rows ?? []).map((l) => l.user_id).filter(Boolean)),
+    );
+    if (memberIds.length > 0) {
+      const { data: levels } = await sb
+        .from("profiles")
+        .select("id, verification_level")
+        .in("id", memberIds);
+      const byUser = new Map<string, number>();
+      for (const p of levels ?? []) {
+        const n = Number(p.verification_level);
+        if (Number.isFinite(n)) byUser.set(p.id, n);
+      }
+      for (let i = 0; i < deals.length; i++) {
+        const level = byUser.get((rows ?? [])[i].user_id);
+        deals[i].verificationLevel = level ?? null;
+      }
+    }
+
+    if (radarIsPublic()) {
+      deals.push(...(await readRadar(sb, limit)));
+    }
+
+    await decorateChapters(sb, deals);
+
+    return deals
+      .sort((a, b) => Date.parse(b.postedAt) - Date.parse(a.postedAt))
+      .slice(0, limit);
+  } catch {
+    // A homepage must render when the database does not. The showcase hides
+    // itself on an empty list, which is the correct thing to show when we
+    // cannot prove there is anything live.
+    return [];
+  }
+}
+
+/**
+ * Desk Radar, public fields only. Internal columns (source_url,
+ * source_platform, counterparty_name, counterparty_contact, notes) are never
+ * selected: spec section 2 keeps them desk-visible, and the cheapest way to
+ * honour that is to never ask for them.
+ *
+ * `graduated`, `expired` and `removed` items are excluded, and an item past
+ * its validity date is not live regardless of what its status column says.
+ */
+async function readRadar(
+  sb: ReturnType<typeof createAdminClient>,
+  limit: number,
+): Promise<LiveDeal[]> {
+  try {
+    const { data, error } = await sb
+      .from("desk_radar")
+      .select(
+        "id, side, product, hs_code, qty, unit, incoterms, origin, destination, spotted_at, valid_until, status",
+      )
+      .in("status", ["live", "under_pursuit"])
+      .order("spotted_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+
+    const now = Date.now();
+    return (data ?? [])
+      .filter((r) => !r.valid_until || Date.parse(r.valid_until) > now)
+      .map((r) => ({
+        id: r.id,
+        ref: null,
+        source: "radar" as const,
+        type: r.side,
+        product: r.product,
+        hsCode: r.hs_code,
+        chapter: chapterOf(r.hs_code),
+        chapterTitle: null,
+        quantity: r.qty === null || r.qty === undefined ? null : String(r.qty),
+        unit: r.unit,
+        incoterm: r.incoterms,
+        originText: r.origin,
+        destinationText: r.destination,
+        originCode: isoCode(r.origin),
+        destinationCode: isoCode(r.destination),
+        postedAt: r.spotted_at,
+        // Never a badge on a radar item. Nobody behind it is a member.
+        verificationLevel: null,
+        href: null,
+      }));
+  } catch {
+    // The table does not exist yet. That is the expected state until the
+    // radar build lands, and it must not take the homepage with it.
+    return [];
+  }
+}
+
+/** Chapter titles for the category chips, from the HS catalog. */
+async function decorateChapters(
+  sb: ReturnType<typeof createAdminClient>,
+  deals: LiveDeal[],
+): Promise<void> {
+  const chapters = Array.from(
+    new Set(deals.map((d) => d.chapter).filter((c): c is string => !!c)),
+  );
+  if (chapters.length === 0) return;
+
+  try {
+    const { data } = await sb
+      .from("hs_codes")
+      .select("chapter, chapter_title")
+      .in("chapter", chapters);
+    const titleOf = new Map<string, string>();
+    for (const row of data ?? []) {
+      if (row.chapter && row.chapter_title && !titleOf.has(row.chapter)) {
+        titleOf.set(row.chapter, row.chapter_title);
+      }
+    }
+    for (const d of deals) {
+      if (d.chapter) d.chapterTitle = titleOf.get(d.chapter) ?? null;
+    }
+  } catch {
+    // Chips fall back to the chapter number, which is still true.
+  }
+}
+
+/** Distinct countries touched by a set of deals, for the live count line. */
+export function countriesIn(deals: LiveDeal[]): string[] {
+  const codes = new Set<string>();
+  for (const d of deals) {
+    if (d.originCode) codes.add(d.originCode);
+    if (d.destinationCode) codes.add(d.destinationCode);
+  }
+  return Array.from(codes);
+}
+
+/** The corridors worth drawing: both ends resolved, and not a loop. */
+export function routesIn(
+  deals: LiveDeal[],
+): { from: string; to: string; id: string }[] {
+  const seen = new Set<string>();
+  const routes: { from: string; to: string; id: string }[] = [];
+  for (const d of deals) {
+    if (!d.originCode || !d.destinationCode) continue;
+    if (d.originCode === d.destinationCode) continue;
+    const key = `${d.originCode}-${d.destinationCode}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    routes.push({ from: d.originCode, to: d.destinationCode, id: key });
+  }
+  return routes;
+}

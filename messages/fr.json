@@ -292,14 +292,13 @@
     "metaDescription": "Ponte est un tableau vérifié pour le commerce transfrontalier de marchandises physiques. Les offres et les besoins sont rédigés en termes commerciaux, diffusés anonymement, et aucune mise en relation n'a lieu avant la signature d'un NCNDA. Les membres sont criblés au regard de Companies House, VIES, GLEIF et des listes OFAC, UE, ONU et OFSI.",
     "hero": {
       "eyebrow": "Gratuit pour tous les membres",
-      "title": "Sachez qui se trouve",
-      "titleAccent": "en face de vous.",
+      "title": "Achetez et vendez des matières premières physiques dans le monde entier",
       "lead": "Chaque contrepartie est vérifiée dans les registres du commerce et les listes de sanctions avant toute mise en relation.",
       "b1": "Publier et se connecter est gratuit",
       "b2": "Aucune commission sur votre affaire",
       "b3": "Anonyme jusqu'à accord des deux parties",
-      "cta": "Publiez une annonce, gratuit",
-      "secondary": "Voir le tableau"
+      "ctaPrimary": "Voir les affaires en direct",
+      "ctaSecondary": "Publiez une annonce, gratuit"
     },
     "proof": {
       "eyebrow": "Vérification des contreparties",
@@ -399,6 +398,16 @@
         "cta": "Voir les tarifs"
       },
       "currency": "Tous les honoraires sont libellés et réglés en USD."
+    },
+    "showcase": {
+      "eyebrow": "En direct sur le tableau",
+      "heading": "Des affaires en mouvement en ce moment.",
+      "count": "{deals} affaires en direct dans {countries} pays",
+      "mapCaption": "Chaque arc est un corridor actif sur le tableau.",
+      "gridHeading": "Parcourir ce qui est en ligne",
+      "all": "Tout",
+      "seeAll": "Voir toutes les affaires en direct",
+      "deskSourced": "Opportunité repérée par le desk"
     }
   },
   "legal": {

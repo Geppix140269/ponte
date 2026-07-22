@@ -292,14 +292,13 @@
     "metaDescription": "Ponte è una bacheca verificata per il commercio transfrontaliero di merci fisiche. Offerte e richieste sono redatte in termini commerciali, circolano in forma anonima e nessuna presentazione avviene prima della firma di un NCNDA. I membri sono controllati su Companies House, VIES, GLEIF e sulle liste di OFAC, UE, ONU e OFSI.",
     "hero": {
       "eyebrow": "Gratis per ogni membro",
-      "title": "Scopri chi c'è",
-      "titleAccent": "dall'altra parte.",
+      "title": "Compra e vendi materie prime fisiche in tutto il mondo",
       "lead": "Ogni controparte viene verificata su registri delle imprese e liste di sanzioni prima di qualsiasi presentazione.",
       "b1": "Pubblicare e connettersi è gratis",
       "b2": "Nessuna commissione sul tuo affare",
       "b3": "Anonimo finché non siete d'accordo",
-      "cta": "Pubblica un annuncio, gratis",
-      "secondary": "Vedi il tabellone"
+      "ctaPrimary": "Vedi le trattative in corso",
+      "ctaSecondary": "Pubblica un annuncio, gratis"
     },
     "proof": {
       "eyebrow": "Verifica della controparte",
@@ -399,6 +398,16 @@
         "cta": "Guarda le tariffe"
       },
       "currency": "Tutti i compensi sono quotati e regolati in USD."
+    },
+    "showcase": {
+      "eyebrow": "Live sulla bacheca",
+      "heading": "Trattative in movimento adesso.",
+      "count": "{deals} trattative in corso in {countries} paesi",
+      "mapCaption": "Ogni arco è un corridoio attivo sulla bacheca.",
+      "gridHeading": "Sfoglia ciò che è attivo",
+      "all": "Tutto",
+      "seeAll": "Vedi tutte le trattative in corso",
+      "deskSourced": "Opportunità individuata dal desk"
     }
   },
   "legal": {

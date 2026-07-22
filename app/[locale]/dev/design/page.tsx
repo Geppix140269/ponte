@@ -9,6 +9,10 @@ import {
   SYSTEM_ICON_NAMES,
 } from "@/components/icons";
 import { AppIcon, BridgeMark, Wordmark } from "@/components/Logo";
+import TradeRouteMap from "@/components/home/TradeRouteMap";
+import LiveDealsStrip from "@/components/home/LiveDealsStrip";
+import LiveDealCard, { type DealLabels } from "@/components/home/LiveDealCard";
+import type { LiveDeal } from "@/lib/board/live-deals";
 import { COLOR, PROFILE_CATEGORY_OF, TIER } from "@/lib/design-tokens";
 
 /**
@@ -280,6 +284,46 @@ export default function DesignSystemPage({
         </div>
       </Section>
 
+      {/* ===== 07 Live deals showcase =====
+          Sample rows, never seeded anywhere near production. The real
+          homepage reads `getLiveDeals()` and renders nothing at all when the
+          board is empty; this section exists so the components can be checked
+          by eye before there is inventory to check them against. It lives on
+          a route that 404s in production. */}
+      <Section n="07" title="Live deals showcase (sample rows)">
+        <p className="mb-4 text-[11.5px] leading-relaxed text-coral">
+          Sample data, for layout only. The homepage never renders a deal it
+          did not read from the board.
+        </p>
+
+        <p className="label">Trade route map</p>
+        <TradeRouteMap
+          routes={[
+            { from: "BR", to: "NL", id: "BR-NL" },
+            { from: "EG", to: "BR", id: "EG-BR" },
+            { from: "AE", to: "TR", id: "AE-TR" },
+            { from: "IN", to: "GB", id: "IN-GB" },
+            { from: "ZA", to: "CN", id: "ZA-CN" },
+            { from: "US", to: "JP", id: "US-JP" },
+          ]}
+          className="w-full"
+        />
+
+        <p className="label mt-6">Live deals strip, member and radar</p>
+        <LiveDealsStrip
+          deals={SAMPLE_DEALS}
+          labels={SAMPLE_LABELS}
+          locale="en"
+        />
+
+        <p className="label mt-6">Cards, side by side</p>
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+          {SAMPLE_DEALS.slice(0, 3).map((d) => (
+            <LiveDealCard key={d.id} deal={d} labels={SAMPLE_LABELS} locale="en" />
+          ))}
+        </div>
+      </Section>
+
       {/* ===== 06 Motion ===== */}
       <Section n="06" title="Motion">
         <dl className="grid gap-x-6 text-[12.5px] md:grid-cols-2">
@@ -307,6 +351,54 @@ export default function DesignSystemPage({
     </div>
   );
 }
+
+/**
+ * Layout fixtures for section 07. Deliberately in this file and nowhere near
+ * `lib/`, so there is no path by which a sample deal reaches a real surface.
+ */
+const SAMPLE_LABELS: DealLabels = {
+  offer: "offer",
+  requirement: "requirement",
+  service: "service",
+  notStated: "not stated",
+  deskSourced: "Desk-sourced opportunity",
+  tier: {
+    1: "Identity verified",
+    2: "Business verified",
+    3: "Activity verified",
+    4: "Institutional",
+  },
+};
+
+const SAMPLE_DEALS: LiveDeal[] = [
+  ["Refined white sugar, ICUMSA 45", "25,000", "MT", "CIF", "BR", "NL", "1701.99", 2, "offer", "member"],
+  ["Urea 46% granular", "12,000", "MT", "FOB", "EG", "BR", "3102.10", 0, "requirement", "member"],
+  ["Aluminium ingot A7, 99.7%", "1,000", "MT", "FOB", "AE", "TR", "7601.10", 4, "offer", "member"],
+  ["Copper cathode grade A", "500", "MT", "CIF", "ZA", "CN", "7403.11", 0, "offer", "radar"],
+  ["Basmati rice, 1121 sella", "8,000", "MT", "FOB", "IN", "GB", "1006.30", 3, "offer", "member"],
+  ["HMS 1&2 metal scrap", "20,000", "MT", "CFR", "US", "JP", "7204.49", 0, "requirement", "radar"],
+].map(
+  ([product, quantity, unit, incoterm, from, to, hs, level, type, source], i) => ({
+    id: `sample-${i}`,
+    ref: source === "member" ? `PT-${1000 + i}` : null,
+    source: source as LiveDeal["source"],
+    type: type as string,
+    product: product as string,
+    hsCode: hs as string,
+    chapter: (hs as string).slice(0, 2),
+    chapterTitle: null,
+    quantity: quantity as string,
+    unit: unit as string,
+    incoterm: incoterm as string,
+    originText: from as string,
+    destinationText: to as string,
+    originCode: from as string,
+    destinationCode: to as string,
+    postedAt: `2026-07-${String(22 - i).padStart(2, "0")}T09:00:00Z`,
+    verificationLevel: (level as number) || null,
+    href: null,
+  }),
+);
 
 /** C4, at the bundle's r=18 geometry: circumference 113. */
 function TrustDial({ score }: { score: number }) {
