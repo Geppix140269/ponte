@@ -5,14 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-// July 2026: Ponte is a brokerage/marketplace. The legacy shop sections
-// (Products, Orders) are hidden from the nav; their pages still exist at
-// /admin/products and /admin/orders if old data ever needs a look.
+// July 2026: Ponte is a brokerage/marketplace. The legacy shop (Products,
+// Orders, and their admin screens) was deleted with zero orders ever taken;
+// the products and categories tables still hold the old rows, readable in
+// the Supabase console if that era ever needs a look.
 const adminNav = [
   { href: "/admin/listings", label: "Listings" },
   { href: "/admin/verifications", label: "Verifications" },
   { href: "/admin/users", label: "Users" },
-  { href: "/admin", label: "Legacy shop" },
 ];
 
 function Notice({ title, body }: { title: string; body: string }) {

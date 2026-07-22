@@ -5,7 +5,7 @@ import { localeAlternates, localeUrl } from "@/lib/seo";
 // Paths worth indexing, with their crawl hints. Legacy shop and Deal Desk
 // routes (catalogue, category, product, cart, checkout, order-success,
 // brokerage, network, methodology, why-ponte) are permanent redirects in
-// next.config.mjs, so they are deliberately not listed.
+// middleware.ts, so they are deliberately not listed.
 const PATHS: {
   path: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];

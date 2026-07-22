@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
-import { Download, UserCircle2 } from "lucide-react";
+import { UserCircle2 } from "lucide-react";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,16 +46,9 @@ export default async function AccountPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  // Legacy report-era deliveries: shown only if this account actually has
-  // any, so old customers keep their files without new members ever seeing
-  // shop language.
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, order_items(*)")
-    .eq("user_id", user.id);
-  const downloads = (orders ?? [])
-    .flatMap((o: any) => o.order_items ?? [])
-    .filter((it: any) => it.delivery_status === "delivered" && it.report_path);
+  // The report-era "delivered files" section is gone with the shop. The
+  // orders table was checked before deletion: zero rows, so there is no
+  // account anywhere with a file this section could have shown.
 
   return (
     <section className="container-px py-14 lg:py-20">
@@ -115,35 +108,6 @@ export default async function AccountPage() {
         Go to the marketplace
       </Link>
 
-      {/* Legacy deliveries, only for accounts that have them */}
-      {downloads.length > 0 && (
-        <>
-          <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-            <div className="num-italic">â€” 02 / Files</div>
-            <h2
-              className="serif text-white"
-              style={{ fontSize: 28, fontWeight: 500 }}
-            >
-              Delivered files
-            </h2>
-          </div>
-          <ul className="glass divide-y divide-white/10 mb-12">
-            {downloads.map((it: any) => (
-              <li
-                key={it.id}
-                className="flex items-center justify-between p-5 first:rounded-t-[18px] last:rounded-b-[18px]"
-              >
-                <span className="serif text-sm text-cream" style={{ fontWeight: 500 }}>
-                  {it.config_values?.sku ?? "File"}
-                </span>
-                <a href={`/api/download/${it.id}`} className="btn-gold">
-                  <Download className="h-4 w-4" /> Download
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </section>
   );
 }

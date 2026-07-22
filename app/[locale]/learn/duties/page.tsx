@@ -335,22 +335,25 @@ export default function LearnDutiesPage() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA. This used to point at a duty calculator that was never built
+            and a $299 report SKU from the retired shop: one 404 and one
+            redirect. It now offers the two things that exist. */}
         <section className="container-px py-12 border-t border-white/10">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Ready to calculate</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Put it to work</p>
           <h2 className="heading-lg mb-4 max-w-xl">
-            Get your landed cost in seconds.
+            Know your landed cost before you commit.
           </h2>
           <p className="text-sm text-muted max-w-lg mb-6">
-            Free interactive calculator. Enter your HS code, origin, destination and customs value
-            â€” get MFN rate, FTA rate, ADD/CVD exposure, VAT and total landed cost instantly.
+            The desk works duty and landed-cost questions as part of any engagement, and the
+            marketplace is where the counterparties are. Both start from the same place: tell us
+            the product and the route.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/tools/duties" className="btn-primary">
-              Open duty calculator
+            <Link href="/contact" className="btn-primary">
+              Ask the desk
             </Link>
-            <Link href="/product/tariff-landed-cost-analysis" className="btn-ghost text-sm">
-              Get a full analyst brief â€” CT-002, $299
+            <Link href="/marketplace" className="btn-ghost text-sm">
+              See the board
             </Link>
           </div>
         </section>

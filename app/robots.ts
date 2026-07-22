@@ -7,7 +7,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/account", "/checkout", "/order-success", "/admin"],
+      // /checkout and /order-success left with the shop; those paths are now
+      // permanent redirects, and a redirect needs no crawl rule.
+      disallow: ["/account", "/admin"],
     },
     sitemap: `${BASE_URL}/sitemap.xml`,
     host: BASE_URL,
