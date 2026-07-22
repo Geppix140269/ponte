@@ -20,9 +20,9 @@ function isUnlocalized(pathname: string): boolean {
 // Legacy routes from the shop and Deal Desk eras, mapped to their nearest live
 // equivalent. This is the single authority for those redirects.
 //
-// It lives in middleware rather than in next.config redirects() because
-// middleware runs at the edge, ahead of the origin, on Vercel as it did on
-// Netlify. A bare "/cart" was being rewritten to "/en/cart" before
+// It lives in middleware rather than in next.config redirects() because on
+// Netlify the middleware runs at the edge, ahead of the origin. A bare
+// "/cart" was being rewritten to "/en/cart" by the locale middleware before
 // the origin's redirect could ever match, so it answered 307 instead of a
 // permanent 308 and the ranking signal was not transferring.
 const LEGACY_EXACT: Record<string, string> = {

@@ -48,9 +48,8 @@ export function checkRateLimit(
  * Extract the client IP from a Next.js request. Falls back through
  * x-forwarded-for → x-real-ip → "unknown".
  *
- * Vercel's proxy populates x-forwarded-for with the real client IP as the
- * first comma-separated value, the same shape Netlify used, so this needed no
- * change in the move between them.
+ * In Netlify the proxy populates x-forwarded-for with the real client IP
+ * as the first comma-separated value.
  */
 export function getClientIp(req: NextRequest): string {
   const xff = req.headers.get("x-forwarded-for");

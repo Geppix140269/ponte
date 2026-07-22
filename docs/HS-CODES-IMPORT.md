@@ -5,16 +5,11 @@ One-off data load. Run this once on your local machine to populate
 
 ## Prerequisites
 
-1. Supabase migration `supabase/migrations/20260527_hs_codes.sql` already
+1. `OPENAI_API_KEY` set in Netlify (you've confirmed this)
+2. Supabase migration `supabase/migrations/20260527_hs_codes.sql` already
    run (you've confirmed this)
-2. Node 18+ installed locally
-3. You're in the repo: `C:\dev\ponte`
-
-**No OpenAI key is needed.** This runbook used to open by asking for one.
-`scripts/import-hs-codes.ts` reads exactly two variables, both Supabase, and
-has no model call in it at all. The requirement was left over from an earlier
-embeddings-based version of the import and was removed on 22 July 2026, along
-with the last other reference to OpenAI anywhere in the platform.
+3. Node 18+ installed locally
+4. You're in the repo: `C:\Users\gfuna\OneDrive\Documents\GitHub\ponte`
 
 ## Step 1 — Install the two dev dependencies needed by the script
 
@@ -24,13 +19,14 @@ npm install --save-dev tsx dotenv
 
 ## Step 2 — Create a `.env.local` file at the repo root
 
-`.env.local` is git-ignored. Use it to feed the script the two values it
-needs. Take both from the Supabase dashboard rather than from the hosting
-provider, so a stale copy in a dashboard cannot send this at the wrong project.
+`.env.local` is git-ignored. Use it to feed the script the three values
+it needs. Three env vars are enough — copy them from Netlify (Site
+configuration → Environment variables) and your Supabase dashboard.
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJh...        # Supabase → Project Settings → API → service_role secret
+OPENAI_API_KEY=sk-...                    # Same as in Netlify env vars
 ```
 
 The `service_role` key is your full-access Supabase key (NOT the anon

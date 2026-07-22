@@ -88,19 +88,12 @@ verdict is re-screened against the result.
 `npm run sanctions:refresh`, which is `scripts/sanctions-refresh.ts`, which
 calls `runRefreshAndRescreen()` in `lib/sanctions/refresh-run.ts`.
 
-**Why not a function.** A full refresh takes minutes. A synchronous function is
-capped well below that on any host, so the old scheduled function returned HTTP
-504 while the work carried on server side, or did not, with no way to tell
-which. A GitHub Actions runner has a six hour ceiling, so the timeout is gone
-rather than raised.
-
-This survived the move to Vercel unchanged, and deliberately. Vercel's function
-ceiling is higher than Netlify's was, and `maxDuration` now works where it used
-to be inert, so it is tempting to move this back into a Vercel Cron job. Do
-not: the ceiling is still minutes, so a job that grows slightly starts failing
-intermittently, which is worse to operate than a job that cannot fail this way
-at all. The runner also keeps the nightly rebuild independent of the host, so a
-hosting incident does not stop sanctions screening from being refreshed.
+**Why not a function.** A full refresh takes minutes. Netlify caps a
+synchronous function at roughly 10 to 26 seconds, so the old scheduled
+function returned HTTP 504 while the work carried on server side, or did not,
+with no way to tell which. The route carried `maxDuration = 300`, which is a
+Vercel setting and did nothing here. A runner has a six hour ceiling, so the
+timeout is gone rather than raised.
 
 **Trigger it by hand.** GitHub, Actions tab, `Sanctions refresh`, `Run
 workflow`. That is the supported manual path and it is the same code as the
@@ -144,10 +137,8 @@ real result.
 **Secrets the workflow needs**, set under Settings, Secrets and variables,
 Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
 `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ADMIN_ALERT_EMAIL`. Rotating any of
-these means updating both Vercel and here, or the nightly run starts failing
-while the site stays up. This is the failure mode that hides: the site is
-green, screening is refreshing against a stale list, and nothing says so except
-the Actions tab.
+these means updating both Netlify and here, or the nightly run starts failing
+while the site stays up.
 
 **Two GitHub scheduling caveats.** Scheduled runs can be delayed by several
 minutes at peak, which does not matter for a daily rebuild. And GitHub
