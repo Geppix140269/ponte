@@ -334,10 +334,13 @@ so it is called out here.
 
 ## 8. Operational constraints confirmed in-repo
 
-- The working copy is inside OneDrive. `git commit` from Bash fails with
-  `Unable to create .git/index.lock`; **PowerShell works**. All commits will use
-  PowerShell (`docs/platform/SOURCE-OF-TRUTH.md`).
-- `.env.local` holds live secrets and is inside OneDrive. Recorded, not touched.
+- ~~The working copy is inside OneDrive.~~ Resolved 2026-07-22: moved to
+  `C:\dev\ponte` by fresh clone. Both shells now work for git, and
+  `npm run verify` went from never finishing to 52 seconds. See
+  `docs/platform/SOURCE-OF-TRUTH.md`.
+- `.env.local` holds live secrets and was inside OneDrive. It moved with the
+  working copy, but the keys already synced remain exposed and need rotating.
+  See `docs/platform/SECRETS.md`.
 - Working tree is clean; `main` is level with `origin/main`. Nothing unpushed.
 - CI: `.github/workflows/ci.yml`; nightly sanctions refresh:
   `.github/workflows/sanctions-refresh.yml`.

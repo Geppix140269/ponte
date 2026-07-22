@@ -43,12 +43,17 @@ replaced at the provider and updated in both the password manager and the host.
 
 These came out of the 21 July 2026 audit.
 
-1. **`.env.local` sits inside a cloud synced folder.** The working copy lives
-   under OneDrive, so twelve live production secrets are uploaded to Microsoft,
-   present on every device signed into that account, and retained in OneDrive
-   version history and recycle bin. Until the working copy is moved outside the
-   synced folder, treat these keys as exposed to anyone with access to that
-   OneDrive account.
+1. **`.env.local` was inside a cloud synced folder.** The working copy lived
+   under OneDrive until 22 July 2026, so twelve live production secrets were
+   uploaded to Microsoft, present on every device signed into that account, and
+   retained in OneDrive version history and recycle bin.
+
+   The working copy has moved to `C:\dev\ponte` and new writes no longer sync.
+   **This does not un-expose the keys already uploaded.** They remain in that
+   account's version history and recycle bin. Rotate all twelve, then delete
+   the retired folder `C:\Users\gfuna\OneDrive\Documents\GitHub\ponte` and
+   empty the OneDrive recycle bin. Until rotation, treat them as exposed to
+   anyone with access to that OneDrive account.
 2. **A second `.env.local` with eighteen populated keys** was found in a
    retired clone at `C:\Users\gfuna\GitHub\ponte`. Nobody maintains it, so
    nobody rotates it. Remove it, and rotate anything it held.

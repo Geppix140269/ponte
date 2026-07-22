@@ -78,9 +78,10 @@ copy .env.example .env.local   # fill from the password manager, never from a ch
 - Keep untranslated: Ponte, Ponte AI, NCNDA, incoterms, unit codes, prices,
   listing references, HS codes, and the legal entity names and numbers.
 
-## If the working copy is still inside OneDrive
+## Where the working copy lives
 
-Use PowerShell for git and for `npm install`. A Bash shell cannot create files
-there, so every git write fails on `.git/index.lock`. See
-[docs/platform/RUNBOOK.md](docs/platform/RUNBOOK.md). Moving the working copy
-out of OneDrive removes the problem entirely and is recommended.
+`C:\dev\ponte`. It was moved out of OneDrive on 22 July 2026, which removed
+the `.git/index.lock` failures and took `npm run verify` from not finishing at
+all to 52 seconds. If you are in an OneDrive folder, you are in a retired
+clone that cannot push. See
+[docs/platform/SOURCE-OF-TRUTH.md](docs/platform/SOURCE-OF-TRUTH.md).
