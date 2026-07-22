@@ -81,7 +81,16 @@ a{color:inherit}
 .free{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(74,192,154,.30);
   background:rgba(74,192,154,.10);color:var(--verdict);border-radius:999px;padding:6px 13px;
   font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
-.acts{margin-top:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+/* The answer to "how?", on the first screen. Mono because these are the names
+   of records, not prose, and a reader can go and check any of them. */
+.receipt{list-style:none;margin:18px 0 0;padding:14px 16px;display:grid;gap:9px;
+  background:rgba(4,10,18,.55);border:1px solid var(--line);border-radius:10px;max-width:35rem}
+.receipt li{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:12px;line-height:1.35}
+.receipt b{color:var(--cream);font-weight:600;flex:none}
+.receipt .what{color:var(--neutral-dim);font-size:11px;margin-left:auto;text-align:right}
+.receipt .tick{position:relative;top:1px}
+
+.acts{margin-top:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
 .plain{font-size:14.5px;color:var(--cream);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.26);padding-bottom:2px}
 .plain:hover{border-color:var(--gold);color:var(--gold)}
 
@@ -116,12 +125,13 @@ a{color:inherit}
   border:1px solid rgba(74,192,154,.42);color:var(--verdict);display:grid;place-items:center;font-size:9px;font-weight:700}
 .when{color:var(--neutral-dim);font-size:10.5px}
 @keyframes arrive{to{opacity:1;transform:none}}
-.stamp{margin-top:14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(74,192,154,.40);
-  background:rgba(74,192,154,.09);border-radius:7px;padding:10px 13px;
-  opacity:0;animation:arrive .5s cubic-bezier(.2,.7,.3,1) 1.5s forwards}
-.stamp .v{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+.stamp{margin:12px 0 0;display:flex;align-items:center;gap:10px;border:1px solid rgba(74,192,154,.40);
+  background:rgba(74,192,154,.09);border-radius:7px;padding:11px 13px;
+  opacity:0;animation:arrive .5s cubic-bezier(.2,.7,.3,1) .5s forwards}
+.stamp .v{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--verdict);font-weight:700}
-.stamp .n{font-size:12px;color:var(--neutral);margin-left:auto;font-family:var(--mono)}
+.stamp .n{font-size:11.5px;color:var(--neutral);margin-left:auto;font-family:var(--mono)}
+.caveat{margin:11px 0 0;font-size:11.5px;line-height:1.45;color:var(--neutral-dim)}
 
 /* ---- source strip ---- */
 .strip{margin-top:64px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
@@ -184,7 +194,23 @@ a{color:inherit}
   <div class="pitch">
     <span class="free">Free to post &middot; Free to connect</span>
     <h1>Trade with strangers.<span class="two">Not with unknowns.</span></h1>
-    <p class="sub">Every counterparty on this board is screened before you ever speak to them.</p>
+
+    <!--
+      "Screened" is the word every scam marketplace uses too. A claim with no
+      visible mechanism reads as marketing, and the reader's next thought is
+      "how?" If that is not answered in the same glance, the sentence costs
+      trust instead of building it. So the mechanism is named here, on the
+      first screen, above the fold on a phone, in the reader's own line of
+      sight. Named sources are checkable. "Screened" is not.
+    -->
+    <p class="sub">Here is what we check on every member, before anyone is introduced.</p>
+    <ul class="receipt">
+      <li><span class="tick">&#10003;</span><b>Companies House</b><span class="what">Registry, status, officers</span></li>
+      <li><span class="tick">&#10003;</span><b>EU VIES</b><span class="what">VAT validated at source</span></li>
+      <li><span class="tick">&#10003;</span><b>GLEIF</b><span class="what">Legal Entity Identifier</span></li>
+      <li><span class="tick">&#10003;</span><b>5 sanctions lists</b><span class="what">OFAC SDN and Consolidated, EU, UN, UK OFSI</span></li>
+    </ul>
+
     <div class="acts">
       <a class="cta lg" href="#post">Post a listing, free &rarr;</a>
       <a class="plain" href="#board">See the board</a>
@@ -205,15 +231,13 @@ a{color:inherit}
       <div class="term"><dt>Payment</dt><dd>LC at sight</dd></div>
       <div class="term"><dt>Role</dt><dd>End buyer</dd></div>
     </dl>
+    <!-- The four sources are named on the left. Here they are only counted,
+         because this panel's job is the verdict on a real listing, not a
+         second recital of the same list. -->
     <div class="check">
-      <div class="check-top"><span class="label">Counterparty check</span><span class="when mono">21 Jul 2026</span></div>
-      <ul class="srcs">
-        <li class="src"><span class="tick">&#10003;</span><b>Companies House</b><span class="when">Active</span></li>
-        <li class="src"><span class="tick">&#10003;</span><b>EU VIES</b><span class="when">VAT valid</span></li>
-        <li class="src"><span class="tick">&#10003;</span><b>GLEIF</b><span class="when">LEI held</span></li>
-        <li class="src"><span class="tick">&#10003;</span><b>Sanctions, 7 lists</b><span class="when">No match</span></li>
-      </ul>
-      <p class="stamp"><span class="v">Cleared</span><span class="n">Level 2</span></p>
+      <div class="check-top"><span class="label">Counterparty check</span><span class="when mono">Read 21 Jul 2026</span></div>
+      <p class="stamp"><span class="tick">&#10003;</span><span class="v">Cleared</span><span class="n">8 sources, 0 matches</span></p>
+      <p class="caveat">What each source published on the day it was read. Evidence of standing, not a guarantee of performance.</p>
     </div>
   </article>
 </div></section>
@@ -232,7 +256,7 @@ a{color:inherit}
   <div class="grid">
     <section class="panel">
       <h3>They get checked</h3>
-      <p>Registers and seven sanctions lists, each with the date it was read. A source we cannot reach is reported as not checked, never as clean.</p>
+      <p>Three registers and five sanctions lists, each with the date it was read. A source we cannot reach is reported as not checked, never as clean.</p>
       <div class="screen">
         <div class="line"><span class="k">Companies House</span><span class="v">ACTIVE</span></div>
         <div class="line"><span class="k">EU VIES</span><span class="v">VALID</span></div>
