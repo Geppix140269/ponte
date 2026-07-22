@@ -586,17 +586,28 @@
     "pill": "会员",
     "title": "一个入口。一次登录。",
     "subtitle": "无需密码。第一次来？登录即创建账户。会员可以发布交易并查看看板。",
-    "linkExpired": "该链接已过期或已被使用。请在下方输入你的邮箱，我们会发送一个新链接。",
-    "notConfigured": "连接 Supabase Auth 后即可登录。添加你的 Supabase 密钥以启用魔法链接和 Google 登录。",
-    "checkInbox": "请查收邮箱中的魔法登录链接。",
+    "linkExpired": "该验证码已过期或已被使用。请在下方输入邮箱，我们会重新发送一个。",
+    "notConfigured": "连接 Supabase Auth 后即可登录。添加您的 Supabase 密钥以启用邮箱和 Google 登录。",
     "googleDisabled": "Google 登录已停用（未配置 client ID）。",
     "or": "或",
     "emailLabel": "电子邮箱",
     "emailPlaceholder": "you@company.com",
     "sending": "发送中...",
-    "submit": "给我发送魔法链接",
+    "submit": "给我发送验证码",
     "errorFallback": "出了点问题。请重试。",
-    "errorUnknown": "未知错误"
+    "errorUnknown": "未知错误",
+    "code": {
+      "heading": "输入验证码",
+      "sentTo": "我们已向 {email} 发送了一个六位验证码，有效期 10 分钟。",
+      "label": "第",
+      "verifying": "正在验证…",
+      "wrong": "验证码不正确。请核对邮件后重试。",
+      "expired": "验证码已过期。请重新获取一个。",
+      "resend": "重新发送验证码",
+      "resent": "新验证码已发送。",
+      "changeEmail": "使用其他邮箱",
+      "switched": "您此前以其他账户登录，该会话已被替换。"
+    }
   },
   "marketplace": {
     "meta": {

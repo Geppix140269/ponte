@@ -13,6 +13,9 @@ export async function GET(request: Request) {
   if (code && isSupabaseConfigured()) {
     try {
       const supabase = createClient();
+      // Clear any session already on this browser before establishing the new
+      // one, so an OAuth return cannot land on top of somebody else's cookie.
+      await supabase.auth.signOut();
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
         return NextResponse.redirect(`${origin}${next}`);

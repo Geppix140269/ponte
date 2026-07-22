@@ -586,17 +586,28 @@
     "pill": "Membri",
     "title": "Una porta. Un accesso.",
     "subtitle": "Nessuna password. È la prima volta? Accedendo crea il Suo account. I membri pubblicano operazioni e vedono la bacheca.",
-    "linkExpired": "Quel link è scaduto o è già stato usato. Inserisca la Sua email qui sotto e gliene inviamo uno nuovo.",
-    "notConfigured": "L'accesso sarà disponibile una volta collegato Supabase Auth. Aggiunga le Sue chiavi Supabase per abilitare il magic link e l'accesso con Google.",
-    "checkInbox": "Controlli la casella di posta: troverà un link di accesso.",
+    "linkExpired": "Quel codice è scaduto o è già stato usato. Scrivi la tua email qui sotto e te ne mandiamo uno nuovo.",
+    "notConfigured": "L'accesso si attiva una volta collegato Supabase Auth. Aggiungi le tue chiavi Supabase per abilitare il login via email e con Google.",
     "googleDisabled": "Accesso con Google disattivato (nessun client ID configurato).",
     "or": "oppure",
     "emailLabel": "Indirizzo email",
     "emailPlaceholder": "you@company.com",
     "sending": "Invio in corso...",
-    "submit": "Invia il link di accesso via email",
+    "submit": "Mandami un codice",
     "errorFallback": "Qualcosa è andato storto. Riprovi.",
-    "errorUnknown": "Errore sconosciuto"
+    "errorUnknown": "Errore sconosciuto",
+    "code": {
+      "heading": "Inserisci il codice",
+      "sentTo": "Abbiamo mandato un codice di sei cifre a {email}. Scade fra 10 minuti.",
+      "label": "Cifra",
+      "verifying": "Verifica in corso...",
+      "wrong": "Quel codice non è giusto. Controlla l'email e riprova.",
+      "expired": "Quel codice è scaduto. Chiedine uno nuovo.",
+      "resend": "Manda un nuovo codice",
+      "resent": "Nuovo codice inviato.",
+      "changeEmail": "Usa un'altra email",
+      "switched": "Eri collegato come qualcun altro. Quella sessione è stata sostituita."
+    }
   },
   "marketplace": {
     "meta": {

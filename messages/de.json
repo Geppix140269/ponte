@@ -586,17 +586,28 @@
     "pill": "Mitglieder",
     "title": "Eine Tür. Eine Anmeldung.",
     "subtitle": "Keine Passwörter. Neu hier? Mit der Anmeldung entsteht Ihr Konto. Mitglieder stellen Geschäfte ein und sehen das Board.",
-    "linkExpired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Geben Sie unten Ihre E-Mail-Adresse ein, wir senden Ihnen einen neuen.",
-    "notConfigured": "Die Anmeldung wird verfügbar, sobald Supabase Auth verbunden ist. Fügen Sie Ihre Supabase-Schlüssel hinzu, um Magic-Link- und Google-Anmeldung zu aktivieren.",
-    "checkInbox": "Prüfen Sie Ihren Posteingang, dort liegt Ihr Magic Link zur Anmeldung.",
+    "linkExpired": "Dieser Code ist abgelaufen oder wurde schon benutzt. Tragen Sie unten Ihre E-Mail ein, wir schicken einen neuen.",
+    "notConfigured": "Die Anmeldung steht bereit, sobald Supabase Auth verbunden ist. Fügen Sie Ihre Supabase-Schlüssel hinzu, um Anmeldung per E-Mail und mit Google zu aktivieren.",
     "googleDisabled": "Google-Anmeldung deaktiviert (keine Client-ID konfiguriert).",
     "or": "oder",
     "emailLabel": "E-Mail-Adresse",
     "emailPlaceholder": "you@company.com",
     "sending": "Wird gesendet...",
-    "submit": "Magic Link per E-Mail senden",
+    "submit": "Code schicken",
     "errorFallback": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
-    "errorUnknown": "Unbekannter Fehler"
+    "errorUnknown": "Unbekannter Fehler",
+    "code": {
+      "heading": "Code eingeben",
+      "sentTo": "Wir haben einen sechsstelligen Code an {email} geschickt. Er läuft in 10 Minuten ab.",
+      "label": "Ziffer",
+      "verifying": "Wird geprüft...",
+      "wrong": "Dieser Code stimmt nicht. Prüfen Sie die E-Mail und versuchen Sie es erneut.",
+      "expired": "Dieser Code ist abgelaufen. Fordern Sie einen neuen an.",
+      "resend": "Neuen Code schicken",
+      "resent": "Neuer Code geschickt.",
+      "changeEmail": "Andere E-Mail verwenden",
+      "switched": "Sie waren als jemand anderes angemeldet. Diese Sitzung wurde ersetzt."
+    }
   },
   "marketplace": {
     "meta": {
