@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 // the Supabase console if that era ever needs a look.
 const adminNav = [
   { href: "/admin/listings", label: "Listings" },
+  { href: "/admin/signals", label: "Signals" },
   { href: "/admin/verifications", label: "Verifications" },
   { href: "/admin/users", label: "Users" },
 ];

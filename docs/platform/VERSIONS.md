@@ -136,6 +136,45 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
+## 23 July 2026, Block A: Market Signals separated from Qualified Opportunities
+
+**Status:** code-complete on the launch branch `claude/ponte-block-a-3e085f`.
+**Not yet live**, and cannot be pushed from the OneDrive clone (its remote is
+disabled). Publishing means moving the branch to `C:\dev\ponte`, applying the
+migration, and deploying. One migration is pending: see APPLY-PENDING.md item 2.
+
+The Definitive 1 August brief (Block A) splits the two classes of public
+content that commit #11 had merged into one board.
+
+- **`getLiveDeals()` is member-only now.** It no longer reads `desk_radar`, and
+  it drops any approved listing past its `valid_until`. Qualified Opportunities
+  are approved, current member listings, full stop. The `DESK_RADAR_PUBLIC`
+  flag and the `readRadar` reader are gone.
+- **Market Signals have their own everything.** `lib/board/market-signals.ts`
+  (DB read) over `lib/market-signals/logic.ts` (pure, unit-tested) returns a
+  distinct `MarketSignal` type; the public read selects public columns only, so
+  source, identity and original prose cannot travel to a client. Board at
+  `/market-signals`, detail at `/market-signals/[id]`, both carrying the exact
+  mandatory "not verified" disclaimer and the "Ask Ponte to investigate" CTA.
+- **Private on import, public only on approval.** `import-desk-radar.mjs` lands
+  rows `private`. The new `/admin/signals` queue approves a signal individually,
+  which records the approving admin and sets a 90-day public expiry from the
+  original signal date. Approve / unpublish / mark unavailable / withdraw.
+- **The migration** (`20260723a_desk_radar_signal_gate.sql`) is additive: adds
+  approval, expiry and promotion columns, defaults status to `private`, and
+  remaps the old vocabulary onto the Market Signal lifecycle. No row is deleted.
+
+**Verified here:** encoding check, all 10 locales, `tsc --noEmit`, and the unit
+tests (13 completeness + 16 new market-signals). **Not run here:** `next build`
+(unreliable in OneDrive) and any browser or database check (no `.env.local` in
+this clone). Run `npm run verify` and the acceptance checks in `C:\dev\ponte`.
+
+**The em dash lives in lib/.** The disclaimer text the brief mandates contains
+an em dash, which check-encoding.mjs bans in app/ and components/. It sits in
+`lib/market-signals/copy.ts` and is imported, the same pattern as
+`VERIFICATION_DISCLAIMER`. The Market Signal chrome (nav label, board headings)
+is English for now; Block E moves it into the message fragments.
+
 ## 22 July 2026, the migration nobody checked
 
 **The bug.** Picking a company from the ambiguous match list always answered

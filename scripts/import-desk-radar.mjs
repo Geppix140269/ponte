@@ -17,8 +17,10 @@
 //     country, which is a third of this file, has no route to draw and is
 //     imported without one.
 //
-// Rows are inserted `live`. The spec's desk-review step is a human one and is
-// not automated here.
+// Rows are inserted `private`. Nothing an import produces is public: a Market
+// Signal appears on the public board only after an individual admin approval
+// in /admin/signals (Definitive 1 August brief, Block A). The desk-review step
+// is a human one and is not automated here.
 
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
@@ -167,7 +169,9 @@ for (const r of data) {
     category: g("category") || null,
     spotted_at: spotted.toISOString(),
     valid_until: validUntil.toISOString(),
-    status: "live",
+    // Private on import. Public display is a separate, individual admin
+    // decision; see the header note and the migration's status vocabulary.
+    status: "private",
     // Left null on purpose. The public description is written by the write-up
     // engine, in our words, and until that run happens a card shows structured
     // facts only. The source's prose is never promoted into this column.

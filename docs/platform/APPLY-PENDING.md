@@ -32,6 +32,35 @@ Until this is applied:
 
 Nothing breaks. It just stays unclassified.
 
+### 2. Block A: the desk_radar signal gate
+
+    supabase/migrations/20260723a_desk_radar_signal_gate.sql
+
+**Probe first.** Confirm the table and its current status values actually exist
+before running anything:
+
+    select status, count(*) from desk_radar group by status;
+
+Then apply and verify by probe, not by assertion:
+
+    node scripts/db-query.mjs --file supabase/migrations/20260723a_desk_radar_signal_gate.sql
+    node scripts/db-query.mjs --sql "select status, count(*) from desk_radar group by status"
+
+The `update` that remaps the status values is not data-losing, so db-query.mjs
+will run it. Expect every former `live` row to read `private` afterwards.
+
+Until this is applied:
+
+- the public `/market-signals` board is empty and hides itself, because
+  `getMarketSignals()` fails soft when the new columns are absent
+- `/admin/signals` shows a red notice explaining the migration is not yet
+  applied, and its Approve action cannot succeed
+- the homepage and `getLiveDeals()` are unaffected: they no longer read
+  `desk_radar` at all, so nothing there depends on this migration
+
+Nothing on the current site breaks. The radar simply stays private until the
+gate exists and an admin approves individual signals.
+
 ## Checking what has been applied
 
 There is no migration ledger in this project, so the only honest answer comes
