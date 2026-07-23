@@ -18,7 +18,7 @@
     "prepare": "node scripts/install-hooks.mjs",
     "encoding:check": "node scripts/check-encoding.mjs",
     "hs:import": "tsx scripts/import-hs-codes.ts",
-    "test": "tsx lib/writeup/__tests__/completeness.test.ts && tsx lib/board/__tests__/market-signals.test.ts && tsx lib/verification/__tests__/purpose.test.ts"
+    "test": "tsx lib/writeup/__tests__/completeness.test.ts && tsx lib/board/__tests__/market-signals.test.ts && tsx lib/verification/__tests__/purpose.test.ts && tsx lib/listings/__tests__/publication-gate.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",

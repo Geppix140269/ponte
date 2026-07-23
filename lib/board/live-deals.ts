@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode, parseVolume } from "@/lib/listing-terms";
+import { isNotExpired } from "@/lib/listings/validity";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -77,7 +78,7 @@ export const SHOWCASE_MIN = 3;
 export const COUNT_MIN = 8;
 
 const LISTING_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, valid_until, created_at";
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, valid_until, created_at";
 
 /** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
 function chapterOf(hsCode: string | null): string | null {
@@ -115,11 +116,10 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
 
     // Current only: an approved listing past its validity date is not a live
     // opportunity, so it is dropped here rather than shown as one. A listing
-    // with no date is standing and stays. Same clock the expiry cron reads.
+    // with no date is standing and stays. Same rule the board and detail page
+    // share, so no public surface disagrees about what has expired.
     const now = Date.now();
-    const liveRows = (rows ?? []).filter(
-      (l) => !l.valid_until || Date.parse(l.valid_until) > now,
-    );
+    const liveRows = (rows ?? []).filter((l) => isNotExpired(l.valid_until, now));
 
     const deals: LiveDeal[] = liveRows.map((l) => {
       const vol = parseVolume(l.volume);
@@ -135,9 +135,8 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         quantity: vol.quantity,
         unit: vol.unit,
         incoterm: l.incoterm,
-        // Member listings keep payment terms inside the composed details for
-        // now; the v4 column exists but the composer does not write it yet.
-        payment: null,
+        // Payment terms are now a structured column the composer writes.
+        payment: l.payment_terms ?? null,
         originText: l.origin,
         destinationText: l.destination,
         originCode: isoCode(l.origin),

@@ -100,6 +100,17 @@ const ROLES: Record<"offer" | "requirement", { v: string; label: string; labelKe
 
 const NEEDS_CHAIN = new Set(["mandated_broker", "intermediary"]);
 
+// Recover a role option key from the English label stored on a listing, so an
+// edit can reselect the chip the member originally chose. Accepts a key too,
+// in case it is passed already resolved.
+function roleKeyFromLabel(value: string): string {
+  for (const side of ["offer", "requirement"] as const) {
+    const hit = ROLES[side].find((r) => r.label === value || r.v === value);
+    if (hit) return hit.v;
+  }
+  return "";
+}
+
 const STEPS: Record<ListingType, string[]> = {
   offer: ["steps.offer.product", "steps.offer.terms", "steps.offer.media", "steps.offer.preview"],
   requirement: ["steps.requirement.need", "steps.requirement.delivery", "steps.requirement.files", "steps.requirement.preview"],
@@ -121,18 +132,56 @@ const BADGE_KEYS: Record<ListingType, string> = {
 const LAST = 3;
 const DRAFT_KEY = "ponte_draft";
 
+// The values an edit prefills the composer with. Product arrives as the stored
+// composed string, which the category grid cannot reliably reverse, so edit
+// mode edits it as text rather than forcing a category to be reselected.
+export type ListingInitial = {
+  type?: ListingType;
+  product?: string;
+  description?: string;
+  qty?: string;
+  unit?: string;
+  freq?: string;
+  price?: string;
+  priceBasis?: "unit" | "deal";
+  role?: string;
+  chain?: string;
+  origin?: string;
+  destination?: string;
+  incoterm?: string;
+  timing?: string;
+  extraTerms?: string;
+  paymentTerms?: string;
+  validityMode?: "standing" | "dated";
+  validUntil?: string;
+};
+
 function safeName(name: string): string {
   return name.replace(/[^\w.\-]+/g, "_").slice(-80);
 }
+
+// The fact-only write-up the composer shows the member on the preview step.
+type Writeup = {
+  description: string;
+  strengths: string[];
+  open_points: { text: string; field_ref: string | null }[];
+  non_negotiables: string;
+  summary_line: string;
+  share_text: string;
+};
 
 export default function ListingForm({
   initialType = "offer",
   isAuthed = false,
   restoreDraft = false,
+  editId = null,
+  initial = null,
 }: {
   initialType?: ListingType;
   isAuthed?: boolean;
   restoreDraft?: boolean;
+  editId?: string | null;
+  initial?: ListingInitial | null;
 }) {
   const t = useTranslations("listingForm");
   const tCat = useTranslations("categories");
@@ -181,6 +230,19 @@ export default function ListingForm({
   const [incoterm, setIncoterm] = useState("To discuss");
   const [timing, setTiming] = useState(initialType === "requirement" ? "As soon as possible" : "Ready now");
   const [extraTerms, setExtraTerms] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
+  const [validityMode, setValidityMode] = useState<"standing" | "dated">("standing");
+  const [validUntil, setValidUntil] = useState("");
+
+  // Edit mode: the product arrives as a stored string and is edited as text.
+  const isEditing = !!editId;
+  const [editProduct, setEditProduct] = useState("");
+
+  // The fact-only deal write-up, generated on the preview step and confirmed
+  // by publishing. It is sent with the submission as the internal draft.
+  const [writeup, setWriteup] = useState<Writeup | null>(null);
+  const [writeupMeta, setWriteupMeta] = useState<{ prompt_version: string | null; model: string | null } | null>(null);
+  const [writeupStatus, setWriteupStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   const cat = TRADE_CATEGORIES.find((c) => c.id === catId);
   const isGoods = type !== "service";
@@ -212,6 +274,9 @@ export default function ListingForm({
       if (typeof d.incoterm === "string") setIncoterm(d.incoterm);
       if (typeof d.timing === "string") setTiming(d.timing);
       if (typeof d.extraTerms === "string") setExtraTerms(d.extraTerms);
+      if (typeof d.paymentTerms === "string") setPaymentTerms(d.paymentTerms);
+      if (d.validityMode === "standing" || d.validityMode === "dated") setValidityMode(d.validityMode);
+      if (typeof d.validUntil === "string") setValidUntil(d.validUntil);
       sessionStorage.removeItem(DRAFT_KEY);
       setStep(2);
       setRestoredNote(true);
@@ -220,6 +285,30 @@ export default function ListingForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoreDraft]);
+
+  // Editing an existing listing: prefill from the stored values passed in.
+  useEffect(() => {
+    if (!initial) return;
+    if (initial.type) setType(initial.type);
+    if (typeof initial.product === "string") setEditProduct(initial.product);
+    if (typeof initial.description === "string") setDescription(initial.description);
+    if (typeof initial.qty === "string") setQty(initial.qty);
+    if (typeof initial.unit === "string") setUnit(initial.unit);
+    if (typeof initial.freq === "string") setFreq(initial.freq);
+    if (typeof initial.price === "string") setPrice(initial.price);
+    if (initial.priceBasis === "unit" || initial.priceBasis === "deal") setPriceBasis(initial.priceBasis);
+    if (typeof initial.role === "string") setRole(roleKeyFromLabel(initial.role));
+    if (typeof initial.chain === "string") setChain(initial.chain);
+    if (typeof initial.origin === "string") setOrigin(initial.origin);
+    if (typeof initial.destination === "string") setDestination(initial.destination);
+    if (typeof initial.incoterm === "string") setIncoterm(initial.incoterm);
+    if (typeof initial.timing === "string") setTiming(initial.timing);
+    if (typeof initial.extraTerms === "string") setExtraTerms(initial.extraTerms);
+    if (typeof initial.paymentTerms === "string") setPaymentTerms(initial.paymentTerms);
+    if (initial.validityMode === "standing" || initial.validityMode === "dated") setValidityMode(initial.validityMode);
+    if (typeof initial.validUntil === "string") setValidUntil(initial.validUntil);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Object URLs for the photo previews on the preview step.
   const previewUrls = useMemo(
@@ -233,9 +322,11 @@ export default function ListingForm({
   // Composed exactly as the submit payload composes them, so the preview
   // is honest. These stay in the stored English values: they travel to the
   // desk and to Supabase, they are not screen copy.
-  const composedProduct = isGoods
-    ? `${cat?.value ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
-    : serviceName.trim();
+  const composedProduct = isEditing
+    ? editProduct.trim()
+    : isGoods
+      ? `${cat?.value ?? ""}${sub && sub !== "Other" ? ` · ${sub}` : ""}`
+      : serviceName.trim();
   const composedVolume = qty.trim()
     ? `${qty.trim()} ${unit}${freq !== "One-off" ? ` ${freq.toLowerCase()}` : ""}`
     : "";
@@ -249,9 +340,11 @@ export default function ListingForm({
     return u ? t(u.labelKey) : v;
   };
   const subLabelKey = cat?.subs.find((s) => s.value === sub)?.labelKey;
-  const shownProduct = isGoods
-    ? `${cat ? tCat(cat.labelKey) : ""}${sub && sub !== "Other" && subLabelKey ? ` · ${tCat(subLabelKey)}` : ""}`
-    : serviceName.trim();
+  const shownProduct = isEditing
+    ? editProduct.trim()
+    : isGoods
+      ? `${cat ? tCat(cat.labelKey) : ""}${sub && sub !== "Other" && subLabelKey ? ` · ${tCat(subLabelKey)}` : ""}`
+      : serviceName.trim();
   const freqInlineKey = FREQUENCIES.find((f) => f.value === freq)?.inlineKey;
   const shownVolume = qty.trim()
     ? `${qty.trim()} ${unitLabel(unit)}${freqInlineKey ? ` ${t(freqInlineKey)}` : ""}`
@@ -273,17 +366,24 @@ export default function ListingForm({
   function next() {
     setError("");
     if (step === 0) {
-      if (isGoods && !catId) {
-        setError(t("errors.pickCategory"));
-        return;
-      }
-      if (isGoods && cat && cat.subs.length > 1 && !sub) {
-        setError(t("errors.pickSubcategory"));
-        return;
-      }
-      if (!isGoods && !serviceName.trim()) {
-        setError(t("errors.nameService"));
-        return;
+      if (isEditing) {
+        if (!editProduct.trim()) {
+          setError(t("errors.nameService"));
+          return;
+        }
+      } else {
+        if (isGoods && !catId) {
+          setError(t("errors.pickCategory"));
+          return;
+        }
+        if (isGoods && cat && cat.subs.length > 1 && !sub) {
+          setError(t("errors.pickSubcategory"));
+          return;
+        }
+        if (!isGoods && !serviceName.trim()) {
+          setError(t("errors.nameService"));
+          return;
+        }
       }
       if (!description.trim()) {
         setError(
@@ -337,10 +437,70 @@ export default function ListingForm({
     }
   }
 
-  // Auto-run the check the first time the preview opens.
+  // The structured facts the fact-only write-up engine reads. Services carry
+  // no quantity or Incoterm and declare a service-provider role.
+  function writeupPayload() {
+    const roleLabel = isGoods
+      ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
+      : "Service provider";
+    return {
+      type,
+      product: composedProduct,
+      quantity: qty.replace(/[, ]/g, ""),
+      unit: isGoods ? unit : "",
+      frequency: isGoods ? freq : "",
+      incoterm: isGoods && incoterm !== "To discuss" ? incoterm : "",
+      payment_terms: paymentTerms.trim(),
+      origin: type !== "requirement" ? origin : "",
+      destination: type === "requirement" ? destination : "",
+      submitter_role: roleLabel,
+      chain_depth: isGoods ? chain : "",
+      validity_type: validityMode,
+      valid_until: validityMode === "dated" ? validUntil : "",
+      key_notes: extraTerms.trim(),
+      details: description.trim(),
+      media_count: media.length,
+      flexibility: {},
+    };
+  }
+
+  // The fact-only draft. Below-minimum comes back as a soft signal, not an
+  // error: the member is still typing, so nothing is shown as broken.
+  async function runWriteup() {
+    if (writeupStatus === "loading") return;
+    setWriteupStatus("loading");
+    try {
+      const res = await fetch("/api/writeup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(writeupPayload()),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.ok && body.writeup) {
+        setWriteup(body.writeup as Writeup);
+        setWriteupMeta({
+          prompt_version: body.meta?.prompt_version ?? null,
+          model: body.meta?.model ?? null,
+        });
+        setWriteupStatus("done");
+      } else if (body && body.ok === false && body.reason === "below_minimum") {
+        setWriteup(null);
+        setWriteupStatus("idle");
+      } else {
+        setWriteupStatus("error");
+      }
+    } catch {
+      setWriteupStatus("error");
+    }
+  }
+
+  // Auto-run the check and the write-up the first time the preview opens.
   useEffect(() => {
     if (step === LAST && assessStatus === "idle" && description.trim().length >= 15) {
       runAssessment();
+    }
+    if (step === LAST && writeupStatus === "idle" && description.trim().length >= 15) {
+      runWriteup();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
@@ -352,7 +512,7 @@ export default function ListingForm({
         JSON.stringify({
           type, catId, sub, serviceName, description, qty, unit, freq,
           price, priceBasis, role, chain, origin, destination, incoterm,
-          timing, extraTerms,
+          timing, extraTerms, paymentTerms, validityMode, validUntil,
         }),
       );
     } catch {
@@ -425,8 +585,9 @@ export default function ListingForm({
       return;
     }
     // Photos: required to publish an offer (buyers must see the product);
-    // drafts can wait.
-    if (!asDraft && type === "offer" && !media.some((f) => IMAGE_TYPES.has(f.type))) {
+    // drafts can wait. On an edit the browser cannot re-attach the files
+    // already uploaded, so the requirement is not re-imposed.
+    if (!asDraft && !isEditing && type === "offer" && !media.some((f) => IMAGE_TYPES.has(f.type))) {
       setError(t("errors.photoRequired"));
       return;
     }
@@ -453,9 +614,14 @@ export default function ListingForm({
     const timingLine = isGoods
       ? `${type === "offer" ? "Availability" : "Needed"}: ${timing}`
       : "";
-    const details = [description.trim(), priceLine, timingLine, extraTerms.trim()]
-      .filter(Boolean)
-      .join("\n");
+    // On a new listing the terms are folded into the details text. On an edit
+    // the member is handed the stored details back as one editable block, so it
+    // is taken verbatim to avoid re-appending lines that are already in it.
+    const details = isEditing
+      ? description.trim()
+      : [description.trim(), priceLine, timingLine, extraTerms.trim()]
+          .filter(Boolean)
+          .join("\n");
 
     try {
       setProgress(t("progress.creating"));
@@ -463,18 +629,28 @@ export default function ListingForm({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          ...(editId ? { id: editId } : {}),
           type,
           product,
           details,
           volume,
+          quantity: qty.replace(/[, ]/g, ""),
+          unit: isGoods ? unit : "",
+          frequency: isGoods ? freq : "",
+          payment_terms: paymentTerms.trim(),
+          validity_type: validityMode,
+          valid_until: validityMode === "dated" ? validUntil : "",
+          key_notes: extraTerms.trim(),
           origin: type === "offer" || type === "service" ? origin : "",
           destination: type === "requirement" ? destination : "",
           incoterm: isGoods && incoterm !== "To discuss" ? incoterm : "",
           indicative_value_usd: totalValue ? String(totalValue) : "",
           submitter_role: isGoods
             ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
-            : "",
+            : "Service provider",
           chain_depth: isGoods ? chain : "",
+          writeup: writeup ?? undefined,
+          writeup_meta: writeupMeta ?? undefined,
           draft: asDraft,
         }),
       });
@@ -591,7 +767,20 @@ export default function ListingForm({
           ))}
         </div>
 
-        {isGoods ? (
+        {isEditing ? (
+          <div>
+            <p className="mb-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Product
+            </p>
+            <input
+              value={editProduct}
+              onChange={(e) => setEditProduct(e.target.value)}
+              maxLength={200}
+              placeholder="Product and specification"
+              className={FIELD}
+            />
+          </div>
+        ) : isGoods ? (
           <>
             {/* Category grid: click, don't type */}
             <p className="mb-3 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
@@ -749,6 +938,11 @@ export default function ListingForm({
                 )}
               </div>
             )}
+            {NEEDS_CHAIN.has(role) && (
+              <p className="mt-3 rounded-[10px] px-4 py-3 text-[11px] leading-relaxed text-gold" style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.30)" }}>
+                Add your mandate or authority evidence as a document in the next step. Ponte records authority as sighted only after the desk reviews that evidence.
+              </p>
+            )}
             <div className="my-5 h-px bg-white/10" />
           </>
         )}
@@ -785,6 +979,61 @@ export default function ListingForm({
         {type === "service" && (
           <input value={origin} onChange={(e) => setOrigin(e.target.value)} maxLength={80} placeholder={t("step2.servicePlacePlaceholder")} className={FIELD} />
         )}
+
+        {/* Payment terms and validity: the two facts a desk needs before it can
+            publish, kept to one row so the step stays short. */}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Payment terms
+            </p>
+            <input
+              value={paymentTerms}
+              onChange={(e) => setPaymentTerms(e.target.value)}
+              maxLength={200}
+              placeholder="e.g. LC at sight, 30% deposit, CAD"
+              className={FIELD}
+            />
+            <button
+              type="button"
+              onClick={() => setPaymentTerms("To be agreed")}
+              className="mt-2 text-[11px] uppercase text-gray-2 hover:text-gold"
+              style={{ letterSpacing: "0.14em" }}
+            >
+              Set to be agreed
+            </button>
+          </div>
+          <div>
+            <p className="mb-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Validity
+            </p>
+            <div className="flex gap-2">
+              {(["standing", "dated"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setValidityMode(mode)}
+                  className={`rounded-full border px-4 py-2 text-[12px] transition-colors ${
+                    validityMode === mode
+                      ? "border-gold bg-gold text-navy font-semibold"
+                      : "border-white/15 text-gray-2 hover:border-gold/60 hover:text-cream"
+                  }`}
+                >
+                  {mode === "standing" ? "Standing" : "Until a date"}
+                </button>
+              ))}
+            </div>
+            {validityMode === "dated" && (
+              <input
+                type="date"
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                className={`${FIELD} mt-2`}
+              />
+            )}
+          </div>
+        </div>
+
         <textarea
           value={extraTerms}
           onChange={(e) => setExtraTerms(e.target.value)}
@@ -894,6 +1143,72 @@ export default function ListingForm({
           {t("preview.privacy")}
           {!isAuthed && ` ${t("preview.freeToPublish")}`}
         </p>
+
+        {/* The fact-only deal write-up: what the desk reviews, generated from
+            the facts entered and nothing else. The public wording is approved
+            by Ponte, not taken from this draft. */}
+        <div className="mt-5 rounded-2xl border border-gold/25 bg-white/[0.03] p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-2 text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              <Sparkles className="h-3.5 w-3.5 text-gold" /> Deal write-up
+            </span>
+            {writeupStatus === "done" && (
+              <button
+                type="button"
+                onClick={runWriteup}
+                className="text-[11px] uppercase text-gray-2 hover:text-gold"
+                style={{ letterSpacing: "0.14em" }}
+              >
+                Regenerate
+              </button>
+            )}
+          </div>
+          {writeupStatus === "loading" && (
+            <p className="mt-3 text-[13px] text-gray-2">Writing this up from your facts...</p>
+          )}
+          {writeupStatus === "error" && (
+            <p className="mt-3 text-[13px] text-gray-2">
+              The write-up is unavailable right now. Your listing is not affected.
+            </p>
+          )}
+          {writeupStatus === "idle" && !writeup && (
+            <p className="mt-3 text-[13px] text-gray-2">
+              Add a product, a quantity and one end of the route to generate a write-up.
+            </p>
+          )}
+          {writeupStatus === "done" && writeup && (
+            <div className="mt-3 space-y-3">
+              <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-cream">{writeup.description}</p>
+              {writeup.strengths.length > 0 && (
+                <ul className="space-y-1">
+                  {writeup.strengths.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-gray-2">
+                      <span className="text-gold">+</span> {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {writeup.open_points.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase text-gray-2/70" style={{ letterSpacing: "0.16em" }}>
+                    Open points
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {writeup.open_points.map((p, i) => (
+                      <li key={i} className="text-[12.5px] leading-relaxed text-gray-2">{p.text}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {writeup.non_negotiables && (
+                <p className="text-[12.5px] leading-relaxed text-gray-2">{writeup.non_negotiables}</p>
+              )}
+              <p className="text-[11px] leading-relaxed text-gray-2/70">
+                A draft from your facts. Ponte reviews and approves the public wording before it is published.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Instant listing check */}
         <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">

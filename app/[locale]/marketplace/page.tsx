@@ -20,6 +20,7 @@ import {
   FREQUENCY_KEYS,
   UNIT_KEYS,
 } from "@/lib/listing-terms";
+import { isNotExpired } from "@/lib/listings/validity";
 import type { Locale } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -219,12 +220,14 @@ export default async function MarketplacePage({
     destination: string | null;
     volume: string | null;
     incoterm: string | null;
+    payment_terms: string | null;
+    valid_until: string | null;
     details: string;
     created_at: string;
     full: boolean;
   };
   const BOARD_COLUMNS =
-    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, details, created_at";
+    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, valid_until, details, created_at";
   // The board stays hidden from EVERYONE until it has real inventory.
   const BOARD_MIN = Number(process.env.BOARD_MIN_LISTINGS ?? 3);
   // A live count is a claim about size. It is only made once the board is
@@ -260,6 +263,10 @@ export default async function MarketplacePage({
         full: false,
       }));
     }
+    // Current only: an expired approved listing is not a live opportunity, so
+    // it never reaches the public board. Same rule getLiveDeals and the detail
+    // page apply, so the three surfaces cannot disagree about what has expired.
+    board = board.filter((b) => isNotExpired(b.valid_until));
     approvedCount = board.length;
     if (approvedCount < BOARD_MIN) {
       board = [];
@@ -446,7 +453,7 @@ export default async function MarketplacePage({
                       )}
                     </div>
 
-                    {/* 2 · Incoterm */}
+                    {/* 2 · Incoterm and payment terms */}
                     <div className="mt-3 md:mt-0">
                       {b.incoterm ? (
                         <span
@@ -463,6 +470,11 @@ export default async function MarketplacePage({
                         <span className="text-[12px] text-gray-2/55">
                           {t("notStated")}
                         </span>
+                      )}
+                      {b.payment_terms && (
+                        <p className="mt-1 text-[11px] leading-snug text-gray-2/80">
+                          {b.payment_terms}
+                        </p>
                       )}
                     </div>
 
@@ -608,6 +620,20 @@ export default async function MarketplacePage({
                   {l.status === "rejected" && l.decision_note && (
                     <p className="mt-3 border-l-2 border-gold/40 pl-3 text-[13px] leading-relaxed text-gray-2">
                       {l.decision_note}
+                    </p>
+                  )}
+                  {l.status !== "closed" && (
+                    <Link
+                      href={`/marketplace/new?edit=${l.id}`}
+                      className="mt-3 mr-4 inline-flex items-center gap-2 text-[11px] uppercase text-gray-2 hover:text-gold"
+                      style={{ letterSpacing: "0.16em" }}
+                    >
+                      Edit
+                    </Link>
+                  )}
+                  {l.status === "approved" && (
+                    <p className="mt-2 text-[11px] leading-relaxed text-gray-2/70">
+                      Editing a live opportunity{"'"}s terms returns it to Ponte for review before it goes public again.
                     </p>
                   )}
                   {l.status === "draft" && (

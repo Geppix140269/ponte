@@ -16,6 +16,7 @@ export type DraftForScore = {
   hs_code?: string | null;
   quantity?: number | string | null;
   unit?: string | null;
+  frequency?: string | null;
   incoterm?: string | null;
   payment_terms?: string | null;
   origin_country?: string | null;
