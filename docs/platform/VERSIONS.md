@@ -136,6 +136,34 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
+## 23 July 2026, Block B follow-up: server-side attestation
+
+The Block B attestation ("This is the business I represent on Ponte") was only
+enforced in the browser, so a direct API request could open a member-business
+verification without it and earn a badge, and nothing recorded what was
+declared. Now:
+
+- the API route rejects a `member_business` request whose `attestation` is not
+  boolean `true` (400) before any case is created or credit spent, and the
+  pipeline guards it again before opening the row;
+- a counterparty check needs no attestation and is never badge-eligible;
+- the accepted attestation is recorded auditably on the row: `attested_at`
+  (server-stamped) and `attestation_version` (`represent-own-business/v1`), added
+  by migration `20260723c_verification_attestation.sql` (applied, probe-verified);
+- purpose and attestation are written once at creation and never rewritten, so a
+  resumed `needs_selection` case cannot change them, and nothing converts a
+  counterparty case into a member-business one.
+
+Tests: 21 verification-purpose tests (up from 10) cover the seven acceptance
+scenarios. `npm run verify` green.
+
+**Legacy `1402 celsius` state, reported for a decision, unchanged:** the admin
+requester (`6665aa81`) has `verified_at` set (2026-07-22 07:28:44) and 55 trust
+points (business 25, sanctions_clean 20, company_age 10) from that own-business
+check, but `verification_level` NULL, `verification_tier` 0, `verified_trader`
+false and `business_verification_id` NULL. So a `verified_at` timestamp and trust
+components, but no level/tier/trader badge and no binding. Not modified.
+
 ## 23 July 2026, Block B: honest member-business verification
 
 **Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`, committed

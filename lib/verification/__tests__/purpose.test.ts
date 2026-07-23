@@ -14,6 +14,10 @@ import {
   normalizePurpose,
   grantsMemberStatus,
   VERIFICATION_PURPOSES,
+  checkAttestation,
+  attestationAccepted,
+  requiresAttestation,
+  MEMBER_BUSINESS_ATTESTATION,
 } from "../purpose";
 
 let passed = 0;
@@ -119,6 +123,116 @@ test("the API route records the declared purpose, normalised", () => {
     s.includes("normalizePurpose(body.purpose)"),
     "the verification route must normalise and pass the request purpose",
   );
+});
+
+// --- Attestation gate (Block B acceptance correction) -----------------------
+
+// 1. member-business with attestation true is accepted.
+test("member-business with attestation true is accepted", () => {
+  assert.deepEqual(checkAttestation("member_business", true), { ok: true });
+});
+
+// 2. member-business with attestation missing is rejected.
+test("member-business with attestation missing is rejected", () => {
+  assert.equal(checkAttestation("member_business", undefined).ok, false);
+});
+
+// 3. member-business with attestation false is rejected.
+test("member-business with attestation false is rejected", () => {
+  assert.equal(checkAttestation("member_business", false).ok, false);
+});
+
+test("only a strict boolean true is an attestation; look-alikes are rejected", () => {
+  for (const v of ["true", 1, "yes", {}, [true], null, undefined, 0, false]) {
+    assert.equal(
+      attestationAccepted(v),
+      false,
+      `${JSON.stringify(v)} must not count as an attestation`,
+    );
+    assert.equal(
+      checkAttestation("member_business", v).ok,
+      false,
+      `member-business must reject attestation ${JSON.stringify(v)}`,
+    );
+  }
+  assert.equal(attestationAccepted(true), true);
+});
+
+// 4. malformed / unknown purpose is treated as counterparty and is never
+//    badge-eligible, and needs no attestation.
+test("a malformed purpose is a counterparty check, never badge-eligible", () => {
+  for (const p of ["business", "MEMBER_BUSINESS", "", null, undefined, 42, {}]) {
+    assert.equal(normalizePurpose(p), "counterparty_check");
+    assert.equal(grantsMemberStatus(p), false, "must not be badge-eligible");
+    assert.equal(requiresAttestation(p), false);
+    assert.equal(checkAttestation(p, undefined).ok, true, "no attestation needed");
+  }
+});
+
+// 5. counterparty request is accepted without an attestation and never
+//    badge-eligible.
+test("a counterparty check needs no attestation and grants nothing", () => {
+  assert.deepEqual(checkAttestation("counterparty_check", undefined), { ok: true });
+  assert.deepEqual(checkAttestation("counterparty_check", false), { ok: true });
+  assert.equal(grantsMemberStatus("counterparty_check"), false);
+  assert.equal(requiresAttestation("counterparty_check"), false);
+});
+
+test("the attestation has a stable version and the exact displayed text", () => {
+  assert.equal(typeof MEMBER_BUSINESS_ATTESTATION.version, "string");
+  assert.ok(MEMBER_BUSINESS_ATTESTATION.version.length > 0);
+  assert.equal(
+    MEMBER_BUSINESS_ATTESTATION.text,
+    "This is the business I represent on Ponte.",
+  );
+});
+
+// --- Structural: the server enforces and records the attestation ------------
+
+test("the route refuses a request that fails the attestation gate", () => {
+  const s = src("app/api/verification/route.ts");
+  assert.ok(
+    s.includes("checkAttestation(purpose, body.attestation)"),
+    "route must run the attestation gate on the request",
+  );
+  assert.ok(
+    /if \(!attestation\.ok\)[\s\S]*status: 400/.test(s),
+    "route must return 400 when the attestation gate fails",
+  );
+});
+
+test("the pipeline refuses to open a member-business case without the attestation", () => {
+  const s = src("lib/verification/pipeline.ts");
+  assert.ok(
+    s.includes('purpose === "member_business" && !attestationAccepted(req.attested)'),
+    "runLevel2 must guard on the attestation before creating a row",
+  );
+});
+
+// 6. a resumed selection cannot change the stored purpose or attestation.
+test("resume derives purpose from the row, and the attestation is written once", () => {
+  const s = src("lib/verification/pipeline.ts");
+  assert.ok(
+    s.includes("purpose: normalizePurpose(row.purpose)"),
+    "resume must take the purpose from the stored row, not from input",
+  );
+  // attested_at is written by the insert and never by an update, so a resume
+  // (or any later write) cannot change the recorded attestation. Count the
+  // object-key form so a mention of the column in a comment does not register.
+  const writes = (s.match(/attested_at:/g) || []).length;
+  assert.equal(writes, 1, `attested_at must be written exactly once (insert), found ${writes}`);
+  assert.ok(
+    s.includes("attestation_version:"),
+    "the pipeline must record which attestation version was accepted",
+  );
+});
+
+// 7. admin approval of a counterparty case cannot grant member status
+//    (covered above by the grantsMemberStatus(row.purpose) gate in the admin
+//    queue); asserted again here as an attestation-suite invariant.
+test("admin approval still cannot badge a counterparty case", () => {
+  const s = src("app/[locale]/admin/verifications/actions.ts");
+  assert.ok(s.includes("grantsMemberStatus(row.purpose)"));
 });
 
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AlertCircle, BadgeCheck, Clock, ListChecks, ShieldCheck } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { MEMBER_BUSINESS_ATTESTATION } from "@/lib/verification/purpose";
 
 const FIELD =
   "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
@@ -26,7 +27,7 @@ const PURPOSE_COPY: Record<
   { attest?: string; note: string; resultNote: string }
 > = {
   member_business: {
-    attest: "This is the business I represent on Ponte.",
+    attest: MEMBER_BUSINESS_ATTESTATION.text,
     note: "Verifying your own business is what unlocks the Business checked badge, publishing an opportunity and receiving an introduction.",
     resultNote:
       "This verifies your own business. A clean pass sets your Business checked status.",
@@ -144,6 +145,9 @@ export default function VerifyForm({
           regNumber: regNumber.trim(),
           vat: vat.trim(),
           purpose,
+          // Sent only as a real boolean, and only true once the member has
+          // ticked the attestation. The server requires it for member_business.
+          attestation: isBusiness ? attested === true : false,
         }),
       });
       const body = await res.json().catch(() => ({}));

@@ -40,3 +40,50 @@ export function normalizePurpose(input: unknown): VerificationPurpose {
 export function grantsMemberStatus(purpose: unknown): boolean {
   return normalizePurpose(purpose) === "member_business";
 }
+
+/**
+ * The attestation a member makes before a badge-granting check runs. Stored by
+ * version, not by copy: the row records which version was accepted and when, and
+ * this constant maps the version to the exact words shown. Bump the version if
+ * the wording changes, so an old acceptance is never silently reinterpreted.
+ */
+export const MEMBER_BUSINESS_ATTESTATION = {
+  version: "represent-own-business/v1",
+  text: "This is the business I represent on Ponte.",
+} as const;
+
+/** A member-business verification requires an explicit attestation; a counterparty check never does. */
+export function requiresAttestation(purpose: unknown): boolean {
+  return normalizePurpose(purpose) === "member_business";
+}
+
+/**
+ * Only a strict boolean `true` is an accepted attestation. A missing value,
+ * `false`, the string "true", 1, or any other shape is not an attestation, so a
+ * badge-eligible check cannot be opened by a request that merely looks like it
+ * attested.
+ */
+export function attestationAccepted(input: unknown): boolean {
+  return input === true;
+}
+
+export type AttestationCheck = { ok: true } | { ok: false; error: string };
+
+/**
+ * The server-side gate. A member-business verification may only proceed with an
+ * explicit affirmative attestation; a counterparty check proceeds without one.
+ * Used by the API route before any row is created, so a direct request cannot
+ * bypass the checkbox.
+ */
+export function checkAttestation(
+  purpose: unknown,
+  attestation: unknown,
+): AttestationCheck {
+  if (requiresAttestation(purpose) && !attestationAccepted(attestation)) {
+    return {
+      ok: false,
+      error: "To verify your own business, confirm you represent it.",
+    };
+  }
+  return { ok: true };
+}

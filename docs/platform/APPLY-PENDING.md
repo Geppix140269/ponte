@@ -77,6 +77,16 @@ gate exists and an admin approves individual signals.
 legacy verification rows are all `purpose = NULL` (unclassified, grants nothing).
 Recorded in `schema_migrations`. Additive and reversible (drop the two columns).
 
+### 4. Block B follow-up: verification attestation — APPLIED 2026-07-23
+
+    supabase/migrations/20260723c_verification_attestation.sql
+
+**Done.** Applied to production on 2026-07-23 and probe-verified: `attested_at`
+(timestamptz) and `attestation_version` (text) exist on `verifications`, both
+nullable, and all seven legacy rows are null on both (they pre-date the
+attestation). Records the member-business attestation server-side. Additive and
+reversible (drop the two columns).
+
 ## Checking what has been applied
 
 There is no migration ledger in this project, so the only honest answer comes

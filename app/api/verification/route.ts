@@ -3,7 +3,7 @@ import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getBalance, COST_VERIFICATION_L2 } from "@/lib/credits";
 import { runLevel2 } from "@/lib/verification/pipeline";
-import { normalizePurpose } from "@/lib/verification/purpose";
+import { normalizePurpose, checkAttestation } from "@/lib/verification/purpose";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +73,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // The purpose decides whether a pass may badge the requester: anything that
+  // is not exactly 'member_business' is a counterparty check. A member-business
+  // verification must ALSO carry an explicit boolean-true attestation. This is
+  // the server gate against a direct request bypassing the checkbox: a missing,
+  // false or malformed attestation is refused here, BEFORE a case is created or
+  // a credit is spent. A counterparty check needs no attestation.
+  const purpose = normalizePurpose(body.purpose);
+  const attestation = checkAttestation(purpose, body.attestation);
+  if (!attestation.ok) {
+    return NextResponse.json(
+      { error: attestation.error, field: "attestation" },
+      { status: 400 },
+    );
+  }
+
   // Check the balance before opening a case. The pipeline spends atomically
   // and would refuse anyway, but a member should be told before a record
   // exists rather than after.
@@ -96,12 +111,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // The purpose decides whether a pass may badge the requester. It is taken
-  // only from the request body and normalised: anything that is not exactly
-  // 'member_business' is a counterparty check, so a badge is only ever earned
-  // by explicitly declaring this is the member's own business.
-  const purpose = normalizePurpose(body.purpose);
-
   try {
     const outcome = await runLevel2({
       userId: user.id,
@@ -111,6 +120,9 @@ export async function POST(req: NextRequest) {
       vat: vat || null,
       lei: lei || null,
       purpose,
+      // Only a strict boolean true is an attestation. The pipeline guards this
+      // again before opening a member-business case.
+      attested: body.attestation === true,
     });
 
     if (outcome.status === "failed" && /insufficient credits/i.test(outcome.reason)) {

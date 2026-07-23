@@ -49,8 +49,10 @@ import { lookupLei } from "@/lib/registry/gleif";
 import { reconcile } from "@/lib/verification/reconcile";
 import { companyAgePoints, setComponent } from "@/lib/verification/trust-score";
 import {
+  attestationAccepted,
   grantsMemberStatus,
   normalizePurpose,
+  MEMBER_BUSINESS_ATTESTATION,
   type VerificationPurpose,
 } from "@/lib/verification/purpose";
 
@@ -78,6 +80,12 @@ export type VerificationRequest = VerificationSubject & {
    * account. Anything else is a counterparty check. See lib/verification/purpose.
    */
   purpose: VerificationPurpose;
+  /**
+   * The member's affirmative attestation that this is the business they
+   * represent. Required, and only ever a boolean true, for a member-business
+   * verification; ignored for a counterparty check.
+   */
+  attested?: boolean;
 };
 
 export type VerificationOutcome = {
@@ -124,6 +132,21 @@ export async function runLevel2(
 ): Promise<VerificationOutcome> {
   const sb = createAdminClient();
 
+  // A member-business verification cannot even be OPENED without the
+  // attestation. The route validates first and returns 400; this is the
+  // defence for any other caller, and it fires BEFORE the row is created, so a
+  // request that fails it produces no verification and spends no credit. The
+  // attested_at stamp is the server's own clock, never a client value.
+  const purpose = normalizePurpose(req.purpose);
+  if (purpose === "member_business" && !attestationAccepted(req.attested)) {
+    return {
+      id: "",
+      status: "failed",
+      reason: "A member-business verification requires an explicit attestation.",
+    };
+  }
+  const attestedAt = purpose === "member_business" ? new Date().toISOString() : null;
+
   // 1. Create the record first, so an abandoned run is still visible.
   const { data: created, error: createErr } = await sb
     .from("verifications")
@@ -139,7 +162,12 @@ export async function runLevel2(
       status: "pending",
       // Stored on the row so the resume path and the admin queue read the same
       // purpose the request declared, never one inferred later.
-      purpose: normalizePurpose(req.purpose),
+      purpose,
+      // The attestation recorded auditably: when it was accepted and which
+      // wording version. Null for a counterparty check.
+      attested_at: attestedAt,
+      attestation_version:
+        purpose === "member_business" ? MEMBER_BUSINESS_ATTESTATION.version : null,
     })
     .select("id")
     .single();
@@ -180,7 +208,7 @@ export async function runLevel2(
   // this row without charging again, which is what a resume does.
   return runLevel2Checks(id, req, {
     userId: req.userId ?? null,
-    purpose: normalizePurpose(req.purpose),
+    purpose,
   });
 }
 
