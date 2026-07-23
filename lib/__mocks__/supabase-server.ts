@@ -76,6 +76,9 @@ function makeBuilder(kind: "rls" | "admin", table: string) {
     eq() {
       return b;
     },
+    is() {
+      return b;
+    },
     in() {
       return b;
     },

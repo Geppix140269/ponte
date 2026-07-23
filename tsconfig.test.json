@@ -11,6 +11,7 @@
       "next/server": ["./lib/__mocks__/next-server.ts"],
       "next/navigation": ["./lib/__mocks__/next-navigation.ts"],
       "next/cache": ["./lib/__mocks__/next-cache.ts"],
+      "next/headers": ["./lib/__mocks__/next-headers.ts"],
       "@/*": ["./*"]
     }
   }
