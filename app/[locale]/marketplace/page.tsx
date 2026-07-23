@@ -136,11 +136,13 @@ export default async function MarketplacePage({
     valid_until: string | null;
   }[] = [];
 
-  // Pending connection requests on the member's own listings, with the
-  // structured expression of interest the requester sent (brief Block D).
+  // Pending connection requests on the member's own listings. The requester's
+  // business identity is deliberately NOT selected here: it is disclosed only
+  // after the owner accepts (brief Block D follow-up). Pre-acceptance the owner
+  // sees the substance of the request (role, target, geography, reason) and an
+  // accurate "confirmed member" label, never the business name or contact.
   type PendingConnection = {
     id: string;
-    interested_business: string | null;
     interest_role: string | null;
     interest_target: string | null;
     interest_geography: string | null;
@@ -159,16 +161,13 @@ export default async function MarketplacePage({
     if (listings.length > 0) {
       const { data: conns } = await supabase
         .from("listing_connections")
-        .select(
-          "id, listing_id, interested_business, interest_role, interest_target, interest_geography, interest_reason",
-        )
+        .select("id, listing_id, interest_role, interest_target, interest_geography, interest_reason")
         .eq("status", "pending")
         .in("listing_id", listings.map((l) => l.id));
       for (const c of conns ?? []) {
         const arr = pendingByListing.get(c.listing_id) ?? [];
         arr.push({
           id: c.id,
-          interested_business: c.interested_business,
           interest_role: c.interest_role,
           interest_target: c.interest_target,
           interest_geography: c.interest_geography,
@@ -724,10 +723,7 @@ export default async function MarketplacePage({
                     // A pre-Block-D row carries none of these; fall back to the
                     // original one-line notice so an old request still reads.
                     const structured =
-                      c.interested_business ||
-                      c.interest_target ||
-                      c.interest_geography ||
-                      c.interest_reason;
+                      c.interest_target || c.interest_geography || c.interest_reason || roleLabel;
                     return (
                       <div
                         key={c.id}
@@ -738,11 +734,13 @@ export default async function MarketplacePage({
                           <div className="min-w-0 flex-1">
                             {structured ? (
                               <>
+                                {/* Confirmed member: they signed in with a
+                                    confirmed email. NOT a claim that the business
+                                    itself is verified, and the business name is
+                                    withheld until acceptance. */}
                                 <p className="text-[13px] text-cream">
-                                  <span className="text-gold">{c.interested_business || "A vetted member"}</span>
-                                  {roleLabel && (
-                                    <span className="text-gray-2"> · {roleLabel}</span>
-                                  )}
+                                  <span className="text-gold">Confirmed member</span>
+                                  {roleLabel && <span className="text-gray-2"> · {roleLabel}</span>}
                                   {" wants to connect."}
                                 </p>
                                 <dl className="mt-2 grid gap-x-4 gap-y-1 text-[12px] text-gray-2 sm:grid-cols-2">
@@ -766,7 +764,7 @@ export default async function MarketplacePage({
                                   )}
                                 </dl>
                                 <p className="mt-2 text-[11px] text-gray-2/70">
-                                  Accept and you both receive each other{"'"}s contact. Free.
+                                  Their business and contact are revealed only if you accept. Free.
                                 </p>
                               </>
                             ) : (

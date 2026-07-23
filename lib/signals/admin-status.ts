@@ -9,6 +9,7 @@
  */
 
 import type { MarketSignalStatus } from "@/lib/market-signals/logic";
+import { isPubliclyCurrent } from "../listings/validity";
 
 /**
  * The statuses an admin may move a signal to from the review queue. Approval to
@@ -66,4 +67,36 @@ export function confirmationLinksListing(
   promotedListingId: string | null | undefined,
 ): boolean {
   return status === "confirmed" && !!promotedListingId;
+}
+
+/** The listing shape needed to judge whether it may back a confirmation. */
+export type ConfirmListing = {
+  status: string;
+  valid_until?: string | null;
+  reconfirmed_at?: string | null;
+};
+
+/**
+ * Whether a listing may be the Qualified Opportunity a confirmed signal links
+ * to (brief Block D follow-up). It must be a listing the public can PRESENTLY
+ * see: approved, current (finite validity not passed and reconfirmation not
+ * lapsed), AND its owner's business verification still passing. Verification
+ * currency depends on a different record, so the caller resolves it and passes
+ * ownerEligible; everything else is decided here.
+ *
+ * A missing, submitted, expired, reconfirmation-lapsed or verification-
+ * ineligible listing is refused, so a confirmation can never point at something
+ * that is not itself a live Qualified Opportunity, and the signal never becomes
+ * public or inherits a badge in the process.
+ */
+export function confirmationLinkVerdict(
+  listing: ConfirmListing | null | undefined,
+  ownerEligible: boolean,
+  now: number = Date.now(),
+): { ok: boolean; reason: string } {
+  if (!listing) return { ok: false, reason: "listing_missing" };
+  if (listing.status !== "approved") return { ok: false, reason: "listing_not_approved" };
+  if (!isPubliclyCurrent(listing, now)) return { ok: false, reason: "listing_not_current" };
+  if (!ownerEligible) return { ok: false, reason: "listing_owner_ineligible" };
+  return { ok: true, reason: "ok" };
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getMarketSignal } from "@/lib/board/market-signals";
@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Signal not available." }, { status: 404 });
   }
 
-  // Stored as the requester (RLS: requester_id must equal auth.uid()).
+  // Stored as the requester (RLS: requester_id must equal auth.uid()). One
+  // request per member per signal: a repeat click, retry or concurrent submit
+  // hits the unique constraint and is a no-op. investigation_count is kept
+  // accurate by a database trigger in the same transaction, so there is nothing
+  // to recompute here and no partial-failure window to leave it inconsistent.
   const supabase = createClient();
   const { error: insertErr } = await supabase.from("signal_investigations").insert({
     signal_id: signalId,
@@ -79,21 +83,14 @@ export async function POST(req: NextRequest) {
     evidence: request.evidence || null,
     wants_intro: request.wants_intro,
   });
-  if (insertErr) {
+  if (insertErr && !insertErr.message?.includes("duplicate")) {
     console.error("[ponte] investigation request failed:", insertErr);
     return NextResponse.json({ error: "Could not submit the request." }, { status: 500 });
   }
-
-  // Keep the private per-signal counter accurate. Derived from the rows so it
-  // cannot drift; it never appears in a public payload (the public read never
-  // selects investigation_count).
-  const adminSb = createAdminClient();
-  const { count } = await adminSb
-    .from("signal_investigations")
-    .select("id", { count: "exact", head: true })
-    .eq("signal_id", signalId);
-  if (typeof count === "number") {
-    await adminSb.from("desk_radar").update({ investigation_count: count }).eq("id", signalId);
+  // A duplicate is an already-recorded request: succeed quietly, and do not
+  // re-notify the desk.
+  if (insertErr) {
+    return NextResponse.json({ ok: true, duplicate: true });
   }
 
   // Notify the desk. The desk is internal, so this carries the requester's own

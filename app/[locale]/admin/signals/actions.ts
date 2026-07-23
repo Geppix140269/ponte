@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { isAdminSettableStatus } from "@/lib/signals/admin-status";
+import { isAdminSettableStatus, confirmationLinkVerdict } from "@/lib/signals/admin-status";
+import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 
 /**
  * Admin decisions on a Market Signal (Definitive 1 August brief, Block A).
@@ -130,15 +131,29 @@ export async function setSignalStatusAction(formData: FormData): Promise<void> {
 
   const update: Record<string, unknown> = { status };
 
-  // Confirmation may link a real listing by its reference. Resolve it now so an
-  // admin typo is caught rather than silently storing a broken link.
-  if (status === "confirmed" && listingRef) {
+  // Confirmation must CREATE OR LINK a real Qualified Opportunity, never a bare
+  // status flip. It requires a listing reference, and that listing must be one
+  // the public can presently see: approved, current, and its owner's business
+  // verification still passing. Anything less is refused, so a confirmed signal
+  // cannot point at a missing, submitted, expired or verification-ineligible
+  // listing. The linked id and the status are written in the same update, so
+  // the two can never diverge.
+  if (status === "confirmed") {
+    if (!listingRef) finish("confirm_needs_listing");
     const { data: listing } = await adminSb
       .from("listings")
-      .select("id")
+      .select("id, user_id, status, valid_until, reconfirmed_at")
       .eq("ref", listingRef)
       .maybeSingle();
     if (!listing) finish("no_listing", listingRef);
+
+    const eligible = await eligibleOwnerIds(adminSb, [listing!.user_id]);
+    const verdict = confirmationLinkVerdict(
+      { status: listing!.status, valid_until: listing!.valid_until, reconfirmed_at: listing!.reconfirmed_at },
+      eligible.has(listing!.user_id),
+    );
+    if (!verdict.ok) finish(verdict.reason, listingRef);
+
     update.promoted_listing_id = listing!.id;
   }
 

@@ -142,8 +142,8 @@ export default function InterestButton({ refCode }: { refCode: string }) {
                   Express interest
                 </h2>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-muted">
-                  The owner sees this, never your name, and decides. You stay
-                  anonymous until both sides agree to connect.
+                  The owner sees your role and request, not your business name or
+                  contact, and decides. You are introduced only if they accept.
                 </p>
               </div>
               <button

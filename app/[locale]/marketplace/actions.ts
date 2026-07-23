@@ -126,14 +126,15 @@ export async function connectDecisionAction(formData: FormData): Promise<void> {
   const decision = String(formData.get("decision") || "");
   if (!id || !["accepted", "declined"].includes(decision)) return;
 
-  // RLS: only the owner of the listing may decide.
+  // RLS: only the owner of the listing may decide. The requester's business
+  // identity travels no further than this row until the owner accepts.
   const supabase = createClient();
   const { data: conn, error } = await supabase
     .from("listing_connections")
     .update({ status: decision, decided_at: new Date().toISOString() })
     .eq("id", id)
     .eq("status", "pending")
-    .select("listing_id, requester_id")
+    .select("listing_id, requester_id, interested_business")
     .maybeSingle();
   if (error || !conn) return;
 
@@ -151,10 +152,13 @@ export async function connectDecisionAction(formData: FormData): Promise<void> {
     const ownerEmail = user.email;
     if (requesterEmail && ownerEmail) {
       await Promise.allSettled([
+        // Only now, on acceptance, does the owner learn who the requester is:
+        // their business name alongside their contact email.
         sendConnectAccepted(ownerEmail, {
           ref: listing.ref,
           product: listing.product,
           otherEmail: requesterEmail,
+          otherName: conn.interested_business ?? undefined,
         }),
         sendConnectAccepted(requesterEmail, {
           ref: listing.ref,

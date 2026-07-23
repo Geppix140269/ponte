@@ -55,6 +55,33 @@ function clean(value: unknown, max: number): string {
   return value.replace(/\s+/g, " ").trim().slice(0, max);
 }
 
+const EMAIL_RE = /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/gi;
+const URL_RE = /\b(?:https?:\/\/|www\.)\S+/gi;
+const BARE_DOMAIN_RE =
+  /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|eu|us|uk|de|it|fr|es|pt|ru|cn|in|info|biz|app|dev|me|trade)\b/gi;
+// A run that could be a phone number: digits with the usual separators.
+const PHONE_RUN_RE = /\+?\d[\d\s().-]{5,}\d/g;
+
+/**
+ * Redact obvious direct-contact details from a free-text field (brief Block D
+ * follow-up). These fields are shown to the listing owner BEFORE acceptance, so
+ * an email, phone number or URL smuggled into them would bypass the disclosure
+ * gate that withholds contact until the owner accepts. Emails, URLs and bare
+ * domains go first; then digit runs long enough to be a phone number (>= 7
+ * digits, so a quantity like "12000 MT" or "2 x 20ft" is left alone).
+ *
+ * Redaction, not rejection: a legitimate request is never blocked, and the
+ * owner still sees the substance with the contact hole plugged.
+ */
+export function stripContact(input: string): string {
+  const out = input
+    .replace(EMAIL_RE, "[removed]")
+    .replace(URL_RE, "[removed]")
+    .replace(BARE_DOMAIN_RE, "[removed]")
+    .replace(PHONE_RUN_RE, (m) => (m.replace(/\D/g, "").length >= 7 ? "[removed]" : m));
+  return out.replace(/\s+/g, " ").trim();
+}
+
 /**
  * Normalise a raw request body into the stored shape. Unknown roles become
  * null (the completeness check then rejects the request), never a silent
@@ -64,11 +91,14 @@ export function cleanInterest(input: unknown): ExpressionOfInterest {
   const o = (input ?? {}) as Record<string, unknown>;
   const role = o.interest_role ?? o.role;
   return {
+    // Business identity is disclosed only AFTER acceptance, so it is not
+    // scrubbed here; the other three are shown to the owner pre-acceptance and
+    // must not carry a back-channel contact.
     interested_business: clean(o.interested_business ?? o.business, CAP.interested_business),
     interest_role: isInterestRole(role) ? role : null,
-    interest_target: clean(o.interest_target ?? o.target, CAP.interest_target),
-    interest_geography: clean(o.interest_geography ?? o.geography, CAP.interest_geography),
-    interest_reason: clean(o.interest_reason ?? o.reason, CAP.interest_reason),
+    interest_target: stripContact(clean(o.interest_target ?? o.target, CAP.interest_target)),
+    interest_geography: stripContact(clean(o.interest_geography ?? o.geography, CAP.interest_geography)),
+    interest_reason: stripContact(clean(o.interest_reason ?? o.reason, CAP.interest_reason)),
   };
 }
 

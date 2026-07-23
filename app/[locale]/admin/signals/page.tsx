@@ -27,7 +27,12 @@ const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
   no_id: { tone: "bad", text: "Nothing was written: the form arrived without a signal id." },
   no_signal: { tone: "bad", text: "Nothing was written: that signal no longer exists." },
   no_status: { tone: "bad", text: "Nothing was written: the form arrived without a valid status." },
-  no_listing: { tone: "bad", text: "Nothing was written: no listing has that reference, so the confirmation was not linked." },
+  confirm_needs_listing: { tone: "bad", text: "Nothing was written: a confirmation must link a listing reference. Confirm only once a real Qualified Opportunity exists for it." },
+  no_listing: { tone: "bad", text: "Nothing was written: no listing has that reference, so nothing was confirmed." },
+  listing_missing: { tone: "bad", text: "Nothing was written: that listing could not be read." },
+  listing_not_approved: { tone: "bad", text: "Nothing was written: the linked listing is not approved, so it is not a live Qualified Opportunity." },
+  listing_not_current: { tone: "bad", text: "Nothing was written: the linked listing is expired or awaiting reconfirmation, so it is not currently public." },
+  listing_owner_ineligible: { tone: "bad", text: "Nothing was written: the linked listing's owner does not presently pass business verification, so it is not currently public." },
   db_error: { tone: "bad", text: "The database refused the write, so nothing changed." },
 };
 
@@ -203,15 +208,18 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
           <input type="hidden" name="status" value="under_investigation" />
           <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Under investigation</button>
         </form>
-        {/* Confirm links a real member listing by its reference. The signal is
-            never itself promoted; a normal Qualified Opportunity carries it. */}
+        {/* Confirm links a real member listing by its reference. The listing
+            must be approved, current and its owner verification-passing, or the
+            action is refused. The signal is never itself promoted; a normal
+            Qualified Opportunity carries it. */}
         <form action={setSignalStatusAction} className="flex items-end gap-2">
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="confirmed" />
           <label className="flex flex-col gap-1 text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.12em" }}>
-            Link listing ref
+            Link listing ref (required)
             <input
               name="listing_ref"
+              required
               placeholder="PT-0000"
               className="w-28 rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-[12px] text-cream"
             />

@@ -25,6 +25,7 @@ import {
   interestIsComplete,
   missingInterestFields,
   isInterestRole,
+  stripContact,
   INTEREST_ROLES,
   INTEREST_ROLE_LABELS,
 } from "../../interest/expression";
@@ -40,6 +41,7 @@ import {
   ADMIN_SETTABLE_STATUSES,
   isAdminSettableStatus,
   confirmationLinksListing,
+  confirmationLinkVerdict,
   PUBLIC_SIGNAL_STATUS,
 } from "../admin-status";
 
@@ -336,6 +338,119 @@ test("copy: the corrected keys claim no NCNDA and no deal room, in every locale"
       );
     }
   }
+});
+
+// --- Follow-up 1: pre-accept identity and contact scrubbing ----------------
+
+test("stripContact redacts emails, phones, URLs and bare domains", () => {
+  assert.ok(!/@/.test(stripContact("reach me at bob@acme.com")));
+  assert.ok(!/acme\.com/i.test(stripContact("see acme.com for details")));
+  assert.ok(!/https?:|www\./i.test(stripContact("https://acme.com and www.x.io")));
+  assert.ok(stripContact("call +39 351 123 4567 now").includes("[removed]"));
+  assert.ok(stripContact("whatsapp 07700 900123").includes("[removed]"));
+});
+
+test("stripContact leaves genuine trade text (quantities, corridors) intact", () => {
+  assert.equal(stripContact("2 x 20ft per month from Q1"), "2 x 20ft per month from Q1");
+  assert.equal(stripContact("12000 MT, CIF Rotterdam"), "12000 MT, CIF Rotterdam");
+  assert.equal(stripContact("Genoa to Shanghai corridor"), "Genoa to Shanghai corridor");
+});
+
+test("cleanInterest scrubs the pre-accept fields but keeps the business name", () => {
+  const e = cleanInterest({
+    interested_business: "Acme Trading Ltd", // revealed only post-accept, not scrubbed
+    interest_role: "buyer",
+    interest_target: "email me bob@acme.com",
+    interest_geography: "reach www.acme.com",
+    interest_reason: "call +1 202 555 0143 to discuss",
+  });
+  assert.equal(e.interested_business, "Acme Trading Ltd");
+  assert.ok(!/@|acme\.com/i.test(e.interest_target), "target must be scrubbed");
+  assert.ok(!/acme\.com|www\./i.test(e.interest_geography), "geography must be scrubbed");
+  assert.ok(e.interest_reason.includes("[removed]"), "reason phone must be scrubbed");
+});
+
+test("22: the owner never receives the business name before acceptance", () => {
+  const p = src("app/[locale]/marketplace/page.tsx");
+  // The pending-request query must not select the business identity at all.
+  const pendingSelect = p.slice(p.indexOf("listing_connections"), p.indexOf("listing_connections") + 300);
+  assert.ok(
+    !pendingSelect.includes("interested_business"),
+    "the pending-connections read must not select interested_business",
+  );
+  assert.ok(p.includes("Confirmed member"), "pre-accept label must be the neutral 'Confirmed member'");
+});
+
+test("22: identity is disclosed to the owner only on acceptance", () => {
+  const a = src("app/[locale]/marketplace/actions.ts");
+  const acceptGate = a.indexOf('decision === "accepted"');
+  const nameDisclosure = a.indexOf("otherName:");
+  assert.ok(acceptGate !== -1 && nameDisclosure > acceptGate, "otherName must be sent inside the accepted branch");
+  assert.ok(a.includes("interested_business"), "the decision action must read the business to disclose it");
+  const email = src("lib/email.ts");
+  assert.ok(email.includes("otherName"), "the accepted email must be able to render the business name");
+});
+
+// --- Follow-up 2: investigation idempotency and count accuracy --------------
+
+test("investigation dedupe: a unique constraint and an atomic count trigger exist", () => {
+  const m = src("supabase/migrations/20260723e_investigation_dedupe_and_count.sql");
+  assert.ok(
+    m.includes("unique (signal_id, requester_id)"),
+    "one investigation request per member per signal",
+  );
+  assert.ok(m.includes("create trigger") && m.includes("investigation_count"), "count kept by a trigger");
+  assert.ok(m.includes("after insert or delete"), "count recomputed on insert and delete");
+  assert.ok(m.includes("security definer"), "the trigger must cross the RLS boundary safely");
+});
+
+test("investigation dedupe: a duplicate request is a no-op, not a double count", () => {
+  const s = src("app/api/market-signals/investigate/route.ts");
+  assert.ok(s.includes('.includes("duplicate")'), "a duplicate insert must be tolerated");
+  assert.ok(s.includes("duplicate: true"), "a duplicate returns success without re-notifying");
+  // The manual recompute is gone: the count is maintained by the DB trigger, so
+  // there is no partial-failure window in application code.
+  assert.ok(
+    !s.includes('.update({ investigation_count'),
+    "the route must not hand-maintain investigation_count any more",
+  );
+});
+
+// --- Follow-up 3: confirmation genuinely links a live Qualified Opportunity --
+
+const CURRENT_APPROVED = { status: "approved", valid_until: null, reconfirmed_at: "2999-01-01T00:00:00Z" };
+
+test("confirmation verdict: only an approved, current, eligible-owner listing links", () => {
+  assert.equal(confirmationLinkVerdict(CURRENT_APPROVED, true).ok, true);
+  assert.equal(confirmationLinkVerdict(null, true).reason, "listing_missing");
+  assert.equal(
+    confirmationLinkVerdict({ ...CURRENT_APPROVED, status: "submitted" }, true).reason,
+    "listing_not_approved",
+  );
+  // Expired finite validity is not current.
+  assert.equal(
+    confirmationLinkVerdict({ status: "approved", valid_until: "2000-01-01T00:00:00Z", reconfirmed_at: "2999-01-01T00:00:00Z" }, true).reason,
+    "listing_not_current",
+  );
+  // Never reconfirmed => reconfirmation lapsed => not current.
+  assert.equal(
+    confirmationLinkVerdict({ status: "approved", valid_until: null, reconfirmed_at: null }, true).reason,
+    "listing_not_current",
+  );
+  // Approved and current but the owner's verification no longer passes.
+  assert.equal(confirmationLinkVerdict(CURRENT_APPROVED, false).reason, "listing_owner_ineligible");
+});
+
+test("10: the admin confirm action requires a listing and gates it fully", () => {
+  const s = src("app/[locale]/admin/signals/actions.ts");
+  assert.ok(s.includes('finish("confirm_needs_listing")'), "confirm without a listing ref is refused");
+  assert.ok(s.includes("confirmationLinkVerdict("), "the linked listing is gated, not merely resolved");
+  assert.ok(s.includes("eligibleOwnerIds("), "owner verification currency is checked");
+  assert.ok(
+    s.includes("valid_until") && s.includes("reconfirmed_at") && s.includes('.select("id, user_id, status'),
+    "the listing is loaded with the fields the gate needs",
+  );
+  assert.ok(s.includes("promoted_listing_id"), "status and the link are written together");
 });
 
 console.log(`\n${passed} passed`);
