@@ -1,12 +1,11 @@
 import { Icon } from "@/components/icons";
-import { SIGNAL_BADGE, SIGNAL_DISCLAIMER } from "@/lib/market-signals/copy";
 
 /**
  * The mandatory "not verified" notice a Market Signal must carry (brief 1.2).
  *
- * The exact strings live in lib/market-signals/copy.ts, imported here, so the
- * badge's em dash never lands in a components/ file that check-encoding.mjs
- * would reject. This component is only the presentation.
+ * The badge and the full disclaimer are passed in, resolved by the caller from
+ * the "marketSignals" message namespace, so they localise with the rest of the
+ * surface. This component is only the presentation.
  *
  *   - `full` shows the badge and the full paragraph. Used above a board and
  *     near a detail title, where the reader is deciding whether to trust it.
@@ -14,9 +13,13 @@ import { SIGNAL_BADGE, SIGNAL_DISCLAIMER } from "@/lib/market-signals/copy";
  *     travels with every signal without the paragraph repeating on each card.
  */
 export default function SignalDisclaimer({
+  badge,
+  disclaimer,
   full = false,
   className = "",
 }: {
+  badge: string;
+  disclaimer: string;
   full?: boolean;
   className?: string;
 }) {
@@ -27,11 +30,11 @@ export default function SignalDisclaimer({
     >
       <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.6px] text-slate">
         <Icon name="scan" size={13} className="text-muted" />
-        {SIGNAL_BADGE}
+        {badge}
       </p>
       {full && (
         <p className="mt-2 text-[12.5px] leading-relaxed text-muted">
-          {SIGNAL_DISCLAIMER}
+          {disclaimer}
         </p>
       )}
     </div>

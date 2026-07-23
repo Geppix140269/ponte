@@ -710,6 +710,8 @@
   },
   "marketSignals": {
     "label": "Market Signals",
+    "badge": "External market signal: not yet verified by Ponte",
+    "disclaimer": "This information was identified through external market research. Ponte has not yet verified the participant, the continuing availability of the requirement or offer, or their authority to transact.",
     "board": {
       "heading": "Recent demand worth investigating",
       "intro": "Ponte identifies recent indications of buyer demand and seller availability through external market research. These are not verified opportunities. Ask Ponte to establish who is behind a signal, whether it is still current, and whether a qualified introduction can be arranged.",

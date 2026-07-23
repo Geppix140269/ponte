@@ -16,10 +16,11 @@ export const dynamic = "force-dynamic";
  * above the first card. It shows only approved, unexpired signals, because
  * getMarketSignals will not return anything else.
  *
- * The chrome reads from the "marketSignals" message namespace (Block E), so it
- * localises with the rest of the site. The mandatory badge and disclaimer stay
- * English constants in lib/market-signals/copy.ts, the same way the
- * verification disclaimer does.
+ * The chrome, the mandatory badge and the mandatory disclaimer all read from
+ * the "marketSignals" message namespace and are localised across the ten
+ * locales. The brief (1.2) requires the badge and disclaimer to be shown and
+ * preserves their meaning; it does not require them to stay in English, so they
+ * are translated like the rest of the surface.
  */
 
 export async function generateMetadata({
@@ -28,8 +29,10 @@ export async function generateMetadata({
   params: { locale: Locale };
 }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "marketSignals" });
+  // The root layout template already appends " | Ponte Trade"; no brand suffix
+  // here, so the title never carries the brand twice.
   return {
-    title: `${t("label")} · Ponte`,
+    title: t("label"),
     description: t("board.intro"),
     alternates: alternatesFor("/market-signals", params.locale),
   };
@@ -70,7 +73,7 @@ export default async function MarketSignalsPage({
         </p>
       </header>
 
-      <SignalDisclaimer full className="mt-7 max-w-3xl" />
+      <SignalDisclaimer full className="mt-7 max-w-3xl" badge={t("badge")} disclaimer={t("disclaimer")} />
 
       {signals.length === 0 ? (
         <div className="mt-8 rounded-glass border border-hairline bg-glass p-8 text-[14px] leading-relaxed text-muted">

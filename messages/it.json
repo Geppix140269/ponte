@@ -1100,6 +1100,8 @@
   },
   "marketSignals": {
     "label": "Segnali di mercato",
+    "badge": "Segnale di mercato esterno: non ancora verificato da Ponte",
+    "disclaimer": "Queste informazioni sono state individuate tramite ricerca di mercato esterna. Ponte non ha ancora verificato il partecipante, la disponibilità continuativa della richiesta o dell'offerta, né la sua facoltà di operare.",
     "board": {
       "heading": "Domanda recente da approfondire",
       "intro": "Ponte individua indicazioni recenti di domanda degli acquirenti e disponibilità dei venditori tramite ricerca di mercato esterna. Non sono opportunità verificate. Chiedi a Ponte di stabilire chi c'è dietro un segnale, se è ancora attuale e se è possibile organizzare una presentazione qualificata.",

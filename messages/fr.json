@@ -1100,6 +1100,8 @@
   },
   "marketSignals": {
     "label": "Signaux de marché",
+    "badge": "Signal de marché externe : pas encore vérifié par Ponte",
+    "disclaimer": "Ces informations ont été identifiées grâce à une recherche de marché externe. Ponte n'a pas encore vérifié le participant, la disponibilité continue du besoin ou de l'offre, ni son pouvoir de transiger.",
     "board": {
       "heading": "Une demande récente à investiguer",
       "intro": "Ponte repère des indications récentes de demande d'acheteurs et de disponibilité de vendeurs grâce à une recherche de marché externe. Ce ne sont pas des opportunités vérifiées. Demandez à Ponte d'établir qui se trouve derrière un signal, s'il est toujours d'actualité et si une mise en relation qualifiée peut être organisée.",

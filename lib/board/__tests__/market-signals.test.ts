@@ -18,7 +18,11 @@ import {
   type SignalRow,
   type MarketSignal,
 } from "../../market-signals/logic";
-import { SIGNAL_BADGE, SIGNAL_DISCLAIMER } from "../../market-signals/copy";
+
+const LOCALES = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "hi", "it"];
+function locale(loc: string): Record<string, any> {
+  return JSON.parse(readFileSync(`messages/${loc}.json`, "utf8"));
+}
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -143,20 +147,39 @@ test("chapterOf reads the two-digit HS chapter from any code shape", () => {
   assert.equal(chapterOf("7"), null);
 });
 
-// --- The exact mandatory disclaimer -----------------------------------------
+// --- The mandatory badge and disclaimer -------------------------------------
+// Brief 1.2 requires every Market Signal to show the badge and the disclaimer,
+// and preserves their meaning; it does not require them to stay in English, so
+// they live in the "marketSignals" message namespace and are localised. The
+// badge's original em dash becomes a colon here because check-messages bans the
+// em dash in message values; the substantive wording is unchanged.
 
-test("the badge is the brief's exact unverified label", () => {
-  // The literal below carries the brief's em dash. check-encoding.mjs bans the
-  // em dash in app/ and components/ but not in lib/, which is why the constant
-  // lives in lib/market-signals/copy.ts and this assertion can spell it out.
-  assert.equal(SIGNAL_BADGE, "External market signal — not yet verified by Ponte");
+test("the English badge is the brief's unverified label", () => {
+  assert.equal(
+    locale("en").marketSignals.badge,
+    "External market signal: not yet verified by Ponte",
+  );
 });
 
-test("the disclaimer is the brief's exact wording", () => {
+test("the English disclaimer is the brief's exact wording", () => {
   assert.equal(
-    SIGNAL_DISCLAIMER,
+    locale("en").marketSignals.disclaimer,
     "This information was identified through external market research. Ponte has not yet verified the participant, the continuing availability of the requirement or offer, or their authority to transact.",
   );
+});
+
+test("every locale carries a non-empty badge and disclaimer (mandatory presence)", () => {
+  for (const loc of LOCALES) {
+    const ms = locale(loc).marketSignals;
+    assert.ok(
+      ms && typeof ms.badge === "string" && ms.badge.trim().length > 0,
+      `${loc} is missing marketSignals.badge`,
+    );
+    assert.ok(
+      typeof ms.disclaimer === "string" && ms.disclaimer.trim().length > 0,
+      `${loc} is missing marketSignals.disclaimer`,
+    );
+  }
 });
 
 // --- Structural separation from Qualified Opportunities ----------------------

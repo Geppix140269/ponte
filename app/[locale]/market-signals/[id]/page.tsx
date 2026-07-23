@@ -18,8 +18,8 @@ export const dynamic = "force-dynamic";
  * (the extracted facts) from what it has not established (identity, authority,
  * current availability), so a reader is never left to assume the gap is filled.
  *
- * Chrome reads from the "marketSignals" message namespace (Block E); the
- * mandatory badge and disclaimer stay English constants inside SignalDisclaimer.
+ * Chrome, the mandatory badge and the mandatory disclaimer all read from the
+ * "marketSignals" message namespace and are localised across the ten locales.
  *
  * Three cases, answered honestly:
  *   - visible: a live approved signal, shown in full with the investigate CTA.
@@ -34,8 +34,10 @@ export async function generateMetadata({
   params: { locale: string };
 }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: "marketSignals" });
+  // The root layout template already appends " | Ponte Trade"; no brand suffix
+  // here, so the title never carries the brand twice.
   return {
-    title: `${t("label")} · Ponte`,
+    title: t("label"),
     robots: { index: false },
   };
 }
@@ -95,7 +97,7 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
           {signal.product}
         </h1>
 
-        <SignalDisclaimer full className="mt-5" />
+        <SignalDisclaimer full className="mt-5" badge={t("badge")} disclaimer={t("disclaimer")} />
 
         {signal.description && (
           <p className="mt-6 text-[15px] leading-relaxed text-slate">
