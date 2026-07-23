@@ -16,21 +16,35 @@ import type { MarketSignal } from "@/lib/board/market-signals";
  *
  * Structured facts only. The public payload never contained a source, a person
  * or the original prose, so a card cannot show one.
+ *
+ * Chrome is passed in as `labels`, resolved once by the board page from the
+ * "marketSignals" message namespace (Block E), so the card localises without
+ * being a client component or awaiting translations per card.
  */
 
-function sideLabel(side: string): string {
-  if (side === "requirement") return "Buyer demand";
-  if (side === "offer") return "Seller availability";
-  return side;
-}
+export type SignalCardLabels = {
+  marker: string;
+  view: string;
+  notStated: string;
+  sideBuyer: string;
+  sideSeller: string;
+};
 
 export default function SignalCard({
   signal,
   locale,
+  labels,
 }: {
   signal: MarketSignal;
   locale: string;
+  labels: SignalCardLabels;
 }) {
+  const sideLabel =
+    signal.side === "requirement"
+      ? labels.sideBuyer
+      : signal.side === "offer"
+        ? labels.sideSeller
+        : signal.side;
   const originIso = signal.originCode;
   const destIso = signal.destinationCode;
 
@@ -42,11 +56,11 @@ export default function SignalCard({
       <div className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-muted">
           <Icon name={signal.side === "offer" ? "offer" : "request"} size={11} />
-          {sideLabel(signal.side)}
+          {sideLabel}
         </span>
         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.5px] text-slate">
           <Icon name="scan" size={11} />
-          Signal
+          {labels.marker}
         </span>
       </div>
 
@@ -65,7 +79,7 @@ export default function SignalCard({
             ) : null}
           </span>
         ) : (
-          <span className="text-[12px] text-muted">Not stated</span>
+          <span className="text-[12px] text-muted">{labels.notStated}</span>
         )}
         {signal.incoterm ? (
           <span className="text-[11.5px] text-muted">{signal.incoterm}</span>
@@ -106,7 +120,7 @@ export default function SignalCard({
           {formatPosted(signal.spottedAt, locale)}
         </span>
         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-slate group-hover:text-ink">
-          View signal
+          {labels.view}
           <Icon name="chevron" size={12} />
         </span>
       </div>

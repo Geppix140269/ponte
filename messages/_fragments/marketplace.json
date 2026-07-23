@@ -2,7 +2,7 @@
   "marketplace": {
     "meta": {
       "title": "Marketplace",
-      "description": "Submit offers and requirements to the Ponte marketplace. Every listing is vetted and documents verified before anything is circulated."
+      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is reviewed by Ponte, and the public record states which evidence Ponte reviewed and what remains unverified."
     },
     "type": {
       "offer": "offer",
@@ -19,7 +19,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every listing <em>vetted</em>. Every counterparty checked.",
+      "heading": "Every published <em>opportunity</em> reviewed by Ponte.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
@@ -27,7 +27,7 @@
     "rules": {
       "vetted": {
         "title": "Vetted before live",
-        "body": "Every listing is reviewed by the desk and documents are verified before anything is circulated. No exceptions."
+        "body": "The public record states which evidence Ponte reviewed and what remains unverified."
       },
       "anonymous": {
         "title": "Anonymized always",

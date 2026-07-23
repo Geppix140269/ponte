@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/icons";
 import { formatPosted } from "@/lib/listing-terms";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
 import SignalDisclaimer from "@/components/signals/SignalDisclaimer";
 import InvestigateButton from "@/components/signals/InvestigateButton";
-import {
-  SIGNALS_NAV_LABEL,
-  SIGNAL_KNOWN_HEADING,
-  SIGNAL_UNKNOWN_HEADING,
-  SIGNAL_UNKNOWNS,
-  SIGNAL_TOMBSTONE,
-  ASK_PONTE_CTA,
-  secondaryCtaFor,
-} from "@/lib/market-signals/copy";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +18,9 @@ export const dynamic = "force-dynamic";
  * (the extracted facts) from what it has not established (identity, authority,
  * current availability), so a reader is never left to assume the gap is filled.
  *
+ * Chrome reads from the "marketSignals" message namespace (Block E); the
+ * mandatory badge and disclaimer stay English constants inside SignalDisclaimer.
+ *
  * Three cases, answered honestly:
  *   - visible: a live approved signal, shown in full with the investigate CTA.
  *   - gone: the signal existed but is expired, withdrawn or unavailable. A safe
@@ -34,33 +28,51 @@ export const dynamic = "force-dynamic";
  *   - missing: no such signal. A 404.
  */
 
-export const metadata: Metadata = {
-  title: `${SIGNALS_NAV_LABEL} · Ponte`,
-  robots: { index: false },
-};
-
-function sideLabel(side: string): string {
-  if (side === "requirement") return "Buyer demand";
-  if (side === "offer") return "Seller availability";
-  return side;
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "marketSignals" });
+  return {
+    title: `${t("label")} · Ponte`,
+    robots: { index: false },
+  };
 }
 
-function Fact({ label, value }: { label: string; value: string | null }) {
+function Fact({
+  label,
+  value,
+  notStated,
+}: {
+  label: string;
+  value: string | null;
+  notStated: string;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-hairline-soft py-3 last:border-0">
       <span className="text-[12px] uppercase tracking-[0.4px] text-muted">{label}</span>
       <span className={`text-right text-[14px] ${value ? "text-ink" : "text-muted"}`}>
-        {value ?? "Not stated"}
+        {value ?? notStated}
       </span>
     </div>
   );
 }
 
-function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
+async function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
+  const t = await getTranslations("marketSignals");
   const corridor =
     signal.originText || signal.destinationText
       ? [signal.originText ?? "?", signal.destinationText ?? "?"].join(" to ")
       : null;
+
+  const sideLabel =
+    signal.side === "requirement"
+      ? t("card.sideBuyer")
+      : signal.side === "offer"
+        ? t("card.sideSeller")
+        : signal.side;
+  const notStated = t("card.notStated");
 
   return (
     <div className="container-px py-14 md:py-20">
@@ -70,11 +82,11 @@ function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
           className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.4px] text-muted hover:text-ink"
         >
           <Icon name="chevron" size={13} className="rotate-180" />
-          {SIGNALS_NAV_LABEL}
+          {t("label")}
         </Link>
 
         <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.8px] text-slate">
-          Market Signal
+          {t("detail.eyebrow")}
         </p>
         <h1
           className="display mt-2 text-ink"
@@ -94,38 +106,43 @@ function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
         {/* What Ponte currently knows: the extracted facts, nothing more. */}
         <section className="mt-8">
           <h2 className="text-[13px] font-bold uppercase tracking-[0.4px] text-ink">
-            {SIGNAL_KNOWN_HEADING}
+            {t("detail.knownHeading")}
           </h2>
           <div className="mt-3 rounded-glass border border-hairline bg-glass px-4">
-            <Fact label="Side" value={sideLabel(signal.side)} />
+            <Fact label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
             <Fact
-              label="Quantity"
+              label={t("detail.fact.quantity")}
               value={
                 signal.quantity
                   ? `${signal.quantity}${signal.unit ? ` ${signal.unit}` : ""}`
                   : null
               }
+              notStated={notStated}
             />
-            <Fact label="Corridor" value={corridor} />
-            <Fact label="Incoterm" value={signal.incoterm} />
-            <Fact label="Payment" value={signal.payment} />
-            <Fact label="HS code" value={signal.hsCode} />
-            <Fact label="Signal date" value={formatPosted(signal.spottedAt, locale)} />
+            <Fact label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
+            <Fact label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
+            <Fact label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
+            <Fact label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
+            <Fact
+              label={t("detail.fact.signalDate")}
+              value={formatPosted(signal.spottedAt, locale)}
+              notStated={notStated}
+            />
           </div>
         </section>
 
         {/* What Ponte has NOT established. The limits, stated plainly. */}
         <section className="mt-7">
           <h2 className="text-[13px] font-bold uppercase tracking-[0.4px] text-ink">
-            {SIGNAL_UNKNOWN_HEADING}
+            {t("detail.unknownHeading")}
           </h2>
           <ul className="mt-3 space-y-2">
-            {SIGNAL_UNKNOWNS.map((line) => (
-              <li key={line} className="flex items-start gap-2.5 text-[13.5px] text-muted">
+            {(["u1", "u2", "u3", "u4"] as const).map((k) => (
+              <li key={k} className="flex items-start gap-2.5 text-[13.5px] text-muted">
                 <span className="mt-0.5 shrink-0 text-muted">
                   <Icon name="lock" size={14} />
                 </span>
-                {line}
+                {t(`detail.unknowns.${k}`)}
               </li>
             ))}
           </ul>
@@ -136,10 +153,10 @@ function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
             contacts the third party behind the signal. The secondary is the
             same request, role-primed for the side that would respond. */}
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <InvestigateButton signalId={signal.id} label={ASK_PONTE_CTA} />
+          <InvestigateButton signalId={signal.id} label={t("cta.askPonte")} />
           <InvestigateButton
             signalId={signal.id}
-            label={secondaryCtaFor(signal.side)}
+            label={signal.side === "requirement" ? t("cta.secondarySupply") : t("cta.secondaryBuy")}
             variant="secondary"
             initialType={signal.side === "requirement" ? "supplier" : "buyer"}
           />
@@ -149,16 +166,17 @@ function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
   );
 }
 
-function Tombstone() {
+async function Tombstone() {
+  const t = await getTranslations("marketSignals");
   return (
     <div className="container-px py-20">
       <div className="mx-auto max-w-md rounded-glass border border-hairline bg-glass p-10 text-center">
-        <p className="text-[15px] text-muted">{SIGNAL_TOMBSTONE}</p>
+        <p className="text-[15px] text-muted">{t("detail.tombstone")}</p>
         <Link
           href="/market-signals"
           className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.4px] text-lime hover:opacity-80"
         >
-          {SIGNALS_NAV_LABEL}
+          {t("label")}
           <Icon name="chevron" size={13} />
         </Link>
       </div>

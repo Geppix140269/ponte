@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { Icon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { SIGNALS_NAV_LABEL } from "@/lib/market-signals/copy";
 
 // One nav, one story: the marketplace, what it costs, how to reach the desk.
 //
@@ -15,14 +14,10 @@ import { SIGNALS_NAV_LABEL } from "@/lib/market-signals/copy";
 // drawer. Offering the same destination twice on one screen is what makes a
 // phone feel like a shrunken desktop, and it also makes the drawer look like
 // the real navigation when it is not.
-// `label` overrides the i18n key when set: the Market Signals link ships in
-// English for Block A rather than wait on the locale rebuild that Block E owns.
-// Block E folds it into the "nav" namespace with the rest of the Opportunities
-// hub, and this override goes away.
-type NavLink = { href: string; key: string; label?: string; inBottomNav: boolean };
+type NavLink = { href: string; key: string; inBottomNav: boolean };
 const navLinks: NavLink[] = [
   { href: "/marketplace", key: "marketplace", inBottomNav: true },
-  { href: "/market-signals", key: "signals", label: SIGNALS_NAV_LABEL, inBottomNav: false },
+  { href: "/market-signals", key: "signals", inBottomNav: false },
   { href: "/pricing", key: "fees", inBottomNav: false },
   { href: "/contact", key: "contact", inBottomNav: false },
 ];
@@ -52,7 +47,7 @@ export default function SiteHeader() {
                 pathname === link.href ? "text-lime" : "text-muted hover:text-ink"
               }`}
             >
-              {link.label ?? t(link.key)}
+              {t(link.key)}
             </Link>
           ))}
         </div>
@@ -87,7 +82,7 @@ export default function SiteHeader() {
                 href={link.href}
                 className="py-2.5 text-[12px] font-semibold uppercase tracking-label text-ink"
               >
-                {link.label ?? t(link.key)}
+                {t(link.key)}
               </Link>
             ))}
             <div className="py-2.5">

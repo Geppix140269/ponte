@@ -1,10 +1,10 @@
 {
   "landing": {
-    "eyebrow": "Live board",
-    "h1": "One bridge away.",
-    "sub": "Verified counterparties. Real deals. Free to join, free to trade.",
-    "ctaPrimary": "See the live board",
-    "ctaSecondary": "How verification works",
+    "eyebrow": "Founding Network",
+    "h1": "Trade opportunities, without the usual noise.",
+    "sub": "An invitation-led international trade network where businesses are checked, opportunities are reviewed, and introductions are controlled.",
+    "ctaPrimary": "Explore opportunities",
+    "ctaSecondary": "Submit an opportunity",
     "stage": {
       "match": "Match",
       "counterparty": "Counterparty",
@@ -23,8 +23,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "VAT and LEI",
       "identifiersDetail": "VIES, GLEIF, dated at read",
-      "anonymous": "Anonymous until you agree",
-      "anonymousDetail": "Introduced only after both agree",
+      "anonymous": "Identity disclosed at introduction",
+      "anonymousDetail": "Only at the controlled introduction stage, after both sides agree",
       "cta": "What each level checks"
     },
     "ai": {

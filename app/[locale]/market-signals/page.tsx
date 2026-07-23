@@ -1,16 +1,10 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { getMarketSignals } from "@/lib/board/market-signals";
 import { alternatesFor } from "@/lib/seo";
 import SignalDisclaimer from "@/components/signals/SignalDisclaimer";
-import SignalCard from "@/components/signals/SignalCard";
-import {
-  SIGNALS_BOARD_HEADING,
-  SIGNALS_BOARD_INTRO,
-  SIGNALS_BOARD_EMPTY,
-  SIGNALS_NAV_LABEL,
-} from "@/lib/market-signals/copy";
+import SignalCard, { type SignalCardLabels } from "@/components/signals/SignalCard";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +16,10 @@ export const dynamic = "force-dynamic";
  * above the first card. It shows only approved, unexpired signals, because
  * getMarketSignals will not return anything else.
  *
- * The chrome reads in English for now. Block E moves these strings into the
- * message fragments and rebuilds the locales; the mandatory disclaimer stays a
- * constant, the same way the verification disclaimer does.
+ * The chrome reads from the "marketSignals" message namespace (Block E), so it
+ * localises with the rest of the site. The mandatory badge and disclaimer stay
+ * English constants in lib/market-signals/copy.ts, the same way the
+ * verification disclaimer does.
  */
 
 export async function generateMetadata({
@@ -32,9 +27,10 @@ export async function generateMetadata({
 }: {
   params: { locale: Locale };
 }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "marketSignals" });
   return {
-    title: `${SIGNALS_NAV_LABEL} · Ponte`,
-    description: SIGNALS_BOARD_INTRO,
+    title: `${t("label")} · Ponte`,
+    description: t("board.intro"),
     alternates: alternatesFor("/market-signals", params.locale),
   };
 }
@@ -45,23 +41,32 @@ export default async function MarketSignalsPage({
   params: { locale: string };
 }) {
   setRequestLocale(params.locale);
+  const t = await getTranslations("marketSignals");
   const signals = await getMarketSignals();
+
+  const cardLabels: SignalCardLabels = {
+    marker: t("card.marker"),
+    view: t("card.view"),
+    notStated: t("card.notStated"),
+    sideBuyer: t("card.sideBuyer"),
+    sideSeller: t("card.sideSeller"),
+  };
 
   return (
     <div className="container-px py-14 md:py-20">
       <header className="max-w-3xl">
         <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.8px] text-slate">
-          {SIGNALS_NAV_LABEL}
+          {t("label")}
         </p>
         <h1
           className="display mt-3 text-ink"
           style={{ fontSize: "clamp(30px, 4vw, 46px)", lineHeight: 1.05, letterSpacing: "-1px" }}
         >
-          {SIGNALS_BOARD_HEADING}
+          {t("board.heading")}
           <span className="text-slate">.</span>
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-muted">
-          {SIGNALS_BOARD_INTRO}
+          {t("board.intro")}
         </p>
       </header>
 
@@ -69,12 +74,12 @@ export default async function MarketSignalsPage({
 
       {signals.length === 0 ? (
         <div className="mt-8 rounded-glass border border-hairline bg-glass p-8 text-[14px] leading-relaxed text-muted">
-          {SIGNALS_BOARD_EMPTY}
+          {t("board.empty")}
         </div>
       ) : (
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {signals.map((signal) => (
-            <SignalCard key={signal.id} signal={signal} locale={params.locale} />
+            <SignalCard key={signal.id} signal={signal} locale={params.locale} labels={cardLabels} />
           ))}
         </div>
       )}

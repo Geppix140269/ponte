@@ -288,8 +288,8 @@
     "copyright": "© {year} Ponte · 1402 Celsius Ltd 的商号 · ponte.trade"
   },
   "home": {
-    "metaTitle": "实物货物的跨境贸易，在经核验的交易对手之间",
-    "metaDescription": "Ponte 是面向实物货物跨境贸易的已审核交易看板。供应与求购按贸易条款书写，匿名流转，在双方同意建立联系之前不作任何引荐。会员会对照 Companies House、VIES、GLEIF 以及 OFAC、欧盟、联合国和 OFSI 名单进行筛查。",
+    "metaTitle": "凭邀请加入的国际贸易机会",
+    "metaDescription": "Ponte Trade 是一个凭邀请加入的国际贸易网络。企业会对照公司登记册以及 OFAC、欧盟、联合国和英国的制裁名单进行核查，机会由 Ponte 审阅并记录证据，引荐受到控制：身份仅在引荐阶段披露。",
     "hero": {
       "eyebrow": "所有会员均免费",
       "title": "全球买卖实物大宗商品",
@@ -621,7 +621,7 @@
   "marketplace": {
     "meta": {
       "title": "交易市场",
-      "description": "向 Ponte 交易市场提交供应和求购信息。每条挂牌信息都经过审核，文件在对外流通前均已核验。"
+      "description": "向 Ponte 市场提交报盘与需求。每一个发布的机会都经过 Ponte 审阅，公开记录会说明 Ponte 审阅了哪些证据，以及哪些仍未核实。"
     },
     "type": {
       "offer": "供应",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "交易市场",
-      "heading": "每条挂牌信息都<em>经过审核</em>。每个交易对手都经核查。",
+      "heading": "每一个发布的<em>机会</em>都经过 Ponte 审阅。",
       "intro": "免费发布你要卖的或你需要的。挂牌信息上线前，AI 和交易台会逐条核验；在双方同意建立联系之前你保持匿名，建立联系不收取任何费用。想让交易被全程管理？只要你提出要求，交易台就会介入，按成交佣金或顾问月费计费。",
       "newListing": "新建挂牌信息",
       "signIn": "登录后提交"
@@ -638,7 +638,7 @@
     "rules": {
       "vetted": {
         "title": "上线前先审核",
-        "body": "每条挂牌信息都由交易台审阅，文件在对外流通前均已核验。没有例外。"
+        "body": "公开记录会说明 Ponte 审阅了哪些证据，以及哪些仍未核实。"
       },
       "anonymous": {
         "title": "始终匿名",
@@ -761,9 +761,9 @@
   },
   "meta": {
     "siteTitle": "Ponte。买卖双方之间的桥梁。",
-    "siteDescription": "面向实物贸易的免费已审核交易市场。发布你要卖的或你需要的。AI 和交易台核验每一条挂牌信息。直接建立联系，在双方同意之前保持匿名，且不收取任何费用。Ponte 交易台仅在收到请求时才全程管理交易，按成交佣金或顾问月费计费。由 1402 Celsius Ltd 运营。",
-    "ogDescription": "每条挂牌信息都经审核。每次建立联系都免费。三步发布供应或求购信息，只有在你希望交易被管理时才引入交易台。",
-    "twitterDescription": "面向实物贸易的免费已审核交易市场。交易台全程管理为可选项，按成交佣金或顾问月费计费。"
+    "siteDescription": "一个凭邀请加入的国际贸易网络。企业会对照公司登记册和制裁名单进行核查，机会由 Ponte 审阅，引荐受到控制，身份仅在引荐阶段披露。Ponte Desk 可应要求管理委托事项。由 1402 Celsius Ltd 运营。",
+    "ogDescription": "每一个发布的机会都经过 Ponte 审阅。企业经过核查，引荐受到控制。提交一个机会，或请 Ponte Desk 管理委托事项。",
+    "twitterDescription": "一个凭邀请加入的国际贸易网络：企业经过核查，机会经过审阅，引荐受到控制。"
   },
   "nav": {
     "homeAriaLabel": "Ponte Trade 首页",
@@ -777,7 +777,8 @@
     "post": "发布",
     "postAriaLabel": "发布一条挂牌信息",
     "verify": "核验",
-    "primaryAriaLabel": "主导航"
+    "primaryAriaLabel": "主导航",
+    "signals": "市场信号"
   },
   "pricing": {
     "meta": {
@@ -1050,11 +1051,11 @@
     "failedTitle": "未能完成"
   },
   "landing": {
-    "eyebrow": "实时交易板",
-    "h1": "一桥之隔。",
-    "sub": "经核实的交易对手。真实的交易。加入免费，交易免费。",
-    "ctaPrimary": "查看实时交易板",
-    "ctaSecondary": "核实如何进行",
+    "eyebrow": "创始网络",
+    "h1": "贸易机会，没有惯常的噪音。",
+    "sub": "一个凭邀请加入的国际贸易网络：企业经过核查，机会经过审阅，引荐受到控制。",
+    "ctaPrimary": "探索机会",
+    "ctaSecondary": "提交机会",
     "stage": {
       "match": "匹配",
       "counterparty": "交易对手",
@@ -1073,8 +1074,8 @@
       "sanctionsDetail": "OFAC、EU、UN、UK OFSI",
       "identifiers": "增值税号与 LEI",
       "identifiersDetail": "VIES、GLEIF，读取当日标注",
-      "anonymous": "达成一致前保持匿名",
-      "anonymousDetail": "双方同意后才作引荐",
+      "anonymous": "身份在引荐时披露",
+      "anonymousDetail": "仅在受控引荐阶段，双方同意之后",
       "cta": "各级别核查内容"
     },
     "ai": {
@@ -1095,6 +1096,75 @@
       "credit": "{n} 个额度",
       "desk": "交易台居间服务按成功费或聘用费计，开始工作前以书面约定。",
       "cta": "免费开始"
+    }
+  },
+  "marketSignals": {
+    "label": "市场信号",
+    "board": {
+      "heading": "值得调查的近期需求",
+      "intro": "Ponte 通过外部市场研究识别近期买方需求与卖方供应的迹象。这些并非已核实的机会。请 Ponte 确认信号背后是谁、是否仍然有效，以及能否安排合格的引荐。",
+      "empty": "所选信号正在审核中。在管理员批准展示之前，此处不会显示任何内容。"
+    },
+    "card": {
+      "marker": "信号",
+      "view": "查看信号",
+      "notStated": "未说明",
+      "sideBuyer": "买方需求",
+      "sideSeller": "卖方供应"
+    },
+    "detail": {
+      "eyebrow": "市场信号",
+      "knownHeading": "Ponte 目前掌握的信息",
+      "unknownHeading": "Ponte 尚未确认的信息",
+      "unknowns": {
+        "u1": "需求或报盘背后是谁",
+        "u2": "该公司及其交易权限",
+        "u3": "该需求或报盘是否仍然有效",
+        "u4": "该方是否愿意接受引荐"
+      },
+      "fact": {
+        "side": "方向",
+        "quantity": "数量",
+        "corridor": "走廊",
+        "incoterm": "Incoterm",
+        "payment": "付款",
+        "hsCode": "HS 编码",
+        "signalDate": "信号日期"
+      },
+      "tombstone": "此市场信号已不再有效。"
+    },
+    "cta": {
+      "askPonte": "请 Ponte 调查",
+      "secondarySupply": "我或许可以供应",
+      "secondaryBuy": "我或许有兴趣购买"
+    },
+    "investigate": {
+      "intro": "Ponte 将调查此信号背后的需求。您的请求将发送至 Ponte Desk；不会自动联系或披露任何第三方。",
+      "close": "关闭",
+      "businessLabel": "您的公司",
+      "businessPlaceholder": "注册公司名称",
+      "typeLabel": "您是",
+      "typeSelect": "请选择",
+      "requesterType": {
+        "supplier": "潜在供应商",
+        "buyer": "潜在买家",
+        "intermediary": "中间商",
+        "adviser": "顾问"
+      },
+      "goalLabel": "您希望 Ponte 确认什么？",
+      "goalPlaceholder": "例如：背后是谁、是否仍然有效、能否安排合格的引荐",
+      "indicativeLabel": "指示性数量、时间安排或供应能力",
+      "optional": "（可选）",
+      "indicativePlaceholder": "例如：自三月起每月可供应 3 x 40ft",
+      "geographyLabel": "地区",
+      "geographyPlaceholder": "您所在的位置，或您服务的走廊",
+      "evidenceLabel": "您能提供的认证或证据",
+      "evidencePlaceholder": "例如：ISO 22000、植物检疫证书、银行资信证明",
+      "introCheckbox": "如果 Ponte 确认该需求，我希望获得合格的引荐。",
+      "submit": "提交调查请求",
+      "sending": "发送中...",
+      "error": "失败，请重试。",
+      "received": "请求已收到"
     }
   }
 }

@@ -164,7 +164,7 @@ export default async function AccountPage() {
       {(myListings ?? []).length === 0 ? (
         <p className="text-[13px] text-gray-2 mb-4">
           Nothing submitted yet. Offers and requirements you submit are
-          vetted by the desk before anything is circulated.
+          reviewed by the Ponte desk before they are published.
         </p>
       ) : (
         <ul className="glass divide-y divide-white/10 mb-4">

@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Icon } from "@/components/icons";
 import AccountGate from "@/components/AccountGate";
 import {
   REQUESTER_TYPES,
-  REQUESTER_TYPE_LABELS,
   cleanInvestigation,
   investigationIsComplete,
   type InvestigationRequest,
@@ -22,9 +22,9 @@ import {
  * party behind the signal, which is the whole reason a Market Signal is a
  * signal and not an introduction.
  *
- * All chrome is English string literals on purpose (the standing Block C/D
- * convention): Block E migrates it into the message fragments. That keeps this
- * block from churning ten locale files for text that is about to move anyway.
+ * Chrome reads from the "marketSignals" message namespace (Block E), so the
+ * form localises with the rest of the site. The CTA `label` is resolved by the
+ * caller so a signal can prime the contextual (supply/buy) wording.
  */
 
 const EMPTY: InvestigationRequest = {
@@ -49,6 +49,7 @@ export default function InvestigateButton({
   /** Pre-selects the requester type, for a role-primed contextual CTA. */
   initialType?: RequesterType | null;
 }) {
+  const t = useTranslations("marketSignals");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [formOpen, setFormOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
@@ -116,7 +117,7 @@ export default function InvestigateButton({
   if (status === "sent") {
     return (
       <span className="inline-flex items-center justify-center gap-2 rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink">
-        <Icon name="check" size={16} /> Request received
+        <Icon name="check" size={16} /> {t("investigate.received")}
       </span>
     );
   }
@@ -144,24 +145,22 @@ export default function InvestigateButton({
             onSubmit={onSubmit}
             role="dialog"
             aria-modal="true"
-            aria-label="Ask Ponte to investigate"
+            aria-label={t("cta.askPonte")}
             className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-glass border border-hairline bg-surface p-6 text-left shadow-glass sm:rounded-glass sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="display text-[20px] leading-tight text-ink">
-                  Ask Ponte to investigate
+                  {t("cta.askPonte")}
                 </h2>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-muted">
-                  Ponte will look into the requirement behind this signal. Your
-                  request goes to the Ponte desk; no third party is contacted or
-                  revealed automatically.
+                  {t("investigate.intro")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setFormOpen(false)}
-                aria-label="Close"
+                aria-label={t("investigate.close")}
                 className="-mr-1 -mt-1 rounded-full p-2 text-muted transition-colors hover:text-ink"
               >
                 <Icon name="close" size={18} />
@@ -171,7 +170,7 @@ export default function InvestigateButton({
             <div className="mt-4 space-y-3.5">
               <div>
                 <label htmlFor="inv-business" className="field-label">
-                  Your business
+                  {t("investigate.businessLabel")}
                 </label>
                 <input
                   ref={firstFieldRef}
@@ -180,13 +179,13 @@ export default function InvestigateButton({
                   value={form.requesting_business}
                   onChange={(e) => set({ requesting_business: e.target.value })}
                   className="field"
-                  placeholder="Registered company name"
+                  placeholder={t("investigate.businessPlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="inv-type" className="field-label">
-                  You are a
+                  {t("investigate.typeLabel")}
                 </label>
                 <select
                   id="inv-type"
@@ -197,10 +196,10 @@ export default function InvestigateButton({
                   }
                   className="field"
                 >
-                  <option value="">Select</option>
+                  <option value="">{t("investigate.typeSelect")}</option>
                   {REQUESTER_TYPES.map((rt) => (
                     <option key={rt} value={rt}>
-                      {REQUESTER_TYPE_LABELS[rt]}
+                      {t(`investigate.requesterType.${rt}`)}
                     </option>
                   ))}
                 </select>
@@ -208,7 +207,7 @@ export default function InvestigateButton({
 
               <div>
                 <label htmlFor="inv-goal" className="field-label">
-                  What do you want Ponte to establish?
+                  {t("investigate.goalLabel")}
                 </label>
                 <textarea
                   id="inv-goal"
@@ -217,48 +216,48 @@ export default function InvestigateButton({
                   value={form.establish_goal}
                   onChange={(e) => set({ establish_goal: e.target.value })}
                   className="field resize-none"
-                  placeholder="e.g. who is behind this, whether it is still current, whether a qualified introduction can be arranged"
+                  placeholder={t("investigate.goalPlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="inv-indicative" className="field-label">
-                  Indicative quantity, timing or supply capability
-                  <span className="ml-1 text-muted">(optional)</span>
+                  {t("investigate.indicativeLabel")}
+                  <span className="ml-1 text-muted">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-indicative"
                   value={form.indicative}
                   onChange={(e) => set({ indicative: e.target.value })}
                   className="field"
-                  placeholder="e.g. can supply 3 x 40ft/month from March"
+                  placeholder={t("investigate.indicativePlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="inv-geography" className="field-label">
-                  Geography <span className="ml-1 text-muted">(optional)</span>
+                  {t("investigate.geographyLabel")} <span className="ml-1 text-muted">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-geography"
                   value={form.geography}
                   onChange={(e) => set({ geography: e.target.value })}
                   className="field"
-                  placeholder="Where you are, or the corridor you serve"
+                  placeholder={t("investigate.geographyPlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="inv-evidence" className="field-label">
-                  Certifications or evidence you can provide
-                  <span className="ml-1 text-muted">(optional)</span>
+                  {t("investigate.evidenceLabel")}
+                  <span className="ml-1 text-muted">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-evidence"
                   value={form.evidence}
                   onChange={(e) => set({ evidence: e.target.value })}
                   className="field"
-                  placeholder="e.g. ISO 22000, phytosanitary certs, bank reference"
+                  placeholder={t("investigate.evidencePlaceholder")}
                 />
               </div>
 
@@ -269,8 +268,7 @@ export default function InvestigateButton({
                   onChange={(e) => set({ wants_intro: e.target.checked })}
                   className="mt-0.5"
                 />
-                I would like a qualified introduction if Ponte confirms the
-                requirement.
+                {t("investigate.introCheckbox")}
               </label>
             </div>
 
@@ -279,10 +277,10 @@ export default function InvestigateButton({
               disabled={!ready || status === "sending"}
               className="btn-primary mt-5 w-full disabled:opacity-60"
             >
-              {status === "sending" ? "Sending..." : "Submit investigation request"}
+              {status === "sending" ? t("investigate.sending") : t("investigate.submit")}
             </button>
             {status === "error" && (
-              <p className="mt-2 text-[13px] text-coral">Failed, try again.</p>
+              <p className="mt-2 text-[13px] text-coral">{t("investigate.error")}</p>
             )}
           </form>
         </div>
