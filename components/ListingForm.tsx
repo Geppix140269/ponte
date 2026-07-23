@@ -238,10 +238,11 @@ export default function ListingForm({
   const isEditing = !!editId;
   const [editProduct, setEditProduct] = useState("");
 
-  // The fact-only deal write-up, generated on the preview step and confirmed
-  // by publishing. It is sent with the submission as the internal draft.
+  // The fact-only deal write-up shown to the member on the preview step. It is
+  // a PREVIEW only and is never sent to the server: the desk regenerates its
+  // own trustworthy draft from the stored facts, so a client draft can never be
+  // presented as Ponte engine output.
   const [writeup, setWriteup] = useState<Writeup | null>(null);
-  const [writeupMeta, setWriteupMeta] = useState<{ prompt_version: string | null; model: string | null } | null>(null);
   const [writeupStatus, setWriteupStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   const cat = TRADE_CATEGORIES.find((c) => c.id === catId);
@@ -478,10 +479,6 @@ export default function ListingForm({
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.ok && body.writeup) {
         setWriteup(body.writeup as Writeup);
-        setWriteupMeta({
-          prompt_version: body.meta?.prompt_version ?? null,
-          model: body.meta?.model ?? null,
-        });
         setWriteupStatus("done");
       } else if (body && body.ok === false && body.reason === "below_minimum") {
         setWriteup(null);
@@ -649,8 +646,11 @@ export default function ListingForm({
             ? ROLES[type === "offer" ? "offer" : "requirement"].find((r) => r.v === role)?.label ?? ""
             : "Service provider",
           chain_depth: isGoods ? chain : "",
-          writeup: writeup ?? undefined,
-          writeup_meta: writeupMeta ?? undefined,
+          // Media and documents live in separate tables written after this
+          // call. On an edit, flag that new ones were selected so an approved
+          // listing returns to review for the asset change a field diff cannot
+          // see.
+          assetsChanged: isEditing && (media.length > 0 || docs.length > 0),
           draft: asDraft,
         }),
       });

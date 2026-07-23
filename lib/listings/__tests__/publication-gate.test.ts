@@ -18,7 +18,12 @@ import { readFileSync } from "node:fs";
 import { checkPublicationGate, type GateListing, type GateSubmitter } from "../publication-gate";
 import { meetsApprovalMinimum } from "../approval-minimum";
 import { isListingCurrent, isNotExpired } from "../validity";
-import { hasMaterialChange, changedMaterialFields } from "../material-change";
+import {
+  hasMaterialChange,
+  changedMaterialFields,
+  editReturnsToReview,
+  ownsListing,
+} from "../material-change";
 import { truthfulLabels } from "../public-labels";
 
 let passed = 0;
@@ -54,9 +59,11 @@ function goodListing(): GateListing {
 
 function goodSubmitter(): GateSubmitter {
   return {
+    verificationLevel: 2,
     business_verification_id: "ver-1",
     verification: {
       purpose: "member_business",
+      status: "verified",
       sanctions_hits: { clean: true, strongCount: 0 },
     },
   };
@@ -81,7 +88,11 @@ test("no bound business verification fails the gate", () => {
 
 test("a bound verification that is not the member's own business fails", () => {
   const s = goodSubmitter();
-  s.verification = { purpose: "counterparty_check", sanctions_hits: { clean: true, strongCount: 0 } };
+  s.verification = {
+    purpose: "counterparty_check",
+    status: "verified",
+    sanctions_hits: { clean: true, strongCount: 0 },
+  };
   const r = checkPublicationGate(goodListing(), s, NOW);
   assert.equal(r.ok, false);
   assert.ok(!r.ok && r.failures.includes("verification_not_member_business"));
@@ -89,10 +100,50 @@ test("a bound verification that is not the member's own business fails", () => {
 
 test("an unresolved high-risk sanctions candidate fails the gate", () => {
   const s = goodSubmitter();
-  s.verification = { purpose: "member_business", sanctions_hits: { clean: false, strongCount: 1 } };
+  s.verification = {
+    purpose: "member_business",
+    status: "verified",
+    sanctions_hits: { clean: false, strongCount: 1 },
+  };
   const r = checkPublicationGate(goodListing(), s, NOW);
   assert.equal(r.ok, false);
   assert.ok(!r.ok && r.failures.includes("unresolved_sanctions"));
+});
+
+// A re-screen suspension leaves the binding but moves the case to review and
+// drops the profile level. Neither may pass.
+test("a suspended (in-review) business verification fails the gate", () => {
+  const s = goodSubmitter();
+  s.verification = {
+    purpose: "member_business",
+    status: "review",
+    sanctions_hits: { clean: true, strongCount: 0 },
+  };
+  const r = checkPublicationGate(goodListing(), s, NOW);
+  assert.equal(r.ok, false);
+  assert.ok(!r.ok && r.failures.includes("verification_not_passing"));
+});
+
+test("a failed or rejected business verification fails the gate", () => {
+  for (const status of ["failed", "rejected", "pending", "needs_selection"]) {
+    const s = goodSubmitter();
+    s.verification = {
+      purpose: "member_business",
+      status,
+      sanctions_hits: { clean: true, strongCount: 0 },
+    };
+    const r = checkPublicationGate(goodListing(), s, NOW);
+    assert.equal(r.ok, false, `${status} must fail`);
+    assert.ok(!r.ok && r.failures.includes("verification_not_passing"));
+  }
+});
+
+test("a dropped profile level (suspension) fails the gate even if bound", () => {
+  const s = goodSubmitter();
+  s.verificationLevel = 1; // re-screen dropped it from 2
+  const r = checkPublicationGate(goodListing(), s, NOW);
+  assert.equal(r.ok, false);
+  assert.ok(!r.ok && r.failures.includes("verification_not_current"));
 });
 
 test("a missing role fails the gate", () => {
@@ -208,11 +259,73 @@ test("changing a commercial term is a material change", () => {
   assert.deepEqual(changedMaterialFields(before, after), ["quantity"]);
 });
 
-test("editing only non-material fields is not a material change", () => {
-  const before = { ...goodListing(), submitter_role: "Producer / owner of the goods" };
-  // desk_version and unlisted fields are not material; the same terms remain.
+test("changing the public free text (details) is a reviewable change", () => {
+  const before = { ...goodListing(), details: "As posted." };
+  const after = { ...goodListing(), details: "Rewritten entirely." };
+  assert.equal(hasMaterialChange(before, after), true);
+  assert.deepEqual(changedMaterialFields(before, after), ["details"]);
+});
+
+test("changing key notes is a reviewable change", () => {
+  const before = { ...goodListing(), key_notes: "" };
+  const after = { ...goodListing(), key_notes: "Material already at port." };
+  assert.equal(hasMaterialChange(before, after), true);
+});
+
+test("editing nothing material is not a change", () => {
+  const before = { ...goodListing() };
   const after = { ...before };
   assert.equal(hasMaterialChange(before, after), false);
+});
+
+// --- edit returns an approved listing to review ------------------------------
+
+test("any member-controlled change on an approved listing returns it to review", () => {
+  const before = { ...goodListing(), status: undefined };
+  // A structured term change.
+  assert.equal(
+    editReturnsToReview({ priorStatus: "approved", before, after: { ...before, quantity: 5000 }, assetsChanged: false }),
+    true,
+  );
+  // A public free-text change.
+  assert.equal(
+    editReturnsToReview({ priorStatus: "approved", before, after: { ...before, details: "New text." }, assetsChanged: false }),
+    true,
+  );
+  // A media/document change a field diff cannot see.
+  assert.equal(
+    editReturnsToReview({ priorStatus: "approved", before, after: { ...before }, assetsChanged: true }),
+    true,
+  );
+});
+
+test("an approved listing with no reviewable change stays approved", () => {
+  const before = goodListing();
+  assert.equal(
+    editReturnsToReview({ priorStatus: "approved", before, after: { ...before }, assetsChanged: false }),
+    false,
+  );
+});
+
+test("only an approved listing can be returned to review", () => {
+  const before = goodListing();
+  for (const status of ["draft", "submitted", "rejected", "closed"]) {
+    assert.equal(
+      editReturnsToReview({ priorStatus: status, before, after: { ...before, quantity: 1 }, assetsChanged: true }),
+      false,
+      `${status} has no approval to invalidate`,
+    );
+  }
+});
+
+// --- ownership (IDOR) --------------------------------------------------------
+
+test("only the owner may edit a listing", () => {
+  assert.equal(ownsListing("user-a", "user-a"), true);
+  assert.equal(ownsListing("user-a", "user-b"), false, "another member cannot edit it");
+  assert.equal(ownsListing("user-a", null), false);
+  assert.equal(ownsListing(null, "user-a"), false);
+  assert.equal(ownsListing(undefined, undefined), false);
 });
 
 // --- 19: truthful public labels ---------------------------------------------
@@ -271,12 +384,44 @@ test("16: the submit route persists the structured v4 facts", () => {
   }
 });
 
-test("material change on an approved listing returns it to review", () => {
+test("the submit route returns an edited approved listing to review, clearing approval state", () => {
   const s = src("app/api/marketplace/submit/route.ts");
-  assert.ok(
-    s.includes("hasMaterialChange("),
-    "submit route must test for a material change on an owner edit",
-  );
+  assert.ok(s.includes("editReturnsToReview("), "submit route must use editReturnsToReview");
+  assert.ok(s.includes("assetsChanged"), "submit route must consider media/document changes");
+  for (const cleared of [
+    "update.status = \"submitted\"",
+    "update.decided_at = null",
+    "update.decision_note = null",
+    "update.desk_version = null",
+    "update.reconfirmed_at = null",
+    "update.ai_version = null",
+  ]) {
+    assert.ok(s.includes(cleared), `return-to-review must clear ${cleared}`);
+  }
+});
+
+test("cross-account editing is refused server-side (IDOR)", () => {
+  const s = src("app/api/marketplace/submit/route.ts");
+  assert.ok(s.includes("ownsListing("), "submit route must enforce ownership before any write");
+});
+
+test("the submit route does not accept client-supplied write-up content", () => {
+  const s = src("app/api/marketplace/submit/route.ts");
+  assert.ok(!s.includes("body.writeup"), "submit route must not read a client write-up");
+  assert.ok(!s.includes("writeup_meta"), "submit route must not read client write-up meta");
+});
+
+test("only the admin server action writes the fact-only draft, from stored facts", () => {
+  const s = src("app/[locale]/admin/listings/actions.ts");
+  assert.ok(s.includes("generateWriteup("), "admin action must regenerate the write-up server-side");
+  assert.ok(s.includes("ai_version:"), "admin action writes the trusted ai_version");
+});
+
+test("the publication gate checks the live level and passing status, not just a binding", () => {
+  const s = src("app/[locale]/admin/listings/actions.ts");
+  assert.ok(s.includes("verification_level"), "the approve action must read the live profile level");
+  assert.ok(s.includes("status, sanctions_hits"), "the approve action must read the case status");
+  assert.ok(s.includes("verificationLevel:"), "the approve action must pass the level to the gate");
 });
 
 test("18: the admin approve action calls the publication gate", () => {

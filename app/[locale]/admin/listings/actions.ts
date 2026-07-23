@@ -82,17 +82,20 @@ export async function decideListingAction(formData: FormData): Promise<void> {
         ? { qualification: qualification || null, limitations: limitations || null }
         : null;
 
-    // The submitter's own business verification, and the sanctions state on it.
+    // The submitter's LIVE business-verification state: the profile's current
+    // level (a re-screen suspension drops it) and the bound record's purpose,
+    // status and sanctions. A bound id alone is not enough to publish.
     const { data: profile } = await adminSb
       .from("profiles")
-      .select("business_verification_id")
+      .select("business_verification_id, verification_level")
       .eq("id", listing.user_id)
       .maybeSingle();
-    let verification: { purpose: string | null; sanctions_hits: unknown } | null = null;
+    let verification: { purpose: string | null; status: string | null; sanctions_hits: unknown } | null =
+      null;
     if (profile?.business_verification_id) {
       const { data: v } = await adminSb
         .from("verifications")
-        .select("purpose, sanctions_hits")
+        .select("purpose, status, sanctions_hits")
         .eq("id", profile.business_verification_id)
         .maybeSingle();
       verification = v ?? null;
@@ -101,6 +104,7 @@ export async function decideListingAction(formData: FormData): Promise<void> {
     const gate = checkPublicationGate(
       { ...listing, desk_version: deskVersion } as never,
       {
+        verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
         business_verification_id: profile?.business_verification_id ?? null,
         verification: verification as never,
       },

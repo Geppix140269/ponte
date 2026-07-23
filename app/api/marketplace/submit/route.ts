@@ -5,7 +5,11 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendListingReceived, sendBrokerageSubmission } from "@/lib/email";
 import { getHsCode, isHsCatalogReady } from "@/lib/hs";
 import { isoCode } from "@/lib/listing-terms";
-import { hasMaterialChange, type MaterialFacts } from "@/lib/listings/material-change";
+import {
+  editReturnsToReview,
+  ownsListing,
+  type MaterialFacts,
+} from "@/lib/listings/material-change";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,37 +45,13 @@ function flexibilityOf(v: unknown): Record<string, string> {
   return out;
 }
 
-// The member-confirmed fact-only draft, shaped and clipped. This is stored as
-// the INTERNAL draft (ai_version) for the desk to review; it is never shown to
-// the public, which reads the desk-approved text the admin writes. So it is
-// enough to shape it defensively here rather than regenerate it server-side.
-function writeupOf(v: unknown): Record<string, unknown> | null {
-  if (!v || typeof v !== "object") return null;
-  const r = v as Record<string, unknown>;
-  const str = (x: unknown, max: number) => (typeof x === "string" ? x.slice(0, max) : "");
-  const arr = (x: unknown, max: number, each: number) =>
-    Array.isArray(x) ? x.map((s) => str(s, each)).filter(Boolean).slice(0, max) : [];
-  const description = str(r.description, 1400);
-  if (!description) return null;
-  return {
-    description,
-    strengths: arr(r.strengths, 4, 200),
-    open_points: Array.isArray(r.open_points)
-      ? r.open_points
-          .map((p) => {
-            const o = (p ?? {}) as Record<string, unknown>;
-            const text = str(o.text ?? p, 300);
-            const ref = str(o.field_ref, 40);
-            return text ? { text, field_ref: ref || null } : null;
-          })
-          .filter(Boolean)
-          .slice(0, 4)
-      : [],
-    non_negotiables: str(r.non_negotiables, 900),
-    summary_line: str(r.summary_line, 90),
-    share_text: str(r.share_text, 180),
-  };
-}
+// NOTE ON THE WRITE-UP: this route deliberately does NOT accept ai_version,
+// share_text or any other purportedly AI-generated draft from the client. A
+// direct request could otherwise forge content the admin queue would present as
+// Ponte's fact-only engine output. The only writer of ai_version is the admin's
+// server-side generateWriteupAction, which regenerates it from the persisted
+// structured facts. The composer's write-up is a preview for the member and is
+// never persisted.
 
 // Metadata only. Photos, videos and documents are uploaded by the browser
 // straight to Supabase Storage (serverless request bodies are too small
@@ -196,22 +176,6 @@ export async function POST(req: NextRequest) {
     details,
   };
 
-  // The member-confirmed fact-only draft and its provenance, when the composer
-  // generated one. Stored as the internal draft the desk reviews.
-  const draftWriteup = writeupOf(body.writeup);
-  const meta = (body.writeup_meta ?? {}) as Record<string, unknown>;
-  if (draftWriteup) {
-    fields.ai_version = {
-      writeup: draftWriteup,
-      prompt_version: clean(meta.prompt_version, 40) || null,
-      model: clean(meta.model, 60) || null,
-    };
-    fields.prompt_version = clean(meta.prompt_version, 40) || null;
-    fields.model = clean(meta.model, 60) || null;
-    fields.writeup_at = new Date().toISOString();
-    fields.share_text = (draftWriteup.share_text as string) || null;
-  }
-
   const supabase = createClient();
 
   // -------- Owner edit: update in place, and return an approved listing to
@@ -225,8 +189,9 @@ export async function POST(req: NextRequest) {
       .eq("id", editId)
       .maybeSingle();
 
-    if (!existing || existing.user_id !== user.id) {
-      // RLS also guards this; the explicit check keeps the message honest.
+    // Ownership is enforced server-side (RLS also guards it). A listing that is
+    // not the caller's own cannot be edited, so cross-account edits are refused.
+    if (!existing || !ownsListing(existing.user_id, user.id)) {
       return NextResponse.json(
         { error: "That listing cannot be edited from this account." },
         { status: 404 },
@@ -243,33 +208,48 @@ export async function POST(req: NextRequest) {
       if (update[k] === null) delete update[k];
     }
 
-    // A material change to an already-approved opportunity pulls it back to the
-    // desk: the public version and its decision are no longer valid until it is
-    // reviewed again. A non-material edit (description, notes) leaves it live.
-    // The preserved fields keep their stored value for this comparison, so a
-    // field the edit simply did not carry is never counted as a change.
+    // Any change to member-controlled public content or approval evidence pulls
+    // an approved opportunity back to the desk: its public version and its
+    // decision are no longer valid until reviewed again. The preserved fields
+    // keep their stored value for this comparison, so a field the edit did not
+    // carry is never counted as a change. assetsChanged flags a media/document
+    // change, which a field diff cannot see.
     const afterForCompare: Record<string, unknown> = { ...fields };
     for (const k of preserved) {
       if (afterForCompare[k] === null) {
         afterForCompare[k] = (existing as Record<string, unknown>)[k];
       }
     }
-    const materialChanged = hasMaterialChange(
-      existing as MaterialFacts,
-      afterForCompare as MaterialFacts,
-    );
+    const assetsChanged = body.assetsChanged === true;
     let returnedToReview = false;
     if (isDraft) {
       update.status = "draft";
-    } else if (existing.status === "approved" && materialChanged) {
+    } else if (
+      editReturnsToReview({
+        priorStatus: existing.status,
+        before: existing as MaterialFacts,
+        after: afterForCompare as MaterialFacts,
+        assetsChanged,
+      })
+    ) {
+      // Clear every piece of approval-specific state so none of it survives the
+      // re-review: the decision, its metadata, the desk-approved public text,
+      // the reconfirmation stamp and any stale generated draft.
       update.status = "submitted";
       update.decided_at = null;
-      update.desk_version = null; // public text must be re-authored
+      update.decision_note = null;
+      update.desk_version = null;
+      update.reconfirmed_at = null;
+      update.ai_version = null;
+      update.writeup_at = null;
+      update.share_text = null;
+      update.prompt_version = null;
+      update.model = null;
       returnedToReview = true;
     } else if (existing.status === "draft") {
       update.status = "submitted";
     }
-    // else: an approved listing edited without a material change stays approved.
+    // else: an approved listing edited with no reviewable change stays approved.
 
     const { error: updErr } = await supabase.from("listings").update(update).eq("id", editId);
     if (updErr) {

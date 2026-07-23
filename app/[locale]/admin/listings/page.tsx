@@ -176,14 +176,18 @@ export default async function AdminListingsPage({
   // evidence panel. Batched to avoid a query per card: user -> bound record id,
   // then id -> the verification snapshot.
   const bvidByUser = new Map<string, string | null>();
+  const levelByUser = new Map<string, number>();
   {
     const userIds = Array.from(new Set(all.map((l) => l.user_id)));
     if (userIds.length > 0) {
       const { data: profs } = await adminSb
         .from("profiles")
-        .select("id, business_verification_id")
+        .select("id, business_verification_id, verification_level")
         .in("id", userIds);
-      for (const p of profs ?? []) bvidByUser.set(p.id, p.business_verification_id ?? null);
+      for (const p of profs ?? []) {
+        bvidByUser.set(p.id, p.business_verification_id ?? null);
+        levelByUser.set(p.id, Number(p.verification_level ?? 0));
+      }
     }
   }
   const verById = new Map<string, VerRow>();
@@ -204,8 +208,11 @@ export default async function AdminListingsPage({
     const bvid = bvidByUser.get(l.user_id) ?? null;
     const ver = bvid ? verById.get(bvid) ?? null : null;
     return {
+      verificationLevel: levelByUser.get(l.user_id) ?? 0,
       business_verification_id: bvid,
-      verification: ver ? { purpose: ver.purpose, sanctions_hits: ver.sanctions_hits } : null,
+      verification: ver
+        ? { purpose: ver.purpose, status: ver.status, sanctions_hits: ver.sanctions_hits }
+        : null,
       snapshot: ver,
     };
   }
@@ -245,6 +252,7 @@ export default async function AdminListingsPage({
     const gate = checkPublicationGate(
       { ...l, desk_version: l.desk_version } as never,
       {
+        verificationLevel: submitter.verificationLevel,
         business_verification_id: submitter.business_verification_id,
         verification: submitter.verification as never,
       },
@@ -312,6 +320,9 @@ export default async function AdminListingsPage({
                 {ver.subject_country ? ` (${ver.subject_country})` : ""}
               </span>
               <span>Purpose: {ver.purpose ?? "unclassified"}</span>
+              <span>
+                Status: {ver.status ?? "unknown"} · level {submitter.verificationLevel}
+              </span>
               {ver.subject_reg_number && <span>Reg: {ver.subject_reg_number}</span>}
               {ver.subject_vat && <span>VAT: {ver.subject_vat}</span>}
               {ver.subject_lei && <span>LEI: {ver.subject_lei}</span>}
