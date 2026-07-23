@@ -188,7 +188,7 @@ export async function generateMetadata({
     description,
     alternates: alternatesFor(`/marketplace/l/${params.ref}`, params.locale),
     openGraph: {
-      title: `${title} · Ponte`,
+      title: `${title} | Ponte Trade`,
       description,
       url: `${APP_URL}/marketplace/l/${deal.ref}`,
       siteName: "Ponte",
@@ -197,7 +197,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title: `${title} · Ponte`,
+      title: `${title} | Ponte Trade`,
       description,
       ...(image ? { images: [image] } : {}),
     },
