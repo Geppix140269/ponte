@@ -138,10 +138,26 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ## 23 July 2026, Block A: Market Signals separated from Qualified Opportunities
 
-**Status:** code-complete on the launch branch `claude/ponte-block-a-3e085f`.
-**Not yet live**, and cannot be pushed from the OneDrive clone (its remote is
-disabled). Publishing means moving the branch to `C:\dev\ponte`, applying the
-migration, and deploying. One migration is pending: see APPLY-PENDING.md item 2.
+**Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`. The
+migration is **applied to production** (2026-07-23) and the branch is verified
+against it: `npm run verify` green, and a browser/HTTP pass confirmed the board,
+the detail page, the anonymised payload, the disclaimer, approval and
+withdrawal. **Not yet deployed** to the live site: the branch still needs to
+merge to `main`. All 90 imported rows are now `private`, so until an admin
+approves a curated set the public signals board is empty by design.
+
+**A production-affecting bug was found and fixed here** (commit e3cd192): Next's
+Data Cache was pinning the board's Supabase read under its query URL and serving
+a stale empty result even on a force-dynamic page, so an approved signal never
+appeared. `getMarketSignals`, `getMarketSignal` and `getLiveDeals` now call
+`noStore()`. Confirmed by probe: an approval, a withdrawal or an expiry now
+shows immediately.
+
+**Live-site note:** deploying this code stops the homepage reading `desk_radar`,
+and the migration already moved every radar row to `private`, so the old
+homepage radar strip is gone. That is the brief-intended posture. Emergency
+lever if needed before deploy: the rows are `private`, so nothing is public
+regardless of `DESK_RADAR_PUBLIC`.
 
 The Definitive 1 August brief (Block A) splits the two classes of public
 content that commit #11 had merged into one board.

@@ -32,9 +32,15 @@ Until this is applied:
 
 Nothing breaks. It just stays unclassified.
 
-### 2. Block A: the desk_radar signal gate
+### 2. Block A: the desk_radar signal gate — APPLIED 2026-07-23
 
     supabase/migrations/20260723a_desk_radar_signal_gate.sql
+
+**Done.** Applied to production on 2026-07-23 via `db-query.mjs` and verified by
+probe: all 90 rows moved `live` to `private` (none lost), the six new columns
+exist, the status constraint carries the Market Signal vocabulary, the default
+is `private`, and `desk_radar_public_idx` was created. Recorded in
+`schema_migrations`. Left here as a record; the steps below are how it was run.
 
 **Probe first.** Confirm the table and its current status values actually exist
 before running anything:
