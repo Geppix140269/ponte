@@ -2,7 +2,8 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode, parseVolume } from "@/lib/listing-terms";
-import { isNotExpired } from "@/lib/listings/validity";
+import { isPubliclyCurrent } from "@/lib/listings/validity";
+import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -78,7 +79,7 @@ export const SHOWCASE_MIN = 3;
 export const COUNT_MIN = 8;
 
 const LISTING_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, valid_until, created_at";
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, validity_type, valid_until, reconfirmed_at, created_at";
 
 /** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
 function chapterOf(hsCode: string | null): string | null {
@@ -114,12 +115,16 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
       .limit(limit);
     if (error) throw error;
 
-    // Current only: an approved listing past its validity date is not a live
-    // opportunity, so it is dropped here rather than shown as one. A listing
-    // with no date is standing and stays. Same rule the board and detail page
-    // share, so no public surface disagrees about what has expired.
+    // Current only, on two axes. First the listing itself: an approved listing
+    // whose finite validity has passed OR whose 90-day reconfirmation has lapsed
+    // is not live. Then the owner: a member whose business verification is no
+    // longer passing (suspended, failed, dropped below the member level) loses
+    // public visibility for all their listings. Same rules the board and detail
+    // page share, so no public surface disagrees.
     const now = Date.now();
-    const liveRows = (rows ?? []).filter((l) => isNotExpired(l.valid_until, now));
+    const currentRows = (rows ?? []).filter((l) => isPubliclyCurrent(l, now));
+    const eligible = await eligibleOwnerIds(sb, currentRows.map((l) => l.user_id));
+    const liveRows = currentRows.filter((l) => eligible.has(l.user_id));
 
     const deals: LiveDeal[] = liveRows.map((l) => {
       const vol = parseVolume(l.volume);

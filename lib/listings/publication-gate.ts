@@ -139,6 +139,31 @@ export function checkPublicationGate(
   return failures.length ? { ok: false, failures } : { ok: true };
 }
 
+/**
+ * Whether a submitter's member-business verification is CURRENTLY eligible to
+ * keep their approved listings public.
+ *
+ * This is the verification half of the gate, reused as a continuing-currency
+ * check on every public read. It deliberately mirrors gate condition 1: a bound
+ * record, its purpose still member-business, a passing status, and a live
+ * profile level at or above the member floor. A suspended, failed, rejected,
+ * mismatched or level-dropped verification is not eligible, so its owner's
+ * listings drop off the public surfaces even though the listing row itself is
+ * still `approved`.
+ */
+export function isPubliclyEligibleVerification(s: {
+  verificationLevel: number | null;
+  business_verification_id: string | null;
+  verification: { purpose: string | null; status: string | null } | null;
+}): boolean {
+  if (!has(s.business_verification_id)) return false;
+  if (!s.verification) return false;
+  if (!grantsMemberStatus(s.verification.purpose)) return false;
+  if (!PASSING_VERIFICATION_STATUSES.has(s.verification.status ?? "")) return false;
+  if (Number(s.verificationLevel ?? 0) < MEMBER_BUSINESS_MIN_LEVEL) return false;
+  return true;
+}
+
 /** A short, human sentence for each failure, for the admin outcome banner. */
 export function gateFailureLabel(failure: GateFailure): string {
   if (failure.startsWith("missing:")) {

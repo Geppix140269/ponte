@@ -1,8 +1,10 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { checkPublicationGate } from "@/lib/listings/publication-gate";
 import {
   sendListingReceived,
   sendBrokerageSubmission,
@@ -46,6 +48,70 @@ export async function submitDraftAction(formData: FormData): Promise<void> {
   ]);
 
   revalidatePath("/marketplace");
+}
+
+/**
+ * An owner reconfirms their own approved listing without desk re-review.
+ *
+ * Permitted only as a pure re-stamp (nothing is edited here) AND only when the
+ * complete live publication gate still passes: the member-business verification
+ * must still be current and passing, the required facts and desk-approved public
+ * text still present, the validity still declared and not lapsed. If the gate
+ * fails, the reconfirm is refused and the listing needs desk review instead. On
+ * success the 90-day reconfirmation clock resets and it returns to the board.
+ */
+export async function reconfirmListingAction(formData: FormData): Promise<void> {
+  const user = await getUser();
+  if (!user) redirect("/login?next=/marketplace");
+  const id = String(formData.get("id") || "");
+  if (!id) redirect("/marketplace");
+
+  const adminSb = createAdminClient();
+  const { data: listing } = await adminSb
+    .from("listings")
+    .select(
+      "id, user_id, status, type, product, quantity, unit, frequency, payment_terms, submitter_role, chain_depth, validity_type, valid_until, desk_version",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  // Ownership and state: only the owner may reconfirm, and only an approved one.
+  if (!listing || listing.user_id !== user.id || listing.status !== "approved") {
+    redirect("/marketplace");
+  }
+
+  const { data: profile } = await adminSb
+    .from("profiles")
+    .select("business_verification_id, verification_level")
+    .eq("id", user.id)
+    .maybeSingle();
+  let verification:
+    | { purpose: string | null; status: string | null; sanctions_hits: unknown }
+    | null = null;
+  if (profile?.business_verification_id) {
+    const { data: v } = await adminSb
+      .from("verifications")
+      .select("purpose, status, sanctions_hits")
+      .eq("id", profile.business_verification_id)
+      .maybeSingle();
+    verification = v ?? null;
+  }
+
+  const gate = checkPublicationGate(listing as never, {
+    verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    business_verification_id: profile?.business_verification_id ?? null,
+    verification: verification as never,
+  });
+  if (!gate.ok) redirect("/marketplace?rc=blocked");
+
+  await adminSb
+    .from("listings")
+    .update({ reconfirmed_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .eq("status", "approved");
+
+  revalidatePath("/marketplace");
+  redirect("/marketplace?rc=ok");
 }
 
 /**

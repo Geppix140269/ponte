@@ -15,9 +15,14 @@
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { checkPublicationGate, type GateListing, type GateSubmitter } from "../publication-gate";
+import {
+  checkPublicationGate,
+  isPubliclyEligibleVerification,
+  type GateListing,
+  type GateSubmitter,
+} from "../publication-gate";
 import { meetsApprovalMinimum } from "../approval-minimum";
-import { isListingCurrent, isNotExpired } from "../validity";
+import { isListingCurrent, isNotExpired, isPubliclyCurrent, reconfirmationLapsed } from "../validity";
 import {
   hasMaterialChange,
   changedMaterialFields,
@@ -250,6 +255,93 @@ test("isListingCurrent is stricter: undeclared is not current", () => {
   assert.equal(isListingCurrent(null, null, NOW), false);
 });
 
+// --- 90-day reconfirmation currency for public visibility -------------------
+
+const DAY = 24 * 60 * 60 * 1000;
+
+test("reconfirmationLapsed: fresh is fine, over 90 days is lapsed, missing is lapsed", () => {
+  assert.equal(reconfirmationLapsed(new Date(NOW - 10 * DAY).toISOString(), NOW), false);
+  assert.equal(reconfirmationLapsed(new Date(NOW - 89 * DAY).toISOString(), NOW), false);
+  assert.equal(reconfirmationLapsed(new Date(NOW - 91 * DAY).toISOString(), NOW), true);
+  assert.equal(reconfirmationLapsed(null, NOW), true);
+  assert.equal(reconfirmationLapsed("not-a-date", NOW), true);
+});
+
+test("a standing listing is hidden once its reconfirmation lapses", () => {
+  const fresh = { valid_until: null, reconfirmed_at: new Date(NOW - 10 * DAY).toISOString() };
+  const stale = { valid_until: null, reconfirmed_at: new Date(NOW - 91 * DAY).toISOString() };
+  const never = { valid_until: null, reconfirmed_at: null };
+  assert.equal(isPubliclyCurrent(fresh, NOW), true);
+  assert.equal(isPubliclyCurrent(stale, NOW), false);
+  assert.equal(isPubliclyCurrent(never, NOW), false);
+});
+
+test("the earlier of validity and reconfirmation controls a finite listing", () => {
+  // Reconfirmed today, but the finite date has passed: hidden by valid_until.
+  assert.equal(
+    isPubliclyCurrent(
+      { valid_until: "2026-07-01", reconfirmed_at: new Date(NOW).toISOString() },
+      NOW,
+    ),
+    false,
+  );
+  // Finite date far off, but reconfirmation lapsed: hidden by reconfirmation.
+  assert.equal(
+    isPubliclyCurrent(
+      { valid_until: "2027-12-31", reconfirmed_at: new Date(NOW - 91 * DAY).toISOString() },
+      NOW,
+    ),
+    false,
+  );
+  // Both still ahead: visible.
+  assert.equal(
+    isPubliclyCurrent(
+      { valid_until: "2026-08-31", reconfirmed_at: new Date(NOW - 10 * DAY).toISOString() },
+      NOW,
+    ),
+    true,
+  );
+});
+
+// --- continuing verification currency on public reads -----------------------
+
+test("a currently passing member-business verification is publicly eligible", () => {
+  assert.equal(
+    isPubliclyEligibleVerification({
+      verificationLevel: 2,
+      business_verification_id: "ver-1",
+      verification: { purpose: "member_business", status: "verified" },
+    }),
+    true,
+  );
+});
+
+test("a dropped level, non-passing status, wrong purpose or no binding is ineligible", () => {
+  const base = {
+    verificationLevel: 2,
+    business_verification_id: "ver-1",
+    verification: { purpose: "member_business", status: "verified" as string | null },
+  };
+  // level dropped by a re-screen suspension
+  assert.equal(isPubliclyEligibleVerification({ ...base, verificationLevel: 1 }), false);
+  // status no longer passing
+  for (const status of ["review", "failed", "rejected", "pending", "needs_selection"]) {
+    assert.equal(
+      isPubliclyEligibleVerification({ ...base, verification: { purpose: "member_business", status } }),
+      false,
+      `${status} must be ineligible`,
+    );
+  }
+  // not the member's own business
+  assert.equal(
+    isPubliclyEligibleVerification({ ...base, verification: { purpose: "counterparty_check", status: "verified" } }),
+    false,
+  );
+  // no bound record / no verification row
+  assert.equal(isPubliclyEligibleVerification({ ...base, business_verification_id: null }), false);
+  assert.equal(isPubliclyEligibleVerification({ ...base, verification: null }), false);
+});
+
 // --- material change returns to review --------------------------------------
 
 test("changing a commercial term is a material change", () => {
@@ -440,14 +532,50 @@ test("17: the admin queue loads the submitter's business verification", () => {
   );
 });
 
-test("23: every public surface drops expired opportunities", () => {
+test("23: every public surface drops not-current opportunities", () => {
   for (const path of [
     "lib/board/live-deals.ts",
     "app/[locale]/marketplace/page.tsx",
     "app/[locale]/marketplace/l/[ref]/page.tsx",
   ]) {
-    assert.ok(src(path).includes("isNotExpired("), `${path} must drop expired rows`);
+    assert.ok(
+      src(path).includes("isPubliclyCurrent("),
+      `${path} must apply the validity + 90-day reconfirmation currency`,
+    );
   }
+});
+
+test("every public surface drops owners whose verification is no longer current", () => {
+  // The board and homepage filter to eligible owners; the detail page checks
+  // the single owner directly.
+  assert.ok(src("lib/board/live-deals.ts").includes("eligibleOwnerIds("));
+  assert.ok(src("app/[locale]/marketplace/page.tsx").includes("eligibleOwnerIds("));
+  assert.ok(
+    src("app/[locale]/marketplace/l/[ref]/page.tsx").includes("isPubliclyEligibleVerification("),
+  );
+});
+
+test("owner reconfirmation re-stamps only if the full live gate still passes", () => {
+  const s = src("app/[locale]/marketplace/actions.ts");
+  assert.ok(s.includes("checkPublicationGate("), "reconfirm must re-check the full gate");
+  assert.ok(s.includes("reconfirmed_at"), "reconfirm must re-stamp reconfirmed_at");
+  assert.ok(s.includes("listing.user_id !== user.id"), "reconfirm must be owner-scoped");
+});
+
+test("the interface supports only asset additions, covered by assetsChanged", () => {
+  const s = src("components/ListingForm.tsx");
+  // The only asset operation the composer offers is inserting newly selected
+  // files, and that is exactly what assetsChanged reports on an edit.
+  assert.ok(
+    s.includes("assetsChanged: isEditing && (media.length > 0 || docs.length > 0)"),
+    "assetsChanged must report newly selected media/documents on an edit",
+  );
+  // There is no removal, replacement or other mutation of stored assets to miss.
+  assert.ok(!/listing_media[\s\S]{0,120}\.(delete|remove)\(/.test(s), "no media removal in the composer");
+  assert.ok(
+    !/listing_documents[\s\S]{0,120}\.(delete|remove)\(/.test(s),
+    "no document removal in the composer",
+  );
 });
 
 test("19: the detail page renders only truthful stored labels", () => {

@@ -8,6 +8,7 @@ import {
 import { vetListing, isAiConfigured, type AiReview } from "@/lib/ai-vet";
 import { draftListingNotes } from "@/lib/listings/decision-notes";
 import { checkPublicationGate, gateFailureLabel } from "@/lib/listings/publication-gate";
+import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
 
 export const dynamic = "force-dynamic";
 
@@ -260,6 +261,10 @@ export default async function AdminListingsPage({
     const ver = submitter.snapshot;
     const sanctions = ver?.sanctions_hits;
     const sanctionsClean = sanctions?.clean === true && (sanctions?.strongCount ?? 0) === 0;
+    // An approved listing that is not publicly current is awaiting reconfirmation
+    // (or its validity passed): kept for audit, but hidden from every public
+    // surface until an owner reconfirms it.
+    const awaitingReconfirmation = l.status === "approved" && !isPubliclyCurrent(l);
     const wu = l.ai_version?.writeup ?? null;
     // The desk-approved public text defaults to the stored version, else a
     // suggestion drawn from the fact-only draft for the admin to edit.
@@ -282,6 +287,15 @@ export default async function AdminListingsPage({
             {l.status} · {new Date(l.created_at).toLocaleDateString("en-GB")}
           </span>
         </div>
+
+        {awaitingReconfirmation && (
+          <p className="mt-2 text-[12px] text-gold">
+            Awaiting reconfirmation, hidden from public surfaces
+            {reconfirmationLapsed(l.reconfirmed_at)
+              ? " (90-day reconfirmation lapsed)."
+              : " (validity date passed)."}
+          </p>
+        )}
 
         <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
           <span>From: {emailById.get(l.user_id) ?? l.user_id.slice(0, 8)}</span>

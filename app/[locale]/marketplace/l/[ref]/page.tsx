@@ -22,7 +22,8 @@ import {
   TIMING_KEYS,
   UNIT_KEYS,
 } from "@/lib/listing-terms";
-import { isNotExpired } from "@/lib/listings/validity";
+import { isPubliclyCurrent } from "@/lib/listings/validity";
+import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
 import { truthfulLabels } from "@/lib/listings/public-labels";
 import type { Locale } from "@/i18n/routing";
 
@@ -97,10 +98,10 @@ async function getDeal(
     .maybeSingle();
   if (!data) return null;
 
-  // Expired opportunities are not public. Same rule the board and the homepage
-  // showcase apply, so a link to a lapsed opportunity 404s rather than showing
-  // a deal that is no longer live.
-  if (!isNotExpired(data.valid_until)) return null;
+  // Not-current opportunities are not public: a passed finite validity OR a
+  // lapsed 90-day reconfirmation both 404 the link. Same rule the board and the
+  // homepage showcase apply.
+  if (!isPubliclyCurrent(data)) return null;
 
   const { data: media } = await adminSb
     .from("listing_media")
@@ -125,11 +126,31 @@ async function getDeal(
     .eq("id", data.user_id)
     .maybeSingle();
 
+  // Continuing verification currency: an approved listing drops off the public
+  // surfaces when its owner's member-business verification is no longer passing
+  // (suspended, failed, dropped below the member level, or no longer bound). It
+  // 404s here for the same reason it vanishes from the board.
+  let verification: { purpose: string | null; status: string | null } | null = null;
+  if (profile?.business_verification_id) {
+    const { data: v } = await adminSb
+      .from("verifications")
+      .select("purpose, status")
+      .eq("id", profile.business_verification_id)
+      .maybeSingle();
+    verification = v ?? null;
+  }
+  const ownerEligible = isPubliclyEligibleVerification({
+    verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    business_verification_id: profile?.business_verification_id ?? null,
+    verification,
+  });
+  if (!ownerEligible) return null;
+
   return {
     deal: data as Deal,
     image,
     trustLevel: profile ? Number(profile.verification_level ?? 0) : null,
-    businessVerified: Boolean(profile?.business_verification_id),
+    businessVerified: ownerEligible,
   };
 }
 

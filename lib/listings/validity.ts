@@ -23,6 +23,19 @@
 export type ValidityType = "dated" | "standing";
 
 /**
+ * Reconfirmation window for approved member listings.
+ *
+ * Policy decision (2026-07): a Qualified Opportunity must be reconfirmed every
+ * 90 days to stay public. A standing listing that is not reconfirmed within the
+ * window becomes publicly ineligible; a finite listing is additionally capped
+ * by its valid_until, and the EARLIER of the two deadlines controls visibility.
+ * This applies to member listings, not Market Signals (which have their own
+ * 90-day-from-signal-date rule).
+ */
+export const RECONFIRM_WINDOW_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
  * The public expiry filter. Matches getLiveDeals exactly: a listing is shown
  * unless it has a valid_until strictly in the past. No date means standing,
  * which stays. An unparseable date is not treated as expired: hiding a row on
@@ -56,4 +69,39 @@ export function isListingCurrent(
   }
   // Validity was never declared. Recorded facts only: this is not current.
   return false;
+}
+
+/**
+ * Whether an approved listing's reconfirmation has lapsed.
+ *
+ * An approved listing carries a reconfirmed_at stamp. Once it is older than the
+ * window, the listing is stale and must not stay public until an owner
+ * reconfirms it. A listing with no stamp at all has never been reconfirmed and
+ * is treated as lapsed, so nothing is shown on the strength of an absent date.
+ */
+export function reconfirmationLapsed(
+  reconfirmedAt: string | null | undefined,
+  now: number = Date.now(),
+): boolean {
+  if (!reconfirmedAt) return true;
+  const t = Date.parse(reconfirmedAt);
+  if (!Number.isFinite(t)) return true;
+  return t + RECONFIRM_WINDOW_DAYS * DAY_MS <= now;
+}
+
+/**
+ * Whether an approved listing may be shown on a public surface.
+ *
+ * The composite of the two deadlines, earlier one controlling: it is hidden if
+ * its finite validity has passed OR its reconfirmation has lapsed. Verification
+ * currency is enforced separately on the owner (see publication-gate), because
+ * it depends on a different record.
+ */
+export function isPubliclyCurrent(
+  row: { valid_until?: string | null; reconfirmed_at?: string | null },
+  now: number = Date.now(),
+): boolean {
+  if (!isNotExpired(row.valid_until, now)) return false;
+  if (reconfirmationLapsed(row.reconfirmed_at, now)) return false;
+  return true;
 }

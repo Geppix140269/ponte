@@ -6,7 +6,7 @@ import { accountBrief, isAiConfigured, type AccountBrief } from "@/lib/ai-vet";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
-import { submitDraftAction, connectDecisionAction } from "./actions";
+import { submitDraftAction, connectDecisionAction, reconfirmListingAction } from "./actions";
 import Reveal from "@/components/Reveal";
 import ProcessFlow from "@/components/ProcessFlow";
 import { alternatesFor } from "@/lib/seo";
@@ -20,7 +20,8 @@ import {
   FREQUENCY_KEYS,
   UNIT_KEYS,
 } from "@/lib/listing-terms";
-import { isNotExpired } from "@/lib/listings/validity";
+import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
+import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import type { Locale } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -92,8 +93,10 @@ const COLUMN_LABEL_STYLE = { letterSpacing: "0.18em" } as const;
 
 export default async function MarketplacePage({
   params,
+  searchParams,
 }: {
   params: { locale: string };
+  searchParams: { rc?: string };
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("marketplace");
@@ -128,6 +131,8 @@ export default async function MarketplacePage({
     status: string;
     created_at: string;
     decision_note: string | null;
+    reconfirmed_at: string | null;
+    valid_until: string | null;
   }[] = [];
 
   // Pending connection requests on the member's own listings.
@@ -136,7 +141,7 @@ export default async function MarketplacePage({
     const supabase = createClient();
     const { data } = await supabase
       .from("listings")
-      .select("id, ref, type, product, status, created_at, decision_note")
+      .select("id, ref, type, product, status, created_at, decision_note, reconfirmed_at, valid_until")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     listings = data ?? [];
@@ -221,13 +226,15 @@ export default async function MarketplacePage({
     volume: string | null;
     incoterm: string | null;
     payment_terms: string | null;
+    validity_type: string | null;
     valid_until: string | null;
+    reconfirmed_at: string | null;
     details: string;
     created_at: string;
     full: boolean;
   };
   const BOARD_COLUMNS =
-    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, valid_until, details, created_at";
+    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, validity_type, valid_until, reconfirmed_at, details, created_at";
   // The board stays hidden from EVERYONE until it has real inventory.
   const BOARD_MIN = Number(process.env.BOARD_MIN_LISTINGS ?? 3);
   // A live count is a claim about size. It is only made once the board is
@@ -263,10 +270,18 @@ export default async function MarketplacePage({
         full: false,
       }));
     }
-    // Current only: an expired approved listing is not a live opportunity, so
-    // it never reaches the public board. Same rule getLiveDeals and the detail
-    // page apply, so the three surfaces cannot disagree about what has expired.
-    board = board.filter((b) => isNotExpired(b.valid_until));
+    // Current only, on both axes: the listing (finite validity not passed AND
+    // reconfirmation not lapsed) and its owner (member-business verification
+    // still passing). Same rules getLiveDeals and the detail page apply, so the
+    // three surfaces cannot disagree about what is live.
+    board = board.filter((b) => isPubliclyCurrent(b));
+    if (board.length > 0) {
+      const eligible = await eligibleOwnerIds(
+        createAdminClient(),
+        board.map((b) => b.user_id),
+      );
+      board = board.filter((b) => eligible.has(b.user_id));
+    }
     approvedCount = board.length;
     if (approvedCount < BOARD_MIN) {
       board = [];
@@ -580,6 +595,17 @@ export default async function MarketplacePage({
             </Link>
           </div>
 
+          {searchParams.rc === "ok" && (
+            <div className="mb-4 rounded-xl border border-positive/40 bg-positive/10 p-4 text-[13px] text-cream">
+              Reconfirmed. The opportunity is current again and back on the public board.
+            </div>
+          )}
+          {searchParams.rc === "blocked" && (
+            <div className="mb-4 rounded-xl border border-negative/40 bg-negative/10 p-4 text-[13px] text-cream">
+              It could not be reconfirmed automatically: it no longer meets the publication criteria (for example your business verification is not current). It needs Ponte review.
+            </div>
+          )}
+
           {brief && (
             <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
               <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
@@ -635,6 +661,20 @@ export default async function MarketplacePage({
                     <p className="mt-2 text-[11px] leading-relaxed text-gray-2/70">
                       Editing a live opportunity{"'"}s terms returns it to Ponte for review before it goes public again.
                     </p>
+                  )}
+                  {l.status === "approved" && reconfirmationLapsed(l.reconfirmed_at) && (
+                    <div
+                      className="mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-4 py-3"
+                      style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
+                    >
+                      <span className="flex-1 text-[12px] leading-relaxed text-cream">
+                        This opportunity is awaiting reconfirmation and is currently hidden from the public board. Reconfirm it if nothing has changed.
+                      </span>
+                      <form action={reconfirmListingAction}>
+                        <input type="hidden" name="id" value={l.id} />
+                        <button className="btn-gold !px-4 !py-2 text-[12px]">Reconfirm</button>
+                      </form>
+                    </div>
                   )}
                   {l.status === "draft" && (
                     <form action={submitDraftAction} className="mt-3">
