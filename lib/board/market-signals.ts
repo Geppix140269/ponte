@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
 import {
@@ -32,6 +33,18 @@ import {
  * A Market Signal never carries a verification level and never links to a
  * member listing: nobody behind it is a Ponte member, and a signal that looks
  * like a Qualified Opportunity is exactly the confusion Block A removes.
+ *
+ * ---------------------------------------------------------------------------
+ * noStore(), and why it is not optional
+ * ---------------------------------------------------------------------------
+ * supabase-js reads through fetch, and Next caches fetch in its Data Cache.
+ * `export const dynamic = "force-dynamic"` on the page does NOT reliably reach
+ * this fetch: the first empty read gets cached under its URL and survives every
+ * later request and even a rebuild, so an admin approves a signal and the board
+ * keeps showing nothing. noStore() opts these reads out of that cache, which is
+ * the correct posture for a board whose whole job is to reflect an approval the
+ * moment it happens. Confirmed by probe: without it, an approved signal never
+ * appears; with it, it appears immediately.
  */
 
 export type { MarketSignal, MarketSignalStatus } from "@/lib/market-signals/logic";
@@ -45,6 +58,7 @@ export { PUBLIC_SIGNAL_COLUMNS, INTERNAL_SIGNAL_COLUMNS } from "@/lib/market-sig
  * named, and only approved, unexpired rows survive the filter.
  */
 export async function getMarketSignals(limit = 60): Promise<MarketSignal[]> {
+  noStore();
   if (!isSupabaseConfigured()) return [];
 
   try {
@@ -84,6 +98,7 @@ export type SignalLookup =
  * such signal at all.
  */
 export async function getMarketSignal(id: string): Promise<SignalLookup> {
+  noStore();
   if (!isSupabaseConfigured()) return { state: "missing" };
 
   try {

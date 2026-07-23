@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode, parseVolume } from "@/lib/listing-terms";
@@ -94,6 +95,11 @@ function chapterOf(hsCode: string | null): string | null {
  * the query entirely, so they cannot reach the client even by accident.
  */
 export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
+  // Never cache the board read. supabase-js reads through fetch, and Next's
+  // Data Cache will otherwise pin the first result under its URL and keep
+  // serving it after an approval or an expiry, even on a force-dynamic page.
+  // See the note in lib/board/market-signals.ts.
+  noStore();
   if (!isSupabaseConfigured()) return [];
 
   try {
