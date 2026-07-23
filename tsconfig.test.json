@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/lib/supabase/server": ["./lib/__mocks__/supabase-server.ts"],
+      "@/lib/auth": ["./lib/__mocks__/auth.ts"],
+      "@/lib/email": ["./lib/__mocks__/email.ts"],
+      "@/lib/rate-limit": ["./lib/__mocks__/rate-limit.ts"],
+      "@/lib/board/market-signals": ["./lib/__mocks__/board-market-signals.ts"],
+      "@/lib/listings/public-filter": ["./lib/__mocks__/public-filter.ts"],
+      "next/server": ["./lib/__mocks__/next-server.ts"],
+      "next/navigation": ["./lib/__mocks__/next-navigation.ts"],
+      "next/cache": ["./lib/__mocks__/next-cache.ts"],
+      "@/*": ["./*"]
+    }
+  }
+}
