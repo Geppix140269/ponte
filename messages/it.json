@@ -289,7 +289,7 @@
   },
   "home": {
     "metaTitle": "Commercio transfrontaliero di merci fisiche, tra controparti verificate",
-    "metaDescription": "Ponte è una bacheca verificata per il commercio transfrontaliero di merci fisiche. Offerte e richieste sono redatte in termini commerciali, circolano in forma anonima e nessuna presentazione avviene prima della firma di un NCNDA. I membri sono controllati su Companies House, VIES, GLEIF e sulle liste di OFAC, UE, ONU e OFSI.",
+    "metaDescription": "Ponte è una bacheca verificata per il commercio transfrontaliero di merci fisiche. Offerte e richieste sono redatte in termini commerciali, circolano in forma anonima e nessuna presentazione avviene prima che entrambe le parti concordino di mettersi in contatto. I membri sono controllati su Companies House, VIES, GLEIF e sulle liste di OFAC, UE, ONU e OFSI.",
     "hero": {
       "eyebrow": "Gratis per ogni membro",
       "title": "Compra e vendi materie prime fisiche in tutto il mondo",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Come avanza un'operazione",
-      "heading": "Formalizzato prima della presentazione."
+      "heading": "Verificato prima di presentare."
     },
     "desk": {
       "eyebrow": "Il desk",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Ogni annuncio <em>verificato</em>. Ogni operazione formalizzata.",
+      "heading": "Ogni annuncio <em>verificato</em>. Ogni controparte controllata.",
       "intro": "Pubblichi ciò che vende o ciò che Le serve, gratis. L'AI e il desk verificano ogni annuncio prima della pubblicazione, Lei resta anonimo finché entrambe le parti non accettano il contatto, e il contatto non costa nulla. Vuole l'operazione gestita dall'inizio alla fine? Il desk interviene a commissione di successo o a retainer, solo su Sua richiesta.",
       "newListing": "Nuovo annuncio",
       "signIn": "Accedi per inviare"
@@ -642,7 +642,7 @@
       },
       "anonymous": {
         "title": "Sempre anonimo",
-        "body": "Le controparti vedono l'operazione, mai il Suo nome, finché entrambe le parti non hanno firmato l'NCNDA e le condizioni sulle commissioni."
+        "body": "Le controparti vedono l'operazione, mai il Suo nome, finché entrambe le parti non concordano di mettersi in contatto. Poi ciascuno riceve il contatto dell'altro."
       },
       "free": {
         "title": "Commerciare è gratis",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "Come funziona",
-      "heading": "Cinque passaggi. Una regola: formalizzare prima di presentare."
+      "heading": "Cinque passaggi. Una regola: verificato prima di presentare."
     },
     "board": {
       "eyebrow": "Live adesso",
@@ -833,7 +833,7 @@
       },
       "connect": {
         "label": "Collegate",
-        "micro": "NCNDA firmato, poi la presentazione"
+        "micro": "Presentazione dopo l'accordo di entrambe le parti"
       },
       "close": {
         "label": "Chiusura",
@@ -1061,7 +1061,7 @@
       "trustLabel": "Indice di fiducia",
       "clear": "Registri e sanzioni senza rilievi",
       "readOn": "letto il {date}",
-      "openRoom": "Apri una sala trattativa",
+      "openRoom": "Richiedi una presentazione",
       "sampleNote": "Esempio di formato. Mostra come si scrive una trattativa su Ponte. Non è un annuncio live."
     },
     "verify": {
@@ -1073,8 +1073,8 @@
       "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
       "identifiers": "IVA e LEI",
       "identifiersDetail": "VIES, GLEIF, datati alla lettura",
-      "anonymous": "Anonimo fino all'NCNDA",
-      "anonymousDetail": "Documentato prima di presentare",
+      "anonymous": "Anonimo fino all'accordo",
+      "anonymousDetail": "Presentazione solo dopo l'accordo",
       "cta": "Cosa verifica ogni livello"
     },
     "ai": {
@@ -1089,7 +1089,7 @@
       "heading": "Iscriversi è gratis. Nessuna commissione sulle trattative che chiudi da solo.",
       "body": "Pubblicare un'offerta o una richiesta, leggere la bacheca e metterti in contatto con una controparte non costano nulla. Verifica e intelligence si pagano in crediti, e il desk viene pagato solo se gli chiedi di intermediare.",
       "verify": "Verificare una controparte",
-      "room": "Assistenza in sala",
+      "room": "Assistenza all'operazione",
       "report": "Rapporto approfondito",
       "credits": "{n} crediti",
       "credit": "{n} credito",

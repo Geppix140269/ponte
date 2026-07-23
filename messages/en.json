@@ -331,7 +331,7 @@
   },
   "home": {
     "metaTitle": "Cross border trade in physical goods, between verified counterparties",
-    "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made before an NCNDA is signed. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
+    "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made until both sides agree to connect. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
     "hero": {
       "eyebrow": "Free for every member",
       "title": "Buy and sell physical commodities, worldwide",
@@ -422,7 +422,7 @@
     },
     "flow": {
       "eyebrow": "How a deal moves",
-      "heading": "Papered before introduced."
+      "heading": "Checked before introduced."
     },
     "desk": {
       "eyebrow": "The desk",
@@ -464,7 +464,7 @@
       "trustLabel": "Trust score",
       "clear": "Registry and sanctions clear",
       "readOn": "read {date}",
-      "openRoom": "Open a deal room",
+      "openRoom": "Request an introduction",
       "sampleNote": "Format example. It shows how a deal is written on Ponte. It is not a live listing."
     },
     "verify": {
@@ -476,8 +476,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "VAT and LEI",
       "identifiersDetail": "VIES, GLEIF, dated at read",
-      "anonymous": "Anonymous until NCNDA",
-      "anonymousDetail": "Papered before introduced",
+      "anonymous": "Anonymous until you agree",
+      "anonymousDetail": "Introduced only after both agree",
       "cta": "What each level checks"
     },
     "ai": {
@@ -492,7 +492,7 @@
       "heading": "Free to join. No commission on deals you close yourselves.",
       "body": "Posting an offer or a requirement, reading the board and connecting with a counterparty cost nothing. Verification and intelligence are paid in credits, and the desk is paid only if you ask it to broker a deal.",
       "verify": "Verify a counterparty",
-      "room": "Deal room assist",
+      "room": "Managed deal support",
       "report": "Deep report",
       "credits": "{n} credits",
       "credit": "{n} credit",
@@ -728,7 +728,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every listing <em>vetted</em>. Every deal papered.",
+      "heading": "Every listing <em>vetted</em>. Every counterparty checked.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
@@ -740,7 +740,7 @@
       },
       "anonymous": {
         "title": "Anonymized always",
-        "body": "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms."
+        "body": "Counterparties see the deal, never your name, until both sides agree to connect. Then you each receive the other's contact."
       },
       "free": {
         "title": "Free to trade",
@@ -749,7 +749,7 @@
     },
     "how": {
       "eyebrow": "How it works",
-      "heading": "Five steps. One rule: papered before introduced."
+      "heading": "Five steps. One rule: checked before introduced."
     },
     "board": {
       "eyebrow": "Live now",
@@ -923,7 +923,7 @@
       },
       "connect": {
         "label": "Connected",
-        "micro": "NCNDA signed, then introduced"
+        "micro": "Introduced after both sides agree"
       },
       "close": {
         "label": "Closing",

@@ -289,7 +289,7 @@
   },
   "home": {
     "metaTitle": "Grenzüberschreitender Handel mit physischen Waren, zwischen geprüften Kontrahenten",
-    "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der Unterzeichnung eines NCNDA erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
+    "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der beidseitigen Zustimmung zum Kontakt erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
     "hero": {
       "eyebrow": "Kostenlos für jedes Mitglied",
       "title": "Physische Rohstoffe weltweit kaufen und verkaufen",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Wie ein Geschäft läuft",
-      "heading": "Schriftlich geregelt vor der Vermittlung."
+      "heading": "Geprüft vor der Vorstellung."
     },
     "desk": {
       "eyebrow": "Der Desk",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Marktplatz",
-      "heading": "Jedes Inserat <em>geprüft</em>. Jedes Geschäft schriftlich geregelt.",
+      "heading": "Jedes Inserat <em>geprüft</em>. Jede Gegenpartei überprüft.",
       "intro": "Stellen Sie kostenlos ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk verifizieren jedes Inserat, bevor es online geht, Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, und die Kontaktaufnahme kostet nichts. Sie möchten das Geschäft von Anfang bis Ende betreut wissen? Der Desk übernimmt gegen Erfolgshonorar oder Retainer, nur wenn Sie es wünschen.",
       "newListing": "Neues Inserat",
       "signIn": "Zum Einreichen anmelden"
@@ -642,7 +642,7 @@
       },
       "anonymous": {
         "title": "Immer anonymisiert",
-        "body": "Die Gegenseite sieht das Geschäft, niemals Ihren Namen, bis beide Seiten NCNDA und Honorarbedingungen unterzeichnet haben."
+        "body": "Die Gegenseite sieht das Geschäft, niemals Ihren Namen, bis beide Seiten dem Kontakt zustimmen. Danach erhalten Sie jeweils die Kontaktdaten des anderen."
       },
       "free": {
         "title": "Kostenlos handeln",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "So funktioniert es",
-      "heading": "Fünf Schritte. Eine Regel: schriftlich geregelt vor der Vermittlung."
+      "heading": "Fünf Schritte. Eine Regel: geprüft vor der Vorstellung."
     },
     "board": {
       "eyebrow": "Jetzt live",
@@ -833,7 +833,7 @@
       },
       "connect": {
         "label": "Verbunden",
-        "micro": "NCNDA unterzeichnet, dann Vermittlung"
+        "micro": "Vorstellung nach beidseitiger Zustimmung"
       },
       "close": {
         "label": "Abschluss",
@@ -1061,7 +1061,7 @@
       "trustLabel": "Vertrauenswert",
       "clear": "Register und Sanktionslisten ohne Befund",
       "readOn": "gelesen am {date}",
-      "openRoom": "Deal-Room öffnen",
+      "openRoom": "Vorstellung anfordern",
       "sampleNote": "Formatbeispiel. Es zeigt, wie ein Geschäft auf Ponte geschrieben wird. Kein aktives Inserat."
     },
     "verify": {
@@ -1073,8 +1073,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "USt-IdNr. und LEI",
       "identifiersDetail": "VIES, GLEIF, mit Lesedatum",
-      "anonymous": "Anonym bis zum NCNDA",
-      "anonymousDetail": "Papiere vor der Vorstellung",
+      "anonymous": "Anonym bis zur Zustimmung",
+      "anonymousDetail": "Vorstellung erst nach Zustimmung",
       "cta": "Was jede Stufe prüft"
     },
     "ai": {
@@ -1089,7 +1089,7 @@
       "heading": "Beitritt kostenlos. Keine Provision auf Geschäfte, die Sie selbst abschließen.",
       "body": "Ein Angebot oder ein Gesuch einstellen, das Board lesen und eine Gegenpartei kontaktieren kosten nichts. Prüfung und Intelligence werden in Credits bezahlt, und das Desk nur, wenn Sie es mit der Vermittlung beauftragen.",
       "verify": "Gegenpartei prüfen",
-      "room": "Deal-Room-Unterstützung",
+      "room": "Begleitung der Transaktion",
       "report": "Tiefenbericht",
       "credits": "{n} Credits",
       "credit": "{n} Credit",

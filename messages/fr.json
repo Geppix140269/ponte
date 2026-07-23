@@ -289,7 +289,7 @@
   },
   "home": {
     "metaTitle": "Commerce transfrontalier de marchandises physiques, entre contreparties vérifiées",
-    "metaDescription": "Ponte est un tableau vérifié pour le commerce transfrontalier de marchandises physiques. Les offres et les besoins sont rédigés en termes commerciaux, diffusés anonymement, et aucune mise en relation n'a lieu avant la signature d'un NCNDA. Les membres sont criblés au regard de Companies House, VIES, GLEIF et des listes OFAC, UE, ONU et OFSI.",
+    "metaDescription": "Ponte est un tableau vérifié pour le commerce transfrontalier de marchandises physiques. Les offres et les besoins sont rédigés en termes commerciaux, diffusés anonymement, et aucune mise en relation n'a lieu avant que les deux parties acceptent de se connecter. Les membres sont criblés au regard de Companies House, VIES, GLEIF et des listes OFAC, UE, ONU et OFSI.",
     "hero": {
       "eyebrow": "Gratuit pour tous les membres",
       "title": "Achetez et vendez des matières premières physiques dans le monde entier",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Comment une affaire avance",
-      "heading": "Contrats signés avant toute mise en relation."
+      "heading": "Vérifié avant la mise en relation."
     },
     "desk": {
       "eyebrow": "Le desk",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Place de marché",
-      "heading": "Chaque annonce <em>vérifiée</em>. Chaque affaire sous contrat.",
+      "heading": "Chaque annonce <em>vérifiée</em>. Chaque contrepartie contrôlée.",
       "intro": "Publiez ce que vous vendez ou ce que vous cherchez, gratuitement. L’IA et le desk vérifient chaque annonce avant sa mise en ligne, vous restez anonyme jusqu’à l’accord des deux parties, et la mise en relation ne coûte rien. Vous voulez une affaire gérée de bout en bout ? Le desk intervient sur commission de réussite ou forfait mensuel, uniquement à votre demande.",
       "newListing": "Nouvelle annonce",
       "signIn": "Se connecter pour soumettre"
@@ -642,7 +642,7 @@
       },
       "anonymous": {
         "title": "Anonyme en permanence",
-        "body": "Les contreparties voient l’affaire, jamais votre nom, tant que les deux parties n’ont pas signé le NCNDA et les conditions de commission."
+        "body": "Les contreparties voient l’affaire, jamais votre nom, tant que les deux parties n’ont pas accepté de se mettre en relation. Ensuite, chacun reçoit le contact de l’autre."
       },
       "free": {
         "title": "Gratuit pour négocier",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "Comment ça marche",
-      "heading": "Cinq étapes. Une règle : contrats signés avant toute mise en relation."
+      "heading": "Cinq étapes. Une règle : vérifié avant la mise en relation."
     },
     "board": {
       "eyebrow": "En direct",
@@ -833,7 +833,7 @@
       },
       "connect": {
         "label": "Mise en relation",
-        "micro": "NCNDA signé, puis présentation"
+        "micro": "Présentation après l’accord des deux parties"
       },
       "close": {
         "label": "Closing",
@@ -1061,7 +1061,7 @@
       "trustLabel": "Indice de confiance",
       "clear": "Registres et sanctions sans réserve",
       "readOn": "lu le {date}",
-      "openRoom": "Ouvrir une salle de négociation",
+      "openRoom": "Demander une mise en relation",
       "sampleNote": "Exemple de format. Il montre comment une affaire s'écrit sur Ponte. Ce n'est pas une annonce en direct."
     },
     "verify": {
@@ -1073,8 +1073,8 @@
       "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
       "identifiers": "TVA et LEI",
       "identifiersDetail": "VIES, GLEIF, datés à la lecture",
-      "anonymous": "Anonyme jusqu'au NCNDA",
-      "anonymousDetail": "Documenté avant présentation",
+      "anonymous": "Anonyme jusqu’à l’accord",
+      "anonymousDetail": "Présentation seulement après accord",
       "cta": "Ce que vérifie chaque niveau"
     },
     "ai": {
@@ -1089,7 +1089,7 @@
       "heading": "Adhésion gratuite. Aucune commission sur les affaires que vous concluez vous-même.",
       "body": "Publier une offre ou une demande, lire le tableau et entrer en relation avec une contrepartie ne coûtent rien. La vérification et l'intelligence se paient en crédits, et le desk n'est rémunéré que si vous lui demandez d'intermédier.",
       "verify": "Vérifier une contrepartie",
-      "room": "Assistance en salle",
+      "room": "Accompagnement de l’opération",
       "report": "Rapport approfondi",
       "credits": "{n} crédits",
       "credit": "{n} crédit",

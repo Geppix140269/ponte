@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { formatPosted } from "@/lib/listing-terms";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
 import SignalDisclaimer from "@/components/signals/SignalDisclaimer";
+import InvestigateButton from "@/components/signals/InvestigateButton";
 import {
   SIGNALS_NAV_LABEL,
   SIGNAL_KNOWN_HEADING,
@@ -130,23 +131,18 @@ function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
           </ul>
         </section>
 
-        {/* Primary and contextual CTA. Block A routes the ask to the Desk; Block
-            D replaces this with the structured investigation request behind the
-            account gate. Neither reveals a third party. */}
+        {/* Primary and contextual CTA. Both open the structured investigation
+            request behind the account gate (brief Block D). Neither reveals or
+            contacts the third party behind the signal. The secondary is the
+            same request, role-primed for the side that would respond. */}
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href={`/contact?signal=${signal.id}`}
-            className="inline-flex items-center justify-center gap-2 rounded-[15px] bg-lime px-6 py-[15px] text-[15px] font-bold text-obsidian shadow-lime transition-transform hover:-translate-y-px"
-          >
-            {ASK_PONTE_CTA}
-            <Icon name="chevron" size={16} />
-          </Link>
-          <Link
-            href={`/contact?signal=${signal.id}&role=${signal.side === "requirement" ? "supplier" : "buyer"}`}
-            className="inline-flex items-center justify-center rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink transition-colors hover:bg-white/10"
-          >
-            {secondaryCtaFor(signal.side)}
-          </Link>
+          <InvestigateButton signalId={signal.id} label={ASK_PONTE_CTA} />
+          <InvestigateButton
+            signalId={signal.id}
+            label={secondaryCtaFor(signal.side)}
+            variant="secondary"
+            initialType={signal.side === "requirement" ? "supplier" : "buyer"}
+          />
         </div>
       </div>
     </div>

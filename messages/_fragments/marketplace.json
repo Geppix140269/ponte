@@ -19,7 +19,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every listing <em>vetted</em>. Every deal papered.",
+      "heading": "Every listing <em>vetted</em>. Every counterparty checked.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
@@ -31,7 +31,7 @@
       },
       "anonymous": {
         "title": "Anonymized always",
-        "body": "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms."
+        "body": "Counterparties see the deal, never your name, until both sides agree to connect. Then you each receive the other's contact."
       },
       "free": {
         "title": "Free to trade",
@@ -40,7 +40,7 @@
     },
     "how": {
       "eyebrow": "How it works",
-      "heading": "Five steps. One rule: papered before introduced."
+      "heading": "Five steps. One rule: checked before introduced."
     },
     "board": {
       "eyebrow": "Live now",

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { isAdminSettableStatus } from "@/lib/signals/admin-status";
 
 /**
  * Admin decisions on a Market Signal (Definitive 1 August brief, Block A).
@@ -88,9 +89,26 @@ export async function approveSignalAction(formData: FormData): Promise<void> {
 }
 
 /**
- * Move a signal to a non-public status: 'private' (unpublish), 'unavailable'
- * (learned it is not current), or 'withdrawn' (removed for source, legal or
- * quality reason). None of these is public, so the board drops it at once.
+ * Move a signal along its investigation lifecycle (brief Block D):
+ *
+ *   private              unpublish, back to the holding state
+ *   under_investigation  the desk has taken the ask up
+ *   confirmed            established and linked to a Qualified Opportunity
+ *   unavailable          learned it is not current
+ *   expired              aged out / no longer worth pursuing
+ *   withdrawn            removed for source, legal or quality reason
+ *
+ * None of these is the public status ('approved_signal'), so the board drops
+ * the signal at once. Approval to the board is a separate action.
+ *
+ * Confirmation is special: a confirmed signal must CREATE OR LINK a normal
+ * Qualified Opportunity rather than become a public opportunity itself or
+ * inherit a badge (brief Block D, test 10). The admin supplies the reference of
+ * the member's verified listing that carries the reconfirmed requirement, and
+ * it is linked here via promoted_listing_id. Confirmation without a link is
+ * still allowed: the desk may confirm the fact before that member listing
+ * exists (no verified member business exists yet at launch prep), and can link
+ * it later.
  */
 export async function setSignalStatusAction(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
@@ -98,10 +116,9 @@ export async function setSignalStatusAction(formData: FormData): Promise<void> {
 
   const id = String(formData.get("id") || "");
   const status = String(formData.get("status") || "");
+  const listingRef = String(formData.get("listing_ref") || "").trim();
   if (!id) finish("no_id");
-  if (!["private", "unavailable", "withdrawn"].includes(status)) {
-    finish("no_status", status);
-  }
+  if (!isAdminSettableStatus(status)) finish("no_status", status);
 
   const adminSb = createAdminClient();
   const { data: signal } = await adminSb
@@ -111,10 +128,21 @@ export async function setSignalStatusAction(formData: FormData): Promise<void> {
     .maybeSingle();
   if (!signal) finish("no_signal");
 
-  const { error } = await adminSb
-    .from("desk_radar")
-    .update({ status })
-    .eq("id", id);
+  const update: Record<string, unknown> = { status };
+
+  // Confirmation may link a real listing by its reference. Resolve it now so an
+  // admin typo is caught rather than silently storing a broken link.
+  if (status === "confirmed" && listingRef) {
+    const { data: listing } = await adminSb
+      .from("listings")
+      .select("id")
+      .eq("ref", listingRef)
+      .maybeSingle();
+    if (!listing) finish("no_listing", listingRef);
+    update.promoted_listing_id = listing!.id;
+  }
+
+  const { error } = await adminSb.from("desk_radar").update(update).eq("id", id);
   if (error) {
     console.error("[ponte] signal status change failed:", error);
     finish("db_error", error.message);

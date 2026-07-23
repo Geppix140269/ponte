@@ -11,7 +11,7 @@
       "trustLabel": "Trust score",
       "clear": "Registry and sanctions clear",
       "readOn": "read {date}",
-      "openRoom": "Open a deal room",
+      "openRoom": "Request an introduction",
       "sampleNote": "Format example. It shows how a deal is written on Ponte. It is not a live listing."
     },
     "verify": {
@@ -23,8 +23,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "VAT and LEI",
       "identifiersDetail": "VIES, GLEIF, dated at read",
-      "anonymous": "Anonymous until NCNDA",
-      "anonymousDetail": "Papered before introduced",
+      "anonymous": "Anonymous until you agree",
+      "anonymousDetail": "Introduced only after both agree",
       "cta": "What each level checks"
     },
     "ai": {
@@ -39,7 +39,7 @@
       "heading": "Free to join. No commission on deals you close yourselves.",
       "body": "Posting an offer or a requirement, reading the board and connecting with a counterparty cost nothing. Verification and intelligence are paid in credits, and the desk is paid only if you ask it to broker a deal.",
       "verify": "Verify a counterparty",
-      "room": "Deal room assist",
+      "room": "Managed deal support",
       "report": "Deep report",
       "credits": "{n} credits",
       "credit": "{n} credit",

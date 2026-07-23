@@ -289,7 +289,7 @@
   },
   "home": {
     "metaTitle": "Comércio transfronteiriço de mercadorias físicas, entre contrapartes verificadas",
-    "metaDescription": "Ponte é um mural verificado para o comércio transfronteiriço de mercadorias físicas. Ofertas e demandas são escritas em termos comerciais, circulam de forma anônima e nenhuma apresentação é feita antes da assinatura de um NCNDA. Os membros são checados contra Companies House, VIES, GLEIF e as listas da OFAC, da UE, da ONU e do OFSI.",
+    "metaDescription": "Ponte é um mural verificado para o comércio transfronteiriço de mercadorias físicas. Ofertas e demandas são escritas em termos comerciais, circulam de forma anônima e nenhuma apresentação é feita antes de as duas partes concordarem em se conectar. Os membros são checados contra Companies House, VIES, GLEIF e as listas da OFAC, da UE, da ONU e do OFSI.",
     "hero": {
       "eyebrow": "Grátis para todos os membros",
       "title": "Compre e venda commodities físicas em todo o mundo",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Como um negócio avança",
-      "heading": "Documentado antes de apresentar."
+      "heading": "Comprovado antes de apresentar."
     },
     "desk": {
       "eyebrow": "A mesa",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Todo anúncio <em>verificado</em>. Todo negócio documentado.",
+      "heading": "Cada anúncio <em>verificado</em>. Cada contraparte comprovada.",
       "intro": "Publique o que você vende ou o que você precisa, de graça. A IA e a mesa verificam cada anúncio antes de ele entrar no ar, você fica anônimo até as duas partes concordarem em se conectar, e conectar não custa nada. Quer o negócio conduzido de ponta a ponta? A mesa entra por taxa de sucesso ou contrato mensal, só quando você pede.",
       "newListing": "Novo anúncio",
       "signIn": "Entre para enviar"
@@ -642,7 +642,7 @@
       },
       "anonymous": {
         "title": "Sempre anônimo",
-        "body": "As contrapartes veem o negócio, nunca o seu nome, até que as duas partes assinem o NCNDA e os termos de honorários."
+        "body": "As contrapartes veem o negócio, nunca o seu nome, até que as duas partes concordem em conectar-se. Depois, cada um recebe o contacto do outro."
       },
       "free": {
         "title": "Negociar é grátis",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "Como funciona",
-      "heading": "Cinco etapas. Uma regra: documentado antes de apresentar."
+      "heading": "Cinco passos. Uma regra: comprovado antes de apresentar."
     },
     "board": {
       "eyebrow": "Ao vivo agora",
@@ -833,7 +833,7 @@
       },
       "connect": {
         "label": "Conectados",
-        "micro": "NCNDA assinado, depois a apresentação"
+        "micro": "Apresentação após o acordo de ambas as partes"
       },
       "close": {
         "label": "Fechamento",
@@ -1061,7 +1061,7 @@
       "trustLabel": "Índice de confiança",
       "clear": "Registos e sanções sem ocorrências",
       "readOn": "lido em {date}",
-      "openRoom": "Abrir uma sala de negócio",
+      "openRoom": "Pedir uma apresentação",
       "sampleNote": "Exemplo de formato. Mostra como um negócio se escreve na Ponte. Não é um anúncio ao vivo."
     },
     "verify": {
@@ -1073,8 +1073,8 @@
       "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
       "identifiers": "IVA e LEI",
       "identifiersDetail": "VIES, GLEIF, datados na leitura",
-      "anonymous": "Anónimo até ao NCNDA",
-      "anonymousDetail": "Documentado antes de apresentar",
+      "anonymous": "Anónimo até ao acordo",
+      "anonymousDetail": "Apresentação só após o acordo",
       "cta": "O que cada nível verifica"
     },
     "ai": {
@@ -1089,7 +1089,7 @@
       "heading": "Aderir é grátis. Sem comissão nos negócios que fechar sozinho.",
       "body": "Publicar uma oferta ou uma procura, ler o quadro e ligar-se a uma contraparte não custam nada. A verificação e a informação pagam-se em créditos, e a mesa só é paga se lhe pedir para intermediar um negócio.",
       "verify": "Verificar uma contraparte",
-      "room": "Apoio em sala",
+      "room": "Apoio à operação",
       "report": "Relatório aprofundado",
       "credits": "{n} créditos",
       "credit": "{n} crédito",

@@ -22,6 +22,7 @@ import {
 } from "@/lib/listing-terms";
 import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
+import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
 import type { Locale } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -135,8 +136,17 @@ export default async function MarketplacePage({
     valid_until: string | null;
   }[] = [];
 
-  // Pending connection requests on the member's own listings.
-  const pendingByListing = new Map<string, { id: string }[]>();
+  // Pending connection requests on the member's own listings, with the
+  // structured expression of interest the requester sent (brief Block D).
+  type PendingConnection = {
+    id: string;
+    interested_business: string | null;
+    interest_role: string | null;
+    interest_target: string | null;
+    interest_geography: string | null;
+    interest_reason: string | null;
+  };
+  const pendingByListing = new Map<string, PendingConnection[]>();
   if (user) {
     const supabase = createClient();
     const { data } = await supabase
@@ -149,12 +159,21 @@ export default async function MarketplacePage({
     if (listings.length > 0) {
       const { data: conns } = await supabase
         .from("listing_connections")
-        .select("id, listing_id")
+        .select(
+          "id, listing_id, interested_business, interest_role, interest_target, interest_geography, interest_reason",
+        )
         .eq("status", "pending")
         .in("listing_id", listings.map((l) => l.id));
       for (const c of conns ?? []) {
         const arr = pendingByListing.get(c.listing_id) ?? [];
-        arr.push({ id: c.id });
+        arr.push({
+          id: c.id,
+          interested_business: c.interested_business,
+          interest_role: c.interest_role,
+          interest_target: c.interest_target,
+          interest_geography: c.interest_geography,
+          interest_reason: c.interest_reason,
+        });
         pendingByListing.set(c.listing_id, arr);
       }
     }
@@ -698,28 +717,79 @@ export default async function MarketplacePage({
                       <Share2 className="h-3.5 w-3.5" /> {t("mine.shareWhatsApp")}
                     </a>
                   )}
-                  {(pendingByListing.get(l.id) ?? []).map((c, i) => (
-                    <div
-                      key={c.id}
-                      className="mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-4 py-3"
-                      style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
-                    >
-                      <span className="flex-1 text-[13px] text-cream">
-                        {(pendingByListing.get(l.id) ?? []).length > 1
-                          ? t("mine.connect.requestNumbered", { n: i + 1 })
-                          : t("mine.connect.request")}
-                      </span>
-                      <form action={connectDecisionAction} className="flex gap-2">
-                        <input type="hidden" name="id" value={c.id} />
-                        <button name="decision" value="accepted" className="btn-gold !px-4 !py-2 text-[12px]">
-                          {t("mine.connect.accept")}
-                        </button>
-                        <button name="decision" value="declined" className="btn-ghost-light !px-4 !py-2 text-[12px]">
-                          {t("mine.connect.decline")}
-                        </button>
-                      </form>
-                    </div>
-                  ))}
+                  {(pendingByListing.get(l.id) ?? []).map((c, i) => {
+                    const roleLabel = c.interest_role
+                      ? INTEREST_ROLE_LABELS[c.interest_role as InterestRole] ?? c.interest_role
+                      : null;
+                    // A pre-Block-D row carries none of these; fall back to the
+                    // original one-line notice so an old request still reads.
+                    const structured =
+                      c.interested_business ||
+                      c.interest_target ||
+                      c.interest_geography ||
+                      c.interest_reason;
+                    return (
+                      <div
+                        key={c.id}
+                        className="mt-3 rounded-[10px] px-4 py-3"
+                        style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            {structured ? (
+                              <>
+                                <p className="text-[13px] text-cream">
+                                  <span className="text-gold">{c.interested_business || "A vetted member"}</span>
+                                  {roleLabel && (
+                                    <span className="text-gray-2"> · {roleLabel}</span>
+                                  )}
+                                  {" wants to connect."}
+                                </p>
+                                <dl className="mt-2 grid gap-x-4 gap-y-1 text-[12px] text-gray-2 sm:grid-cols-2">
+                                  {c.interest_target && (
+                                    <div>
+                                      <dt className="inline text-gray-2/60">Target: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_target}</dd>
+                                    </div>
+                                  )}
+                                  {c.interest_geography && (
+                                    <div>
+                                      <dt className="inline text-gray-2/60">Geography: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_geography}</dd>
+                                    </div>
+                                  )}
+                                  {c.interest_reason && (
+                                    <div className="sm:col-span-2">
+                                      <dt className="inline text-gray-2/60">Reason for fit: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_reason}</dd>
+                                    </div>
+                                  )}
+                                </dl>
+                                <p className="mt-2 text-[11px] text-gray-2/70">
+                                  Accept and you both receive each other{"'"}s contact. Free.
+                                </p>
+                              </>
+                            ) : (
+                              <span className="text-[13px] text-cream">
+                                {(pendingByListing.get(l.id) ?? []).length > 1
+                                  ? t("mine.connect.requestNumbered", { n: i + 1 })
+                                  : t("mine.connect.request")}
+                              </span>
+                            )}
+                          </div>
+                          <form action={connectDecisionAction} className="flex shrink-0 gap-2">
+                            <input type="hidden" name="id" value={c.id} />
+                            <button name="decision" value="accepted" className="btn-gold !px-4 !py-2 text-[12px]">
+                              {t("mine.connect.accept")}
+                            </button>
+                            <button name="decision" value="declined" className="btn-ghost-light !px-4 !py-2 text-[12px]">
+                              {t("mine.connect.decline")}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
