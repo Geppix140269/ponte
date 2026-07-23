@@ -67,6 +67,16 @@ Until this is applied:
 Nothing on the current site breaks. The radar simply stays private until the
 gate exists and an admin approves individual signals.
 
+### 3. Block B: verification purpose — APPLIED 2026-07-23
+
+    supabase/migrations/20260723b_verification_purpose.sql
+
+**Done.** Applied to production on 2026-07-23 and verified by probe: `verifications.purpose`
+(nullable text, check `null | member_business | counterparty_check`) and
+`profiles.business_verification_id` (nullable uuid FK) both exist, and the seven
+legacy verification rows are all `purpose = NULL` (unclassified, grants nothing).
+Recorded in `schema_migrations`. Additive and reversible (drop the two columns).
+
 ## Checking what has been applied
 
 There is no migration ledger in this project, so the only honest answer comes

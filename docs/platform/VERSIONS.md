@@ -136,6 +136,48 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
+## 23 July 2026, Block B: honest member-business verification
+
+**Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`, committed
+separately on top of Block A. Migration applied to production; `npm run verify`
+green; UI checked. **Not yet deployed** (still needs to merge to `main`).
+
+The defect (brief §3.1): a successful Level 2 check granted the REQUESTER the
+Business Verified badge whatever company they checked, so a member could badge
+themselves off an unrelated company. Block B ties the badge to the member's own
+business.
+
+- **One purpose, one gate.** `verifications.purpose` (`member_business` |
+  `counterparty_check`) is carried from the UI to the row and never inferred
+  from copy. `lib/verification/purpose.ts` holds the pure rule
+  `grantsMemberStatus()`, and the pipeline, the admin queue and the sanctions
+  re-screen all gate their profile writes on it. A counterparty check never
+  touches the requester's level or trust score.
+- **Badge bound to a record.** A member-business pass sets
+  `profiles.business_verification_id`, so the badge is always traceable to the
+  one check it rests on. Re-screen suspends only that badge, only for
+  member-business cases.
+- **Two clear paths.** `/verify` opens on a deliberate choice: Verify my
+  business (with a "This is the business I represent on Ponte" attestation) or
+  Check a counterparty (private, no badge). The account page now shows a
+  Business status card and prompts an unverified member to verify their
+  business.
+
+**Existing-badge audit (§3.4):** no member holds a badge from checking another
+company. All six customers are `unverified`; the only passed verification is the
+admin verifying their own business ("1402 celsius"). Nothing was stripped. That
+one legacy case is `purpose = NULL`; tag it `member_business` and set the admin's
+`business_verification_id` by hand if you want the account card to show it. No
+profile or case was auto-modified.
+
+**Migration** `20260723b_verification_purpose.sql` is additive (two nullable
+columns), applied and probe-verified. Rollback: drop the two columns.
+
+**Not run:** a full paid Level-2 verification end to end (it spends credits and
+calls live registries and the model). The grant/no-grant rule is unit-tested and
+embedded in the gated paths; run one real member-business and one counterparty
+check during the acceptance pass.
+
 ## 23 July 2026, Block A: Market Signals separated from Qualified Opportunities
 
 **Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`. The

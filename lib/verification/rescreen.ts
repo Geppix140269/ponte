@@ -15,6 +15,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { screenSubject } from "@/lib/sanctions/screen";
 import { clearComponent } from "@/lib/verification/trust-score";
+import { grantsMemberStatus } from "@/lib/verification/purpose";
 import { sendAdminNotice } from "@/lib/email";
 
 export type RescreenSummary = {
@@ -42,7 +43,7 @@ export async function rescreenVerified(since: Date): Promise<RescreenSummary> {
   // review is already going to a human.
   const { data: subjects, error } = await sb
     .from("verifications")
-    .select("id, user_id, subject_name, subject_country")
+    .select("id, user_id, subject_name, subject_country, purpose")
     .in("status", ["auto_verified", "verified"]);
 
   if (error) throw new Error(`rescreen query failed: ${error.message}`);
@@ -85,12 +86,27 @@ export async function rescreenVerified(since: Date): Promise<RescreenSummary> {
       })
       .eq("id", row.id);
 
-    if (row.user_id) {
-      await clearComponent(row.user_id, "sanctions_clean");
-      await sb
+    // Pull the member badge only when this case is a member-business
+    // verification AND it is the one the profile's badge actually rests on. A
+    // counterparty check never earned a badge, so a new hit on it routes the
+    // case to review (above) but does not touch the requester's account
+    // (brief §3.2); and a member-business case that is not the badge's basis
+    // must not suspend a badge that another case earned (§3.3).
+    if (row.user_id && grantsMemberStatus(row.purpose)) {
+      const { data: prof } = await sb
         .from("profiles")
-        .update({ verification_level: 1, verified_at: null })
-        .eq("id", row.user_id);
+        .select("business_verification_id")
+        .eq("id", row.user_id)
+        .maybeSingle();
+      const restsOnThisCase =
+        !prof?.business_verification_id || prof.business_verification_id === row.id;
+      if (restsOnThisCase) {
+        await clearComponent(row.user_id, "sanctions_clean");
+        await sb
+          .from("profiles")
+          .update({ verification_level: 1, verified_at: null })
+          .eq("id", row.user_id);
+      }
     }
   }
 

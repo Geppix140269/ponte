@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getBalance, COST_VERIFICATION_L2 } from "@/lib/credits";
 import { runLevel2 } from "@/lib/verification/pipeline";
+import { normalizePurpose } from "@/lib/verification/purpose";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,6 +96,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // The purpose decides whether a pass may badge the requester. It is taken
+  // only from the request body and normalised: anything that is not exactly
+  // 'member_business' is a counterparty check, so a badge is only ever earned
+  // by explicitly declaring this is the member's own business.
+  const purpose = normalizePurpose(body.purpose);
+
   try {
     const outcome = await runLevel2({
       userId: user.id,
@@ -103,6 +110,7 @@ export async function POST(req: NextRequest) {
       regNumber: regNumber || null,
       vat: vat || null,
       lei: lei || null,
+      purpose,
     });
 
     if (outcome.status === "failed" && /insufficient credits/i.test(outcome.reason)) {
