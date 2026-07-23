@@ -1168,5 +1168,14 @@
       "error": "Non riuscito, riprova.",
       "received": "Richiesta ricevuta"
     }
+  },
+  "founding": {
+    "metaTitle": "Invito alla Rete fondatrice",
+    "eyebrow": "Rete fondatrice",
+    "heading": "Sei invitato alla rete fondatrice.",
+    "lead": "Ponte è una rete internazionale di commercio su invito in cui le imprese vengono verificate, le opportunità esaminate e le presentazioni controllate. Esplora ciò che è attivo, o accedi per partecipare.",
+    "ctaExplore": "Esplora le opportunità",
+    "ctaSignIn": "Accedi",
+    "privacy": "Registriamo quale invito ti ha portato, per capire come cresce la rete fondatrice. Viene memorizzato una sola volta nel tuo account, mai condiviso e non influisce mai sulla verifica o sui prezzi."
   }
 }

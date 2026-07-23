@@ -1168,5 +1168,14 @@
       "error": "Falhou, tente novamente.",
       "received": "Pedido recebido"
     }
+  },
+  "founding": {
+    "metaTitle": "Convite para a Rede fundadora",
+    "eyebrow": "Rede fundadora",
+    "heading": "Você foi convidado para a rede fundadora.",
+    "lead": "A Ponte é uma rede internacional de comércio por convite onde as empresas são verificadas, as oportunidades revisadas e as apresentações controladas. Explore o que está ativo, ou entre para participar.",
+    "ctaExplore": "Explorar oportunidades",
+    "ctaSignIn": "Entrar",
+    "privacy": "Registramos qual convite trouxe você, para entender como a rede fundadora cresce. É armazenado uma única vez na sua conta, nunca compartilhado e nunca afeta a verificação ou os preços."
   }
 }

@@ -1168,5 +1168,14 @@
       "error": "Échec, réessayez.",
       "received": "Demande reçue"
     }
+  },
+  "founding": {
+    "metaTitle": "Invitation au Réseau fondateur",
+    "eyebrow": "Réseau fondateur",
+    "heading": "Vous êtes invité au réseau fondateur.",
+    "lead": "Ponte est un réseau international de commerce sur invitation où les entreprises sont vérifiées, les opportunités examinées et les mises en relation contrôlées. Explorez ce qui est en ligne, ou connectez-vous pour participer.",
+    "ctaExplore": "Explorer les opportunités",
+    "ctaSignIn": "Se connecter",
+    "privacy": "Nous notons quelle invitation vous a amené, afin de comprendre comment le réseau fondateur se développe. Elle est enregistrée une seule fois sur votre compte, jamais partagée, et n'affecte jamais la vérification ni les tarifs."
   }
 }

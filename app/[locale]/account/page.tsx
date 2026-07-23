@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { ArrowRight, BadgeCheck, ShieldAlert, UserCircle2 } from "lucide-react";
+import { cookies } from "next/headers";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { referralToPersist, REFERRAL_COOKIE } from "@/lib/founding/referral";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -54,9 +56,30 @@ export default async function AccountPage() {
   const adminSb = createAdminClient();
   const { data: profile } = await adminSb
     .from("profiles")
-    .select("verification_level, verified_at, business_verification_id")
+    .select("verification_level, verified_at, business_verification_id, referral_code")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Founding attribution (Block F): record how this member arrived, exactly
+  // once. The code is attribution only, never read for authorisation,
+  // verification currency or pricing. The write is set-once at the database
+  // layer (guarded on a null column and scoped to this member's own row) and
+  // idempotent, and any failure here must never block the account page, so it
+  // is swallowed. The cookie is left in place; the null guard makes a repeat a
+  // no-op, and it expires on its own.
+  try {
+    const cookieRef = cookies().get(REFERRAL_COOKIE)?.value ?? null;
+    const toStore = referralToPersist(profile?.referral_code ?? null, cookieRef);
+    if (toStore) {
+      await supabase
+        .from("profiles")
+        .update({ referral_code: toStore })
+        .eq("id", user.id)
+        .is("referral_code", null);
+    }
+  } catch {
+    // Attribution is non-critical; never surface a failure to the member.
+  }
 
   let businessCheck:
     | { subject: string; country: string | null; decidedAt: string | null }

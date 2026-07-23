@@ -1168,5 +1168,14 @@
       "error": "Fehlgeschlagen, bitte erneut versuchen.",
       "received": "Anfrage erhalten"
     }
+  },
+  "founding": {
+    "metaTitle": "Einladung zum Gründungsnetzwerk",
+    "eyebrow": "Gründungsnetzwerk",
+    "heading": "Sie sind zum Gründungsnetzwerk eingeladen.",
+    "lead": "Ponte ist ein internationales Handelsnetzwerk auf Einladung, in dem Unternehmen geprüft, Chancen bewertet und Vorstellungen kontrolliert werden. Entdecken Sie, was aktiv ist, oder melden Sie sich an, um teilzunehmen.",
+    "ctaExplore": "Chancen entdecken",
+    "ctaSignIn": "Anmelden",
+    "privacy": "Wir erfassen, welche Einladung Sie gebracht hat, um zu verstehen, wie das Gründungsnetzwerk wächst. Sie wird einmal in Ihrem Konto gespeichert, nie weitergegeben und wirkt sich nie auf Prüfung oder Preise aus."
   }
 }

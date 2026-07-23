@@ -287,6 +287,15 @@
     "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
+  "founding": {
+    "metaTitle": "Founding Network invitation",
+    "eyebrow": "Founding Network",
+    "heading": "You are invited to the founding network.",
+    "lead": "Ponte is an invitation-led international trade network where businesses are checked, opportunities are reviewed, and introductions are controlled. Explore what is live, or sign in to take part.",
+    "ctaExplore": "Explore opportunities",
+    "ctaSignIn": "Sign in",
+    "privacy": "We record which invitation brought you, so we understand how the founding network grows. It is stored once on your account, never shared, and never affects verification or pricing."
+  },
   "gate": {
     "title": {
       "inquiry": "Create your free account to send this inquiry.",

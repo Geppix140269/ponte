@@ -1168,5 +1168,14 @@
       "error": "Error, inténtalo de nuevo.",
       "received": "Solicitud recibida"
     }
+  },
+  "founding": {
+    "metaTitle": "Invitación a la Red fundadora",
+    "eyebrow": "Red fundadora",
+    "heading": "Estás invitado a la red fundadora.",
+    "lead": "Ponte es una red internacional de comercio por invitación donde las empresas se comprueban, las oportunidades se revisan y las presentaciones se controlan. Explora lo que está activo o inicia sesión para participar.",
+    "ctaExplore": "Explorar oportunidades",
+    "ctaSignIn": "Iniciar sesión",
+    "privacy": "Registramos qué invitación te trajo, para entender cómo crece la red fundadora. Se guarda una sola vez en tu cuenta, nunca se comparte y nunca afecta a la verificación ni a los precios."
   }
 }
