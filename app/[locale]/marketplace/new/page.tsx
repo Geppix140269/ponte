@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
-import ListingForm from "@/components/ListingForm";
+import { createClient } from "@/lib/supabase/server";
+import ListingForm, { type ListingInitial } from "@/components/ListingForm";
+import { parseVolume } from "@/lib/listing-terms";
 import { alternatesFor } from "@/lib/seo";
 import type { Locale } from "@/i18n/routing";
 
@@ -25,12 +27,14 @@ export async function generateMetadata({
   };
 }
 
+type ListingType = "offer" | "requirement" | "service";
+
 export default async function NewListingPage({
   params,
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { type?: string; restore?: string };
+  searchParams: { type?: string; restore?: string; edit?: string };
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("marketplace");
@@ -41,6 +45,43 @@ export default async function NewListingPage({
   if (!isSupabaseConfigured()) redirect("/marketplace");
   // No sign-in required to build and preview. The account comes at publish.
   const user = await getUser();
+
+  // Edit mode: load the member's own listing and prefill the composer. An
+  // edit is only offered to the signed-in owner; anything else falls back to a
+  // fresh listing rather than leaking another member's draft.
+  let editId: string | null = null;
+  let initial: ListingInitial | null = null;
+  if (searchParams.edit && user) {
+    const supabase = createClient();
+    const { data: row } = await supabase
+      .from("listings")
+      .select(
+        "id, user_id, type, product, details, volume, quantity, unit, frequency, origin, destination, incoterm, submitter_role, chain_depth, payment_terms, validity_type, valid_until",
+      )
+      .eq("id", searchParams.edit)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (row) {
+      const vol = parseVolume(row.volume);
+      editId = row.id;
+      initial = {
+        type: (row.type as ListingType) ?? "offer",
+        product: row.product ?? "",
+        description: row.details ?? "",
+        qty: row.quantity != null ? String(row.quantity) : vol.quantity ?? "",
+        unit: row.unit ?? vol.unit ?? "MT",
+        freq: row.frequency ?? "One-off",
+        origin: row.origin ?? "",
+        destination: row.destination ?? "",
+        incoterm: row.incoterm ?? "To discuss",
+        role: row.submitter_role ?? "",
+        chain: row.chain_depth ?? "",
+        paymentTerms: row.payment_terms ?? "",
+        validityMode: row.validity_type === "dated" ? "dated" : "standing",
+        validUntil: row.valid_until ?? "",
+      };
+    }
+  }
 
   return (
     <>
@@ -60,9 +101,11 @@ export default async function NewListingPage({
       <section className="container-px pb-24">
         <div className="max-w-2xl">
           <ListingForm
-            initialType={initialType}
+            initialType={initial?.type ?? initialType}
             isAuthed={Boolean(user)}
             restoreDraft={searchParams.restore === "1"}
+            editId={editId}
+            initial={initial}
           />
         </div>
       </section>

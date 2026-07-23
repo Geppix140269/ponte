@@ -15,7 +15,7 @@
       },
       "connect": {
         "label": "Connected",
-        "micro": "NCNDA signed, then introduced"
+        "micro": "Introduced after both sides agree"
       },
       "close": {
         "label": "Closing",

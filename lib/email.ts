@@ -315,8 +315,13 @@ export async function sendVerificationDecision(
 
 export async function sendConnectAccepted(
   to: string,
-  data: { ref: string; product: string; otherEmail: string },
+  data: { ref: string; product: string; otherEmail: string; otherName?: string },
 ): Promise<void> {
+  // The counterparty's business name is revealed here, on acceptance, and never
+  // before (brief Block D follow-up). Shown only when provided.
+  const nameLine = data.otherName
+    ? `<p>Their business: <strong>${data.otherName}</strong>.</p>`
+    : "";
   await send(
     to,
     `You are connected · ${data.ref} | Ponte`,
@@ -324,6 +329,7 @@ export async function sendConnectAccepted(
       <h2 style="margin:0 0 12px">You are connected.</h2>
       <p>Both sides agreed to connect on <strong>${data.ref}</strong> ·
       ${data.product}.</p>
+      ${nameLine}
       <p>Your counterparty: <a href="mailto:${data.otherEmail}" style="color:#D08F18">${data.otherEmail}</a>.
       Reach out directly; connecting through Ponte is free.</p>
       <p style="color:#64748B;font-size:13px">Want the desk on your side of

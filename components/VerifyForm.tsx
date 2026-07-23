@@ -5,12 +5,39 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AlertCircle, BadgeCheck, Clock, ListChecks, ShieldCheck } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { MEMBER_BUSINESS_ATTESTATION } from "@/lib/verification/purpose";
 
 const FIELD =
   "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
 
 const LABEL = "block text-[11px] uppercase text-gray-2";
 const LABEL_STYLE = { letterSpacing: "0.16em" } as const;
+
+/** What this check is for. Only 'member_business' can move the member's badge. */
+export type VerifyPurpose = "member_business" | "counterparty_check";
+
+/**
+ * Block B copy for the two purposes, in English for now. The rest of this form
+ * still reads the `verification` message namespace; Block E folds these lines in
+ * and rebuilds the locales. Kept here, not inferred from the page, so the button
+ * a member presses and the purpose the server records are the same thing.
+ */
+const PURPOSE_COPY: Record<
+  VerifyPurpose,
+  { attest?: string; note: string; resultNote: string }
+> = {
+  member_business: {
+    attest: MEMBER_BUSINESS_ATTESTATION.text,
+    note: "Verifying your own business is what unlocks the Business checked badge, publishing an opportunity and receiving an introduction.",
+    resultNote:
+      "This verifies your own business. A clean pass sets your Business checked status.",
+  },
+  counterparty_check: {
+    note: "This is a private check on another company. It does not verify your business and does not change your account or badge.",
+    resultNote:
+      "This was a private counterparty check. It does not change your own account, level or badge.",
+  },
+};
 
 /** One of the companies that matched the name. Mirrors RegistryCandidate. */
 type Candidate = {
@@ -60,16 +87,23 @@ function Detail({
 export default function VerifyForm({
   balance,
   cost,
+  purpose,
 }: {
   balance: number | null;
   cost: number;
+  purpose: VerifyPurpose;
 }) {
   const t = useTranslations("verification");
+  const isBusiness = purpose === "member_business";
+  const copy = PURPOSE_COPY[purpose];
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [regNumber, setRegNumber] = useState("");
   const [vat, setVat] = useState("");
+  // The member-business path requires an explicit attestation that this is the
+  // business they represent, before a badge-granting check is run (blueprint P10).
+  const [attested, setAttested] = useState(false);
 
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState("");
@@ -94,6 +128,10 @@ export default function VerifyForm({
       setError(t("request.errors.country"));
       return;
     }
+    if (isBusiness && !attested) {
+      setError("Please confirm this is the business you represent.");
+      return;
+    }
 
     setError("");
     setStatus("sending");
@@ -106,6 +144,10 @@ export default function VerifyForm({
           country,
           regNumber: regNumber.trim(),
           vat: vat.trim(),
+          purpose,
+          // Sent only as a real boolean, and only true once the member has
+          // ticked the attestation. The server requires it for member_business.
+          attestation: isBusiness ? attested === true : false,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -182,6 +224,7 @@ export default function VerifyForm({
     setCountry("");
     setRegNumber("");
     setVat("");
+    setAttested(false);
   }
 
   // Several companies carry that name, so the check is paused on the member's
@@ -345,6 +388,9 @@ export default function VerifyForm({
             {outcome.reason}
           </p>
         )}
+        <p className="mt-4 text-[12.5px] leading-relaxed text-gray-2">
+          {copy.resultNote}
+        </p>
         <button type="button" onClick={reset} className="btn-gold mt-7">
           {t("request.result.again")}
         </button>
@@ -462,11 +508,31 @@ export default function VerifyForm({
         </div>
       </div>
 
+      {/* What this check is for, stated plainly, and for the business path an
+          explicit attestation before a badge-granting check runs. */}
+      <p className="mt-6 text-[12.5px] leading-relaxed text-gray-2">{copy.note}</p>
+      {isBusiness && copy.attest && (
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <input
+            type="checkbox"
+            className="mt-0.5 accent-gold"
+            checked={attested}
+            onChange={(e) => {
+              setAttested(e.target.checked);
+              setError("");
+            }}
+          />
+          <span className="text-[13.5px] leading-relaxed text-cream">
+            {copy.attest}
+          </span>
+        </label>
+      )}
+
       {error && <p className="mt-5 text-sm text-red-400">{error}</p>}
 
       <button
         type="submit"
-        disabled={status === "sending" || short}
+        disabled={status === "sending" || short || (isBusiness && !attested)}
         className="btn-gold mt-7 w-full justify-center disabled:opacity-60"
       >
         <ShieldCheck className="h-4 w-4" />

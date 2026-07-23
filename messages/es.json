@@ -288,8 +288,8 @@
     "copyright": "© {year} Ponte · nombre comercial de 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Comercio transfronterizo de mercancías físicas, entre contrapartes verificadas",
-    "metaDescription": "Ponte es un tablero verificado para el comercio transfronterizo de mercancías físicas. Las ofertas y las necesidades se redactan en términos comerciales, circulan de forma anónima y no se hace ninguna presentación antes de firmar un NCNDA. Los miembros se contrastan con Companies House, VIES, GLEIF y las listas de OFAC, la UE, la ONU y OFSI.",
+    "metaTitle": "Oportunidades de comercio internacional por invitación",
+    "metaDescription": "Ponte Trade es una red internacional de comercio por invitación. Las empresas se comprueban frente a registros mercantiles y las listas de sanciones de OFAC, la UE, la ONU y el Reino Unido, las oportunidades las revisa Ponte y deja constancia de las pruebas, y las presentaciones se controlan: la identidad se revela solo en la fase de presentación.",
     "hero": {
       "eyebrow": "Gratis para todos los miembros",
       "title": "Compre y venda materias primas físicas en todo el mundo",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Cómo avanza una operación",
-      "heading": "Documentado antes de presentar."
+      "heading": "Comprobado antes de presentar."
     },
     "desk": {
       "eyebrow": "La mesa",
@@ -621,7 +621,7 @@
   "marketplace": {
     "meta": {
       "title": "Marketplace",
-      "description": "Envíe ofertas y necesidades al marketplace de Ponte. Cada anuncio se verifica y los documentos se comprueban antes de circular nada."
+      "description": "Envía ofertas y requerimientos al mercado de Ponte. Cada oportunidad publicada es revisada por Ponte, y el registro público indica qué pruebas revisó Ponte y qué queda sin verificar."
     },
     "type": {
       "offer": "oferta",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Cada anuncio <em>verificado</em>. Cada operación documentada.",
+      "heading": "Cada <em>oportunidad</em> publicada, revisada por Ponte.",
       "intro": "Publique lo que vende o lo que necesita, gratis. La IA y la mesa verifican cada anuncio antes de publicarlo, usted permanece anónimo hasta que ambas partes aceptan conectar, y conectar no cuesta nada. ¿Quiere la operación gestionada de principio a fin? La mesa interviene con comisión de éxito o retainer, solo cuando usted lo pide.",
       "newListing": "Nuevo anuncio",
       "signIn": "Inicie sesión para enviar"
@@ -638,11 +638,11 @@
     "rules": {
       "vetted": {
         "title": "Verificado antes de publicar",
-        "body": "Cada anuncio lo revisa la mesa y los documentos se comprueban antes de circular nada. Sin excepciones."
+        "body": "El registro público indica qué pruebas revisó Ponte y qué queda sin verificar."
       },
       "anonymous": {
         "title": "Siempre anónimo",
-        "body": "Las contrapartes ven la operación, nunca su nombre, hasta que ambas partes hayan firmado el NCNDA y las condiciones de honorarios."
+        "body": "Las contrapartes ven la operación, nunca su nombre, hasta que ambas partes acuerden conectarse. Después, cada uno recibe el contacto del otro."
       },
       "free": {
         "title": "Operar es gratis",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "Cómo funciona",
-      "heading": "Cinco pasos. Una regla: documentado antes de presentar."
+      "heading": "Cinco pasos. Una regla: comprobado antes de presentar."
     },
     "board": {
       "eyebrow": "En vivo ahora",
@@ -761,9 +761,9 @@
   },
   "meta": {
     "siteTitle": "Ponte. El puente entre comprador y vendedor.",
-    "siteDescription": "El marketplace gratuito y verificado para el comercio físico. Publique lo que vende o lo que necesita. La IA y la mesa verifican cada anuncio. Conecte directamente, en anonimato hasta que ambas partes acepten, sin coste. La mesa de Ponte gestiona operaciones de principio a fin solo si se le pide, con comisión de éxito o retainer. Operado por 1402 Celsius Ltd.",
-    "ogDescription": "Cada anuncio verificado. Cada conexión gratis. Publique una oferta o una necesidad en tres pasos, y recurra a la mesa solo cuando quiera la operación gestionada.",
-    "twitterDescription": "El marketplace gratuito y verificado para el comercio físico. Gestión de la operación por la mesa opcional, con comisión de éxito o retainer."
+    "siteDescription": "Una red internacional de comercio por invitación. Las empresas se comprueban frente a registros mercantiles y listas de sanciones, las oportunidades las revisa Ponte y las presentaciones se controlan, con la identidad revelada solo en la fase de presentación. La Mesa de Ponte puede gestionar un mandato a petición. Operado por 1402 Celsius Ltd.",
+    "ogDescription": "Cada oportunidad publicada, revisada por Ponte. Empresas comprobadas, presentaciones controladas. Envía una oportunidad o pide a la Mesa de Ponte que gestione un mandato.",
+    "twitterDescription": "Una red internacional de comercio por invitación: empresas comprobadas, oportunidades revisadas, presentaciones controladas."
   },
   "nav": {
     "homeAriaLabel": "Inicio de Ponte Trade",
@@ -777,7 +777,8 @@
     "post": "Publicar",
     "postAriaLabel": "Publicar un anuncio",
     "verify": "Verificar",
-    "primaryAriaLabel": "Navegación principal"
+    "primaryAriaLabel": "Navegación principal",
+    "signals": "Señales de mercado"
   },
   "pricing": {
     "meta": {
@@ -833,7 +834,7 @@
       },
       "connect": {
         "label": "Conectados",
-        "micro": "NCNDA firmado, luego presentación"
+        "micro": "Presentación tras el acuerdo de ambas partes"
       },
       "close": {
         "label": "Cierre",
@@ -1050,18 +1051,18 @@
     "failedTitle": "No se pudo completar"
   },
   "landing": {
-    "eyebrow": "Tablón en vivo",
-    "h1": "A un puente de distancia.",
-    "sub": "Contrapartes verificadas. Operaciones reales. Unirse y operar es gratis.",
-    "ctaPrimary": "Ver el tablón en vivo",
-    "ctaSecondary": "Cómo funciona la verificación",
+    "eyebrow": "Red fundadora",
+    "h1": "Oportunidades comerciales, sin el ruido de siempre.",
+    "sub": "Una red internacional de comercio por invitación donde las empresas se comprueban, las oportunidades se revisan y las presentaciones se controlan.",
+    "ctaPrimary": "Explorar oportunidades",
+    "ctaSecondary": "Enviar una oportunidad",
     "stage": {
       "match": "Coincidencia",
       "counterparty": "Contraparte",
       "trustLabel": "Índice de confianza",
       "clear": "Registros y sanciones sin incidencias",
       "readOn": "leído el {date}",
-      "openRoom": "Abrir una sala de operación",
+      "openRoom": "Solicitar una presentación",
       "sampleNote": "Ejemplo de formato. Muestra cómo se escribe una operación en Ponte. No es un anuncio en vivo."
     },
     "verify": {
@@ -1073,8 +1074,8 @@
       "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
       "identifiers": "IVA y LEI",
       "identifiersDetail": "VIES, GLEIF, con fecha de lectura",
-      "anonymous": "Anónimo hasta el NCNDA",
-      "anonymousDetail": "Documentado antes de presentar",
+      "anonymous": "Identidad revelada en la presentación",
+      "anonymousDetail": "Solo en la fase de presentación controlada, cuando ambas partes están de acuerdo",
       "cta": "Qué comprueba cada nivel"
     },
     "ai": {
@@ -1089,12 +1090,92 @@
       "heading": "Unirse es gratis. Sin comisión en las operaciones que cierre usted mismo.",
       "body": "Publicar una oferta o una demanda, leer el tablón y conectar con una contraparte no cuestan nada. La verificación y la inteligencia se pagan en créditos, y la mesa cobra solo si le pide que intermedie una operación.",
       "verify": "Verificar una contraparte",
-      "room": "Asistencia en sala",
+      "room": "Apoyo a la operación",
       "report": "Informe profundo",
       "credits": "{n} créditos",
       "credit": "{n} crédito",
       "desk": "La intermediación de la mesa se cobra por éxito o por retainer, acordado por escrito antes de empezar.",
       "cta": "Empezar gratis"
     }
+  },
+  "marketSignals": {
+    "label": "Señales de mercado",
+    "badge": "Señal de mercado externa: aún no verificada por Ponte",
+    "disclaimer": "Esta información se identificó mediante investigación de mercado externa. Ponte aún no ha verificado al participante, la disponibilidad continuada del requerimiento o la oferta, ni su autoridad para transaccionar.",
+    "board": {
+      "heading": "Demanda reciente que vale la pena investigar",
+      "intro": "Ponte identifica indicios recientes de demanda de compradores y disponibilidad de vendedores mediante investigación de mercado externa. No son oportunidades verificadas. Pide a Ponte que establezca quién está detrás de una señal, si sigue vigente y si se puede organizar una presentación cualificada.",
+      "empty": "Las señales seleccionadas están en revisión. No se muestra nada aquí hasta que un administrador lo haya aprobado para su publicación."
+    },
+    "card": {
+      "marker": "Señal",
+      "view": "Ver señal",
+      "notStated": "No indicado",
+      "sideBuyer": "Demanda de compra",
+      "sideSeller": "Disponibilidad de venta"
+    },
+    "detail": {
+      "eyebrow": "Señal de mercado",
+      "knownHeading": "Lo que Ponte sabe por ahora",
+      "unknownHeading": "Lo que Ponte aún no ha establecido",
+      "unknowns": {
+        "u1": "Quién está detrás del requerimiento o la oferta",
+        "u2": "La empresa y su autoridad para operar",
+        "u3": "Si el requerimiento o la oferta sigue vigente",
+        "u4": "Si la parte está dispuesta a ser presentada"
+      },
+      "fact": {
+        "side": "Lado",
+        "quantity": "Cantidad",
+        "corridor": "Corredor",
+        "incoterm": "Incoterm",
+        "payment": "Pago",
+        "hsCode": "Código HS",
+        "signalDate": "Fecha de la señal"
+      },
+      "tombstone": "Esta señal de mercado ya no está activa."
+    },
+    "cta": {
+      "askPonte": "Pedir a Ponte que investigue",
+      "secondarySupply": "Quizá pueda suministrar esto",
+      "secondaryBuy": "Quizá me interese comprar esto"
+    },
+    "investigate": {
+      "intro": "Ponte investigará el requerimiento que hay detrás de esta señal. Tu solicitud va a la mesa de Ponte; ningún tercero es contactado ni revelado automáticamente.",
+      "close": "Cerrar",
+      "businessLabel": "Tu empresa",
+      "businessPlaceholder": "Nombre registrado de la empresa",
+      "typeLabel": "Eres",
+      "typeSelect": "Selecciona",
+      "requesterType": {
+        "supplier": "Posible proveedor",
+        "buyer": "Posible comprador",
+        "intermediary": "Intermediario",
+        "adviser": "Asesor"
+      },
+      "goalLabel": "¿Qué quieres que Ponte establezca?",
+      "goalPlaceholder": "p. ej. quién está detrás, si sigue vigente, si se puede organizar una presentación cualificada",
+      "indicativeLabel": "Cantidad, plazos o capacidad de suministro indicativos",
+      "optional": "(opcional)",
+      "indicativePlaceholder": "p. ej. puedo suministrar 3 x 40ft/mes desde marzo",
+      "geographyLabel": "Geografía",
+      "geographyPlaceholder": "Dónde estás, o el corredor que cubres",
+      "evidenceLabel": "Certificaciones o pruebas que puedes aportar",
+      "evidencePlaceholder": "p. ej. ISO 22000, certificados fitosanitarios, referencia bancaria",
+      "introCheckbox": "Me gustaría una presentación cualificada si Ponte confirma el requerimiento.",
+      "submit": "Enviar solicitud de investigación",
+      "sending": "Enviando...",
+      "error": "Error, inténtalo de nuevo.",
+      "received": "Solicitud recibida"
+    }
+  },
+  "founding": {
+    "metaTitle": "Invitación a la Red fundadora",
+    "eyebrow": "Red fundadora",
+    "heading": "Estás invitado a la red fundadora.",
+    "lead": "Ponte es una red internacional de comercio por invitación donde las empresas se comprueban, las oportunidades se revisan y las presentaciones se controlan. Explora lo que está activo o inicia sesión para participar.",
+    "ctaExplore": "Explorar oportunidades",
+    "ctaSignIn": "Iniciar sesión",
+    "privacy": "Registramos qué invitación te trajo, para entender cómo crece la red fundadora. Se guarda una sola vez en tu cuenta, nunca se comparte y nunca afecta a la verificación ni a los precios."
   }
 }

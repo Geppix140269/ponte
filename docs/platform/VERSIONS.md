@@ -136,6 +136,131 @@ and the cost difference at 3,000 tokens is immaterial.
 
 ---
 
+## 23 July 2026, Block B follow-up: server-side attestation
+
+The Block B attestation ("This is the business I represent on Ponte") was only
+enforced in the browser, so a direct API request could open a member-business
+verification without it and earn a badge, and nothing recorded what was
+declared. Now:
+
+- the API route rejects a `member_business` request whose `attestation` is not
+  boolean `true` (400) before any case is created or credit spent, and the
+  pipeline guards it again before opening the row;
+- a counterparty check needs no attestation and is never badge-eligible;
+- the accepted attestation is recorded auditably on the row: `attested_at`
+  (server-stamped) and `attestation_version` (`represent-own-business/v1`), added
+  by migration `20260723c_verification_attestation.sql` (applied, probe-verified);
+- purpose and attestation are written once at creation and never rewritten, so a
+  resumed `needs_selection` case cannot change them, and nothing converts a
+  counterparty case into a member-business one.
+
+Tests: 21 verification-purpose tests (up from 10) cover the seven acceptance
+scenarios. `npm run verify` green.
+
+**Legacy `1402 celsius` state, reported for a decision, unchanged:** the admin
+requester (`6665aa81`) has `verified_at` set (2026-07-22 07:28:44) and 55 trust
+points (business 25, sanctions_clean 20, company_age 10) from that own-business
+check, but `verification_level` NULL, `verification_tier` 0, `verified_trader`
+false and `business_verification_id` NULL. So a `verified_at` timestamp and trust
+components, but no level/tier/trader badge and no binding. Not modified.
+
+## 23 July 2026, Block B: honest member-business verification
+
+**Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`, committed
+separately on top of Block A. Migration applied to production; `npm run verify`
+green; UI checked. **Not yet deployed** (still needs to merge to `main`).
+
+The defect (brief §3.1): a successful Level 2 check granted the REQUESTER the
+Business Verified badge whatever company they checked, so a member could badge
+themselves off an unrelated company. Block B ties the badge to the member's own
+business.
+
+- **One purpose, one gate.** `verifications.purpose` (`member_business` |
+  `counterparty_check`) is carried from the UI to the row and never inferred
+  from copy. `lib/verification/purpose.ts` holds the pure rule
+  `grantsMemberStatus()`, and the pipeline, the admin queue and the sanctions
+  re-screen all gate their profile writes on it. A counterparty check never
+  touches the requester's level or trust score.
+- **Badge bound to a record.** A member-business pass sets
+  `profiles.business_verification_id`, so the badge is always traceable to the
+  one check it rests on. Re-screen suspends only that badge, only for
+  member-business cases.
+- **Two clear paths.** `/verify` opens on a deliberate choice: Verify my
+  business (with a "This is the business I represent on Ponte" attestation) or
+  Check a counterparty (private, no badge). The account page now shows a
+  Business status card and prompts an unverified member to verify their
+  business.
+
+**Existing-badge audit (§3.4):** no member holds a badge from checking another
+company. All six customers are `unverified`; the only passed verification is the
+admin verifying their own business ("1402 celsius"). Nothing was stripped. That
+one legacy case is `purpose = NULL`; tag it `member_business` and set the admin's
+`business_verification_id` by hand if you want the account card to show it. No
+profile or case was auto-modified.
+
+**Migration** `20260723b_verification_purpose.sql` is additive (two nullable
+columns), applied and probe-verified. Rollback: drop the two columns.
+
+**Not run:** a full paid Level-2 verification end to end (it spends credits and
+calls live registries and the model). The grant/no-grant rule is unit-tested and
+embedded in the gated paths; run one real member-business and one counterparty
+check during the acceptance pass.
+
+## 23 July 2026, Block A: Market Signals separated from Qualified Opportunities
+
+**Status:** on `C:\dev\ponte`, branch `claude/ponte-block-a-3e085f`. The
+migration is **applied to production** (2026-07-23) and the branch is verified
+against it: `npm run verify` green, and a browser/HTTP pass confirmed the board,
+the detail page, the anonymised payload, the disclaimer, approval and
+withdrawal. **Not yet deployed** to the live site: the branch still needs to
+merge to `main`. All 90 imported rows are now `private`, so until an admin
+approves a curated set the public signals board is empty by design.
+
+**A production-affecting bug was found and fixed here** (commit e3cd192): Next's
+Data Cache was pinning the board's Supabase read under its query URL and serving
+a stale empty result even on a force-dynamic page, so an approved signal never
+appeared. `getMarketSignals`, `getMarketSignal` and `getLiveDeals` now call
+`noStore()`. Confirmed by probe: an approval, a withdrawal or an expiry now
+shows immediately.
+
+**Live-site note:** deploying this code stops the homepage reading `desk_radar`,
+and the migration already moved every radar row to `private`, so the old
+homepage radar strip is gone. That is the brief-intended posture. Emergency
+lever if needed before deploy: the rows are `private`, so nothing is public
+regardless of `DESK_RADAR_PUBLIC`.
+
+The Definitive 1 August brief (Block A) splits the two classes of public
+content that commit #11 had merged into one board.
+
+- **`getLiveDeals()` is member-only now.** It no longer reads `desk_radar`, and
+  it drops any approved listing past its `valid_until`. Qualified Opportunities
+  are approved, current member listings, full stop. The `DESK_RADAR_PUBLIC`
+  flag and the `readRadar` reader are gone.
+- **Market Signals have their own everything.** `lib/board/market-signals.ts`
+  (DB read) over `lib/market-signals/logic.ts` (pure, unit-tested) returns a
+  distinct `MarketSignal` type; the public read selects public columns only, so
+  source, identity and original prose cannot travel to a client. Board at
+  `/market-signals`, detail at `/market-signals/[id]`, both carrying the exact
+  mandatory "not verified" disclaimer and the "Ask Ponte to investigate" CTA.
+- **Private on import, public only on approval.** `import-desk-radar.mjs` lands
+  rows `private`. The new `/admin/signals` queue approves a signal individually,
+  which records the approving admin and sets a 90-day public expiry from the
+  original signal date. Approve / unpublish / mark unavailable / withdraw.
+- **The migration** (`20260723a_desk_radar_signal_gate.sql`) is additive: adds
+  approval, expiry and promotion columns, defaults status to `private`, and
+  remaps the old vocabulary onto the Market Signal lifecycle. No row is deleted.
+
+**Verified here:** encoding check, all 10 locales, `tsc --noEmit`, and the unit
+tests (13 completeness + 16 new market-signals). **Not run here:** `next build`
+(unreliable in OneDrive) and any browser or database check (no `.env.local` in
+this clone). Run `npm run verify` and the acceptance checks in `C:\dev\ponte`.
+
+**The em dash lives in lib/.** The disclaimer text the brief mandates contains
+an em dash, which check-encoding.mjs bans in app/ and components/. It sits in
+`lib/market-signals/copy.ts` and is imported, the same pattern as
+`VERIFICATION_DISCLAIMER`. The Market Signal chrome (nav label, board headings)
+is English for now; Block E moves it into the message fragments.
+
 ## 22 July 2026, the migration nobody checked
 
 **The bug.** Picking a company from the ambiguous match list always answered

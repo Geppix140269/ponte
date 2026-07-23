@@ -287,6 +287,15 @@
     "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
+  "founding": {
+    "metaTitle": "Founding Network invitation",
+    "eyebrow": "Founding Network",
+    "heading": "You are invited to the founding network.",
+    "lead": "Ponte is an invitation-led international trade network where businesses are checked, opportunities are reviewed, and introductions are controlled. Explore what is live, or sign in to take part.",
+    "ctaExplore": "Explore opportunities",
+    "ctaSignIn": "Sign in",
+    "privacy": "We record which invitation brought you, so we understand how the founding network grows. It is stored once on your account, never shared, and never affects verification or pricing."
+  },
   "gate": {
     "title": {
       "inquiry": "Create your free account to send this inquiry.",
@@ -330,8 +339,8 @@
     "failedTitle": "That did not go through"
   },
   "home": {
-    "metaTitle": "Cross border trade in physical goods, between verified counterparties",
-    "metaDescription": "Ponte is a vetted board for cross border trade in physical goods. Offers and requirements are written in trade terms, circulated anonymously, and no introduction is made before an NCNDA is signed. Members are screened against Companies House, VIES, GLEIF and the OFAC, EU, UN and UK OFSI lists.",
+    "metaTitle": "Invitation-led international trade opportunities",
+    "metaDescription": "Ponte Trade is an invitation-led international trade network. Businesses are checked against company registers and the OFAC, EU, UN and UK sanctions lists, opportunities are reviewed by Ponte with the evidence recorded, and introductions are controlled: identity is disclosed only at the introduction stage.",
     "hero": {
       "eyebrow": "Free for every member",
       "title": "Buy and sell physical commodities, worldwide",
@@ -422,7 +431,7 @@
     },
     "flow": {
       "eyebrow": "How a deal moves",
-      "heading": "Papered before introduced."
+      "heading": "Checked before introduced."
     },
     "desk": {
       "eyebrow": "The desk",
@@ -453,18 +462,18 @@
     }
   },
   "landing": {
-    "eyebrow": "Live board",
-    "h1": "One bridge away.",
-    "sub": "Verified counterparties. Real deals. Free to join, free to trade.",
-    "ctaPrimary": "See the live board",
-    "ctaSecondary": "How verification works",
+    "eyebrow": "Founding Network",
+    "h1": "Trade opportunities, without the usual noise.",
+    "sub": "An invitation-led international trade network where businesses are checked, opportunities are reviewed, and introductions are controlled.",
+    "ctaPrimary": "Explore opportunities",
+    "ctaSecondary": "Submit an opportunity",
     "stage": {
       "match": "Match",
       "counterparty": "Counterparty",
       "trustLabel": "Trust score",
       "clear": "Registry and sanctions clear",
       "readOn": "read {date}",
-      "openRoom": "Open a deal room",
+      "openRoom": "Request an introduction",
       "sampleNote": "Format example. It shows how a deal is written on Ponte. It is not a live listing."
     },
     "verify": {
@@ -476,8 +485,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "VAT and LEI",
       "identifiersDetail": "VIES, GLEIF, dated at read",
-      "anonymous": "Anonymous until NCNDA",
-      "anonymousDetail": "Papered before introduced",
+      "anonymous": "Identity disclosed at introduction",
+      "anonymousDetail": "Only at the controlled introduction stage, after both sides agree",
       "cta": "What each level checks"
     },
     "ai": {
@@ -492,7 +501,7 @@
       "heading": "Free to join. No commission on deals you close yourselves.",
       "body": "Posting an offer or a requirement, reading the board and connecting with a counterparty cost nothing. Verification and intelligence are paid in credits, and the desk is paid only if you ask it to broker a deal.",
       "verify": "Verify a counterparty",
-      "room": "Deal room assist",
+      "room": "Managed deal support",
       "report": "Deep report",
       "credits": "{n} credits",
       "credit": "{n} credit",
@@ -708,10 +717,81 @@
       "switched": "You were signed in as someone else. That session has been replaced."
     }
   },
+  "marketSignals": {
+    "label": "Market Signals",
+    "badge": "External market signal: not yet verified by Ponte",
+    "disclaimer": "This information was identified through external market research. Ponte has not yet verified the participant, the continuing availability of the requirement or offer, or their authority to transact.",
+    "board": {
+      "heading": "Recent demand worth investigating",
+      "intro": "Ponte identifies recent indications of buyer demand and seller availability through external market research. These are not verified opportunities. Ask Ponte to establish who is behind a signal, whether it is still current, and whether a qualified introduction can be arranged.",
+      "empty": "Selected signals are being reviewed. Nothing is shown here until an administrator has approved it for display."
+    },
+    "card": {
+      "marker": "Signal",
+      "view": "View signal",
+      "notStated": "Not stated",
+      "sideBuyer": "Buyer demand",
+      "sideSeller": "Seller availability"
+    },
+    "detail": {
+      "eyebrow": "Market Signal",
+      "knownHeading": "What Ponte currently knows",
+      "unknownHeading": "What Ponte has not yet established",
+      "unknowns": {
+        "u1": "Who is behind the requirement or offer",
+        "u2": "The company and its authority to transact",
+        "u3": "Whether the requirement or offer is still current",
+        "u4": "Whether the participant is willing to be introduced"
+      },
+      "fact": {
+        "side": "Side",
+        "quantity": "Quantity",
+        "corridor": "Corridor",
+        "incoterm": "Incoterm",
+        "payment": "Payment",
+        "hsCode": "HS code",
+        "signalDate": "Signal date"
+      },
+      "tombstone": "This market signal is no longer active."
+    },
+    "cta": {
+      "askPonte": "Ask Ponte to investigate",
+      "secondarySupply": "I may be able to supply this",
+      "secondaryBuy": "I may be interested in buying this"
+    },
+    "investigate": {
+      "intro": "Ponte will look into the requirement behind this signal. Your request goes to the Ponte desk; no third party is contacted or revealed automatically.",
+      "close": "Close",
+      "businessLabel": "Your business",
+      "businessPlaceholder": "Registered company name",
+      "typeLabel": "You are a",
+      "typeSelect": "Select",
+      "requesterType": {
+        "supplier": "Potential supplier",
+        "buyer": "Potential buyer",
+        "intermediary": "Intermediary",
+        "adviser": "Adviser"
+      },
+      "goalLabel": "What do you want Ponte to establish?",
+      "goalPlaceholder": "e.g. who is behind this, whether it is still current, whether a qualified introduction can be arranged",
+      "indicativeLabel": "Indicative quantity, timing or supply capability",
+      "optional": "(optional)",
+      "indicativePlaceholder": "e.g. can supply 3 x 40ft/month from March",
+      "geographyLabel": "Geography",
+      "geographyPlaceholder": "Where you are, or the corridor you serve",
+      "evidenceLabel": "Certifications or evidence you can provide",
+      "evidencePlaceholder": "e.g. ISO 22000, phytosanitary certs, bank reference",
+      "introCheckbox": "I would like a qualified introduction if Ponte confirms the requirement.",
+      "submit": "Submit investigation request",
+      "sending": "Sending...",
+      "error": "Failed, try again.",
+      "received": "Request received"
+    }
+  },
   "marketplace": {
     "meta": {
       "title": "Marketplace",
-      "description": "Submit offers and requirements to the Ponte marketplace. Every listing is vetted and documents verified before anything is circulated."
+      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is reviewed by Ponte, and the public record states which evidence Ponte reviewed and what remains unverified."
     },
     "type": {
       "offer": "offer",
@@ -728,7 +808,7 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every listing <em>vetted</em>. Every deal papered.",
+      "heading": "Every published <em>opportunity</em> reviewed by Ponte.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
@@ -736,11 +816,11 @@
     "rules": {
       "vetted": {
         "title": "Vetted before live",
-        "body": "Every listing is reviewed by the desk and documents are verified before anything is circulated. No exceptions."
+        "body": "The public record states which evidence Ponte reviewed and what remains unverified."
       },
       "anonymous": {
         "title": "Anonymized always",
-        "body": "Counterparties see the deal, never your name, until both sides have signed NCNDA and fee terms."
+        "body": "Counterparties see the deal, never your name, until both sides agree to connect. Then you each receive the other's contact."
       },
       "free": {
         "title": "Free to trade",
@@ -749,7 +829,7 @@
     },
     "how": {
       "eyebrow": "How it works",
-      "heading": "Five steps. One rule: papered before introduced."
+      "heading": "Five steps. One rule: checked before introduced."
     },
     "board": {
       "eyebrow": "Live now",
@@ -851,14 +931,15 @@
   },
   "meta": {
     "siteTitle": "Ponte. The bridge between buyer and seller.",
-    "siteDescription": "The free, vetted marketplace for physical trade. Post what you sell or what you need. AI and the desk verify every listing. Connect directly, anonymous until both sides agree, at no cost. The Ponte desk manages deals end to end only on request, on a success fee or retainer. Operated by 1402 Celsius Ltd.",
-    "ogDescription": "Every listing vetted. Every connection free. Post an offer or a requirement in three steps, and bring in the desk only when you want the deal managed.",
-    "twitterDescription": "The free, vetted marketplace for physical trade. Desk-managed deals optional, on success fee or retainer."
+    "siteDescription": "An invitation-led international trade network. Businesses are checked against company registers and sanctions lists, opportunities are reviewed by Ponte, and introductions are controlled, with identity disclosed only at the introduction stage. The Ponte Desk can manage a mandate on request. Operated by 1402 Celsius Ltd.",
+    "ogDescription": "Every published opportunity reviewed by Ponte. Businesses checked, introductions controlled. Submit an opportunity, or ask the Ponte Desk to manage a mandate.",
+    "twitterDescription": "An invitation-led international trade network: businesses checked, opportunities reviewed, introductions controlled."
   },
   "nav": {
     "homeAriaLabel": "Ponte Trade home",
     "marketplace": "Marketplace",
     "marketplaceShort": "Market",
+    "signals": "Market Signals",
     "fees": "Fees",
     "contact": "Contact",
     "account": "Account",
@@ -923,7 +1004,7 @@
       },
       "connect": {
         "label": "Connected",
-        "micro": "NCNDA signed, then introduced"
+        "micro": "Introduced after both sides agree"
       },
       "close": {
         "label": "Closing",

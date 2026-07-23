@@ -288,8 +288,8 @@
     "copyright": "© {year} Ponte · ein Handelsname der 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Grenzüberschreitender Handel mit physischen Waren, zwischen geprüften Kontrahenten",
-    "metaDescription": "Ponte ist ein geprüftes Handelsboard für den grenzüberschreitenden Handel mit physischen Waren. Angebote und Gesuche werden in Handelsbegriffen erfasst, anonym verbreitet, und vor der Unterzeichnung eines NCNDA erfolgt keine Vermittlung. Mitglieder werden gegen Companies House, VIES, GLEIF sowie die Listen von OFAC, EU, UN und OFSI geprüft.",
+    "metaTitle": "Internationale Handelschancen auf Einladung",
+    "metaDescription": "Ponte Trade ist ein internationales Handelsnetzwerk auf Einladung. Unternehmen werden gegen Handelsregister und die Sanktionslisten von OFAC, EU, UN und UK geprüft, Chancen werden von Ponte bewertet und die Nachweise festgehalten, und Vorstellungen werden kontrolliert: Die Identität wird erst in der Vorstellungsphase offengelegt.",
     "hero": {
       "eyebrow": "Kostenlos für jedes Mitglied",
       "title": "Physische Rohstoffe weltweit kaufen und verkaufen",
@@ -380,7 +380,7 @@
     },
     "flow": {
       "eyebrow": "Wie ein Geschäft läuft",
-      "heading": "Schriftlich geregelt vor der Vermittlung."
+      "heading": "Geprüft vor der Vorstellung."
     },
     "desk": {
       "eyebrow": "Der Desk",
@@ -621,7 +621,7 @@
   "marketplace": {
     "meta": {
       "title": "Marktplatz",
-      "description": "Reichen Sie Angebote und Gesuche auf dem Ponte-Marktplatz ein. Jedes Inserat wird geprüft und jedes Dokument verifiziert, bevor etwas in Umlauf kommt."
+      "description": "Reichen Sie Angebote und Gesuche beim Ponte-Marktplatz ein. Jede veröffentlichte Chance wird von Ponte geprüft, und das öffentliche Protokoll nennt, welche Nachweise Ponte geprüft hat und was ungeprüft bleibt."
     },
     "type": {
       "offer": "Angebot",
@@ -630,7 +630,7 @@
     },
     "hero": {
       "pill": "Marktplatz",
-      "heading": "Jedes Inserat <em>geprüft</em>. Jedes Geschäft schriftlich geregelt.",
+      "heading": "Jede veröffentlichte <em>Chance</em>, von Ponte geprüft.",
       "intro": "Stellen Sie kostenlos ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk verifizieren jedes Inserat, bevor es online geht, Sie bleiben anonym, bis beide Seiten der Kontaktaufnahme zustimmen, und die Kontaktaufnahme kostet nichts. Sie möchten das Geschäft von Anfang bis Ende betreut wissen? Der Desk übernimmt gegen Erfolgshonorar oder Retainer, nur wenn Sie es wünschen.",
       "newListing": "Neues Inserat",
       "signIn": "Zum Einreichen anmelden"
@@ -638,11 +638,11 @@
     "rules": {
       "vetted": {
         "title": "Geprüft, bevor es online geht",
-        "body": "Jedes Inserat wird vom Desk geprüft und jedes Dokument verifiziert, bevor etwas in Umlauf kommt. Ohne Ausnahme."
+        "body": "Das öffentliche Protokoll nennt, welche Nachweise Ponte geprüft hat und was ungeprüft bleibt."
       },
       "anonymous": {
         "title": "Immer anonymisiert",
-        "body": "Die Gegenseite sieht das Geschäft, niemals Ihren Namen, bis beide Seiten NCNDA und Honorarbedingungen unterzeichnet haben."
+        "body": "Die Gegenseite sieht das Geschäft, niemals Ihren Namen, bis beide Seiten dem Kontakt zustimmen. Danach erhalten Sie jeweils die Kontaktdaten des anderen."
       },
       "free": {
         "title": "Kostenlos handeln",
@@ -651,7 +651,7 @@
     },
     "how": {
       "eyebrow": "So funktioniert es",
-      "heading": "Fünf Schritte. Eine Regel: schriftlich geregelt vor der Vermittlung."
+      "heading": "Fünf Schritte. Eine Regel: geprüft vor der Vorstellung."
     },
     "board": {
       "eyebrow": "Jetzt live",
@@ -761,9 +761,9 @@
   },
   "meta": {
     "siteTitle": "Ponte. Die Brücke zwischen Käufer und Verkäufer.",
-    "siteDescription": "Der kostenlose, geprüfte Marktplatz für den physischen Handel. Stellen Sie ein, was Sie verkaufen oder was Sie brauchen. KI und der Desk verifizieren jedes Inserat. Nehmen Sie direkt Kontakt auf, anonym bis beide Seiten zustimmen, ohne Kosten. Der Ponte-Desk führt Geschäfte nur auf Anfrage von Anfang bis Ende, gegen Erfolgshonorar oder Retainer. Betrieben von 1402 Celsius Ltd.",
-    "ogDescription": "Jedes Inserat geprüft. Jede Kontaktaufnahme kostenlos. Stellen Sie ein Angebot oder ein Gesuch in drei Schritten ein und holen Sie den Desk nur dazu, wenn Sie das Geschäft betreut haben möchten.",
-    "twitterDescription": "Der kostenlose, geprüfte Marktplatz für den physischen Handel. Betreuung durch den Desk optional, gegen Erfolgshonorar oder Retainer."
+    "siteDescription": "Ein internationales Handelsnetzwerk auf Einladung. Unternehmen werden gegen Handelsregister und Sanktionslisten geprüft, Chancen werden von Ponte bewertet und Vorstellungen kontrolliert, wobei die Identität erst in der Vorstellungsphase offengelegt wird. Der Ponte Desk kann auf Anfrage ein Mandat übernehmen. Betrieben von 1402 Celsius Ltd.",
+    "ogDescription": "Jede veröffentlichte Chance, von Ponte geprüft. Unternehmen geprüft, Vorstellungen kontrolliert. Reichen Sie eine Chance ein, oder bitten Sie den Ponte Desk, ein Mandat zu übernehmen.",
+    "twitterDescription": "Ein internationales Handelsnetzwerk auf Einladung: Unternehmen geprüft, Chancen bewertet, Vorstellungen kontrolliert."
   },
   "nav": {
     "homeAriaLabel": "Ponte Trade Startseite",
@@ -777,7 +777,8 @@
     "post": "Einstellen",
     "postAriaLabel": "Ein Inserat einstellen",
     "verify": "Prüfen",
-    "primaryAriaLabel": "Hauptnavigation"
+    "primaryAriaLabel": "Hauptnavigation",
+    "signals": "Marktsignale"
   },
   "pricing": {
     "meta": {
@@ -833,7 +834,7 @@
       },
       "connect": {
         "label": "Verbunden",
-        "micro": "NCNDA unterzeichnet, dann Vermittlung"
+        "micro": "Vorstellung nach beidseitiger Zustimmung"
       },
       "close": {
         "label": "Abschluss",
@@ -1050,18 +1051,18 @@
     "failedTitle": "Das hat nicht geklappt"
   },
   "landing": {
-    "eyebrow": "Live-Board",
-    "h1": "Eine Brücke entfernt.",
-    "sub": "Geprüfte Gegenparteien. Echte Geschäfte. Beitritt und Handel kostenlos.",
-    "ctaPrimary": "Live-Board ansehen",
-    "ctaSecondary": "So funktioniert die Prüfung",
+    "eyebrow": "Gründungsnetzwerk",
+    "h1": "Handelschancen, ohne das übliche Rauschen.",
+    "sub": "Ein internationales Handelsnetzwerk auf Einladung, in dem Unternehmen geprüft, Chancen bewertet und Vorstellungen kontrolliert werden.",
+    "ctaPrimary": "Chancen entdecken",
+    "ctaSecondary": "Chance einreichen",
     "stage": {
       "match": "Treffer",
       "counterparty": "Gegenpartei",
       "trustLabel": "Vertrauenswert",
       "clear": "Register und Sanktionslisten ohne Befund",
       "readOn": "gelesen am {date}",
-      "openRoom": "Deal-Room öffnen",
+      "openRoom": "Vorstellung anfordern",
       "sampleNote": "Formatbeispiel. Es zeigt, wie ein Geschäft auf Ponte geschrieben wird. Kein aktives Inserat."
     },
     "verify": {
@@ -1073,8 +1074,8 @@
       "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
       "identifiers": "USt-IdNr. und LEI",
       "identifiersDetail": "VIES, GLEIF, mit Lesedatum",
-      "anonymous": "Anonym bis zum NCNDA",
-      "anonymousDetail": "Papiere vor der Vorstellung",
+      "anonymous": "Identität bei der Vorstellung offengelegt",
+      "anonymousDetail": "Nur in der kontrollierten Vorstellungsphase, wenn beide Seiten zustimmen",
       "cta": "Was jede Stufe prüft"
     },
     "ai": {
@@ -1089,12 +1090,92 @@
       "heading": "Beitritt kostenlos. Keine Provision auf Geschäfte, die Sie selbst abschließen.",
       "body": "Ein Angebot oder ein Gesuch einstellen, das Board lesen und eine Gegenpartei kontaktieren kosten nichts. Prüfung und Intelligence werden in Credits bezahlt, und das Desk nur, wenn Sie es mit der Vermittlung beauftragen.",
       "verify": "Gegenpartei prüfen",
-      "room": "Deal-Room-Unterstützung",
+      "room": "Begleitung der Transaktion",
       "report": "Tiefenbericht",
       "credits": "{n} Credits",
       "credit": "{n} Credit",
       "desk": "Die Vermittlung durch das Desk erfolgt gegen Erfolgshonorar oder Retainer, schriftlich vereinbart, bevor Arbeit beginnt.",
       "cta": "Kostenlos starten"
     }
+  },
+  "marketSignals": {
+    "label": "Marktsignale",
+    "badge": "Externes Marktsignal: von Ponte noch nicht verifiziert",
+    "disclaimer": "Diese Informationen wurden durch externe Marktrecherche ermittelt. Ponte hat den Teilnehmer, die fortbestehende Verfügbarkeit des Gesuchs oder Angebots oder seine Befugnis zu handeln noch nicht verifiziert.",
+    "board": {
+      "heading": "Aktuelle Nachfrage, die eine Prüfung wert ist",
+      "intro": "Ponte erkennt durch externe Marktrecherche aktuelle Hinweise auf Käufernachfrage und Verkäuferverfügbarkeit. Dies sind keine geprüften Chancen. Bitten Sie Ponte festzustellen, wer hinter einem Signal steht, ob es noch aktuell ist und ob eine qualifizierte Vorstellung arrangiert werden kann.",
+      "empty": "Ausgewählte Signale werden geprüft. Hier wird nichts angezeigt, bis ein Administrator es zur Anzeige freigegeben hat."
+    },
+    "card": {
+      "marker": "Signal",
+      "view": "Signal ansehen",
+      "notStated": "Nicht angegeben",
+      "sideBuyer": "Käufernachfrage",
+      "sideSeller": "Verkäuferverfügbarkeit"
+    },
+    "detail": {
+      "eyebrow": "Marktsignal",
+      "knownHeading": "Was Ponte derzeit weiß",
+      "unknownHeading": "Was Ponte noch nicht festgestellt hat",
+      "unknowns": {
+        "u1": "Wer hinter dem Gesuch oder Angebot steht",
+        "u2": "Das Unternehmen und seine Befugnis zu handeln",
+        "u3": "Ob das Gesuch oder Angebot noch aktuell ist",
+        "u4": "Ob die Partei bereit ist, vorgestellt zu werden"
+      },
+      "fact": {
+        "side": "Seite",
+        "quantity": "Menge",
+        "corridor": "Korridor",
+        "incoterm": "Incoterm",
+        "payment": "Zahlung",
+        "hsCode": "HS-Code",
+        "signalDate": "Signaldatum"
+      },
+      "tombstone": "Dieses Marktsignal ist nicht mehr aktiv."
+    },
+    "cta": {
+      "askPonte": "Ponte um Prüfung bitten",
+      "secondarySupply": "Ich könnte dies liefern",
+      "secondaryBuy": "Ich hätte Interesse am Kauf"
+    },
+    "investigate": {
+      "intro": "Ponte geht dem Gesuch hinter diesem Signal nach. Ihre Anfrage geht an den Ponte Desk; kein Dritter wird automatisch kontaktiert oder offengelegt.",
+      "close": "Schließen",
+      "businessLabel": "Ihr Unternehmen",
+      "businessPlaceholder": "Eingetragener Firmenname",
+      "typeLabel": "Sie sind",
+      "typeSelect": "Auswählen",
+      "requesterType": {
+        "supplier": "Möglicher Lieferant",
+        "buyer": "Möglicher Käufer",
+        "intermediary": "Vermittler",
+        "adviser": "Berater"
+      },
+      "goalLabel": "Was soll Ponte feststellen?",
+      "goalPlaceholder": "z. B. wer dahinter steht, ob es noch aktuell ist, ob eine qualifizierte Vorstellung arrangiert werden kann",
+      "indicativeLabel": "Indikative Menge, Zeitrahmen oder Lieferfähigkeit",
+      "optional": "(optional)",
+      "indicativePlaceholder": "z. B. kann ab März 3 x 40ft/Monat liefern",
+      "geographyLabel": "Region",
+      "geographyPlaceholder": "Wo Sie sind oder welchen Korridor Sie bedienen",
+      "evidenceLabel": "Zertifizierungen oder Nachweise, die Sie beibringen können",
+      "evidencePlaceholder": "z. B. ISO 22000, Pflanzengesundheitszeugnisse, Bankreferenz",
+      "introCheckbox": "Ich hätte gern eine qualifizierte Vorstellung, wenn Ponte das Gesuch bestätigt.",
+      "submit": "Prüfungsanfrage senden",
+      "sending": "Senden...",
+      "error": "Fehlgeschlagen, bitte erneut versuchen.",
+      "received": "Anfrage erhalten"
+    }
+  },
+  "founding": {
+    "metaTitle": "Einladung zum Gründungsnetzwerk",
+    "eyebrow": "Gründungsnetzwerk",
+    "heading": "Sie sind zum Gründungsnetzwerk eingeladen.",
+    "lead": "Ponte ist ein internationales Handelsnetzwerk auf Einladung, in dem Unternehmen geprüft, Chancen bewertet und Vorstellungen kontrolliert werden. Entdecken Sie, was aktiv ist, oder melden Sie sich an, um teilzunehmen.",
+    "ctaExplore": "Chancen entdecken",
+    "ctaSignIn": "Anmelden",
+    "privacy": "Wir erfassen, welche Einladung Sie gebracht hat, um zu verstehen, wie das Gründungsnetzwerk wächst. Sie wird einmal in Ihrem Konto gespeichert, nie weitergegeben und wirkt sich nie auf Prüfung oder Preise aus."
   }
 }

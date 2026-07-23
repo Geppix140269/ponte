@@ -1,0 +1,73 @@
+{
+  "marketSignals": {
+    "label": "Market Signals",
+    "badge": "External market signal: not yet verified by Ponte",
+    "disclaimer": "This information was identified through external market research. Ponte has not yet verified the participant, the continuing availability of the requirement or offer, or their authority to transact.",
+    "board": {
+      "heading": "Recent demand worth investigating",
+      "intro": "Ponte identifies recent indications of buyer demand and seller availability through external market research. These are not verified opportunities. Ask Ponte to establish who is behind a signal, whether it is still current, and whether a qualified introduction can be arranged.",
+      "empty": "Selected signals are being reviewed. Nothing is shown here until an administrator has approved it for display."
+    },
+    "card": {
+      "marker": "Signal",
+      "view": "View signal",
+      "notStated": "Not stated",
+      "sideBuyer": "Buyer demand",
+      "sideSeller": "Seller availability"
+    },
+    "detail": {
+      "eyebrow": "Market Signal",
+      "knownHeading": "What Ponte currently knows",
+      "unknownHeading": "What Ponte has not yet established",
+      "unknowns": {
+        "u1": "Who is behind the requirement or offer",
+        "u2": "The company and its authority to transact",
+        "u3": "Whether the requirement or offer is still current",
+        "u4": "Whether the participant is willing to be introduced"
+      },
+      "fact": {
+        "side": "Side",
+        "quantity": "Quantity",
+        "corridor": "Corridor",
+        "incoterm": "Incoterm",
+        "payment": "Payment",
+        "hsCode": "HS code",
+        "signalDate": "Signal date"
+      },
+      "tombstone": "This market signal is no longer active."
+    },
+    "cta": {
+      "askPonte": "Ask Ponte to investigate",
+      "secondarySupply": "I may be able to supply this",
+      "secondaryBuy": "I may be interested in buying this"
+    },
+    "investigate": {
+      "intro": "Ponte will look into the requirement behind this signal. Your request goes to the Ponte desk; no third party is contacted or revealed automatically.",
+      "close": "Close",
+      "businessLabel": "Your business",
+      "businessPlaceholder": "Registered company name",
+      "typeLabel": "You are a",
+      "typeSelect": "Select",
+      "requesterType": {
+        "supplier": "Potential supplier",
+        "buyer": "Potential buyer",
+        "intermediary": "Intermediary",
+        "adviser": "Adviser"
+      },
+      "goalLabel": "What do you want Ponte to establish?",
+      "goalPlaceholder": "e.g. who is behind this, whether it is still current, whether a qualified introduction can be arranged",
+      "indicativeLabel": "Indicative quantity, timing or supply capability",
+      "optional": "(optional)",
+      "indicativePlaceholder": "e.g. can supply 3 x 40ft/month from March",
+      "geographyLabel": "Geography",
+      "geographyPlaceholder": "Where you are, or the corridor you serve",
+      "evidenceLabel": "Certifications or evidence you can provide",
+      "evidencePlaceholder": "e.g. ISO 22000, phytosanitary certs, bank reference",
+      "introCheckbox": "I would like a qualified introduction if Ponte confirms the requirement.",
+      "submit": "Submit investigation request",
+      "sending": "Sending...",
+      "error": "Failed, try again.",
+      "received": "Request received"
+    }
+  }
+}

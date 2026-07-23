@@ -14,11 +14,13 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 // drawer. Offering the same destination twice on one screen is what makes a
 // phone feel like a shrunken desktop, and it also makes the drawer look like
 // the real navigation when it is not.
-const navLinks = [
+type NavLink = { href: string; key: string; inBottomNav: boolean };
+const navLinks: NavLink[] = [
   { href: "/marketplace", key: "marketplace", inBottomNav: true },
+  { href: "/market-signals", key: "signals", inBottomNav: false },
   { href: "/pricing", key: "fees", inBottomNav: false },
   { href: "/contact", key: "contact", inBottomNav: false },
-] as const;
+];
 
 const drawerLinks = navLinks.filter((link) => !link.inBottomNav);
 

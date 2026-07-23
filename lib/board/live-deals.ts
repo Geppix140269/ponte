@@ -1,25 +1,32 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode, parseVolume } from "@/lib/listing-terms";
+import { isPubliclyCurrent } from "@/lib/listings/validity";
+import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 
 /**
- * The live board, as one list, for any surface that wants to show real
- * activity without caring where a deal came from.
+ * The Qualified Opportunities board: approved, current member listings, and
+ * nothing else.
  *
- * Two sources, deliberately not merged into one shape at the database level:
+ * ---------------------------------------------------------------------------
+ * One source, on purpose (Definitive 1 August brief, Block A)
+ * ---------------------------------------------------------------------------
+ * This used to merge `desk_radar` rows into the same list under a `source`
+ * discriminator. It no longer does. Market Signals are external indications
+ * Ponte has not confirmed, they are not Qualified Opportunities, and the two
+ * must never share a feed, a status or a CTA. The Market Signal query lives in
+ * lib/board/market-signals.ts and returns its own record type.
  *
- *   - `listings`, status `approved`. Real member listings. Carry a
- *     verification level, because a member has one.
- *   - `desk_radar`, status `live`. Opportunities the desk identified in the
- *     open market. They carry NO verification level and no identity, ever,
- *     because nobody behind them is a Ponte member. See
- *     Ponte_Desk_Radar_Spec_2026-07-22.md section 2.
+ * So this reads `listings`, status `approved`, and drops any whose `valid_until`
+ * has passed: an expired opportunity is not current, and a board of current
+ * opportunities does not show it.
  *
- * Nothing here invents a deal. If both sources are empty the caller gets an
- * empty array and every surface that renders it hides itself. There is no
- * demo mode and there must never be one: a fabricated deal on a trading board
- * is the fastest way to lose a trader, and it is the one thing every brief
- * for this product says twice.
+ * Nothing here invents a deal. If the board is empty the caller gets an empty
+ * array and every surface that renders it hides itself. There is no demo mode
+ * and there must never be one: a fabricated deal on a trading board is the
+ * fastest way to lose a trader, and it is the one thing every brief for this
+ * product says twice.
  */
 
 export type DealSource = "member" | "radar";
@@ -71,32 +78,8 @@ export const SHOWCASE_MIN = 3;
  */
 export const COUNT_MIN = 8;
 
-/**
- * Launch switch for the public Desk Radar section, not a legal gate.
- *
- * Spec section 7 raised a counsel question on the sourcing risk. Giuseppe
- * reviewed it on 2026-07-22 and decided to proceed with the radar public,
- * accepting that risk, so this flag exists only to hold the section back
- * until the CSV import has actually run. Set DESK_RADAR_PUBLIC=1 to light it.
- *
- * What the decision did NOT relax, and what this module still enforces: no
- * counterparty identity, no tier badge, no source platform named, and only
- * the paraphrased description ever rendered. Those are in section 2 and they
- * are the reason the radar is publishable at all.
- *
- * The read fails soft while the table does not exist, so flipping the flag
- * early cannot break the homepage.
- */
-function radarIsPublic(): boolean {
-  // Defaults ON as of the CSV import: the sourcing risk was reviewed and
-  // accepted on 2026-07-22 and the collection is loaded, so the switch has
-  // served its purpose. Set DESK_RADAR_PUBLIC=0 to pull the section without
-  // a deploy.
-  return process.env.DESK_RADAR_PUBLIC !== "0";
-}
-
 const LISTING_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, created_at";
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, validity_type, valid_until, reconfirmed_at, created_at";
 
 /** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
 function chapterOf(hsCode: string | null): string | null {
@@ -114,6 +97,11 @@ function chapterOf(hsCode: string | null): string | null {
  * the query entirely, so they cannot reach the client even by accident.
  */
 export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
+  // Never cache the board read. supabase-js reads through fetch, and Next's
+  // Data Cache will otherwise pin the first result under its URL and keep
+  // serving it after an approval or an expiry, even on a force-dynamic page.
+  // See the note in lib/board/market-signals.ts.
+  noStore();
   if (!isSupabaseConfigured()) return [];
 
   try {
@@ -127,7 +115,18 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
       .limit(limit);
     if (error) throw error;
 
-    const deals: LiveDeal[] = (rows ?? []).map((l) => {
+    // Current only, on two axes. First the listing itself: an approved listing
+    // whose finite validity has passed OR whose 90-day reconfirmation has lapsed
+    // is not live. Then the owner: a member whose business verification is no
+    // longer passing (suspended, failed, dropped below the member level) loses
+    // public visibility for all their listings. Same rules the board and detail
+    // page share, so no public surface disagrees.
+    const now = Date.now();
+    const currentRows = (rows ?? []).filter((l) => isPubliclyCurrent(l, now));
+    const eligible = await eligibleOwnerIds(sb, currentRows.map((l) => l.user_id));
+    const liveRows = currentRows.filter((l) => eligible.has(l.user_id));
+
+    const deals: LiveDeal[] = liveRows.map((l) => {
       const vol = parseVolume(l.volume);
       return {
         id: l.id,
@@ -141,9 +140,8 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         quantity: vol.quantity,
         unit: vol.unit,
         incoterm: l.incoterm,
-        // Member listings keep payment terms inside the composed details for
-        // now; the v4 column exists but the composer does not write it yet.
-        payment: null,
+        // Payment terms are now a structured column the composer writes.
+        payment: l.payment_terms ?? null,
         originText: l.origin,
         destinationText: l.destination,
         originCode: isoCode(l.origin),
@@ -158,7 +156,7 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
     // about them the board shows. A level that cannot be read stays null, so
     // the card shows no badge rather than claiming "not verified".
     const memberIds = Array.from(
-      new Set((rows ?? []).map((l) => l.user_id).filter(Boolean)),
+      new Set(liveRows.map((l) => l.user_id).filter(Boolean)),
     );
     if (memberIds.length > 0) {
       const { data: levels } = await sb
@@ -171,13 +169,9 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         if (Number.isFinite(n)) byUser.set(p.id, n);
       }
       for (let i = 0; i < deals.length; i++) {
-        const level = byUser.get((rows ?? [])[i].user_id);
+        const level = byUser.get(liveRows[i].user_id);
         deals[i].verificationLevel = level ?? null;
       }
-    }
-
-    if (radarIsPublic()) {
-      deals.push(...(await readRadar(sb, limit)));
     }
 
     await decorateChapters(sb, deals);
@@ -189,62 +183,6 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
     // A homepage must render when the database does not. The showcase hides
     // itself on an empty list, which is the correct thing to show when we
     // cannot prove there is anything live.
-    return [];
-  }
-}
-
-/**
- * Desk Radar, public fields only. Internal columns (source_url,
- * source_platform, counterparty_name, counterparty_contact, notes) are never
- * selected: spec section 2 keeps them desk-visible, and the cheapest way to
- * honour that is to never ask for them.
- *
- * `graduated`, `expired` and `removed` items are excluded, and an item past
- * its validity date is not live regardless of what its status column says.
- */
-async function readRadar(
-  sb: ReturnType<typeof createAdminClient>,
-  limit: number,
-): Promise<LiveDeal[]> {
-  try {
-    const { data, error } = await sb
-      .from("desk_radar")
-      .select(
-        "id, side, product, hs_code, qty, unit, incoterms, payment, origin, destination, spotted_at, valid_until, status",
-      )
-      .in("status", ["live", "under_pursuit"])
-      .order("spotted_at", { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-
-    const now = Date.now();
-    return (data ?? [])
-      .filter((r) => !r.valid_until || Date.parse(r.valid_until) > now)
-      .map((r) => ({
-        id: r.id,
-        ref: null,
-        source: "radar" as const,
-        type: r.side,
-        product: r.product,
-        hsCode: r.hs_code,
-        chapter: chapterOf(r.hs_code),
-        chapterTitle: null,
-        quantity: r.qty === null || r.qty === undefined ? null : String(r.qty),
-        unit: r.unit,
-        incoterm: r.incoterms,
-        payment: r.payment,
-        originText: r.origin,
-        destinationText: r.destination,
-        originCode: isoCode(r.origin),
-        destinationCode: isoCode(r.destination),
-        postedAt: r.spotted_at,
-        // Never a badge on a radar item. Nobody behind it is a member.
-        verificationLevel: null,
-        href: null,
-      }));
-  } catch {
-    // The table does not exist yet. That is the expected state until the
-    // radar build lands, and it must not take the homepage with it.
     return [];
   }
 }

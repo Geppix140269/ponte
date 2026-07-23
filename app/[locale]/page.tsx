@@ -216,7 +216,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             <Icon name="chevron" size={16} />
           </Link>
           <Link
-            href="/verification"
+            href="/marketplace/new"
             className="inline-flex items-center justify-center rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink transition-colors hover:bg-white/10"
           >
             {t("ctaSecondary")}

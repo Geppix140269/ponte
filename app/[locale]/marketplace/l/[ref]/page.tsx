@@ -22,6 +22,9 @@ import {
   TIMING_KEYS,
   UNIT_KEYS,
 } from "@/lib/listing-terms";
+import { isPubliclyCurrent } from "@/lib/listings/validity";
+import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
+import { truthfulLabels } from "@/lib/listings/public-labels";
 import type { Locale } from "@/i18n/routing";
 
 // Languages a reader can flip the listing into. Each listing/language pair
@@ -43,6 +46,8 @@ export const dynamic = "force-dynamic";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ponte.trade";
 
+type DeskVersion = { qualification?: string | null; limitations?: string | null } | null;
+
 type Deal = {
   id: string;
   user_id: string;
@@ -53,30 +58,50 @@ type Deal = {
   origin: string | null;
   destination: string | null;
   volume: string | null;
+  quantity: number | null;
+  unit: string | null;
+  frequency: string | null;
   incoterm: string | null;
+  payment_terms: string | null;
   submitter_role: string | null;
   chain_depth: string | null;
+  mandate_sighted: boolean | null;
+  validity_type: string | null;
+  valid_until: string | null;
+  reconfirmed_at: string | null;
+  decided_at: string | null;
+  desk_version: DeskVersion;
   details: string;
   created_at: string;
 };
 
 // Public, shareable page for ONE approved listing. This is the link members
 // forward on WhatsApp: OG tags carry the product photo and teaser, and the
-// page converts visitors into members. Anything not approved 404s.
+// page converts visitors into members. Anything not approved, or expired, 404s.
 async function getDeal(
   ref: string,
-): Promise<{ deal: Deal; image: string | null; trustLevel: number | null } | null> {
+): Promise<{
+  deal: Deal;
+  image: string | null;
+  trustLevel: number | null;
+  businessVerified: boolean;
+} | null> {
   if (!isSupabaseConfigured()) return null;
   const adminSb = createAdminClient();
   const { data } = await adminSb
     .from("listings")
     .select(
-      "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, submitter_role, chain_depth, details, created_at",
+      "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at",
     )
     .eq("ref", ref.toUpperCase())
     .eq("status", "approved")
     .maybeSingle();
   if (!data) return null;
+
+  // Not-current opportunities are not public: a passed finite validity OR a
+  // lapsed 90-day reconfirmation both 404 the link. Same rule the board and the
+  // homepage showcase apply.
+  if (!isPubliclyCurrent(data)) return null;
 
   const { data: media } = await adminSb
     .from("listing_media")
@@ -92,17 +117,40 @@ async function getDeal(
   // The counterparty stays anonymous. Their verification level does not
   // identify them, and it is the fact that decides whether to spend time here.
   // No answer means unknown, which is not the same as unverified, so the
-  // badge is left off rather than made up.
+  // badge is left off rather than made up. business_verification_id is the
+  // bound member-business record from Block B: its presence is what makes
+  // "Business checked" a true statement rather than a decoration.
   const { data: profile } = await adminSb
     .from("profiles")
-    .select("verification_level")
+    .select("verification_level, business_verification_id")
     .eq("id", data.user_id)
     .maybeSingle();
+
+  // Continuing verification currency: an approved listing drops off the public
+  // surfaces when its owner's member-business verification is no longer passing
+  // (suspended, failed, dropped below the member level, or no longer bound). It
+  // 404s here for the same reason it vanishes from the board.
+  let verification: { purpose: string | null; status: string | null } | null = null;
+  if (profile?.business_verification_id) {
+    const { data: v } = await adminSb
+      .from("verifications")
+      .select("purpose, status")
+      .eq("id", profile.business_verification_id)
+      .maybeSingle();
+    verification = v ?? null;
+  }
+  const ownerEligible = isPubliclyEligibleVerification({
+    verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    business_verification_id: profile?.business_verification_id ?? null,
+    verification,
+  });
+  if (!ownerEligible) return null;
 
   return {
     deal: data as Deal,
     image,
     trustLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    businessVerified: ownerEligible,
   };
 }
 
@@ -140,7 +188,7 @@ export async function generateMetadata({
     description,
     alternates: alternatesFor(`/marketplace/l/${params.ref}`, params.locale),
     openGraph: {
-      title: `${title} · Ponte`,
+      title: `${title} | Ponte Trade`,
       description,
       url: `${APP_URL}/marketplace/l/${deal.ref}`,
       siteName: "Ponte",
@@ -149,7 +197,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title: `${title} · Ponte`,
+      title: `${title} | Ponte Trade`,
       description,
       ...(image ? { images: [image] } : {}),
     },
@@ -211,7 +259,7 @@ export default async function DealPage({
 
   const res = await getDeal(params.ref);
   if (!res) notFound();
-  const { deal, image, trustLevel } = res;
+  const { deal, image, trustLevel, businessVerified } = res;
   const user = await getUser();
 
   // Optional reader language: the listing shown in THEIR language.
@@ -239,9 +287,39 @@ export default async function DealPage({
   // ---- The trade terms, as a trader would ask for them ----------------
   // Timing is read out of the ORIGINAL details, never the translation: the
   // listing form writes that line in English on every listing.
-  const vol = parseVolume(deal.volume);
+  // Prefer the structured columns the composer now writes, falling back to the
+  // legacy composed `volume` for listings that predate them. Nothing invented:
+  // a value absent in both stays absent.
+  const parsed = parseVolume(deal.volume);
+  const vol = {
+    ...parsed,
+    quantity: deal.quantity != null ? String(deal.quantity) : parsed.quantity,
+    quantityNumeric: deal.quantity != null ? Number(deal.quantity) : parsed.quantityNumeric,
+    unit: deal.unit ?? parsed.unit,
+    frequency: deal.frequency ?? parsed.frequency,
+  };
   const from = corridorEnd(deal.origin);
   const to = corridorEnd(deal.destination);
+
+  // The public trust labels, each shown only when the stored record supports
+  // it (brief 5.1). "Opportunity reviewed" is true because this page only ever
+  // renders an approved listing.
+  const labels = truthfulLabels({
+    businessVerified,
+    submitterRole: deal.submitter_role,
+    mandateSighted: Boolean(deal.mandate_sighted),
+    reviewed: true,
+    lastConfirmed: deal.reconfirmed_at ?? deal.decided_at ?? null,
+  });
+  const LABEL_TEXT: Record<string, string> = {
+    businessChecked: "Business checked",
+    roleDeclared: "Role declared",
+    authoritySighted: "Authority sighted",
+    opportunityReviewed: "Opportunity reviewed",
+    lastConfirmed: "Last confirmed",
+  };
+  const deskQualification = deal.desk_version?.qualification?.trim() || null;
+  const deskLimitations = deal.desk_version?.limitations?.trim() || null;
   const place = (end: { code: string | null; text: string | null }) =>
     end.text ? (end.code ? `${end.text} (${end.code})` : end.text) : null;
 
@@ -259,9 +337,9 @@ export default async function DealPage({
     { label: t("detail.terms.incoterm"), value: deal.incoterm, mono: true },
     { label: t("detail.terms.origin"), value: place(from) },
     { label: t("detail.terms.destination"), value: place(to) },
-    // No column carries payment terms today, so this is honestly empty
-    // rather than filled from the free text and hoped for.
-    { label: t("detail.terms.payment"), value: null },
+    // Payment terms are now a structured column the composer writes. Still
+    // honestly empty when the member did not state them.
+    { label: t("detail.terms.payment"), value: deal.payment_terms },
     { label: t("detail.terms.hsCode"), value: deal.hs_code, mono: true },
     {
       label: t("detail.terms.frequency"),
@@ -407,6 +485,24 @@ export default async function DealPage({
             ))}
           </dl>
 
+          {/* The public trust facts, each corresponding to stored data. No
+              single ambiguous "verified": separate literal statements only. */}
+          {labels.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+              {labels.map((l) => (
+                <span
+                  key={l.key}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-3 py-1 text-[11px] uppercase text-cream"
+                  style={{ letterSpacing: "0.12em" }}
+                >
+                  <ShieldCheck className="h-3 w-3 text-gold" />
+                  {LABEL_TEXT[l.key]}
+                  {l.key === "lastConfirmed" && l.date ? ` ${formatPosted(l.date, locale)}` : ""}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Who is on the other side, to the extent it can be said. */}
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/10 pt-4">
             {trustLevel !== null && (
@@ -427,6 +523,27 @@ export default async function DealPage({
               {t("detail.verificationLink")}
             </Link>
           </div>
+
+          {/* The desk-approved public text: what Ponte qualified, and the
+              limitations that remain. Desk-written, not raw model output, and
+              shown only when it exists. */}
+          {(deskQualification || deskLimitations) && (
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="text-[10px] uppercase text-gray-2/70" style={{ letterSpacing: "0.18em" }}>
+                Ponte review
+              </p>
+              {deskQualification && (
+                <p className="mt-2 whitespace-pre-wrap text-[14px] leading-relaxed text-cream">
+                  {deskQualification}
+                </p>
+              )}
+              {deskLimitations && (
+                <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-gray-2">
+                  {deskLimitations}
+                </p>
+              )}
+            </div>
+          )}
 
           <p className="mt-6 whitespace-pre-wrap text-[14px] leading-relaxed text-gray-2">
             {user ? shownDetails : teaser(shownDetails)}

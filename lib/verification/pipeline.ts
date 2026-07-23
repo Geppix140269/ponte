@@ -48,6 +48,13 @@ import { checkVat } from "@/lib/registry/vies";
 import { lookupLei } from "@/lib/registry/gleif";
 import { reconcile } from "@/lib/verification/reconcile";
 import { companyAgePoints, setComponent } from "@/lib/verification/trust-score";
+import {
+  attestationAccepted,
+  grantsMemberStatus,
+  normalizePurpose,
+  MEMBER_BUSINESS_ATTESTATION,
+  type VerificationPurpose,
+} from "@/lib/verification/purpose";
 
 /** Must appear on every result, every certificate, and in the terms. */
 export const VERIFICATION_DISCLAIMER =
@@ -68,6 +75,17 @@ export type VerificationRequest = VerificationSubject & {
   guestEmail?: string | null;
   /** Set when a guest paid for a single certificate instead of spending credits. */
   guestLedgerId?: string | null;
+  /**
+   * What the check is FOR. Only 'member_business' may move the requester's own
+   * account. Anything else is a counterparty check. See lib/verification/purpose.
+   */
+  purpose: VerificationPurpose;
+  /**
+   * The member's affirmative attestation that this is the business they
+   * represent. Required, and only ever a boolean true, for a member-business
+   * verification; ignored for a counterparty check.
+   */
+  attested?: boolean;
 };
 
 export type VerificationOutcome = {
@@ -114,6 +132,21 @@ export async function runLevel2(
 ): Promise<VerificationOutcome> {
   const sb = createAdminClient();
 
+  // A member-business verification cannot even be OPENED without the
+  // attestation. The route validates first and returns 400; this is the
+  // defence for any other caller, and it fires BEFORE the row is created, so a
+  // request that fails it produces no verification and spends no credit. The
+  // attested_at stamp is the server's own clock, never a client value.
+  const purpose = normalizePurpose(req.purpose);
+  if (purpose === "member_business" && !attestationAccepted(req.attested)) {
+    return {
+      id: "",
+      status: "failed",
+      reason: "A member-business verification requires an explicit attestation.",
+    };
+  }
+  const attestedAt = purpose === "member_business" ? new Date().toISOString() : null;
+
   // 1. Create the record first, so an abandoned run is still visible.
   const { data: created, error: createErr } = await sb
     .from("verifications")
@@ -127,6 +160,14 @@ export async function runLevel2(
       subject_lei: req.lei ?? null,
       level_requested: 2,
       status: "pending",
+      // Stored on the row so the resume path and the admin queue read the same
+      // purpose the request declared, never one inferred later.
+      purpose,
+      // The attestation recorded auditably: when it was accepted and which
+      // wording version. Null for a counterparty check.
+      attested_at: attestedAt,
+      attestation_version:
+        purpose === "member_business" ? MEMBER_BUSINESS_ATTESTATION.version : null,
     })
     .select("id")
     .single();
@@ -165,7 +206,10 @@ export async function runLevel2(
 
   // 3 onwards. The paid for work. Everything below this line can be re-run on
   // this row without charging again, which is what a resume does.
-  return runLevel2Checks(id, req, { userId: req.userId ?? null });
+  return runLevel2Checks(id, req, {
+    userId: req.userId ?? null,
+    purpose,
+  });
 }
 
 /**
@@ -187,7 +231,7 @@ export async function runLevel2(
 export async function runLevel2Checks(
   verificationId: string,
   req: VerificationSubject,
-  opts: { userId?: string | null } = {},
+  opts: { userId?: string | null; purpose?: VerificationPurpose | null } = {},
 ): Promise<VerificationOutcome> {
   const sb = createAdminClient();
   const id = verificationId;
@@ -383,16 +427,25 @@ export async function runLevel2Checks(
       })
       .eq("id", id);
 
-    // 8. Trust score, only on a clean automatic pass. A case in review scores
-    //    nothing until a human decides.
-    if (status === "auto_verified" && userId) {
+    // 8. The member's own account only moves for the member's own business.
+    //    Trust components, the level and the badge are granted on a clean
+    //    automatic pass ONLY when this was a member_business verification. A
+    //    counterparty check has produced its case result above and stops there:
+    //    it never touches the requester's level or trust score (brief §3.2). A
+    //    case in review scores nothing either way until a human decides.
+    //    business_verification_id binds the badge to this record (§3.3).
+    if (status === "auto_verified" && userId && grantsMemberStatus(opts.purpose)) {
       await setComponent(userId, "business", 25);
       await setComponent(userId, "sanctions_clean", 20);
       const agePoints = companyAgePoints(registry.incorporationDate);
       if (agePoints > 0) await setComponent(userId, "company_age", agePoints);
       await sb
         .from("profiles")
-        .update({ verification_level: 2, verified_at: new Date().toISOString() })
+        .update({
+          verification_level: 2,
+          verified_at: new Date().toISOString(),
+          business_verification_id: id,
+        })
         .eq("id", userId);
     }
 
@@ -464,7 +517,7 @@ export async function resumeLevel2WithSelection(input: {
   const { data: row } = await sb
     .from("verifications")
     .select(
-      "id, user_id, status, subject_name, subject_country, subject_vat, subject_lei, registry",
+      "id, user_id, status, subject_name, subject_country, subject_vat, subject_lei, registry, purpose",
     )
     .eq("id", input.verificationId)
     // The ownership guard. Server side, on the read itself.
@@ -505,7 +558,9 @@ export async function resumeLevel2WithSelection(input: {
       vat: row.subject_vat,
       lei: row.subject_lei,
     },
-    { userId: input.userId },
+    // Purpose comes from the row, not the caller: the picker cannot relabel a
+    // counterparty check as a member-business verification to earn a badge.
+    { userId: input.userId, purpose: normalizePurpose(row.purpose) },
   );
 
   return { ok: true, outcome };

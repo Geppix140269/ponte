@@ -7,6 +7,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendVerificationDecision } from "@/lib/email";
 import { VERIFICATION_DISCLAIMER } from "@/lib/verification/pipeline";
 import { companyAgePoints, setComponent } from "@/lib/verification/trust-score";
+import { grantsMemberStatus } from "@/lib/verification/purpose";
 
 /**
  * Admin decisions on a verification case.
@@ -66,6 +67,7 @@ type CaseRow = {
   level_requested: number;
   status: string;
   registry: { incorporationDate?: string } | null;
+  purpose: string | null;
 };
 
 async function loadCase(id: string): Promise<CaseRow | null> {
@@ -73,7 +75,7 @@ async function loadCase(id: string): Promise<CaseRow | null> {
   const { data } = await adminSb
     .from("verifications")
     .select(
-      "id, user_id, guest_email, subject_name, level_requested, status, registry",
+      "id, user_id, guest_email, subject_name, level_requested, status, registry, purpose",
     )
     .eq("id", id)
     .maybeSingle();
@@ -141,6 +143,12 @@ async function notify(
  */
 async function grantLevel(row: CaseRow): Promise<void> {
   if (!row.user_id) return;
+  // A human confirming a COUNTERPARTY check records that case result, but must
+  // not move the requester's own account (brief §3.2). Only a member-business
+  // verification grants the level, the trust components and the badge. A legacy
+  // case with a null purpose is treated as a counterparty check and grants
+  // nothing, which is the safe default.
+  if (!grantsMemberStatus(row.purpose)) return;
   const adminSb = createAdminClient();
 
   if (row.level_requested >= 3) {
@@ -161,7 +169,12 @@ async function grantLevel(row: CaseRow): Promise<void> {
   const next = Math.max(current, row.level_requested);
   await adminSb
     .from("profiles")
-    .update({ verification_level: next, verified_at: new Date().toISOString() })
+    .update({
+      verification_level: next,
+      verified_at: new Date().toISOString(),
+      // Bind the badge to the member-business verification it rests on (§3.3).
+      business_verification_id: row.id,
+    })
     .eq("id", row.user_id);
 }
 

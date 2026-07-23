@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
     hs_code: clean(body.hs_code, 12).replace(/\D/g, "") || null,
     quantity: num(body.quantity),
     unit: clean(body.unit, 30) || null,
+    frequency: clean(body.frequency, 30) || null,
     incoterm: clean(body.incoterm, 20) || null,
     payment_terms: clean(body.payment_terms, 120) || null,
     origin_country: clean(body.origin_country, 2).toUpperCase() || null,

@@ -3,11 +3,20 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendConnectRequest, sendBrokerageSubmission } from "@/lib/email";
+import {
+  cleanInterest,
+  interestIsComplete,
+  missingInterestFields,
+  INTEREST_ROLE_LABELS,
+  type InterestRole,
+} from "@/lib/interest/expression";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// A member requests to connect on an approved listing. The owner decides;
+// A member sends a structured expression of interest on an approved listing:
+// the interested business, its role, the target, the geography and a short
+// reason for fit (brief Block D). The owner decides on that substance;
 // identities are revealed only when both sides agree. Free, always.
 export async function POST(req: NextRequest) {
   const user = await getUser();
@@ -21,14 +30,26 @@ export async function POST(req: NextRequest) {
   }
 
   let ref = "";
+  let body: Record<string, unknown> = {};
   try {
-    const body = await req.json();
+    body = await req.json();
     ref = typeof body.ref === "string" ? body.ref.trim().slice(0, 12) : "";
   } catch {
     /* fallthrough */
   }
   if (!/^PT-\d{3,6}$/.test(ref)) {
     return NextResponse.json({ error: "Invalid reference." }, { status: 400 });
+  }
+
+  // The expression of interest must be a meaningful, structured request, not a
+  // bare connect. The completeness rule lives in the pure module so it is the
+  // same rule the test pins.
+  const interest = cleanInterest(body);
+  if (!interestIsComplete(interest)) {
+    return NextResponse.json(
+      { error: "Incomplete request.", missing: missingInterestFields(interest) },
+      { status: 400 },
+    );
   }
 
   // The authenticated-read policy only exposes approved listings.
@@ -46,11 +67,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This is your own listing." }, { status: 400 });
   }
 
-  // One request per member per listing; a repeat click is a no-op.
+  // One request per member per listing; a repeat click is a no-op. The
+  // structured fields ride on the same row (columns added in Block D).
   const { error: insertErr } = await supabase.from("listing_connections").insert({
     listing_id: listing.id,
     requester_id: user.id,
     status: "pending",
+    interested_business: interest.interested_business,
+    interest_role: interest.interest_role,
+    interest_target: interest.interest_target,
+    interest_geography: interest.interest_geography,
+    interest_reason: interest.interest_reason,
   });
   if (insertErr && !insertErr.message?.includes("duplicate")) {
     console.error("[ponte] connection request failed:", insertErr);
@@ -70,11 +97,19 @@ export async function POST(req: NextRequest) {
       sendBrokerageSubmission({
         type: "requirement",
         name: user.email ?? user.id,
-        company: `Connection request on ${listing.ref}`,
+        company: interest.interested_business,
         email: user.email ?? "unknown@ponte.trade",
-        country: "-",
+        country: interest.interest_geography || "-",
         product: listing.product,
-        details: `${user.email ?? user.id} requested to connect on ${listing.ref} (${listing.type} · ${listing.product}). Owner notified; awaiting owner decision. Desk involvement is optional under the free-connect model.`,
+        details: [
+          `${user.email ?? user.id} expressed interest on ${listing.ref} (${listing.type} · ${listing.product}).`,
+          `Interested business: ${interest.interested_business}`,
+          `Role: ${INTEREST_ROLE_LABELS[interest.interest_role as InterestRole]}`,
+          `Target: ${interest.interest_target}`,
+          `Geography: ${interest.interest_geography}`,
+          `Reason for fit: ${interest.interest_reason}`,
+          `Owner notified; awaiting owner decision. Desk involvement is optional under the free-connect model.`,
+        ].join("\n"),
       }),
     ]);
   }

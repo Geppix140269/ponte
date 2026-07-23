@@ -1,0 +1,20 @@
+-- Block F: founding-invitation referral attribution.
+--
+-- Run: node scripts/db-query.mjs --file supabase/migrations/20260723f_referral_attribution.sql
+--
+-- One nullable column on profiles that records which invitation brought a
+-- member into the founding network. It is attribution only: it is never read
+-- for authorisation, verification currency, badge eligibility or payment, and
+-- nothing in the accepted A-E paths depends on it.
+--
+-- Additive, idempotent and reversible:
+--   - `add column if not exists` is a no-op on a database that already has it,
+--     and existing rows take the default null.
+--   - reverse with `alter table profiles drop column referral_code;` (there is
+--     no data dependency on it).
+--
+-- The set of valid codes is a short allowlist enforced in application code
+-- (lib/founding/referral.ts). The column deliberately carries no check
+-- constraint, so the allowlist can grow without a schema change and a future
+-- code can never be rejected at the database layer after the fact.
+alter table profiles add column if not exists referral_code text;

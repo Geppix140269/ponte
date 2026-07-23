@@ -6,7 +6,7 @@ import { accountBrief, isAiConfigured, type AccountBrief } from "@/lib/ai-vet";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
-import { submitDraftAction, connectDecisionAction } from "./actions";
+import { submitDraftAction, connectDecisionAction, reconfirmListingAction } from "./actions";
 import Reveal from "@/components/Reveal";
 import ProcessFlow from "@/components/ProcessFlow";
 import { alternatesFor } from "@/lib/seo";
@@ -20,6 +20,9 @@ import {
   FREQUENCY_KEYS,
   UNIT_KEYS,
 } from "@/lib/listing-terms";
+import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
+import { eligibleOwnerIds } from "@/lib/listings/public-filter";
+import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
 import type { Locale } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
@@ -91,8 +94,10 @@ const COLUMN_LABEL_STYLE = { letterSpacing: "0.18em" } as const;
 
 export default async function MarketplacePage({
   params,
+  searchParams,
 }: {
   params: { locale: string };
+  searchParams: { rc?: string };
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("marketplace");
@@ -127,15 +132,28 @@ export default async function MarketplacePage({
     status: string;
     created_at: string;
     decision_note: string | null;
+    reconfirmed_at: string | null;
+    valid_until: string | null;
   }[] = [];
 
-  // Pending connection requests on the member's own listings.
-  const pendingByListing = new Map<string, { id: string }[]>();
+  // Pending connection requests on the member's own listings. The requester's
+  // business identity is deliberately NOT selected here: it is disclosed only
+  // after the owner accepts (brief Block D follow-up). Pre-acceptance the owner
+  // sees the substance of the request (role, target, geography, reason) and an
+  // accurate "confirmed member" label, never the business name or contact.
+  type PendingConnection = {
+    id: string;
+    interest_role: string | null;
+    interest_target: string | null;
+    interest_geography: string | null;
+    interest_reason: string | null;
+  };
+  const pendingByListing = new Map<string, PendingConnection[]>();
   if (user) {
     const supabase = createClient();
     const { data } = await supabase
       .from("listings")
-      .select("id, ref, type, product, status, created_at, decision_note")
+      .select("id, ref, type, product, status, created_at, decision_note, reconfirmed_at, valid_until")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     listings = data ?? [];
@@ -143,12 +161,18 @@ export default async function MarketplacePage({
     if (listings.length > 0) {
       const { data: conns } = await supabase
         .from("listing_connections")
-        .select("id, listing_id")
+        .select("id, listing_id, interest_role, interest_target, interest_geography, interest_reason")
         .eq("status", "pending")
         .in("listing_id", listings.map((l) => l.id));
       for (const c of conns ?? []) {
         const arr = pendingByListing.get(c.listing_id) ?? [];
-        arr.push({ id: c.id });
+        arr.push({
+          id: c.id,
+          interest_role: c.interest_role,
+          interest_target: c.interest_target,
+          interest_geography: c.interest_geography,
+          interest_reason: c.interest_reason,
+        });
         pendingByListing.set(c.listing_id, arr);
       }
     }
@@ -219,12 +243,16 @@ export default async function MarketplacePage({
     destination: string | null;
     volume: string | null;
     incoterm: string | null;
+    payment_terms: string | null;
+    validity_type: string | null;
+    valid_until: string | null;
+    reconfirmed_at: string | null;
     details: string;
     created_at: string;
     full: boolean;
   };
   const BOARD_COLUMNS =
-    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, details, created_at";
+    "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, validity_type, valid_until, reconfirmed_at, details, created_at";
   // The board stays hidden from EVERYONE until it has real inventory.
   const BOARD_MIN = Number(process.env.BOARD_MIN_LISTINGS ?? 3);
   // A live count is a claim about size. It is only made once the board is
@@ -259,6 +287,18 @@ export default async function MarketplacePage({
         details: l.details.length > 120 ? l.details.slice(0, 120) + "…" : l.details,
         full: false,
       }));
+    }
+    // Current only, on both axes: the listing (finite validity not passed AND
+    // reconfirmation not lapsed) and its owner (member-business verification
+    // still passing). Same rules getLiveDeals and the detail page apply, so the
+    // three surfaces cannot disagree about what is live.
+    board = board.filter((b) => isPubliclyCurrent(b));
+    if (board.length > 0) {
+      const eligible = await eligibleOwnerIds(
+        createAdminClient(),
+        board.map((b) => b.user_id),
+      );
+      board = board.filter((b) => eligible.has(b.user_id));
     }
     approvedCount = board.length;
     if (approvedCount < BOARD_MIN) {
@@ -446,7 +486,7 @@ export default async function MarketplacePage({
                       )}
                     </div>
 
-                    {/* 2 · Incoterm */}
+                    {/* 2 · Incoterm and payment terms */}
                     <div className="mt-3 md:mt-0">
                       {b.incoterm ? (
                         <span
@@ -463,6 +503,11 @@ export default async function MarketplacePage({
                         <span className="text-[12px] text-gray-2/55">
                           {t("notStated")}
                         </span>
+                      )}
+                      {b.payment_terms && (
+                        <p className="mt-1 text-[11px] leading-snug text-gray-2/80">
+                          {b.payment_terms}
+                        </p>
                       )}
                     </div>
 
@@ -568,6 +613,17 @@ export default async function MarketplacePage({
             </Link>
           </div>
 
+          {searchParams.rc === "ok" && (
+            <div className="mb-4 rounded-xl border border-positive/40 bg-positive/10 p-4 text-[13px] text-cream">
+              Reconfirmed. The opportunity is current again and back on the public board.
+            </div>
+          )}
+          {searchParams.rc === "blocked" && (
+            <div className="mb-4 rounded-xl border border-negative/40 bg-negative/10 p-4 text-[13px] text-cream">
+              It could not be reconfirmed automatically: it no longer meets the publication criteria (for example your business verification is not current). It needs Ponte review.
+            </div>
+          )}
+
           {brief && (
             <div className="glass mb-4 p-6" style={{ borderColor: "rgba(232,160,32,0.3)" }}>
               <p className="flex items-center gap-2 text-[10px] uppercase text-gold" style={{ letterSpacing: "0.2em" }}>
@@ -610,6 +666,34 @@ export default async function MarketplacePage({
                       {l.decision_note}
                     </p>
                   )}
+                  {l.status !== "closed" && (
+                    <Link
+                      href={`/marketplace/new?edit=${l.id}`}
+                      className="mt-3 mr-4 inline-flex items-center gap-2 text-[11px] uppercase text-gray-2 hover:text-gold"
+                      style={{ letterSpacing: "0.16em" }}
+                    >
+                      Edit
+                    </Link>
+                  )}
+                  {l.status === "approved" && (
+                    <p className="mt-2 text-[11px] leading-relaxed text-gray-2/70">
+                      Editing a live opportunity{"'"}s terms returns it to Ponte for review before it goes public again.
+                    </p>
+                  )}
+                  {l.status === "approved" && reconfirmationLapsed(l.reconfirmed_at) && (
+                    <div
+                      className="mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-4 py-3"
+                      style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
+                    >
+                      <span className="flex-1 text-[12px] leading-relaxed text-cream">
+                        This opportunity is awaiting reconfirmation and is currently hidden from the public board. Reconfirm it if nothing has changed.
+                      </span>
+                      <form action={reconfirmListingAction}>
+                        <input type="hidden" name="id" value={l.id} />
+                        <button className="btn-gold !px-4 !py-2 text-[12px]">Reconfirm</button>
+                      </form>
+                    </div>
+                  )}
                   {l.status === "draft" && (
                     <form action={submitDraftAction} className="mt-3">
                       <input type="hidden" name="id" value={l.id} />
@@ -632,28 +716,78 @@ export default async function MarketplacePage({
                       <Share2 className="h-3.5 w-3.5" /> {t("mine.shareWhatsApp")}
                     </a>
                   )}
-                  {(pendingByListing.get(l.id) ?? []).map((c, i) => (
-                    <div
-                      key={c.id}
-                      className="mt-3 flex flex-wrap items-center gap-3 rounded-[10px] px-4 py-3"
-                      style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
-                    >
-                      <span className="flex-1 text-[13px] text-cream">
-                        {(pendingByListing.get(l.id) ?? []).length > 1
-                          ? t("mine.connect.requestNumbered", { n: i + 1 })
-                          : t("mine.connect.request")}
-                      </span>
-                      <form action={connectDecisionAction} className="flex gap-2">
-                        <input type="hidden" name="id" value={c.id} />
-                        <button name="decision" value="accepted" className="btn-gold !px-4 !py-2 text-[12px]">
-                          {t("mine.connect.accept")}
-                        </button>
-                        <button name="decision" value="declined" className="btn-ghost-light !px-4 !py-2 text-[12px]">
-                          {t("mine.connect.decline")}
-                        </button>
-                      </form>
-                    </div>
-                  ))}
+                  {(pendingByListing.get(l.id) ?? []).map((c, i) => {
+                    const roleLabel = c.interest_role
+                      ? INTEREST_ROLE_LABELS[c.interest_role as InterestRole] ?? c.interest_role
+                      : null;
+                    // A pre-Block-D row carries none of these; fall back to the
+                    // original one-line notice so an old request still reads.
+                    const structured =
+                      c.interest_target || c.interest_geography || c.interest_reason || roleLabel;
+                    return (
+                      <div
+                        key={c.id}
+                        className="mt-3 rounded-[10px] px-4 py-3"
+                        style={{ background: "rgba(232,160,32,0.10)", border: "1px solid rgba(232,160,32,0.35)" }}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            {structured ? (
+                              <>
+                                {/* Confirmed member: they signed in with a
+                                    confirmed email. NOT a claim that the business
+                                    itself is verified, and the business name is
+                                    withheld until acceptance. */}
+                                <p className="text-[13px] text-cream">
+                                  <span className="text-gold">Confirmed member</span>
+                                  {roleLabel && <span className="text-gray-2"> · {roleLabel}</span>}
+                                  {" wants to connect."}
+                                </p>
+                                <dl className="mt-2 grid gap-x-4 gap-y-1 text-[12px] text-gray-2 sm:grid-cols-2">
+                                  {c.interest_target && (
+                                    <div>
+                                      <dt className="inline text-gray-2/60">Target: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_target}</dd>
+                                    </div>
+                                  )}
+                                  {c.interest_geography && (
+                                    <div>
+                                      <dt className="inline text-gray-2/60">Geography: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_geography}</dd>
+                                    </div>
+                                  )}
+                                  {c.interest_reason && (
+                                    <div className="sm:col-span-2">
+                                      <dt className="inline text-gray-2/60">Reason for fit: </dt>
+                                      <dd className="inline text-cream/90">{c.interest_reason}</dd>
+                                    </div>
+                                  )}
+                                </dl>
+                                <p className="mt-2 text-[11px] text-gray-2/70">
+                                  Their business and contact are revealed only if you accept. Free.
+                                </p>
+                              </>
+                            ) : (
+                              <span className="text-[13px] text-cream">
+                                {(pendingByListing.get(l.id) ?? []).length > 1
+                                  ? t("mine.connect.requestNumbered", { n: i + 1 })
+                                  : t("mine.connect.request")}
+                              </span>
+                            )}
+                          </div>
+                          <form action={connectDecisionAction} className="flex shrink-0 gap-2">
+                            <input type="hidden" name="id" value={c.id} />
+                            <button name="decision" value="accepted" className="btn-gold !px-4 !py-2 text-[12px]">
+                              {t("mine.connect.accept")}
+                            </button>
+                            <button name="decision" value="declined" className="btn-ghost-light !px-4 !py-2 text-[12px]">
+                              {t("mine.connect.decline")}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>

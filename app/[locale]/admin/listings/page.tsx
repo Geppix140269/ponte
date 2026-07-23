@@ -1,7 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { decideListingAction, runAiVetAction, saveListingNotesAction } from "./actions";
+import {
+  decideListingAction,
+  runAiVetAction,
+  saveListingNotesAction,
+  generateWriteupAction,
+} from "./actions";
 import { vetListing, isAiConfigured, type AiReview } from "@/lib/ai-vet";
 import { draftListingNotes } from "@/lib/listings/decision-notes";
+import { checkPublicationGate, gateFailureLabel } from "@/lib/listings/publication-gate";
+import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +21,10 @@ const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
   ai_done: { tone: "good", text: "AI vetting finished." },
   ai_failed: { tone: "bad", text: "AI vetting returned nothing. The listing is untouched." },
   ai_off: { tone: "bad", text: "AI vetting is not configured, so nothing ran." },
+  writeup_done: { tone: "good", text: "Fact-only write-up generated from the stored facts." },
+  writeup_thin: { tone: "bad", text: "Not enough facts to write up. The listing is untouched." },
+  writeup_failed: { tone: "bad", text: "The write-up did not generate. The listing is untouched." },
+  gate_blocked: { tone: "bad", text: "Not approved: the publication gate is not satisfied." },
   not_admin: { tone: "bad", text: "Nothing was written: your session is not signed in as an admin." },
   no_id: { tone: "bad", text: "Nothing was written: the form arrived without a listing id." },
   no_decision: { tone: "bad", text: "Nothing was written: the form arrived without a valid decision." },
@@ -45,6 +56,19 @@ function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
   );
 }
 
+type Writeup = {
+  description: string;
+  strengths: string[];
+  open_points: { text: string; field_ref: string | null }[];
+  non_negotiables: string;
+  summary_line: string;
+  share_text: string;
+};
+
+type AiVersion = { writeup?: Writeup; prompt_version?: string | null; model?: string | null } | null;
+type DeskVersion = { qualification?: string | null; limitations?: string | null } | null;
+type SanctionsHits = { clean?: boolean; strongCount?: number } | null;
+
 type Listing = {
   id: string;
   ref: string;
@@ -54,11 +78,22 @@ type Listing = {
   hs_code: string | null;
   origin: string | null;
   destination: string | null;
+  origin_country: string | null;
+  destination_country: string | null;
   volume: string | null;
+  quantity: number | null;
+  unit: string | null;
+  frequency: string | null;
   incoterm: string | null;
+  payment_terms: string | null;
   indicative_value_usd: number | null;
   submitter_role: string | null;
   chain_depth: string | null;
+  mandate_sighted: boolean | null;
+  validity_type: string | null;
+  valid_until: string | null;
+  reconfirmed_at: string | null;
+  key_notes: string | null;
   details: string;
   status: string;
   admin_notes: string | null;
@@ -66,6 +101,21 @@ type Listing = {
   created_at: string;
   ai_review: AiReview | null;
   ai_reviewed_at: string | null;
+  ai_version: AiVersion;
+  desk_version: DeskVersion;
+};
+
+type VerRow = {
+  id: string;
+  subject_name: string | null;
+  subject_country: string | null;
+  subject_reg_number: string | null;
+  subject_vat: string | null;
+  subject_lei: string | null;
+  status: string | null;
+  purpose: string | null;
+  sanctions_hits: SanctionsHits;
+  decided_at: string | null;
 };
 
 type Doc = { id: string; listing_id: string; filename: string; path: string };
@@ -123,6 +173,51 @@ export default async function AdminListingsPage({
     mediaByListing.set(m.listing_id, arr);
   }
 
+  // The submitter's own business verification, for the publication gate and the
+  // evidence panel. Batched to avoid a query per card: user -> bound record id,
+  // then id -> the verification snapshot.
+  const bvidByUser = new Map<string, string | null>();
+  const levelByUser = new Map<string, number>();
+  {
+    const userIds = Array.from(new Set(all.map((l) => l.user_id)));
+    if (userIds.length > 0) {
+      const { data: profs } = await adminSb
+        .from("profiles")
+        .select("id, business_verification_id, verification_level")
+        .in("id", userIds);
+      for (const p of profs ?? []) {
+        bvidByUser.set(p.id, p.business_verification_id ?? null);
+        levelByUser.set(p.id, Number(p.verification_level ?? 0));
+      }
+    }
+  }
+  const verById = new Map<string, VerRow>();
+  {
+    const ids = Array.from(new Set(Array.from(bvidByUser.values()).filter(Boolean))) as string[];
+    if (ids.length > 0) {
+      const { data: vers } = await adminSb
+        .from("verifications")
+        .select(
+          "id, subject_name, subject_country, subject_reg_number, subject_vat, subject_lei, status, purpose, sanctions_hits, decided_at",
+        )
+        .in("id", ids);
+      for (const v of vers ?? []) verById.set(v.id, v as VerRow);
+    }
+  }
+
+  function submitterFor(l: Listing) {
+    const bvid = bvidByUser.get(l.user_id) ?? null;
+    const ver = bvid ? verById.get(bvid) ?? null : null;
+    return {
+      verificationLevel: levelByUser.get(l.user_id) ?? 0,
+      business_verification_id: bvid,
+      verification: ver
+        ? { purpose: ver.purpose, status: ver.status, sanctions_hits: ver.sanctions_hits }
+        : null,
+      snapshot: ver,
+    };
+  }
+
   const pending = all.filter((l) => l.status === "submitted");
   const rest = all.filter((l) => l.status !== "submitted");
 
@@ -153,6 +248,35 @@ export default async function AdminListingsPage({
     const ldocs = docsByListing.get(l.id) ?? [];
     const lmedia = mediaByListing.get(l.id) ?? [];
     const drafts = draftListingNotes(l);
+
+    const submitter = submitterFor(l);
+    const gate = checkPublicationGate(
+      { ...l, desk_version: l.desk_version } as never,
+      {
+        verificationLevel: submitter.verificationLevel,
+        business_verification_id: submitter.business_verification_id,
+        verification: submitter.verification as never,
+      },
+    );
+    const ver = submitter.snapshot;
+    const sanctions = ver?.sanctions_hits;
+    const sanctionsClean = sanctions?.clean === true && (sanctions?.strongCount ?? 0) === 0;
+    // An approved listing that is not publicly current is awaiting reconfirmation
+    // (or its validity passed): kept for audit, but hidden from every public
+    // surface until an owner reconfirms it.
+    const awaitingReconfirmation = l.status === "approved" && !isPubliclyCurrent(l);
+    const wu = l.ai_version?.writeup ?? null;
+    // The desk-approved public text defaults to the stored version, else a
+    // suggestion drawn from the fact-only draft for the admin to edit.
+    const suggestedQual = l.desk_version?.qualification ?? wu?.summary_line ?? "";
+    const suggestedLim =
+      l.desk_version?.limitations ??
+      (wu
+        ? [wu.non_negotiables, ...(wu.open_points ?? []).map((p) => p.text)]
+            .filter(Boolean)
+            .join("\n")
+        : "");
+
     return (
       <div className="glass p-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -163,6 +287,15 @@ export default async function AdminListingsPage({
             {l.status} · {new Date(l.created_at).toLocaleDateString("en-GB")}
           </span>
         </div>
+
+        {awaitingReconfirmation && (
+          <p className="mt-2 text-[12px] text-gold">
+            Awaiting reconfirmation, hidden from public surfaces
+            {reconfirmationLapsed(l.reconfirmed_at)
+              ? " (90-day reconfirmation lapsed)."
+              : " (validity date passed)."}
+          </p>
+        )}
 
         <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
           <span>From: {emailById.get(l.user_id) ?? l.user_id.slice(0, 8)}</span>
@@ -179,6 +312,69 @@ export default async function AdminListingsPage({
           {l.incoterm && <span>Incoterm: {l.incoterm}</span>}
           {l.indicative_value_usd && (
             <span>Value: ${Number(l.indicative_value_usd).toLocaleString("en-US")}</span>
+          )}
+          {l.payment_terms && <span>Payment: {l.payment_terms}</span>}
+          {l.validity_type && (
+            <span>
+              Validity: {l.validity_type === "dated" ? `until ${l.valid_until}` : "standing"}
+            </span>
+          )}
+        </div>
+
+        {/* The submitter's own business verification and the publication gate,
+            resolved here so the desk sees exactly what blocks approval. */}
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+          <p className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
+            Publication gate
+          </p>
+          {ver ? (
+            <div className="mt-2 grid gap-x-6 gap-y-1 text-[12.5px] text-gray-2 sm:grid-cols-2">
+              <span className="text-cream">
+                Business: {ver.subject_name ?? "-"}
+                {ver.subject_country ? ` (${ver.subject_country})` : ""}
+              </span>
+              <span>Purpose: {ver.purpose ?? "unclassified"}</span>
+              <span>
+                Status: {ver.status ?? "unknown"} · level {submitter.verificationLevel}
+              </span>
+              {ver.subject_reg_number && <span>Reg: {ver.subject_reg_number}</span>}
+              {ver.subject_vat && <span>VAT: {ver.subject_vat}</span>}
+              {ver.subject_lei && <span>LEI: {ver.subject_lei}</span>}
+              <span className={sanctionsClean ? "text-positive" : "text-red-400"}>
+                Sanctions: {sanctionsClean ? "clean" : `${sanctions?.strongCount ?? "?"} candidate(s)`}
+              </span>
+              {ver.decided_at && (
+                <span>Decided: {new Date(ver.decided_at).toLocaleDateString("en-GB")}</span>
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 text-[12.5px] text-red-400">
+              No verified member-business record is bound to this submitter.
+            </p>
+          )}
+          <p className="mt-3 text-[11px] uppercase" style={{ letterSpacing: "0.14em" }}>
+            <span className="text-gray-2">Authority evidence: </span>
+            <span className={l.mandate_sighted ? "text-positive" : "text-gray-2"}>
+              {l.mandate_sighted ? "sighted" : "not sighted"}
+            </span>
+          </p>
+          {gate.ok ? (
+            <p className="mt-3 text-[12.5px] text-positive">
+              Ready to approve: every publication condition is met.
+            </p>
+          ) : (
+            <div className="mt-3">
+              <p className="text-[11px] uppercase text-red-400" style={{ letterSpacing: "0.14em" }}>
+                Cannot approve yet
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {gate.failures.map((f) => (
+                  <li key={f} className="text-[12.5px] text-gray-2">
+                    - {gateFailureLabel(f)}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 
@@ -279,6 +475,36 @@ export default async function AdminListingsPage({
           </button>
         </form>
 
+        {/* The fact-only deal write-up: the desk's draft from the STORED facts.
+            Its wording seeds the public text below; it is never published raw. */}
+        {wu && (
+          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <p className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
+              Fact-only draft
+            </p>
+            <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-cream">
+              {wu.description}
+            </p>
+            {wu.strengths?.length > 0 && (
+              <p className="mt-2 text-[12px] text-gray-2">Strengths: {wu.strengths.join(" · ")}</p>
+            )}
+            {wu.open_points?.length > 0 && (
+              <p className="mt-1 text-[12px] text-gray-2">
+                Open points: {wu.open_points.map((p) => p.text).join(" · ")}
+              </p>
+            )}
+            {wu.non_negotiables && (
+              <p className="mt-1 text-[12px] text-gray-2">{wu.non_negotiables}</p>
+            )}
+          </div>
+        )}
+        <form action={generateWriteupAction} className="mt-3">
+          <input type="hidden" name="id" value={l.id} />
+          <button className="text-[11px] uppercase text-gold hover:text-cream" style={{ letterSpacing: "0.14em" }}>
+            {wu ? "Regenerate fact-only write-up" : "Generate fact-only write-up"}
+          </button>
+        </form>
+
         {/* One form per decision, because one shared note box cannot hold two
             different messages. Each box arrives already written, drafted from
             this listing's own fields and the co-pilot's findings, and it is a
@@ -289,12 +515,37 @@ export default async function AdminListingsPage({
           <form action={decideListingAction} className="grid gap-2">
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="approved" />
+            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Public qualification summary
+            </label>
+            <textarea
+              name="qualification"
+              rows={3}
+              maxLength={900}
+              defaultValue={suggestedQual}
+              placeholder="What Ponte qualified, shown publicly. Desk-approved, not raw AI."
+              className={FIELD}
+            />
+            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Public limitations statement
+            </label>
+            <textarea
+              name="limitations"
+              rows={3}
+              maxLength={900}
+              defaultValue={suggestedLim}
+              placeholder="What remains unverified or open, shown publicly."
+              className={FIELD}
+            />
+            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+              Note to the member
+            </label>
             <textarea
               name="decisionNote"
-              rows={8}
+              rows={4}
               maxLength={1500}
               defaultValue={l.decision_note ?? drafts.approve}
-              placeholder="Note to the member, sent with the approval."
+              placeholder="Sent with the approval."
               className={FIELD}
             />
             <button className="btn-gold justify-center">Approve</button>

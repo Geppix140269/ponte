@@ -32,6 +32,61 @@ Until this is applied:
 
 Nothing breaks. It just stays unclassified.
 
+### 2. Block A: the desk_radar signal gate — APPLIED 2026-07-23
+
+    supabase/migrations/20260723a_desk_radar_signal_gate.sql
+
+**Done.** Applied to production on 2026-07-23 via `db-query.mjs` and verified by
+probe: all 90 rows moved `live` to `private` (none lost), the six new columns
+exist, the status constraint carries the Market Signal vocabulary, the default
+is `private`, and `desk_radar_public_idx` was created. Recorded in
+`schema_migrations`. Left here as a record; the steps below are how it was run.
+
+**Probe first.** Confirm the table and its current status values actually exist
+before running anything:
+
+    select status, count(*) from desk_radar group by status;
+
+Then apply and verify by probe, not by assertion:
+
+    node scripts/db-query.mjs --file supabase/migrations/20260723a_desk_radar_signal_gate.sql
+    node scripts/db-query.mjs --sql "select status, count(*) from desk_radar group by status"
+
+The `update` that remaps the status values is not data-losing, so db-query.mjs
+will run it. Expect every former `live` row to read `private` afterwards.
+
+Until this is applied:
+
+- the public `/market-signals` board is empty and hides itself, because
+  `getMarketSignals()` fails soft when the new columns are absent
+- `/admin/signals` shows a red notice explaining the migration is not yet
+  applied, and its Approve action cannot succeed
+- the homepage and `getLiveDeals()` are unaffected: they no longer read
+  `desk_radar` at all, so nothing there depends on this migration
+
+Nothing on the current site breaks. The radar simply stays private until the
+gate exists and an admin approves individual signals.
+
+### 3. Block B: verification purpose — APPLIED 2026-07-23
+
+    supabase/migrations/20260723b_verification_purpose.sql
+
+**Done.** Applied to production on 2026-07-23 and verified by probe: `verifications.purpose`
+(nullable text, check `null | member_business | counterparty_check`) and
+`profiles.business_verification_id` (nullable uuid FK) both exist, and the seven
+legacy verification rows are all `purpose = NULL` (unclassified, grants nothing).
+Recorded in `schema_migrations`. Additive and reversible (drop the two columns).
+
+### 4. Block B follow-up: verification attestation — APPLIED 2026-07-23
+
+    supabase/migrations/20260723c_verification_attestation.sql
+
+**Done.** Applied to production on 2026-07-23 and probe-verified: `attested_at`
+(timestamptz) and `attestation_version` (text) exist on `verifications`, both
+nullable, and all seven legacy rows are null on both (they pre-date the
+attestation). Records the member-business attestation server-side. Additive and
+reversible (drop the two columns).
+
 ## Checking what has been applied
 
 There is no migration ledger in this project, so the only honest answer comes
