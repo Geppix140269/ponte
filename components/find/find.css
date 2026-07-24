@@ -1,0 +1,519 @@
+/* ======================================================================
+   Ponte Trade , Find journey (F01/F02/F03, O05-O07, H03/H04).
+
+   Scoped under .ponte-find so the Brand v5 heritage-light tokens override the
+   app's obsidian tokens locally, exactly as the landing does. Tokens are the
+   design system's own values (design/handoff/qualified-opportunities/
+   ponte-system.css).
+
+   ONE hard rule shapes everything here: no boxes. The handoff renders rounded
+   cards; this journey does not. Structure comes from typography, whitespace and
+   fine rules , hairline dividers, left status-rules (inset 3px), dashed rule
+   bands, and --sunken wells , never from border-radius + box-shadow containers.
+   The only rounded things are pills (chips, evidence badges) and the focus ring.
+   ====================================================================== */
+
+.ponte-find {
+  /* ---- Surfaces (heritage light) ---- */
+  --surface: #fcfbf7;
+  --raised: #ffffff;
+  --sunken: #f2efe6;
+  --rule: #e5dfd2;
+  --rule-strong: #d5cebc;
+
+  /* ---- Ink ---- */
+  --ink: #0f0f0e;
+  --ink-2: #3a3733;
+  --ink-3: #6e6a61;
+  --mute: #9a958a;
+
+  /* ---- Brand signal, never a status ---- */
+  --gold: #c9973a;
+  --gold-ink: #8a6520;
+  --gold-tint: #f5ecd8;
+
+  /* ---- Semantic states (reserved meanings, off the accent) ---- */
+  --pos: #0f6e3d;
+  --pos-tint: #e9f1ec;
+  --pos-line: #bfd8c7;
+  --neg: #b4402a;
+  --neg-tint: #f7eae6;
+  --neg-line: #e6c3b8;
+  --review: #4e6472;
+  --review-tint: #eaeff1;
+  --review-line: #c4d2d8;
+  --declared: #6f695e;
+  --declared-tint: #f1eee7;
+
+  /* ---- Focus ---- */
+  --focus: #1e5fa8;
+
+  /* ---- Type ---- */
+  --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+  --f-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Spacing / geometry ---- */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+  --r-pill: 999px;
+  --maxw-prod: 1440px;
+  --gutter: 40px;
+
+  /* ---- Motion ---- */
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--f-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.ponte-find *,
+.ponte-find *::before,
+.ponte-find *::after { box-sizing: border-box; }
+
+.ponte-find :focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus);
+  border-radius: 2px;
+}
+
+/* ---- Type utilities ---- */
+.ponte-find .serif { font-family: var(--f-serif); }
+.ponte-find .mono { font-family: var(--f-mono); font-feature-settings: "tnum", "zero"; }
+.ponte-find .num { font-variant-numeric: tabular-nums; }
+.ponte-find .eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ponte-find .ns { color: var(--mute); }
+
+/* ======================================================================
+   Chrome: light nav + trust-line footer (its own, not the app's obsidian)
+   ====================================================================== */
+.ponte-find .fnav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: 14px var(--gutter);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: saturate(1.2) blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .flockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.ponte-find .flockup__chip {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 6px;
+}
+.ponte-find .flockup__dot { fill: var(--gold); }
+.ponte-find .flockup__word { font-family: var(--f-serif); font-size: 22px; font-weight: 500; }
+.ponte-find .flockup__tld { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+.ponte-find .fnav__links { display: flex; align-items: center; gap: var(--s-5); }
+.ponte-find .fnav__link {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding-bottom: 2px;
+}
+.ponte-find .fnav__link:hover { color: var(--gold-ink); }
+.ponte-find .fnav__link.is-current { color: var(--ink); border-bottom: 2px solid var(--ink); }
+
+.ponte-find .fmain {
+  flex: 1;
+  width: 100%;
+  max-width: var(--maxw-prod);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--s-8);
+}
+
+.ponte-find .ffoot {
+  border-top: 1px solid var(--rule);
+  padding: var(--s-6) var(--gutter);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.ponte-find .ffoot b { color: var(--ink-2); font-weight: 600; }
+
+/* ======================================================================
+   Page header (F01): gold eyebrow rule, serif title, definition, cross-pointer
+   ====================================================================== */
+.ponte-find .fphead { padding: var(--s-7) 0 var(--s-5); border-bottom: 1px solid var(--rule); }
+.ponte-find .fphead__eb { display: inline-flex; align-items: center; gap: 10px; margin-bottom: var(--s-3); }
+.ponte-find .fphead__rule { width: 26px; height: 1px; background: var(--gold); }
+.ponte-find .fphead__h {
+  font-family: var(--f-serif);
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.08;
+  color: var(--ink);
+  max-width: 22ch;
+  margin: 0;
+}
+.ponte-find .fphead__h em { font-style: italic; color: var(--gold-ink); }
+.ponte-find .fphead__def { margin: var(--s-3) 0 0; font-size: 15.5px; color: var(--ink-2); max-width: 62ch; }
+
+/* ======================================================================
+   Query context bar + intent segmented control + counts
+   ====================================================================== */
+.ponte-find .fctx {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-4);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .fctx__crumbs { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-3); }
+.ponte-find .fctx__crumbs b { color: var(--ink); font-weight: 600; }
+.ponte-find .fctx__edit { font-size: 12.5px; color: var(--gold-ink); background: none; border: none; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+.ponte-find .fctx__spacer { margin-left: auto; }
+
+.ponte-find .fseg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--r-pill); overflow: hidden; }
+.ponte-find .fseg__b {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--ink-2);
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.ponte-find .fseg__b + .fseg__b { border-left: 1px solid var(--rule); }
+.ponte-find .fseg__b[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+/* ======================================================================
+   Lanes , the QO / MS separation is structural, not decorative
+   ====================================================================== */
+.ponte-find .flanes { display: grid; grid-template-columns: 1fr; gap: var(--s-7); padding-top: var(--s-6); }
+@media (min-width: 1000px) {
+  .ponte-find .flanes { grid-template-columns: 1fr 1fr; gap: var(--s-8); }
+}
+.ponte-find .flane__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); padding-bottom: var(--s-3); }
+.ponte-find .flane__t { display: flex; align-items: center; gap: 9px; font-family: var(--f-serif); font-size: 20px; font-weight: 500; color: var(--ink); }
+.ponte-find .flane__t .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.ponte-find .flane__n { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+.ponte-find .flane__note { font-size: 13px; color: var(--ink-3); margin: 0 0 var(--s-2); max-width: 56ch; }
+/* The Market Signals lane is set apart by a dashed top rule and slate voice. */
+.ponte-find .flane--ms .flane__head { border-top: 1px dashed var(--rule-strong); padding-top: var(--s-4); }
+.ponte-find .flane--ms .flane__t { color: var(--review); font-family: var(--f-mono); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* ---- Qualified Opportunity row (box-free) ---- */
+.ponte-find .qorow {
+  display: block;
+  padding: var(--s-4) 0;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+}
+.ponte-find .qorow:first-of-type { border-top: none; }
+.ponte-find .qorow__top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.ponte-find .qorow__kind { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qorow__kind .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.ponte-find .qorow__intent { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-2); border: 1px solid var(--rule-strong); padding: 1px 7px; border-radius: 3px; }
+.ponte-find .qorow__title { font-family: var(--f-serif); font-size: 18px; font-weight: 500; line-height: 1.2; color: var(--ink); margin: var(--s-2) 0 0; }
+.ponte-find .qorow:hover .qorow__title { color: var(--gold-ink); }
+.ponte-find .qorow__facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: var(--s-2); font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-2); }
+.ponte-find .qorow__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-top: var(--s-3); }
+.ponte-find .qorow__ref { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.ponte-find .qorow__go { font-size: 13px; color: var(--ink); }
+.ponte-find .qorow:hover .qorow__go { color: var(--gold-ink); }
+
+/* ---- Market Signal row (dashed frame band, sans title, slate note) ---- */
+.ponte-find .msrow {
+  display: block;
+  padding: var(--s-4);
+  margin-top: var(--s-3);
+  background: var(--sunken);
+  border-top: 1px dashed var(--rule-strong);
+  border-bottom: 1px dashed var(--rule-strong);
+  text-decoration: none;
+  color: inherit;
+}
+.ponte-find .msrow__kind { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--review); }
+.ponte-find .msrow__title { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--ink); margin: 6px 0 0; }
+.ponte-find .msrow__facts { display: flex; flex-wrap: wrap; gap: 3px 14px; margin-top: 6px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.ponte-find .msrow__note { margin: 8px 0 0; font-family: var(--f-mono); font-size: 11px; color: var(--review); }
+
+/* ---- Empty / launch / error states: dashed band, never a boxed card ---- */
+.ponte-find .fstate {
+  border-top: 1px dashed var(--rule-strong);
+  border-bottom: 1px dashed var(--rule-strong);
+  padding: var(--s-6) var(--s-4);
+  text-align: left;
+}
+.ponte-find .fstate__badge { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .fstate__h { font-family: var(--f-serif); font-size: 22px; font-weight: 500; color: var(--ink); margin: var(--s-2) 0 var(--s-2); }
+.ponte-find .fstate__p { font-size: 14px; color: var(--ink-2); margin: 0 0 var(--s-4); max-width: 52ch; }
+
+/* ======================================================================
+   Buttons, chips, evidence badges
+   ====================================================================== */
+.ponte-find .fbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--f-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+.ponte-find .fbtn:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-find .fbtn:active { transform: translateY(1px); }
+.ponte-find .fbtn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.ponte-find .fbtn--secondary { background: transparent; color: var(--ink); }
+.ponte-find .fbtn--secondary:hover { background: var(--sunken); border-color: var(--rule-strong); color: var(--ink); }
+.ponte-find .fbtn--ghost { background: transparent; border-color: transparent; color: var(--ink-2); padding: 8px 10px; }
+.ponte-find .fbtn--ghost:hover { color: var(--gold-ink); background: transparent; }
+.ponte-find .fbtn--lg { font-size: 15px; padding: 13px 22px; }
+.ponte-find .fbtn--block { display: flex; width: 100%; }
+
+.ponte-find .fchip {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  padding: 7px 14px;
+  border: 1px solid var(--rule-strong);
+  background: var(--raised);
+  color: var(--ink-2);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+.ponte-find .fchip:hover { border-color: var(--ink-3); }
+.ponte-find .fchip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+
+.ponte-find .fev {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+}
+.ponte-find .fev--checked,
+.ponte-find .fev--reviewed { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
+.ponte-find .fev--declared { color: var(--declared); background: var(--declared-tint); border-style: dashed; border-color: var(--rule-strong); }
+.ponte-find .fev--sighted { color: var(--review); background: var(--review-tint); border-color: var(--review-line); }
+.ponte-find .fev--managed { color: var(--ink); background: var(--gold-tint); border-color: color-mix(in srgb, var(--gold) 45%, var(--rule-strong)); }
+.ponte-find .fevs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--s-3); }
+
+/* ---- Product picker (Find entry) ---- */
+.ponte-find .fpick { display: grid; gap: var(--s-4); max-width: 640px; }
+.ponte-find .fpick__bar { display: flex; align-items: center; gap: var(--s-3); }
+.ponte-find .fpick__bar .reqq__note { flex: 1; }
+.ponte-find .fpick__tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--s-2); }
+.ponte-find .fpick__tile {
+  text-align: left;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.ponte-find .fpick__tile:hover { border-color: var(--gold); color: var(--gold-ink); }
+.ponte-find .fpick__hits { list-style: none; margin: 0; padding: 0; }
+.ponte-find .fpick__hit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule);
+  padding: 10px 0;
+  cursor: pointer;
+  color: var(--ink);
+}
+.ponte-find .fpick__hit:hover .fpick__hitname { color: var(--gold-ink); }
+.ponte-find .fpick__hitname { font-size: 14px; }
+.ponte-find .fpick__hitcode { font-size: 12px; color: var(--ink-3); }
+.ponte-find .fchip.is-listening { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+/* ======================================================================
+   F02 detail
+   ====================================================================== */
+.ponte-find .qdetail { display: grid; grid-template-columns: 1fr; gap: var(--s-7); padding-top: var(--s-5); }
+@media (min-width: 960px) {
+  .ponte-find .qdetail { grid-template-columns: 1fr 360px; gap: var(--s-8); }
+}
+.ponte-find .qcrumb { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); margin-bottom: var(--s-4); }
+.ponte-find .qhead { border-bottom: 1px solid var(--rule); padding-bottom: var(--s-4); }
+.ponte-find .qhead__tags { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); }
+.ponte-find .qhead__kind { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qhead__kind .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.ponte-find .qhead__intent { font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); border: 1px solid var(--rule-strong); padding: 1px 8px; border-radius: 3px; }
+.ponte-find .qhead__h { font-family: var(--f-serif); font-size: clamp(28px, 3.6vw, 44px); font-weight: 500; letter-spacing: -0.018em; line-height: 1.06; color: var(--ink); margin: 0; }
+.ponte-find .qhead__ref { font-family: var(--f-mono); font-size: 13px; color: var(--ink-3); margin-top: var(--s-3); }
+.ponte-find .qhead__ref b { color: var(--ink); font-weight: 600; }
+
+.ponte-find .qlead { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); max-width: 68ch; margin: var(--s-5) 0; }
+
+.ponte-find .qblock { margin: var(--s-6) 0; }
+.ponte-find .qblock__h { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 var(--s-3); }
+
+/* Commercial facts as a ledger grid (no outer box) */
+.ponte-find .qfacts { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--rule); }
+.ponte-find .qfact { padding: var(--s-3) 0; border-bottom: 1px solid var(--rule); }
+.ponte-find .qfact:nth-child(odd) { padding-right: var(--s-5); border-right: 1px solid var(--rule); }
+.ponte-find .qfact:nth-child(even) { padding-left: var(--s-5); }
+.ponte-find .qfact__k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qfact__v { font-family: var(--f-mono); font-size: 14px; color: var(--ink); margin-top: 3px; }
+.ponte-find .qfact__v.conf { color: var(--review); }
+
+/* Dated-evidence receipts: left status-rule, no enclosing box */
+.ponte-find .qreceipt {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: var(--s-3);
+  padding: var(--s-3) 0 var(--s-3) var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  box-shadow: inset 3px 0 0 var(--rule-strong);
+}
+.ponte-find .qreceipt--checked, .ponte-find .qreceipt--reviewed, .ponte-find .qreceipt--confirmed { box-shadow: inset 3px 0 0 var(--pos); }
+.ponte-find .qreceipt--declared { box-shadow: inset 3px 0 0 var(--declared); }
+.ponte-find .qreceipt--sighted { box-shadow: inset 3px 0 0 var(--review); }
+.ponte-find .qreceipt__ico { color: var(--ink-3); }
+.ponte-find .qreceipt__t { font-size: 13.5px; color: var(--ink-2); }
+.ponte-find .qreceipt__t b { color: var(--ink); font-weight: 600; }
+.ponte-find .qreceipt__date { font-family: var(--f-mono); }
+
+/* What remains unverified: dashed well */
+.ponte-find .qunv { background: var(--sunken); border: 1px dashed var(--rule-strong); border-radius: 0; padding: var(--s-4); }
+.ponte-find .qunv ul { margin: 0; padding-left: var(--s-4); }
+.ponte-find .qunv li { font-size: 13.5px; color: var(--ink-2); margin: 6px 0; }
+
+/* Rail: the controlled-introduction panel, an ink band (not an outlined card) */
+.ponte-find .qrail { position: sticky; top: 92px; align-self: start; display: grid; gap: var(--s-5); }
+@media (max-width: 959px) { .ponte-find .qrail { position: static; } }
+.ponte-find .qintro { background: var(--ink); color: var(--surface); }
+.ponte-find .qintro__top { padding: var(--s-4); border-bottom: 1px solid rgba(242, 239, 232, 0.14); }
+.ponte-find .qintro__eb { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+.ponte-find .qintro__h { font-family: var(--f-serif); font-size: 21px; font-weight: 500; margin: 6px 0 0; }
+.ponte-find .qintro__steps { list-style: none; margin: 0; padding: var(--s-4); display: grid; gap: var(--s-3); }
+.ponte-find .qintro__steps li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 13px; color: rgba(242, 239, 232, 0.86); }
+.ponte-find .qintro__num { font-family: var(--f-mono); color: var(--gold); }
+.ponte-find .qintro__foot { padding: var(--s-4); border-top: 1px solid rgba(242, 239, 232, 0.14); }
+.ponte-find .qintro .fbtn { border-color: var(--surface); background: var(--surface); color: var(--ink); }
+.ponte-find .qintro .fbtn:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-find .qrailmeta { display: grid; gap: var(--s-2); }
+.ponte-find .qrailmeta__row { display: flex; justify-content: space-between; gap: var(--s-3); padding: 7px 0; border-bottom: 1px solid var(--rule); font-family: var(--f-mono); font-size: 12px; }
+.ponte-find .qrailmeta__k { color: var(--ink-3); }
+.ponte-find .qrailmeta__v { color: var(--ink); }
+
+/* Detail state banners (gone / paused) */
+.ponte-find .qbanner { border: 1px solid var(--rule-strong); background: var(--sunken); padding: var(--s-4); margin-bottom: var(--s-5); }
+.ponte-find .qbanner--info { border-color: var(--review-line); background: var(--review-tint); }
+.ponte-find .qbanner__h { font-family: var(--f-serif); font-size: 18px; color: var(--ink); margin: 0 0 6px; }
+.ponte-find .qbanner__p { font-size: 13.5px; color: var(--ink-2); margin: 0; }
+
+/* ======================================================================
+   Request an introduction (O05-O07)
+   ====================================================================== */
+.ponte-find .req { display: grid; gap: var(--s-5); }
+.ponte-find .reqctx { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); padding-bottom: var(--s-3); border-bottom: 1px solid var(--rule); }
+.ponte-find .reqctx .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.ponte-find .readiness { display: grid; gap: 6px; }
+.ponte-find .readiness__track { height: 3px; background: var(--rule); overflow: hidden; }
+.ponte-find .readiness__fill { height: 3px; background: var(--gold); width: 0; transition: width var(--dur-3) var(--ease); }
+.ponte-find .readiness__label { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.ponte-find .reqq { display: grid; gap: var(--s-2); }
+.ponte-find .reqq__label { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+.ponte-find .reqq__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ponte-find .reqq__note {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  font-family: var(--f-sans);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  padding: 10px 12px;
+}
+.ponte-find .reqq__note:focus-visible { border-color: var(--focus); }
+.ponte-find .reqq__voice { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--gold-ink); background: none; border: none; cursor: pointer; padding: 0; }
+.ponte-find .req__reassure { font-size: 12.5px; color: var(--ink-3); }
+
+/* Sent acknowledgement */
+.ponte-find .sent { display: grid; gap: var(--s-3); padding: var(--s-6) 0; }
+.ponte-find .sent__ack { display: inline-flex; align-items: center; gap: 8px; color: var(--pos); font-weight: 600; }
+.ponte-find .sent__h { font-family: var(--f-serif); font-size: 26px; font-weight: 500; color: var(--ink); margin: 0; }
+
+/* ======================================================================
+   Workspace (H03/H04)
+   ====================================================================== */
+.ponte-find .wsblock { margin: var(--s-6) 0; }
+.ponte-find .wsblock__h { display: flex; align-items: baseline; gap: 10px; font-family: var(--f-serif); font-size: 22px; font-weight: 500; color: var(--ink); margin: 0 0 var(--s-3); }
+.ponte-find .wsblock__n { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+.ponte-find .wsrow { padding: var(--s-3) 0; border-top: 1px solid var(--rule); }
+.ponte-find .wsrow__top { display: flex; justify-content: space-between; gap: var(--s-3); }
+.ponte-find .wsrow__title { font-family: var(--f-serif); font-size: 16px; color: var(--ink); }
+.ponte-find .wsrow__status { font-family: var(--f-mono); font-size: 11px; color: var(--review); text-transform: uppercase; letter-spacing: 0.06em; }
+.ponte-find .wsrow__meta { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+
+/* ======================================================================
+   Motion: reveal on mount, honoured only when motion is welcome
+   ====================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .ponte-find .reveal { opacity: 0; transform: translateY(8px); animation: freveal var(--dur-3) var(--ease-out) forwards; }
+  @keyframes freveal { to { opacity: 1; transform: none; } }
+}
+
+/* ---- Responsive: single column, tighter gutter ---- */
+@media (max-width: 760px) {
+  .ponte-find .fmain { padding: 0 20px var(--s-7); }
+  .ponte-find .fnav { padding: 12px 20px; }
+  .ponte-find .fnav__links { display: none; }
+  .ponte-find .qfacts { grid-template-columns: 1fr; }
+  .ponte-find .qfact:nth-child(odd) { padding-right: 0; border-right: none; }
+  .ponte-find .qfact:nth-child(even) { padding-left: 0; }
+}

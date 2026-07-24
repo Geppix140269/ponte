@@ -5,10 +5,15 @@
  * the live workflow that already handles it, using the query params those pages
  * already read:
  *
- *   find        -> /marketplace                     (the live board of demand)
+ *   find        -> /find  (Journey 1)  or  /marketplace  (the seam)
  *   structure   -> /marketplace/new?type=requirement (the listing composer)
  *   check       -> /verify?for=counterparty          (counterparty due diligence)
  *   investigate -> /market-signals                   (external signals board)
+ *
+ * The Find route is the one Journey 1 replaces. It points at the new /find
+ * surface when NEXT_PUBLIC_FIND_JOURNEY is "on", and falls back to the old
+ * /marketplace seam otherwise. That single flag is the journey's safe-disable:
+ * turning it off restores the previous handoff with no other change.
  *
  * The user's own words and any facts read from them ride along as query params
  * so nothing is lost across the navigation, and, because the destinations gate
@@ -19,8 +24,10 @@
 
 import type { ExtractedFacts, RouteKey } from "./intent";
 
+const FIND_JOURNEY_ON = process.env.NEXT_PUBLIC_FIND_JOURNEY === "on";
+
 const BASE: Record<RouteKey, string> = {
-  find: "/marketplace",
+  find: FIND_JOURNEY_ON ? "/find" : "/marketplace",
   structure: "/marketplace/new?type=requirement",
   check: "/verify?for=counterparty",
   investigate: "/market-signals",
