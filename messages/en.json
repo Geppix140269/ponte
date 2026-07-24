@@ -1143,6 +1143,164 @@
     "offlineRetry": "Try again",
     "offlineHint": "This page was saved on your device"
   },
+  "structure": {
+    "meta": {
+      "title": "Structure an opportunity",
+      "description": "Structure a buy, sell or service requirement by tapping. Preview what each party sees, then submit for Ponte review."
+    },
+    "bar": {
+      "back": "Back"
+    },
+    "trust": "Build and preview freely. Join only when you save or submit.",
+    "intent": {
+      "eyebrow": "Structure an opportunity",
+      "title": "What are you trading?",
+      "buy": "Buy",
+      "buyDesc": "I need to source",
+      "sell": "Sell",
+      "sellDesc": "I have supply to offer",
+      "service": "Service",
+      "serviceDesc": "A trade-related service",
+      "chosen": "Product",
+      "cta": "Structure it"
+    },
+    "hs": {
+      "choose": "Or choose your product",
+      "catalogue": "HS 2022 catalogue",
+      "all": "All categories",
+      "browse": "Back to categories",
+      "searchInstead": "Search all products instead",
+      "searchPlaceholder": "Product or HS code"
+    },
+    "structuring": {
+      "s1": "Reading what you gave Ponte...",
+      "s2": "Separating facts from gaps...",
+      "s3": "Structuring the opportunity..."
+    },
+    "facts": {
+      "eyebrow": "What Ponte understood",
+      "reward": "Ponte structured {facts} facts. {gaps} details still needed.",
+      "commercial": "Commercial facts",
+      "stated": "stated",
+      "missing": "Missing details",
+      "add": "Add",
+      "evidence": "Evidence or authority needed",
+      "atReview": "Provide at review",
+      "private": "Kept private",
+      "withheld": "Withheld until introduction",
+      "cta": "Complete the record"
+    },
+    "field": {
+      "intent": "Intent",
+      "product": "Product",
+      "hsCode": "HS code",
+      "quantity": "Quantity",
+      "frequency": "Frequency",
+      "origin": "Origin",
+      "destination": "Destination",
+      "incoterm": "Incoterm",
+      "payment": "Payment terms",
+      "role": "Role",
+      "note": "Internal note",
+      "validity": "Validity",
+      "kind": "Kind",
+      "route": "Route",
+      "notStated": "Not stated"
+    },
+    "evidence": {
+      "tradeAuthority": "Authority to buy or sell",
+      "serviceAuthority": "Authority to provide the service"
+    },
+    "private": {
+      "identity": "Your identity",
+      "exactCompany": "Your exact company",
+      "contact": "Your contact details"
+    },
+    "complete": {
+      "eyebrow": "Complete the record",
+      "remaining": "{n} details to close",
+      "skip": "Skip",
+      "next": "Next",
+      "done": "Done",
+      "days": "{n} days"
+    },
+    "ask": {
+      "quantity": "How much, and how often?",
+      "origin": "Where does it ship from?",
+      "destination": "Where does it go?",
+      "incoterm": "On what incoterm?",
+      "payment": "What payment terms?",
+      "validity": "How long is this valid?",
+      "role": "What is your role?",
+      "note": "Anything a reviewer should know?",
+      "notePlaceholder": "Optional note for the reviewer"
+    },
+    "preview": {
+      "eyebrow": "Before you submit",
+      "title": "See exactly what each party sees.",
+      "public": "Public",
+      "private": "Private facts",
+      "reviewer": "Reviewer",
+      "publicNote": "What buyers see before an introduction. Identity withheld.",
+      "privateNote": "Held by Ponte. Never shown publicly.",
+      "reviewerNote": "What a Ponte reviewer assesses. Dated evidence, never a score.",
+      "reviewerOnly": "Shown to Ponte reviewer only",
+      "withheld": "Withheld until introduction",
+      "cta": "Continue to submit"
+    },
+    "reviewer": {
+      "facts": "Material facts complete",
+      "authority": "Authority to buy or sell",
+      "verified": "Business verified",
+      "sanctions": "Sanctions screen",
+      "yes": "yes",
+      "partial": "partial",
+      "evidenceNeeded": "evidence needed",
+      "notYet": "not yet",
+      "onSubmission": "on submission"
+    },
+    "submit": {
+      "eyebrow": "Save or submit",
+      "title": "Ready when the record is.",
+      "sub": "{n} things must be resolved before Ponte can publish. You can save a draft now and finish later.",
+      "resolve": "Resolve",
+      "submit": "Submit for Ponte review",
+      "saveDraft": "Save draft"
+    },
+    "blocker": {
+      "quantity": "Quantity not set",
+      "quantityDesc": "A decisive fact a reviewer needs before publication.",
+      "incoterm": "Incoterm not set",
+      "incotermDesc": "The delivery basis must be stated to publish.",
+      "validity": "Validity not set",
+      "validityDesc": "Ponte publishes only opportunities with a stated horizon.",
+      "role": "Role not declared",
+      "roleDesc": "State the role you act in for this opportunity.",
+      "businessVerification": "Business not yet verified",
+      "businessVerificationDesc": "Publication needs a current member-business verification. You can still submit for review now."
+    },
+    "received": {
+      "eyebrow": "Submitted",
+      "savedEyebrow": "Saved",
+      "title": "Opportunity submitted for review",
+      "draftTitle": "Draft saved",
+      "body": "Ponte will review the structured record before anything is published.",
+      "draftBody": "Your draft is saved privately. Finish and submit it whenever you are ready.",
+      "next1": "What Ponte does next",
+      "next2": "Do you need to act?",
+      "next3": "Where it lives now",
+      "underReview": "Under review",
+      "no": "No",
+      "workspace": "Workspace",
+      "cta": "Go to Workspace"
+    },
+    "error": {
+      "badge": "Could not submit",
+      "title": "Ponte kept your words.",
+      "body": "Something interrupted the submission. Nothing you tapped is lost. Try again.",
+      "retry": "Try again"
+    }
+  },
   "verification": {
     "meta": {
       "title": "Verify a trade counterparty",
