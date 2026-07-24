@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { searchHsCodes, listHsChapters, listHsCodesInHeading } from "@/lib/hs";
+import {
+  searchHsCodes,
+  getHsCode,
+  listHsChapters,
+  listHeadingsInChapter,
+  listHsCodesInHeading,
+} from "@/lib/hs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +20,9 @@ export const dynamic = "force-dynamic";
  *
  *   GET /api/hs/search?q=sugar        ranked search, the typing fallback
  *   GET /api/hs/search?chapters=1     the 97 chapters, for the tile grid
+ *   GET /api/hs/search?chapter=17     the headings inside one chapter
  *   GET /api/hs/search?heading=1701   the codes inside one heading
+ *   GET /api/hs/search?code=170199    one code with its WCO unit
  *
  * Cached at the edge: the answer for a given query is identical for every
  * visitor and changes only when an HS edition does.
@@ -34,9 +42,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ chapters: await listHsChapters() }, { headers });
   }
 
+  const chapter = params.get("chapter");
+  if (chapter) {
+    return NextResponse.json({ headings: await listHeadingsInChapter(chapter) }, { headers });
+  }
+
   const heading = params.get("heading");
   if (heading) {
     return NextResponse.json({ codes: await listHsCodesInHeading(heading) }, { headers });
+  }
+
+  // A single code, with its WCO unit, so the composer can prefill the unit chip
+  // from the chosen product.
+  const code = params.get("code");
+  if (code) {
+    return NextResponse.json({ code: await getHsCode(code.replace(/\D/g, "")) }, { headers });
   }
 
   const q = (params.get("q") ?? "").slice(0, 80);

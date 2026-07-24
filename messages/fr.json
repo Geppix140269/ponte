@@ -1297,5 +1297,163 @@
       "signInPrompt": "Connectez-vous pour voir votre espace de travail."
     },
     "trust": "Commencez librement. Ne rejoignez que lorsqu'une introduction doit être envoyée."
+  },
+  "structure": {
+    "meta": {
+      "title": "Structurez une opportunité",
+      "description": "Structurez un besoin d'achat, de vente ou de service en touchant. Prévisualisez ce que voit chaque partie, puis soumettez pour examen par Ponte."
+    },
+    "bar": {
+      "back": "Retour"
+    },
+    "trust": "Construisez et prévisualisez librement. Rejoignez seulement quand vous enregistrez ou soumettez.",
+    "intent": {
+      "eyebrow": "Structurez une opportunité",
+      "title": "Que négociez-vous ?",
+      "buy": "Acheter",
+      "buyDesc": "J'ai besoin de m'approvisionner",
+      "sell": "Vendre",
+      "sellDesc": "J'ai une offre à proposer",
+      "service": "Service",
+      "serviceDesc": "Un service lié au commerce",
+      "chosen": "Produit",
+      "cta": "Structurez-la"
+    },
+    "hs": {
+      "choose": "Ou choisissez votre produit",
+      "catalogue": "Catalogue HS 2022",
+      "all": "Toutes les catégories",
+      "browse": "Retour aux catégories",
+      "searchInstead": "Rechercher plutôt dans tous les produits",
+      "searchPlaceholder": "Produit ou code HS"
+    },
+    "structuring": {
+      "s1": "Lecture de ce que vous avez donné à Ponte...",
+      "s2": "Séparation des faits et des lacunes...",
+      "s3": "Structuration de l'opportunité..."
+    },
+    "facts": {
+      "eyebrow": "Ce que Ponte a compris",
+      "reward": "Ponte a structuré {facts} faits. Il manque encore {gaps} détails.",
+      "commercial": "Faits commerciaux",
+      "stated": "déclaré",
+      "missing": "Détails manquants",
+      "add": "Ajouter",
+      "evidence": "Preuve ou autorisation requise",
+      "atReview": "À fournir lors de l'examen",
+      "private": "Gardé privé",
+      "withheld": "Retenu jusqu'à l'introduction",
+      "cta": "Complétez le dossier"
+    },
+    "field": {
+      "intent": "Intention",
+      "product": "Produit",
+      "hsCode": "Code HS",
+      "quantity": "Quantité",
+      "frequency": "Fréquence",
+      "origin": "Origine",
+      "destination": "Destination",
+      "incoterm": "Incoterm",
+      "payment": "Conditions de paiement",
+      "role": "Rôle",
+      "note": "Note interne",
+      "validity": "Validité",
+      "kind": "Type",
+      "route": "Itinéraire",
+      "notStated": "Non déclaré"
+    },
+    "evidence": {
+      "tradeAuthority": "Autorisation d'acheter ou de vendre",
+      "serviceAuthority": "Autorisation de fournir le service"
+    },
+    "private": {
+      "identity": "Votre identité",
+      "exactCompany": "Votre entreprise exacte",
+      "contact": "Vos coordonnées"
+    },
+    "complete": {
+      "eyebrow": "Complétez le dossier",
+      "remaining": "{n} détails à finaliser",
+      "skip": "Passer",
+      "next": "Suivant",
+      "done": "Terminé",
+      "days": "{n} jours"
+    },
+    "ask": {
+      "quantity": "Combien, et à quelle fréquence ?",
+      "origin": "D'où est-ce expédié ?",
+      "destination": "Où cela va-t-il ?",
+      "incoterm": "Sur quel incoterm ?",
+      "payment": "Quelles conditions de paiement ?",
+      "validity": "Pendant combien de temps est-ce valable ?",
+      "role": "Quel est votre rôle ?",
+      "note": "Quelque chose qu'un examinateur devrait savoir ?",
+      "notePlaceholder": "Note facultative pour l'examinateur"
+    },
+    "preview": {
+      "eyebrow": "Avant de soumettre",
+      "title": "Voyez exactement ce que voit chaque partie.",
+      "public": "Public",
+      "private": "Faits privés",
+      "reviewer": "Examinateur",
+      "publicNote": "Ce que voient les acheteurs avant une introduction. Identité retenue.",
+      "privateNote": "Détenu par Ponte. Jamais montré publiquement.",
+      "reviewerNote": "Ce qu'évalue un examinateur de Ponte. Preuves datées, jamais une note.",
+      "reviewerOnly": "Montré uniquement à l'examinateur de Ponte",
+      "withheld": "Retenu jusqu'à l'introduction",
+      "cta": "Continuer pour soumettre"
+    },
+    "reviewer": {
+      "facts": "Faits essentiels complets",
+      "authority": "Autorisation d'acheter ou de vendre",
+      "verified": "Entreprise vérifiée",
+      "sanctions": "Contrôle des sanctions",
+      "yes": "oui",
+      "partial": "partiel",
+      "evidenceNeeded": "preuve requise",
+      "notYet": "pas encore",
+      "onSubmission": "à la soumission"
+    },
+    "submit": {
+      "eyebrow": "Enregistrer ou soumettre",
+      "title": "Prêt quand le dossier l'est.",
+      "sub": "{n} choses doivent être résolues avant que Ponte puisse publier. Vous pouvez enregistrer un brouillon maintenant et terminer plus tard.",
+      "resolve": "Résoudre",
+      "submit": "Soumettre pour examen par Ponte",
+      "saveDraft": "Enregistrer le brouillon"
+    },
+    "blocker": {
+      "quantity": "Quantité non définie",
+      "quantityDesc": "Un fait décisif dont un examinateur a besoin avant la publication.",
+      "incoterm": "Incoterm non défini",
+      "incotermDesc": "La base de livraison doit être déclarée pour publier.",
+      "validity": "Validité non définie",
+      "validityDesc": "Ponte ne publie que des opportunités avec un horizon déclaré.",
+      "role": "Rôle non déclaré",
+      "roleDesc": "Déclarez le rôle dans lequel vous agissez pour cette opportunité.",
+      "businessVerification": "Entreprise pas encore vérifiée",
+      "businessVerificationDesc": "La publication nécessite une vérification à jour de l'entreprise du membre. Vous pouvez tout de même soumettre pour examen maintenant."
+    },
+    "received": {
+      "eyebrow": "Soumis",
+      "savedEyebrow": "Enregistré",
+      "title": "Opportunité soumise pour examen",
+      "draftTitle": "Brouillon enregistré",
+      "body": "Ponte examinera le dossier structuré avant toute publication.",
+      "draftBody": "Votre brouillon est enregistré en privé. Terminez-le et soumettez-le quand vous êtes prêt.",
+      "next1": "Ce que Ponte fait ensuite",
+      "next2": "Devez-vous agir ?",
+      "next3": "Où cela se trouve maintenant",
+      "underReview": "En cours d'examen",
+      "no": "Non",
+      "workspace": "Espace de travail",
+      "cta": "Aller à l'espace de travail"
+    },
+    "error": {
+      "badge": "Échec de l'envoi",
+      "title": "Ponte a gardé vos mots.",
+      "body": "Quelque chose a interrompu l'envoi. Rien de ce que vous avez touché n'est perdu. Réessayez.",
+      "retry": "Réessayer"
+    }
   }
 }

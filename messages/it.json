@@ -1297,5 +1297,163 @@
       "signInPrompt": "Accedi per vedere il tuo spazio di lavoro."
     },
     "trust": "Inizia liberamente. Unisciti solo quando occorre inviare una presentazione."
+  },
+  "structure": {
+    "meta": {
+      "title": "Struttura un'opportunità",
+      "description": "Struttura un'esigenza di acquisto, vendita o servizio con un tocco. Visualizza in anteprima ciò che vede ogni parte, poi invia per la revisione di Ponte."
+    },
+    "bar": {
+      "back": "Indietro"
+    },
+    "trust": "Costruisci e visualizza in anteprima liberamente. Unisciti solo quando salvi o invii.",
+    "intent": {
+      "eyebrow": "Struttura un'opportunità",
+      "title": "Che cosa stai commerciando?",
+      "buy": "Compra",
+      "buyDesc": "Devo approvvigionarmi",
+      "sell": "Vendi",
+      "sellDesc": "Ho merce da offrire",
+      "service": "Servizio",
+      "serviceDesc": "Un servizio legato al commercio",
+      "chosen": "Prodotto",
+      "cta": "Strutturala"
+    },
+    "hs": {
+      "choose": "Oppure scegli il tuo prodotto",
+      "catalogue": "Catalogo HS 2022",
+      "all": "Tutte le categorie",
+      "browse": "Torna alle categorie",
+      "searchInstead": "Cerca invece in tutti i prodotti",
+      "searchPlaceholder": "Prodotto o codice HS"
+    },
+    "structuring": {
+      "s1": "Sto leggendo ciò che hai dato a Ponte...",
+      "s2": "Sto separando i fatti dalle lacune...",
+      "s3": "Sto strutturando l'opportunità..."
+    },
+    "facts": {
+      "eyebrow": "Ciò che Ponte ha compreso",
+      "reward": "Ponte ha strutturato {facts} fatti. Mancano ancora {gaps} dettagli.",
+      "commercial": "Fatti commerciali",
+      "stated": "dichiarato",
+      "missing": "Dettagli mancanti",
+      "add": "Aggiungi",
+      "evidence": "Servono prove o autorizzazione",
+      "atReview": "Fornisci in fase di revisione",
+      "private": "Mantenuto privato",
+      "withheld": "Riservato fino alla presentazione",
+      "cta": "Completa il record"
+    },
+    "field": {
+      "intent": "Intento",
+      "product": "Prodotto",
+      "hsCode": "Codice HS",
+      "quantity": "Quantità",
+      "frequency": "Frequenza",
+      "origin": "Origine",
+      "destination": "Destinazione",
+      "incoterm": "Incoterm",
+      "payment": "Termini di pagamento",
+      "role": "Ruolo",
+      "note": "Nota interna",
+      "validity": "Validità",
+      "kind": "Tipo",
+      "route": "Rotta",
+      "notStated": "Non dichiarato"
+    },
+    "evidence": {
+      "tradeAuthority": "Autorizzazione ad acquistare o vendere",
+      "serviceAuthority": "Autorizzazione a fornire il servizio"
+    },
+    "private": {
+      "identity": "La tua identità",
+      "exactCompany": "La tua azienda esatta",
+      "contact": "I tuoi recapiti"
+    },
+    "complete": {
+      "eyebrow": "Completa il record",
+      "remaining": "{n} dettagli da chiudere",
+      "skip": "Salta",
+      "next": "Avanti",
+      "done": "Fatto",
+      "days": "{n} giorni"
+    },
+    "ask": {
+      "quantity": "Quanto e con quale frequenza?",
+      "origin": "Da dove viene spedito?",
+      "destination": "Dove è diretto?",
+      "incoterm": "Con quale incoterm?",
+      "payment": "Quali termini di pagamento?",
+      "validity": "Per quanto tempo è valido?",
+      "role": "Qual è il tuo ruolo?",
+      "note": "Qualcosa che un revisore dovrebbe sapere?",
+      "notePlaceholder": "Nota facoltativa per il revisore"
+    },
+    "preview": {
+      "eyebrow": "Prima di inviare",
+      "title": "Vedi esattamente ciò che vede ogni parte.",
+      "public": "Pubblico",
+      "private": "Fatti privati",
+      "reviewer": "Revisore",
+      "publicNote": "Ciò che vedono gli acquirenti prima di una presentazione. Identità riservata.",
+      "privateNote": "Custodito da Ponte. Mai mostrato pubblicamente.",
+      "reviewerNote": "Ciò che valuta un revisore di Ponte. Prove datate, mai un punteggio.",
+      "reviewerOnly": "Mostrato solo al revisore di Ponte",
+      "withheld": "Riservato fino alla presentazione",
+      "cta": "Continua per inviare"
+    },
+    "reviewer": {
+      "facts": "Fatti sostanziali completi",
+      "authority": "Autorizzazione ad acquistare o vendere",
+      "verified": "Azienda verificata",
+      "sanctions": "Controllo sanzioni",
+      "yes": "sì",
+      "partial": "parziale",
+      "evidenceNeeded": "servono prove",
+      "notYet": "non ancora",
+      "onSubmission": "all'invio"
+    },
+    "submit": {
+      "eyebrow": "Salva o invia",
+      "title": "Pronto quando lo è il record.",
+      "sub": "{n} cose devono essere risolte prima che Ponte possa pubblicare. Puoi salvare una bozza ora e finire più tardi.",
+      "resolve": "Risolvi",
+      "submit": "Invia per la revisione di Ponte",
+      "saveDraft": "Salva bozza"
+    },
+    "blocker": {
+      "quantity": "Quantità non impostata",
+      "quantityDesc": "Un fatto decisivo di cui un revisore ha bisogno prima della pubblicazione.",
+      "incoterm": "Incoterm non impostato",
+      "incotermDesc": "La base di consegna deve essere dichiarata per pubblicare.",
+      "validity": "Validità non impostata",
+      "validityDesc": "Ponte pubblica solo opportunità con un orizzonte dichiarato.",
+      "role": "Ruolo non dichiarato",
+      "roleDesc": "Dichiara il ruolo con cui agisci per questa opportunità.",
+      "businessVerification": "Azienda non ancora verificata",
+      "businessVerificationDesc": "La pubblicazione richiede una verifica aziendale del membro in corso di validità. Puoi comunque inviare per la revisione ora."
+    },
+    "received": {
+      "eyebrow": "Inviato",
+      "savedEyebrow": "Salvato",
+      "title": "Opportunità inviata per la revisione",
+      "draftTitle": "Bozza salvata",
+      "body": "Ponte esaminerà il record strutturato prima che venga pubblicato qualcosa.",
+      "draftBody": "La tua bozza è salvata in privato. Completala e inviala quando sei pronto.",
+      "next1": "Cosa fa Ponte dopo",
+      "next2": "Devi agire?",
+      "next3": "Dove si trova ora",
+      "underReview": "In revisione",
+      "no": "No",
+      "workspace": "Spazio di lavoro",
+      "cta": "Vai allo spazio di lavoro"
+    },
+    "error": {
+      "badge": "Impossibile inviare",
+      "title": "Ponte ha conservato le tue parole.",
+      "body": "Qualcosa ha interrotto l'invio. Nulla di ciò che hai toccato è perso. Riprova.",
+      "retry": "Riprova"
+    }
   }
 }
