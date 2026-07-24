@@ -45,9 +45,9 @@ export default function HsProductPicker({ labels }: { labels: ProductPickerLabel
   useEffect(() => {
     let live = true;
     fetch("/api/hs/search?chapters=1")
-      .then((r) => (r.ok ? r.json() : []))
+      .then((r) => (r.ok ? r.json() : { chapters: [] }))
       .then((data) => {
-        if (live && Array.isArray(data)) setChapters(data);
+        if (live && Array.isArray(data?.chapters)) setChapters(data.chapters);
       })
       .catch(() => {});
     setVoiceOk(
@@ -68,8 +68,8 @@ export default function HsProductPicker({ labels }: { labels: ProductPickerLabel
     }
     debounce.current = window.setTimeout(() => {
       fetch(`/api/hs/search?q=${encodeURIComponent(q)}`)
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data) => setHits(Array.isArray(data) ? data.slice(0, 8) : []))
+        .then((r) => (r.ok ? r.json() : { codes: [] }))
+        .then((data) => setHits(Array.isArray(data?.codes) ? data.codes.slice(0, 8) : []))
         .catch(() => setHits([]));
     }, 220);
     return () => {

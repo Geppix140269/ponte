@@ -1,0 +1,172 @@
+/* ======================================================================
+   Ponte Trade , Structure & Submit journey (S01-S06).
+
+   Scoped under .ponte-find so it shares the Brand v5 token block, buttons
+   (.fbtn), chips (.fchip) and evidence pills (.fev) with the Find journey and
+   the landing. This file adds only the composer-specific, box-free classes:
+   tap rows, the HS drill grid, steppers, validity pills, fact buckets, the
+   preview ledger, the reviewer checklist, the blockers list and the received
+   acknowledgement. No rounded cards; structure comes from rules and type.
+   ====================================================================== */
+
+/* Top bar: back, title, step marker */
+.ponte-find .sbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: 54px;
+  padding: 0 var(--gutter);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(1.2) blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .sbar__back {
+  display: inline-grid;
+  place-items: center;
+  width: 30px; height: 30px;
+  border: none; background: none; cursor: pointer;
+  color: var(--ink-2);
+}
+.ponte-find .sbar__back:hover { color: var(--gold-ink); }
+.ponte-find .sbar__title { font-family: var(--f-serif); font-size: 17px; color: var(--ink); }
+.ponte-find .sbar__step { margin-left: auto; font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+
+.ponte-find .sstep { max-width: 640px; margin: 0 auto; padding: var(--s-6) 0 var(--s-8); }
+
+/* S01 intent tap rows, gold left status-rule on the chosen one */
+.ponte-find .tapopts { margin: var(--s-5) 0; }
+.ponte-find .tapopt {
+  position: relative;
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer;
+  padding: var(--s-4) 0 var(--s-4) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .tapopt__t { font-family: var(--f-serif); font-size: 25px; color: var(--ink); }
+.ponte-find .tapopt__d { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+.ponte-find .tapopt[aria-pressed="true"]::before {
+  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--gold);
+}
+.ponte-find .tapopt[aria-pressed="true"] .tapopt__t { color: var(--gold-ink); }
+
+.ponte-find .prodblock { opacity: 0.35; pointer-events: none; transition: opacity var(--dur-2) var(--ease); }
+.ponte-find .prodblock.on { opacity: 1; pointer-events: auto; }
+
+/* Voice capture */
+.ponte-find .capture { display: flex; align-items: center; gap: var(--s-4); margin: var(--s-5) 0; }
+.ponte-find .mic-lg {
+  flex: none; width: 64px; height: 64px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--gold-tint); color: var(--gold-ink);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--rule-strong));
+  cursor: pointer;
+}
+.ponte-find .mic-lg.is-listening { background: var(--gold); color: var(--ink); }
+.ponte-find .capture__t { font-size: 14px; color: var(--ink-2); }
+.ponte-find .capture__t b { color: var(--ink); font-weight: 600; display: block; }
+
+.ponte-find .orpick { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); margin: var(--s-5) 0 var(--s-3); }
+.ponte-find .orpick__t { font-size: 13px; color: var(--ink-2); }
+.ponte-find .orpick__n { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+
+/* HS drill-down: crumb + a 1px-gap ledger grid of tiles / rule rows */
+.ponte-find .hscrumb { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); margin-bottom: var(--s-3); }
+.ponte-find .hscrumb button { background: none; border: none; cursor: pointer; color: var(--gold-ink); padding: 0; font: inherit; }
+.ponte-find .hsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.ponte-find .hstile {
+  text-align: left; background: var(--raised); border: none; cursor: pointer;
+  padding: 12px 12px; font-size: 13px; color: var(--ink-2);
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.ponte-find .hstile:hover { background: var(--sunken); color: var(--gold-ink); }
+.ponte-find .hstile__n { display: block; font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); margin-top: 3px; }
+.ponte-find .hsrow {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 12px 4px; border-top: 1px solid var(--rule); color: var(--ink);
+}
+.ponte-find .hsrow:hover { color: var(--gold-ink); }
+.ponte-find .hsrow__code { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.ponte-find .hsrow.leaf.is-picked { color: var(--gold-ink); }
+.ponte-find .hsrow.leaf.is-picked .hsrow__code::before { content: "\2022 "; color: var(--gold); }
+.ponte-find .paste-toggle { display: inline-block; margin: var(--s-3) 0 0; font-family: var(--f-mono); font-size: 12px; color: var(--gold-ink); background: none; border: none; cursor: pointer; text-decoration: underline dashed; text-underline-offset: 3px; }
+.ponte-find .hssearch { width: 100%; margin-top: var(--s-3); }
+
+/* Steppers, chips, pills */
+.ponte-find .stepper { display: inline-flex; align-items: center; gap: var(--s-4); }
+.ponte-find .step { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule-strong); background: var(--raised); color: var(--ink); font-size: 20px; cursor: pointer; }
+.ponte-find .step:hover { border-color: var(--ink-3); }
+.ponte-find .stepval { font-family: var(--f-mono); font-size: 24px; color: var(--ink); min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
+.ponte-find .chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--s-2); }
+.ponte-find .spill {
+  font-family: var(--f-mono); font-size: 12.5px; padding: 6px 14px;
+  border: 1px solid var(--rule-strong); background: var(--raised); color: var(--ink-2);
+  border-radius: var(--r-pill); cursor: pointer;
+}
+.ponte-find .spill[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+
+/* S02 buckets */
+.ponte-find .bucket { margin: var(--s-5) 0; }
+.ponte-find .bucket__l { display: flex; align-items: baseline; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+.ponte-find .sfact { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.ponte-find .sfact__k { font-size: 13.5px; color: var(--ink-2); }
+.ponte-find .sval { font-family: var(--f-mono); font-size: 11.5px; padding: 3px 10px; border-radius: var(--r-pill); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 5px; }
+.ponte-find .sval--ok { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
+.ponte-find .sval--add { color: var(--gold-ink); background: transparent; border: 1px dashed color-mix(in srgb, var(--gold) 50%, var(--rule-strong)); cursor: pointer; }
+.ponte-find .sval--ev { color: var(--review); background: var(--review-tint); border-color: var(--review-line); }
+.ponte-find .sval--priv { color: var(--ink-3); background: var(--sunken); }
+.ponte-find .reveal-stagger { opacity: 0; transform: translateY(8px); animation: freveal var(--dur-3) var(--ease-out) forwards; }
+
+/* S03 completion, one question at a time */
+.ponte-find .qwrap { min-height: 220px; }
+.ponte-find .q { font-family: var(--f-serif); font-size: 26px; color: var(--ink); margin: var(--s-4) 0 var(--s-4); }
+.ponte-find .sayline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--gold-ink); background: none; border: none; cursor: pointer; margin-top: var(--s-3); }
+.ponte-find .qnav { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-top: var(--s-6); }
+.ponte-find .snote { width: 100%; min-height: 84px; resize: vertical; font-family: var(--f-sans); font-size: 14px; color: var(--ink); background: var(--raised); border: 1px solid var(--rule-strong); border-radius: 0; padding: 10px 12px; }
+
+/* S04 preview: underline tabs + ledger + reviewer checklist */
+.ponte-find .tabs2 { display: flex; gap: var(--s-5); border-bottom: 1px solid var(--rule); margin: var(--s-4) 0; }
+.ponte-find .tab2 { background: none; border: none; cursor: pointer; padding: 0 0 10px; font-size: 13.5px; color: var(--ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ponte-find .tab2[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.ponte-find .pv__note { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); margin-bottom: var(--s-4); }
+.ponte-find .ledger2 { border-top: 1px solid var(--ink); }
+.ponte-find .lrow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.ponte-find .lrow__k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .lrow__v { font-family: var(--f-mono); font-size: 13px; color: var(--ink); text-align: right; }
+.ponte-find .lrow__v.ns { color: var(--mute); }
+.ponte-find .rev { border-top: 1px solid var(--ink); }
+.ponte-find .rev__v { font-family: var(--f-sans); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill); border: 1px solid transparent; }
+.ponte-find .rev__v.ok { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
+.ponte-find .rev__v.wait { color: var(--review); background: var(--review-tint); border-color: var(--review-line); }
+
+/* S05 blockers */
+.ponte-find .block { position: relative; padding: var(--s-4) 0 var(--s-4) var(--s-4); border-bottom: 1px solid var(--rule); }
+.ponte-find .block:first-child { border-top: 1px solid var(--ink); }
+.ponte-find .block__t { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); font-weight: 600; }
+.ponte-find .block__t::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--neg); flex: none; }
+.ponte-find .block__d { font-size: 13px; color: var(--ink-3); margin: 4px 0 0 15px; }
+.ponte-find .block__r { margin: 6px 0 0 15px; font-family: var(--f-mono); font-size: 12px; color: var(--gold-ink); background: none; border: none; cursor: pointer; padding: 0; }
+.ponte-find .submit-cta { display: grid; gap: var(--s-3); margin-top: var(--s-6); }
+
+/* S06 received */
+.ponte-find .rec { text-align: center; max-width: 460px; margin: 0 auto; padding-top: var(--s-7); }
+.ponte-find .rec-ack { width: 64px; height: 64px; border-radius: 50%; margin: var(--s-4) auto; display: grid; place-items: center; background: var(--gold-tint); color: var(--pos); }
+@media (prefers-reduced-motion: no-preference) {
+  .ponte-find .rec-ack { animation: ackIn 0.55s var(--ease-out); }
+  @keyframes ackIn { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+}
+.ponte-find .rec-title { font-family: var(--f-serif); font-size: 28px; color: var(--ink); margin: var(--s-3) 0; }
+.ponte-find .rec-body { font-size: 14px; color: var(--ink-2); }
+.ponte-find .rec-next { text-align: left; margin: var(--s-5) 0; }
+.ponte-find .rec-step { display: flex; justify-content: space-between; gap: var(--s-3); padding: 10px 0; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+.ponte-find .rec-step b { color: var(--ink); font-weight: 600; }
+
+/* Structuring interstitial */
+.ponte-find .structing { text-align: center; padding: var(--s-8) 0; }
+.ponte-find .structing__s { font-family: var(--f-mono); font-size: 13px; color: var(--review); margin-top: var(--s-4); }
+
+/* Parse-error */
+.ponte-find .err-badge { display: inline-block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neg); }

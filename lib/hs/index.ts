@@ -19,11 +19,24 @@ export type HsCode = {
   chapter: string;
   chapter_title: string;
   heading: string;
+  /**
+   * The WCO statistical unit for this code (e.g. "kg", "number"), or null when
+   * the nomenclature states none. Present on a single-code lookup; the search
+   * RPC does not return it, so it is optional. The Structure composer uses it to
+   * prefill the quantity unit from the chosen product.
+   */
+  unit?: string | null;
 };
 
 export type HsChapter = {
   chapter: string;
   chapter_title: string;
+  codes: number;
+};
+
+export type HsHeading = {
+  heading: string;
+  heading_title: string;
   codes: number;
 };
 
@@ -80,7 +93,7 @@ export async function getHsCode(code: string): Promise<HsCode | null> {
   const sb = createAdminClient();
   const { data, error } = await sb
     .from("hs_codes")
-    .select("code, display, description, short_title, chapter, chapter_title, heading")
+    .select("code, display, description, short_title, chapter, chapter_title, heading, unit")
     .eq("code", code)
     .eq("is_active", true)
     .maybeSingle();
@@ -149,6 +162,36 @@ export async function listHsChapters(): Promise<HsChapter[]> {
   );
   chapterCache = { at: Date.now(), value };
   return value;
+}
+
+/**
+ * The headings inside one chapter, for the middle tap of the drill-down
+ * (chapter -> heading -> six-digit product). Distinct 4-digit headings with
+ * their title and a count of the active codes beneath each.
+ */
+export async function listHeadingsInChapter(chapter: string): Promise<HsHeading[]> {
+  if (!/^\d{2}$/.test(chapter)) return [];
+
+  const sb = createAdminClient();
+  const { data, error } = await sb
+    .from("hs_codes")
+    .select("heading, heading_title")
+    .eq("chapter", chapter)
+    .eq("is_active", true);
+
+  if (error) {
+    if (isMissingTable(error)) warnOnce("headings");
+    else console.error("[ponte] hs headings failed:", error.message);
+    return [];
+  }
+
+  const counts = new Map<string, HsHeading>();
+  for (const row of (data ?? []) as { heading: string; heading_title: string }[]) {
+    const existing = counts.get(row.heading);
+    if (existing) existing.codes++;
+    else counts.set(row.heading, { heading: row.heading, heading_title: row.heading_title, codes: 1 });
+  }
+  return Array.from(counts.values()).sort((a, b) => a.heading.localeCompare(b.heading));
 }
 
 /** The codes inside one heading, for the second tap of the tile grid. */

@@ -26,6 +26,8 @@ function rendersOwnChrome(path: string): boolean {
     path === "/" ||
     path === "/find" ||
     path.startsWith("/find/") ||
+    path === "/structure" ||
+    path.startsWith("/structure/") ||
     path === "/workspace" ||
     path.startsWith("/workspace/")
   );

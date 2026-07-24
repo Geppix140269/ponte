@@ -1297,5 +1297,163 @@
       "signInPrompt": "登录以查看您的工作区。"
     },
     "trust": "自由开始。只有在需要发送引荐时才加入。"
+  },
+  "structure": {
+    "meta": {
+      "title": "构建一个机会",
+      "description": "通过点按构建采购、销售或服务需求。预览各方所见，然后提交给 Ponte 审核。"
+    },
+    "bar": {
+      "back": "返回"
+    },
+    "trust": "自由构建和预览。只有在保存或提交时才加入。",
+    "intent": {
+      "eyebrow": "构建一个机会",
+      "title": "您要交易什么？",
+      "buy": "采购",
+      "buyDesc": "我需要采购",
+      "sell": "销售",
+      "sellDesc": "我有货源可提供",
+      "service": "服务",
+      "serviceDesc": "与贸易相关的服务",
+      "chosen": "产品",
+      "cta": "开始构建"
+    },
+    "hs": {
+      "choose": "或选择您的产品",
+      "catalogue": "HS 2022 目录",
+      "all": "所有类别",
+      "browse": "返回类别",
+      "searchInstead": "改为搜索所有产品",
+      "searchPlaceholder": "产品或 HS 编码"
+    },
+    "structuring": {
+      "s1": "正在读取您提供给 Ponte 的内容...",
+      "s2": "正在区分事实与缺口...",
+      "s3": "正在构建这个机会..."
+    },
+    "facts": {
+      "eyebrow": "Ponte 所理解的内容",
+      "reward": "Ponte 构建了 {facts} 项事实。还需要 {gaps} 项细节。",
+      "commercial": "商业事实",
+      "stated": "已声明",
+      "missing": "缺失的细节",
+      "add": "添加",
+      "evidence": "需要证据或授权",
+      "atReview": "在审核时提供",
+      "private": "保持私密",
+      "withheld": "在引荐前保留",
+      "cta": "完善记录"
+    },
+    "field": {
+      "intent": "意图",
+      "product": "产品",
+      "hsCode": "HS 编码",
+      "quantity": "数量",
+      "frequency": "频率",
+      "origin": "原产地",
+      "destination": "目的地",
+      "incoterm": "Incoterm",
+      "payment": "付款条件",
+      "role": "角色",
+      "note": "内部备注",
+      "validity": "有效期",
+      "kind": "种类",
+      "route": "路线",
+      "notStated": "未声明"
+    },
+    "evidence": {
+      "tradeAuthority": "采购或销售的授权",
+      "serviceAuthority": "提供该服务的授权"
+    },
+    "private": {
+      "identity": "您的身份",
+      "exactCompany": "您的确切公司",
+      "contact": "您的联系方式"
+    },
+    "complete": {
+      "eyebrow": "完善记录",
+      "remaining": "还有 {n} 项细节待完成",
+      "skip": "跳过",
+      "next": "下一步",
+      "done": "完成",
+      "days": "{n} 天"
+    },
+    "ask": {
+      "quantity": "数量多少，频率如何？",
+      "origin": "从哪里发货？",
+      "destination": "运往何处？",
+      "incoterm": "采用哪种 incoterm？",
+      "payment": "什么付款条件？",
+      "validity": "有效期多长？",
+      "role": "您的角色是什么？",
+      "note": "有什么审核人应知道的吗？",
+      "notePlaceholder": "给审核人的可选备注"
+    },
+    "preview": {
+      "eyebrow": "提交之前",
+      "title": "确切查看各方所见。",
+      "public": "公开",
+      "private": "私密事实",
+      "reviewer": "审核人",
+      "publicNote": "买方在引荐前所见。身份保留。",
+      "privateNote": "由 Ponte 保管。绝不公开显示。",
+      "reviewerNote": "Ponte 审核人所评估的内容。带日期的证据，绝非评分。",
+      "reviewerOnly": "仅向 Ponte 审核人显示",
+      "withheld": "在引荐前保留",
+      "cta": "继续提交"
+    },
+    "reviewer": {
+      "facts": "实质性事实完整",
+      "authority": "采购或销售的授权",
+      "verified": "企业已验证",
+      "sanctions": "制裁筛查",
+      "yes": "是",
+      "partial": "部分",
+      "evidenceNeeded": "需要证据",
+      "notYet": "尚未",
+      "onSubmission": "提交时"
+    },
+    "submit": {
+      "eyebrow": "保存或提交",
+      "title": "记录就绪即可。",
+      "sub": "在 Ponte 能够发布之前，必须解决 {n} 项事项。您现在可以保存草稿，稍后完成。",
+      "resolve": "解决",
+      "submit": "提交给 Ponte 审核",
+      "saveDraft": "保存草稿"
+    },
+    "blocker": {
+      "quantity": "数量未设置",
+      "quantityDesc": "审核人在发布前需要的决定性事实。",
+      "incoterm": "Incoterm 未设置",
+      "incotermDesc": "必须声明交货基础才能发布。",
+      "validity": "有效期未设置",
+      "validityDesc": "Ponte 只发布有明确期限的机会。",
+      "role": "角色未声明",
+      "roleDesc": "声明您在此机会中所担任的角色。",
+      "businessVerification": "企业尚未验证",
+      "businessVerificationDesc": "发布需要当前有效的会员企业验证。您现在仍可提交审核。"
+    },
+    "received": {
+      "eyebrow": "已提交",
+      "savedEyebrow": "已保存",
+      "title": "机会已提交审核",
+      "draftTitle": "草稿已保存",
+      "body": "在发布任何内容之前，Ponte 将审核结构化记录。",
+      "draftBody": "您的草稿已私密保存。准备好后随时完成并提交。",
+      "next1": "Ponte 接下来会做什么",
+      "next2": "您需要采取行动吗？",
+      "next3": "它现在存放在哪里",
+      "underReview": "审核中",
+      "no": "否",
+      "workspace": "工作区",
+      "cta": "前往工作区"
+    },
+    "error": {
+      "badge": "无法提交",
+      "title": "Ponte 保留了您的内容。",
+      "body": "有情况中断了提交。您点按的内容不会丢失。请重试。",
+      "retry": "重试"
+    }
   }
 }

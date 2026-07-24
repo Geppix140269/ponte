@@ -1297,5 +1297,163 @@
       "signInPrompt": "Melden Sie sich an, um Ihren Arbeitsbereich zu sehen."
     },
     "trust": "Beginnen Sie frei. Treten Sie erst bei, wenn eine Vorstellung gesendet werden muss."
+  },
+  "structure": {
+    "meta": {
+      "title": "Strukturieren Sie eine Gelegenheit",
+      "description": "Strukturieren Sie einen Kauf-, Verkaufs- oder Dienstleistungsbedarf per Tippen. Sehen Sie in der Vorschau, was jede Partei sieht, und reichen Sie es dann zur Prüfung durch Ponte ein."
+    },
+    "bar": {
+      "back": "Zurück"
+    },
+    "trust": "Erstellen und in der Vorschau ansehen, ganz frei. Treten Sie erst bei, wenn Sie speichern oder einreichen.",
+    "intent": {
+      "eyebrow": "Strukturieren Sie eine Gelegenheit",
+      "title": "Was handeln Sie?",
+      "buy": "Kaufen",
+      "buyDesc": "Ich muss beschaffen",
+      "sell": "Verkaufen",
+      "sellDesc": "Ich habe ein Angebot",
+      "service": "Dienstleistung",
+      "serviceDesc": "Eine handelsbezogene Dienstleistung",
+      "chosen": "Produkt",
+      "cta": "Strukturieren"
+    },
+    "hs": {
+      "choose": "Oder wählen Sie Ihr Produkt",
+      "catalogue": "HS 2022 Katalog",
+      "all": "Alle Kategorien",
+      "browse": "Zurück zu den Kategorien",
+      "searchInstead": "Stattdessen alle Produkte durchsuchen",
+      "searchPlaceholder": "Produkt oder HS-Code"
+    },
+    "structuring": {
+      "s1": "Lese, was Sie Ponte gegeben haben...",
+      "s2": "Trenne Fakten von Lücken...",
+      "s3": "Strukturiere die Gelegenheit..."
+    },
+    "facts": {
+      "eyebrow": "Was Ponte verstanden hat",
+      "reward": "Ponte hat {facts} Fakten strukturiert. {gaps} Angaben fehlen noch.",
+      "commercial": "Kommerzielle Fakten",
+      "stated": "angegeben",
+      "missing": "Fehlende Angaben",
+      "add": "Hinzufügen",
+      "evidence": "Nachweis oder Berechtigung erforderlich",
+      "atReview": "Bei der Prüfung bereitstellen",
+      "private": "Privat gehalten",
+      "withheld": "Zurückgehalten bis zur Vorstellung",
+      "cta": "Vervollständigen Sie den Datensatz"
+    },
+    "field": {
+      "intent": "Absicht",
+      "product": "Produkt",
+      "hsCode": "HS-Code",
+      "quantity": "Menge",
+      "frequency": "Häufigkeit",
+      "origin": "Ursprung",
+      "destination": "Bestimmungsort",
+      "incoterm": "Incoterm",
+      "payment": "Zahlungsbedingungen",
+      "role": "Rolle",
+      "note": "Interne Notiz",
+      "validity": "Gültigkeit",
+      "kind": "Art",
+      "route": "Route",
+      "notStated": "Nicht angegeben"
+    },
+    "evidence": {
+      "tradeAuthority": "Berechtigung zum Kauf oder Verkauf",
+      "serviceAuthority": "Berechtigung zur Erbringung der Dienstleistung"
+    },
+    "private": {
+      "identity": "Ihre Identität",
+      "exactCompany": "Ihr genaues Unternehmen",
+      "contact": "Ihre Kontaktdaten"
+    },
+    "complete": {
+      "eyebrow": "Vervollständigen Sie den Datensatz",
+      "remaining": "{n} Angaben abzuschließen",
+      "skip": "Überspringen",
+      "next": "Weiter",
+      "done": "Fertig",
+      "days": "{n} Tage"
+    },
+    "ask": {
+      "quantity": "Wie viel und wie oft?",
+      "origin": "Von wo wird versandt?",
+      "destination": "Wohin geht es?",
+      "incoterm": "Auf welchem Incoterm?",
+      "payment": "Welche Zahlungsbedingungen?",
+      "validity": "Wie lange ist das gültig?",
+      "role": "Was ist Ihre Rolle?",
+      "note": "Sollte ein Prüfer etwas wissen?",
+      "notePlaceholder": "Optionale Notiz für den Prüfer"
+    },
+    "preview": {
+      "eyebrow": "Bevor Sie einreichen",
+      "title": "Sehen Sie genau, was jede Partei sieht.",
+      "public": "Öffentlich",
+      "private": "Private Fakten",
+      "reviewer": "Prüfer",
+      "publicNote": "Was Käufer vor einer Vorstellung sehen. Identität zurückgehalten.",
+      "privateNote": "Von Ponte verwahrt. Nie öffentlich gezeigt.",
+      "reviewerNote": "Was ein Ponte-Prüfer bewertet. Datierte Nachweise, nie eine Bewertung.",
+      "reviewerOnly": "Nur dem Ponte-Prüfer gezeigt",
+      "withheld": "Zurückgehalten bis zur Vorstellung",
+      "cta": "Weiter zum Einreichen"
+    },
+    "reviewer": {
+      "facts": "Wesentliche Fakten vollständig",
+      "authority": "Berechtigung zum Kauf oder Verkauf",
+      "verified": "Unternehmen verifiziert",
+      "sanctions": "Sanktionsprüfung",
+      "yes": "ja",
+      "partial": "teilweise",
+      "evidenceNeeded": "Nachweis erforderlich",
+      "notYet": "noch nicht",
+      "onSubmission": "bei Einreichung"
+    },
+    "submit": {
+      "eyebrow": "Speichern oder einreichen",
+      "title": "Bereit, sobald der Datensatz es ist.",
+      "sub": "{n} Dinge müssen gelöst werden, bevor Ponte veröffentlichen kann. Sie können jetzt einen Entwurf speichern und später fertigstellen.",
+      "resolve": "Lösen",
+      "submit": "Zur Prüfung durch Ponte einreichen",
+      "saveDraft": "Entwurf speichern"
+    },
+    "blocker": {
+      "quantity": "Menge nicht festgelegt",
+      "quantityDesc": "Eine entscheidende Tatsache, die ein Prüfer vor der Veröffentlichung benötigt.",
+      "incoterm": "Incoterm nicht festgelegt",
+      "incotermDesc": "Die Lieferbasis muss zur Veröffentlichung angegeben werden.",
+      "validity": "Gültigkeit nicht festgelegt",
+      "validityDesc": "Ponte veröffentlicht nur Gelegenheiten mit einem angegebenen Zeithorizont.",
+      "role": "Rolle nicht angegeben",
+      "roleDesc": "Geben Sie die Rolle an, in der Sie bei dieser Gelegenheit handeln.",
+      "businessVerification": "Unternehmen noch nicht verifiziert",
+      "businessVerificationDesc": "Die Veröffentlichung erfordert eine aktuelle Verifizierung des Mitgliedsunternehmens. Sie können es jetzt trotzdem zur Prüfung einreichen."
+    },
+    "received": {
+      "eyebrow": "Eingereicht",
+      "savedEyebrow": "Gespeichert",
+      "title": "Gelegenheit zur Prüfung eingereicht",
+      "draftTitle": "Entwurf gespeichert",
+      "body": "Ponte prüft den strukturierten Datensatz, bevor etwas veröffentlicht wird.",
+      "draftBody": "Ihr Entwurf wird privat gespeichert. Stellen Sie ihn fertig und reichen Sie ihn ein, wann immer Sie bereit sind.",
+      "next1": "Was Ponte als Nächstes tut",
+      "next2": "Müssen Sie handeln?",
+      "next3": "Wo es jetzt liegt",
+      "underReview": "In Prüfung",
+      "no": "Nein",
+      "workspace": "Arbeitsbereich",
+      "cta": "Zum Arbeitsbereich"
+    },
+    "error": {
+      "badge": "Einreichung fehlgeschlagen",
+      "title": "Ponte hat Ihre Worte behalten.",
+      "body": "Etwas hat die Einreichung unterbrochen. Nichts, was Sie getippt haben, geht verloren. Versuchen Sie es erneut.",
+      "retry": "Erneut versuchen"
+    }
   }
 }
