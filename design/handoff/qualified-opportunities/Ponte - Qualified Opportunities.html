@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Qualified Opportunities | Ponte Trade</title>
+<meta name="description" content="Browse current cross-border opportunities reviewed by Ponte and shown with clear commercial facts, evidence labels and last-confirmed dates." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="brand/favicons/favicon-32.png" />
+<link rel="stylesheet" href="ponte-system.css" />
+<template id="__bundler_thumbnail" data-bg-color="#FCFBF7">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#FCFBF7"/>
+    <g transform="translate(600 300)">
+      <g transform="translate(-130 -110) scale(2.2)">
+        <path d="M22 98 L22 60 C22 35 98 35 98 60 L98 98" fill="none" stroke="#0F0F0E" stroke-width="11" stroke-linejoin="miter" stroke-linecap="square"/>
+        <line x1="12" y1="98" x2="108" y2="98" stroke="#0F0F0E" stroke-width="5"/>
+        <circle cx="60" cy="41" r="10" fill="#C9973A"/>
+      </g>
+    </g>
+    <text x="600" y="540" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="500" fill="#0F0F0E">Qualified Opportunities</text>
+    <text x="600" y="600" text-anchor="middle" font-family="monospace" font-size="24" fill="#9A958A">Ponte Trade</text>
+  </svg>
+</template>
+<style>
+  main { max-width: var(--maxw-prod); margin: 0 auto; padding: 0 var(--gutter) 96px; }
+  .burger { display: none; }
+
+  /* page header */
+  .phead { padding: 40px 0 26px; border-bottom: 1px solid var(--rule); }
+  .phead__eyebrow { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .phead__eyebrow .rule { width: 26px; height: 1px; background: var(--gold); }
+  .phead h1 { font-family: var(--f-serif); font-size: clamp(30px, 3.4vw, 44px); font-weight: 500; letter-spacing: -0.018em; line-height: 1.05; max-width: 720px; }
+  .phead__def { font-size: 16px; color: var(--ink-2); margin-top: 12px; max-width: 620px; line-height: 1.55; }
+  .phead__ctx { margin-top: 16px; font-size: 13.5px; color: var(--ink-3); }
+  .phead__ctx a { color: var(--gold-ink); border-bottom: 1px solid var(--rule-strong); padding-bottom: 1px; }
+  .phead__ctx a:hover { border-color: var(--gold-ink); }
+
+  /* toolbar */
+  .toolbar { position: sticky; top: 73px; z-index: 40; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 16px 0; margin-bottom: 4px; border-bottom: 1px solid var(--rule); }
+  .toolbar__row { display: flex; gap: 12px; align-items: center; }
+  .search { position: relative; flex: 1; min-width: 0; }
+  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--ink-3); }
+  .search .input { padding-left: 40px; }
+  .sortsel { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .sortsel label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+  .sortsel .select { min-width: 168px; min-height: 40px; }
+  .toolbar__row2 { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .intentgroup { display: inline-flex; gap: 6px; }
+  .fbtn { display: inline-flex; align-items: center; gap: 7px; }
+  .fbtn svg { width: 15px; height: 15px; }
+  .count { margin-left: auto; font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+
+  /* filters drawer (desktop inline panel) */
+  .filters { display: none; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 18px; margin-top: 12px; background: var(--sunken); border: 1px solid var(--rule); border-radius: var(--r-lg); }
+  .filters.is-open { display: grid; }
+  .filters .field__label { margin-bottom: 2px; }
+
+  /* board grid */
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding-top: 24px; }
+  .qo { display: flex; flex-direction: column; background: var(--raised); border: 1px solid var(--rule); border-radius: var(--r-lg); box-shadow: var(--e-1); overflow: hidden; transition: box-shadow var(--dur-2), transform var(--dur-2), border-color var(--dur-2); }
+  .qo:hover { box-shadow: var(--e-2); border-color: var(--rule-strong); }
+  .qo__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--rule); }
+  .qo__kind { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+  .qo__kind .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .qo__intent { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--ink-2); padding: 3px 8px; border: 1px solid var(--rule-strong); border-radius: 4px; }
+  .qo__intent .g { font-weight: 700; }
+  .qo__body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .qo__title { font-family: var(--f-serif); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.2; }
+  .qo__facts { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .qo__facts li { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
+  .qo__facts li svg { width: 13px; height: 13px; color: var(--ink-3); flex-shrink: 0; }
+  .qo__facts .ns { color: var(--mute); }
+  .qo__ev { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .qo__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 16px; border-top: 1px solid var(--rule); background: var(--sunken); }
+  .qo__ref { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+  .qo__cta { font-size: 13px; font-weight: 600; color: var(--ink); display: inline-flex; align-items: center; gap: 5px; }
+  .qo__cta:hover { color: var(--gold-ink); }
+  .evb { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; line-height: 1.1; border: 1px solid transparent; }
+  .evb svg { width: 12px; height: 12px; }
+  .evb--checked { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
+  .evb--reviewed { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
+  .evb--declared { color: var(--declared); background: var(--declared-tint); border: 1px dashed var(--rule-strong); }
+  .evb--sighted { color: var(--review); background: var(--review-tint); border-color: var(--review-line); }
+  .evb--managed { color: var(--ink); background: var(--gold-tint); border-color: color-mix(in srgb, var(--gold) 40%, transparent); }
+
+  /* empty / states */
+  .estate { grid-column: 1 / -1; border: 1px dashed var(--rule-strong); border-radius: var(--r-lg); background: var(--raised); padding: 56px 40px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .estate__badge { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px; }
+  .estate__h { font-family: var(--f-serif); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; max-width: 480px; line-height: 1.2; }
+  .estate__b { font-size: 14.5px; color: var(--ink-2); margin-top: 12px; max-width: 460px; line-height: 1.6; }
+  .estate__cta { margin-top: 22px; }
+
+  /* reference states */
+  .refstates { margin-top: 64px; border-top: 1px solid var(--rule); padding-top: 32px; }
+  .refstates__h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+  .refstates__h .eyebrow { font-size: 11px; }
+  .refgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .refcard { border: 1px solid var(--rule); border-radius: var(--r-lg); overflow: hidden; background: var(--raised); }
+  .refcard__cap { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--rule); background: var(--sunken); }
+  .refcard__body { padding: 22px 18px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .refcard__h { font-family: var(--f-serif); font-size: 17px; font-weight: 500; line-height: 1.25; }
+  .refcard__b { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+  .refcard__cta { margin-top: 14px; }
+  .skrow { display: flex; flex-direction: column; gap: 9px; }
+  .skrow .skeleton { height: 12px; }
+  .loadingline { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 12px; color: var(--review); justify-content: center; }
+  .loadingline .sp { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--review); border-right-color: transparent; animation: spin .8s linear infinite; }
+
+  @media (max-width: 1080px) { .board, .refgrid { grid-template-columns: repeat(2, 1fr); } .filters { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 760px) {
+    .nav__links, .nav__actions .btn { display: none; }
+    .burger { display: inline-flex; width: 40px; height: 40px; border: 1px solid var(--rule-strong); border-radius: var(--r-sm); background: var(--raised); align-items: center; justify-content: center; }
+    .burger svg { width: 20px; height: 20px; color: var(--ink); }
+    .board, .refgrid, .filters { grid-template-columns: 1fr; }
+    .toolbar { top: 65px; }
+    .toolbar__row { flex-wrap: wrap; }
+    .sortsel { width: 100%; } .sortsel .select { flex: 1; }
+    .count { width: 100%; margin: 4px 0 0; }
+  }
+  /* mobile menu (shared pattern) */
+  .mmenu { position: fixed; inset: 0; z-index: var(--z-drawer); display: none; }
+  .mmenu.is-open { display: block; }
+  .mmenu__scrim { position: absolute; inset: 0; background: rgba(15,15,14,0.42); }
+  .mmenu__panel { position: absolute; top: 0; right: 0; height: 100%; width: min(86vw, 360px); background: var(--surface); border-left: 1px solid var(--rule); box-shadow: var(--e-3); display: flex; flex-direction: column; padding: 18px 20px; overflow-y: auto; }
+  .mmenu__head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; margin-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .mmenu__links { display: flex; flex-direction: column; }
+  .mmenu__links a { font-size: 16px; font-weight: 500; color: var(--ink); padding: 15px 4px; border-bottom: 1px solid var(--rule); }
+  .mmenu__cta { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header class="nav" data-screen-label="Board nav">
+  <div class="nav__inner" style="max-width:var(--maxw-prod)">
+    <a class="lockup" href="Ponte - Homepage.html" aria-label="Ponte Trade home">
+      <span class="lockup__chip"><svg class="lockup__mark" viewBox="0 0 120 120" aria-hidden="true"><path d="M22 98 L22 60 C22 35 98 35 98 60 L98 98" fill="none" stroke="currentColor" stroke-width="11" stroke-linejoin="miter" stroke-linecap="square"/><line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" stroke-width="5"/><circle class="lockup__dot" cx="60" cy="41" r="10"/></svg></span>
+      <span class="lockup__word">Ponte</span><span class="lockup__tld">.trade</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="Ponte - Qualified Opportunities.html" style="color:var(--ink);border-bottom-color:var(--ink)">Qualified Opportunities</a>
+      <a href="Ponte - Market Signals.html">Market Signals</a>
+      <a href="Ponte - Homepage.html#submit">Submit an Opportunity</a>
+      <a href="Ponte - Business Verification.html">Verify My Business</a>
+    </nav>
+    <div class="nav__actions">
+      <a class="btn btn--ghost btn--sm" href="Ponte - Homepage.html#signin">Sign in</a>
+      <a class="btn btn--primary btn--sm" href="Ponte - Homepage.html#join">Join the network</a>
+      <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu" id="burgerBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="mmenu" id="mobileMenu">
+  <div class="mmenu__scrim" data-mclose></div>
+  <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="mmenu__head">
+      <span class="lockup"><span class="lockup__chip" style="width:38px;height:38px"><svg class="lockup__mark" viewBox="0 0 120 120" style="width:24px;height:24px" aria-hidden="true"><path d="M22 98 L22 60 C22 35 98 35 98 60 L98 98" fill="none" stroke="currentColor" stroke-width="11" stroke-linejoin="miter" stroke-linecap="square"/><line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" stroke-width="5"/><circle class="lockup__dot" cx="60" cy="41" r="10"/></svg></span><span class="lockup__word" style="font-size:24px">Ponte</span><span class="lockup__tld">.trade</span></span>
+      <button class="iconbtn iconbtn--framed" type="button" data-mclose aria-label="Close menu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <nav class="mmenu__links" aria-label="Mobile primary">
+      <a href="Ponte - Qualified Opportunities.html">Qualified Opportunities</a>
+      <a href="Ponte - Market Signals.html">Market Signals</a>
+      <a href="Ponte - Homepage.html#submit">Submit an Opportunity</a>
+      <a href="Ponte - Business Verification.html">Verify My Business</a>
+      <a href="Ponte - Homepage.html#desk">Ponte Desk</a>
+    </nav>
+    <div class="mmenu__cta">
+      <a class="btn btn--secondary btn--block" href="Ponte - Homepage.html#signin">Sign in</a>
+      <a class="btn btn--primary btn--block" href="Ponte - Homepage.html#join">Join the network</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="phead" data-screen-label="Board header">
+    <div class="phead__eyebrow"><span class="rule"></span><span class="eyebrow">Qualified Opportunities</span></div>
+    <h1>Reviewed opportunities from identified participants.</h1>
+    <p class="phead__def">Each opportunity was submitted to or directly reconfirmed by Ponte, reviewed before publication and shown with the information currently supported.</p>
+    <p class="phead__ctx">Looking for external market intelligence? <a href="Ponte - Market Signals.html">Explore Market Signals.</a></p>
+  </div>
+
+  <div class="toolbar" data-screen-label="Board toolbar">
+    <div class="toolbar__row">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+        <input class="input" id="searchInput" type="search" placeholder="Search product, specification, HS code or reference" aria-label="Search opportunities" />
+      </div>
+      <div class="sortsel">
+        <label for="sortSel">Sort by</label>
+        <select class="select" id="sortSel" aria-label="Sort by">
+          <option>Last confirmed</option>
+          <option>Newest published</option>
+          <option>Required date</option>
+          <option>Quantity</option>
+        </select>
+      </div>
+    </div>
+    <div class="toolbar__row2">
+      <div class="intentgroup seg" role="group" aria-label="Filter by intent">
+        <button class="seg__b is-active" data-intent="all" aria-pressed="true">All</button>
+        <button class="seg__b" data-intent="buy" aria-pressed="false">Buy</button>
+        <button class="seg__b" data-intent="sell" aria-pressed="false">Sell</button>
+        <button class="seg__b" data-intent="service" aria-pressed="false">Service</button>
+      </div>
+      <button class="btn btn--secondary btn--sm fbtn" id="filterToggle" aria-expanded="false" aria-controls="filterPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8Z"/></svg>Filters</button>
+      <button class="btn btn--ghost btn--sm" id="clearBtn">Clear filters</button>
+      <span class="count" id="count">6 opportunities</span>
+    </div>
+    <div class="filters" id="filterPanel">
+      <div class="field"><label class="field__label">Product category</label><select class="select"><option>Any category</option><option>Agricultural &amp; soft commodities</option><option>Fertilizers</option><option>Building materials</option><option>Inspection &amp; services</option></select></div>
+      <div class="field"><label class="field__label">Origin</label><select class="select"><option>Any origin</option><option>Brazil</option><option>Qatar</option><option>Vietnam</option><option>Türkiye</option></select></div>
+      <div class="field"><label class="field__label">Destination</label><select class="select"><option>Any destination</option><option>Algeria</option><option>India</option><option>Egypt</option><option>Senegal</option><option>Italy</option></select></div>
+      <div class="field"><label class="field__label">Recency</label><select class="select"><option>Any time</option><option>Confirmed this week</option><option>Confirmed this month</option></select></div>
+      <div class="field"><label class="field__label">Quantity (min)</label><input class="input" placeholder="e.g. 10,000 MT" /></div>
+      <div class="field"><label class="field__label">HS code</label><input class="input" placeholder="e.g. 1701" /></div>
+    </div>
+  </div>
+
+  <div class="board" id="board" data-screen-label="Board grid"></div>
+
+  <!-- reference states (handoff documentation) -->
+  <section class="refstates" data-screen-label="Board states reference">
+    <div class="refstates__h">
+      <span class="eyebrow">Board states · reference for engineering</span>
+      <span class="meta-chip">Launch-empty · loading · load failure</span>
+    </div>
+    <div class="refgrid">
+      <div class="refcard">
+        <div class="refcard__cap">No Qualified Opportunities at launch</div>
+        <div class="refcard__body">
+          <div class="refcard__h">The first Qualified Opportunities are being prepared.</div>
+          <p class="refcard__b">Ponte publishes only after the opportunity and relevant business context have been reviewed. Submit a current requirement or offer to begin.</p>
+          <div class="refcard__cta"><a class="btn btn--primary btn--sm" href="Ponte - Homepage.html#submit">Submit an opportunity</a></div>
+        </div>
+      </div>
+      <div class="refcard">
+        <div class="refcard__cap">Loading</div>
+        <div class="refcard__body">
+          <div class="skrow" style="text-align:left;margin-bottom:16px"><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:90%"></span><span class="skeleton" style="width:40%"></span></div>
+          <div class="loadingline"><span class="sp"></span>Loading current opportunities…</div>
+        </div>
+      </div>
+      <div class="refcard">
+        <div class="refcard__cap">Load failure</div>
+        <div class="refcard__body">
+          <div class="refcard__h">Opportunities could not be loaded.</div>
+          <p class="refcard__b">Your filters are safe. Try again in a moment.</p>
+          <div class="refcard__cta"><button class="btn btn--secondary btn--sm">Try again</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // sample opportunities (realistic content lengths). intent: buy|sell|service
+  const OPPS = [
+    { intent:'buy',  title:'Refined cane sugar — ICUMSA 45', qty:'25,000 MT · monthly', route:'Brazil → Algeria', term:'CIF Algiers', hs:'1701', ref:'PT-4821', date:'2026-07-20', ev:['checked','reviewed'], cat:'agri' },
+    { intent:'sell', title:'Granular urea — N46 prilled', qty:'30,000 MT · spot', route:'Qatar → India', term:'FOB Ruwais', hs:'3102', ref:'PT-4790', date:'2026-07-18', ev:['checked','sighted','reviewed'], cat:'fert' },
+    { intent:'buy',  title:'Milling wheat — 12.5% protein', qty:'50,000 MT · single cargo', route:'Not stated → Egypt', term:'CFR Alexandria', hs:'1001', ref:'PT-4763', date:'2026-07-15', ev:['checked','declared','reviewed'], cat:'agri' },
+    { intent:'sell', title:'Robusta green coffee — Grade 1, screen 18', qty:'6 × 20ft · monthly', route:'Vietnam → Italy', term:'FOB Ho Chi Minh', hs:'0901', ref:'PT-4744', date:'2026-07-12', ev:['checked','reviewed'], cat:'agri' },
+    { intent:'service', title:'Pre-shipment inspection — West Africa corridors', qty:'Framework · per shipment', route:'Multi-origin → West Africa', term:'Not stated', hs:null, ref:'PT-4720', date:'2026-07-10', ev:['declared','reviewed'], cat:'svc' },
+    { intent:'buy',  title:'Portland cement — CEM II / 42.5N', qty:'40,000 MT · quarterly', route:'Türkiye → Senegal', term:'CIF Dakar', hs:'2523', ref:'PT-4698', date:'2026-07-08', ev:['checked','reviewed','managed'], cat:'build' },
+  ];
+  const EVMAP = {
+    checked:  ['evb--checked','Business checked','<path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/>'],
+    reviewed: ['evb--reviewed','Opportunity reviewed','<path d="M4 6h13M4 11h13M4 16h8"/><circle cx="18" cy="16.5" r="3"/><path d="m20.4 18.9 1.4 1.4"/>'],
+    declared: ['evb--declared','Role declared','<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'],
+    sighted:  ['evb--sighted','Authority sighted','<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'],
+    managed:  ['evb--managed','Ponte-managed','<path d="M4 18v-4a8 8 0 0 1 16 0v4"/><rect x="2.5" y="17" width="4" height="5" rx="1.2"/><rect x="17.5" y="17" width="4" height="5" rx="1.2"/>'],
+  };
+  const INTENTGLYPH = { buy:'↑ BUY', sell:'↓ SELL', service:'⇄ SERVICE' };
+  const fmtDate = d => new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  function card(o){
+    const ev = o.ev.map(k=>{ const [c,l,p]=EVMAP[k]; return `<span class="evb ${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${p}</svg>${l}</span>`; }).join('');
+    const hs = o.hs ? `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>HS ${o.hs}</li>` : '';
+    const term = o.term==='Not stated' ? `<span class="ns">Not stated</span>` : o.term;
+    return `<article class="qo">
+      <div class="qo__top"><span class="qo__kind"><span class="dot"></span>Qualified Opportunity</span><span class="qo__intent"><span class="g">${INTENTGLYPH[o.intent].split(' ')[0]}</span>${INTENTGLYPH[o.intent].split(' ')[1]}</span></div>
+      <div class="qo__body">
+        <h2 class="qo__title">${o.title}</h2>
+        <ul class="qo__facts">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 4.5-9 4.5-9-4.5Z"/><path d="m3 12 9 4.5 9-4.5"/></svg>${o.qty}</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg>${o.route}</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h11v9H2ZM13 10h5l3 3v3h-8"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>${term}</li>
+          ${hs}
+        </ul>
+        <div class="qo__ev">${ev}</div>
+      </div>
+      <div class="qo__foot">
+        <span class="qo__ref">Ref. ${o.ref} · Last confirmed ${fmtDate(o.date)}</span>
+        <a class="qo__cta" href="Ponte - Qualified Opportunity Detail.html">View opportunity →</a>
+      </div>
+    </article>`;
+  }
+
+  const board=document.getElementById('board'), countEl=document.getElementById('count');
+  let intent='all', q='';
+  function apply(){
+    let list=OPPS.filter(o=>(intent==='all'||o.intent===intent));
+    if(q.trim()){ const t=q.toLowerCase(); list=list.filter(o=>(o.title+' '+o.route+' '+(o.hs||'')+' '+o.ref).toLowerCase().includes(t)); }
+    countEl.textContent = list.length+' '+(list.length===1?'opportunity':'opportunities');
+    if(!list.length){
+      board.innerHTML = `<div class="estate"><div class="estate__badge">No results</div><div class="estate__h">No opportunities match these filters.</div><p class="estate__b">Try removing one or more filters. Your search remains in place.</p><div class="estate__cta"><button class="btn btn--primary btn--sm" id="clr2">Clear filters</button></div></div>`;
+      document.getElementById('clr2').addEventListener('click', clearAll);
+      return;
+    }
+    board.innerHTML = list.map(card).join('');
+  }
+  function clearAll(){ intent='all'; q=''; document.getElementById('searchInput').value=''; document.querySelectorAll('.intentgroup .seg__b').forEach(b=>{const on=b.dataset.intent==='all';b.classList.toggle('is-active',on);b.setAttribute('aria-pressed',on);}); apply(); }
+
+  document.querySelectorAll('.intentgroup .seg__b').forEach(b=>b.addEventListener('click',()=>{
+    intent=b.dataset.intent;
+    document.querySelectorAll('.intentgroup .seg__b').forEach(x=>{const on=x===b;x.classList.toggle('is-active',on);x.setAttribute('aria-pressed',on);});
+    apply();
+  }));
+  document.getElementById('searchInput').addEventListener('input',e=>{q=e.target.value;apply();});
+  document.getElementById('clearBtn').addEventListener('click',clearAll);
+  const ft=document.getElementById('filterToggle'), fp=document.getElementById('filterPanel');
+  ft.addEventListener('click',()=>{const open=fp.classList.toggle('is-open');ft.setAttribute('aria-expanded',open);});
+  apply();
+
+  // mobile menu
+  (function(){
+    const menu=document.getElementById('mobileMenu'), btn=document.getElementById('burgerBtn'); if(!menu||!btn) return;
+    const panel=menu.querySelector('.mmenu__panel'); let last=null;
+    const foc=()=>panel.querySelectorAll('a[href],button:not([disabled])');
+    function open(){ last=document.activeElement; menu.classList.add('is-open'); btn.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; const f=foc(); if(f.length)f[0].focus(); document.addEventListener('keydown',onKey); }
+    function close(){ menu.classList.remove('is-open'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; document.removeEventListener('keydown',onKey); if(last)last.focus(); }
+    function onKey(e){ if(e.key==='Escape')close(); else if(e.key==='Tab'){ const f=Array.from(foc()); if(!f.length)return; const a=f[0],z=f[f.length-1]; if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();} else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();} } }
+    btn.addEventListener('click',open);
+    menu.querySelectorAll('[data-mclose]').forEach(el=>el.addEventListener('click',close));
+    menu.querySelectorAll('.mmenu__links a,.mmenu__cta a').forEach(a=>a.addEventListener('click',close));
+  })();
+</script>
+</body>
+</html>

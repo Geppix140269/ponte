@@ -1,0 +1,163 @@
+{
+  "find": {
+    "meta": {
+      "title": "Find demand and supply",
+      "description": "Search cross-border demand and supply. Qualified Opportunities Ponte has reviewed, and external Market Signals, kept separate."
+    },
+    "nav": {
+      "opportunities": "Qualified Opportunities",
+      "signals": "Market Signals",
+      "submit": "Submit an opportunity",
+      "verify": "Verify a business",
+      "signIn": "Sign in",
+      "join": "Join the network",
+      "home": "Ponte Trade home"
+    },
+    "entry": {
+      "eyebrow": "Find",
+      "title": "What are you looking for?",
+      "lead": "Name a product. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "pickerLabel": "Choose a product",
+      "pickerHint": "Tap a category, then a product. Or speak it.",
+      "searchPlaceholder": "Product or HS code",
+      "chaptersLabel": "Product categories",
+      "back": "Back to categories",
+      "voice": "Speak the product",
+      "noMatch": "No category matches that. Try another word, or browse the categories."
+    },
+    "results": {
+      "eyebrow": "First results",
+      "titleFor": "Demand and supply for {product}",
+      "definition": "Two kinds of result, never blended: opportunities Ponte has reviewed, and external signals Ponte has not.",
+      "editSearch": "Change search",
+      "crumbProduct": "Product",
+      "crumbIntent": "Direction",
+      "crumbMarket": "Market",
+      "intentAll": "All",
+      "intentOffer": "Sell",
+      "intentRequirement": "Buy",
+      "intentService": "Service"
+    },
+    "qualified": {
+      "laneTitle": "Qualified Opportunities",
+      "count": "{count, plural, =0 {No opportunities} one {# opportunity} other {# opportunities}}",
+      "kind": "Qualified opportunity",
+      "managed": "Ponte-managed",
+      "view": "View opportunity",
+      "ref": "Ref. {ref}",
+      "emptyBadge": "No current match",
+      "emptyTitle": "No qualified opportunity matches yet",
+      "emptyBody": "Ponte publishes an opportunity only after the opportunity and the business behind it have been reviewed. Market Signals below may still be relevant.",
+      "launchTitle": "The first Qualified Opportunities are being prepared",
+      "launchBody": "Ponte publishes only after review. Submit an opportunity to be among the first."
+    },
+    "signals": {
+      "laneTitle": "Market Signals",
+      "count": "{count, plural, =0 {No signals} one {# signal} other {# signals}}",
+      "kind": "Market signal",
+      "note": "External indications Ponte has not verified. Shown separately, never as opportunities.",
+      "disclaimer": "External market signal, not verified by Ponte.",
+      "view": "Open signal",
+      "emptyTitle": "No market signals match yet",
+      "emptyBody": "Nothing external matches this product right now. Try a broader product word."
+    },
+    "facts": {
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "incoterm": "Incoterm",
+      "origin": "Origin",
+      "destination": "Destination",
+      "payment": "Payment terms",
+      "hsCode": "HS code",
+      "frequency": "Frequency",
+      "timing": "Timing",
+      "role": "Declared role",
+      "validUntil": "Valid until",
+      "spotted": "Signal date",
+      "notStated": "Not stated",
+      "buy": "Buy",
+      "sell": "Sell",
+      "service": "Service"
+    },
+    "detail": {
+      "crumb": "Qualified Opportunities",
+      "lead": "This page shows the commercial facts currently supported, what Ponte checked, and what remains unverified. The participant's identity is disclosed only through the controlled introduction.",
+      "factsHeading": "Commercial facts",
+      "receiptsHeading": "What Ponte checked",
+      "receiptsIntro": "These statements describe specific checks completed for this opportunity. They do not guarantee the transaction or future performance.",
+      "unverifiedHeading": "What remains unverified",
+      "unverified1": "The counterparty's financial capacity or creditworthiness.",
+      "unverified2": "The continuing mandate or authority of the individual acting.",
+      "unverified3": "The ability or willingness to complete on the stated terms.",
+      "unverified4": "Final price, terms and logistics, which are settled between the parties.",
+      "paymentGated": "Available after qualification",
+      "reviewLabel": "Ponte review",
+      "goneTitle": "This opportunity is no longer active",
+      "goneBody": "It has expired or been withdrawn. Current opportunities remain available.",
+      "goneCta": "View current opportunities",
+      "notFound": "Opportunity not found"
+    },
+    "receipts": {
+      "businessChecked": "Business checked",
+      "businessCheckedBody": "The submitter's legal entity and status were checked against public registry and tax records.",
+      "roleDeclared": "Role declared",
+      "roleDeclaredBody": "The submitting member states the role they act in. This is a declaration, not an external confirmation.",
+      "authoritySighted": "Authority sighted",
+      "authoritySightedBody": "Ponte sighted evidence of authority to act. This does not authenticate every statement or guarantee continuing authority.",
+      "opportunityReviewed": "Opportunity reviewed",
+      "opportunityReviewedBody": "Ponte reviewed the structured commercial record before publication.",
+      "lastConfirmed": "Last confirmed",
+      "lastConfirmedBody": "The owner confirmed the requirement remained current on this date.",
+      "on": "on {date}"
+    },
+    "request": {
+      "eyebrow": "Controlled introduction",
+      "title": "Tell us why you fit",
+      "lead": "The opportunity owner reviews your commercial context before any contact details are shared. You can complete this before creating an account.",
+      "prereqTitle": "How an introduction works",
+      "prereq1": "You submit your role, capability and proposed fit.",
+      "prereq2": "The owner reviews your commercial context.",
+      "prereq3": "Ponte completes its checks and records the introduction.",
+      "readiness": "{done} of {total} answered",
+      "roleLabel": "Your role",
+      "roleBuyer": "Buyer / import principal",
+      "roleSeller": "Seller / supplier",
+      "roleDistributor": "Distributor",
+      "roleIntermediary": "Trading intermediary",
+      "targetLabel": "What you can supply or need",
+      "targetPlaceholder": "e.g. 5,000 MT quarterly, ready to ship from origin",
+      "geographyLabel": "Your market or geography",
+      "geographyPlaceholder": "e.g. buyer based in India, delivering to Nhava Sheva",
+      "reasonLabel": "Why you fit this opportunity",
+      "reasonPlaceholder": "A short reason the owner should introduce to you",
+      "voiceHint": "Speak instead",
+      "send": "Send introduction request",
+      "reassure": "Your answers are kept as you go. An account is only needed to send.",
+      "contactHint": "No contact details are shared until the owner accepts.",
+      "open": "Request an introduction"
+    },
+    "sent": {
+      "ack": "Introduction request sent",
+      "title": "Your request is in",
+      "body": "The owner will review your commercial context. No contact is shared until they accept. You can follow it in your workspace.",
+      "toWorkspace": "Go to my workspace"
+    },
+    "gate": {
+      "reason": "Ponte records who is asking before contacting an opportunity owner. This is the only reason we need an account now.",
+      "preserved": "Your introduction request is saved and will send automatically."
+    },
+    "workspace": {
+      "title": "What needs your attention?",
+      "waitingTitle": "Waiting on others",
+      "waitingEmpty": "Nothing is waiting on someone else right now.",
+      "waitingStatus": "Introduction request sent, waiting on owner",
+      "waitingMeta": "Sent {date}",
+      "mineTitle": "My opportunities",
+      "mineEmpty": "You have not submitted an opportunity yet.",
+      "mineStatusSubmitted": "In review",
+      "mineStatusApproved": "Live",
+      "signInPrompt": "Sign in to see your workspace."
+    },
+    "trust": "Start freely. Join only when an introduction needs to be sent."
+  }
+}

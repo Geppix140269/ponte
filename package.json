@@ -18,7 +18,7 @@
     "prepare": "node scripts/install-hooks.mjs",
     "encoding:check": "node scripts/check-encoding.mjs",
     "hs:import": "tsx scripts/import-hs-codes.ts",
-    "test": "tsx lib/writeup/__tests__/completeness.test.ts && tsx lib/board/__tests__/market-signals.test.ts && tsx lib/verification/__tests__/purpose.test.ts && tsx lib/listings/__tests__/publication-gate.test.ts && tsx lib/signals/__tests__/block-d.test.ts && tsx lib/founding/__tests__/referral.test.ts && tsx lib/landing/__tests__/intent.test.ts && tsx --tsconfig tsconfig.test.json lib/signals/__tests__/route-behaviour.test.ts && tsx --tsconfig tsconfig.test.json lib/founding/__tests__/claim-route.test.ts"
+    "test": "tsx lib/writeup/__tests__/completeness.test.ts && tsx lib/board/__tests__/market-signals.test.ts && tsx lib/verification/__tests__/purpose.test.ts && tsx lib/listings/__tests__/publication-gate.test.ts && tsx lib/signals/__tests__/block-d.test.ts && tsx lib/founding/__tests__/referral.test.ts && tsx lib/landing/__tests__/intent.test.ts && tsx lib/market-signals/__tests__/import-map.test.ts && tsx lib/find/__tests__/query.test.ts && tsx --tsconfig tsconfig.test.json lib/signals/__tests__/route-behaviour.test.ts && tsx --tsconfig tsconfig.test.json lib/founding/__tests__/claim-route.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",

@@ -12,9 +12,24 @@ import { usePathname } from "@/i18n/navigation";
  * not sit inside the app's obsidian chrome. next-intl's usePathname returns the
  * locale-stripped path, so "/" identifies the landing in every locale.
  *
- * On the landing the shared <main> wrapper is also dropped, because the landing
+ * The Find journey (/find, /find/..., /workspace) is the same Brand v5 cream
+ * world extended inward: it too renders full-bleed with its own light chrome and
+ * its own <main>, so it is bared for the same reason the landing is.
+ *
+ * On a bared route the shared <main> wrapper is also dropped, because the page
  * supplies its own <main> landmark; a wrapper here would nest two mains.
  */
+
+/** Locale-stripped path prefixes that render their own Brand v5 chrome. */
+function rendersOwnChrome(path: string): boolean {
+  return (
+    path === "/" ||
+    path === "/find" ||
+    path.startsWith("/find/") ||
+    path === "/workspace" ||
+    path.startsWith("/workspace/")
+  );
+}
 export default function ChromeGate({
   header,
   footer,
@@ -28,7 +43,7 @@ export default function ChromeGate({
   extras?: ReactNode;
   children: ReactNode;
 }) {
-  const bare = usePathname() === "/";
+  const bare = rendersOwnChrome(usePathname());
 
   if (bare) return <>{children}</>;
 

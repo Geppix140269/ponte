@@ -23,6 +23,12 @@ export type MarketSignalStatus =
 
 export type MarketSignal = {
   id: string;
+  /**
+   * The stable public reference (e.g. "EXT-G4WB-000001") for an imported
+   * external signal. Null for desk-originated rows that predate the import.
+   * This is a reference, not provenance: it names the signal, never its source.
+   */
+  canonicalId: string | null;
   /** "offer" (seller availability) or "requirement" (buyer demand). */
   side: string;
   product: string;
@@ -53,7 +59,7 @@ export type MarketSignal = {
  * appears in both lists is a leak.
  */
 export const PUBLIC_SIGNAL_COLUMNS =
-  "id, side, product, hs_code, qty, unit, incoterms, payment, origin, destination, category, spotted_at, public_expires_at, status, ai_description, summary_line";
+  "id, canonical_signal_id, side, product, hs_code, qty, unit, incoterms, payment, origin, destination, category, spotted_at, public_expires_at, status, ai_description, summary_line";
 
 /**
  * The columns that must NEVER reach a public payload. This list is the test's
@@ -82,6 +88,7 @@ export function chapterOf(hsCode: string | null): string | null {
 /** A raw desk_radar row, restricted to the public columns. */
 export type SignalRow = {
   id: string;
+  canonical_signal_id?: string | null;
   side: string;
   product: string;
   hs_code: string | null;
@@ -121,6 +128,7 @@ export function isPubliclyVisible(
 export function mapSignalRow(r: SignalRow): MarketSignal {
   return {
     id: r.id,
+    canonicalId: r.canonical_signal_id ?? null,
     side: r.side,
     product: r.product,
     hsCode: r.hs_code,

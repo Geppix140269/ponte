@@ -425,6 +425,9 @@ body:has(.ponte-landing) {
   fill: var(--gold);
   stroke: var(--gold);
 }
+.ponte-landing .g-dot.hot {
+  stroke: var(--gold);
+}
 .ponte-landing .g-dotn {
   font-family: var(--f-mono);
   font-size: 13px;
@@ -481,36 +484,58 @@ body:has(.ponte-landing) {
 .ponte-landing .rlabel {
   position: absolute;
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-2);
   background: none;
   border: 0;
-  line-height: 1.4;
-  max-width: 130px;
+  line-height: 1.35;
+  max-width: 150px;
   padding: 2px;
   cursor: pointer;
   transition: color var(--dur-1);
 }
-.ponte-landing .rlabel:hover {
-  color: var(--ink);
+.ponte-landing .rlabel__t {
+  display: inline-block;
+  transition: transform var(--dur-1) var(--ease);
 }
+.ponte-landing .rlabel--structure .rlabel__t,
+.ponte-landing .rlabel--find .rlabel__t {
+  transform-origin: right center;
+}
+.ponte-landing .rlabel--check .rlabel__t,
+.ponte-landing .rlabel--investigate .rlabel__t {
+  transform-origin: left center;
+}
+/* Hovering a marker or its label lights both: gold text, larger (via a
+   reflow-free scale anchored at the bridge-facing edge), and a gold ring. */
+.ponte-landing .rlabel:hover,
+.ponte-landing .rlabel.hot,
 .ponte-landing .rlabel.active {
   color: var(--gold-ink);
 }
+.ponte-landing .rlabel:hover .rlabel__t,
+.ponte-landing .rlabel.hot .rlabel__t {
+  transform: scale(1.18);
+}
+/* All four labels share two outer columns: Structure sits above Find on the
+   left, Check above Investigate on the right, each level with its own marker
+   row. The top pair use the exact same column anchor as the bottom pair. */
 .ponte-landing .rlabel--structure {
-  left: 0;
-  top: 7%;
-  text-align: left;
-  max-width: 140px;
+  left: 11.5%;
+  top: 29%;
+  transform: translate(calc(-100% - 16px), -50%);
+  text-align: right;
+  max-width: 150px;
 }
 .ponte-landing .rlabel--check {
-  right: 0;
-  top: 7%;
-  text-align: right;
-  max-width: 140px;
+  right: 11.5%;
+  top: 29%;
+  transform: translate(calc(100% + 16px), -50%);
+  text-align: left;
+  max-width: 150px;
 }
 .ponte-landing .rlabel--find {
   left: 11.5%;
