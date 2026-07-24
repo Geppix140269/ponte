@@ -339,174 +339,133 @@
     "failedTitle": "That did not go through"
   },
   "home": {
-    "metaTitle": "Invitation-led international trade opportunities",
-    "metaDescription": "Ponte Trade is an invitation-led international trade network. Businesses are checked against company registers and the OFAC, EU, UN and UK sanctions lists, opportunities are reviewed by Ponte with the evidence recorded, and introductions are controlled: identity is disclosed only at the introduction stage.",
+    "metaTitle": "Ponte Trade: What's your deal?",
+    "metaDescription": "Cross-border trade, with greater clarity. One commercial objective, four direct routes. Say it naturally, or choose directly.",
+    "header": {
+      "homeAria": "Ponte Trade home",
+      "tradeClarity": "Cross-border trade, with greater clarity"
+    },
     "hero": {
-      "eyebrow": "Free for every member",
-      "title": "Buy and sell physical commodities, worldwide",
-      "lead": "Every counterparty is checked against company registers and sanctions lists before anyone is introduced.",
-      "b1": "Free to post and connect",
-      "b2": "No commission on your deal",
-      "b3": "Anonymous until you both agree",
-      "ctaPrimary": "See live deals",
-      "ctaSecondary": "Post a listing, free"
+      "regionLabel": "State your commercial objective"
     },
-    "proof": {
-      "eyebrow": "Counterparty verification",
-      "heading": "Members are checked against named public sources.",
-      "lead": "A verification reads the sources below, records what each one returned, and records the date it was read. A source that cannot be reached is reported as not checked, never as clean.",
-      "registriesLabel": "Registers and identifiers",
-      "sanctionsLabel": "Sanctions lists screened",
-      "reg1": {
-        "name": "UK Companies House",
-        "note": "Registry record, company status and officers"
-      },
-      "reg2": {
-        "name": "EU VIES",
-        "note": "VAT number validated at source"
-      },
-      "reg3": {
-        "name": "GLEIF",
-        "note": "Legal Entity Identifier, where one is held"
-      },
-      "s1": {
-        "name": "OFAC SDN and Consolidated lists",
-        "note": "United States Department of the Treasury"
-      },
-      "s2": {
-        "name": "EU Consolidated Financial Sanctions List",
-        "note": "European Union"
-      },
-      "s3": {
-        "name": "UN Security Council Consolidated List",
-        "note": "United Nations"
-      },
-      "s4": {
-        "name": "UK OFSI Consolidated List",
-        "note": "HM Treasury, financial sanctions targets"
-      },
-      "refresh": "Screening is not a one time event. When these lists change, members already verified are screened again against the updated lists, and a new candidate reopens the case.",
-      "caveat": "A verification records what a named source published on the day it was read. It is evidence of identity and standing, not a guarantee of performance.",
-      "link": "What each level checks"
+    "eyebrow": "Cross-border trade, with greater clarity",
+    "headline": "What's your deal?",
+    "supporting": "What are you looking to source, supply or move across borders?",
+    "voice": {
+      "cta": "Click and talk",
+      "sub": "Ponte reads your intent. Nothing is sent until you choose.",
+      "ariaLabel": "Speak your objective"
     },
-    "shape": {
-      "eyebrow": "What moves here",
-      "heading": "Deals are written in trade terms.",
-      "lead": "Every listing carries the same fields: HS code, quantity and unit, incoterm, origin and destination, payment terms, the role the counterparty holds in the deal, and how many intermediaries stand between them and the principal.",
-      "sampleLabel": "Format examples. They show how a deal is written on Ponte. They are not live listings and no volume is implied.",
-      "cta": "See the board",
-      "type": {
-        "offer": "Offer",
-        "requirement": "Requirement"
+    "type": {
+      "or": "Or type naturally",
+      "ariaLabel": "Describe your commercial objective",
+      "continueLabel": "Continue"
+    },
+    "gateway": {
+      "regionLabel": "Choose where to begin",
+      "chooseWhereToBegin": "Choose where to begin",
+      "goldSignal": "The gold signal follows your choice",
+      "centerEyebrow": "Four ways to begin",
+      "centerTitle": "Say it naturally.",
+      "centerTitleEm": "Or choose directly.",
+      "centerHint": "One choice opens the route →"
+    },
+    "routes": {
+      "find": {
+        "label": "Find demand for my products",
+        "title": "Find",
+        "titleEm": "buyer demand.",
+        "hint": "Name the product →",
+        "placeholder": "e.g. almonds, pistachios, refined sugar...",
+        "support": "<b>Name the product.</b> Ponte returns global buyer demand; market and quantity refine it.",
+        "fact1": "Product",
+        "fact1q": "to begin",
+        "fact2": "Any market",
+        "fact2q": "optional",
+        "fact3": "Quantity",
+        "fact3q": "optional",
+        "fact4": "You",
+        "fact4q": "choose to connect"
       },
-      "fields": {
-        "hs": "HS code",
-        "incoterm": "Incoterm",
-        "corridor": "Corridor",
-        "corridorValue": "{from} to {to}",
-        "payment": "Payment",
-        "role": "Role"
+      "structure": {
+        "label": "Structure a requirement",
+        "title": "Structure",
+        "titleEm": "the requirement.",
+        "hint": "Paste or describe it →",
+        "placeholder": "Paste or describe the requirement, rough text is fine...",
+        "support": "<b>Start with what you know.</b> Ponte identifies only the decisive missing facts.",
+        "fact1": "Rough text",
+        "fact1q": "accepted",
+        "fact2": "Decisive facts",
+        "fact2q": "only",
+        "fact3": "Nothing",
+        "fact3q": "invented",
+        "fact4": "You",
+        "fact4q": "confirm each"
       },
-      "e1": {
-        "product": "Refined white sugar, ICUMSA 45",
-        "quantity": "25,000 MT",
-        "frequency": "One shipment",
-        "payment": "Irrevocable LC at sight, confirmed",
-        "role": "Trading company holding title"
+      "check": {
+        "label": "Check a company",
+        "title": "Check",
+        "titleEm": "the business.",
+        "hint": "Enter the company →",
+        "placeholder": "Legal or trading name...",
+        "support": "<b>Begin with a company name.</b> Add the jurisdiction if you know it.",
+        "fact1": "Legal name",
+        "fact1q": "to begin",
+        "fact2": "Dated",
+        "fact2q": "evidence",
+        "fact3": "Unknowns",
+        "fact3q": "shown",
+        "fact4": "You",
+        "fact4q": "decide use"
       },
-      "e2": {
-        "product": "Urea 46%, granular",
-        "quantity": "12,000 MT",
-        "frequency": "Monthly, twelve months",
-        "payment": "LC at sight against shipping documents",
-        "role": "End buyer"
-      },
-      "e3": {
-        "product": "Aluminium ingot A7, 99.7%",
-        "quantity": "1,000 MT",
-        "frequency": "Monthly, rolling",
-        "payment": "30% advance, balance against documents",
-        "role": "Producer, direct"
+      "investigate": {
+        "label": "Investigate a signal",
+        "title": "Investigate",
+        "titleEm": "a signal.",
+        "hint": "Paste or describe the signal →",
+        "placeholder": "What signal or reported opportunity did you see?",
+        "support": "<b>Paste a link or describe what you saw.</b> Ponte preserves the source and uncertainty.",
+        "fact1": "1",
+        "fact1q": "signal captured",
+        "fact2": "Source",
+        "fact2q": "retained",
+        "fact3": "?",
+        "fact3q": "unknowns shown",
+        "fact4": "You",
+        "fact4q": "approve scope"
       }
     },
-    "flow": {
-      "eyebrow": "How a deal moves",
-      "heading": "Checked before introduced."
+    "trust": "<b>Start freely.</b> Join only when an action needs to be saved or sent.",
+    "clarify": {
+      "prompt": "<b>Ponte kept your words.</b> Which route fits: find demand, structure a requirement, check a company, or investigate a signal?",
+      "announce": "Choose a route on the mark.",
+      "emptyAnnounce": "Describe your objective, or choose a route on the mark."
     },
-    "desk": {
-      "eyebrow": "The desk",
-      "heading": "The board is free. The desk is optional.",
-      "free": {
-        "title": "The marketplace",
-        "terms": "Free, for every member",
-        "body": "Submitting an offer or a requirement, being vetted, reading the board and connecting with a counterparty cost nothing. Deals you close between yourselves carry no commission.",
-        "cta": "Post an offer or a requirement"
-      },
-      "mandate": {
-        "title": "The desk",
-        "terms": "Success fee or monthly retainer",
-        "body": "Where you want a deal run for you, the desk takes verification in depth, NCNDA, negotiation, contract and closing coordination. Terms are agreed in writing before any work starts, and a success fee falls due only when the deal closes.",
-        "cta": "See fees"
-      },
-      "currency": "All fees are quoted and settled in USD."
+    "find": {
+      "needProductSupport": "<b>Name the product.</b> Ponte returns global buyer demand; it will not assume a product.",
+      "needProductAnnounce": "Name the product, Ponte will not assume one."
     },
-    "showcase": {
-      "eyebrow": "Live on the board",
-      "heading": "Deals moving right now.",
-      "count": "{deals} live deals across {countries} countries",
-      "mapCaption": "Every arc is a live corridor on the board.",
-      "gridHeading": "Browse what is live",
-      "all": "All",
-      "seeAll": "See all live deals",
-      "deskSourced": "Desk-sourced opportunity"
-    }
-  },
-  "landing": {
-    "eyebrow": "Founding Network",
-    "h1": "Trade opportunities, without the usual noise.",
-    "sub": "An invitation-led international trade network where businesses are checked, opportunities are reviewed, and introductions are controlled.",
-    "ctaPrimary": "Explore opportunities",
-    "ctaSecondary": "Submit an opportunity",
-    "stage": {
-      "match": "Match",
-      "counterparty": "Counterparty",
-      "trustLabel": "Trust score",
-      "clear": "Registry and sanctions clear",
-      "readOn": "read {date}",
-      "openRoom": "Request an introduction",
-      "sampleNote": "Format example. It shows how a deal is written on Ponte. It is not a live listing."
-    },
-    "verify": {
-      "heading": "Checked before introduced.",
-      "trustLabel": "Trust score",
-      "registers": "Company registers",
-      "registersDetail": "Companies House, OpenCorporates",
-      "sanctions": "Sanctions, four lists",
-      "sanctionsDetail": "OFAC, EU, UN, UK OFSI",
-      "identifiers": "VAT and LEI",
-      "identifiersDetail": "VIES, GLEIF, dated at read",
-      "anonymous": "Identity disclosed at introduction",
-      "anonymousDetail": "Only at the controlled introduction stage, after both sides agree",
-      "cta": "What each level checks"
-    },
-    "ai": {
-      "heading": "Facts in. Deal out.",
-      "provenance": "AI-drafted, desk-reviewed",
-      "body": "You enter the facts you have. The write-up interprets only those, never invents, and a person reads it before anything publishes.",
-      "descriptionLabel": "Description",
-      "sample": "Bankable sugar parcel on confirmed LC, standard export spec, ready for a Rotterdam-region buyer.",
-      "publish": "Publish"
-    },
-    "pricing": {
-      "heading": "Free to join. No commission on deals you close yourselves.",
-      "body": "Posting an offer or a requirement, reading the board and connecting with a counterparty cost nothing. Verification and intelligence are paid in credits, and the desk is paid only if you ask it to broker a deal.",
-      "verify": "Verify a counterparty",
-      "room": "Managed deal support",
-      "report": "Deep report",
-      "credits": "{n} credits",
-      "credit": "{n} credit",
-      "desk": "Desk brokerage is a success fee or a retainer, agreed in writing before any work starts.",
-      "cta": "Start free"
+    "voiceSheet": {
+      "title": "Speak to Ponte",
+      "requesting": "Requesting the microphone...",
+      "listening": "Listening...",
+      "ready": "Transcription ready. Edit if needed.",
+      "editHint": "You can edit this before continuing.",
+      "noSpeech": "No speech detected",
+      "noSpeechHint": "Ponte created nothing. Try again, or type it instead.",
+      "denied": "Microphone unavailable",
+      "deniedHint": "Ponte cannot reach the microphone. Typing stays fully available, you are never blocked.",
+      "unsupported": "Voice input is not available in this browser",
+      "unsupportedHint": "This browser does not support in-page voice. Typing stays fully available.",
+      "error": "Voice input stopped",
+      "errorHint": "Something interrupted the microphone. Try again, or type it instead.",
+      "stop": "Stop",
+      "reRecord": "Re-record",
+      "continueLabel": "Continue",
+      "tryAgain": "Try again",
+      "typeInstead": "Type instead",
+      "close": "Close"
     }
   },
   "legal": {

@@ -1,0 +1,933 @@
+/* ======================================================================
+   Ponte Trade public landing, "What's your deal?".
+
+   Ported from the v1.1 design handoff (02_FINAL_HOMEPAGE). The whole page is
+   scoped under .ponte-landing so the Brand v5 heritage-light tokens override
+   the app's obsidian tokens of the same names locally, and nothing leaks into
+   the rest of the (dark) application. Geometry, colours and timings are the
+   design's own values.
+   ====================================================================== */
+
+.ponte-landing {
+  /* ---- Surfaces (heritage light) ---- */
+  --surface: #fcfbf7;
+  --raised: #ffffff;
+  --sunken: #f2efe6;
+  --rule: #e5dfd2;
+  --rule-strong: #d5cebc;
+
+  /* ---- Ink ---- */
+  --ink: #0f0f0e;
+  --ink-2: #3a3733;
+  --ink-3: #6e6a61;
+  --mute: #9a958a;
+
+  /* ---- Brand signal, never a status ---- */
+  --gold: #c9973a;
+  --gold-ink: #8a6520;
+  --gold-tint: #f5ecd8;
+
+  /* ---- Semantic states (only fact colours are used here) ---- */
+  --pos: #0f6e3d;
+  --review: #4e6472;
+  --neg: #b4402a;
+
+  /* ---- Focus ---- */
+  --focus: #1e5fa8;
+
+  /* ---- Type ---- */
+  --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+  --f-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Geometry ---- */
+  --r-sm: 5px;
+  --r-md: 9px;
+  --r-lg: 14px;
+
+  /* ---- Elevation ---- */
+  --e-3: 0 1px 0 var(--rule), 0 28px 60px -30px rgba(15, 15, 14, 0.24);
+
+  /* ---- Motion ---- */
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--f-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A single accessible focus treatment, distinct from every state colour, that
+   overrides the app's global lime focus ring inside this subtree. */
+.ponte-landing :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* globals.css reserves 58px of body padding on mobile for the bottom bar. The
+   landing has no bottom bar (ChromeGate hides it), so that reserved strip would
+   show the app's dark ground beneath the cream. Reclaim it wherever the landing
+   is mounted. (:has degrades to the harmless strip on browsers without it.) */
+body:has(.ponte-landing) {
+  padding-bottom: 0 !important;
+}
+
+/* ---- header ---- */
+.ponte-landing .lhead {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 44px;
+}
+.ponte-landing .lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.ponte-landing .lockup__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--surface);
+  flex-shrink: 0;
+}
+.ponte-landing .lockup__mark {
+  width: 30px;
+  height: 30px;
+  color: currentColor;
+}
+.ponte-landing .lockup__dot {
+  fill: var(--gold);
+}
+.ponte-landing .lockup__word {
+  font-family: var(--f-serif);
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1;
+  color: var(--ink);
+}
+.ponte-landing .lockup__tld {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--mute);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.ponte-landing .lhead__pos {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---- landing body ---- */
+.ponte-landing .land {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.ponte-landing .land__top {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 44px;
+  align-items: start;
+  justify-items: center;
+  max-width: 840px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 44px 52px;
+}
+.ponte-landing .obj {
+  width: 100%;
+}
+
+/* ---- masthead ---- */
+.ponte-landing .obj__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.ponte-landing .obj__eyebrow .eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.ponte-landing .obj__q {
+  font-family: var(--f-serif);
+  font-size: clamp(44px, 5.6vw, 84px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  color: var(--ink);
+}
+.ponte-landing .obj__q em {
+  display: block;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold-ink);
+  font-size: 0.46em;
+  letter-spacing: -0.01em;
+  line-height: 1.06;
+  margin-top: 0.2em;
+}
+
+/* ---- voice primary: oversized circular talk control ---- */
+.ponte-landing .talk {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 34px;
+}
+.ponte-landing .mic {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: var(--gold-tint);
+  color: var(--gold-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform var(--dur-1),
+    background var(--dur-1),
+    color var(--dur-1);
+}
+.ponte-landing .mic:hover {
+  background: var(--gold);
+  color: var(--ink);
+  transform: scale(1.05);
+}
+.ponte-landing .mic:active {
+  transform: scale(0.95);
+}
+.ponte-landing .mic svg {
+  width: 40px;
+  height: 40px;
+}
+.ponte-landing .mic.listening {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+.ponte-landing .mic::before,
+.ponte-landing .mic::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  opacity: 0;
+  animation: pl-micpulse 2.6s var(--ease-out) infinite;
+}
+.ponte-landing .mic::after {
+  animation-delay: 1.3s;
+}
+@keyframes pl-micpulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+.ponte-landing .talk__label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ponte-landing .talk__cta {
+  font-family: var(--f-serif);
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  line-height: 1;
+}
+.ponte-landing .talk__sub {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  max-width: 300px;
+  line-height: 1.45;
+  transition: opacity var(--dur-2);
+}
+
+/* ---- secondary: unboxed editorial type line ---- */
+.ponte-landing .obj__type {
+  margin-top: 40px;
+  max-width: 620px;
+  width: 100%;
+}
+.ponte-landing .obj__or {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.ponte-landing .obj__ask {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  border-bottom: 1.5px solid var(--ink);
+  padding-bottom: 12px;
+}
+.ponte-landing .obj__field {
+  flex: 1;
+  border: 0;
+  background: none;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+  font-family: var(--f-serif);
+  font-size: clamp(19px, 2.2vw, 24px);
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.3;
+  padding: 0;
+  min-height: 34px;
+}
+.ponte-landing .obj__field::placeholder {
+  color: var(--mute);
+  font-style: italic;
+}
+.ponte-landing .obj__field[dir="rtl"]::placeholder {
+  text-align: right;
+}
+.ponte-landing .obj__go {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color var(--dur-1),
+    transform 70ms;
+}
+.ponte-landing .obj__go:hover {
+  color: var(--gold-ink);
+  transform: translateX(2px);
+}
+.ponte-landing .obj__go svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- route support line + clarification ---- */
+.ponte-landing .obj__support {
+  margin-top: 20px;
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  max-width: 520px;
+  transition: opacity var(--dur-2);
+}
+.ponte-landing .obj__support b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---- gateway ---- */
+.ponte-landing .gatewrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.ponte-landing .gate__labels {
+  display: flex;
+  justify-content: space-between;
+  width: min(560px, 100%);
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+.ponte-landing .gate__labels .r {
+  color: var(--ink-3);
+}
+.ponte-landing .gate {
+  position: relative;
+  width: min(560px, 100%);
+  aspect-ratio: 1 / 0.82;
+}
+.ponte-landing .gate__stage {
+  position: absolute;
+  inset: 0;
+}
+.ponte-landing .gate__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ponte-landing .g-portal {
+  fill: var(--ink);
+}
+.ponte-landing .g-open {
+  fill: var(--surface);
+}
+.ponte-landing .g-ring {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+.ponte-landing .g-dot {
+  fill: var(--raised);
+  stroke: var(--ink);
+  stroke-width: 2;
+  transition:
+    fill var(--dur-2),
+    stroke var(--dur-2);
+}
+.ponte-landing .g-dot.active {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+.ponte-landing .g-dotn {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ---- archway centre ---- */
+.ponte-landing .gate__center {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: 54%;
+  text-align: center;
+}
+.ponte-landing .gate__ceb {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  transition: opacity var(--dur-2);
+}
+.ponte-landing .gate__ct {
+  font-family: var(--f-serif);
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  margin-top: 8px;
+  color: var(--ink);
+  transition: opacity var(--dur-2);
+}
+.ponte-landing .gate__ct em {
+  display: block;
+  font-style: italic;
+  color: var(--gold-ink);
+  font-weight: 400;
+}
+.ponte-landing .gate__ch {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 12px;
+  transition: opacity var(--dur-2);
+}
+
+/* ---- route label buttons overlaid on the bridge ---- */
+.ponte-landing .rlabel {
+  position: absolute;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  line-height: 1.4;
+  max-width: 130px;
+  padding: 2px;
+  cursor: pointer;
+  transition: color var(--dur-1);
+}
+.ponte-landing .rlabel:hover {
+  color: var(--ink);
+}
+.ponte-landing .rlabel.active {
+  color: var(--gold-ink);
+}
+.ponte-landing .rlabel--structure {
+  left: 0;
+  top: 7%;
+  text-align: left;
+  max-width: 140px;
+}
+.ponte-landing .rlabel--check {
+  right: 0;
+  top: 7%;
+  text-align: right;
+  max-width: 140px;
+}
+.ponte-landing .rlabel--find {
+  left: 11.5%;
+  top: 76%;
+  transform: translate(calc(-100% - 16px), -50%);
+  text-align: right;
+  max-width: 140px;
+}
+.ponte-landing .rlabel--investigate {
+  right: 11.5%;
+  top: 76%;
+  transform: translate(calc(100% + 16px), -50%);
+  text-align: left;
+  max-width: 140px;
+}
+
+/* ---- route facts (unboxed, rule-separated) ---- */
+.ponte-landing .rfacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 0;
+  margin-top: 26px;
+  min-height: 18px;
+}
+.ponte-landing .rfact {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 0 16px;
+  border-right: 1px solid var(--rule-strong);
+  line-height: 1;
+}
+.ponte-landing .rfact:last-child {
+  border-right: 0;
+}
+.ponte-landing .rfact .q {
+  opacity: 0.7;
+  font-weight: 500;
+}
+.ponte-landing .rfact.opt {
+  color: var(--ink-3);
+}
+.ponte-landing .rfact.unk {
+  color: var(--review);
+}
+.ponte-landing .rfact.ok {
+  color: var(--pos);
+}
+
+/* ---- footer ---- */
+.ponte-landing .land__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 44px;
+}
+.ponte-landing .land__foot .re {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.ponte-landing .land__foot .re b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---- voice bottom sheet ---- */
+.ponte-landing .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  min-height: 44px;
+  font-family: var(--f-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background var(--dur-1),
+    border-color var(--dur-1),
+    color var(--dur-1),
+    transform 70ms;
+}
+.ponte-landing .btn:active {
+  transform: translateY(1px);
+}
+.ponte-landing .btn--primary {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+.ponte-landing .btn--primary:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+.ponte-landing .btn--secondary {
+  background: var(--raised);
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+.ponte-landing .btn--secondary:hover {
+  border-color: var(--ink-2);
+  background: var(--sunken);
+}
+.ponte-landing .btn--block {
+  width: 100%;
+  flex: 1;
+}
+.ponte-landing .iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background var(--dur-1),
+    color var(--dur-1);
+}
+.ponte-landing .iconbtn:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.voice {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+}
+.voice__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 14, 0.5);
+  opacity: 0;
+  transition: opacity var(--dur-2);
+}
+.voice.open .voice__scrim {
+  opacity: 1;
+}
+.voice__panel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(460px, 100%);
+  background: var(--surface);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: var(--e-3);
+  padding: 12px 24px calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(100%);
+  transition: transform var(--dur-3) var(--ease-out);
+  font-family: var(--f-sans);
+}
+.voice.open .voice__panel {
+  transform: translateX(-50%) translateY(0);
+}
+.voice__grip {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule-strong);
+  margin: 0 auto 12px;
+}
+.voice__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.voice__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.voice__status {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--review);
+  letter-spacing: 0.04em;
+}
+.voice__status--ok {
+  color: var(--pos);
+}
+.voice__status--warn {
+  color: var(--neg);
+}
+.wave {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 46px;
+  margin: 16px 0;
+}
+.wave i {
+  flex: 1;
+  background: var(--gold);
+  border-radius: 3px;
+  height: 40px;
+  transform: scaleY(0.4);
+  transform-origin: center;
+  animation: pl-wv 1s ease infinite;
+}
+.wave i:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.wave i:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.wave i:nth-child(4) {
+  animation-delay: 0.36s;
+}
+.wave i:nth-child(5) {
+  animation-delay: 0.24s;
+}
+.wave i:nth-child(6) {
+  animation-delay: 0.12s;
+}
+@keyframes pl-wv {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.voice__hint {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin: 6px 0 16px;
+}
+.voice__row {
+  display: flex;
+  gap: 10px;
+}
+.voice__transcript {
+  width: 100%;
+  font-family: var(--f-serif);
+  font-size: 20px;
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1.5px solid var(--rule-strong);
+  border-radius: 0;
+  padding: 8px 2px;
+  margin: 8px 0 14px;
+  resize: none;
+  background: none;
+  line-height: 1.35;
+}
+.voice__transcript:focus {
+  outline: none;
+  border-bottom-color: var(--focus);
+}
+.voice__transcript[dir="rtl"] {
+  text-align: right;
+  direction: rtl;
+}
+.voice__hint-edit {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  margin: 0 0 14px;
+}
+
+.ponte-landing .sr-only,
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- responsive ---- */
+@media (max-width: 1040px) {
+  .ponte-landing .land__top {
+    gap: 24px;
+    padding-top: 8px;
+  }
+  .ponte-landing .obj__q {
+    font-size: clamp(44px, 11vw, 68px);
+  }
+  .ponte-landing .gate,
+  .ponte-landing .gate__labels {
+    width: min(400px, 90%);
+  }
+  .ponte-landing .rlabel {
+    font-size: 10px;
+    max-width: 120px;
+  }
+  .ponte-landing .rlabel--find {
+    transform: translate(calc(-100% - 12px), -50%);
+  }
+  .ponte-landing .rlabel--investigate {
+    transform: translate(calc(100% + 12px), -50%);
+  }
+}
+@media (max-width: 640px) {
+  .ponte-landing .lhead,
+  .ponte-landing .land__top,
+  .ponte-landing .land__foot {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .ponte-landing .lhead__pos {
+    display: none;
+  }
+  .ponte-landing .land__foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  /* phone: routes become a borderless number-badge legend below the mark */
+  .ponte-landing .gate {
+    aspect-ratio: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    width: min(420px, 100%);
+  }
+  .ponte-landing .gate__stage {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 1 / 0.72;
+  }
+  .ponte-landing .rlabel {
+    position: static;
+    transform: none !important;
+    max-width: none;
+    text-align: left !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 2px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  .ponte-landing .rlabel::before {
+    content: attr(data-num);
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--rule-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink);
+  }
+  .ponte-landing .rlabel.active::before {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+  /* one clean sequential 01-04 list: hide the numbers embedded in the bridge */
+  .ponte-landing .g-dotn {
+    display: none;
+  }
+  /* On the smaller mobile bridge the opening only reaches full width lower down,
+     where the arch has straightened. Sit the archway message there and narrow
+     it, so it never rides onto the black crown or spills over the arch walls. */
+  .ponte-landing .gate__center {
+    top: 66%;
+    width: 48%;
+  }
+  .ponte-landing .gate__ceb {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+  .ponte-landing .gate__ct {
+    font-size: 16px;
+    margin-top: 5px;
+  }
+  .ponte-landing .gate__ch {
+    font-size: 8px;
+    margin-top: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ponte-landing .mic::before,
+  .ponte-landing .mic::after,
+  .wave i {
+    animation: none !important;
+  }
+  .ponte-landing .talk__sub,
+  .ponte-landing .obj__support,
+  .ponte-landing .gate__ceb,
+  .ponte-landing .gate__ct,
+  .ponte-landing .gate__ch,
+  .voice__panel,
+  .voice__scrim {
+    transition: none !important;
+  }
+}
