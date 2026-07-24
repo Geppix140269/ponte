@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { RouteKey } from "@/lib/landing/intent";
 
 /**
@@ -11,8 +12,9 @@ import type { RouteKey } from "@/lib/landing/intent";
  * buttons, keyboard operable, carrying the number and route name, with
  * aria-pressed reflecting selection. The SVG itself is decorative
  * (aria-hidden); its dot groups are a mouse convenience that mirror the
- * buttons. On mobile the buttons fall into a borderless 01-04 legend and the
- * SVG's own numbers hide, so numbering is never duplicated.
+ * buttons. Hovering a marker or its label lights both (the number and the
+ * route name share one hover state). On mobile the buttons fall into a
+ * borderless 01-04 legend and the SVG's own numbers hide.
  */
 
 export interface BridgeCenter {
@@ -48,6 +50,8 @@ export default function PonteBridge({
   labels: Record<RouteKey, string>;
   onSelect: (key: RouteKey) => void;
 }) {
+  const [hovered, setHovered] = useState<RouteKey | null>(null);
+
   return (
     <div className="gate">
       <div className="gate__stage">
@@ -59,19 +63,26 @@ export default function PonteBridge({
             d="M120 150 Q120 112 200 112 Q280 112 280 150"
             opacity="0.5"
           />
+          {/* Base beam, then a foot centred under each pier (left pier 46-86,
+              right pier 314-354), so the feet sit square beneath the legs. */}
           <rect className="g-portal" x="28" y="300" width="344" height="15" />
-          <rect className="g-portal" x="40" y="315" width="42" height="13" />
-          <rect className="g-portal" x="318" y="315" width="42" height="13" />
+          <rect className="g-portal" x="45" y="315" width="42" height="13" />
+          <rect className="g-portal" x="313" y="315" width="42" height="13" />
           {ORDER.map(({ key }) => {
             const d = DOTS[key];
+            const cls =
+              "g-dot" +
+              (active === key ? " active" : "") +
+              (hovered === key ? " hot" : "");
             return (
-              <g key={key} onClick={() => onSelect(key)} style={{ cursor: "pointer" }}>
-                <circle
-                  className={`g-dot${active === key ? " active" : ""}`}
-                  cx={d.cx}
-                  cy={d.cy}
-                  r="16"
-                />
+              <g
+                key={key}
+                onClick={() => onSelect(key)}
+                onMouseEnter={() => setHovered(key)}
+                onMouseLeave={() => setHovered(null)}
+                style={{ cursor: "pointer" }}
+              >
+                <circle className={cls} cx={d.cx} cy={d.cy} r="16" />
                 <text className="g-dotn" x={d.cx} y={d.cy}>
                   {d.num}
                 </text>
@@ -94,12 +105,18 @@ export default function PonteBridge({
         <button
           key={key}
           type="button"
-          className={`rlabel ${variant}${active === key ? " active" : ""}`}
+          className={
+            `rlabel ${variant}` +
+            (active === key ? " active" : "") +
+            (hovered === key ? " hot" : "")
+          }
           data-num={num}
           aria-pressed={active === key}
           onClick={() => onSelect(key)}
+          onMouseEnter={() => setHovered(key)}
+          onMouseLeave={() => setHovered(null)}
         >
-          {labels[key]}
+          <span className="rlabel__t">{labels[key]}</span>
         </button>
       ))}
     </div>

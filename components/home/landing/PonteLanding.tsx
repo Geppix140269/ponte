@@ -332,10 +332,6 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
           </section>
 
           <section className="gatewrap" aria-label={t("gateway.regionLabel")}>
-            <div className="gate__labels">
-              <span>{t("gateway.chooseWhereToBegin")}</span>
-              <span className="r">{t("gateway.goldSignal")}</span>
-            </div>
             <PonteBridge active={activeRoute} center={center} labels={labels} onSelect={selectRoute} />
             <div className="rfacts" aria-live="polite">
               {activeRoute
