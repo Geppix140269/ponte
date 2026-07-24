@@ -47,13 +47,14 @@ alter table desk_radar add column if not exists indexable boolean not null defau
 alter table desk_radar add column if not exists import_batch text;
 alter table desk_radar add column if not exists import_meta jsonb;
 
--- One row per canonical id. A partial unique index (where not null) lets the
--- desk-originated rows that predate the import keep a null canonical id while
--- guaranteeing the imported set never duplicates one. This is also the conflict
--- target the import upserts on, so a re-run updates in place rather than doubling.
+-- One row per canonical id. A plain (non-partial) unique index: Postgres treats
+-- NULLs as distinct, so the desk-originated rows that predate the import keep a
+-- null canonical id and coexist freely, while the imported set can never
+-- duplicate one. It must be non-partial because it is also the conflict target
+-- the import upserts on (ON CONFLICT (canonical_signal_id)), and Postgres cannot
+-- infer a partial index from a bare column list.
 create unique index if not exists desk_radar_canonical_signal_id_key
-  on desk_radar (canonical_signal_id)
-  where canonical_signal_id is not null;
+  on desk_radar (canonical_signal_id);
 
 -- The Find signal lane filters approved rows by product; support that scan.
 create index if not exists desk_radar_product_idx

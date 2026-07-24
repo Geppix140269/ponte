@@ -43,7 +43,7 @@ const LISTINGS = [
     ref: "PT-9001",
     type: "requirement",
     product: "Refined cane sugar, ICUMSA 45",
-    hs_code: "1701.99",
+    hs_code: "170199",
     origin: "Brazil",
     destination: "Algeria",
     quantity: 25000,
@@ -67,7 +67,7 @@ const LISTINGS = [
     ref: "PT-9002",
     type: "offer",
     product: "Dried chickpeas, 8mm Kabuli",
-    hs_code: "0713.20",
+    hs_code: "071320",
     origin: "Argentina",
     destination: "India",
     quantity: 5000,
@@ -114,16 +114,23 @@ async function main(): Promise<void> {
   //    opportunities clear the publication gate exactly as a member's would.
   const verificationId = await ensureDeskVerification(sb, deskId);
 
-  await sb.from("profiles").upsert(
+  // verification_level is a TEXT enum (unverified | email_verified |
+  // phone_verified | company_verified | fully_verified), NOT an integer. The
+  // publication gate keys off business_verification_id + the bound
+  // verification's status; company_verified is the truthful level for a checked
+  // business. The error is surfaced, not swallowed, so a failed bind never
+  // leaves the desk account silently unverified.
+  const { error: profileErr } = await sb.from("profiles").upsert(
     {
       id: deskId,
       full_name: "Ponte Desk",
       company: "Ponte Trade",
-      verification_level: 2,
+      verification_level: "company_verified",
       business_verification_id: verificationId,
     },
     { onConflict: "id" },
   );
+  if (profileErr) throw new Error(`could not bind desk profile: ${profileErr.message}`);
 
   // 3. The opportunities themselves.
   const nowIso = new Date().toISOString();
