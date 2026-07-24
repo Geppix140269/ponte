@@ -86,6 +86,53 @@ export async function getMarketSignals(limit = 60): Promise<MarketSignal[]> {
   }
 }
 
+/**
+ * The Market Signals lane for a Find query: approved, unexpired signals whose
+ * product matches, newest spotted first. Unlike getMarketSignals (the whole
+ * recent board) this filters at the database, because the imported signal set
+ * is large and a product search must reach all of it, not the newest page.
+ *
+ * `side` narrows to buyer requirements or seller offers; a "service" intent has
+ * no signal equivalent, so the caller passes null and gets the product's
+ * signals across both sides. The public column contract and the visibility rule
+ * are identical to the board read: no internal column is named, nothing
+ * unapproved or expired survives.
+ */
+export async function searchMarketSignals(opts: {
+  product?: string | null;
+  side?: "offer" | "requirement" | null;
+  limit?: number;
+}): Promise<MarketSignal[]> {
+  noStore();
+  if (!isSupabaseConfigured()) return [];
+  const product = opts.product?.trim();
+  if (!product) return [];
+
+  try {
+    const sb = createAdminClient();
+    let q = sb
+      .from("desk_radar")
+      .select(PUBLIC_SIGNAL_COLUMNS)
+      .eq("status", "approved_signal")
+      .ilike("product", `%${product}%`);
+    if (opts.side) q = q.eq("side", opts.side);
+    const { data, error } = await q
+      .order("spotted_at", { ascending: false })
+      .limit(opts.limit ?? 40);
+    if (error) throw error;
+
+    const now = Date.now();
+    const signals = (data ?? [])
+      .filter((r) => isPubliclyVisible(r as SignalRow, now))
+      .map((r) => mapSignalRow(r as SignalRow));
+
+    await decorateChapters(sb, signals);
+    return signals;
+  } catch {
+    return [];
+  }
+}
+
 export type SignalLookup =
   | { state: "visible"; signal: MarketSignal }
   | { state: "gone" }
