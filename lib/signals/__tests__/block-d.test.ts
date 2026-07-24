@@ -309,17 +309,16 @@ test("the Block D migration is additive, idempotent and RLS-guarded", () => {
 // --- Copy truth: no interface claims an NCNDA was signed or a deal room ------
 
 const LOCALES = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "hi", "it"];
+// The former home.flow.* and landing.* keys were removed when the homepage was
+// rebuilt as the "What's your deal?" gateway (the `landing` namespace is gone
+// and `home` was replaced). The marketplace, process and home.metaDescription
+// copy that this guard exists for is unchanged and still checked here.
 const CORRECTED_KEYS = [
   "process.steps.connect.micro",
   "marketplace.hero.heading",
   "marketplace.rules.anonymous.body",
   "marketplace.how.heading",
   "home.metaDescription",
-  "home.flow.heading",
-  "landing.verify.anonymous",
-  "landing.verify.anonymousDetail",
-  "landing.stage.openRoom",
-  "landing.pricing.room",
 ];
 
 function pick(obj: unknown, dotted: string): unknown {

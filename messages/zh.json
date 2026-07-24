@@ -288,126 +288,133 @@
     "copyright": "© {year} Ponte · 1402 Celsius Ltd 的商号 · ponte.trade"
   },
   "home": {
-    "metaTitle": "凭邀请加入的国际贸易机会",
-    "metaDescription": "Ponte Trade 是一个凭邀请加入的国际贸易网络。企业会对照公司登记册以及 OFAC、欧盟、联合国和英国的制裁名单进行核查，机会由 Ponte 审阅并记录证据，引荐受到控制：身份仅在引荐阶段披露。",
+    "metaTitle": "Ponte Trade：您想做什么交易？",
+    "metaDescription": "跨境贸易，更加清晰。一个商业目标，四条直达路径。用您的话说出来，或直接选择。",
+    "header": {
+      "homeAria": "Ponte Trade 首页",
+      "tradeClarity": "跨境贸易，更加清晰"
+    },
     "hero": {
-      "eyebrow": "所有会员均免费",
-      "title": "全球买卖实物大宗商品",
-      "lead": "在任何一方被引荐之前，每一个交易对手都会对照公司登记册和制裁名单接受核查。",
-      "b1": "发布和建立联系均免费",
-      "b2": "你的成交不收佣金",
-      "b3": "双方同意前保持匿名",
-      "ctaPrimary": "查看实时交易",
-      "ctaSecondary": "免费发布信息"
+      "regionLabel": "陈述您的商业目标"
     },
-    "proof": {
-      "eyebrow": "交易对手核验",
-      "heading": "会员对照具名的公开来源进行核查。",
-      "lead": "一次核验会读取下列来源，记录每一个来源返回的内容，并记录读取日期。无法访问的来源报告为未核查，绝不报告为无风险。",
-      "registriesLabel": "登记机构与识别码",
-      "sanctionsLabel": "已筛查的制裁名单",
-      "reg1": {
-        "name": "UK Companies House",
-        "note": "登记记录、公司状态与董事"
-      },
-      "reg2": {
-        "name": "EU VIES",
-        "note": "增值税号在来源端验证"
-      },
-      "reg3": {
-        "name": "GLEIF",
-        "note": "法人识别编码，若已持有"
-      },
-      "s1": {
-        "name": "OFAC SDN 与 Consolidated 名单",
-        "note": "美国财政部"
-      },
-      "s2": {
-        "name": "欧盟金融制裁统一名单",
-        "note": "欧洲联盟"
-      },
-      "s3": {
-        "name": "联合国安理会统一名单",
-        "note": "联合国"
-      },
-      "s4": {
-        "name": "英国 OFSI 统一名单",
-        "note": "HM Treasury，金融制裁对象"
-      },
-      "refresh": "筛查不是一次性的事。这些名单变更时，已核验的会员会按更新后的名单重新筛查，出现新的疑似匹配即重新开卷。",
-      "caveat": "核验记录的是具名来源在读取当日所公布的内容。它是身份与存续状态的证据，不是履约的保证。",
-      "link": "各级别核查什么"
+    "eyebrow": "跨境贸易，更加清晰",
+    "headline": "您想做什么交易？",
+    "supporting": "您想跨境采购、供应还是运送什么？",
+    "voice": {
+      "cta": "点击说话",
+      "sub": "Ponte 读懂您的意图。在您确认之前，不会发送任何内容。",
+      "ariaLabel": "说出您的目标"
     },
-    "shape": {
-      "eyebrow": "这里流转什么",
-      "heading": "交易按贸易条款书写。",
-      "lead": "每一条挂牌都带同样的字段：HS 编码、数量与单位、incoterm、起运地与目的地、付款条件、交易对手在这笔交易中的角色，以及其与委托方之间有几层中间商。",
-      "sampleLabel": "格式示例。它们展示在 Ponte 上如何书写一笔交易，并非在线挂牌，也不暗示任何成交量。",
-      "cta": "查看看板",
-      "type": {
-        "offer": "供应",
-        "requirement": "求购"
+    "type": {
+      "or": "或自然地输入",
+      "ariaLabel": "描述您的商业目标",
+      "continueLabel": "继续"
+    },
+    "gateway": {
+      "regionLabel": "选择从哪里开始",
+      "chooseWhereToBegin": "选择从哪里开始",
+      "goldSignal": "金色信号跟随您的选择",
+      "centerEyebrow": "四种开始方式",
+      "centerTitle": "自然地说出来。",
+      "centerTitleEm": "或直接选择。",
+      "centerHint": "一次选择即开启路径 →"
+    },
+    "routes": {
+      "find": {
+        "label": "为我的产品寻找需求",
+        "title": "寻找",
+        "titleEm": "买家需求。",
+        "hint": "说出产品 →",
+        "placeholder": "例如：杏仁、开心果、精炼糖……",
+        "support": "<b>说出产品。</b>Ponte 返回全球买家需求；市场与数量会进一步细化。",
+        "fact1": "产品",
+        "fact1q": "开始",
+        "fact2": "市场",
+        "fact2q": "可选",
+        "fact3": "数量",
+        "fact3q": "可选",
+        "fact4": "您",
+        "fact4q": "选择连接"
       },
-      "fields": {
-        "hs": "HS 编码",
-        "incoterm": "Incoterm",
-        "corridor": "贸易走廊",
-        "corridorValue": "{from} 至 {to}",
-        "payment": "付款",
-        "role": "角色"
+      "structure": {
+        "label": "构建一项需求",
+        "title": "构建",
+        "titleEm": "该需求。",
+        "hint": "粘贴或描述 →",
+        "placeholder": "粘贴或描述需求，粗略文字即可……",
+        "support": "<b>从您已知的开始。</b>Ponte 只识别缺失的关键事实。",
+        "fact1": "自由文本",
+        "fact1q": "接受",
+        "fact2": "关键事实",
+        "fact2q": "仅限",
+        "fact3": "任何",
+        "fact3q": "不臆造",
+        "fact4": "您",
+        "fact4q": "逐项确认"
       },
-      "e1": {
-        "product": "精炼白砂糖，ICUMSA 45",
-        "quantity": "25,000 MT",
-        "frequency": "单批装运",
-        "payment": "不可撤销即期信用证，保兑",
-        "role": "持有货权的贸易公司"
+      "check": {
+        "label": "核查一家公司",
+        "title": "核查",
+        "titleEm": "该公司。",
+        "hint": "输入公司 →",
+        "placeholder": "法定或商用名称……",
+        "support": "<b>从公司名称开始。</b>如知道，请补充司法辖区。",
+        "fact1": "法定名称",
+        "fact1q": "开始",
+        "fact2": "注明日期",
+        "fact2q": "证据",
+        "fact3": "未知项",
+        "fact3q": "已显示",
+        "fact4": "您",
+        "fact4q": "决定用途"
       },
-      "e2": {
-        "product": "尿素 46%，颗粒",
-        "quantity": "12,000 MT",
-        "frequency": "按月，十二个月",
-        "payment": "即期信用证，凭装运单据付款",
-        "role": "最终买家"
-      },
-      "e3": {
-        "product": "铝锭 A7，99.7%",
-        "quantity": "1,000 MT",
-        "frequency": "按月，滚动",
-        "payment": "预付 30%，余款凭单据支付",
-        "role": "生产商，直接"
+      "investigate": {
+        "label": "调查一条信号",
+        "title": "调查",
+        "titleEm": "一条信号。",
+        "hint": "粘贴或描述信号 →",
+        "placeholder": "您看到了什么信号或所报机会？",
+        "support": "<b>粘贴链接或描述所见。</b>Ponte 保留来源与不确定性。",
+        "fact1": "1",
+        "fact1q": "已捕获信号",
+        "fact2": "来源",
+        "fact2q": "已保留",
+        "fact3": "？",
+        "fact3q": "未知项已显示",
+        "fact4": "您",
+        "fact4q": "批准范围"
       }
     },
-    "flow": {
-      "eyebrow": "一笔交易如何推进",
-      "heading": "先核查，后引荐。"
+    "trust": "<b>自由开始。</b>只有当某项操作需要保存或发送时才加入。",
+    "clarify": {
+      "prompt": "<b>Ponte 保留了您的话。</b>哪条路径合适：寻找需求、构建需求、核查公司，还是调查信号？",
+      "announce": "在标记上选择一条路径。",
+      "emptyAnnounce": "描述您的目标，或在标记上选择一条路径。"
     },
-    "desk": {
-      "eyebrow": "交易台",
-      "heading": "看板免费。交易台可选。",
-      "free": {
-        "title": "交易市场",
-        "terms": "免费，对每一位会员",
-        "body": "发布供应或求购、通过审核、查看看板并与交易对手建立联系，均不收费。双方自行成交的交易不收取佣金。",
-        "cta": "发布供应或求购"
-      },
-      "mandate": {
-        "title": "交易台",
-        "terms": "成交佣金或按月顾问费",
-        "body": "若您希望由我们代为推进交易，交易台承担深度核验、NCNDA、谈判、合同与交割协调。条件在任何工作开始前以书面约定，成交佣金仅在交易成交时到期应付。",
-        "cta": "查看费用"
-      },
-      "currency": "所有费用均以 USD 报价并结算。"
+    "find": {
+      "needProductSupport": "<b>说出产品。</b>Ponte 返回全球买家需求；不会臆测产品。",
+      "needProductAnnounce": "说出产品，Ponte 不会臆测。"
     },
-    "showcase": {
-      "eyebrow": "交易板实时动态",
-      "heading": "正在流转的交易。",
-      "count": "{countries} 个国家的 {deals} 笔实时交易",
-      "mapCaption": "每一条弧线都是交易板上的实时贸易通道。",
-      "gridHeading": "浏览实时交易",
-      "all": "全部",
-      "seeAll": "查看所有实时交易",
-      "deskSourced": "交易台发掘的机会"
+    "voiceSheet": {
+      "title": "对 Ponte 说话",
+      "requesting": "正在请求麦克风……",
+      "listening": "正在聆听……",
+      "ready": "转写完成。如需可编辑。",
+      "editHint": "继续之前您可以编辑。",
+      "noSpeech": "未检测到语音",
+      "noSpeechHint": "Ponte 未创建任何内容。请重试，或改为输入。",
+      "denied": "麦克风不可用",
+      "deniedHint": "Ponte 无法访问麦克风。输入始终可用，您绝不会被阻挡。",
+      "unsupported": "此浏览器不支持语音输入",
+      "unsupportedHint": "此浏览器不支持页面内语音。输入仍然可用。",
+      "error": "语音输入已停止",
+      "errorHint": "有情况中断了麦克风。请重试，或改为输入。",
+      "stop": "停止",
+      "reRecord": "重新录制",
+      "continueLabel": "继续",
+      "tryAgain": "重试",
+      "typeInstead": "改为输入",
+      "close": "关闭"
     }
   },
   "legal": {
@@ -1049,54 +1056,6 @@
     "actionFailed": "未能完成。您可以在账户中继续。",
     "working": "正在完成...",
     "failedTitle": "未能完成"
-  },
-  "landing": {
-    "eyebrow": "创始网络",
-    "h1": "贸易机会，没有惯常的噪音。",
-    "sub": "一个凭邀请加入的国际贸易网络：企业经过核查，机会经过审阅，引荐受到控制。",
-    "ctaPrimary": "探索机会",
-    "ctaSecondary": "提交机会",
-    "stage": {
-      "match": "匹配",
-      "counterparty": "交易对手",
-      "trustLabel": "信任评分",
-      "clear": "登记与制裁核查无异常",
-      "readOn": "读取于 {date}",
-      "openRoom": "请求引荐",
-      "sampleNote": "格式示例。它展示交易在 Ponte 上如何书写，并非实时挂牌。"
-    },
-    "verify": {
-      "heading": "先核实，再引荐。",
-      "trustLabel": "信任评分",
-      "registers": "公司登记机构",
-      "registersDetail": "Companies House、OpenCorporates",
-      "sanctions": "制裁名单，共四份",
-      "sanctionsDetail": "OFAC、EU、UN、UK OFSI",
-      "identifiers": "增值税号与 LEI",
-      "identifiersDetail": "VIES、GLEIF，读取当日标注",
-      "anonymous": "身份在引荐时披露",
-      "anonymousDetail": "仅在受控引荐阶段，双方同意之后",
-      "cta": "各级别核查内容"
-    },
-    "ai": {
-      "heading": "输入事实，产出交易。",
-      "provenance": "AI 起草，交易台复核",
-      "body": "您录入已掌握的事实。撰写稿只解读这些事实，绝不臆造，并且在发布前由人工审阅。",
-      "descriptionLabel": "描述",
-      "sample": "凭已确认信用证的可融资糖货，标准出口规格，可供鹿特丹地区买家。",
-      "publish": "发布"
-    },
-    "pricing": {
-      "heading": "加入免费。自行达成的交易不收佣金。",
-      "body": "发布报盘或求购、浏览交易板、与交易对手建立联系均不收费。核实与情报以额度支付，交易台仅在您委托其居间撮合时收费。",
-      "verify": "核实交易对手",
-      "room": "交易管理支持",
-      "report": "深度报告",
-      "credits": "{n} 个额度",
-      "credit": "{n} 个额度",
-      "desk": "交易台居间服务按成功费或聘用费计，开始工作前以书面约定。",
-      "cta": "免费开始"
-    }
   },
   "marketSignals": {
     "label": "市场信号",

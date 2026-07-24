@@ -288,126 +288,133 @@
     "copyright": "© {year} Ponte · denominazione commerciale di 1402 Celsius Ltd · ponte.trade"
   },
   "home": {
-    "metaTitle": "Opportunità di commercio internazionale su invito",
-    "metaDescription": "Ponte Trade è una rete internazionale di commercio su invito. Le imprese vengono verificate presso i registri delle imprese e le liste sanzionatorie di OFAC, UE, ONU e Regno Unito, le opportunità sono esaminate da Ponte che registra le prove, e le presentazioni sono controllate: l'identità viene rivelata solo nella fase di presentazione.",
+    "metaTitle": "Ponte Trade: qual è il tuo affare?",
+    "metaDescription": "Commercio transfrontaliero, con maggiore chiarezza. Un obiettivo commerciale, quattro percorsi diretti. Dillo con parole tue, o scegli direttamente.",
+    "header": {
+      "homeAria": "Home di Ponte Trade",
+      "tradeClarity": "Commercio transfrontaliero, con maggiore chiarezza"
+    },
     "hero": {
-      "eyebrow": "Gratis per ogni membro",
-      "title": "Compra e vendi materie prime fisiche in tutto il mondo",
-      "lead": "Ogni controparte viene verificata su registri delle imprese e liste di sanzioni prima di qualsiasi presentazione.",
-      "b1": "Pubblicare e connettersi è gratis",
-      "b2": "Nessuna commissione sul tuo affare",
-      "b3": "Anonimo finché non siete d'accordo",
-      "ctaPrimary": "Vedi le trattative in corso",
-      "ctaSecondary": "Pubblica un annuncio, gratis"
+      "regionLabel": "Esprimi il tuo obiettivo commerciale"
     },
-    "proof": {
-      "eyebrow": "Verifica della controparte",
-      "heading": "I membri sono controllati su fonti pubbliche indicate per nome.",
-      "lead": "Una verifica interroga le fonti qui sotto, registra ciò che ciascuna ha restituito e registra la data della consultazione. Una fonte non raggiungibile è riportata come non controllata, mai come pulita.",
-      "registriesLabel": "Registri e identificativi",
-      "sanctionsLabel": "Liste sanzionatorie controllate",
-      "reg1": {
-        "name": "UK Companies House",
-        "note": "Visura del registro, stato della società e amministratori"
-      },
-      "reg2": {
-        "name": "EU VIES",
-        "note": "Partita IVA validata alla fonte"
-      },
-      "reg3": {
-        "name": "GLEIF",
-        "note": "Legal Entity Identifier, quando esiste"
-      },
-      "s1": {
-        "name": "Liste SDN e Consolidated di OFAC",
-        "note": "Dipartimento del Tesoro degli Stati Uniti"
-      },
-      "s2": {
-        "name": "Elenco consolidato delle sanzioni finanziarie dell'UE",
-        "note": "Unione europea"
-      },
-      "s3": {
-        "name": "Elenco consolidato del Consiglio di sicurezza dell'ONU",
-        "note": "Nazioni Unite"
-      },
-      "s4": {
-        "name": "Elenco consolidato dell'OFSI del Regno Unito",
-        "note": "HM Treasury, soggetti colpiti da sanzioni finanziarie"
-      },
-      "refresh": "Il controllo non è un atto unico. Quando queste liste cambiano, i membri già verificati sono ricontrollati sulle liste aggiornate e una nuova corrispondenza riapre la pratica.",
-      "caveat": "Una verifica registra ciò che una fonte indicata per nome ha pubblicato il giorno della consultazione. È prova di identità e di stato, non garanzia di adempimento.",
-      "link": "Che cosa controlla ogni livello"
+    "eyebrow": "Commercio transfrontaliero, con maggiore chiarezza",
+    "headline": "Qual è il tuo affare?",
+    "supporting": "Cosa cerchi di reperire, fornire o movimentare oltre confine?",
+    "voice": {
+      "cta": "Premi e parla",
+      "sub": "Ponte legge la tua intenzione. Non viene inviato nulla finché non scegli tu.",
+      "ariaLabel": "Pronuncia il tuo obiettivo"
     },
-    "shape": {
-      "eyebrow": "Che cosa si muove qui",
-      "heading": "Le operazioni sono redatte in termini commerciali.",
-      "lead": "Ogni annuncio porta gli stessi campi: codice HS, quantità e unità, incoterm, origine e destinazione, condizioni di pagamento, il ruolo della controparte nell'operazione e quanti intermediari la separano dal principale.",
-      "sampleLabel": "Esempi di formato. Mostrano come si redige un'operazione su Ponte. Non sono annunci attivi e non implicano alcun volume.",
-      "cta": "Guarda la bacheca",
-      "type": {
-        "offer": "Offerta",
-        "requirement": "Richiesta"
+    "type": {
+      "or": "Oppure scrivilo con naturalezza",
+      "ariaLabel": "Descrivi il tuo obiettivo commerciale",
+      "continueLabel": "Continua"
+    },
+    "gateway": {
+      "regionLabel": "Scegli da dove iniziare",
+      "chooseWhereToBegin": "Scegli da dove iniziare",
+      "goldSignal": "Il segnale dorato segue la tua scelta",
+      "centerEyebrow": "Quattro modi per iniziare",
+      "centerTitle": "Dillo con naturalezza.",
+      "centerTitleEm": "Oppure scegli direttamente.",
+      "centerHint": "Una scelta apre il percorso →"
+    },
+    "routes": {
+      "find": {
+        "label": "Trovare domanda per i miei prodotti",
+        "title": "Trova",
+        "titleEm": "domanda di acquirenti.",
+        "hint": "Indica il prodotto →",
+        "placeholder": "es. mandorle, pistacchi, zucchero raffinato...",
+        "support": "<b>Indica il prodotto.</b> Ponte restituisce la domanda globale di acquirenti; mercato e quantità la affinano.",
+        "fact1": "Prodotto",
+        "fact1q": "per iniziare",
+        "fact2": "Mercato",
+        "fact2q": "facoltativo",
+        "fact3": "Quantità",
+        "fact3q": "facoltativa",
+        "fact4": "Tu",
+        "fact4q": "scegli di connetterti"
       },
-      "fields": {
-        "hs": "Codice HS",
-        "incoterm": "Incoterm",
-        "corridor": "Corridoio",
-        "corridorValue": "da {from} a {to}",
-        "payment": "Pagamento",
-        "role": "Ruolo"
+      "structure": {
+        "label": "Strutturare un fabbisogno",
+        "title": "Struttura",
+        "titleEm": "il fabbisogno.",
+        "hint": "Incollalo o descrivilo →",
+        "placeholder": "Incolla o descrivi il fabbisogno, un testo grezzo va bene...",
+        "support": "<b>Parti da ciò che sai.</b> Ponte individua solo i dati decisivi mancanti.",
+        "fact1": "Testo libero",
+        "fact1q": "accettato",
+        "fact2": "Dati decisivi",
+        "fact2q": "soltanto",
+        "fact3": "Niente",
+        "fact3q": "inventato",
+        "fact4": "Tu",
+        "fact4q": "confermi ognuno"
       },
-      "e1": {
-        "product": "Zucchero bianco raffinato, ICUMSA 45",
-        "quantity": "25.000 MT",
-        "frequency": "Una spedizione",
-        "payment": "Credito documentario irrevocabile a vista, confermato",
-        "role": "Società di trading titolare della merce"
+      "check": {
+        "label": "Verificare un'azienda",
+        "title": "Verifica",
+        "titleEm": "l'azienda.",
+        "hint": "Inserisci l'azienda →",
+        "placeholder": "Ragione sociale o nome commerciale...",
+        "support": "<b>Parti dal nome di un'azienda.</b> Aggiungi la giurisdizione se la conosci.",
+        "fact1": "Ragione sociale",
+        "fact1q": "per iniziare",
+        "fact2": "Datate",
+        "fact2q": "evidenze",
+        "fact3": "Incognite",
+        "fact3q": "mostrate",
+        "fact4": "Tu",
+        "fact4q": "decidi l'uso"
       },
-      "e2": {
-        "product": "Urea 46%, granulare",
-        "quantity": "12.000 MT",
-        "frequency": "Mensile, dodici mesi",
-        "payment": "Credito documentario a vista contro documenti di spedizione",
-        "role": "Acquirente finale"
-      },
-      "e3": {
-        "product": "Lingotto di alluminio A7, 99,7%",
-        "quantity": "1.000 MT",
-        "frequency": "Mensile, rinnovabile",
-        "payment": "30% di anticipo, saldo contro documenti",
-        "role": "Produttore, diretto"
+      "investigate": {
+        "label": "Indagare un segnale",
+        "title": "Indaga",
+        "titleEm": "un segnale.",
+        "hint": "Incolla o descrivi il segnale →",
+        "placeholder": "Quale segnale o opportunità segnalata hai visto?",
+        "support": "<b>Incolla un link o descrivi ciò che hai visto.</b> Ponte conserva la fonte e l'incertezza.",
+        "fact1": "1",
+        "fact1q": "segnale acquisito",
+        "fact2": "Fonte",
+        "fact2q": "conservata",
+        "fact3": "?",
+        "fact3q": "incognite mostrate",
+        "fact4": "Tu",
+        "fact4q": "approvi l'ambito"
       }
     },
-    "flow": {
-      "eyebrow": "Come avanza un'operazione",
-      "heading": "Verificato prima di presentare."
+    "trust": "<b>Inizia liberamente.</b> Unisciti solo quando un'azione deve essere salvata o inviata.",
+    "clarify": {
+      "prompt": "<b>Ponte ha conservato le tue parole.</b> Quale percorso si adatta: trovare domanda, strutturare un fabbisogno, verificare un'azienda o indagare un segnale?",
+      "announce": "Scegli un percorso sul marchio.",
+      "emptyAnnounce": "Descrivi il tuo obiettivo, o scegli un percorso sul marchio."
     },
-    "desk": {
-      "eyebrow": "Il desk",
-      "heading": "La bacheca è gratuita. Il desk è opzionale.",
-      "free": {
-        "title": "Il marketplace",
-        "terms": "Gratuito, per ogni membro",
-        "body": "Pubblicare un'offerta o una richiesta, passare la verifica, leggere la bacheca e mettersi in contatto con una controparte non costa nulla. Le operazioni concluse direttamente tra le parti non portano alcuna commissione.",
-        "cta": "Pubblichi un'offerta o una richiesta"
-      },
-      "mandate": {
-        "title": "Il desk",
-        "terms": "Commissione di successo o retainer mensile",
-        "body": "Se desidera che l'operazione sia condotta per suo conto, il desk assume la verifica approfondita, l'NCNDA, la negoziazione, il contratto e il coordinamento della chiusura. Le condizioni sono concordate per iscritto prima di iniziare qualsiasi lavoro, e una commissione di successo matura solo alla conclusione dell'operazione.",
-        "cta": "Guarda le tariffe"
-      },
-      "currency": "Tutti i compensi sono quotati e regolati in USD."
+    "find": {
+      "needProductSupport": "<b>Indica il prodotto.</b> Ponte restituisce la domanda globale di acquirenti; non darà per scontato un prodotto.",
+      "needProductAnnounce": "Indica il prodotto, Ponte non lo darà per scontato."
     },
-    "showcase": {
-      "eyebrow": "Live sulla bacheca",
-      "heading": "Trattative in movimento adesso.",
-      "count": "{deals} trattative in corso in {countries} paesi",
-      "mapCaption": "Ogni arco è un corridoio attivo sulla bacheca.",
-      "gridHeading": "Sfoglia ciò che è attivo",
-      "all": "Tutto",
-      "seeAll": "Vedi tutte le trattative in corso",
-      "deskSourced": "Opportunità individuata dal desk"
+    "voiceSheet": {
+      "title": "Parla con Ponte",
+      "requesting": "Richiesta del microfono...",
+      "listening": "In ascolto...",
+      "ready": "Trascrizione pronta. Modificala se serve.",
+      "editHint": "Puoi modificarla prima di continuare.",
+      "noSpeech": "Nessun parlato rilevato",
+      "noSpeechHint": "Ponte non ha creato nulla. Riprova, oppure scrivilo.",
+      "denied": "Microfono non disponibile",
+      "deniedHint": "Ponte non può accedere al microfono. Scrivere resta sempre disponibile, non sei mai bloccato.",
+      "unsupported": "L'input vocale non è disponibile in questo browser",
+      "unsupportedHint": "Questo browser non supporta la voce nella pagina. Scrivere resta disponibile.",
+      "error": "Input vocale interrotto",
+      "errorHint": "Qualcosa ha interrotto il microfono. Riprova, oppure scrivilo.",
+      "stop": "Ferma",
+      "reRecord": "Registra di nuovo",
+      "continueLabel": "Continua",
+      "tryAgain": "Riprova",
+      "typeInstead": "Scrivi invece",
+      "close": "Chiudi"
     }
   },
   "legal": {
@@ -1049,54 +1056,6 @@
     "actionFailed": "Non è andata a buon fine. Puoi completarla dal tuo account.",
     "working": "Completamento...",
     "failedTitle": "Non è andata a buon fine"
-  },
-  "landing": {
-    "eyebrow": "Rete fondatrice",
-    "h1": "Opportunità commerciali, senza il solito rumore.",
-    "sub": "Una rete internazionale di commercio su invito in cui le imprese vengono verificate, le opportunità esaminate e le presentazioni controllate.",
-    "ctaPrimary": "Esplora le opportunità",
-    "ctaSecondary": "Proponi un'opportunità",
-    "stage": {
-      "match": "Corrispondenza",
-      "counterparty": "Controparte",
-      "trustLabel": "Indice di fiducia",
-      "clear": "Registri e sanzioni senza rilievi",
-      "readOn": "letto il {date}",
-      "openRoom": "Richiedi una presentazione",
-      "sampleNote": "Esempio di formato. Mostra come si scrive una trattativa su Ponte. Non è un annuncio live."
-    },
-    "verify": {
-      "heading": "Verificato prima di presentare.",
-      "trustLabel": "Indice di fiducia",
-      "registers": "Registri delle imprese",
-      "registersDetail": "Companies House, OpenCorporates",
-      "sanctions": "Sanzioni, quattro liste",
-      "sanctionsDetail": "OFAC, UE, ONU, UK OFSI",
-      "identifiers": "IVA e LEI",
-      "identifiersDetail": "VIES, GLEIF, datati alla lettura",
-      "anonymous": "Identità rivelata alla presentazione",
-      "anonymousDetail": "Solo nella fase di presentazione controllata, quando entrambe le parti sono d'accordo",
-      "cta": "Cosa verifica ogni livello"
-    },
-    "ai": {
-      "heading": "Fatti dentro. Trattativa fuori.",
-      "provenance": "Redatto dall'IA, rivisto dal desk",
-      "body": "Inserisci i fatti che hai. Il testo interpreta solo quelli, non inventa mai, e una persona lo legge prima della pubblicazione.",
-      "descriptionLabel": "Descrizione",
-      "sample": "Partita di zucchero bancabile con credito confermato, specifica export standard, pronta per un compratore dell'area di Rotterdam.",
-      "publish": "Pubblica"
-    },
-    "pricing": {
-      "heading": "Iscriversi è gratis. Nessuna commissione sulle trattative che chiudi da solo.",
-      "body": "Pubblicare un'offerta o una richiesta, leggere la bacheca e metterti in contatto con una controparte non costano nulla. Verifica e intelligence si pagano in crediti, e il desk viene pagato solo se gli chiedi di intermediare.",
-      "verify": "Verificare una controparte",
-      "room": "Assistenza all'operazione",
-      "report": "Rapporto approfondito",
-      "credits": "{n} crediti",
-      "credit": "{n} credito",
-      "desk": "L'intermediazione del desk è a success fee o a retainer, concordata per iscritto prima di iniziare.",
-      "cta": "Inizia gratis"
-    }
   },
   "marketSignals": {
     "label": "Segnali di mercato",

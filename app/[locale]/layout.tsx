@@ -9,6 +9,7 @@ import SiteFooter from "@/components/SiteFooter";
 import BottomNav from "@/components/BottomNav";
 import InstallPrompt from "@/components/InstallPrompt";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import ChromeGate from "@/components/ChromeGate";
 import { isRtl, locales, type Locale } from "@/i18n/routing";
 import { alternatesFor, APP_URL } from "@/lib/seo";
 
@@ -140,13 +141,19 @@ export default async function LocaleLayout({
         />
         <div className="bg-ambient" aria-hidden="true" />
         <NextIntlClientProvider messages={messages}>
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-          {/* Mobile only. The room they need at the foot of the page is
-              reserved by a body rule in globals.css, not by a spacer here. */}
-          <BottomNav />
-          <InstallPrompt />
+          {/* Every page carries the shared obsidian chrome except the public
+              landing ("/"), which is full-bleed cream and supplies its own
+              header and footer. ChromeGate also drops the <main> wrapper there,
+              since the landing renders its own <main> landmark.
+              Mobile bottom bar room is reserved by a body rule in globals.css. */}
+          <ChromeGate
+            header={<SiteHeader />}
+            footer={<SiteFooter />}
+            bottomNav={<BottomNav />}
+            extras={<InstallPrompt />}
+          >
+            {children}
+          </ChromeGate>
         </NextIntlClientProvider>
         <ServiceWorkerRegistrar />
       </body>
