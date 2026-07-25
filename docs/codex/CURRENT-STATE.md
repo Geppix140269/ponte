@@ -40,6 +40,16 @@ Code on `main` is not automatically deployed, enabled or production-verified.
 | Full controlled introduction O01-O07 and threads | Partially implemented | Complete lifecycle not production-verified | Request path exists. Owner review, disclosure blockers, recorded contact release and post-introduction thread need full audit. |
 | Complete admin operations A01-A09 | Partially implemented | Individual queues may be live; complete priority model not verified | Existing opportunity, verification and signal review surfaces are reusable candidates. No one-click AI approval. |
 
+## Localisation
+
+Ponte is English-first (decision of 25 July 2026). Active interface languages:
+English (canonical) and Spanish. The other eight interface languages are
+deferred, with translations retained in `messages/_deferred/` and old URLs
+308-redirected to English. Multilingual input, AI language detection and
+translated display of member content are preserved. See
+`docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`, the DECISION-LOG entry and
+`LANGUAGES.md`.
+
 ## Recent merged implementation evidence
 
 - PR #14: Founding-launch readiness, Blocks A-F.

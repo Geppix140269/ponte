@@ -1,6 +1,7 @@
 import createIntlMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { locales, defaultLocale, routing } from "@/i18n/routing";
+import { stripRemovedLocale } from "@/lib/i18n/removed-locales";
 import { updateSession, applySession } from "@/lib/supabase/middleware";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -73,9 +74,21 @@ export async function middleware(request: NextRequest) {
     return await updateSession(request);
   }
 
-  // Retired URLs answer with a permanent redirect, keeping the reader's
-  // language. A Spanish reader hitting a dead shop URL lands on the Spanish
-  // page, not back in English.
+  // Retired interface languages (Ponte is now English-first: only English and
+  // Spanish remain). A URL under a removed locale, e.g. /fr/marketplace or a
+  // bare /de, is permanently redirected to the canonical English path so an old
+  // bookmark or indexed link never 404s. Any legacy shop/desk mapping is applied
+  // in the same hop, so /zh/cart lands directly on /marketplace, never looping.
+  const englishPath = stripRemovedLocale(pathname);
+  if (englishPath !== null) {
+    const url = request.nextUrl.clone();
+    url.pathname = legacyTarget(englishPath) ?? englishPath;
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Retired shop/Deal Desk URLs answer with a permanent redirect, keeping the
+  // reader's language. A Spanish reader hitting a dead shop URL lands on the
+  // Spanish page, not back in English.
   const [prefix, rest] = splitLocale(pathname);
   const target = legacyTarget(rest);
   if (target) {

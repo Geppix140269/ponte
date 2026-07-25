@@ -308,7 +308,9 @@ test("the Block D migration is additive, idempotent and RLS-guarded", () => {
 
 // --- Copy truth: no interface claims an NCNDA was signed or a deal room ------
 
-const LOCALES = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "hi", "it"];
+// Active interface locales only (English-first). Deferred snapshots in
+// messages/_deferred/ are frozen and not gated for copy truth here.
+const LOCALES = ["en", "es"];
 // The former home.flow.* and landing.* keys were removed when the homepage was
 // rebuilt as the "What's your deal?" gateway (the `landing` namespace is gone
 // and `home` was replaced). The marketplace, process and home.metaDescription

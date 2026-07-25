@@ -2,6 +2,16 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 25 July 2026 — English-first localisation
+
+**Decision:** Ponte is an English-first platform. English is the canonical product and operational language; Spanish is the only additional fully supported interface language. Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are removed from the active interface build and deferred until real market demand justifies reactivation. Additional full interface languages are deferred, not planned.
+
+**Why:** Maintaining ten fully localised interfaces was disproportionate complexity for the current stage. Reducing to two actively supported interface languages cuts translation-parity, review and CI burden without a redesign or any schema change.
+
+**What is preserved:** Multilingual natural-language and voice *input* in any language, AI language detection and normalisation into the canonical English commercial object, optional translated display of member-entered content (`listing_translations`), and the reactivation path. Deferred translations are retained in `messages/_deferred/`. Old removed-locale URLs are permanently (308) redirected to their canonical English path, so no bookmark 404s. Unsupported browser locales fall back to English.
+
+**Affected areas:** `i18n/routing.ts`, `i18n/request.ts`, `middleware.ts`, `lib/i18n/removed-locales.ts`, `components/LanguageSwitcher.tsx` (data-driven), `app/sitemap.ts` and `lib/seo.ts` (data-driven), `messages/_deferred/*`, `scripts/check-messages.mjs`, locale tests, `LANGUAGES.md`, `AGENTS.md`. Supersedes the earlier "Preserve ten-locale support" instruction. Impact report: `docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`.
+
 ## 25 July 2026 — Governing implementation authority
 
 **Decision:** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` is the single self-contained governing implementation authority for the current development cycle.
