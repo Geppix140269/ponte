@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { buildFindHref } from "@/lib/find/query";
+import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
 
 type Chapter = { chapter: string; chapter_title: string };
 type Hit = { code: string; display: string; short_title: string | null; description: string };
@@ -28,6 +29,7 @@ export type ProductPickerLabels = {
 export default function HsProductPicker({ labels }: { labels: ProductPickerLabels }) {
   const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [category, setCategory] = useState<HsCategory | null>(null);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [listening, setListening] = useState(false);
@@ -141,21 +143,31 @@ export default function HsProductPicker({ labels }: { labels: ProductPickerLabel
         ) : (
           <p className="flane__note">{labels.noMatch}</p>
         )
+      ) : category ? (
+        <>
+          <div className="fpick__crumb">
+            <button type="button" onClick={() => setCategory(null)}>‹ {labels.back}</button>
+            <span className="fpick__crumbcur">{category.label}</span>
+          </div>
+          <div className="fpick__tiles">
+            {chapters
+              .filter((c) => chapterInCategory(c.chapter, category))
+              .map((c) => (
+                <button
+                  key={c.chapter}
+                  type="button"
+                  className="fpick__tile"
+                  onClick={() => pick(c.chapter_title)}
+                >
+                  {c.chapter_title}
+                </button>
+              ))}
+          </div>
+        </>
       ) : (
         <>
           <p className="eyebrow" style={{ marginTop: 8 }}>{labels.chaptersLabel}</p>
-          <div className="fpick__tiles">
-            {chapters.map((c) => (
-              <button
-                key={c.chapter}
-                type="button"
-                className="fpick__tile"
-                onClick={() => pick(c.chapter_title)}
-              >
-                {c.chapter_title}
-              </button>
-            ))}
-          </div>
+          <HsCategoryGrid ariaLabel={labels.chaptersLabel} onPick={(cat) => setCategory(cat)} />
         </>
       )}
     </div>
