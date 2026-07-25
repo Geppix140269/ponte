@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
+import CountryPicker from "@/components/CountryPicker";
+import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
 import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
 import {
   emptyDraft,
@@ -23,12 +25,14 @@ const PAYMENTS = ["LC at sight", "LC 30d", "TT advance", "CAD", "Open account"];
 const VALIDITIES = [7, 30, 60, 90];
 const ROLES = ["Principal", "Producer", "Distributor", "Agent (mandated)", "Intermediary"];
 const FREQS = ["Spot", "Monthly", "Quarterly", "Annual contract"];
-const COUNTRIES: [string, string][] = [
-  ["Brazil", "BR"], ["Argentina", "AR"], ["India", "IN"], ["China", "CN"],
-  ["United States", "US"], ["Germany", "DE"], ["Netherlands", "NL"],
-  ["United Arab Emirates", "AE"], ["Turkey", "TR"], ["Vietnam", "VN"],
-  ["Thailand", "TH"], ["Nigeria", "NG"],
-];
+
+// Origin/destination are stored as country NAMES (they display in the
+// opportunity and ride into the submit payload), so the searchable picker,
+// which works in ISO codes, is bridged both ways over the full ISO list.
+const nameForCode = (code: string): string =>
+  ISO_COUNTRIES.find((c) => c.code === code)?.name ?? code;
+const codeForName = (name: string | null): string =>
+  ISO_COUNTRIES.find((c) => c.name === name)?.code ?? "";
 
 type Step = "intent" | "structuring" | "facts" | "complete" | "preview" | "submit" | "received" | "error";
 type Chapter = { chapter: string; chapter_title: string };
@@ -376,9 +380,9 @@ function QControl({ field, draft, set, t }: { field: CompletionField; draft: Str
         </div>
       );
     case "origin":
-      return <div className="chiprow">{COUNTRIES.map(([n, iso]) => <button key={iso} className="fchip" aria-pressed={draft.origin === n} onClick={() => set({ origin: n })}><span style={{ color: "var(--gold-ink)" }}>{iso}</span> {n}</button>)}</div>;
+      return <CountryPicker value={codeForName(draft.origin)} onChange={(code) => set({ origin: nameForCode(code) })} />;
     case "destination":
-      return <div className="chiprow">{COUNTRIES.map(([n, iso]) => <button key={iso} className="fchip" aria-pressed={draft.destination === n} onClick={() => set({ destination: n })}><span style={{ color: "var(--gold-ink)" }}>{iso}</span> {n}</button>)}</div>;
+      return <CountryPicker value={codeForName(draft.destination)} onChange={(code) => set({ destination: nameForCode(code) })} />;
     case "incoterm":
       return chips(INCOTERMS, draft.incoterm, (v) => set({ incoterm: v }));
     case "payment":

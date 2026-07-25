@@ -16,6 +16,10 @@ import { usePathname } from "@/i18n/navigation";
  * world extended inward: it too renders full-bleed with its own light chrome and
  * its own <main>, so it is bared for the same reason the landing is.
  *
+ * The public legal pages (/about, /privacy, /terms) are the same light Brand v5
+ * treatment with their own PonteFooter, so they are bared too; otherwise the
+ * app's obsidian header and legacy boxed footer would render underneath them.
+ *
  * On a bared route the shared <main> wrapper is also dropped, because the page
  * supplies its own <main> landmark; a wrapper here would nest two mains.
  */
@@ -30,6 +34,9 @@ function rendersOwnChrome(path: string): boolean {
     path.startsWith("/structure/") ||
     path === "/check" ||
     path.startsWith("/check/") ||
+    path === "/about" ||
+    path === "/privacy" ||
+    path === "/terms" ||
     path === "/workspace" ||
     path.startsWith("/workspace/")
   );
