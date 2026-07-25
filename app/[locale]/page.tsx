@@ -3,6 +3,7 @@ import { isRtl, type Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import PonteLanding from "@/components/home/landing/PonteLanding";
 import { landingFontVars } from "@/components/home/landing/fonts";
+import PonteFooter from "@/components/PonteFooter";
 import "@/components/home/landing/landing.css";
 
 /**
@@ -34,6 +35,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
   return (
     <div className={`ponte-landing ${landingFontVars}`}>
       <PonteLanding locale={params.locale} rtl={isRtl(params.locale)} />
+      <PonteFooter />
     </div>
   );
 }

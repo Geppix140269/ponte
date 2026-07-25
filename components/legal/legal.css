@@ -1,0 +1,145 @@
+/* Public legal / informational pages (About, Privacy, Terms), Brand v5
+   heritage light. Box-free: structure comes from typography, whitespace and
+   fine rules between sections, never from cards or rounded containers. */
+.ponte-legal {
+  --lg-surface: #fcfbf7;
+  --lg-rule: #e5dfd2;
+  --lg-ink: #0f0f0e;
+  --lg-ink-2: #3a3733;
+  --lg-ink-3: #6e6a61;
+  --lg-gold-ink: #8a6520;
+  --lg-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --lg-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --lg-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--lg-surface);
+  color: var(--lg-ink-2);
+  font-family: var(--lg-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.ponte-legal :focus-visible {
+  outline: 2px solid #1e5fa8;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---- top bar ---- */
+.ponte-legal .lgl__top {
+  padding: 22px 40px;
+  border-bottom: 1px solid var(--lg-rule);
+}
+.ponte-legal .lgl__lockup {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  text-decoration: none;
+}
+.ponte-legal .lgl__word {
+  font-family: var(--lg-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--lg-ink);
+}
+.ponte-legal .lgl__tld {
+  font-family: var(--lg-mono);
+  font-size: 12px;
+  color: var(--lg-ink-3);
+}
+
+/* ---- document ---- */
+.ponte-legal .lgl {
+  flex: 1;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 40px 72px;
+}
+.ponte-legal .lgl__head {
+  margin-bottom: 40px;
+}
+.ponte-legal .lgl__title {
+  font-family: var(--lg-serif);
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--lg-ink);
+  margin: 0;
+}
+.ponte-legal .lgl__updated {
+  margin: 14px 0 0;
+  font-family: var(--lg-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--lg-ink-3);
+}
+.ponte-legal .lgl__lead {
+  margin: 22px 0 0;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--lg-ink-2);
+  max-width: 62ch;
+}
+
+/* Sections: a fine rule and generous space, never a boxed card. */
+.ponte-legal .lgl__h {
+  font-family: var(--lg-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--lg-ink);
+  margin: 44px 0 14px;
+  padding-top: 26px;
+  border-top: 1px solid var(--lg-rule);
+}
+.ponte-legal .lgl__body > .lgl__h:first-child {
+  margin-top: 8px;
+}
+.ponte-legal .lgl__p {
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--lg-ink-2);
+  margin: 0 0 16px;
+  max-width: 68ch;
+}
+.ponte-legal .lgl__list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  max-width: 68ch;
+}
+.ponte-legal .lgl__list li {
+  position: relative;
+  padding-left: 18px;
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  line-height: 1.68;
+  color: var(--lg-ink-2);
+}
+.ponte-legal .lgl__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 1px;
+  background: var(--lg-gold-ink);
+}
+.ponte-legal .lgl__mail {
+  color: var(--lg-gold-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--lg-rule);
+  padding-bottom: 1px;
+}
+
+@media (max-width: 640px) {
+  .ponte-legal .lgl__top {
+    padding: 18px 22px;
+  }
+  .ponte-legal .lgl {
+    padding: 40px 22px 56px;
+  }
+}

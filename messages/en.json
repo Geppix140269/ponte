@@ -1458,5 +1458,13 @@
       },
       "disclaimerHeading": "What this result does not mean"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Cross-border trade, with greater clarity.",
+    "navLabel": "Footer",
+    "about": "About",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
   }
 }

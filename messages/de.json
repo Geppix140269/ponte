@@ -1458,5 +1458,13 @@
       "body": "Etwas hat die Einreichung unterbrochen. Nichts, was Sie getippt haben, geht verloren. Versuchen Sie es erneut.",
       "retry": "Erneut versuchen"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Grenzüberschreitender Handel, mit mehr Klarheit.",
+    "navLabel": "Fußzeile",
+    "about": "Über uns",
+    "privacy": "Datenschutz",
+    "terms": "Bedingungen",
+    "contact": "Kontakt"
   }
 }
