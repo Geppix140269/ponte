@@ -3,10 +3,11 @@
 // Run: npx tsx lib/i18n/__tests__/routing.test.ts
 //
 // Proves the acceptance points of the localisation-simplification task:
-//   - exactly English and Spanish are actively supported;
+//   - English is the sole actively supported interface language;
 //   - unsupported / deferred / unknown browser locales fall back to English;
-//   - old removed-locale URLs resolve to the canonical English path, never 404;
-//   - the language selector data lists only the active locales;
+//   - old removed-locale URLs (including /es/…) resolve to the canonical English
+//     path, never 404;
+//   - the language selector data lists only the active locale;
 //   - multilingual typed input is classified independently of interface locale.
 
 import assert from "node:assert/strict";
@@ -30,16 +31,15 @@ function test(name: string, fn: () => void) {
 
 // --- Active locale set --------------------------------------------------------
 
-test("only English and Spanish are actively supported", () => {
-  assert.deepEqual([...locales], ["en", "es"]);
+test("English is the sole actively supported interface language", () => {
+  assert.deepEqual([...locales], ["en"]);
   assert.equal(defaultLocale, "en");
 });
 
-test("the language selector data lists exactly the active locales", () => {
-  assert.deepEqual(Object.keys(localeNames).sort(), ["en", "es"]);
-  assert.deepEqual(Object.keys(hreflangFor).sort(), ["en", "es"]);
+test("the language selector data lists exactly the active locale", () => {
+  assert.deepEqual(Object.keys(localeNames), ["en"]);
+  assert.deepEqual(Object.keys(hreflangFor), ["en"]);
   assert.equal(localeNames.en, "English");
-  assert.equal(localeNames.es, "Español");
 });
 
 test("no active locale is RTL, but the RTL plumbing still answers", () => {
@@ -48,10 +48,10 @@ test("no active locale is RTL, but the RTL plumbing still answers", () => {
   assert.equal(isRtl("en"), false);
 });
 
-test("deferred locales are the eight removed languages and never overlap active", () => {
+test("deferred locales are the nine non-English languages and never overlap active", () => {
   assert.deepEqual(
     [...deferredLocales].sort(),
-    ["ar", "de", "fr", "hi", "it", "pt", "ru", "zh"],
+    ["ar", "de", "es", "fr", "hi", "it", "pt", "ru", "zh"],
   );
   for (const d of deferredLocales) {
     assert.ok(!(locales as readonly string[]).includes(d), `${d} must not be active`);
@@ -60,9 +60,8 @@ test("deferred locales are the eight removed languages and never overlap active"
 
 // --- Fallback -----------------------------------------------------------------
 
-test("resolveLocale keeps supported locales", () => {
+test("resolveLocale keeps the supported locale", () => {
   assert.equal(resolveLocale("en"), "en");
-  assert.equal(resolveLocale("es"), "es");
 });
 
 test("resolveLocale falls back to English for deferred, unknown and empty input", () => {
@@ -82,14 +81,14 @@ test("removedLocales stays in sync with deferredLocales", () => {
 
 test("a removed-locale URL strips to the canonical English path", () => {
   assert.equal(stripRemovedLocale("/fr/marketplace"), "/marketplace");
+  assert.equal(stripRemovedLocale("/es/marketplace"), "/marketplace"); // Spanish now deferred
   assert.equal(stripRemovedLocale("/zh/find/o/PT-1234"), "/find/o/PT-1234");
   assert.equal(stripRemovedLocale("/de"), "/");
   assert.equal(stripRemovedLocale("/it/"), "/");
   assert.equal(stripRemovedLocale("/ar/marketplace/"), "/marketplace");
 });
 
-test("supported and unprefixed paths are left alone (no redirect)", () => {
-  assert.equal(stripRemovedLocale("/es/marketplace"), null);
+test("English and unprefixed paths are left alone (no redirect)", () => {
   assert.equal(stripRemovedLocale("/marketplace"), null);
   assert.equal(stripRemovedLocale("/"), null);
   assert.equal(stripRemovedLocale("/en/marketplace"), null); // "en" is not a removed prefix
@@ -109,7 +108,8 @@ test("stripping never yields another removed-locale prefix (no redirect loop)", 
 
 test("typed intent is classified without any interface-locale input", () => {
   // inferIntent takes no locale argument at all: interface language cannot
-  // restrict what language a user may type their objective in.
+  // restrict what language a user may type their objective in. Spanish is no
+  // longer an interface language, yet Spanish input still classifies.
   const es = inferIntent("Necesito estructurar una solicitud de compra de azúcar.");
   assert.equal(es.route, "structure");
 

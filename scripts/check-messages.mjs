@@ -18,8 +18,8 @@ const EN = "en";
 // for full parity with English. Deferred languages live in messages/_deferred/
 // as frozen reactivation snapshots and are checked for JSON validity only, not
 // key parity, so they never block a build while an interface string evolves.
-const LOCALES = ["en", "es"];
-const DEFERRED_LOCALES = ["zh", "ar", "fr", "pt", "ru", "de", "hi", "it"];
+const LOCALES = ["en"];
+const DEFERRED_LOCALES = ["es", "zh", "ar", "fr", "pt", "ru", "de", "hi", "it"];
 const EM_DASH = "—";
 
 function load(locale, dir = "messages") {

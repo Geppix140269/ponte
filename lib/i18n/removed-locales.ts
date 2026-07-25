@@ -8,6 +8,7 @@
 // node test runner both load it without pulling in next-intl's routing object.
 
 export const removedLocales = [
+  "es",
   "zh",
   "ar",
   "fr",
@@ -25,9 +26,10 @@ const REMOVED = new Set<string>(removedLocales);
  * that segment stripped (the canonical English path). Otherwise return null.
  *
  *   /fr/marketplace -> /marketplace
+ *   /es/marketplace -> /marketplace
  *   /de             -> /
  *   /zh/find/o/PT-1 -> /find/o/PT-1
- *   /es/marketplace -> null   (Spanish is still supported)
+ *   /en/marketplace -> null   (English is not a removed prefix)
  *   /marketplace    -> null   (no locale prefix)
  */
 export function stripRemovedLocale(pathname: string): string | null {

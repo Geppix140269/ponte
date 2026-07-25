@@ -1,15 +1,15 @@
 import { defineRouting } from "next-intl/routing";
 
-// Ponte is English-first. English is the canonical product and operational
-// language; Spanish is the one additional fully supported interface language.
-// Multilingual *input* (typed or spoken in any language) is a separate,
-// preserved capability handled by the landing intent/interpret layer, not by
-// this interface-locale list. See LANGUAGES.md.
+// Ponte is English-only. English is the canonical product and operational
+// language, and the sole interface language. Multilingual *input* (typed or
+// spoken in any language) is a separate, preserved capability handled by the
+// landing intent/interpret layer, not by this interface-locale list. See
+// LANGUAGES.md.
 //
-// Adding a language back is a content task: move its file out of
-// messages/_deferred/ into messages/, add the code here (plus localeNames and
-// hreflangFor), and it ships.
-export const locales = ["en", "es"] as const;
+// Adding a language is a content task: move its file out of messages/_deferred/
+// into messages/, add the code here (plus localeNames and hreflangFor), and it
+// ships.
+export const locales = ["en"] as const;
 
 export type Locale = (typeof locales)[number];
 
@@ -21,6 +21,7 @@ export const defaultLocale: Locale = "en";
 // authority for that list; check-messages and the middleware redirect read the
 // same set through lib/i18n/removed-locales.ts.
 export const deferredLocales = [
+  "es",
   "zh",
   "ar",
   "fr",
@@ -41,8 +42,8 @@ export function isRtl(locale: string): boolean {
 }
 
 // Map an incoming/candidate locale to a supported one. Anything not actively
-// supported (a deferred language, an unsupported browser locale such as "ja")
-// falls back to English, the canonical language.
+// supported (a deferred language such as "es", an unsupported browser locale
+// such as "ja") falls back to English, the canonical language.
 export function resolveLocale(candidate: string | undefined | null): Locale {
   return locales.includes(candidate as Locale)
     ? (candidate as Locale)
@@ -50,23 +51,21 @@ export function resolveLocale(candidate: string | undefined | null): Locale {
 }
 
 // Native names for the switcher. Shown in the language itself, which is what
-// a non-English speaker scans for.
+// a non-English speaker scans for. With a single active language the switcher
+// hides itself, so this exists mainly for when a second language is added back.
 export const localeNames: Record<Locale, string> = {
   en: "English",
-  es: "Español",
 };
 
 // hreflang values. Search engines want a language or language-region tag.
 export const hreflangFor: Record<Locale, string> = {
   en: "en",
-  es: "es",
 };
 
 export const routing = defineRouting({
   locales,
   defaultLocale,
   // English keeps its bare URLs, so every link already indexed still resolves.
-  // Spanish is prefixed, for example /es/marketplace.
   localePrefix: "as-needed",
   // First visit is matched on Accept-Language, then persisted in a cookie.
   // Once a visitor picks a language the cookie wins, so we never override

@@ -25,10 +25,9 @@ const FACT_TONE: Record<RouteKey, string[]> = {
 // BCP-47 recognition tag for the *interface* locale. This only sets the voice
 // recogniser's starting language; the user can still speak any language and the
 // edited transcript is classified language-independently. Add a tag here when an
-// interface locale is reactivated (see LANGUAGES.md).
+// interface locale is added (see LANGUAGES.md).
 const SPEECH_LANG: Record<string, string> = {
   en: "en-US",
-  es: "es-ES",
 };
 
 export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boolean }) {

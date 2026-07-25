@@ -1,13 +1,14 @@
 # Languages
 
-Ponte is **English-first**. English is the canonical product and operational
-language; **Spanish** is the one additional fully supported interface language.
-Everything else is a deferred interface language, retained but not built.
+Ponte's interface is **English-only**. English is the canonical product and
+operational language and the sole interface language. Every other language,
+including Spanish, is a deferred interface language, retained but not built.
 
 Keep three concerns separate. They are not the same system.
 
-1. **Interface language** — the language the UI chrome renders in. Two active:
-   `en` (default, canonical) and `es`.
+1. **Interface language** — the language the UI chrome renders in. One active:
+   `en` (default, canonical). The language switcher hides itself while only one
+   language is active.
 2. **User input language** — a member may type or speak a commercial objective
    in **any** language. Ponte detects and interprets it. This is never
    restricted by the interface language.
@@ -15,8 +16,8 @@ Keep three concerns separate. They are not the same system.
    English (product as an English trade name, English HS lookup, English stored
    fields). Database object names and workflow states stay English.
 
-Current interface locales: `en` (default), `es`.
-Deferred interface locales: `zh`, `ar`, `fr`, `pt`, `ru`, `de`, `hi`, `it`
+Current interface locale: `en` (default).
+Deferred interface locales: `es`, `zh`, `ar`, `fr`, `pt`, `ru`, `de`, `hi`, `it`
 (translations frozen in `messages/_deferred/`).
 
 ## How it works
@@ -29,27 +30,25 @@ Deferred interface locales: `zh`, `ar`, `fr`, `pt`, `ru`, `de`, `hi`, `it`
 | Routing, session, redirects | `middleware.ts` | Detects locale, refreshes the Supabase session, and 308-redirects removed-locale URLs to English |
 | Removed-locale redirects | `lib/i18n/removed-locales.ts` | Pure, unit-tested logic that maps `/fr/…` to the English path |
 | SEO helpers | `lib/seo.ts` | Canonical URLs and hreflang alternates (active locales only) |
-| Switcher | `components/LanguageSwitcher.tsx` | Globe menu in the header, lists active locales |
+| Switcher | `components/LanguageSwitcher.tsx` | Globe menu in the header; renders nothing while only one locale is active |
 
-English keeps bare URLs (`/marketplace`). Spanish is prefixed
-(`/es/marketplace`), so links already indexed keep resolving.
+English keeps bare URLs (`/marketplace`). There is no locale prefix while
+English is the only active language.
 
 ### Detection order
 
-1. An explicit choice, stored in the `NEXT_LOCALE` cookie. This always wins.
-2. The browser `Accept-Language` header, on a first visit, matched against the
-   active locales.
-3. English, for anything unmatched (including a deferred or unshipped locale
-   such as `ja`).
-
-A visitor who picks a language is never redirected away from it.
+1. An explicit choice, stored in the `NEXT_LOCALE` cookie.
+2. The browser `Accept-Language` header, matched against the active locales.
+3. English, for anything unmatched (a deferred locale such as `es`, or an
+   unshipped locale such as `ja`). Today this is everything except English.
 
 ### Removed-locale URLs
 
-An old link under a retired interface language never 404s. `middleware.ts`
-permanently redirects it to the canonical English path, applying any legacy
-shop/desk mapping in the same hop:
+An old link under a deferred/retired interface language never 404s.
+`middleware.ts` permanently redirects it to the canonical English path, applying
+any legacy shop/desk mapping in the same hop:
 
+- `/es/marketplace` → `/marketplace`
 - `/fr/marketplace` → `/marketplace`
 - `/de` → `/`
 - `/zh/cart` → `/marketplace`
@@ -125,7 +124,7 @@ These apply to every language, not just English.
 
 ## Review status
 
-The Spanish interface file was reviewed as part of the two active locales. The
-eight deferred files in `messages/_deferred/` are machine-translated starting
-points from the earlier ten-locale build and would need a native pass before any
-are reactivated for a paid campaign.
+English is the only shipped interface language. The nine deferred files in
+`messages/_deferred/` (including Spanish) are carried over from the earlier
+multi-locale build; each would need a native review pass before it is
+reactivated for a paid campaign.

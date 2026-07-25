@@ -19,9 +19,9 @@ import {
   type MarketSignal,
 } from "../../market-signals/logic";
 
-// Active interface locales only. Ponte is English-first; deferred languages
+// Active interface locales only. Ponte is English-only; deferred languages
 // live in messages/_deferred/ and are not gated for copy truth here.
-const LOCALES = ["en", "es"];
+const LOCALES = ["en"];
 function locale(loc: string): Record<string, any> {
   return JSON.parse(readFileSync(`messages/${loc}.json`, "utf8"));
 }

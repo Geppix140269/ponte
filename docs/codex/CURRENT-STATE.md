@@ -42,12 +42,13 @@ Code on `main` is not automatically deployed, enabled or production-verified.
 
 ## Localisation
 
-Ponte is English-first (decision of 25 July 2026). Active interface languages:
-English (canonical) and Spanish. The other eight interface languages are
-deferred, with translations retained in `messages/_deferred/` and old URLs
-308-redirected to English. Multilingual input, AI language detection and
-translated display of member content are preserved. See
-`docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`, the DECISION-LOG entry and
+Ponte is English-only (decision of 25 July 2026). English is the canonical and
+sole interface language. All other interface languages, including Spanish, are
+deferred, with translations retained in `messages/_deferred/` and old
+locale-prefixed URLs (including `/es/…`) 308-redirected to English. The language
+switcher hides itself while only one language is active. Multilingual input, AI
+language detection and translated display of member content are preserved. See
+`docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`, the DECISION-LOG entries and
 `LANGUAGES.md`.
 
 ## Recent merged implementation evidence

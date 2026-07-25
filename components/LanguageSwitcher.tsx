@@ -41,6 +41,12 @@ export default function LanguageSwitcher() {
     });
   }
 
+  // With a single active interface language there is nothing to switch to, so
+  // the control renders nothing. It reappears automatically when a second
+  // locale is added back to i18n/routing.ts. Declared after the hooks above so
+  // the Rules of Hooks hold.
+  if (locales.length <= 1) return null;
+
   return (
     <div className="relative" ref={boxRef}>
       <button
