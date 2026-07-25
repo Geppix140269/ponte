@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
+import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
 import {
   emptyDraft,
   openGaps,
@@ -172,11 +173,11 @@ function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p:
 // The HS drill-down (chapter -> heading -> six-digit) with a search fallback.
 function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
   const [mode, setMode] = useState<"browse" | "search">("browse");
-  const [level, setLevel] = useState<"chapters" | "headings" | "codes">("chapters");
+  const [level, setLevel] = useState<"categories" | "chapters" | "headings" | "codes">("categories");
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [codes, setCodes] = useState<Hit[]>([]);
-  const [chosen, setChosen] = useState<{ chapter?: Chapter; heading?: Heading }>({});
+  const [chosen, setChosen] = useState<{ category?: HsCategory; chapter?: Chapter; heading?: Heading }>({});
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const deb = useRef<number | null>(null);
@@ -222,16 +223,20 @@ function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<St
     <div>
       <div className="orpick"><span className="orpick__t">{t("hs.choose")}</span><span className="orpick__n">{t("hs.catalogue")}</span></div>
       <div className="hscrumb">
-        <button onClick={() => { setLevel("chapters"); setChosen({}); }}>{t("hs.all")}</button>
-        {chosen.chapter && <><span>›</span><button onClick={() => { setLevel("headings"); setChosen({ chapter: chosen.chapter }); }}>{chosen.chapter.chapter_title}</button></>}
+        <button onClick={() => { setLevel("categories"); setChosen({}); }}>{t("hs.all")}</button>
+        {chosen.category && <><span>›</span><button onClick={() => { setLevel("chapters"); setChosen({ category: chosen.category }); }}>{chosen.category.label}</button></>}
+        {chosen.chapter && <><span>›</span><button onClick={() => { setLevel("headings"); setChosen({ category: chosen.category, chapter: chosen.chapter }); }}>{chosen.chapter.chapter_title}</button></>}
         {chosen.heading && <><span>›</span><span>{chosen.heading.heading_title}</span></>}
       </div>
 
+      {level === "categories" && (
+        <HsCategoryGrid ariaLabel={t("hs.choose")} onPick={(cat) => { setChosen({ category: cat }); setLevel("chapters"); }} />
+      )}
       {level === "chapters" && (
         <div className="hsgrid">
-          {chapters.map((c) => (
+          {chapters.filter((c) => !chosen.category || chapterInCategory(c.chapter, chosen.category)).map((c) => (
             <button key={c.chapter} className="hstile" onClick={() => {
-              setChosen({ chapter: c });
+              setChosen((prev) => ({ category: prev.category, chapter: c }));
               fetch(`/api/hs/search?chapter=${c.chapter}`).then((r) => r.json()).then((d) => { setHeadings(d?.headings ?? []); setLevel("headings"); }).catch(() => {});
             }}>
               {c.chapter_title}<span className="hstile__n">{c.chapter}</span>
