@@ -30,6 +30,22 @@ test("buyer / importer / demand language maps to Find demand", () => {
   }
 });
 
+test("seeking language with a product maps decisively to Find", () => {
+  // "looking for X" is a search/find signal, not ambiguous: a named product
+  // must route, never dead-end in clarification.
+  for (const t of [
+    "Hello I'm looking for almonds",
+    "I'm searching for cashews",
+    "in search of pistachios",
+    "seeking coffee suppliers",
+  ]) {
+    const r = inferIntent(t);
+    assert.equal(r.route, "find", t);
+    assert.equal(r.needsClarification, false, t);
+    assert.ok(r.facts.product, `${t} should carry a product`);
+  }
+});
+
 test("sourcing / procurement / requirement language maps to Structure", () => {
   for (const t of [
     "I need to source 200 tons of urea.",

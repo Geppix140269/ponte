@@ -53,7 +53,7 @@ const LOGISTICS =
 const STRUCTURE =
   /structur|\bdraft\b|put together|write up|compose|procure|procurement|sourcing|\bsource\b|requirement to (buy|sell)|need to (buy|sell|source)|solicitud|estructurar|comprar|preventivo/;
 const FIND =
-  /\bfind\b|\bdemand\b|\bbuyers?\b|\bimporters?\b|\bsell\b|selling|\bsupply\b|\bsuppliers?\b|market for|export market|distribution|acquirent|compradores|find (me )?(a )?market/;
+  /\bfind\b|looking for|look for|searching for|in search of|\bseeking\b|\bdemand\b|\bbuyers?\b|\bimporters?\b|\bsell\b|selling|\bsupply\b|\bsuppliers?\b|market for|export market|distribution|acquirent|compradores|find (me )?(a )?market/;
 
 // Country-ish token used to read origin / destination. Deliberately shallow: a
 // title-cased word after a preposition. It reads what is written and no more.
