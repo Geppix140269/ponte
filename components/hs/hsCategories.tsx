@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
  * Ponte line icon over a span of HS chapters. Lifted verbatim from the approved
  * Structure & Submit design (Ponte_HS_Category_Icons_Extract_2026-07-25.html,
  * itself from the file Giuseppe signed off on 2026-07-24). Do not redraw the
- * icons or reword the labels here — this is the design, not a paraphrase.
+ * icons or reword the labels here. This is the design, not a paraphrase.
  *
  * Single source of truth so both pickers (Structure's HsDrill and Find's
  * HsProductPicker) share one copy of the icons and one chapter-range map.
@@ -219,7 +219,7 @@ export function chapterInCategory(chapter: string, cat: HsCategory): boolean {
 
 /**
  * The 15-tile category grid (Tier 1). Box-free by construction: the hairline
- * grid comes from a 1px background gap, never a rounded card. Presentational —
+ * grid comes from a 1px background gap, never a rounded card. Presentational:
  * the caller decides what a tap does (narrow to that category's chapters).
  */
 export function HsCategoryGrid({
