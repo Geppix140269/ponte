@@ -1,0 +1,43 @@
+# Database state
+
+**Reconciled:** 25 July 2026
+
+This file is a guardrail, not a complete schema dump. Codex must inspect the live production record and repository migrations before proposing database work.
+
+## Known production-aligned changes
+
+- Blocks A-F migrations dated `20260723a` through `20260723f` were reported applied to production and verified during the founding-launch work.
+- Journey 1 added the desk-radar signal-import mapping and Ponte-managed Qualified Opportunity seed migrations dated `20260724a` and `20260724b`.
+- PR #20 aligned the repository with two defects already corrected in production:
+  - `desk_radar.canonical_signal_id` requires a full unique index to support `ON CONFLICT (canonical_signal_id)`.
+  - the Journey seed must use the text verification enum `company_verified`, not integer `2`, and must check the profile-bind error.
+
+## Known risk
+
+The historical numbered migration chain is not a reliable proof that a fresh Supabase preview recreates production. A Supabase Preview failure has been treated as pre-existing. Do not repair, squash, rename or replay migrations without a dedicated migration-reconciliation plan and explicit approval.
+
+## Required pre-migration report
+
+Before any new schema change, record:
+
+1. target user outcome;
+2. current production tables, columns, constraints, indexes, functions, triggers and RLS relevant to the change;
+3. matching repository migrations;
+4. any drift or manual SQL;
+5. forward migration;
+6. rollback or safe-disable path;
+7. data backfill and idempotency;
+8. privacy and disclosure effects;
+9. tests and production verification steps.
+
+## Prohibited automatic actions
+
+Codex must not, without explicit approval:
+
+- apply SQL to production;
+- use a Supabase service-role key against production;
+- disable RLS;
+- broaden anonymous reads;
+- rewrite migration history;
+- delete production data;
+- infer production state solely from migration filenames.
