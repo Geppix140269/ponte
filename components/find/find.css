@@ -559,3 +559,109 @@
 .ponte-find .vcp__opt.is-active { background: var(--sunken); color: var(--ink); }
 .ponte-find .vcp__code { font-family: var(--f-mono); font-size: 11px; color: var(--gold-ink); width: 24px; flex: none; }
 .ponte-find .vcp__empty { padding: 12px 14px; font-size: 13px; color: var(--ink-3); }
+
+/* ======================================================================
+   The account gate, inside the new shells.
+
+   AccountGate is shared by six surfaces, some of them still the legacy
+   obsidian application, so it is not rewritten: it is re-skinned only where it
+   renders inside a Brand v5 scope. On a legacy route it keeps the look that
+   route already has, and nothing there changes.
+
+   This matters more than most re-skins. The gate is the product's registration
+   boundary, and it was appearing as an obsidian sheet with a lime submit
+   button over the cream composer and the cream signal page: black-and-lime
+   legacy at the single moment a visitor is asked to commit. Every value below
+   is the same Brand v5 token the surrounding page already uses.
+   ====================================================================== */
+.ponte-find .agate,
+.ponte-landing .agate {
+  background: rgba(15, 15, 14, 0.42) !important;
+  backdrop-filter: none;
+}
+.ponte-find .agate__panel,
+.ponte-landing .agate__panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--rule-strong) !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--ink-2);
+}
+.ponte-find .agate__t,
+.ponte-landing .agate__t {
+  font-family: var(--f-serif);
+  color: var(--ink) !important;
+  letter-spacing: -0.015em;
+}
+.ponte-find .agate__p,
+.ponte-landing .agate__p {
+  color: var(--ink-2) !important;
+}
+.ponte-find .agate__close,
+.ponte-landing .agate__close {
+  color: var(--ink-3) !important;
+}
+.ponte-find .agate__l,
+.ponte-landing .agate__l {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3) !important;
+}
+.ponte-find .agate__i,
+.ponte-landing .agate__i {
+  width: 100%;
+  background: none !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid var(--rule-strong) !important;
+  border-radius: 0 !important;
+  padding: 8px 2px !important;
+  font-family: var(--f-sans);
+  font-size: 15px;
+  color: var(--ink) !important;
+}
+.ponte-find .agate__i:focus,
+.ponte-landing .agate__i:focus {
+  border-bottom-color: var(--focus) !important;
+  outline: none;
+}
+.ponte-find .agate__i::placeholder,
+.ponte-landing .agate__i::placeholder {
+  color: var(--mute) !important;
+}
+/* The submit: ink, not lime. Gold is a brand signal and never a "go". */
+.ponte-find .agate__submit,
+.ponte-landing .agate__submit {
+  background: var(--ink) !important;
+  color: var(--surface) !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: var(--r-sm) !important;
+  box-shadow: none !important;
+  font-family: var(--f-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px 20px !important;
+}
+.ponte-find .agate__submit:hover,
+.ponte-landing .agate__submit:hover {
+  background: var(--ink-2) !important;
+}
+.ponte-find .agate__link,
+.ponte-landing .agate__link {
+  color: var(--gold-ink) !important;
+}
+.ponte-find .agate__err,
+.ponte-landing .agate__err {
+  color: var(--neg) !important;
+}
+
+@media (min-width: 640px) {
+  .ponte-find .agate__panel,
+  .ponte-landing .agate__panel {
+    border-bottom: 1px solid var(--rule-strong) !important;
+    border-radius: var(--r-md) !important;
+  }
+}

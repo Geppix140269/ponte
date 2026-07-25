@@ -170,6 +170,29 @@ test("a missing or unreadable signal stays in the Ponte shell", () => {
   }
 });
 
+test("the account gate is not black-and-lime inside the new shells", () => {
+  // The registration boundary was rendering as an obsidian sheet with a lime
+  // submit over the cream composer and the cream signal page: legacy styling
+  // at the one moment a visitor is asked to commit. It was missed by an
+  // earlier audit because the gate only mounts after a click, so checking
+  // server HTML found nothing.
+  const gate = readFileSync("components/AccountGate.tsx", "utf8");
+  for (const hook of ["agate__panel", "agate__submit", "agate__i", "agate__l"]) {
+    assert.ok(gate.includes(hook), `AccountGate lost its ${hook} styling hook`);
+  }
+
+  // Strip CSS comments: the block explains what it exists to remove, and
+  // naming "lime" in prose is not shipping a lime value.
+  const css = readFileSync("components/find/find.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const scoped = css.slice(css.indexOf(".ponte-find .agate"));
+  assert.ok(scoped.length > 0, "the gate has no Brand v5 treatment inside the shells");
+  assert.ok(
+    /\.ponte-find \.agate__submit[\s\S]{0,200}background: var\(--ink\)/.test(scoped),
+    "the gate's submit must be ink inside the new shells, never lime",
+  );
+  assert.ok(!/lime/i.test(scoped), "a lime value entered the scoped gate styling");
+});
+
 test("no product surface introduces a verification asset", () => {
   for (const icon of icons) {
     assert.ok(
