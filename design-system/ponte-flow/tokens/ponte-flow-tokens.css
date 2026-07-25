@@ -1,0 +1,53 @@
+/* Ponte Flow — design tokens (v1.0.0, generated 2026-07-26)
+   Colour authority: Ponte Brand Book v5. Prefix: --pf-  */
+:root{
+  /* grid + construction */
+  --pf-grid: 24; --pf-live-area: 20; --pf-keyline: 2px;
+  --pf-arc-route: 12; --pf-arc-turn: 6; --pf-arc-detail: 3;
+  --pf-stroke: 1.75; --pf-linecap: round; --pf-linejoin: round;
+  --pf-stroke-16: 1.5; --pf-stroke-20: 1.6; --pf-stroke-24: 1.75; --pf-stroke-32: 2; --pf-stroke-40: 2.2; --pf-stroke-48: 2.5;
+
+  /* sizes */
+  --pf-size-list: 16px; --pf-size-field: 20px; --pf-size-sector: 24px; --pf-size-lg: 32px; --pf-size-nav: 48px;
+  --pf-reduced-below: 21px;
+
+  /* radii */
+  --pf-r-sm: 5px; --pf-r-md: 9px; --pf-r-lg: 14px; --pf-r-pill: 999px;
+
+  /* nodes + line law */
+  --pf-node-origin: 1.9; --pf-node-open: 1.7; --pf-node-evidence: 1.2; --pf-node-stem: 2.4;
+  --pf-dash-unconfirmed: 2 2.6; --pf-dash-unavailable: 1 3; --pf-dash-reserved: 3 5;
+  --pf-opacity-unavailable: .45; --pf-opacity-track: .16; --pf-opacity-secondary: .6;
+
+  /* colour */
+  --pf-ink: #0F0F0E; --pf-ink-2: #3A3733; --pf-ink-3: #6E6A61; --pf-mute: #9A958A;
+  --pf-surface: #FCFBF7; --pf-raised: #FFFFFF; --pf-sunken: #F2EFE6; --pf-rule: #E5DFD2; --pf-rule-strong: #D5CEBC;
+  --pf-gold: #C9973A; --pf-gold-ink: #8A6520;
+  --pf-positive: #0F6E3D; --pf-review: #4E6472; --pf-danger: #B4402A; --pf-declared: #6F695E;
+  --pf-focus: #1E5FA8; --pf-select: #DCE8F4;
+  --pf-focus-ring: 0 0 0 2px var(--pf-surface), 0 0 0 4px var(--pf-focus);
+
+  /* motion */
+  --pf-dur-micro: 120ms; --pf-dur-enter: 220ms; --pf-dur-deliberate: 420ms; --pf-dur-crossing: 900ms;
+  --pf-dur-loop: 1900ms; --pf-dur-lane: 1600ms; --pf-dur-signal: 2600ms; --pf-dur-segment: 520ms;
+  --pf-ease: cubic-bezier(.2,.6,.2,1); --pf-ease-entrance: cubic-bezier(.16,1,.3,1);
+  --pf-progress-floor: 20; --pf-point-rest: 62%;
+}
+
+[data-theme="dark"], .inverse{
+  --pf-ink: #F2EFE8; --pf-ink-2: #CDC8BC; --pf-ink-3: #A7A296; --pf-mute: #7E7A72;
+  --pf-surface: #0E0F0C; --pf-raised: #161813; --pf-sunken: #0A0B09;
+  --pf-rule: rgba(242,239,232,.12); --pf-rule-strong: rgba(242,239,232,.20);
+  --pf-gold: #D9AC55; --pf-gold-ink: #E7C173;
+  --pf-positive: #4FB07A; --pf-review: #9DB4C0; --pf-danger: #E0674C; --pf-declared: #A7A296;
+  --pf-focus: #6FA8E0; --pf-select: rgba(111,168,224,.22);
+}
+
+/* icon host — colour is inherited, never set on the SVG */
+.pf-icon{ display:inline-flex; color: var(--pf-ink); }
+.pf-icon svg{ display:block; width:100%; height:100% }
+.pf-icon--muted{ color: var(--pf-ink-3) }
+.pf-icon--disabled{ opacity:.42; pointer-events:none }
+.pf-icon--on-dark{ color: var(--pf-ink) }
+:where(button,a,[tabindex]):focus-visible .pf-icon{ outline:none }
+:where(button,a,[tabindex]):focus-visible{ box-shadow: var(--pf-focus-ring); border-radius: var(--pf-r-sm); outline:none }

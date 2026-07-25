@@ -1,0 +1,28 @@
+/* Ponte Flow — reduced-motion contract
+   Because every component is authored in its END state, reduced motion is a REMOVAL,
+   not a redraw. Nothing here re-styles a component: it only stops movement.
+
+   Ship BOTH rules: the media query for the OS setting, and the attribute hook for the
+   in-product toggle. They must produce identical output. */
+
+@media (prefers-reduced-motion: reduce) {
+  .fx *, .fa *, .fs *, .fc *, .fv *, .fu *, .fg *, .fr *, .fl *, .fp *, .fe * {
+    animation: none !important;
+    stroke-dasharray: none !important;
+  }
+  .fs-dot, .fl-dot { offset-distance: 62% }   /* mid-route: a process is running, position unknown */
+  .fu-dot { offset-distance: 100% }           /* the crossing has happened */
+}
+
+[data-reduced-motion="1"] .fx *, [data-reduced-motion="1"] .fa *, [data-reduced-motion="1"] .fs *,
+[data-reduced-motion="1"] .fc *, [data-reduced-motion="1"] .fv *, [data-reduced-motion="1"] .fu *,
+[data-reduced-motion="1"] .fg *, [data-reduced-motion="1"] .fr *, [data-reduced-motion="1"] .fl *,
+[data-reduced-motion="1"] .fp *, [data-reduced-motion="1"] .fe * {
+  animation: none !important;
+  stroke-dasharray: none !important;
+}
+[data-reduced-motion="1"] .fs-dot, [data-reduced-motion="1"] .fl-dot { offset-distance: 62% }
+[data-reduced-motion="1"] .fu-dot { offset-distance: 100% }
+
+/* H01 bridge progress is engine-driven: the engine must hide the travelling point and
+   set the active length directly. See motion/js/ponte-flow-progress.md. */

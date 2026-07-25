@@ -5,6 +5,8 @@ import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import PonteShell from "@/components/shell/PonteShell";
 import RecordList from "@/components/explore/RecordList";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import { MARKET_FAMILIES } from "@/lib/taxonomy/market";
 import { HS_CATEGORIES, type HsCategory } from "@/components/hs/hsCategories";
 import { getMarketActivity } from "@/lib/board/market-activity";
 import { inChapterRange, type ActivityItem } from "@/lib/board/activity-logic";
@@ -199,6 +201,7 @@ export default async function ExplorePage({
               </div>
               <div className="exfam">
                 <span className="exfam__i">
+                  <PonteIcon name={MARKET_FAMILIES[0].icon} size={40} className="exfam__ic" />
                   <span className="exfam__t">{t("families.products.title")}</span>
                   <span className="exfam__n">
                     {t("records", { count: families.products.toLocaleString("en-US") })}
@@ -206,6 +209,7 @@ export default async function ExplorePage({
                   <span className="exfam__d">{t("families.products.lead")}</span>
                 </span>
                 <Link className="exfam__i" href="/explore?family=services">
+                  <PonteIcon name={MARKET_FAMILIES[1].icon} size={40} className="exfam__ic" />
                   <span className="exfam__t">{t("families.services.title")}</span>
                   <span className="exfam__n">
                     {t("records", { count: families.services.toLocaleString("en-US") })}
@@ -213,6 +217,7 @@ export default async function ExplorePage({
                   <span className="exfam__d">{t("families.services.lead")}</span>
                 </Link>
                 <Link className="exfam__i" href="/explore?family=distribution">
+                  <PonteIcon name={MARKET_FAMILIES[2].icon} size={40} className="exfam__ic" />
                   <span className="exfam__t">{t("families.distribution.title")}</span>
                   <span className="exfam__n">{t("noCount")}</span>
                   <span className="exfam__d">{t("families.distribution.lead")}</span>
@@ -242,8 +247,11 @@ export default async function ExplorePage({
                   const tone = counts.total === 0 ? " exsector--quiet" : busy ? " exsector--busy" : "";
                   const body = (
                     <>
-                      <span className={`exsector__disc`} aria-hidden="true">
-                        <svg viewBox="0 0 24 24">{cat.icon}</svg>
+                      <span className="exsector__disc">
+                        {/* The delivered Flow sector asset at its 24px default,
+                            resolved through the registry rather than drawn
+                            here. Decorative: the sector name is beside it. */}
+                        <PonteIcon name={cat.flowIcon} size={24} />
                       </span>
                       <span className="exsector__t">{cat.label}</span>
                       <span className="exsector__n">

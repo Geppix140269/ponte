@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 90" width="200" height="90" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="fs">
+  <path d="M14 46C56 22 140 22 186 44" opacity=".18"></path><circle class="fs-f1" cx="52" cy="64" r="3.4" fill="currentColor"></circle><circle class="fs-f2" cx="92" cy="70" r="3.4" fill="currentColor"></circle><circle class="fs-f3" cx="132" cy="62" r="3.4" fill="currentColor"></circle><circle class="fs-f4" cx="166" cy="66" r="3.4" fill="currentColor"></circle><g class="fs-dot"><circle r="5.5" fill="var(--gold)"></circle></g>
+</svg>

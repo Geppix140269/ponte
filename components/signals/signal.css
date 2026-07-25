@@ -229,3 +229,65 @@
     padding: 28px;
   }
 }
+
+/* ---- Ponte Flow field and sector rows ------------------------------------
+   The icon sits beside the field's own visible name, at --pf-ink-3 so the word
+   leads and the drawing supports. It is never the label. */
+.ponte-find .qfact__k {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ponte-find .qfact__i {
+  color: var(--pf-ink-3);
+  flex-shrink: 0;
+}
+
+/* The sector: navigation into Explore, so a real link with a real hit area. */
+.ponte-find .sigsector {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 2px;
+  text-decoration: none;
+  color: var(--ink-2);
+}
+.ponte-find .sigsector:hover .sigsector__t {
+  color: var(--gold-ink);
+}
+.ponte-find .sigsector .pf-icon {
+  color: var(--ink);
+}
+.ponte-find .sigsector__t {
+  font-family: var(--f-serif);
+  font-size: 18px;
+  color: var(--ink);
+  transition: color var(--pf-dur-micro, 120ms);
+}
+.ponte-find .sigsector__r {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ---- participation boundary ----------------------------------------------
+   Stated in words with its condition, never as a badge and never animated.
+   A reserved route carries no point because nothing is waiting on anyone. */
+.ponte-find .sigbound {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 0 0;
+  border-top: 1px dashed var(--rule-strong);
+  max-width: 660px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.ponte-find .sigbound .pf-icon {
+  color: var(--pf-review);
+  flex-shrink: 0;
+  margin-top: 1px;
+}

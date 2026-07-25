@@ -1,0 +1,47 @@
+/* ======================================================================
+   Ponte Flow — the single import.
+
+   One file so a route never picks and chooses parts of the system. It pulls in
+   the delivered tokens, the motion components and the reduced-motion contract,
+   in that order, unmodified. Nothing is retyped here and no value is changed.
+
+   Imported once, from app/globals.css.
+
+   ----------------------------------------------------------------------
+   Reconciliation with the existing Brand v5 tokens
+   ----------------------------------------------------------------------
+   The Flow palette and the token blocks already scoped under .ponte-landing
+   and .ponte-find are the same Brand Book v5 values under different names.
+   Checked pair by pair on integration:
+
+     --pf-ink        #0F0F0E   ==  --ink
+     --pf-ink-2      #3A3733   ==  --ink-2
+     --pf-ink-3      #6E6A61   ==  --ink-3
+     --pf-mute       #9A958A   ==  --mute
+     --pf-surface    #FCFBF7   ==  --surface
+     --pf-raised     #FFFFFF   ==  --raised
+     --pf-sunken     #F2EFE6   ==  --sunken
+     --pf-rule       #E5DFD2   ==  --rule
+     --pf-rule-strong#D5CEBC   ==  --rule-strong
+     --pf-gold       #C9973A   ==  --gold
+     --pf-gold-ink   #8A6520   ==  --gold-ink
+     --pf-positive   #0F6E3D   ==  --pos
+     --pf-review     #4E6472   ==  --review
+     --pf-danger     #B4402A   ==  --neg
+     --pf-focus      #1E5FA8   ==  --focus
+
+   So no alias layer is written. The two namespaces are kept separate on
+   purpose: --pf-* is owned by the design system and must not be edited in the
+   product, while the scoped --ink family is the product's own and may evolve.
+   Should a value ever need to differ, that divergence is a design decision to
+   be recorded, not something to be papered over with an alias today.
+
+   The Flow tokens are declared on :root, which means they are also present on
+   the legacy obsidian surfaces. That is harmless: nothing outside a .pf-* or
+   Flow motion class reads them, and no legacy lime value can enter the --pf-*
+   namespace because these are the delivered values and are not edited here.
+   ====================================================================== */
+
+@import "./tokens/ponte-flow-tokens.css";
+@import "./motion/css/ponte-flow-motion.css";
+@import "./motion/reduced-motion/ponte-flow-reduced-motion.css";
