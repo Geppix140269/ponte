@@ -1,12 +1,17 @@
 # Ponte Trade agent instructions
 
-Read `docs/codex/00-START-HERE.md` before changing code.
+Before changing code, read these files in order:
+
+1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` in full.
+2. `docs/codex/00-START-HERE.md`.
+3. Every status, decision and roadmap file linked from the start page.
 
 ## Source of truth
 
 - `main` in `Geppix140269/ponte` is the canonical code source.
+- The Master Implementation Brief is the governing product and implementation authority for the current development cycle.
 - Do not treat a local clone, chat transcript, design export, deployed page or stale document as more authoritative than the reconciled repository record.
-- The product authority order is defined in `docs/codex/00-START-HERE.md`.
+- The complete authority order is defined in `docs/codex/00-START-HERE.md`.
 
 ## Non-negotiable product rules
 
@@ -20,6 +25,7 @@ Read `docs/codex/00-START-HERE.md` before changing code.
 - AI may structure, compare, explain, recommend and draft. It must not silently publish, verify, disclose, pay, contact a third party or make a commercial commitment.
 - Existing L1-L4 fields may remain for compatibility, but numbered tiers or a Trust Score must not become the primary user-facing trust model.
 - Gold is a brand signal, not a verification, warning, approval or review status.
+- Apply Brand v5 journey by journey. Do not begin an app-wide repaint.
 
 ## Engineering rules
 
@@ -27,6 +33,7 @@ Read `docs/codex/00-START-HERE.md` before changing code.
 - Inspect existing behaviour before replacing it. Reuse proven services and lifecycle gates.
 - Do not alter production schemas, RLS, secrets, hosting settings or production feature flags without explicit owner approval.
 - Database migrations must be additive, idempotent where practical, based on the recorded production state, and documented in `docs/codex/DATABASE-STATE.md`.
+- Inspect the live production schema before proposing or applying a migration.
 - Do not claim a migration, deployment or production test occurred without evidence.
 - Preserve ten-locale support and accessibility states.
 - Review mobile at 390 x 844 before desktop approval.
@@ -46,3 +53,13 @@ For a behavioural change, update in the same pull request:
 ## Substantial work
 
 For work spanning multiple routes, schemas, services or user journeys, create and maintain an ExecPlan using `.agent/PLANS.md` before implementation.
+
+## Stop conditions
+
+Stop and request owner approval before:
+
+- implementing beyond the approved milestone;
+- applying a production migration;
+- changing production feature flags or hosting;
+- changing verification data, L1-L4 compatibility or user-facing trust representation;
+- executing an external or commercial action not already covered by a recorded approval policy.
