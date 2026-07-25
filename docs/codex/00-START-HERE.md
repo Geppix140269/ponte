@@ -23,14 +23,13 @@ Operating spine:
 
 When documents conflict, use this order:
 
-1. Master Product, Experience and Agentic Architecture v3 — product structure, object relationships, permissions, sequencing and acceptance.
-2. Brand Book v5 / Final Brand System — identity, colour, typography, graphic language and assets.
-3. Messaging and Screen Copy Pack — terminology, factual distinctions, prohibited claims and evidence language.
+1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for the current development cycle.
+2. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report the conflict before changing direction.
+3. The underlying long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, when present, for additional depth that does not conflict with the governing brief.
 4. Existing engineering, lifecycle, security and production authorities in the repository.
-5. Master Route Atlas and Screen Register — execution register beneath the product architecture.
-6. This reconciled Codex layer — current implementation, deployment and roadmap status.
+5. This reconciled Codex layer — current implementation, deployment, decision and roadmap status.
 
-The long-form authority sources are being imported under `docs/ponte-authority/`. Until every source is present, `docs/codex/AUTHORITY-MANIFEST.md` records what is available and what remains to be copied.
+The governing brief already consolidates the product architecture, Brand v5 rules, messaging and copy, route register, experience blueprints, technical boundaries, implementation sequence and acceptance suite. The remaining long-form sources are useful supporting authorities but are not required for the Phase 0 audit to begin.
 
 ## Current implementation headline
 
@@ -42,7 +41,7 @@ The long-form authority sources are being imported under `docs/ponte-authority/`
 - Journey 2: Structure & Submit, screens S01-S06, including facts/gaps, public/private/reviewer preview, account gate and submission.
 - Production fixes for the Journey 1 signal import and Journey 2 seed.
 
-The next planned target is not to rebuild Find or Structure. It is to reconcile deployment and then implement the next approved vertical slice from the architecture.
+The next planned target is not to rebuild Find or Structure. It is first to complete the Phase 0 repository-to-architecture gap report required by the governing brief, reconcile deployment and production enablement, and then obtain owner approval for the smallest truthful Phase 1 vertical slice.
 
 ## Critical current truth
 
@@ -50,15 +49,16 @@ Code existing on `main` does not prove it is enabled or live. Find and Structure
 
 Read next:
 
-1. `CURRENT-STATE.md`
-2. `FEATURE-FLAGS.md`
-3. `DATABASE-STATE.md`
-4. `KNOWN-ISSUES.md`
-5. `DECISION-LOG.md`
-6. `DO-NOT-REOPEN.md`
-7. `MASTER-ROADMAP.md`
-8. `ACTIVE-MILESTONE.md`
-9. `.agent/PLANS.md`
+1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+2. `CURRENT-STATE.md`
+3. `FEATURE-FLAGS.md`
+4. `DATABASE-STATE.md`
+5. `KNOWN-ISSUES.md`
+6. `DECISION-LOG.md`
+7. `DO-NOT-REOPEN.md`
+8. `MASTER-ROADMAP.md`
+9. `ACTIVE-MILESTONE.md`
+10. `.agent/PLANS.md`
 
 ## Completion discipline
 
