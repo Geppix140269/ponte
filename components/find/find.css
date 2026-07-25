@@ -532,3 +532,30 @@
   .ponte-find .qfact:nth-child(odd) { padding-right: 0; border-right: none; }
   .ponte-find .qfact:nth-child(even) { padding-left: 0; }
 }
+
+/* ---- Shared searchable country picker (CountryPicker), used by Find,
+   Structure and Check. Box-free: an underline field and a plain hairline
+   suggestion list with square corners, never a chip wall or a rounded card. */
+.ponte-find .vcp { position: relative; max-width: 420px; }
+.ponte-find .vcp__input {
+  width: 100%; border: 0; border-bottom: 1px solid var(--rule-strong);
+  background: none; outline: none; font-family: var(--f-sans); font-size: 15px;
+  color: var(--ink); padding: 8px 0;
+}
+.ponte-find .vcp__input::placeholder { color: var(--mute); }
+.ponte-find .vcp__input:focus { border-bottom-color: var(--ink); }
+.ponte-find .vcp__list {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 1px);
+  margin: 0; padding: 0; list-style: none; max-height: 264px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--rule);
+  box-shadow: 0 10px 24px -18px rgba(15, 15, 14, 0.4);
+}
+.ponte-find .vcp__opt {
+  display: flex; align-items: baseline; gap: 12px; width: 100%; text-align: left;
+  background: none; border: 0; border-top: 1px solid var(--rule); cursor: pointer;
+  padding: 10px 14px; font-size: 14px; color: var(--ink-2);
+}
+.ponte-find .vcp__list li:first-child .vcp__opt { border-top: 0; }
+.ponte-find .vcp__opt.is-active { background: var(--sunken); color: var(--ink); }
+.ponte-find .vcp__code { font-family: var(--f-mono); font-size: 11px; color: var(--gold-ink); width: 24px; flex: none; }
+.ponte-find .vcp__empty { padding: 12px 14px; font-size: 13px; color: var(--ink-3); }
