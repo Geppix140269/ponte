@@ -4,7 +4,10 @@
       "title": "Start a deal",
       "description": "Source a product, supply a product or offer a trade service. Build it by tapping, preview exactly what each party sees, then submit for Ponte review."
     },
-    "bar": { "back": "Back" },
+    "bar": {
+      "back": "Back",
+      "home": "Ponte Trade home"
+    },
     "trust": "Build and preview freely. Join only when you save or submit.",
     "intent": {
       "eyebrow": "Start a deal",

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
 import CountryPicker from "@/components/CountryPicker";
 import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
@@ -103,7 +103,12 @@ export default function StructureComposer() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         ) : (
-          <span className="sbar__title serif">Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span></span>
+          // A link, not a label. Until now the composer's first step showed the
+          // wordmark as plain text and every later step replaced it with Back,
+          // so there was no way out of Start a Deal to the home page at all.
+          <Link className="sbar__title serif" href="/" aria-label={t("bar.home")}>
+            Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span>
+          </Link>
         )}
         {STEP_MARK[step] && <span className="sbar__step">{STEP_MARK[step]}</span>}
       </div>

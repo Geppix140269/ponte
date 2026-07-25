@@ -294,9 +294,27 @@ test("market activity reads only the two existing public readers", () => {
   const src = readFileSync("lib/board/market-activity.ts", "utf8");
   assert.ok(src.includes("getLiveDeals"), "member records must come from the board reader");
   assert.ok(src.includes("getMarketSignals"), "signals must come from the signals reader");
+  // The rule is that no RECORD may reach a surface without passing the two
+  // rule-filtered readers. A head-only count returns no rows at all, so it
+  // cannot leak one; forbidding it outright forced the surfaces to print the
+  // page size as though it were the size of the market. So: any direct query
+  // here must be a count.
+  const queries = src.split(".from(").slice(1);
+  for (const q of queries) {
+    const call = q.slice(0, 400);
+    assert.ok(
+      call.includes("head: true"),
+      "market-activity may only query directly for counts, never for rows",
+    );
+  }
+});
+
+test("the record total is counted, not inferred from the page size", () => {
+  const src = readFileSync("lib/board/market-activity.ts", "utf8");
+  assert.ok(src.includes("countPublicRecords"), "the total must come from a count query");
   assert.ok(
-    !src.includes("createAdminClient") && !src.includes(".from("),
-    "market-activity must not open a second, weaker definition of public",
+    src.includes('count: "exact"'),
+    "an approximate count would understate a market just as badly as the cap did",
   );
 });
 
