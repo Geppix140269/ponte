@@ -34,7 +34,9 @@
         "hsCode": "HS code",
         "signalDate": "Signal date"
       },
-      "tombstone": "This market signal is no longer active."
+      "tombstone": "This market signal is no longer active.",
+      "actionsHeading": "What you can do next",
+      "actionsNote": "Reading this signal needs no account. Ponte contacts nobody and reveals nobody automatically: a request goes to the Ponte desk, and you are asked to join only at the point of sending it."
     },
     "cta": {
       "askPonte": "Ask Ponte to investigate",

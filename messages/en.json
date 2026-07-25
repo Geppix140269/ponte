@@ -880,7 +880,9 @@
         "hsCode": "HS code",
         "signalDate": "Signal date"
       },
-      "tombstone": "This market signal is no longer active."
+      "tombstone": "This market signal is no longer active.",
+      "actionsHeading": "What you can do next",
+      "actionsNote": "Reading this signal needs no account. Ponte contacts nobody and reveals nobody automatically: a request goes to the Ponte desk, and you are asked to join only at the point of sending it."
     },
     "cta": {
       "askPonte": "Ask Ponte to investigate",
@@ -1150,6 +1152,12 @@
     "offlineBody": "Ponte needs a connection to show live listings and to run a verification. Nothing you were doing has been lost. Reconnect and carry on.",
     "offlineRetry": "Try again",
     "offlineHint": "This page was saved on your device"
+  },
+  "shell": {
+    "home": "Ponte Trade home",
+    "navLabel": "Primary",
+    "explore": "Explore the market",
+    "deal": "Start a deal"
   },
   "siteFooter": {
     "whoWeAre": "Ponte Trade. Cross-border trade, with greater clarity.",

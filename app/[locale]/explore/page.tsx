@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { isRtl, type Locale } from "@/i18n/routing";
+import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
-import { landingFontVars } from "@/components/home/landing/fonts";
-import ExploreChrome from "@/components/explore/ExploreChrome";
+import PonteShell from "@/components/shell/PonteShell";
 import RecordList from "@/components/explore/RecordList";
 import { HS_CATEGORIES, type HsCategory } from "@/components/hs/hsCategories";
 import { getMarketActivity } from "@/lib/board/market-activity";
@@ -17,7 +16,6 @@ import {
   sectorCounts,
   type FamilyKey,
 } from "@/lib/explore/families";
-import "@/components/find/find.css";
 import "@/components/explore/explore.css";
 
 /**
@@ -145,8 +143,7 @@ export default async function ExplorePage({
   const busiest = Math.max(...sectors.map((s) => s.counts.total), 0);
 
   return (
-    <div className={`ponte-find ${landingFontVars}`} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
-      <ExploreChrome>
+    <PonteShell locale={params.locale} current="explore">
         <nav className="excrumb" aria-label={t("crumb.label")}>
           <Link href="/">{t("crumb.home")}</Link>
           <span aria-hidden="true">/</span>
@@ -314,7 +311,6 @@ export default async function ExplorePage({
             {t("deal.cta")}
           </Link>
         </section>
-      </ExploreChrome>
-    </div>
+    </PonteShell>
   );
 }

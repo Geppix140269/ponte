@@ -2,30 +2,41 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Icon } from "@/components/icons";
 import { formatPosted } from "@/lib/listing-terms";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
-import SignalDisclaimer from "@/components/signals/SignalDisclaimer";
+import { getMarketActivity } from "@/lib/board/market-activity";
+import { toBandItems, type ActivityLabels } from "@/lib/board/activity-view";
+import PonteShell from "@/components/shell/PonteShell";
+import RecordList from "@/components/explore/RecordList";
 import InvestigateButton from "@/components/signals/InvestigateButton";
+import "@/components/explore/explore.css";
+import "@/components/signals/signal.css";
 
 export const dynamic = "force-dynamic";
 
 /**
- * A single Market Signal (brief 1.2, blueprint P06).
+ * One Market Signal, inside the Ponte Trade shell.
  *
- * The header says "Market Signal", never "Opportunity". The disclaimer sits
- * near the title, not only in the footer. The page separates what Ponte knows
- * (the extracted facts) from what it has not established (identity, authority,
- * current availability), so a reader is never left to assume the gap is filled.
+ * This route used to render the legacy obsidian application: its own header and
+ * footer, the lowercase "ponte." lockup, marketplace and fees navigation, and a
+ * "every listing is reviewed by the desk before it goes live" line sitting
+ * directly above a record whose entire point is that Ponte has NOT confirmed
+ * it. The North Star landing links here from its activity band, so a visitor
+ * one click in left the new product, entered the old one, and was told the
+ * opposite of the truth about what they were looking at.
  *
- * Chrome, the mandatory badge and the mandatory disclaimer all read from the
- * "marketSignals" message namespace and are localised across the ten locales.
+ * It now mounts the shared PonteShell and states its classification plainly and
+ * repeatedly: a Market Signal is an indication seen in the open market that
+ * Ponte has not confirmed. Nothing on this page calls it vetted, verified,
+ * reviewed before publication, or a safe counterparty.
  *
- * Three cases, answered honestly:
- *   - visible: a live approved signal, shown in full with the investigate CTA.
- *   - gone: the signal existed but is expired, withdrawn or unavailable. A safe
- *     tombstone, no facts, so a stale shared link cannot resurrect a signal.
- *   - missing: no such signal. A 404.
+ * Every fact the legacy page carried is preserved: side, quantity, corridor,
+ * Incoterm, payment, HS code, signal date, the description, what Ponte knows,
+ * what Ponte has not established, and both actions.
+ *
+ * Reading it requires no account. The account gate sits where it always sat, on
+ * the investigation request itself, which is the first thing that would spend
+ * Ponte's resources or disclose the visitor.
  */
 
 export async function generateMetadata({
@@ -42,27 +53,20 @@ export async function generateMetadata({
   };
 }
 
-function Fact({
-  label,
-  value,
-  notStated,
-}: {
-  label: string;
-  value: string | null;
-  notStated: string;
-}) {
+function Fact({ label, value, notStated }: { label: string; value: string | null; notStated: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-hairline-soft py-3 last:border-0">
-      <span className="text-[12px] uppercase tracking-[0.4px] text-muted">{label}</span>
-      <span className={`text-right text-[14px] ${value ? "text-ink" : "text-muted"}`}>
-        {value ?? notStated}
-      </span>
+    <div className="qfact">
+      <span className="qfact__k">{label}</span>
+      <span className={`qfact__v${value ? "" : " ns"}`}>{value ?? notStated}</span>
     </div>
   );
 }
 
 async function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
   const t = await getTranslations("marketSignals");
+  const th = await getTranslations("home");
+  const te = await getTranslations("explore");
+
   const corridor =
     signal.originText || signal.destinationText
       ? [signal.originText ?? "?", signal.destinationText ?? "?"].join(" to ")
@@ -76,85 +80,96 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
         : signal.side;
   const notStated = t("card.notStated");
 
+  // Related recent activity, so the page is a deeper level of the market rather
+  // than a dead end. Same bounded read the landing and Explore use.
+  const { items } = await getMarketActivity();
+  const labels: ActivityLabels = {
+    kind: {
+      market_signal: th("kinds.marketSignal"),
+      member_requirement: th("kinds.memberRequirement"),
+      member_offer: th("kinds.memberOffer"),
+      service_requirement: th("kinds.serviceRequirement"),
+    },
+    route: (from, to) => th("activity.route", { from, to }),
+    today: th("activity.today"),
+    daysAgo: (days) => th("activity.daysAgo", { days }),
+  };
+  const related = toBandItems(
+    items.filter((i) => i.key !== `signal:${signal.id}`).slice(0, 6),
+    Date.now(),
+    labels,
+  );
+
   return (
-    <div className="container-px py-14 md:py-20">
-      <div className="mx-auto max-w-2xl">
-        <Link
-          href="/market-signals"
-          className="inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.4px] text-muted hover:text-ink"
-        >
-          <Icon name="chevron" size={13} className="rotate-180" />
-          {t("label")}
-        </Link>
+    <>
+      <nav className="excrumb" aria-label={te("crumb.label")}>
+        <Link href="/">{te("crumb.home")}</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/explore">{te("crumb.explore")}</Link>
+        <span aria-hidden="true">/</span>
+        <span>{t("detail.eyebrow")}</span>
+      </nav>
 
-        <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.8px] text-slate">
-          {t("detail.eyebrow")}
+      <header className="exhead">
+        <div className="exhead__eb">
+          <span className="exhead__rule" aria-hidden="true" />
+          {/* The classification, first and as a word, never as a colour. */}
+          <span className="sigkind">{t("detail.eyebrow")}</span>
+        </div>
+        <h1 className="exhead__h serif">{signal.product}</h1>
+
+        {/* The unverified status is stated next to the title, not buried in a
+            footnote, because it is the single most important fact here. */}
+        <p className="sigunv">
+          <b>{t("badge")}</b> {t("disclaimer")}
         </p>
-        <h1
-          className="display mt-2 text-ink"
-          style={{ fontSize: "clamp(26px, 3.4vw, 40px)", lineHeight: 1.08, letterSpacing: "-0.8px" }}
-        >
-          {signal.product}
-        </h1>
 
-        <SignalDisclaimer full className="mt-5" badge={t("badge")} disclaimer={t("disclaimer")} />
+        {signal.description && <p className="exhead__d">{signal.description}</p>}
+      </header>
 
-        {signal.description && (
-          <p className="mt-6 text-[15px] leading-relaxed text-slate">
-            {signal.description}
-          </p>
-        )}
+      <section className="exsec" aria-label={t("detail.knownHeading")}>
+        <div className="exsec__h">
+          <h2 className="exsec__t">{t("detail.knownHeading")}</h2>
+        </div>
+        <div className="qfacts">
+          <Fact label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
+          <Fact
+            label={t("detail.fact.quantity")}
+            value={signal.quantity ? `${signal.quantity}${signal.unit ? ` ${signal.unit}` : ""}` : null}
+            notStated={notStated}
+          />
+          <Fact label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
+          <Fact label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
+          <Fact label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
+          <Fact label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
+          <Fact
+            label={t("detail.fact.signalDate")}
+            value={formatPosted(signal.spottedAt, locale)}
+            notStated={notStated}
+          />
+        </div>
+      </section>
 
-        {/* What Ponte currently knows: the extracted facts, nothing more. */}
-        <section className="mt-8">
-          <h2 className="text-[13px] font-bold uppercase tracking-[0.4px] text-ink">
-            {t("detail.knownHeading")}
-          </h2>
-          <div className="mt-3 rounded-glass border border-hairline bg-glass px-4">
-            <Fact label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
-            <Fact
-              label={t("detail.fact.quantity")}
-              value={
-                signal.quantity
-                  ? `${signal.quantity}${signal.unit ? ` ${signal.unit}` : ""}`
-                  : null
-              }
-              notStated={notStated}
-            />
-            <Fact label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
-            <Fact label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
-            <Fact label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
-            <Fact label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
-            <Fact
-              label={t("detail.fact.signalDate")}
-              value={formatPosted(signal.spottedAt, locale)}
-              notStated={notStated}
-            />
-          </div>
-        </section>
+      <section className="exsec" aria-label={t("detail.unknownHeading")}>
+        <div className="exsec__h">
+          <h2 className="exsec__t">{t("detail.unknownHeading")}</h2>
+        </div>
+        <ul className="sigunk">
+          {(["u1", "u2", "u3", "u4"] as const).map((k) => (
+            <li key={k}>{t(`detail.unknowns.${k}`)}</li>
+          ))}
+        </ul>
+      </section>
 
-        {/* What Ponte has NOT established. The limits, stated plainly. */}
-        <section className="mt-7">
-          <h2 className="text-[13px] font-bold uppercase tracking-[0.4px] text-ink">
-            {t("detail.unknownHeading")}
-          </h2>
-          <ul className="mt-3 space-y-2">
-            {(["u1", "u2", "u3", "u4"] as const).map((k) => (
-              <li key={k} className="flex items-start gap-2.5 text-[13.5px] text-muted">
-                <span className="mt-0.5 shrink-0 text-muted">
-                  <Icon name="lock" size={14} />
-                </span>
-                {t(`detail.unknowns.${k}`)}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Primary and contextual CTA. Both open the structured investigation
-            request behind the account gate (brief Block D). Neither reveals or
-            contacts the third party behind the signal. The secondary is the
-            same request, role-primed for the side that would respond. */}
-        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+      {/* Both actions open the same structured investigation request behind the
+          account gate. Neither reveals or contacts the third party, and the
+          copy below says so, so nobody reads a click as an introduction. */}
+      <section className="exsec" aria-label={t("detail.actionsHeading")}>
+        <div className="exsec__h">
+          <h2 className="exsec__t">{t("detail.actionsHeading")}</h2>
+        </div>
+        <p className="exsec__d">{t("detail.actionsNote")}</p>
+        <div className="sigacts">
           <InvestigateButton signalId={signal.id} label={t("cta.askPonte")} />
           <InvestigateButton
             signalId={signal.id}
@@ -163,26 +178,55 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
             initialType={signal.side === "requirement" ? "supplier" : "buyer"}
           />
         </div>
-      </div>
-    </div>
+      </section>
+
+      {related.length > 0 && (
+        <section className="exsec" aria-label={te("activity.title")}>
+          <div className="exsec__h">
+            <h2 className="exsec__t">{te("activity.title")}</h2>
+          </div>
+          <RecordList
+            items={related}
+            labels={{ view: te("record.view"), listLabel: te("record.listLabel") }}
+          />
+        </section>
+      )}
+
+      <section className="exdeal" aria-label={te("deal.title")}>
+        <div>
+          <p className="exdeal__t">{te("deal.title")}</p>
+          <p className="exdeal__d">{te("deal.lead")}</p>
+        </div>
+        <Link className="fbtn" href="/structure">
+          {te("deal.cta")}
+        </Link>
+      </section>
+    </>
   );
 }
 
+/**
+ * The signal existed but is no longer public: expired, withdrawn, unavailable
+ * or not approved. A tombstone with no facts, so a stale shared link cannot
+ * resurrect a signal, and a route back into the live market.
+ */
 async function Tombstone() {
   const t = await getTranslations("marketSignals");
+  const te = await getTranslations("explore");
   return (
-    <div className="container-px py-20">
-      <div className="mx-auto max-w-md rounded-glass border border-hairline bg-glass p-10 text-center">
-        <p className="text-[15px] text-muted">{t("detail.tombstone")}</p>
-        <Link
-          href="/market-signals"
-          className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.4px] text-lime hover:opacity-80"
-        >
-          {t("label")}
-          <Icon name="chevron" size={13} />
-        </Link>
+    <header className="exhead">
+      <div className="exhead__eb">
+        <span className="exhead__rule" aria-hidden="true" />
+        <span className="sigkind">{t("detail.eyebrow")}</span>
       </div>
-    </div>
+      <h1 className="exhead__h serif">{t("detail.tombstone")}</h1>
+      <p className="exhead__d">{te("activity.lead")}</p>
+      <p style={{ marginTop: 24 }}>
+        <Link className="fbtn fbtn--secondary" href="/explore">
+          {te("nav.explore")}
+        </Link>
+      </p>
+    </header>
   );
 }
 
@@ -195,6 +239,14 @@ export default async function MarketSignalPage({
   const result = await getMarketSignal(params.id);
 
   if (result.state === "missing") notFound();
-  if (result.state === "gone") return <Tombstone />;
-  return <Detail signal={result.signal} locale={params.locale} />;
+
+  return (
+    <PonteShell locale={params.locale} current="explore">
+      {result.state === "gone" ? (
+        <Tombstone />
+      ) : (
+        <Detail signal={result.signal} locale={params.locale} />
+      )}
+    </PonteShell>
+  );
 }
