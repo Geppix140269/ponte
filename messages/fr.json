@@ -1458,5 +1458,13 @@
       "body": "Quelque chose a interrompu l'envoi. Rien de ce que vous avez touché n'est perdu. Réessayez.",
       "retry": "Réessayer"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Le commerce transfrontalier, avec plus de clarté.",
+    "navLabel": "Pied de page",
+    "about": "À propos",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "contact": "Contact"
   }
 }

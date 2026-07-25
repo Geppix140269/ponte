@@ -1458,5 +1458,13 @@
       "body": "Algo interrompeu o envio. Nada do que tocou se perdeu. Tente novamente.",
       "retry": "Tente novamente"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Comércio transfronteiriço, com mais clareza.",
+    "navLabel": "Rodapé",
+    "about": "Sobre",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "contact": "Contato"
   }
 }

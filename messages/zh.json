@@ -1458,5 +1458,13 @@
       "body": "有情况中断了提交。您点按的内容不会丢失。请重试。",
       "retry": "重试"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade。跨境贸易，更清晰。",
+    "navLabel": "页脚",
+    "about": "关于",
+    "privacy": "隐私",
+    "terms": "条款",
+    "contact": "联系"
   }
 }

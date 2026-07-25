@@ -1,0 +1,74 @@
+/* Public footer, Brand v5 heritage light. Self-contained: it carries its own
+   colours so it reads correctly on any page it is mounted on, and it is
+   box-free by construction (a hairline top rule, no card, no rounded corners). */
+.pfooter {
+  --pf-surface: #fcfbf7;
+  --pf-rule: #e5dfd2;
+  --pf-ink: #0f0f0e;
+  --pf-ink-2: #3a3733;
+  --pf-ink-3: #6e6a61;
+  --pf-gold-ink: #8a6520;
+  --pf-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --pf-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --pf-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+
+  border-top: 1px solid var(--pf-rule);
+  background: var(--pf-surface);
+  color: var(--pf-ink-2);
+  font-family: var(--pf-sans);
+}
+.pfooter__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 40px 36px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 28px;
+}
+.pfooter__who {
+  font-family: var(--pf-serif);
+  font-size: 15px;
+  color: var(--pf-ink);
+  margin: 0;
+}
+.pfooter__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13.5px;
+  margin-left: auto;
+}
+.pfooter__links a {
+  color: var(--pf-ink-2);
+  text-decoration: none;
+  padding-bottom: 1px;
+  transition: color 120ms ease;
+}
+.pfooter__links a:hover {
+  color: var(--pf-gold-ink);
+}
+.pfooter__links span {
+  color: var(--pf-ink-3);
+}
+.pfooter__legal {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  font-family: var(--pf-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--pf-ink-3);
+}
+
+@media (max-width: 640px) {
+  .pfooter__inner {
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 22px 30px;
+  }
+  .pfooter__links {
+    margin-left: 0;
+  }
+}

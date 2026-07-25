@@ -1458,5 +1458,13 @@
       "body": "Qualcosa ha interrotto l'invio. Nulla di ciò che hai toccato è perso. Riprova.",
       "retry": "Riprova"
     }
+  },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Commercio transfrontaliero, con maggiore chiarezza.",
+    "navLabel": "Piè di pagina",
+    "about": "Chi siamo",
+    "privacy": "Privacy",
+    "terms": "Termini",
+    "contact": "Contatti"
   }
 }

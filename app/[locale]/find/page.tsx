@@ -7,6 +7,7 @@ import FindChrome from "@/components/find/FindChrome";
 import QoRow from "@/components/find/QoRow";
 import SignalRow from "@/components/find/SignalRow";
 import HsProductPicker from "@/components/find/HsProductPicker";
+import PonteFooter from "@/components/PonteFooter";
 import { getLiveDeals } from "@/lib/board/live-deals";
 import { searchMarketSignals } from "@/lib/board/market-signals";
 import { parseFindQuery, buildFindHref, matchesFindQuery, type FindQuery } from "@/lib/find/query";
@@ -40,6 +41,7 @@ export default async function FindPage({
       <FindChrome current="opportunities">
         {!q.product ? <Entry /> : <Results q={q} />}
       </FindChrome>
+      <PonteFooter />
     </div>
   );
 }
