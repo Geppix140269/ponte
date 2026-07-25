@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "next-intl": ["./lib/__mocks__/next-intl.ts"],
+      "@/i18n/navigation": ["./lib/__mocks__/i18n-navigation.tsx"],
+      "@/*": ["./*"]
+    }
+  }
+}

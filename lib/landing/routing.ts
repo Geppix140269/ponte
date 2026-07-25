@@ -25,26 +25,37 @@
 
 import type { ExtractedFacts, RouteKey } from "./intent";
 
-const FIND_JOURNEY_ON = process.env.NEXT_PUBLIC_FIND_JOURNEY === "on";
-const STRUCTURE_JOURNEY_ON = process.env.NEXT_PUBLIC_STRUCTURE_JOURNEY === "on";
-const CHECK_JOURNEY_ON = process.env.NEXT_PUBLIC_CHECK_JOURNEY === "on";
-
-const BASE: Record<RouteKey, string> = {
-  find: FIND_JOURNEY_ON ? "/find" : "/marketplace",
-  structure: STRUCTURE_JOURNEY_ON ? "/structure" : "/marketplace/new?type=requirement",
-  // Check & Verify (Journey 3) when its flag is on; else the counterparty
-  // handoff to the existing /verify surface. Turning the flag off restores the
-  // previous behaviour with no other change (the journey's safe-disable).
-  check: CHECK_JOURNEY_ON ? "/check" : "/verify?for=counterparty",
-  investigate: "/market-signals",
-};
+/**
+ * The base path for a route, read from the journey flags. Each
+ * `process.env.NEXT_PUBLIC_*` reference stays a literal member expression so
+ * the Next build still inlines it into the client bundle; reading it per call
+ * (rather than once at module load) changes nothing at runtime and lets the
+ * tests prove both flag states in one process.
+ */
+function baseFor(route: RouteKey): string {
+  switch (route) {
+    case "find":
+      return process.env.NEXT_PUBLIC_FIND_JOURNEY === "on" ? "/find" : "/marketplace";
+    case "structure":
+      return process.env.NEXT_PUBLIC_STRUCTURE_JOURNEY === "on"
+        ? "/structure"
+        : "/marketplace/new?type=requirement";
+    // Check & Verify (Journey 3) when its flag is on; else the counterparty
+    // handoff to the existing /verify surface. Turning the flag off restores the
+    // previous behaviour with no other change (the journey's safe-disable).
+    case "check":
+      return process.env.NEXT_PUBLIC_CHECK_JOURNEY === "on" ? "/check" : "/verify?for=counterparty";
+    case "investigate":
+      return "/market-signals";
+  }
+}
 
 /**
  * Build the locale-relative destination path for a route. The returned path is
  * fed to the next-intl locale-aware router, which prefixes the active locale.
  */
 export function destinationFor(route: RouteKey, facts?: ExtractedFacts): string {
-  const base = BASE[route];
+  const base = baseFor(route);
   const params = new URLSearchParams();
 
   const raw = facts?.raw?.trim();

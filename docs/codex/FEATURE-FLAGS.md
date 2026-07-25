@@ -9,4 +9,6 @@
 
 The flags are evaluated at build time because they are `NEXT_PUBLIC_*` variables. Changing them requires a new deployment.
 
+They govern the gateway's direct bridge-route clicks as well as its interpreted objectives: both resolve through `destinationFor` in `lib/landing/routing.ts`, which is the only place a destination is decided.
+
 Do not describe Find or Structure as live until the production values and deployed routes have been checked directly.
