@@ -228,6 +228,17 @@ export default async function ExplorePage({
                 <h2 className="exsec__t">{t("universe.sectorsTitle")}</h2>
                 <span className="exsec__n">{t("universe.sectorsNote")}</span>
               </div>
+              {/* A sector universe reading zero beside a non-zero product count
+                  has to explain itself. Most public Market Signals carry no HS
+                  code, so no sector can claim them yet; saying so is better
+                  than letting the screen look broken. */}
+              {families.unclassified > 0 && (
+                <p className="exsec__d">
+                  {t("universe.unclassified", {
+                    count: families.unclassified.toLocaleString("en-US"),
+                  })}
+                </p>
+              )}
               <ul className="exuni">
                 {sectors.map(({ sector: cat, counts }) => {
                   const busy = counts.total > 0 && counts.total >= busiest / 2;

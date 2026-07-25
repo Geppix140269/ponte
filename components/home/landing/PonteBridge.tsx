@@ -8,15 +8,18 @@ import type { BridgeRoute } from "@/lib/landing/bridge";
  * section 5.1).
  *
  * The arch and its geometry are the design's own (viewBox 0 0 400 330, from the
- * v1.1 handoff); what changed is the number of routes across it. Two markers
- * sit on the two piers, and the two real entrances are the route buttons
- * beneath the stage, each carrying its number, its name and the supporting line
- * that says what it opens.
+ * v1.1 handoff); what changed is the number of routes across it. The two routes
+ * ARE the bridge's two points: each label sits at its own pier, carrying the
+ * number, the name and the line that says what it opens.
  *
- * The buttons are the accessible controls: real <button> elements, keyboard
+ * There is deliberately no second set of route cards beneath the arch. A bridge
+ * whose endpoints are unlabelled, with the real controls in boxes below it, is
+ * the same decision drawn twice: it says nothing extra and costs the fold.
+ *
+ * The labels are the accessible controls: real <button> elements, keyboard
  * operable, with a text label and supporting text, never colour alone. The SVG
  * is decorative (aria-hidden); its markers are a mouse convenience that mirror
- * the buttons and light with them.
+ * the labels and light with them.
  *
  * A route is an entrance, not a filter: both the marker and the button call
  * `onOpen`, which leaves the landing page at once. The bridge knows nothing
@@ -54,8 +57,31 @@ export default function PonteBridge({
 }) {
   const [hovered, setHovered] = useState<BridgeRoute | null>(null);
 
+  const label = (key: BridgeRoute, num: string) => (
+    <button
+      type="button"
+      className={`rlabel rlabel--${key}${hovered === key ? " hot" : ""}`}
+      data-num={num}
+      onClick={() => onOpen(key)}
+      onMouseEnter={() => setHovered(key)}
+      onMouseLeave={() => setHovered(null)}
+      onFocus={() => setHovered(key)}
+      onBlur={() => setHovered(null)}
+    >
+      <span className="rlabel__n" aria-hidden="true">
+        {num}
+      </span>
+      <span className="rlabel__b">
+        <span className="rlabel__t serif">{labels[key].title}</span>
+        <span className="rlabel__d">{labels[key].support}</span>
+      </span>
+    </button>
+  );
+
   return (
     <div className="gate">
+      {label("explore", "01")}
+
       <div className="gate__stage">
         <svg className="gate__svg" viewBox="0 0 400 330" aria-hidden="true" focusable="false">
           <path className="g-portal" d="M46 300 L46 150 Q46 52 200 52 Q354 52 354 150 L354 300 Z" />
@@ -97,34 +123,7 @@ export default function PonteBridge({
         </div>
       </div>
 
-      <div className="broutes">
-        {ORDER.map(({ key, num }) => (
-          <button
-            key={key}
-            type="button"
-            className={`broute${hovered === key ? " hot" : ""}`}
-            data-num={num}
-            onClick={() => onOpen(key)}
-            onMouseEnter={() => setHovered(key)}
-            onMouseLeave={() => setHovered(null)}
-            onFocus={() => setHovered(key)}
-            onBlur={() => setHovered(null)}
-          >
-            <span className="broute__n" aria-hidden="true">
-              {num}
-            </span>
-            <span className="broute__b">
-              <span className="broute__t serif">{labels[key].title}</span>
-              <span className="broute__d">{labels[key].support}</span>
-            </span>
-            <span className="broute__go" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </span>
-          </button>
-        ))}
-      </div>
+      {label("deal", "02")}
     </div>
   );
 }

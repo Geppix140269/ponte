@@ -26,7 +26,8 @@
       "lead": "What is happening in global physical-goods trade right now: what buyers need, what sellers have, and which services are being asked for.",
       "familiesTitle": "Three families",
       "sectorsTitle": "Product sectors",
-      "sectorsNote": "Sectors with records open"
+      "sectorsNote": "Sectors with records open",
+      "unclassified": "{count} product records are not yet mapped to a sector, so no sector claims them. They are all in the market activity below."
     },
     "families": {
       "products": {

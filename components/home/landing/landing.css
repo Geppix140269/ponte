@@ -151,13 +151,17 @@ body:has(.ponte-landing) {
   gap: 44px;
   align-items: start;
   justify-items: center;
-  max-width: 840px;
+  max-width: 1080px;
   width: 100%;
   margin: 0 auto;
   padding: 32px 44px 52px;
 }
-.ponte-landing .obj {
+/* Only the bridge row uses the full 1080. Everything that is read as prose
+   keeps the original 840 measure, so line length is unchanged. */
+.ponte-landing .obj,
+.ponte-landing .popular {
   width: 100%;
+  max-width: 840px;
 }
 
 /* ---- masthead ---- */
@@ -207,8 +211,8 @@ body:has(.ponte-landing) {
    horizontal scroller: the same records, reachable by hand. */
 .ponte-landing .aband {
   flex-shrink: 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
   background: var(--sunken);
   overflow: hidden;
 }
@@ -217,15 +221,17 @@ body:has(.ponte-landing) {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 6px 16px;
-  padding: 10px 44px 0;
+  padding: 14px 44px 0;
 }
+/* The band is the first evidence that Ponte is a live market, so its title is
+   set as a heading, not as a caption, and carries the gold brand signal. */
 .ponte-landing .aband__t {
   font-family: var(--f-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--gold-ink);
 }
 .ponte-landing .aband__note {
   font-size: 12px;
@@ -264,7 +270,7 @@ body:has(.ponte-landing) {
   align-items: baseline;
   flex-wrap: nowrap;
   gap: 10px;
-  padding: 6px 22px;
+  padding: 8px 26px;
   border-right: 1px solid var(--rule);
   white-space: nowrap;
   font-size: 13px;
@@ -292,7 +298,7 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .aband__p {
   font-family: var(--f-serif);
-  font-size: 16px;
+  font-size: 18px;
   color: var(--ink);
   transition: color var(--dur-1);
 }
@@ -409,19 +415,25 @@ body:has(.ponte-landing) {
   align-items: center;
   width: 100%;
 }
-/* The bridge is now a column: the arch, then the two entrances beneath it.
-   The stage keeps the handoff's aspect ratio and stays the width the geometry
-   was drawn for; the entrances may run wider. */
+/* The two routes are the bridge's two points, so the bridge is a three-column
+   row: label, arch, label. The labels sit at the piers, level with their own
+   markers. No second set of route cards below; the endpoints are the control.
+   A grid rather than absolute positioning, so a longer supporting line reflows
+   instead of colliding with the arch. */
+/* The middle track is sized explicitly rather than by content: the arch is an
+   absolutely-positioned SVG over an aspect-ratio box, so a content-sized track
+   would resolve its width from a child that has none, and collapse to zero. */
 .ponte-landing .gate {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 420px) 1fr;
   align-items: center;
-  width: min(680px, 100%);
+  gap: 0 28px;
+  width: 100%;
 }
 .ponte-landing .gate__stage {
   position: relative;
-  width: min(560px, 100%);
+  width: 100%;
   aspect-ratio: 1 / 0.82;
 }
 .ponte-landing .gate__svg {
@@ -505,99 +517,73 @@ body:has(.ponte-landing) {
   transition: opacity var(--dur-2);
 }
 
-/* ---- the two route entrances, beneath the bridge -------------------------
-   Two routes, so they no longer hang off the piers as bare labels: they are a
-   pair of full-width entrances under the arch, each carrying its number, its
-   name and the line that says what it opens. Real buttons, text labels beside
-   the numbers, and a hover that lights both the button and its marker, so the
-   pairing is visible without relying on colour. */
-.ponte-landing .broutes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  width: 100%;
-  margin-top: 26px;
-}
-.ponte-landing .broute {
+/* ---- the two route labels, at the piers ----------------------------------
+   Unboxed, in the editorial manner of the rest of the page: a mono number, a
+   serif name and one supporting line, set against the arch rather than inside
+   a card. Hovering or focusing a label lights it and its marker together, so
+   the pairing reads without depending on colour. */
+.ponte-landing .rlabel {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding: 18px 20px;
-  text-align: left;
-  background: var(--raised);
-  border: 1px solid var(--rule-strong);
-  border-radius: var(--r-md);
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 244px;
+  padding: 10px 2px;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
   cursor: pointer;
-  transition:
-    border-color var(--dur-1),
-    box-shadow var(--dur-2),
-    transform var(--dur-1);
+  text-align: left;
+  transition: border-color var(--dur-1);
 }
-.ponte-landing .broute:hover,
-.ponte-landing .broute.hot {
-  border-color: var(--gold);
-  box-shadow: var(--e-3);
-  transform: translateY(-1px);
+.ponte-landing .rlabel--explore {
+  justify-self: end;
+  flex-direction: row-reverse;
+  text-align: right;
 }
-.ponte-landing .broute__n {
+.ponte-landing .rlabel--deal {
+  justify-self: start;
+}
+.ponte-landing .rlabel:hover,
+.ponte-landing .rlabel.hot {
+  border-top-color: var(--gold);
+}
+.ponte-landing .rlabel__n {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--rule-strong);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   font-family: var(--f-mono);
   font-size: 11px;
   font-weight: 600;
-  color: var(--ink);
-  transition:
-    background var(--dur-1),
-    border-color var(--dur-1);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding-top: 6px;
+  transition: color var(--dur-1);
 }
-.ponte-landing .broute:hover .broute__n,
-.ponte-landing .broute.hot .broute__n {
-  background: var(--gold);
-  border-color: var(--gold);
+.ponte-landing .rlabel:hover .rlabel__n,
+.ponte-landing .rlabel.hot .rlabel__n {
+  color: var(--gold-ink);
 }
-.ponte-landing .broute__b {
+.ponte-landing .rlabel__b {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
+  gap: 5px;
   min-width: 0;
 }
-.ponte-landing .broute__t {
+.ponte-landing .rlabel__t {
   font-family: var(--f-serif);
-  font-size: clamp(19px, 2.1vw, 24px);
+  font-size: clamp(20px, 2.2vw, 27px);
   font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
   color: var(--ink);
+  transition: color var(--dur-1);
 }
-.ponte-landing .broute__d {
-  font-size: 13.5px;
+.ponte-landing .rlabel:hover .rlabel__t,
+.ponte-landing .rlabel.hot .rlabel__t {
+  color: var(--gold-ink);
+}
+.ponte-landing .rlabel__d {
+  font-size: 13px;
   line-height: 1.45;
   color: var(--ink-2);
-}
-.ponte-landing .broute__go {
-  flex-shrink: 0;
-  color: var(--ink-3);
-  display: inline-flex;
-  transition:
-    color var(--dur-1),
-    transform var(--dur-1);
-}
-.ponte-landing .broute__go svg {
-  width: 20px;
-  height: 20px;
-}
-.ponte-landing .broute:hover .broute__go,
-.ponte-landing .broute.hot .broute__go {
-  color: var(--gold-ink);
-  transform: translateX(3px);
 }
 
 /* ---- popular / recent areas ---- */
@@ -739,20 +725,48 @@ body:has(.ponte-landing) {
   }
   .ponte-landing .gate {
     width: 100%;
+    gap: 0 20px;
   }
   .ponte-landing .gate__stage {
-    width: min(440px, 92%);
+    max-width: 400px;
   }
   .ponte-landing .aband__head {
     padding-left: 32px;
     padding-right: 32px;
   }
 }
-@media (max-width: 760px) {
-  /* Two entrances side by side stop being readable well before the phone
-     breakpoint: they stack, keeping their numbers and supporting lines. */
-  .ponte-landing .broutes {
+@media (max-width: 860px) {
+  /* Below this the arch and two flanking labels stop fitting side by side, so
+     the bridge becomes a column: the arch, then its two endpoints listed under
+     it in order. Still labels, still unboxed, still the same two controls. */
+  .ponte-landing .gate {
     grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0;
+  }
+  .ponte-landing .gate__stage {
+    grid-row: 1;
+    width: min(420px, 100%);
+    max-width: 420px;
+  }
+  .ponte-landing .rlabel {
+    width: 100%;
+    max-width: 420px;
+    justify-self: stretch;
+    flex-direction: row;
+    text-align: left;
+    padding: 16px 2px;
+  }
+  .ponte-landing .rlabel--explore {
+    grid-row: 2;
+    justify-self: center;
+  }
+  .ponte-landing .rlabel--deal {
+    grid-row: 3;
+    justify-self: center;
+  }
+  .ponte-landing .rlabel__n {
+    padding-top: 4px;
   }
 }
 @media (max-width: 640px) {
@@ -781,7 +795,6 @@ body:has(.ponte-landing) {
     gap: 6px;
   }
   .ponte-landing .gate__stage {
-    width: 100%;
     aspect-ratio: 1 / 0.72;
   }
   /* The phone band never animates: it is a scroller the reader drives, so a
@@ -818,10 +831,6 @@ body:has(.ponte-landing) {
     font-size: 8px;
     margin-top: 7px;
   }
-  .ponte-landing .broute {
-    padding: 16px;
-    gap: 12px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -837,13 +846,9 @@ body:has(.ponte-landing) {
   .ponte-landing .gate__ceb,
   .ponte-landing .gate__ct,
   .ponte-landing .gate__ch,
-  .ponte-landing .broute,
-  .ponte-landing .broute__go,
-  .ponte-landing .broute__n {
+  .ponte-landing .rlabel,
+  .ponte-landing .rlabel__t,
+  .ponte-landing .rlabel__n {
     transition: none !important;
-  }
-  .ponte-landing .broute:hover,
-  .ponte-landing .broute.hot {
-    transform: none;
   }
 }

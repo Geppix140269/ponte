@@ -58,10 +58,26 @@ export function sectorCounts<S extends SectorSpan>(
 }
 
 export interface FamilyCounts {
-  /** Records carrying a product classification (an HS chapter). */
+  /**
+   * Product records: everything that is not a service.
+   *
+   * Deliberately NOT "records carrying an HS chapter". Imported Market Signals
+   * have no HS code at all (the importer records `hs_code: null` because the
+   * source has no clean HS column), so counting only chaptered records printed
+   * "Products 0" directly above "Market activity 40" on the same screen. Both
+   * numbers were individually defensible and the pair was nonsense. A record
+   * about a physical good is a product record whether or not anyone has yet
+   * mapped it to a chapter.
+   */
   products: number;
   /** Member service records. */
   services: number;
+  /**
+   * Product records that no sector can claim, because they carry no HS
+   * chapter. Surfaced so a sector universe reading zero next to a non-zero
+   * product count explains itself instead of looking broken.
+   */
+  unclassified: number;
   /**
    * Null, always, in this phase: nothing in the schema classifies a record as a
    * distribution or representation opportunity. Null means "not counted", which
@@ -73,11 +89,16 @@ export interface FamilyCounts {
 export function familyCounts(items: ActivityItem[]): FamilyCounts {
   let products = 0;
   let services = 0;
+  let unclassified = 0;
   for (const item of items) {
-    if (item.kind === "service_requirement") services++;
-    else if (item.chapter) products++;
+    if (item.kind === "service_requirement") {
+      services++;
+      continue;
+    }
+    products++;
+    if (!item.chapter) unclassified++;
   }
-  return { products, services, distribution: null };
+  return { products, services, unclassified, distribution: null };
 }
 
 /** The sectors that actually have records, most active first, for "popular areas". */
@@ -98,9 +119,9 @@ export function busiestSectors<S extends SectorSpan>(
 /** The activity belonging to one family, for a family or sector listing. */
 export function itemsInFamily(items: ActivityItem[], family: FamilyKey): ActivityItem[] {
   if (family === "services") return items.filter((i) => i.kind === "service_requirement");
-  if (family === "products") {
-    return items.filter((i) => i.kind !== "service_requirement" && !!i.chapter);
-  }
+  // Products is every non-service record, chaptered or not, for the same
+  // reason familyCounts counts them that way.
+  if (family === "products") return items.filter((i) => i.kind !== "service_requirement");
   return [];
 }
 

@@ -252,6 +252,23 @@ test("trade services counts member service records only", () => {
   assert.equal(counts.products, 4);
 });
 
+// Imported Market Signals carry no HS code, so a products count that required
+// a chapter printed "Products 0" next to "Market activity 40" on the live
+// preview. A product record is a product record before anyone maps it.
+test("a product record with no HS chapter still counts as a product", () => {
+  const set = mergeActivity([deal({ id: "d1", chapter: null, hsCode: null })], []);
+  const counts = familyCounts(set);
+  assert.equal(counts.products, 1);
+  assert.equal(counts.unclassified, 1);
+  assert.equal(itemsInFamily(set, "products").length, 1);
+});
+
+test("unclassified counts only the products no sector can claim", () => {
+  const counts = familyCounts(items());
+  // d1, d2, d3 and s1 are chaptered; d4 is the service, so none are stranded.
+  assert.equal(counts.unclassified, 0);
+});
+
 test("busiest sectors are the ones with records, most active first", () => {
   const busiest = busiestSectors(items(), SECTORS, 5);
   assert.deepEqual(busiest.map((s) => s.sector.id), [0, 1]);
