@@ -321,7 +321,7 @@ export default function AccountGate({
       {/* The draft stays visible behind this, dimmed. That is deliberate: the
           visitor can see their work is still there while they sign in. */}
       <div
-        className="fixed inset-0 z-[100] flex items-end justify-center bg-obsidian-deep/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+        className="agate fixed inset-0 z-[100] flex items-end justify-center bg-obsidian-deep/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
@@ -331,10 +331,10 @@ export default function AccountGate({
           role="dialog"
           aria-modal="true"
           aria-labelledby="gate-title"
-          className="w-full max-w-[440px] rounded-t-glass border border-hairline bg-surface p-6 shadow-glass sm:rounded-glass sm:p-7"
+          className="agate__panel w-full max-w-[440px] rounded-t-glass border border-hairline bg-surface p-6 shadow-glass sm:rounded-glass sm:p-7"
         >
           <div className="flex items-start justify-between gap-4">
-            <h2 id="gate-title" className="display text-[22px] leading-tight text-ink">
+            <h2 id="gate-title" className="agate__t display text-[22px] leading-tight text-ink">
               {step === "done"
                 ? outcome === "ok"
                   ? t(`done.${context}`)
@@ -351,7 +351,7 @@ export default function AccountGate({
               type="button"
               onClick={onClose}
               aria-label={t("close")}
-              className="-mr-1 -mt-1 rounded-full p-2 text-muted transition-colors hover:text-ink"
+              className="agate__close -mr-1 -mt-1 rounded-full p-2 text-muted transition-colors hover:text-ink"
             >
               <Icon name="close" size={18} />
             </button>
@@ -360,7 +360,7 @@ export default function AccountGate({
           {/* ===== A1: one email field ===== */}
           {step === "email" && (
             <div className="mt-3 space-y-5">
-              <p className="text-[13.5px] leading-relaxed text-muted">
+              <p className="agate__p text-[13.5px] leading-relaxed text-muted">
                 {t(`body.${context}`)}
               </p>
 
@@ -382,7 +382,7 @@ export default function AccountGate({
                 className="space-y-3"
               >
                 <div>
-                  <label htmlFor="gate-email" className="field-label">
+                  <label htmlFor="gate-email" className="agate__l field-label">
                     {tl("emailLabel")}
                   </label>
                   <input
@@ -393,19 +393,19 @@ export default function AccountGate({
                     autoComplete="email"
                     value={otp.email}
                     onChange={(e) => otp.setEmail(e.target.value)}
-                    className="field"
+                    className="agate__i field"
                     placeholder={tl("emailPlaceholder")}
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={otp.status === "sending"}
-                  className="btn-primary w-full disabled:opacity-60"
+                  className="agate__submit btn-primary w-full disabled:opacity-60"
                 >
                   {otp.status === "sending" ? tl("sending") : tl("submit")}
                 </button>
                 {otp.status === "error" && (
-                  <p className="text-[13px] text-coral">{errorCopy}</p>
+                  <p className="agate__err text-[13px] text-coral">{errorCopy}</p>
                 )}
               </form>
             </div>
@@ -414,7 +414,7 @@ export default function AccountGate({
           {/* ===== A2: the code ===== */}
           {step === "code" && (
             <div className="mt-3 space-y-5">
-              <p className="text-[13.5px] leading-relaxed text-muted">
+              <p className="agate__p text-[13.5px] leading-relaxed text-muted">
                 {tl("code.sentTo", { email: otp.email })}
               </p>
 
@@ -437,7 +437,7 @@ export default function AccountGate({
                 <p className="text-[13px] text-muted">{tl("code.verifying")}</p>
               )}
               {otp.status === "error" && (
-                <p className="text-[13px] text-coral">{errorCopy}</p>
+                <p className="agate__err text-[13px] text-coral">{errorCopy}</p>
               )}
 
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -445,7 +445,7 @@ export default function AccountGate({
                   type="button"
                   onClick={() => otp.requestCode(otp.email, true)}
                   disabled={otp.status === "sending" || otp.status === "verifying"}
-                  className="text-[11px] uppercase tracking-label text-lime disabled:opacity-50"
+                  className="agate__link text-[11px] uppercase tracking-label text-lime disabled:opacity-50"
                 >
                   {otp.status === "sending" ? tl("sending") : tl("code.resend")}
                 </button>
@@ -463,11 +463,11 @@ export default function AccountGate({
           {/* ===== A3: exactly two fields ===== */}
           {step === "profile" && (
             <form onSubmit={saveProfile} className="mt-3 space-y-4">
-              <p className="text-[13.5px] leading-relaxed text-muted">
+              <p className="agate__p text-[13.5px] leading-relaxed text-muted">
                 {t("profile.body")}
               </p>
               <div>
-                <label htmlFor="gate-name" className="field-label">
+                <label htmlFor="gate-name" className="agate__l field-label">
                   {t("profile.nameLabel")}
                 </label>
                 <input
@@ -477,11 +477,11 @@ export default function AccountGate({
                   autoComplete="name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="field"
+                  className="agate__i field"
                 />
               </div>
               <div>
-                <label htmlFor="gate-company" className="field-label">
+                <label htmlFor="gate-company" className="agate__l field-label">
                   {t("profile.companyLabel")}
                 </label>
                 <input
@@ -490,18 +490,18 @@ export default function AccountGate({
                   autoComplete="organization"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  className="field"
+                  className="agate__i field"
                 />
               </div>
               <div>
-                <label htmlFor="gate-country" className="field-label">
+                <label htmlFor="gate-country" className="agate__l field-label">
                   {t("profile.countryLabel")}
                 </label>
                 <select
                   id="gate-country"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="field"
+                  className="agate__i field"
                 >
                   <option value="">{t("profile.countryUnset")}</option>
                   {COUNTRIES.map((c) => (
@@ -514,7 +514,7 @@ export default function AccountGate({
               <button
                 type="submit"
                 disabled={saving}
-                className="btn-primary w-full disabled:opacity-60"
+                className="agate__submit btn-primary w-full disabled:opacity-60"
               >
                 {saving ? t("profile.saving") : t("profile.submit")}
               </button>
@@ -542,7 +542,7 @@ export default function AccountGate({
                 </p>
               )}
 
-              {actionError && <p className="text-[13px] text-coral">{actionError}</p>}
+              {actionError && <p className="agate__err text-[13px] text-coral">{actionError}</p>}
 
               <button type="button" onClick={onClose} className="btn-primary w-full">
                 {t("doneCta")}

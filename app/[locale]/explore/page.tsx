@@ -101,7 +101,7 @@ export default async function ExplorePage({
       ? (HS_CATEGORIES.find((c) => c.id === sectorId) ?? null)
       : null;
 
-  const { items, capped } = await getMarketActivity();
+  const { items, capped, total } = await getMarketActivity();
 
   const labels: ActivityLabels = {
     kind: {
@@ -169,7 +169,7 @@ export default async function ExplorePage({
           <p className="exhead__d">{lead}</p>
           <p className="exhead__note">
             {t("countsNote")}
-            {capped ? ` ${t("cappedNote")}` : ""}
+            {capped ? ` ${t("cappedNote", { read: items.length.toLocaleString("en-US"), total: total.toLocaleString("en-US") })}` : ""}
           </p>
         </header>
 
@@ -200,14 +200,17 @@ export default async function ExplorePage({
                 <h2 className="exsec__t">{t("universe.familiesTitle")}</h2>
               </div>
               <div className="exfam">
-                <span className="exfam__i">
+                {/* A link, like its two siblings. It was a span, so one of three
+                    identical-looking cards silently did nothing when clicked. */}
+                <Link className="exfam__i" href="/explore?family=products">
                   <PonteIcon name={MARKET_FAMILIES[0].icon} size={40} className="exfam__ic" />
                   <span className="exfam__t">{t("families.products.title")}</span>
                   <span className="exfam__n">
-                    {t("records", { count: families.products.toLocaleString("en-US") })}
+                    {/* The real total, not the number of rows this page read. */}
+                    {t("records", { count: total.toLocaleString("en-US") })}
                   </span>
                   <span className="exfam__d">{t("families.products.lead")}</span>
-                </span>
+                </Link>
                 <Link className="exfam__i" href="/explore?family=services">
                   <PonteIcon name={MARKET_FAMILIES[1].icon} size={40} className="exfam__ic" />
                   <span className="exfam__t">{t("families.services.title")}</span>

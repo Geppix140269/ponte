@@ -1,3 +1,6 @@
+import { unstable_noStore as noStore } from "next/cache";
+import { createAdminClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/auth";
 import { getLiveDeals } from "./live-deals";
 import { getMarketSignals } from "./market-signals";
 import { mergeActivity, type ActivityItem } from "./activity-logic";
@@ -33,6 +36,17 @@ export interface MarketActivity {
   items: ActivityItem[];
   /** True when a source returned as many rows as the cap allows. */
   capped: boolean;
+  /**
+   * The real number of public records, from a count query rather than from the
+   * length of the capped read.
+   *
+   * Without this the surfaces printed the cap: a market holding thousands of
+   * approved signals reported "300 market records", which reads as the size of
+   * the market rather than the size of one page. Counting is two `head: true`
+   * queries that return no rows at all, so the honest number costs almost
+   * nothing.
+   */
+  total: number;
 }
 
 /**
@@ -42,13 +56,55 @@ export interface MarketActivity {
  * dozen; Explore wants the lot within the cap).
  */
 export async function getMarketActivity(limit?: number): Promise<MarketActivity> {
-  const [deals, signals] = await Promise.all([
+  const [deals, signals, total] = await Promise.all([
     getLiveDeals(ACTIVITY_SOURCE_CAP),
     getMarketSignals(ACTIVITY_SOURCE_CAP),
+    countPublicRecords(),
   ]);
 
+  const capped = deals.length >= ACTIVITY_SOURCE_CAP || signals.length >= ACTIVITY_SOURCE_CAP;
   return {
     items: mergeActivity(deals, signals, limit),
-    capped: deals.length >= ACTIVITY_SOURCE_CAP || signals.length >= ACTIVITY_SOURCE_CAP,
+    capped,
+    // Fall back to what was actually read if the count query is unavailable,
+    // so a failed count never reports a market smaller than the rows in hand.
+    total: total ?? deals.length + signals.length,
   };
+}
+
+/**
+ * How many public records exist, as a number rather than as a page size.
+ *
+ * Two `head: true` counts, which return the count in a header and no rows at
+ * all, so this is cheap enough to run on every entry render. It applies the
+ * same status filters the two readers apply. It cannot apply the per-row
+ * validity and owner-eligibility rules without reading the rows, so the
+ * listings figure is an upper bound on currently-visible member records; the
+ * signals figure is exact, because approval and expiry are both columns.
+ *
+ * Returns null when the database is unreachable, so the caller can fall back
+ * rather than print a zero it cannot justify.
+ */
+async function countPublicRecords(): Promise<number | null> {
+  noStore();
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const sb = createAdminClient();
+    const nowIso = new Date().toISOString();
+
+    const [listings, signals] = await Promise.all([
+      sb.from("listings").select("id", { count: "exact", head: true }).eq("status", "approved"),
+      sb
+        .from("desk_radar")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "approved_signal")
+        .or(`public_expires_at.is.null,public_expires_at.gt.${nowIso}`),
+    ]);
+
+    if (listings.error || signals.error) return null;
+    return (listings.count ?? 0) + (signals.count ?? 0);
+  } catch {
+    return null;
+  }
 }

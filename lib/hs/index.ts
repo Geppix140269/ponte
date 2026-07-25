@@ -134,24 +134,40 @@ export async function listHsChapters(): Promise<HsChapter[]> {
   }
 
   const sb = createAdminClient();
-  // Selected rather than aggregated because PostgREST has no group by. 5,613
-  // rows of two short columns is a small read, and it happens once an hour.
-  const { data, error } = await sb
-    .from("hs_codes")
-    .select("chapter, chapter_title")
-    .eq("is_active", true);
 
-  if (error) {
-    if (isMissingTable(error)) warnOnce("chapters");
-    else console.error("[ponte] hs chapters failed:", error.message);
-    return [];
-  }
-
+  // Selected rather than aggregated because PostgREST has no group by, and
+  // PAGED because PostgREST caps a select at 1,000 rows unless a range is
+  // given. The unpaged read returned the first 1,000 of 5,613 rows, which is
+  // chapters 01-25 plus 29 and nothing else: 26 of 97. Every category above
+  // chapter 29 therefore drew an empty chapter grid in the composer, so no
+  // product could be chosen and Continue stayed disabled for good. Start a
+  // Deal was unusable for most of the catalogue.
   const counts = new Map<string, HsChapter>();
-  for (const row of (data ?? []) as { chapter: string; chapter_title: string }[]) {
-    const existing = counts.get(row.chapter);
-    if (existing) existing.codes++;
-    else counts.set(row.chapter, { chapter: row.chapter, chapter_title: row.chapter_title, codes: 1 });
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from("hs_codes")
+      .select("chapter, chapter_title")
+      .eq("is_active", true)
+      .order("code", { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      if (isMissingTable(error)) warnOnce("chapters");
+      else console.error("[ponte] hs chapters failed:", error.message);
+      return [];
+    }
+
+    const rows = (data ?? []) as { chapter: string; chapter_title: string }[];
+    for (const row of rows) {
+      const existing = counts.get(row.chapter);
+      if (existing) existing.codes++;
+      else counts.set(row.chapter, { chapter: row.chapter, chapter_title: row.chapter_title, codes: 1 });
+    }
+
+    // A short page is the last page. The ordered range also guarantees the
+    // walk terminates rather than re-reading the same window.
+    if (rows.length < PAGE) break;
   }
 
   // Array.from rather than a spread: the project targets a level where

@@ -281,7 +281,7 @@
     "breakdown": "Demand {demand} · Supply {supply} · Signals {signals}",
     "noCount": "Not counted yet",
     "countsNote": "Counts are market records, not verified opportunities.",
-    "cappedNote": "A count is a floor: this view reads the most recent records, not the whole archive.",
+    "cappedNote": "Sector and breakdown figures come from the {read} most recent records, out of {total} public records in total.",
     "universe": {
       "title": "Explore the market",
       "lead": "What is happening in global physical-goods trade right now: what buyers need, what sellers have, and which services are being asked for.",
@@ -1179,7 +1179,8 @@
       "description": "Source a product, supply a product or offer a trade service. Build it by tapping, preview exactly what each party sees, then submit for Ponte review."
     },
     "bar": {
-      "back": "Back"
+      "back": "Back",
+      "home": "Ponte Trade home"
     },
     "trust": "Build and preview freely. Join only when you save or submit.",
     "intent": {
