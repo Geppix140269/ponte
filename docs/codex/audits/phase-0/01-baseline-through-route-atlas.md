@@ -6,7 +6,7 @@ The previous application-code audit was performed against the local checkout at 
 Governing corrections are from [Master Brief section 9](C:/dev/ponte/docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md:721), [section 10](C:/dev/ponte/docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md:908), and [section 13](C:/dev/ponte/docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md:1223).
 
 **1. Executive Summary**
-The repository contains useful infrastructure for intelligent entry, Find, Structure, verification, QO listing review, Market Signal handling, account gating, admin review, credits, Stripe, AI writeups, localisation and CI. It does not yet implement the Master Brief’s core architecture: Commercial Missions, Commercial Developments, Evidence Chains, Prepared Actions, Approval Requests, Executions, Mission Memory or Workspace outcomes as first-class objects.
+The repository contains useful infrastructure for intelligent entry, Find, Structure, verification, QO listing review, Market Signal handling, account gating, admin review, credits, Stripe, AI writeups, localisation and CI. It does not yet implement the Master Brief's core architecture: Commercial Missions, Commercial Developments, Evidence Chains, Prepared Actions, Approval Requests, Executions, Mission Memory or Workspace outcomes as first-class objects.
 
 The most reusable current areas are homepage intent parsing, `AccountGate`, HS search, Find/QO services, Market Signal public/private separation, verification purpose controls, listing publication gates and reviewer surfaces. The highest-risk gaps remain production schema drift, the `profiles.verification_level` type contradiction, Stripe webhook fulfilment non-atomicity, stale legal copy, direct AI calls outside the central wrapper, and missing exact approval/disclosure workflow for controlled introductions.
 
@@ -64,4 +64,3 @@ Key hazards:
 - `T/P`: `T01` is opportunity-specific thread after introduction, `T02` is Ponte Desk/investigation thread, `T03` is deliberate document sharing. All three are missing as governed states. Evidence: [T01-T03 definitions](C:/dev/ponte/docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md:861).
 - `A01-A09`: admin listing, signal, user and verification surfaces partially cover A02-A04 and some A09-like decisions. A01 priority operations, A05 investigation case, A06 introduction blocker, A07 agent/action exception and A08 source/notification failure are incomplete.
 - `SYS`: partial through middleware, no-data/partial-failure patterns, CI and offline route; not consistently governed across all families.
-
