@@ -78,6 +78,16 @@ export default function VoiceSheet({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const finalRef = useRef("");
 
+  // labels and announce are read through refs so that begin()/stop() stay
+  // referentially stable. The parent recreates the labels object on every
+  // render (and announce() itself triggers parent re-renders), so depending on
+  // them directly would tear down and restart recognition mid-listen, so the
+  // microphone would abort the instant it started, and nothing would transcribe.
+  const labelsRef = useRef(labels);
+  labelsRef.current = labels;
+  const announceRef = useRef(announce);
+  announceRef.current = announce;
+
   const stop = useCallback(() => {
     const rec = recognitionRef.current;
     if (rec) {
@@ -97,9 +107,12 @@ export default function VoiceSheet({
     const Recognition = getRecognition();
     if (!Recognition) {
       setPhase("unsupported");
-      announce(labels.unsupported);
+      announceRef.current(labelsRef.current.unsupported);
       return;
     }
+    // A previous recognition may still be tearing down; release it before
+    // starting a new one so rec.start() never throws "already started".
+    stop();
     finalRef.current = "";
     setTranscript("");
     setInterim("");
@@ -113,7 +126,7 @@ export default function VoiceSheet({
 
     rec.onstart = () => {
       setPhase("listening");
-      announce(labels.listening);
+      announceRef.current(labelsRef.current.listening);
     };
     rec.onresult = (event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => {
       let live = "";
@@ -129,15 +142,15 @@ export default function VoiceSheet({
       const err = event?.error;
       if (err === "not-allowed" || err === "service-not-allowed" || err === "audio-capture") {
         setPhase("denied");
-        announce(labels.denied);
+        announceRef.current(labelsRef.current.denied);
       } else if (err === "no-speech") {
         setPhase("nospeech");
-        announce(labels.noSpeech);
+        announceRef.current(labelsRef.current.noSpeech);
       } else if (err === "aborted") {
         // Deliberate stop/close; no state change needed.
       } else {
         setPhase("error");
-        announce(labels.errorLabel);
+        announceRef.current(labelsRef.current.errorLabel);
       }
     };
     rec.onend = () => {
@@ -146,10 +159,10 @@ export default function VoiceSheet({
         if (current === "denied" || current === "nospeech" || current === "error") return current;
         if (text) {
           setTranscript(text);
-          announce(labels.ready);
+          announceRef.current(labelsRef.current.ready);
           return "transcript";
         }
-        announce(labels.noSpeech);
+        announceRef.current(labelsRef.current.noSpeech);
         return "nospeech";
       });
     };
@@ -159,9 +172,9 @@ export default function VoiceSheet({
       rec.start();
     } catch {
       setPhase("error");
-      announce(labels.errorLabel);
+      announceRef.current(labelsRef.current.errorLabel);
     }
-  }, [announce, labels, lang]);
+  }, [lang, stop]);
 
   // Start when opened; release the microphone whenever the sheet closes or the
   // component unmounts (navigation away).

@@ -350,6 +350,29 @@ body:has(.ponte-landing) {
   width: 24px;
   height: 24px;
 }
+.ponte-landing .obj__go.is-busy {
+  cursor: progress;
+  opacity: 0.55;
+  animation: obj-go-pulse 1s ease-in-out infinite;
+}
+@keyframes obj-go-pulse {
+  50% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ponte-landing .obj__go.is-busy {
+    animation: none;
+  }
+}
+/* AI transparency: a plain, muted line under the objective input. */
+.ponte-landing .obj__ai {
+  margin-top: 12px;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
 
 /* ---- route support line + clarification ---- */
 .ponte-landing .obj__support {

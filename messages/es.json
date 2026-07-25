@@ -415,6 +415,9 @@
       "tryAgain": "Reintentar",
       "typeInstead": "Escribir en su lugar",
       "close": "Cerrar"
+    },
+    "ai": {
+      "disclosure": "Ponte usa IA para entender lo que escribes o dices."
     }
   },
   "legal": {

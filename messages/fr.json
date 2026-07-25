@@ -415,6 +415,9 @@
       "tryAgain": "Réessayer",
       "typeInstead": "Saisir plutôt",
       "close": "Fermer"
+    },
+    "ai": {
+      "disclosure": "Ponte utilise l'IA pour comprendre ce que vous écrivez ou dites."
     }
   },
   "legal": {
