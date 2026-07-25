@@ -36,7 +36,24 @@ export async function GET(req: NextRequest) {
   }
 
   const params = req.nextUrl.searchParams;
-  const headers = { "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400" };
+  // The cache key MUST include the query string.
+  //
+  // Netlify's CDN does not vary on query parameters by default: its own
+  // Netlify-Vary header lists only the Next.js internals (__nextDataReq, _rsc).
+  // Without this line every response below shares one cache entry, so whichever
+  // request arrives first is served to all of them for an hour. In production
+  // that entry was `?chapters=1`, so `?q=steel` and `?chapter=17` both returned
+  // the chapter list; the composer read `d.codes` / `d.headings`, found
+  // undefined, and rendered an empty list. No product could be selected by any
+  // path, which left Continue permanently disabled on Start a Deal, and did the
+  // same to the Find product picker and the WCO unit prefill.
+  //
+  // `Netlify-Vary: query` (no list) keys on the whole query string, which is
+  // what an endpoint whose entire answer is determined by its query needs.
+  const headers = {
+    "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+    "netlify-vary": "query",
+  };
 
   if (params.get("chapters") !== null) {
     return NextResponse.json({ chapters: await listHsChapters() }, { headers });
