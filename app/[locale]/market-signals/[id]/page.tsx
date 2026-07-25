@@ -55,9 +55,12 @@ export async function generateMetadata({
 
 function Fact({ label, value, notStated }: { label: string; value: string | null; notStated: string }) {
   return (
+    // Block children, not spans: the shared .qfact__k / .qfact__v rules stack a
+    // label above its value and space them with a margin, which an inline span
+    // silently ignores, running "SIDE" and "Buyer demand" together.
     <div className="qfact">
-      <span className="qfact__k">{label}</span>
-      <span className={`qfact__v${value ? "" : " ns"}`}>{value ?? notStated}</span>
+      <div className="qfact__k">{label}</div>
+      <div className={`qfact__v${value ? "" : " ns"}`}>{value ?? notStated}</div>
     </div>
   );
 }
