@@ -153,6 +153,23 @@ test("the signal route never animates an unconfirmed signal", () => {
   assert.ok(!/@keyframes|animation:/.test(css), "the signal stylesheet animates something");
 });
 
+test("a missing or unreadable signal stays in the Ponte shell", () => {
+  // Found on the PR 38 preview: notFound() fell through to the global 404,
+  // which is still the legacy obsidian page with a btn-gold and a link to the
+  // old Catalogue. A stale signal link dropped the visitor out of the new
+  // product entirely, which is the leak this route was migrated to close.
+  const notFound = "app/[locale]/market-signals/not-found.tsx";
+  assert.ok(existsSync(notFound), "the market-signal segment needs its own not-found boundary");
+  const src = readFileSync(notFound, "utf8");
+  assert.ok(src.includes("PonteShell"), "the not-found page must render the shared shell");
+  // Strip comments first: the file explains which legacy classes it exists to
+  // avoid, and naming one in prose is not shipping it.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*/g, "");
+  for (const legacy of ["btn-gold", "btn-ghost-light", "glass", "/pricing", "text-lime"]) {
+    assert.ok(!code.includes(legacy), `the not-found page carries legacy ${legacy}`);
+  }
+});
+
 test("no product surface introduces a verification asset", () => {
   for (const icon of icons) {
     assert.ok(
