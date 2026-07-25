@@ -415,6 +415,9 @@
       "tryAgain": "Erneut versuchen",
       "typeInstead": "Stattdessen tippen",
       "close": "Schließen"
+    },
+    "ai": {
+      "disclosure": "Ponte nutzt KI, um zu verstehen, was Sie schreiben oder sagen."
     }
   },
   "legal": {

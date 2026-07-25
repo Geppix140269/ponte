@@ -415,6 +415,9 @@
       "tryAgain": "Tentar de novo",
       "typeInstead": "Escrever em alternativa",
       "close": "Fechar"
+    },
+    "ai": {
+      "disclosure": "A Ponte usa IA para entender o que você escreve ou diz."
     }
   },
   "legal": {

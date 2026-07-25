@@ -627,6 +627,9 @@
       "tryAgain": "Try again",
       "typeInstead": "Type instead",
       "close": "Close"
+    },
+    "ai": {
+      "disclosure": "Ponte uses AI to understand what you type or say."
     }
   },
   "legal": {
