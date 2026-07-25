@@ -2,9 +2,29 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 25 July 2026 — Governing implementation authority
+
+**Decision:** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` is the single self-contained governing implementation authority for the current development cycle.
+
+**Why:** It consolidates the product architecture, Brand v5, messaging and copy, route register, experience blueprints, technical boundaries, implementation programme and acceptance suite. It governs conflicts with older material unless a verified live technical or legal constraint is discovered and reported.
+
+## 25 July 2026 — Phase 0 before new implementation
+
+**Decision:** Codex must complete the repository-to-architecture gap report defined in section 13 of the governing brief before implementing new product behaviour.
+
+**Why:** The repository already contains substantial Journey 1 and Journey 2 work, but the programme sequence, deployment state, feature flags, schema state and newer agentic architecture are not yet fully reconciled.
+
+## 25 July 2026 — Phase 1 direction
+
+**Decision:** After Phase 0 and Giuseppe's approval, the governing programme's next target is the smallest truthful agentic vertical slice:
+
+> Mission setup → meaningful Commercial Development → evidence chain → recommended action → prepared response or investigation → exact preview → human approval → recorded Workspace outcome
+
+**Why:** This is the first complete proof of Ponte as a commercial intelligence and controlled-execution layer rather than a marketplace surface.
+
 ## 25 July 2026 — Codex handover model
 
-**Decision:** The repository, not a chat transcript, is the operating memory for future agents. Codex receives `AGENTS.md`, an authority manifest, reconciled status, flags, database guardrails, roadmap and versioned ExecPlans.
+**Decision:** The repository, not a chat transcript, is the operating memory for future agents. Codex receives `AGENTS.md`, the governing authority, reconciled status, flags, database guardrails, roadmap and versioned ExecPlans.
 
 **Why:** Code was ahead of the visible site and knowledge was fragmented across chats, File Library documents, PR descriptions and stale repository notes.
 
