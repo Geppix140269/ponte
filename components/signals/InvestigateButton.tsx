@@ -116,27 +116,24 @@ export default function InvestigateButton({
 
   if (status === "sent") {
     return (
-      <span className="inline-flex items-center justify-center gap-2 rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink">
-        <Icon name="check" size={16} /> {t("investigate.received")}
-      </span>
+      <span className="sigsheet__done">{t("investigate.received")}</span>
     );
   }
 
-  const triggerClass =
-    variant === "primary"
-      ? "inline-flex items-center justify-center gap-2 rounded-[15px] bg-lime px-6 py-[15px] text-[15px] font-bold text-obsidian shadow-lime transition-transform hover:-translate-y-px"
-      : "inline-flex items-center justify-center rounded-[15px] border border-hairline-strong bg-white/[0.06] px-6 py-[15px] text-[15px] font-bold text-ink transition-colors hover:bg-white/10";
+  // The shared button, not a local imitation of it. `fbtn` and `fbtn--secondary`
+  // are the public design system's buttons, so this control cannot drift away
+  // from the pages it sits on.
+  const triggerClass = variant === "primary" ? "fbtn" : "fbtn fbtn--secondary";
 
   return (
     <>
       <button type="button" onClick={() => setFormOpen(true)} className={triggerClass}>
         {label}
-        {variant === "primary" && <Icon name="chevron" size={16} />}
       </button>
 
       {formOpen && (
         <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-obsidian-deep/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+          className="sigsheet"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setFormOpen(false);
           }}
@@ -146,30 +143,26 @@ export default function InvestigateButton({
             role="dialog"
             aria-modal="true"
             aria-label={t("cta.askPonte")}
-            className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-glass border border-hairline bg-surface p-6 text-left shadow-glass sm:rounded-glass sm:p-7"
+            className="sigsheet__panel"
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="sigsheet__head">
               <div>
-                <h2 className="display text-[20px] leading-tight text-ink">
-                  {t("cta.askPonte")}
-                </h2>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-muted">
-                  {t("investigate.intro")}
-                </p>
+                <h2 className="sigsheet__t serif">{t("cta.askPonte")}</h2>
+                <p className="sigsheet__intro">{t("investigate.intro")}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setFormOpen(false)}
                 aria-label={t("investigate.close")}
-                className="-mr-1 -mt-1 rounded-full p-2 text-muted transition-colors hover:text-ink"
+                className="sigsheet__close"
               >
                 <Icon name="close" size={18} />
               </button>
             </div>
 
-            <div className="mt-4 space-y-3.5">
+            <div className="sigsheet__fields">
               <div>
-                <label htmlFor="inv-business" className="field-label">
+                <label htmlFor="inv-business" className="sigsheet__l">
                   {t("investigate.businessLabel")}
                 </label>
                 <input
@@ -178,13 +171,13 @@ export default function InvestigateButton({
                   required
                   value={form.requesting_business}
                   onChange={(e) => set({ requesting_business: e.target.value })}
-                  className="field"
+                  className="sigsheet__i"
                   placeholder={t("investigate.businessPlaceholder")}
                 />
               </div>
 
               <div>
-                <label htmlFor="inv-type" className="field-label">
+                <label htmlFor="inv-type" className="sigsheet__l">
                   {t("investigate.typeLabel")}
                 </label>
                 <select
@@ -194,7 +187,7 @@ export default function InvestigateButton({
                   onChange={(e) =>
                     set({ requester_type: (e.target.value || null) as InvestigationRequest["requester_type"] })
                   }
-                  className="field"
+                  className="sigsheet__i"
                 >
                   <option value="">{t("investigate.typeSelect")}</option>
                   {REQUESTER_TYPES.map((rt) => (
@@ -206,7 +199,7 @@ export default function InvestigateButton({
               </div>
 
               <div>
-                <label htmlFor="inv-goal" className="field-label">
+                <label htmlFor="inv-goal" className="sigsheet__l">
                   {t("investigate.goalLabel")}
                 </label>
                 <textarea
@@ -215,58 +208,58 @@ export default function InvestigateButton({
                   rows={3}
                   value={form.establish_goal}
                   onChange={(e) => set({ establish_goal: e.target.value })}
-                  className="field resize-none"
+                  className="sigsheet__i sigsheet__i--area"
                   placeholder={t("investigate.goalPlaceholder")}
                 />
               </div>
 
               <div>
-                <label htmlFor="inv-indicative" className="field-label">
+                <label htmlFor="inv-indicative" className="sigsheet__l">
                   {t("investigate.indicativeLabel")}
-                  <span className="ml-1 text-muted">{t("investigate.optional")}</span>
+                  <span className="sigsheet__opt">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-indicative"
                   value={form.indicative}
                   onChange={(e) => set({ indicative: e.target.value })}
-                  className="field"
+                  className="sigsheet__i"
                   placeholder={t("investigate.indicativePlaceholder")}
                 />
               </div>
 
               <div>
-                <label htmlFor="inv-geography" className="field-label">
-                  {t("investigate.geographyLabel")} <span className="ml-1 text-muted">{t("investigate.optional")}</span>
+                <label htmlFor="inv-geography" className="sigsheet__l">
+                  {t("investigate.geographyLabel")} <span className="sigsheet__opt">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-geography"
                   value={form.geography}
                   onChange={(e) => set({ geography: e.target.value })}
-                  className="field"
+                  className="sigsheet__i"
                   placeholder={t("investigate.geographyPlaceholder")}
                 />
               </div>
 
               <div>
-                <label htmlFor="inv-evidence" className="field-label">
+                <label htmlFor="inv-evidence" className="sigsheet__l">
                   {t("investigate.evidenceLabel")}
-                  <span className="ml-1 text-muted">{t("investigate.optional")}</span>
+                  <span className="sigsheet__opt">{t("investigate.optional")}</span>
                 </label>
                 <input
                   id="inv-evidence"
                   value={form.evidence}
                   onChange={(e) => set({ evidence: e.target.value })}
-                  className="field"
+                  className="sigsheet__i"
                   placeholder={t("investigate.evidencePlaceholder")}
                 />
               </div>
 
-              <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-slate">
+              <label className="sigsheet__check">
                 <input
                   type="checkbox"
                   checked={form.wants_intro}
                   onChange={(e) => set({ wants_intro: e.target.checked })}
-                  className="mt-0.5"
+
                 />
                 {t("investigate.introCheckbox")}
               </label>
@@ -275,12 +268,12 @@ export default function InvestigateButton({
             <button
               type="submit"
               disabled={!ready || status === "sending"}
-              className="btn-primary mt-5 w-full disabled:opacity-60"
+              className="fbtn fbtn--block sigsheet__submit"
             >
               {status === "sending" ? t("investigate.sending") : t("investigate.submit")}
             </button>
             {status === "error" && (
-              <p className="mt-2 text-[13px] text-coral">{t("investigate.error")}</p>
+              <p className="sigsheet__err">{t("investigate.error")}</p>
             )}
           </form>
         </div>

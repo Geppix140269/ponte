@@ -12,9 +12,6 @@
  */
 
 export type LandingEvent =
-  | "voice_started"
-  | "voice_denied"
-  | "voice_unavailable"
   | "text_started"
   | "intent_submitted"
   | "route_suggested"
@@ -23,8 +20,12 @@ export type LandingEvent =
   | "auth_boundary_reached";
 
 export interface LandingEventMeta {
-  /** One of the four routes, never free text. */
-  route?: "find" | "structure" | "check" | "investigate";
+  /**
+   * A bridge route ("explore" / "deal") or a search-interpreted route, never
+   * free text. The voice events are gone with the voice control the North Star
+   * removed from the landing (section 5.2).
+   */
+  route?: "explore" | "deal" | "find" | "structure" | "check" | "investigate";
   /** Coarse category only, never a raw objective. */
   category?: string;
 }

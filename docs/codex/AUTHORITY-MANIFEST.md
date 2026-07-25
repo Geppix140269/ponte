@@ -4,7 +4,8 @@ The governing authority is now present in the repository. It is the required sou
 
 | Priority | Target path | Source title | Status |
 |---:|---|---|---|
-| 0 | `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` | Ponte Trade Master Implementation Brief v1 | **Imported and byte-verified on 25 July 2026** |
+| 0 | `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` | Ponte Trade North Star Reset, entry architecture | **Current authority for the entry experience, 25 July 2026.** Supersedes all earlier landing, gateway and primary-entry instructions in every document below. |
+| 0 | `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` | Ponte Trade Master Implementation Brief v1 | **Imported and byte-verified on 25 July 2026.** Governs everything downstream of entry that the North Star does not restate. |
 | 1 | `docs/ponte-authority/01-MASTER-PRODUCT-ARCHITECTURE-V3.md` | Master Product, Experience and Agentic Architecture v3 | Optional supporting import |
 | 2 | `docs/ponte-authority/02-FINAL-BRAND-SYSTEM.md` | Final Brand System and Product-Design Handoff / Brand Book v5 authority | Optional supporting import |
 | 3 | `docs/ponte-authority/03-MESSAGING-AND-SCREEN-COPY.md` | Messaging and Screen Copy Pack | Optional supporting import |

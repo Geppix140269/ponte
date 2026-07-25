@@ -4,7 +4,8 @@
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Canonical commit inspected:** `9fa0aa63d82cdaa3f34251e8ca526677647680ff`  
-**Governing authority:** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+**Governing authority (entry experience):** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
+**Governing authority (everything downstream of entry):** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
 
 ## Status vocabulary
 
@@ -27,7 +28,10 @@ Code on `main` is not automatically deployed, enabled or production-verified.
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Founding-launch integrity Blocks A-F | On `main` | Production database changes recorded as applied; deployed state needs direct confirmation | Separates Market Signals and Qualified Opportunities, purpose-binds business verification, strengthens publication gates, controlled introductions and founding lifecycle. |
-| “What’s your deal?” intelligent gateway | On `main` | Deployment must be checked directly | Cream/ink/gold entry, voice/type input, deterministic intent extraction and four real route handoffs. The four bridge routes are direct entrances: a click on a route label or its bridge marker navigates immediately to that route's destination (`destinationFor`), with no objective, product, company or Continue step first. |
+| “What’s your deal?” intelligent gateway (four routes) | On `main`, superseded | Deployment must be checked directly | Cream/ink/gold entry, voice/type input, deterministic intent extraction and four direct route handoffs. Superseded by the North Star entry architecture; retained on `main` until PR 1 is reviewed and merged. |
+| North Star entrance: two routes, activity band, search, popular areas, trust | Implemented on branch (PR 1), not merged | Not deployed | Two bridge routes (Explore the market, Start a deal) navigating directly; the voice control and `VoiceSheet` removed; a recent market activity band from real public records; search below the bridge; popular areas from real sector counts; trust and evidence copy. Search still resolves the older four-route vocabulary through `destinationFor`. |
+| Explore the market shell | Implemented on branch (PR 1), not merged | Not deployed | `/explore`: three families (Products, Trade services, Distribution and representation), the approved HS sectors as containers with real record counts, one level of sector market activity, a no-JavaScript search, and a Start a related deal action. No account required. Chapter/subcategory drill-down, filters and pagination are PR 2 and PR 3. |
+| Unified market-activity read | Implemented on branch (PR 1), not merged | Not deployed | `lib/board/activity-logic.ts`, `activity-view.ts` and `market-activity.ts` merge the two existing rule-filtered public readers into one truthfully classified stream, under a source cap of 300 records per read. `Reviewed Opportunity` and `Distribution Opportunity` are not asserted: no current field proves them. |
 | Journey 1 — Find | On `main` | Feature-flag and live-route status unconfirmed | `/find`, product drill-down, separate Qualified Opportunity and Market Signal lanes, Qualified Opportunity detail and controlled-introduction request. |
 | Journey 2 — Structure & Submit | On `main` | Feature-flag and live-route status unconfirmed | `/structure`, S01-S06 composer, facts/gaps, progressive completion, public/private/reviewer preview, account gate and submit. |
 | Workspace H04 | On `main` | Live behaviour unconfirmed | Reused by Journey 1/2. The broader agentic Workspace required by the governing architecture is not complete. |
@@ -82,6 +86,20 @@ The following must be resolved before claiming the current application is fully 
 5. Direct exercise of the gateway, `/find`, `/structure`, account resumption and submission/introduction paths.
 6. Current production schema versus repository migration ledger.
 
+## Data-quality limitations recorded with PR 1
+
+- Market activity is read under a cap of 300 records per source per request
+  (`ACTIVITY_SOURCE_CAP`). Where a source saturates the cap, every count derived
+  from it is a floor, and the surface says so rather than implying a total.
+- `desk_radar` carries no service or distribution classification, so Trade
+  services counts member service records only, and Distribution and
+  representation carries no count at all rather than an invented zero.
+- A member listing with no board reference gets no detail link rather than a
+  broken one.
+
 ## Immediate next action
 
-Complete the Phase 0 Codex audit defined in `ACTIVE-MILESTONE.md`. Do not implement Phase 1 until Giuseppe reviews and approves the report.
+Review PR 1 (North Star landing and entry shell). It is open for owner review
+and must not be merged before Giuseppe approves it. The remaining North Star
+phases (Explore drill-down, market activity presentation, Start a Deal
+refinement) follow as separate pull requests, each stopping before merge.

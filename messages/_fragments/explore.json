@@ -1,0 +1,77 @@
+{
+  "explore": {
+    "meta": {
+      "title": "Explore the market",
+      "description": "See current demand, supply, services and commercial activity in global physical-goods trade. No account needed to look."
+    },
+    "nav": {
+      "home": "Ponte Trade home",
+      "explore": "Explore the market",
+      "deal": "Start a deal"
+    },
+    "trust": "Public market activity. Look freely; join only when an action needs to be saved or sent.",
+    "crumb": {
+      "label": "Breadcrumb",
+      "home": "Ponte",
+      "explore": "Explore"
+    },
+    "eyebrow": "Explore the market",
+    "records": "{count} market records",
+    "breakdown": "Demand {demand} · Supply {supply} · Signals {signals}",
+    "noCount": "Not counted yet",
+    "countsNote": "Counts are market records, not verified opportunities.",
+    "cappedNote": "A count is a floor: this view reads the most recent records, not the whole archive.",
+    "universe": {
+      "title": "Explore the market",
+      "lead": "What is happening in global physical-goods trade right now: what buyers need, what sellers have, and which services are being asked for.",
+      "familiesTitle": "Three families",
+      "sectorsTitle": "Product sectors",
+      "sectorsNote": "Sectors with records open",
+      "unclassified": "{count} product records are not yet mapped to a sector, so no sector claims them. They are all in the market activity below."
+    },
+    "families": {
+      "products": {
+        "title": "Products",
+        "lead": "Goods, by sector, using the Ponte product catalogue.",
+        "empty": "No product records are public in this view yet."
+      },
+      "services": {
+        "title": "Trade services",
+        "lead": "Freight, customs, inspection, finance and other trade-enabling services members are asking for.",
+        "empty": "No service records are public in this view yet."
+      },
+      "distribution": {
+        "title": "Distribution and representation",
+        "lead": "Distributors, agents, representation and route-to-market partners.",
+        "empty": "Ponte does not classify records as distribution or representation yet, so there is nothing honest to count here. If this is what you need, start a deal and describe it; it is the fastest way to put it in front of the market."
+      }
+    },
+    "sector": {
+      "lead": "Recent market activity in this sector ({range}), across demand, supply, services and unconfirmed Market Signals."
+    },
+    "results": {
+      "title": "Results for {query}",
+      "lead": "Records whose product or geography matches what you searched."
+    },
+    "search": {
+      "label": "Search the market",
+      "placeholder": "Search products, markets, companies or services",
+      "go": "Search"
+    },
+    "activity": {
+      "title": "Market activity",
+      "lead": "Every record shows what it actually is. A Market Signal is an indication Ponte has seen and has not confirmed.",
+      "empty": "Nothing is public here yet. That is a gap in the market Ponte can see, not the end of the road: describe what you need and it becomes the first record here.",
+      "more": "Showing the {shown} most recent. Deeper browsing arrives with the sector drill-down."
+    },
+    "record": {
+      "view": "View",
+      "listLabel": "Market records"
+    },
+    "deal": {
+      "title": "Start a related deal",
+      "lead": "Source a product, supply a product or offer a trade service. Build and preview it before joining.",
+      "cta": "Start a deal"
+    }
+  }
+}

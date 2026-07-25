@@ -1,0 +1,231 @@
+/* ======================================================================
+   Market Signal surfaces, in the shared public design system.
+
+   Scoped under .ponte-find like every other public page below the landing, so
+   the tokens, type scale and measure are the shared ones and not a local
+   imitation of them. Only what the signal pages add lives here; the facts
+   grid, buttons, headers and crumbs are the shared classes.
+
+   The rule that shapes this file: the unverified status is typography and
+   words, never a colour. A reader with no colour vision, or a printed page,
+   must get exactly the same warning.
+   ====================================================================== */
+
+/* The classification, set as the eyebrow. Not a badge, not a pill: a Market
+   Signal is not a status to be decorated, it is what the record IS. */
+.ponte-find .sigkind {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* The unverified statement, beside the title. A dashed rule, because the same
+   dashed border marks a Market Signal in the activity band and the record
+   lists: one visual language for "Ponte has not confirmed this". */
+.ponte-find .sigunv {
+  margin-top: 18px;
+  max-width: 660px;
+  border-left: 2px dashed var(--rule-strong);
+  padding: 4px 0 4px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.ponte-find .sigunv b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* What Ponte has not established. A list of limits, each on its own rule, so
+   the gaps read as facts rather than as small print. */
+.ponte-find .sigunk {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-width: 660px;
+}
+.ponte-find .sigunk li {
+  padding: 14px 0 14px 22px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  position: relative;
+}
+.ponte-find .sigunk li::before {
+  content: "?";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.ponte-find .sigacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+/* The board's own grid of signal rows, using the shared record presentation. */
+.ponte-find .sigboard {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+@media (max-width: 640px) {
+  .ponte-find .sigacts {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ---- the investigation request sheet -------------------------------------
+   The one action on a signal that spends Ponte's resources and discloses the
+   visitor, so it is a deliberate dialog rather than an inline form. It used to
+   be an obsidian sheet with a lime submit button sitting over a cream page;
+   it now uses the shared tokens and the shared buttons. */
+.ponte-find .sigsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 15, 14, 0.42);
+  padding: 0;
+}
+.ponte-find .sigsheet__panel {
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-bottom: 0;
+  padding: 24px 22px 28px;
+  text-align: left;
+}
+.ponte-find .sigsheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ponte-find .sigsheet__t {
+  font-family: var(--f-serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.ponte-find .sigsheet__intro {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.ponte-find .sigsheet__close {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  padding: 4px;
+  cursor: pointer;
+}
+.ponte-find .sigsheet__close:hover {
+  color: var(--ink);
+}
+.ponte-find .sigsheet__fields {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ponte-find .sigsheet__l {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+.ponte-find .sigsheet__opt {
+  margin-left: 6px;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+  text-transform: none;
+  font-weight: 500;
+}
+.ponte-find .sigsheet__i {
+  width: 100%;
+  border: 0;
+  border-bottom: 1.5px solid var(--rule-strong);
+  border-radius: 0;
+  background: none;
+  padding: 8px 2px;
+  font-family: var(--f-sans);
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+}
+.ponte-find .sigsheet__i:focus {
+  border-bottom-color: var(--focus);
+}
+.ponte-find .sigsheet__i::placeholder {
+  color: var(--mute);
+}
+.ponte-find .sigsheet__i--area {
+  resize: none;
+  line-height: 1.5;
+}
+.ponte-find .sigsheet__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.ponte-find .sigsheet__submit {
+  margin-top: 22px;
+}
+.ponte-find .sigsheet__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ponte-find .sigsheet__err {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--neg);
+}
+/* The sent state: a plain statement, not a button that looks pressable. */
+.ponte-find .sigsheet__done {
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 20px;
+  border: 1px dashed var(--rule-strong);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+@media (min-width: 640px) {
+  .ponte-find .sigsheet {
+    align-items: center;
+    padding: 24px;
+  }
+  .ponte-find .sigsheet__panel {
+    border-bottom: 1px solid var(--rule-strong);
+    border-radius: var(--r-md);
+    padding: 28px;
+  }
+}
