@@ -221,6 +221,20 @@ export default function CheckComposer({ cost }: { cost: number }) {
     void runCheck();
   };
 
+  // Closing the gate without completing sign-in must not strand the visitor
+  // on the K06 spinner: startRun() already pushed "running" before the 401
+  // response opened the gate, and the back button is deliberately hidden on
+  // that step. Step back to the preview and clear the pending run so "Run the
+  // checks" works again.
+  const closeGate = useCallback(() => {
+    setGateOpen(false);
+    if (pending.current) {
+      pending.current = false;
+      replace("preview");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onGateComplete = useCallback(async () => {
     if (ran.current) return;
     ran.current = true;
@@ -345,7 +359,12 @@ export default function CheckComposer({ cost }: { cost: number }) {
             receipt={receipt}
             status={receiptStatus}
             purpose={purpose}
-            onWorkspace={() => router.push("/workspace")}
+            // The check is already saved server-side the moment it ran; there is
+            // no separate save/attach action to perform here. member_business
+            // sends the member to /account, where their verification status
+            // actually appears; counterparty_check has no dedicated view yet, so
+            // it returns to the general workspace rather than claiming one.
+            onDone={() => router.push(purpose === "member_business" ? "/account" : "/workspace")}
           />
         )}
 
@@ -358,7 +377,7 @@ export default function CheckComposer({ cost }: { cost: number }) {
         )}
       </div>
 
-      <AccountGate open={gateOpen} context="verify" onClose={() => setGateOpen(false)} onComplete={onGateComplete} />
+      <AccountGate open={gateOpen} context="verify" onClose={closeGate} onComplete={onGateComplete} />
     </div>
   );
 }
@@ -514,8 +533,8 @@ function PurposeStep({ purpose, onPick }: { purpose: Purpose | null; onPick: (p:
         >
           <span className="vopt__t">Verify my business</span>
           <span className="vopt__d">
-            This is the business you represent. A pass can raise your own status and feed your Business
-            Passport. You will confirm you represent it.
+            This is the business you represent. A pass can raise your own status, shown on your account.
+            You will confirm you represent it.
           </span>
         </button>
         <button
@@ -561,7 +580,7 @@ function PreviewStep({
       <h1 className="fphead__h serif">Before anything runs</h1>
       <p className="vsub">
         {isMember
-          ? "This verifies the business you represent. A pass can raise your status and feed your Business Passport."
+          ? "This verifies the business you represent. A pass can raise your status, shown on your account."
           : "This is private to you. It never affects your status or the counterparty's."}
       </p>
 
@@ -656,12 +675,12 @@ function ReceiptStep({
   receipt,
   status,
   purpose,
-  onWorkspace,
+  onDone,
 }: {
   receipt: EvidenceReceipt;
   status: string;
   purpose: Purpose | null;
-  onWorkspace: () => void;
+  onDone: () => void;
 }) {
   const isMember = purpose === "member_business";
   return (
@@ -703,11 +722,11 @@ function ReceiptStep({
       </ul>
 
       <div className="vactions">
-        <button className="fbtn fbtn--lg" onClick={onWorkspace}>
-          {isMember ? "Save to my Business Passport" : "Attach to an opportunity"}
+        <button className="fbtn fbtn--lg" onClick={onDone}>
+          {isMember ? "View my account" : "Back to my workspace"}
         </button>
         <button className="fbtn fbtn--ghost" onClick={() => window.print()}>
-          Download dated receipt
+          Print or save as PDF
         </button>
       </div>
     </section>

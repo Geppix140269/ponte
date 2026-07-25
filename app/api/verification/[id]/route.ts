@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReceipt } from "@/lib/check/receipt";
 import type { VerificationCase } from "@/lib/verification/decision-notes";
@@ -18,10 +19,15 @@ export const dynamic = "force-dynamic";
  * member's user_id, so a case belonging to somebody else returns the same 404
  * as a missing one.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: "Please sign in." }, { status: 401 });
+  }
+
+  const ip = getClientIp(req);
+  if (!checkRateLimit(`verify-receipt:${user.id}:${ip}`, 60, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
 
   const id = (params.id ?? "").trim();
