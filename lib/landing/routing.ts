@@ -27,11 +27,15 @@ import type { ExtractedFacts, RouteKey } from "./intent";
 
 const FIND_JOURNEY_ON = process.env.NEXT_PUBLIC_FIND_JOURNEY === "on";
 const STRUCTURE_JOURNEY_ON = process.env.NEXT_PUBLIC_STRUCTURE_JOURNEY === "on";
+const CHECK_JOURNEY_ON = process.env.NEXT_PUBLIC_CHECK_JOURNEY === "on";
 
 const BASE: Record<RouteKey, string> = {
   find: FIND_JOURNEY_ON ? "/find" : "/marketplace",
   structure: STRUCTURE_JOURNEY_ON ? "/structure" : "/marketplace/new?type=requirement",
-  check: "/verify?for=counterparty",
+  // Check & Verify (Journey 3) when its flag is on; else the counterparty
+  // handoff to the existing /verify surface. Turning the flag off restores the
+  // previous behaviour with no other change (the journey's safe-disable).
+  check: CHECK_JOURNEY_ON ? "/check" : "/verify?for=counterparty",
   investigate: "/market-signals",
 };
 

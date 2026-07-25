@@ -1,0 +1,413 @@
+/* Check & Verify (Journey 3), scoped under .ponte-find so it inherits the Brand
+   v5 heritage-light tokens that find.css defines. Box-free by rule: rule rows,
+   ledgers and fine lines, never rounded cards. The only rounded things are the
+   pills/chips and the focus ring, inherited from find.css. */
+
+/* ---- top bar ---- */
+.ponte-find .vbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px var(--gutter, 40px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vbar__back {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--ink-2);
+  display: inline-flex;
+  padding: 4px;
+}
+.ponte-find .vbar__title {
+  font-family: var(--f-serif);
+  font-size: 18px;
+  color: var(--ink);
+}
+.ponte-find .vbar__step {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+
+/* ---- layout ---- */
+.ponte-find .vmain {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px var(--gutter, 40px) 64px;
+}
+.ponte-find .vstep {
+  padding-top: 8px;
+}
+.ponte-find .vsub {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 60ch;
+  margin: 0 0 20px;
+}
+
+/* ---- K01 free-text company field (the one allowed typed input) ---- */
+.ponte-find .vfield {
+  width: 100%;
+  border: 0;
+  border-bottom: 1.5px solid var(--ink);
+  background: none;
+  outline: none;
+  font-family: var(--f-serif);
+  font-size: clamp(20px, 2.4vw, 26px);
+  color: var(--ink);
+  padding: 6px 0 10px;
+}
+.ponte-find .vfield::placeholder {
+  color: var(--mute);
+}
+.ponte-find .vfieldrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+/* ---- searchable country picker (K01) ---- */
+.ponte-find .vcp {
+  position: relative;
+  max-width: 420px;
+}
+.ponte-find .vcp__input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  background: none;
+  outline: none;
+  font-family: var(--f-sans);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 8px 0;
+}
+.ponte-find .vcp__input::placeholder {
+  color: var(--mute);
+}
+.ponte-find .vcp__input:focus {
+  border-bottom-color: var(--ink);
+}
+/* A plain suggestion list, not a floating card: hairline border, square
+   corners, a quiet lift so it reads above the page without a rounded panel. */
+.ponte-find .vcp__list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 1px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 264px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 10px 24px -18px rgba(15, 15, 14, 0.4);
+}
+.ponte-find .vcp__opt {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.ponte-find .vcp__list li:first-child .vcp__opt {
+  border-top: 0;
+}
+.ponte-find .vcp__opt.is-active {
+  background: var(--sunken);
+  color: var(--ink);
+}
+.ponte-find .vcp__code {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--gold-ink);
+  width: 24px;
+  flex: none;
+}
+.ponte-find .vcp__empty {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ---- tap options (K03 purpose) ---- */
+.ponte-find .vopts {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 4px;
+}
+.ponte-find .vopt {
+  position: relative;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+  padding: 20px 0 20px 16px;
+}
+.ponte-find .vopt:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vopt[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  background: var(--gold);
+}
+.ponte-find .vopt__t {
+  display: block;
+  font-family: var(--f-serif);
+  font-size: 20px;
+  color: var(--ink);
+}
+.ponte-find .vopt[aria-pressed="true"] .vopt__t {
+  color: var(--gold-ink);
+}
+.ponte-find .vopt__d {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  max-width: 54ch;
+}
+
+/* ---- candidate rows (K02) ---- */
+.ponte-find .vcand {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+  padding: 16px 4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--ink);
+}
+.ponte-find .vcand:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vcand:hover .vcand__n {
+  color: var(--gold-ink);
+}
+.ponte-find .vcand__n {
+  font-size: 15px;
+}
+.ponte-find .vcand__m {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* ---- ledger (previews + receipt) ---- */
+.ponte-find .vledger {
+  margin: 4px 0 8px;
+}
+.ponte-find .vrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+}
+.ponte-find .vrow:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vrow__k {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.ponte-find .vrow__v {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+/* ---- receipt check line ---- */
+.ponte-find .vcheck {
+  padding: 16px 0;
+  border-top: 1px solid var(--rule);
+}
+.ponte-find .vcheck:last-of-type {
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vcheck__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ponte-find .vcheck__l {
+  font-size: 14.5px;
+  color: var(--ink);
+}
+.ponte-find .vcheck__meta {
+  margin-top: 4px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.ponte-find .vpill {
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
+}
+.ponte-find .vpill--ok {
+  color: var(--pos, #0f6e3d);
+  border-color: var(--pos-line, #bfd8c7);
+  background: var(--pos-tint, #e9f1ec);
+}
+.ponte-find .vpill--warn {
+  color: var(--neg, #b4402a);
+  border-color: var(--neg-line, #e6c3b8);
+  background: var(--neg-tint, #f7eae6);
+}
+.ponte-find .vpill--none {
+  color: var(--review, #4e6472);
+  border-color: var(--review-line, #c4d2d8);
+  background: var(--review-tint, #eaeff1);
+}
+
+/* ---- what remains unknown ---- */
+.ponte-find .vunknown {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ponte-find .vunknown li {
+  position: relative;
+  padding-left: 18px;
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.ponte-find .vunknown li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 6px;
+  height: 1px;
+  background: var(--ink-3);
+}
+
+/* ---- running ---- */
+.ponte-find .vrun {
+  padding: 64px 0;
+  text-align: center;
+}
+.ponte-find .vrun__s {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.ponte-find .vrun__dots {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.ponte-find .vrun__dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: vrun-pulse 1s ease-in-out infinite;
+}
+.ponte-find .vrun__dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.ponte-find .vrun__dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes vrun-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ponte-find .vrun__dots i {
+    animation: none;
+  }
+}
+
+/* ---- note band ---- */
+.ponte-find .vnote {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--rule-strong);
+  background: var(--sunken);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.ponte-find .vactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.ponte-find .vcheckbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 20px 0 4px;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ponte-find .vcheckbox__box {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--rule-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--surface);
+}
+.ponte-find .vcheckbox[aria-pressed="true"] .vcheckbox__box {
+  background: var(--ink);
+  border-color: var(--ink);
+}
