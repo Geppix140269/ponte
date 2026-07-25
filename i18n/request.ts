@@ -1,11 +1,11 @@
 import { getRequestConfig } from "next-intl/server";
-import { defaultLocale, locales, type Locale } from "./routing";
+import { resolveLocale } from "./routing";
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
-  const locale: Locale = locales.includes(requested as Locale)
-    ? (requested as Locale)
-    : defaultLocale;
+  // Any unsupported locale (a deferred language, or a browser locale we do not
+  // ship, e.g. "ja") resolves to English.
+  const locale = resolveLocale(requested);
 
   return {
     locale,

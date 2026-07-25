@@ -14,11 +14,16 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const EN = "en";
-const LOCALES = ["en", "zh", "es", "ar", "fr", "pt", "ru", "de", "hi", "it"];
+// Ponte is English-first. Only the actively shipped interface locales are gated
+// for full parity with English. Deferred languages live in messages/_deferred/
+// as frozen reactivation snapshots and are checked for JSON validity only, not
+// key parity, so they never block a build while an interface string evolves.
+const LOCALES = ["en"];
+const DEFERRED_LOCALES = ["es", "zh", "ar", "fr", "pt", "ru", "de", "hi", "it"];
 const EM_DASH = "—";
 
-function load(locale) {
-  const path = join("messages", `${locale}.json`);
+function load(locale, dir = "messages") {
+  const path = join(dir, `${locale}.json`);
   if (!existsSync(path)) return { path, missing: true };
   try {
     return { path, data: JSON.parse(readFileSync(path, "utf8")) };
@@ -115,8 +120,22 @@ for (const locale of LOCALES) {
   }
 }
 
+// Deferred snapshots: JSON validity only. A broken file here does not gate the
+// build, but it must still be parseable so reactivation is a clean move.
+for (const locale of DEFERRED_LOCALES) {
+  const file = load(locale, join("messages", "_deferred"));
+  if (file.missing) {
+    console.warn(`warn ${locale}: deferred snapshot missing (messages/_deferred/${locale}.json)`);
+  } else if (file.parseError) {
+    console.error(`FAIL ${locale}: deferred snapshot is invalid JSON, ${file.parseError}`);
+    failed = true;
+  } else {
+    console.log(`ok   ${locale}: deferred snapshot valid JSON`);
+  }
+}
+
 if (failed) {
   console.error("\nMessage validation failed.");
   process.exit(1);
 }
-console.log(`\nAll ${LOCALES.length} locales valid.`);
+console.log(`\nAll ${LOCALES.length} active locales valid; ${DEFERRED_LOCALES.length} deferred snapshots parseable.`);

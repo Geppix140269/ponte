@@ -35,7 +35,14 @@ Before changing code, read these files in order:
 - Database migrations must be additive, idempotent where practical, based on the recorded production state, and documented in `docs/codex/DATABASE-STATE.md`.
 - Inspect the live production schema before proposing or applying a migration.
 - Do not claim a migration, deployment or production test occurred without evidence.
-- Preserve ten-locale support and accessibility states.
+- Ponte is English-only: English is the canonical and sole interface language.
+  All other interface languages (including Spanish) are deferred, with their
+  translations retained in `messages/_deferred/` and their old URLs permanently
+  redirected to English. Preserve accessibility states, the reactivation path
+  (see `LANGUAGES.md`), and all multilingual *input* and translation
+  capabilities (typed/voice objectives in any language, AI language detection
+  and normalisation, translated display of member content). See the 25 July 2026
+  decision-log entries.
 - Review mobile at 390 x 844 before desktop approval.
 - Every meaningful journey must account for loading, empty, incomplete, ambiguous, error, blocked, resumed and completed states.
 

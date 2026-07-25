@@ -2,6 +2,24 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 25 July 2026 — English-only interface
+
+**Decision:** Ponte's interface is English-only. English is the canonical product and operational language and the sole interface language. Spanish, Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are all deferred until real market demand justifies reactivation. (This supersedes the same-day "English-first" step below, which had kept Spanish as a second interface language; the owner narrowed the scope to English-only.)
+
+**Why:** Maintaining multiple fully localised interfaces was disproportionate complexity for the current stage. A single interface language cuts all translation-parity, review and CI burden without a redesign or any schema change.
+
+**What is preserved:** Multilingual natural-language and voice *input* in any language, AI language detection and normalisation into the canonical English commercial object, optional translated display of member-entered content (`listing_translations`), and the reactivation path. Deferred translations (including Spanish) are retained in `messages/_deferred/`. Old locale-prefixed URLs (including `/es/…`) are permanently (308) redirected to their canonical English path, so no bookmark 404s. Unsupported browser locales fall back to English. The language switcher hides itself while only one interface language is active.
+
+**Affected areas:** `i18n/routing.ts`, `i18n/request.ts`, `middleware.ts`, `lib/i18n/removed-locales.ts`, `components/LanguageSwitcher.tsx`, `app/sitemap.ts` and `lib/seo.ts` (data-driven), `messages/_deferred/*`, `scripts/check-messages.mjs`, locale tests, `LANGUAGES.md`, `AGENTS.md`. Supersedes the earlier "Preserve ten-locale support" instruction. Impact report: `docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`.
+
+## 25 July 2026 — English-first localisation (superseded same day by English-only)
+
+**Decision:** Ponte is an English-first platform. English is the canonical product and operational language; Spanish is the only additional fully supported interface language. Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are removed from the active interface build and deferred until real market demand justifies reactivation.
+
+**Why:** Maintaining ten fully localised interfaces was disproportionate complexity for the current stage. Reducing to two actively supported interface languages cuts translation-parity, review and CI burden without a redesign or any schema change.
+
+**Status:** Superseded the same day by the English-only decision above. Retained for history.
+
 ## 25 July 2026 — Governing implementation authority
 
 **Decision:** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` is the single self-contained governing implementation authority for the current development cycle.
