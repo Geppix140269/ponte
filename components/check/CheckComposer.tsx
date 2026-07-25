@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
-import { COUNTRIES } from "@/lib/countries";
+import CountryPicker from "@/components/CountryPicker";
 import type { EvidenceReceipt, CheckResult } from "@/lib/check/receipt";
 
 type Purpose = "member_business" | "counterparty_check";
@@ -420,18 +420,8 @@ function IdentifyStep({
       <p className="eyebrow" style={{ marginTop: 28 }}>
         Country of registration
       </p>
-      <div className="chiprow" role="group" aria-label="Country of registration" style={{ marginTop: 10 }}>
-        {COUNTRIES.map((c) => (
-          <button
-            key={c.code}
-            type="button"
-            className="fchip"
-            aria-pressed={country === c.code}
-            onClick={() => setCountry(c.code)}
-          >
-            <span style={{ color: "var(--gold-ink)" }}>{c.code}</span> {c.name}
-          </button>
-        ))}
+      <div style={{ marginTop: 10 }}>
+        <CountryPicker value={country} onChange={setCountry} />
       </div>
 
       <div style={{ marginTop: 28 }}>
