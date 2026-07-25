@@ -81,7 +81,7 @@ export default function VoiceSheet({
   // labels and announce are read through refs so that begin()/stop() stay
   // referentially stable. The parent recreates the labels object on every
   // render (and announce() itself triggers parent re-renders), so depending on
-  // them directly would tear down and restart recognition mid-listen — the
+  // them directly would tear down and restart recognition mid-listen, so the
   // microphone would abort the instant it started, and nothing would transcribe.
   const labelsRef = useRef(labels);
   labelsRef.current = labels;
