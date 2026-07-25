@@ -882,7 +882,13 @@
       },
       "tombstone": "This market signal is no longer active.",
       "actionsHeading": "What you can do next",
-      "actionsNote": "Reading this signal needs no account. Ponte contacts nobody and reveals nobody automatically: a request goes to the Ponte desk, and you are asked to join only at the point of sending it."
+      "actionsNote": "Reading this signal needs no account. Ponte contacts nobody and reveals nobody automatically: a request goes to the Ponte desk, and you are asked to join only at the point of sending it.",
+      "sectorHeading": "Where this sits in the market",
+      "commsUnavailable": "There is no channel between you and whoever is behind this signal. One would open only after Ponte establishes who they are, they agree to an introduction, and both sides are verified participants. None of that has happened.",
+      "registrationNote": "Sending an investigation request needs an account. Everything on this page can be read without one.",
+      "commsHeading": "Talking to the other side",
+      "missingTitle": "No signal at this address",
+      "missingBody": "This link does not lead to a market signal. It may have been mistyped, it may have been removed, or Ponte may not have been able to read it just now. Nothing is wrong with your account, and the rest of the market is unaffected."
     },
     "cta": {
       "askPonte": "Ask Ponte to investigate",

@@ -36,6 +36,9 @@ function rendersOwnChrome(path: string): boolean {
     path.startsWith("/explore/") ||
     path === "/market-signals" ||
     path.startsWith("/market-signals/") ||
+    // The design-system specimen sheets, which exist to be looked at against
+    // the handoff and should not be framed by the chrome they are replacing.
+    path.startsWith("/dev/") ||
     path === "/find" ||
     path.startsWith("/find/") ||
     path === "/structure" ||

@@ -1,0 +1,107 @@
+/* Ponte Flow specimen sheet. Development only; see page.tsx. */
+
+.fspec {
+  min-height: 100dvh;
+  background: var(--surface);
+  padding-bottom: 80px;
+}
+.fspec__head {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 44px 0;
+}
+.fspec__h {
+  font-family: var(--f-serif);
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.fspec__h2 {
+  font-family: var(--f-serif);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.fspec__p {
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin-top: 8px;
+}
+.fspec__sec {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 44px 44px 0;
+  border-top: 1px solid var(--rule);
+  margin-top: 44px;
+}
+.fspec__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 22px;
+  margin-top: 24px;
+}
+.fspec__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fspec__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.fspec__row--baseline {
+  align-items: flex-end;
+}
+.fspec__size {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.fspec__k {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.fspec__prohibited {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--review);
+  margin-top: 4px;
+  max-width: 560px;
+}
+.fspec__states {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.fspec__state {
+  display: flex;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.fspec__state .pf-icon {
+  flex-shrink: 0;
+  color: var(--ink);
+}
+/* An icon-only control: its own label, and a real 44px touch target. */
+.fspec__iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm, 5px);
+  background: var(--raised);
+  color: var(--ink);
+  cursor: pointer;
+}

@@ -1,6 +1,15 @@
+/* The Ponte Flow design system: tokens, motion and the reduced-motion contract.
+   Imported once, here, so no route re-declares a token or approximates an
+   animation locally. An @import has to precede every other statement, which is
+   why it sits above the Tailwind directives. See
+   design-system/ponte-flow/ponte-flow.css for the reconciliation against the
+   existing Brand v5 token blocks. */
+@import "../design-system/ponte-flow/ponte-flow.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* ======================================================================
    Ponte design system. Rebranding 21st July handoff, brand book v1.

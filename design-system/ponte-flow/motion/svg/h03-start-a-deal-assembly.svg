@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 90" width="200" height="90" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="fa">
+  <circle class="fa-a1" cx="30" cy="66" r="5.5" fill="currentColor"></circle><circle class="fa-a2" cx="170" cy="24" r="5.5" fill="none" stroke="currentColor" stroke-width="3"></circle><path class="fa-s1" pathLength="100" d="M35 66C62 66 74 50 90 42"></path><path class="fa-s2" pathLength="100" d="M90 42C108 34 126 24 164 24"></path>
+</svg>

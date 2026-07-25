@@ -9,6 +9,9 @@ import { geographyOf, toBandItems, type ActivityLabels } from "@/lib/board/activ
 import PonteShell from "@/components/shell/PonteShell";
 import RecordList from "@/components/explore/RecordList";
 import InvestigateButton from "@/components/signals/InvestigateButton";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import type { FlowIconKey, FlowLabelledKey } from "@/design-system/ponte-flow/generated/flow-icon-keys";
+import { PRODUCT_SECTORS, sectorForChapter } from "@/lib/taxonomy/market";
 import "@/components/explore/explore.css";
 import "@/components/signals/signal.css";
 
@@ -53,13 +56,39 @@ export async function generateMetadata({
   };
 }
 
-function Fact({ label, value, notStated }: { label: string; value: string | null; notStated: string }) {
+/**
+ * One commercial fact.
+ *
+ * The Flow icon is the field's own parent icon at 20px, which resolves to the
+ * authored reduced drawing where one exists. It sits beside the visible field
+ * name and is therefore decorative: the word is the label, the icon is not.
+ *
+ * Deliberately no icon for the VALUE. Incoterms, currencies, units and
+ * frequencies keep their exact text, per the handoff's rejected-icons rule; a
+ * drawing per Incoterm would be 11 near-identical glyphs carrying nothing the
+ * three letters do not already say.
+ */
+function Fact({
+  icon,
+  label,
+  value,
+  notStated,
+}: {
+  /** A decorative field icon: one that never carries meaning on its own. */
+  icon: Exclude<FlowIconKey, FlowLabelledKey>;
+  label: string;
+  value: string | null;
+  notStated: string;
+}) {
   return (
     // Block children, not spans: the shared .qfact__k / .qfact__v rules stack a
     // label above its value and space them with a margin, which an inline span
     // silently ignores, running "SIDE" and "Buyer demand" together.
     <div className="qfact">
-      <div className="qfact__k">{label}</div>
+      <div className="qfact__k">
+        <PonteIcon name={icon} size={20} className="qfact__i" />
+        {label}
+      </div>
       <div className={`qfact__v${value ? "" : " ns"}`}>{value ?? notStated}</div>
     </div>
   );
@@ -85,6 +114,12 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
         ? t("card.sideSeller")
         : signal.side;
   const notStated = t("card.notStated");
+
+  // The sector, from the canonical taxonomy. A signal whose chapter is
+  // unassigned (71, 91, 92) or absent gets no sector row at all rather than
+  // being filed under the nearest family: product-authority finding F4.
+  const sector = sectorForChapter(signal.chapter);
+  const sectorIndex = sector ? PRODUCT_SECTORS.findIndex((s) => s.key === sector.key) : -1;
 
   // Related recent activity, so the page is a deeper level of the market rather
   // than a dead end. Same bounded read the landing and Explore use.
@@ -138,23 +173,40 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
           <h2 className="exsec__t">{t("detail.knownHeading")}</h2>
         </div>
         <div className="qfacts">
-          <Fact label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
+          <Fact icon="deal.role" label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
           <Fact
+            icon="deal.quantity"
             label={t("detail.fact.quantity")}
             value={signal.quantity ? `${signal.quantity}${signal.unit ? ` ${signal.unit}` : ""}` : null}
             notStated={notStated}
           />
-          <Fact label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
-          <Fact label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
-          <Fact label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
-          <Fact label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
+          <Fact icon="deal.destination" label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
+          <Fact icon="deal.delivery" label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
+          <Fact icon="deal.payment" label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
+          <Fact icon="deal.category" label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
           <Fact
+            icon="deal.timing"
             label={t("detail.fact.signalDate")}
             value={formatPosted(signal.spottedAt, locale)}
             notStated={notStated}
           />
         </div>
       </section>
+
+      {sector && (
+        <section className="exsec" aria-label={t("detail.sectorHeading")}>
+          <div className="exsec__h">
+            <h2 className="exsec__t">{t("detail.sectorHeading")}</h2>
+          </div>
+          {/* The sector is navigation, so it is a link into Explore rather than
+              a decoration. The 24px asset is the sector default. */}
+          <Link className="sigsector" href={`/explore?sector=${sectorIndex}`}>
+            <PonteIcon name={sector.icon} size={24} />
+            <span className="sigsector__t">{sector.label}</span>
+            <span className="sigsector__r">{sector.range}</span>
+          </Link>
+        </section>
+      )}
 
       <section className="exsec" aria-label={t("detail.unknownHeading")}>
         <div className="exsec__h">
@@ -175,6 +227,18 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
           <h2 className="exsec__t">{t("detail.actionsHeading")}</h2>
         </div>
         <p className="exsec__d">{t("detail.actionsNote")}</p>
+        {/* Registration is a gate the visitor can pass now, so it uses the
+            gate asset and says what it gates. It is labelled because the icon
+            is the only carrier of "registration required" in this row. */}
+        <p className="sigbound">
+          <PonteIcon
+            name="participation.registration"
+            size={20}
+            label={t("detail.registrationNote")}
+          />
+          <span>{t("detail.registrationNote")}</span>
+        </p>
+
         <div className="sigacts">
           <InvestigateButton signalId={signal.id} label={t("cta.askPonte")} />
           <InvestigateButton
@@ -184,6 +248,21 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
             initialType={signal.side === "requirement" ? "supplier" : "buyer"}
           />
         </div>
+      </section>
+
+      {/* Communication is unavailable, and the rule is that the condition must
+          always be stated. It is not a block, a warning or a finding about
+          anyone: no channel exists yet, and the sentence says what would open
+          one. `participation.commson` is never rendered here, because the
+          product does not permit communication at all. */}
+      <section className="exsec" aria-label={t("detail.commsHeading")}>
+        <div className="exsec__h">
+          <h2 className="exsec__t">{t("detail.commsHeading")}</h2>
+        </div>
+        <p className="sigbound">
+          <PonteIcon name="participation.commsoff" size={20} />
+          <span>{t("detail.commsUnavailable")}</span>
+        </p>
       </section>
 
       {related.length > 0 && (

@@ -254,15 +254,10 @@
   border-color: var(--gold);
   transform: translateY(-2px);
 }
-.ponte-find .exsector__disc svg {
-  width: 38px;
-  height: 38px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+/* Nothing here restyles the SVG. The handoff says to pick ONE place for the
+   optical stroke and not to mix; PonteIcon sets it per rendered size via
+   strokeFor(), so a stroke-width or a size here would silently overrule the
+   delivered value. This rule was doing exactly that: 1.4 instead of 1.75. */
 .ponte-find .exsector__t {
   font-size: 13.5px;
   line-height: 1.35;
@@ -429,10 +424,6 @@
     width: 76px;
     height: 76px;
   }
-  .ponte-find .exsector__disc svg {
-    width: 30px;
-    height: 30px;
-  }
   .ponte-find .exrec__i {
     grid-template-columns: 1fr;
   }
@@ -449,4 +440,11 @@
   .ponte-find a.exsector:hover .exsector__disc {
     transform: none;
   }
+}
+
+/* The Flow navigation-family asset on a family card. Decorative: the family
+   name sits beside it and carries the meaning. */
+.ponte-find .exfam__ic {
+  color: var(--ink);
+  margin-bottom: 4px;
 }

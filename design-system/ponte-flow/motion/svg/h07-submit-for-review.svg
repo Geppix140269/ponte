@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 90" width="200" height="90" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="fu">
+  <path d="M22 62C58 62 76 34 118 34" opacity=".3"></path><path class="fu-active" pathLength="100" d="M22 62C58 62 76 34 118 34"></path><circle cx="22" cy="62" r="5" fill="currentColor"></circle><path class="fu-th" d="M132 12V78" stroke-dasharray="4 5"></path><g class="fu-dot"><circle r="5.5" fill="var(--gold)"></circle></g><path class="fu-rev" pathLength="100" d="M150 24H176V66H150" stroke="var(--review)"></path>
+</svg>

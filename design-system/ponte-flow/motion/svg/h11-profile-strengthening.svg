@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 90" width="200" height="90" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" class="fp">
+  <path d="M20 68C20 22 180 22 180 68" opacity=".16" stroke-width="7"></path><path class="fp-s" pathLength="100" d="M20 68C20 22 180 22 180 68" stroke-width="7"></path><path pathLength="100" d="M20 68C20 22 180 22 180 68" stroke="var(--sunken)" stroke-width="9" stroke-dasharray="1.8 18.2" stroke-dashoffset="-9.1"></path>
+</svg>

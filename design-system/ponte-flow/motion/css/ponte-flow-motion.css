@@ -1,0 +1,74 @@
+/* Ponte Flow — motion components (Library H)
+   Production CSS. Every component is authored in its END state in the SVG;
+   these keyframes play FROM an offset TOWARD that state. Removing the animation
+   therefore leaves the correct information on screen — that is the reduced-motion contract.
+
+   Usage: add .is-run to the component root (or an ancestor) to play.
+   Requires ponte-flow-tokens.css for --pf-gold, --pf-review and the easing tokens. */
+
+@keyframes pf-draw   { from { stroke-dashoffset: 100 } to { stroke-dashoffset: 0 } }
+@keyframes pf-pop    { from { opacity: 0; transform: scale(.4) } to { opacity: 1; transform: scale(1) } }
+@keyframes pf-slide  { from { opacity: 0; transform: translateX(-16px) } to { opacity: 1; transform: none } }
+@keyframes pf-drop   { from { opacity: 0; transform: translateY(-8px) } to { opacity: 1; transform: none } }
+@keyframes pf-travel { from { offset-distance: 2% } to { offset-distance: 100% } }
+@keyframes pf-loop   { 0% { offset-distance: 2%; opacity: 0 } 8% { opacity: 1 } 86% { offset-distance: 100%; opacity: 1 } 96% { opacity: 0 } 100% { offset-distance: 2%; opacity: 0 } }
+@keyframes pf-pulse  { 0% { opacity: 0; transform: scale(.6) } 45% { opacity: 1 } 100% { opacity: .4; transform: scale(1) } }
+@keyframes pf-settle { from { transform: scale(1.06) } to { transform: scale(1) } }
+
+/* transform-origin must be the shape's own box inside SVG */
+.fx [class], .fa [class], .fs [class], .fc [class], .fv [class],
+.fu [class], .fg [class], .fr [class], .fl [class], .fp [class], .fe [class] { transform-box: fill-box; transform-origin: center }
+
+/* motion paths for travelling points (H04, H07, H10) */
+.fs-dot { offset-path: path("M14 46C56 22 140 22 186 44"); offset-distance: 62% }
+.fu-dot { offset-path: path("M22 62C58 62 76 34 118 34"); offset-distance: 100% }
+.fl-dot { offset-path: path("M32 58C70 58 120 32 168 32"); offset-distance: 62% }
+
+.is-run .fx-r1, .is-run .fx-r2, .is-run .fx-r3, .is-run .fa-s1, .is-run .fa-s2, .is-run .fc-link,
+.is-run .fv-b1, .is-run .fv-b2, .is-run .fu-active, .is-run .fu-rev, .is-run .fe-rd,
+.is-run .fp-s, .is-run .fl-active { stroke-dasharray: 100 }
+
+/* H02 explore activation */
+.is-run .fx-r1 { animation: pf-draw .62s var(--pf-ease-entrance) both }
+.is-run .fx-r2 { animation: pf-draw .62s var(--pf-ease-entrance) .09s both }
+.is-run .fx-r3 { animation: pf-draw .62s var(--pf-ease-entrance) .18s both }
+.is-run .fx-n1 { animation: pf-pop .34s var(--pf-ease-entrance) .5s both }
+.is-run .fx-n2 { animation: pf-pop .34s var(--pf-ease-entrance) .59s both }
+.is-run .fx-n3 { animation: pf-pop .34s var(--pf-ease-entrance) .68s both }
+/* H03 start-a-deal assembly */
+.is-run .fa-a1 { animation: pf-pop .3s var(--pf-ease-entrance) both }
+.is-run .fa-a2 { animation: pf-pop .3s var(--pf-ease-entrance) .42s both }
+.is-run .fa-s1 { animation: pf-draw .34s var(--pf-ease-entrance) .16s both }
+.is-run .fa-s2 { animation: pf-draw .34s var(--pf-ease-entrance) .5s both }
+/* H04 search in progress — loops until results return */
+.is-run .fs-dot { animation: pf-loop 1.9s var(--pf-ease) infinite }
+.is-run .fs-f1 { animation: pf-pulse .5s ease-out .5s both }
+.is-run .fs-f2 { animation: pf-pulse .5s ease-out .8s both }
+.is-run .fs-f3 { animation: pf-pulse .5s ease-out 1.1s both }
+.is-run .fs-f4 { animation: pf-pulse .5s ease-out 1.4s both }
+/* H05 match or related activity */
+.is-run .fc-link { animation: pf-draw .64s var(--pf-ease) both }
+/* H06 save privately */
+.is-run .fv-b1, .is-run .fv-b2 { animation: pf-draw .42s var(--pf-ease-entrance) .16s both }
+.is-run .fv-in { animation: pf-settle .52s var(--pf-ease-entrance) both }
+/* H07 submit for review */
+.is-run .fu-active { animation: pf-draw .62s var(--pf-ease) both }
+.is-run .fu-dot { animation: pf-travel .9s var(--pf-ease) both }
+.is-run .fu-rev { animation: pf-draw .42s var(--pf-ease-entrance) .82s both }
+/* H08 market signal — two cycles, then rest */
+.is-run .fg-p0, .is-run .fg-p1 { animation: pf-pulse 2.6s var(--pf-ease) 2 }
+.is-run .fg-p2 { animation: pf-pulse 2.6s var(--pf-ease) .3s 2 }
+/* H09 reviewed opportunity */
+.is-run .fr-e1 { animation: pf-drop .5s var(--pf-ease-entrance) .1s both }
+.is-run .fr-e2 { animation: pf-drop .5s var(--pf-ease-entrance) .21s both }
+.is-run .fr-e3 { animation: pf-drop .5s var(--pf-ease-entrance) .32s both }
+/* H10 origin to destination */
+.is-run .fl-active { animation: pf-draw 1.6s var(--pf-ease) infinite }
+.is-run .fl-dot { animation: pf-loop 1.6s var(--pf-ease) infinite }
+/* H11 profile strengthening — five discrete segments */
+.is-run .fp-s { animation: pf-draw 2.4s steps(5, end) both }
+/* H12 empty-state transformation */
+.is-run .fe-rd { animation: pf-draw .58s var(--pf-ease-entrance) .18s both }
+.is-run .fe-a1 { animation: pf-pop .32s var(--pf-ease-entrance) .6s both }
+.is-run .fe-a2 { animation: pf-pop .32s var(--pf-ease-entrance) .7s both }
+.is-run .fe-a3 { animation: pf-pop .32s var(--pf-ease-entrance) .8s both }
