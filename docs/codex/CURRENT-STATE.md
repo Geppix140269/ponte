@@ -27,7 +27,7 @@ Code on `main` is not automatically deployed, enabled or production-verified.
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Founding-launch integrity Blocks A-F | On `main` | Production database changes recorded as applied; deployed state needs direct confirmation | Separates Market Signals and Qualified Opportunities, purpose-binds business verification, strengthens publication gates, controlled introductions and founding lifecycle. |
-| “What’s your deal?” intelligent gateway | On `main` | Deployment must be checked directly | Cream/ink/gold entry, voice/type input, deterministic intent extraction and four real route handoffs. |
+| “What’s your deal?” intelligent gateway | On `main` | Deployment must be checked directly | Cream/ink/gold entry, voice/type input, deterministic intent extraction and four real route handoffs. The four bridge routes are direct entrances: a click on a route label or its bridge marker navigates immediately to that route's destination (`destinationFor`), with no objective, product, company or Continue step first. |
 | Journey 1 — Find | On `main` | Feature-flag and live-route status unconfirmed | `/find`, product drill-down, separate Qualified Opportunity and Market Signal lanes, Qualified Opportunity detail and controlled-introduction request. |
 | Journey 2 — Structure & Submit | On `main` | Feature-flag and live-route status unconfirmed | `/structure`, S01-S06 composer, facts/gaps, progressive completion, public/private/reviewer preview, account gate and submit. |
 | Workspace H04 | On `main` | Live behaviour unconfirmed | Reused by Journey 1/2. The broader agentic Workspace required by the governing architecture is not complete. |

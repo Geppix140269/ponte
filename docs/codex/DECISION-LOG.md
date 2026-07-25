@@ -2,6 +2,18 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 25 July 2026 — The four bridge routes are direct entrances
+
+**Decision:** A click on one of the four named routes across the gateway bridge — the label or its bridge marker — navigates immediately to that route's journey. It no longer only selects the route, changes the centre copy and focuses the objective field. No objective text, product, company or Continue press is required first; the destination journey collects whatever it still needs.
+
+**Why:** Find, Structure and Check are built journeys. Selecting a route without going anywhere made the application look stuck on the landing page and turned a deliberate decision into a second, avoidable step.
+
+**What is preserved:** The natural-language path is unchanged — an objective may still be typed or spoken, Ponte still reads the route and the facts, still asks when the input is ambiguous or a Find objective names no product, and still carries `intent`, `product` and `company` to the destination. Words already typed ride along with a direct click. `lib/landing/routing.ts` remains the sole destination authority, so the journey feature flags keep deciding between each journey and its fallback. The bridge component knows nothing about routing or flags.
+
+**Analytics:** A direct click emits `route_suggested` then `route_confirmed`. It emits `intent_submitted` only when an objective was actually supplied, so a bare route click is never reported as a submitted objective.
+
+**Affected areas:** `components/home/landing/PonteBridge.tsx` (`onSelect` → `onOpen`), `components/home/landing/PonteLanding.tsx`, `lib/landing/direct-route.ts` (new), `lib/landing/routing.ts` (flags read per call so both states are testable; inlining behaviour unchanged), `lib/landing/__tests__/direct-route.test.ts` and `lib/landing/__tests__/bridge-navigation.test.tsx` (new).
+
 ## 25 July 2026 — English-only interface
 
 **Decision:** Ponte's interface is English-only. English is the canonical product and operational language and the sole interface language. Spanish, Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are all deferred until real market demand justifies reactivation. (This supersedes the same-day "English-first" step below, which had kept Spanish as a second interface language; the owner narrowed the scope to English-only.)

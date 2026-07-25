@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { inferIntent, type RouteKey, type ExtractedFacts } from "@/lib/landing/intent";
 import { destinationFor } from "@/lib/landing/routing";
+import { directRouteNavigation } from "@/lib/landing/direct-route";
 import { ROTATING_EXAMPLES } from "@/lib/landing/examples";
 import { track } from "@/lib/landing/analytics";
 import PonteBridge, { type BridgeCenter } from "./PonteBridge";
@@ -120,20 +121,14 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
     [t],
   );
 
-  const selectRoute = useCallback(
-    (key: RouteKey, opts?: { silent?: boolean }) => {
-      setActiveRoute(key);
-      setClarify(false);
-      setNeedProduct(false);
-      track("route_suggested", { route: key });
-      if (!opts?.silent) {
-        track("route_confirmed", { route: key });
-        announce(`${t(`routes.${key}.label`)}. ${t(`routes.${key}.title`)}.`);
-        window.requestAnimationFrame(() => fieldRef.current?.focus());
-      }
-    },
-    [announce, t],
-  );
+  // The route Ponte read from an objective. It only reflects the reading on the
+  // page; the navigation that follows is the caller's business.
+  const selectRoute = useCallback((key: RouteKey) => {
+    setActiveRoute(key);
+    setClarify(false);
+    setNeedProduct(false);
+    track("route_suggested", { route: key });
+  }, []);
 
   const navigate = useCallback(
     (route: RouteKey, text: string, factsOverride?: ExtractedFacts) => {
@@ -142,6 +137,25 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
       router.push(destinationFor(route, facts));
     },
     [router],
+  );
+
+  // A deliberate click on a bridge route or its marker: a direct entrance.
+  // The route lights up and the page leaves for that journey immediately -- no
+  // objective, no Continue, no timeout. Anything already typed or spoken rides
+  // along; nothing else is asked for here, because the journey collects what it
+  // still needs.
+  const openRoute = useCallback(
+    (key: RouteKey) => {
+      const text = objective.trim();
+      const facts = text ? inferIntent(text, key).facts : undefined;
+      const { destination, events } = directRouteNavigation(key, facts);
+      setActiveRoute(key);
+      setClarify(false);
+      setNeedProduct(false);
+      for (const e of events) track(e.name, e.meta);
+      router.push(destination);
+    },
+    [objective, router],
   );
 
   // The AI fallback: for anything the deterministic matcher cannot resolve (any
@@ -161,7 +175,7 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
         if (!data?.ok) return false;
 
         if (data.route) {
-          selectRoute(data.route as RouteKey, { silent: true });
+          selectRoute(data.route as RouteKey);
           navigate(data.route as RouteKey, text, {
             raw: text,
             product: data.product ?? undefined,
@@ -213,7 +227,7 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
       const resolvedByMatcher =
         result.route && !(result.route === "find" && result.needsClarification);
       if (resolvedByMatcher) {
-        selectRoute(result.route as RouteKey, { silent: true });
+        selectRoute(result.route as RouteKey);
         navigate(result.route as RouteKey, text);
         return;
       }
@@ -223,7 +237,7 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
       if (await interpretWithAi(text)) return;
 
       if (result.route === "find") {
-        selectRoute("find", { silent: true });
+        selectRoute("find");
         setNeedProduct(true);
         announce(t("find.needProductAnnounce"));
         fieldRef.current?.focus();
@@ -386,7 +400,7 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
           </section>
 
           <section className="gatewrap" aria-label={t("gateway.regionLabel")}>
-            <PonteBridge active={activeRoute} center={center} labels={labels} onSelect={selectRoute} />
+            <PonteBridge active={activeRoute} center={center} labels={labels} onOpen={openRoute} />
             <div className="rfacts" aria-live="polite">
               {activeRoute
                 ? [1, 2, 3, 4].map((n, i) => (

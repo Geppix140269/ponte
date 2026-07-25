@@ -15,6 +15,11 @@ import type { RouteKey } from "@/lib/landing/intent";
  * buttons. Hovering a marker or its label lights both (the number and the
  * route name share one hover state). On mobile the buttons fall into a
  * borderless 01-04 legend and the SVG's own numbers hide.
+ *
+ * A route is an entrance, not a filter: label and marker both call `onOpen`,
+ * which leaves the landing page for that journey. The bridge knows nothing
+ * about destinations, routing or feature flags; the page it belongs to owns
+ * all of that.
  */
 
 export interface BridgeCenter {
@@ -43,12 +48,13 @@ export default function PonteBridge({
   active,
   center,
   labels,
-  onSelect,
+  onOpen,
 }: {
   active: RouteKey | null;
   center: BridgeCenter;
   labels: Record<RouteKey, string>;
-  onSelect: (key: RouteKey) => void;
+  /** Open the route: a deliberate click is the whole decision. */
+  onOpen: (key: RouteKey) => void;
 }) {
   const [hovered, setHovered] = useState<RouteKey | null>(null);
 
@@ -77,7 +83,7 @@ export default function PonteBridge({
             return (
               <g
                 key={key}
-                onClick={() => onSelect(key)}
+                onClick={() => onOpen(key)}
                 onMouseEnter={() => setHovered(key)}
                 onMouseLeave={() => setHovered(null)}
                 style={{ cursor: "pointer" }}
@@ -112,7 +118,7 @@ export default function PonteBridge({
           }
           data-num={num}
           aria-pressed={active === key}
-          onClick={() => onSelect(key)}
+          onClick={() => onOpen(key)}
           onMouseEnter={() => setHovered(key)}
           onMouseLeave={() => setHovered(null)}
         >
