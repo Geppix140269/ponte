@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { formatPosted } from "@/lib/listing-terms";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
 import { getMarketActivity } from "@/lib/board/market-activity";
-import { toBandItems, type ActivityLabels } from "@/lib/board/activity-view";
+import { geographyOf, toBandItems, type ActivityLabels } from "@/lib/board/activity-view";
 import PonteShell from "@/components/shell/PonteShell";
 import RecordList from "@/components/explore/RecordList";
 import InvestigateButton from "@/components/signals/InvestigateButton";
@@ -67,10 +67,13 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
   const th = await getTranslations("home");
   const te = await getTranslations("explore");
 
-  const corridor =
-    signal.originText || signal.destinationText
-      ? [signal.originText ?? "?", signal.destinationText ?? "?"].join(" to ")
-      : null;
+
+  // Only the ends the record actually states. The legacy page printed a literal
+  // "?" for a missing end ("? to United Arab Emirates"), which is a punctuation
+  // mark pretending to be a fact on a page whose whole subject is what is and
+  // is not known. An unstated end now falls through to "Not stated" like every
+  // other unstated fact.
+  const corridor = geographyOf(signal, { route: (from, to) => th("activity.route", { from, to }) });
 
   const sideLabel =
     signal.side === "requirement"
