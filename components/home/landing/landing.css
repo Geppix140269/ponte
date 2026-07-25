@@ -194,102 +194,123 @@ body:has(.ponte-landing) {
   margin-top: 0.2em;
 }
 
-/* ---- voice primary: oversized circular talk control ---- */
-.ponte-landing .talk {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  margin-top: 34px;
-}
-.ponte-landing .mic {
-  position: relative;
+/* ---- recent market activity band ----------------------------------------
+   Sits directly under the header, above the masthead: the first thing the
+   entrance says is what is happening, not what Ponte is. One rule above and
+   below, no card, so it reads as a ticker of record rather than a widget.
+
+   The motion is CSS only. The track carries the rows twice and is translated
+   by exactly half its width, which is what makes the loop seamless; the pause
+   is animation-play-state on hover and focus-within, so pointing at it or
+   tabbing into it stops it without any JavaScript. Under reduced motion, and
+   on phones, the animation is dropped and the band becomes an ordinary
+   horizontal scroller: the same records, reachable by hand. */
+.ponte-landing .aband {
   flex-shrink: 0;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 1.5px solid var(--gold);
-  background: var(--gold-tint);
-  color: var(--gold-ink);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    transform var(--dur-1),
-    background var(--dur-1),
-    color var(--dur-1);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--sunken);
+  overflow: hidden;
 }
-.ponte-landing .mic:hover {
-  background: var(--gold);
-  color: var(--ink);
-  transform: scale(1.05);
-}
-.ponte-landing .mic:active {
-  transform: scale(0.95);
-}
-.ponte-landing .mic svg {
-  width: 40px;
-  height: 40px;
-}
-.ponte-landing .mic.listening {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--surface);
-}
-.ponte-landing .mic::before,
-.ponte-landing .mic::after {
-  content: "";
-  position: absolute;
-  inset: -1.5px;
-  border-radius: 50%;
-  border: 1.5px solid var(--gold);
-  opacity: 0;
-  animation: pl-micpulse 2.6s var(--ease-out) infinite;
-}
-.ponte-landing .mic::after {
-  animation-delay: 1.3s;
-}
-@keyframes pl-micpulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  70% {
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.85);
-    opacity: 0;
-  }
-}
-.ponte-landing .talk__label {
+.ponte-landing .aband__head {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding: 10px 44px 0;
 }
-.ponte-landing .talk__cta {
-  font-family: var(--f-serif);
-  font-size: clamp(26px, 3.2vw, 38px);
-  font-weight: 500;
-  letter-spacing: -0.015em;
+.ponte-landing .aband__t {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--ink);
-  line-height: 1;
 }
-.ponte-landing .talk__sub {
-  font-size: 13.5px;
+.ponte-landing .aband__note {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.ponte-landing .aband__vp {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 8px 0 12px;
+}
+.ponte-landing .aband__vp::-webkit-scrollbar {
+  display: none;
+}
+.ponte-landing .aband__track {
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  animation: aband-run var(--aband-duration, 44s) linear infinite;
+}
+.ponte-landing .aband__echo {
+  display: flex;
+  align-items: stretch;
+}
+.ponte-landing .aband__vp:hover .aband__track,
+.ponte-landing .aband__vp:focus-within .aband__track {
+  animation-play-state: paused;
+}
+@keyframes aband-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ponte-landing .aband__i {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 6px 22px;
+  border-right: 1px solid var(--rule);
+  white-space: nowrap;
+  font-size: 13px;
   color: var(--ink-2);
-  max-width: 300px;
-  line-height: 1.45;
-  transition: opacity var(--dur-2);
+  text-decoration: none;
+}
+.ponte-landing .aband__i--link:hover .aband__p {
+  color: var(--gold-ink);
+}
+.ponte-landing .aband__kind {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+/* A Market Signal is the one class Ponte has not confirmed, so it is marked
+   with a word and a border, never with colour alone. */
+.ponte-landing .aband__kind[data-kind="market_signal"] {
+  border-style: dashed;
+}
+.ponte-landing .aband__p {
+  font-family: var(--f-serif);
+  font-size: 16px;
+  color: var(--ink);
+  transition: color var(--dur-1);
+}
+.ponte-landing .aband__f {
+  color: var(--ink-2);
+}
+.ponte-landing .aband__age {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--mute);
 }
 
-/* ---- secondary: unboxed editorial type line ---- */
-.ponte-landing .obj__type {
-  margin-top: 40px;
-  max-width: 620px;
+/* ---- search under the bridge ---- */
+.ponte-landing .lsearch {
   width: 100%;
+  max-width: 620px;
 }
-.ponte-landing .obj__or {
+.ponte-landing .lsearch__l {
   display: block;
   font-family: var(--f-mono);
   font-size: 10.5px;
@@ -297,6 +318,12 @@ body:has(.ponte-landing) {
   text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 12px;
+}
+.ponte-landing .lsearch__h {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 .ponte-landing .obj__ask {
   display: flex;
@@ -307,11 +334,12 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .obj__field {
   flex: 1;
+  min-width: 0;
   border: 0;
   background: none;
-  resize: none;
   outline: none;
-  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
   font-family: var(--f-serif);
   font-size: clamp(19px, 2.2vw, 24px);
   font-style: italic;
@@ -374,20 +402,6 @@ body:has(.ponte-landing) {
   color: var(--ink-3);
 }
 
-/* ---- route support line + clarification ---- */
-.ponte-landing .obj__support {
-  margin-top: 20px;
-  font-size: 15px;
-  color: var(--ink-2);
-  line-height: 1.5;
-  max-width: 520px;
-  transition: opacity var(--dur-2);
-}
-.ponte-landing .obj__support b {
-  color: var(--ink);
-  font-weight: 600;
-}
-
 /* ---- gateway ---- */
 .ponte-landing .gatewrap {
   display: flex;
@@ -395,28 +409,20 @@ body:has(.ponte-landing) {
   align-items: center;
   width: 100%;
 }
-.ponte-landing .gate__labels {
-  display: flex;
-  justify-content: space-between;
-  width: min(560px, 100%);
-  font-family: var(--f-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin-bottom: 6px;
-}
-.ponte-landing .gate__labels .r {
-  color: var(--ink-3);
-}
+/* The bridge is now a column: the arch, then the two entrances beneath it.
+   The stage keeps the handoff's aspect ratio and stays the width the geometry
+   was drawn for; the entrances may run wider. */
 .ponte-landing .gate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(680px, 100%);
+}
+.ponte-landing .gate__stage {
   position: relative;
   width: min(560px, 100%);
   aspect-ratio: 1 / 0.82;
-}
-.ponte-landing .gate__stage {
-  position: absolute;
-  inset: 0;
 }
 .ponte-landing .gate__svg {
   position: absolute;
@@ -443,10 +449,6 @@ body:has(.ponte-landing) {
   transition:
     fill var(--dur-2),
     stroke var(--dur-2);
-}
-.ponte-landing .g-dot.active {
-  fill: var(--gold);
-  stroke: var(--gold);
 }
 .ponte-landing .g-dot.hot {
   stroke: var(--gold);
@@ -503,114 +505,196 @@ body:has(.ponte-landing) {
   transition: opacity var(--dur-2);
 }
 
-/* ---- route label buttons overlaid on the bridge ---- */
-.ponte-landing .rlabel {
-  position: absolute;
-  font-family: var(--f-mono);
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  background: none;
-  border: 0;
-  line-height: 1.35;
-  max-width: 150px;
-  padding: 2px;
-  cursor: pointer;
-  transition: color var(--dur-1);
-}
-.ponte-landing .rlabel__t {
-  display: inline-block;
-  transition: transform var(--dur-1) var(--ease);
-}
-.ponte-landing .rlabel--structure .rlabel__t,
-.ponte-landing .rlabel--find .rlabel__t {
-  transform-origin: right center;
-}
-.ponte-landing .rlabel--check .rlabel__t,
-.ponte-landing .rlabel--investigate .rlabel__t {
-  transform-origin: left center;
-}
-/* Hovering a marker or its label lights both: gold text, larger (via a
-   reflow-free scale anchored at the bridge-facing edge), and a gold ring. */
-.ponte-landing .rlabel:hover,
-.ponte-landing .rlabel.hot,
-.ponte-landing .rlabel.active {
-  color: var(--gold-ink);
-}
-.ponte-landing .rlabel:hover .rlabel__t,
-.ponte-landing .rlabel.hot .rlabel__t {
-  transform: scale(1.18);
-}
-/* All four labels share two outer columns: Structure sits above Find on the
-   left, Check above Investigate on the right, each level with its own marker
-   row. The top pair use the exact same column anchor as the bottom pair. */
-.ponte-landing .rlabel--structure {
-  left: 11.5%;
-  top: 29%;
-  transform: translate(calc(-100% - 16px), -50%);
-  text-align: right;
-  max-width: 150px;
-}
-.ponte-landing .rlabel--check {
-  right: 11.5%;
-  top: 29%;
-  transform: translate(calc(100% + 16px), -50%);
-  text-align: left;
-  max-width: 150px;
-}
-.ponte-landing .rlabel--find {
-  left: 11.5%;
-  top: 76%;
-  transform: translate(calc(-100% - 16px), -50%);
-  text-align: right;
-  max-width: 140px;
-}
-.ponte-landing .rlabel--investigate {
-  right: 11.5%;
-  top: 76%;
-  transform: translate(calc(100% + 16px), -50%);
-  text-align: left;
-  max-width: 140px;
-}
-
-/* ---- route facts (unboxed, rule-separated) ---- */
-.ponte-landing .rfacts {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 10px 0;
+/* ---- the two route entrances, beneath the bridge -------------------------
+   Two routes, so they no longer hang off the piers as bare labels: they are a
+   pair of full-width entrances under the arch, each carrying its number, its
+   name and the line that says what it opens. Real buttons, text labels beside
+   the numbers, and a hover that lights both the button and its marker, so the
+   pairing is visible without relying on colour. */
+.ponte-landing .broutes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  width: 100%;
   margin-top: 26px;
-  min-height: 18px;
 }
-.ponte-landing .rfact {
+.ponte-landing .broute {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  text-align: left;
+  background: var(--raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1),
+    box-shadow var(--dur-2),
+    transform var(--dur-1);
+}
+.ponte-landing .broute:hover,
+.ponte-landing .broute.hot {
+  border-color: var(--gold);
+  box-shadow: var(--e-3);
+  transform: translateY(-1px);
+}
+.ponte-landing .broute__n {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--rule-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--f-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  padding: 0 16px;
-  border-right: 1px solid var(--rule-strong);
-  line-height: 1;
+  color: var(--ink);
+  transition:
+    background var(--dur-1),
+    border-color var(--dur-1);
 }
-.ponte-landing .rfact:last-child {
-  border-right: 0;
+.ponte-landing .broute:hover .broute__n,
+.ponte-landing .broute.hot .broute__n {
+  background: var(--gold);
+  border-color: var(--gold);
 }
-.ponte-landing .rfact .q {
-  opacity: 0.7;
+.ponte-landing .broute__b {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.ponte-landing .broute__t {
+  font-family: var(--f-serif);
+  font-size: clamp(19px, 2.1vw, 24px);
   font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--ink);
 }
-.ponte-landing .rfact.opt {
+.ponte-landing .broute__d {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.ponte-landing .broute__go {
+  flex-shrink: 0;
+  color: var(--ink-3);
+  display: inline-flex;
+  transition:
+    color var(--dur-1),
+    transform var(--dur-1);
+}
+.ponte-landing .broute__go svg {
+  width: 20px;
+  height: 20px;
+}
+.ponte-landing .broute:hover .broute__go,
+.ponte-landing .broute.hot .broute__go {
+  color: var(--gold-ink);
+  transform: translateX(3px);
+}
+
+/* ---- popular / recent areas ---- */
+.ponte-landing .popular {
+  width: 100%;
+}
+.ponte-landing .popular__t {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 14px;
+}
+.ponte-landing .popular__l {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ponte-landing .popular__i {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--raised);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-1),
+    background var(--dur-1);
+}
+.ponte-landing .popular__i:hover {
+  border-color: var(--gold);
+  background: var(--gold-tint);
+}
+.ponte-landing .popular__n {
+  font-size: 14px;
+  color: var(--ink);
+}
+.ponte-landing .popular__c {
+  font-family: var(--f-mono);
+  font-size: 11px;
   color: var(--ink-3);
 }
-.ponte-landing .rfact.unk {
-  color: var(--review);
+
+/* ---- trust and evidence ---- */
+.ponte-landing .ltrust {
+  width: 100%;
+  max-width: 720px;
+  border-top: 1px solid var(--rule);
+  padding-top: 24px;
 }
-.ponte-landing .rfact.ok {
-  color: var(--pos);
+.ponte-landing .ltrust__t {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.ponte-landing .ltrust__p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.ponte-landing .ltrust__p + .ltrust__p {
+  margin-top: 10px;
+}
+.ponte-landing .ltrust__p b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---- header links ---- */
+.ponte-landing .lhead__actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.ponte-landing .lhead__link {
+  font-size: 13px;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--dur-1),
+    border-color var(--dur-1);
+}
+.ponte-landing .lhead__link:hover {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
 }
 
 /* ---- footer ---- */
@@ -630,216 +714,6 @@ body:has(.ponte-landing) {
   font-weight: 600;
 }
 
-/* ---- voice bottom sheet ---- */
-.ponte-landing .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--r-md);
-  min-height: 44px;
-  font-family: var(--f-sans);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  transition:
-    background var(--dur-1),
-    border-color var(--dur-1),
-    color var(--dur-1),
-    transform 70ms;
-}
-.ponte-landing .btn:active {
-  transform: translateY(1px);
-}
-.ponte-landing .btn--primary {
-  background: var(--ink);
-  color: var(--surface);
-  border-color: var(--ink);
-}
-.ponte-landing .btn--primary:hover {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--ink);
-}
-.ponte-landing .btn--secondary {
-  background: var(--raised);
-  color: var(--ink);
-  border-color: var(--rule-strong);
-}
-.ponte-landing .btn--secondary:hover {
-  border-color: var(--ink-2);
-  background: var(--sunken);
-}
-.ponte-landing .btn--block {
-  width: 100%;
-  flex: 1;
-}
-.ponte-landing .iconbtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition:
-    background var(--dur-1),
-    color var(--dur-1);
-}
-.ponte-landing .iconbtn:hover {
-  background: var(--sunken);
-  color: var(--ink);
-}
-
-.voice {
-  position: fixed;
-  inset: 0;
-  z-index: 130;
-}
-.voice__scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 15, 14, 0.5);
-  opacity: 0;
-  transition: opacity var(--dur-2);
-}
-.voice.open .voice__scrim {
-  opacity: 1;
-}
-.voice__panel {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: min(460px, 100%);
-  background: var(--surface);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: var(--e-3);
-  padding: 12px 24px calc(28px + env(safe-area-inset-bottom));
-  transform: translateX(-50%) translateY(100%);
-  transition: transform var(--dur-3) var(--ease-out);
-  font-family: var(--f-sans);
-}
-.voice.open .voice__panel {
-  transform: translateX(-50%) translateY(0);
-}
-.voice__grip {
-  width: 38px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--rule-strong);
-  margin: 0 auto 12px;
-}
-.voice__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.voice__title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-}
-.voice__status {
-  font-family: var(--f-mono);
-  font-size: 13px;
-  color: var(--review);
-  letter-spacing: 0.04em;
-}
-.voice__status--ok {
-  color: var(--pos);
-}
-.voice__status--warn {
-  color: var(--neg);
-}
-.wave {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  height: 46px;
-  margin: 16px 0;
-}
-.wave i {
-  flex: 1;
-  background: var(--gold);
-  border-radius: 3px;
-  height: 40px;
-  transform: scaleY(0.4);
-  transform-origin: center;
-  animation: pl-wv 1s ease infinite;
-}
-.wave i:nth-child(2) {
-  animation-delay: 0.12s;
-}
-.wave i:nth-child(3) {
-  animation-delay: 0.24s;
-}
-.wave i:nth-child(4) {
-  animation-delay: 0.36s;
-}
-.wave i:nth-child(5) {
-  animation-delay: 0.24s;
-}
-.wave i:nth-child(6) {
-  animation-delay: 0.12s;
-}
-@keyframes pl-wv {
-  0%,
-  100% {
-    transform: scaleY(0.35);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-.voice__hint {
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.5;
-  margin: 6px 0 16px;
-}
-.voice__row {
-  display: flex;
-  gap: 10px;
-}
-.voice__transcript {
-  width: 100%;
-  font-family: var(--f-serif);
-  font-size: 20px;
-  color: var(--ink);
-  border: 0;
-  border-bottom: 1.5px solid var(--rule-strong);
-  border-radius: 0;
-  padding: 8px 2px;
-  margin: 8px 0 14px;
-  resize: none;
-  background: none;
-  line-height: 1.35;
-}
-.voice__transcript:focus {
-  outline: none;
-  border-bottom-color: var(--focus);
-}
-.voice__transcript[dir="rtl"] {
-  text-align: right;
-  direction: rtl;
-}
-.voice__hint-edit {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  color: var(--ink-3);
-  letter-spacing: 0.04em;
-  margin: 0 0 14px;
-}
 
 .ponte-landing .sr-only,
 .sr-only {
@@ -857,25 +731,28 @@ body:has(.ponte-landing) {
 /* ---- responsive ---- */
 @media (max-width: 1040px) {
   .ponte-landing .land__top {
-    gap: 24px;
+    gap: 30px;
     padding-top: 8px;
   }
   .ponte-landing .obj__q {
     font-size: clamp(44px, 11vw, 68px);
   }
-  .ponte-landing .gate,
-  .ponte-landing .gate__labels {
-    width: min(400px, 90%);
+  .ponte-landing .gate {
+    width: 100%;
   }
-  .ponte-landing .rlabel {
-    font-size: 10px;
-    max-width: 120px;
+  .ponte-landing .gate__stage {
+    width: min(440px, 92%);
   }
-  .ponte-landing .rlabel--find {
-    transform: translate(calc(-100% - 12px), -50%);
+  .ponte-landing .aband__head {
+    padding-left: 32px;
+    padding-right: 32px;
   }
-  .ponte-landing .rlabel--investigate {
-    transform: translate(calc(100% + 12px), -50%);
+}
+@media (max-width: 760px) {
+  /* Two entrances side by side stop being readable well before the phone
+     breakpoint: they stack, keeping their numbers and supporting lines. */
+  .ponte-landing .broutes {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 640px) {
@@ -885,62 +762,42 @@ body:has(.ponte-landing) {
     padding-left: 20px;
     padding-right: 20px;
   }
-  .ponte-landing .lhead__pos {
-    display: none;
+  .ponte-landing .aband__head {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .ponte-landing .lhead {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 16px;
+    padding-bottom: 12px;
+  }
+  .ponte-landing .lhead__actions {
+    gap: 16px;
   }
   .ponte-landing .land__foot {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
   }
-  /* phone: routes become a borderless number-badge legend below the mark */
-  .ponte-landing .gate {
-    aspect-ratio: auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    width: min(420px, 100%);
-  }
   .ponte-landing .gate__stage {
-    position: relative;
-    inset: auto;
     width: 100%;
     aspect-ratio: 1 / 0.72;
   }
-  .ponte-landing .rlabel {
-    position: static;
-    transform: none !important;
-    max-width: none;
-    text-align: left !important;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 2px;
-    border-top: 1px solid var(--rule);
-    font-size: 12px;
-    letter-spacing: 0.06em;
+  /* The phone band never animates: it is a scroller the reader drives, so a
+     record is never moving under a thumb. */
+  .ponte-landing .aband__track {
+    animation: none;
   }
-  .ponte-landing .rlabel::before {
-    content: attr(data-num);
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid var(--rule-strong);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--f-mono);
-    font-size: 11px;
-    color: var(--ink);
-  }
-  .ponte-landing .rlabel.active::before {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: var(--ink);
-  }
-  /* one clean sequential 01-04 list: hide the numbers embedded in the bridge */
-  .ponte-landing .g-dotn {
+  .ponte-landing .aband__echo {
     display: none;
+  }
+  .ponte-landing .aband__i {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .ponte-landing .aband__i:first-child {
+    padding-left: 20px;
   }
   /* On the smaller mobile bridge the opening only reaches full width lower down,
      where the arch has straightened. Sit the archway message there and narrow
@@ -961,21 +818,32 @@ body:has(.ponte-landing) {
     font-size: 8px;
     margin-top: 7px;
   }
+  .ponte-landing .broute {
+    padding: 16px;
+    gap: 12px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ponte-landing .mic::before,
-  .ponte-landing .mic::after,
-  .wave i {
-    animation: none !important;
+  /* The band stops moving entirely and becomes a scroller. Nothing on this
+     page animates for decoration; what is left is a transition on a state the
+     visitor caused. */
+  .ponte-landing .aband__track {
+    animation: none;
   }
-  .ponte-landing .talk__sub,
-  .ponte-landing .obj__support,
+  .ponte-landing .aband__echo {
+    display: none;
+  }
   .ponte-landing .gate__ceb,
   .ponte-landing .gate__ct,
   .ponte-landing .gate__ch,
-  .voice__panel,
-  .voice__scrim {
+  .ponte-landing .broute,
+  .ponte-landing .broute__go,
+  .ponte-landing .broute__n {
     transition: none !important;
+  }
+  .ponte-landing .broute:hover,
+  .ponte-landing .broute.hot {
+    transform: none;
   }
 }

@@ -1,22 +1,22 @@
 {
   "structure": {
     "meta": {
-      "title": "Structure an opportunity",
-      "description": "Structure a buy, sell or service requirement by tapping. Preview what each party sees, then submit for Ponte review."
+      "title": "Start a deal",
+      "description": "Source a product, supply a product or offer a trade service. Build it by tapping, preview exactly what each party sees, then submit for Ponte review."
     },
     "bar": { "back": "Back" },
     "trust": "Build and preview freely. Join only when you save or submit.",
     "intent": {
-      "eyebrow": "Structure an opportunity",
-      "title": "What are you trading?",
-      "buy": "Buy",
-      "buyDesc": "I need to source",
-      "sell": "Sell",
+      "eyebrow": "Start a deal",
+      "title": "What do you want to do?",
+      "buy": "Source a product",
+      "buyDesc": "I need to buy or import",
+      "sell": "Supply a product",
       "sellDesc": "I have supply to offer",
-      "service": "Service",
-      "serviceDesc": "A trade-related service",
+      "service": "Offer a trade service",
+      "serviceDesc": "Freight, customs, inspection, finance or another trade service",
       "chosen": "Product",
-      "cta": "Structure it"
+      "cta": "Continue"
     },
     "hs": {
       "choose": "Or choose your product",

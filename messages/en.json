@@ -260,6 +260,80 @@
       "subject": "Enquiry: {topic}"
     }
   },
+  "explore": {
+    "meta": {
+      "title": "Explore the market",
+      "description": "See current demand, supply, services and commercial activity in global physical-goods trade. No account needed to look."
+    },
+    "nav": {
+      "home": "Ponte Trade home",
+      "explore": "Explore the market",
+      "deal": "Start a deal"
+    },
+    "trust": "Public market activity. Look freely; join only when an action needs to be saved or sent.",
+    "crumb": {
+      "label": "Breadcrumb",
+      "home": "Ponte",
+      "explore": "Explore"
+    },
+    "eyebrow": "Explore the market",
+    "records": "{count} market records",
+    "breakdown": "Demand {demand} · Supply {supply} · Signals {signals}",
+    "noCount": "Not counted yet",
+    "countsNote": "Counts are market records, not verified opportunities.",
+    "cappedNote": "A count is a floor: this view reads the most recent records, not the whole archive.",
+    "universe": {
+      "title": "Explore the market",
+      "lead": "What is happening in global physical-goods trade right now: what buyers need, what sellers have, and which services are being asked for.",
+      "familiesTitle": "Three families",
+      "sectorsTitle": "Product sectors",
+      "sectorsNote": "Sectors with records open"
+    },
+    "families": {
+      "products": {
+        "title": "Products",
+        "lead": "Goods, by sector, using the Ponte product catalogue.",
+        "empty": "No product records are public in this view yet."
+      },
+      "services": {
+        "title": "Trade services",
+        "lead": "Freight, customs, inspection, finance and other trade-enabling services members are asking for.",
+        "empty": "No service records are public in this view yet."
+      },
+      "distribution": {
+        "title": "Distribution and representation",
+        "lead": "Distributors, agents, representation and route-to-market partners.",
+        "empty": "Ponte does not classify records as distribution or representation yet, so there is nothing honest to count here. If this is what you need, start a deal and describe it; it is the fastest way to put it in front of the market."
+      }
+    },
+    "sector": {
+      "lead": "Recent market activity in this sector ({range}), across demand, supply, services and unconfirmed Market Signals."
+    },
+    "results": {
+      "title": "Results for {query}",
+      "lead": "Records whose product or geography matches what you searched."
+    },
+    "search": {
+      "label": "Search the market",
+      "placeholder": "Search products, markets, companies or services",
+      "go": "Search"
+    },
+    "activity": {
+      "title": "Market activity",
+      "lead": "Every record shows what it actually is. A Market Signal is an indication Ponte has seen and has not confirmed.",
+      "empty": "Nothing is public here yet. That is a gap in the market Ponte can see, not the end of the road: describe what you need and it becomes the first record here.",
+      "more": "Showing the {shown} most recent. Deeper browsing arrives with the sector drill-down."
+    },
+    "record": {
+      "view": "View",
+      "listLabel": "Market records"
+    },
+    "deal": {
+      "title": "Start a related deal",
+      "lead": "Source a product, supply a product or offer a trade service. Build and preview it before joining.",
+      "cta": "Start a deal"
+    }
+  },
   "find": {
     "meta": {
       "title": "Find demand and supply",
@@ -501,135 +575,65 @@
   },
   "home": {
     "metaTitle": "Ponte Trade: What's your deal?",
-    "metaDescription": "Cross-border trade, with greater clarity. One commercial objective, four direct routes. Say it naturally, or choose directly.",
+    "metaDescription": "Explore what is happening in global physical-goods trade, or start a deal of your own. Recent market activity, sectors and services, with no account needed to look.",
     "header": {
-      "homeAria": "Ponte Trade home",
-      "tradeClarity": "Cross-border trade, with greater clarity"
+      "homeAria": "Ponte Trade home"
     },
     "hero": {
-      "regionLabel": "State your commercial objective"
+      "regionLabel": "Ponte Trade"
     },
-    "eyebrow": "Cross-border trade, with greater clarity",
+    "brand": "Ponte Trade",
     "headline": "What's your deal?",
-    "supporting": "What are you looking to source, supply or move across borders?",
-    "voice": {
-      "cta": "Click and talk",
-      "sub": "Ponte reads your intent. Nothing is sent until you choose.",
-      "ariaLabel": "Speak your objective"
+    "supporting": "Explore what is happening in global trade, or start a deal of your own.",
+    "activity": {
+      "title": "Recent market activity",
+      "note": "Real records, each shown with what it actually is. Ponte has not confirmed every one.",
+      "route": "{from} to {to}",
+      "today": "Today",
+      "daysAgo": "{days, plural, one {# day ago} other {# days ago}}"
     },
-    "type": {
-      "or": "Or type naturally",
-      "ariaLabel": "Describe your commercial objective",
-      "continueLabel": "Continue"
+    "kinds": {
+      "marketSignal": "Market Signal",
+      "memberRequirement": "Member Requirement",
+      "memberOffer": "Member Offer",
+      "serviceRequirement": "Service Requirement"
     },
     "gateway": {
       "regionLabel": "Choose where to begin",
-      "chooseWhereToBegin": "Choose where to begin",
-      "goldSignal": "The gold signal follows your choice",
-      "centerEyebrow": "Four ways to begin",
-      "centerTitle": "Say it naturally.",
-      "centerTitleEm": "Or choose directly.",
-      "centerHint": "One choice opens the route →"
+      "centerEyebrow": "Two ways to begin",
+      "centerTitle": "See the market.",
+      "centerTitleEm": "Or start a deal.",
+      "centerHint": "One click opens the route"
     },
     "routes": {
-      "find": {
-        "label": "Find demand for my products",
-        "title": "Find",
-        "titleEm": "buyer demand.",
-        "hint": "Name the product →",
-        "placeholder": "e.g. almonds, pistachios, refined sugar...",
-        "support": "<b>Name the product.</b> Ponte returns global buyer demand; market and quantity refine it.",
-        "fact1": "Product",
-        "fact1q": "to begin",
-        "fact2": "Any market",
-        "fact2q": "optional",
-        "fact3": "Quantity",
-        "fact3q": "optional",
-        "fact4": "You",
-        "fact4q": "choose to connect"
+      "explore": {
+        "label": "Explore the market",
+        "support": "See current demand, supply, services and commercial activity."
       },
-      "structure": {
-        "label": "Structure a requirement",
-        "title": "Structure",
-        "titleEm": "the requirement.",
-        "hint": "Paste or describe it →",
-        "placeholder": "Paste or describe the requirement, rough text is fine...",
-        "support": "<b>Start with what you know.</b> Ponte identifies only the decisive missing facts.",
-        "fact1": "Rough text",
-        "fact1q": "accepted",
-        "fact2": "Decisive facts",
-        "fact2q": "only",
-        "fact3": "Nothing",
-        "fact3q": "invented",
-        "fact4": "You",
-        "fact4q": "confirm each"
-      },
-      "check": {
-        "label": "Check a company",
-        "title": "Check",
-        "titleEm": "the business.",
-        "hint": "Enter the company →",
-        "placeholder": "Legal or trading name...",
-        "support": "<b>Begin with a company name.</b> Add the jurisdiction if you know it.",
-        "fact1": "Legal name",
-        "fact1q": "to begin",
-        "fact2": "Dated",
-        "fact2q": "evidence",
-        "fact3": "Unknowns",
-        "fact3q": "shown",
-        "fact4": "You",
-        "fact4q": "decide use"
-      },
-      "investigate": {
-        "label": "Investigate a signal",
-        "title": "Investigate",
-        "titleEm": "a signal.",
-        "hint": "Paste or describe the signal →",
-        "placeholder": "What signal or reported opportunity did you see?",
-        "support": "<b>Paste a link or describe what you saw.</b> Ponte preserves the source and uncertainty.",
-        "fact1": "1",
-        "fact1q": "signal captured",
-        "fact2": "Source",
-        "fact2q": "retained",
-        "fact3": "?",
-        "fact3q": "unknowns shown",
-        "fact4": "You",
-        "fact4q": "approve scope"
+      "deal": {
+        "label": "Start a deal",
+        "support": "Source a product, supply a product or offer a trade service."
       }
     },
+    "search": {
+      "regionLabel": "Search the market",
+      "label": "Search",
+      "placeholder": "Search products, markets, companies or services",
+      "go": "Search",
+      "hint": "Try a product, a route, a service or a company name.",
+      "reading": "Reading what you typed...",
+      "clarify": "Ponte kept your words. Open the market universe, or try naming a product, a route or a company.",
+      "emptyAnnounce": "Type a product, market, company or service, or choose a route on the bridge."
+    },
+    "popular": {
+      "title": "Where the activity is",
+      "records": "{count} market records"
+    },
+    "trustTitle": "What Ponte shows you",
+    "trustBody": "<b>Every record says what it is.</b> A Market Signal is an indication Ponte has seen in the open market and has not confirmed. A Member Requirement or Member Offer was posted by a member and reviewed before publication. Ponte does not present one as the other, and does not claim a counterparty is safe.",
     "trust": "<b>Start freely.</b> Join only when an action needs to be saved or sent.",
-    "clarify": {
-      "prompt": "<b>Ponte kept your words.</b> Which route fits: find demand, structure a requirement, check a company, or investigate a signal?",
-      "announce": "Choose a route on the mark.",
-      "emptyAnnounce": "Describe your objective, or choose a route on the mark."
-    },
-    "find": {
-      "needProductSupport": "<b>Name the product.</b> Ponte returns global buyer demand; it will not assume a product.",
-      "needProductAnnounce": "Name the product, Ponte will not assume one."
-    },
-    "voiceSheet": {
-      "title": "Speak to Ponte",
-      "requesting": "Requesting the microphone...",
-      "listening": "Listening...",
-      "ready": "Transcription ready. Edit if needed.",
-      "editHint": "You can edit this before continuing.",
-      "noSpeech": "No speech detected",
-      "noSpeechHint": "Ponte created nothing. Try again, or type it instead.",
-      "denied": "Microphone unavailable",
-      "deniedHint": "Ponte cannot reach the microphone. Typing stays fully available, you are never blocked.",
-      "unsupported": "Voice input is not available in this browser",
-      "unsupportedHint": "This browser does not support in-page voice. Typing stays fully available.",
-      "error": "Voice input stopped",
-      "errorHint": "Something interrupted the microphone. Try again, or type it instead.",
-      "stop": "Stop",
-      "reRecord": "Re-record",
-      "continueLabel": "Continue",
-      "tryAgain": "Try again",
-      "typeInstead": "Type instead",
-      "close": "Close"
-    },
     "ai": {
-      "disclosure": "Ponte uses AI to understand what you type or say."
+      "disclosure": "Ponte uses AI to understand what you type."
     }
   },
   "legal": {
@@ -1146,26 +1150,34 @@
     "offlineRetry": "Try again",
     "offlineHint": "This page was saved on your device"
   },
+  "siteFooter": {
+    "whoWeAre": "Ponte Trade. Cross-border trade, with greater clarity.",
+    "navLabel": "Footer",
+    "about": "About",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
   "structure": {
     "meta": {
-      "title": "Structure an opportunity",
-      "description": "Structure a buy, sell or service requirement by tapping. Preview what each party sees, then submit for Ponte review."
+      "title": "Start a deal",
+      "description": "Source a product, supply a product or offer a trade service. Build it by tapping, preview exactly what each party sees, then submit for Ponte review."
     },
     "bar": {
       "back": "Back"
     },
     "trust": "Build and preview freely. Join only when you save or submit.",
     "intent": {
-      "eyebrow": "Structure an opportunity",
-      "title": "What are you trading?",
-      "buy": "Buy",
-      "buyDesc": "I need to source",
-      "sell": "Sell",
+      "eyebrow": "Start a deal",
+      "title": "What do you want to do?",
+      "buy": "Source a product",
+      "buyDesc": "I need to buy or import",
+      "sell": "Supply a product",
       "sellDesc": "I have supply to offer",
-      "service": "Service",
-      "serviceDesc": "A trade-related service",
+      "service": "Offer a trade service",
+      "serviceDesc": "Freight, customs, inspection, finance or another trade service",
       "chosen": "Product",
-      "cta": "Structure it"
+      "cta": "Continue"
     },
     "hs": {
       "choose": "Or choose your product",
@@ -1458,13 +1470,5 @@
       },
       "disclaimerHeading": "What this result does not mean"
     }
-  },
-  "siteFooter": {
-    "whoWeAre": "Ponte Trade. Cross-border trade, with greater clarity.",
-    "navLabel": "Footer",
-    "about": "About",
-    "privacy": "Privacy",
-    "terms": "Terms",
-    "contact": "Contact"
   }
 }

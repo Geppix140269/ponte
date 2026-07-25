@@ -14,7 +14,9 @@ import { usePathname } from "@/i18n/navigation";
  *
  * The Find journey (/find, /find/..., /workspace) is the same Brand v5 cream
  * world extended inward: it too renders full-bleed with its own light chrome and
- * its own <main>, so it is bared for the same reason the landing is.
+ * its own <main>, so it is bared for the same reason the landing is. Explore
+ * (/explore), the first of the two North Star entrances, is that same world and
+ * is bared with them.
  *
  * The public legal pages (/about, /privacy, /terms) are the same light Brand v5
  * treatment with their own PonteFooter, so they are bared too; otherwise the
@@ -28,6 +30,8 @@ import { usePathname } from "@/i18n/navigation";
 function rendersOwnChrome(path: string): boolean {
   return (
     path === "/" ||
+    path === "/explore" ||
+    path.startsWith("/explore/") ||
     path === "/find" ||
     path.startsWith("/find/") ||
     path === "/structure" ||

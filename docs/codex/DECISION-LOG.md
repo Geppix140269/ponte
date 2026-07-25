@@ -2,7 +2,21 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
-## 25 July 2026 — The four bridge routes are direct entrances
+## 25 July 2026 — North Star entry reset: two primary routes
+
+**Decision:** The Ponte Trade entrance has exactly two primary journeys, Explore the market and Start a deal. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` is the governing authority for the entry experience and supersedes all earlier landing, gateway and primary-entry instructions, including the four-route bridge decision recorded below (25 July 2026, "The four bridge routes are direct entrances"), which is retained for history.
+
+**Why:** The entrance was organised around the wrong hierarchy. Four routes split a decision that is really two; the voice control drew more attention than its reliability across browsers and accents justifies; and a visitor searching a product could be met with "No Qualified Opportunity matches yet" while many relevant Market Signals existed. That reads as "Ponte has nothing for me". Ponte has one chance to establish relevance and must give value immediately.
+
+**What changed:** Two bridge routes, both navigating directly; the voice control and its bottom sheet removed with no reserved layout space; a recent market activity band above the masthead built from real public records; the search field beneath the bridge; popular areas derived from real counts; a trust and evidence explanation; and a new `/explore` market universe over Products, Trade services, and Distribution and representation.
+
+**What is preserved:** Check a company and Investigate a signal remain reachable downstream and through search, which still resolves the older `RouteKey` vocabulary through `lib/landing/routing.ts`; that file remains the sole destination authority, so `NEXT_PUBLIC_STRUCTURE_JOURNEY` still decides where Start a deal lands. Market Signals and member records stay separate in data, status, language and actions; only the presentation hierarchy is unified, and every record prints its own true class. Voice input inside journeys (the Find picker, the Check composer, the introduction request) is untouched. Structure keeps its composer, preview, AccountGate, submission payload and Workspace continuation; only its S01 copy changed, to Source a product / Supply a product / Offer a trade service.
+
+**What was deliberately not done:** No migration, no flag change, no monetisation, no verification work, no rewrite of `/find` (PR 3), and no sector drill-down below one level (PR 2). `Reviewed Opportunity` and `Distribution Opportunity` are not used as classifications, because no field in the current schema proves them.
+
+**Affected areas:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` (new), `app/[locale]/page.tsx`, `app/[locale]/explore/page.tsx` (new), `components/home/landing/*` (`VoiceSheet.tsx` deleted), `components/explore/*` (new), `components/ChromeGate.tsx`, `lib/board/activity-logic.ts`, `lib/board/activity-view.ts`, `lib/board/market-activity.ts`, `lib/explore/families.ts`, `lib/landing/bridge.ts` (all new), `lib/landing/analytics.ts`, `lib/landing/examples.ts` (deleted), `messages/_fragments/home.json`, `messages/_fragments/explore.json` (new), `messages/_fragments/structure.json`, and the tests in `lib/board/__tests__/market-activity.test.ts` (new) and `lib/landing/__tests__/bridge-navigation.test.tsx` (rewritten).
+
+## 25 July 2026 — The four bridge routes are direct entrances (superseded by the North Star entry reset above)
 
 **Decision:** A click on one of the four named routes across the gateway bridge — the label or its bridge marker — navigates immediately to that route's journey. It no longer only selects the route, changes the centre copy and focuses the objective field. No objective text, product, company or Continue press is required first; the destination journey collects whatever it still needs.
 

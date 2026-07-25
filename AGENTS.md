@@ -2,21 +2,30 @@
 
 Before changing code, read these files in order:
 
-1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` in full.
-2. `docs/codex/00-START-HERE.md`.
-3. Every status, decision and roadmap file linked from the start page.
+1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` in full. It is the
+   current authority for the entry experience and supersedes all earlier
+   landing, gateway and primary-entry instructions.
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` in full.
+3. `docs/codex/00-START-HERE.md`.
+4. Every status, decision and roadmap file linked from the start page.
 
 ## Source of truth
 
 - `main` in `Geppix140269/ponte` is the canonical code source.
-- The Master Implementation Brief is the governing product and implementation authority for the current development cycle.
+- The North Star Entry Architecture governs the entry experience: the landing,
+  the two primary routes (Explore the market, Start a deal), Explore, market
+  activity presentation and the Start a Deal entry.
+- The Master Implementation Brief is the governing product and implementation
+  authority for everything downstream of entry that the North Star does not
+  restate.
 - Do not treat a local clone, chat transcript, design export, deployed page or stale document as more authoritative than the reconciled repository record.
 - The complete authority order is defined in `docs/codex/00-START-HERE.md`.
 
 ## Non-negotiable product rules
 
 - Ponte Trade is a commercial intelligence and controlled-execution layer for cross-border trade, not a consumer classifieds marketplace.
-- Keep Qualified Opportunities and Market Signals separate in data, language, presentation and actions.
+- Keep Qualified Opportunities and Market Signals separate in data, status, language and actions. They may appear in one market-activity stream on entry surfaces, where each record must print its own true classification; unifying a presentation is not blending the record classes, and an unconfirmed Market Signal is never called a Qualified Opportunity.
+- Never answer commercial curiosity with a large empty Qualified Opportunities state. When no reviewed opportunity exists, show the market activity that does exist and a route to create a related deal.
 - Never invent users, demand, supply, liquidity, urgency, transaction volume, mandates, verification or commercial success.
 - Public Market Signals must not expose third-party identity, contacts, source URLs, copied prose or private provenance.
 - Commercial fit precedes contact disclosure. Introductions must remain controlled and recorded.

@@ -23,7 +23,8 @@ Operating spine:
 
 When documents conflict, use this order:
 
-1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for the current development cycle.
+0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience (landing, the two primary routes, Explore, market-activity presentation, Start a Deal entry). It supersedes all earlier landing, gateway and primary-entry instructions, including anything below that defines four primary routes, makes Qualified Opportunities the primary Explore result, or treats Market Signals as a secondary fallback.
+1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry.
 2. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report the conflict before changing direction.
 3. The underlying long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, when present, for additional depth that does not conflict with the governing brief.
 4. Existing engineering, lifecycle, security and production authorities in the repository.
@@ -36,7 +37,7 @@ The governing brief already consolidates the product architecture, Brand v5 rule
 `main` already contains:
 
 - Founding-launch integrity work, Blocks A-F.
-- The cream/ink/gold “What’s your deal?” gateway.
+- The cream/ink/gold “What’s your deal?” gateway. Its four-route form is superseded by the North Star entry architecture; the two-route entrance, the market activity band and `/explore` are on a branch awaiting owner review (PR 1).
 - Journey 1: Find → separate Qualified Opportunities and Market Signals → Qualified Opportunity detail → controlled-introduction request.
 - Journey 2: Structure & Submit, screens S01-S06, including facts/gaps, public/private/reviewer preview, account gate and submission.
 - Production fixes for the Journey 1 signal import and Journey 2 seed.
@@ -49,6 +50,7 @@ Code existing on `main` does not prove it is enabled or live. Find and Structure
 
 Read next:
 
+0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
 1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
 2. `CURRENT-STATE.md`
 3. `FEATURE-FLAGS.md`

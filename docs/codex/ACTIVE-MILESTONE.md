@@ -1,65 +1,70 @@
-# Active milestone — Phase 0 Codex onboarding and gap report
+# Active milestone — North Star entry architecture, PR 1
+
+**Authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
+**Status:** Implemented on branch, open for owner review, not merged.
+
+This milestone supersedes the previous active milestone (Phase 0 Codex
+onboarding and gap report), summarised at the foot of this file for history.
+The owner directed a controlled refactor of the entry experience against the
+North Star reset rather than a further audit pass.
 
 ## Objective
 
-Make the repository self-contained enough for Codex to understand the product, current implementation, production constraints and roadmap, then complete the governing brief's Phase 0 repository-to-architecture gap report before any new implementation.
+Deliver the first phase of the North Star entry architecture: an entrance that
+gives a visitor value immediately, offers two primary journeys, and never leads
+with emptiness.
 
-## In scope
+## In scope (PR 1)
 
-- Merge the repository agent instructions and reconciled Codex operating layer.
-- Use `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` as the governing implementation authority.
-- Audit `main`, recent merged PRs, routes, components, APIs, database-facing services, migrations, CI, deployment configuration, localisation and tests.
-- Map current implementation to the Route Atlas IDs, conceptual domain objects and named end-to-end journeys.
-- Separate reusable engineering infrastructure, visual debt, product-flow debt, data-model gaps, security/migration risk and obsolete surfaces.
-- Identify stale or contradictory repository documentation.
-- Assess the merged homepage as retain, revise or replace within connected journeys without modifying it.
-- Propose the smallest truthful Phase 1 vertical slice and stop for owner approval.
+- The North Star authority document, and marking the superseded four-route
+  instructions as historical.
+- Recent market activity band, from real public records, on the landing.
+- Two-route bridge (Explore the market, Start a deal) with direct navigation.
+- Removal of the voice control and of any layout space it reserved.
+- Search field below the bridge.
+- Popular or recent areas, derived from real counts.
+- Trust and evidence explanation.
+- Desktop and mobile.
+- Start a Deal routing into the existing Structure composer, with Source a
+  product / Supply a product / Offer a trade service as the first choices.
+- Initial `/explore` route shell.
 
-## Out of scope
+## Out of scope (later phases)
 
-- No product UI or behaviour changes.
-- No database migration.
-- No route changes.
-- No production deployment or feature-flag change.
-- No secret access or rotation.
-- No global Brand v5 repaint.
-- No L1-L4, Trust Score, verification-data or user-facing trust-model changes.
-
-## Phase 0 deliverables
-
-1. Current route inventory.
-2. Current major component inventory.
-3. Current database and API inventory.
-4. Mapping to every route family and conceptual domain object.
-5. Classification of each relevant item as aligned, partially aligned, reusable infrastructure, obsolete, missing, or unsafe/contradictory.
-6. Visual debt separated from workflow and data debt.
-7. Every L1-L4 and Trust Score dependency.
-8. Assessment of the merged landing implementation.
-9. Schema drift and migration hazards.
-10. All places where Qualified Opportunities and Market Signals are blended or confused.
-11. Authentication boundaries that lose user work.
-12. External actions lacking deterministic approval or idempotency.
-13. Routes currently receiving handoff from the gateway.
-14. Conflicts between repository documentation and the governing brief.
-15. The smallest proposed Phase 1 vertical slice, including exact route/state IDs, files to reuse, files likely to change, possible schema/API additions, eventual migration needs, test plan, risks, rollback/safe-disable and unresolved decisions.
-16. Assumptions and owner questions.
+- PR 2: the Explore universe drill-down (sector, chapter, subcategory,
+  product), pagination and progressive loading.
+- PR 3: the unified market activity screen, filters, and the rewrite of `/find`
+  away from a Qualified-Opportunities-first result.
+- PR 4: Start a Deal refinement, including duration and the remaining
+  commercial terms, and service-specific fields.
+- Verification, communication, investigation execution and monetisation.
+- Any migration, production flag change or deployment.
 
 ## Definition of done
 
-1. `AGENTS.md`, the governing brief and this Codex layer are merged.
-2. Codex has read the governing brief in full.
-3. Codex returns the complete Phase 0 report without implementing application behaviour.
-4. The report distinguishes code on `main`, deployed code, enabled flags and production-tested behaviour.
-5. `npm run verify` is run and its exact result recorded, or an environment-specific inability is reported precisely.
-6. The production host, branch and feature-flag state are resolved or left as explicit owner actions.
-7. Giuseppe approves the next milestone before implementation begins.
+1. The North Star authority exists and the superseded instructions are marked.
+2. Only two primary bridge routes render, and each navigates directly.
+3. The voice control is absent, with no reserved space.
+4. "Ponte Trade - What's your deal?" remains central, with search prominent
+   below the bridge.
+5. Recent market activity is visible above the bridge, from real data, with
+   truthful classifications and working reduced-motion behaviour.
+6. Explore opens a useful first screen with the three approved families and the
+   existing HS categories and icons, requiring no registration.
+7. Start a Deal reaches the existing composer, keeps preview before
+   registration and keeps the existing AccountGate on save and submit.
+8. `npm run verify` is run and its exact result recorded.
+9. A deploy preview is available and the pull request stops before merge for
+   owner review.
 
-## Codex audit instruction
+---
 
-Read `AGENTS.md` and `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` in full before taking any action. Then read every status, decision and roadmap file linked from `docs/codex/00-START-HERE.md`.
+## Superseded milestone (history): Phase 0 Codex onboarding and gap report
 
-Do not implement the app-wide rebrand. Do not change L1-L4, the Trust Score, global tokens, migrations, routes, production settings or application behaviour.
-
-Inspect the current `main`, including merged PRs #14-#20, and produce the Phase 0 repository-to-architecture gap report defined above and in section 13 of the governing brief.
-
-Run `npm run verify` and record the exact result. Return the report for Giuseppe's review. Do not begin Phase 1, create a migration, change a production flag or deploy anything.
+Phase 0 asked for a repository-to-architecture gap report before any new
+implementation, with no product UI or behaviour change. Its record is in the
+repository history and in `docs/codex/CODEX-ONBOARDING-AUDIT.md`. The
+deliverables that remain useful (route, component and API inventories; the
+Qualified Opportunity and Market Signal confusion map; authentication
+boundaries that lose work) are not cancelled. They are simply no longer the
+blocking gate in front of the entry work the owner has now directed.

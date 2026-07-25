@@ -1,134 +1,105 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { inferIntent, type RouteKey, type ExtractedFacts } from "@/lib/landing/intent";
 import { destinationFor } from "@/lib/landing/routing";
-import { directRouteNavigation } from "@/lib/landing/direct-route";
-import { ROTATING_EXAMPLES } from "@/lib/landing/examples";
+import { bridgeNavigation, type BridgeRoute } from "@/lib/landing/bridge";
 import { track } from "@/lib/landing/analytics";
-import PonteBridge, { type BridgeCenter } from "./PonteBridge";
-import VoiceSheet, { type VoiceLabels } from "./VoiceSheet";
+import type { ActivityBandItem } from "@/lib/board/activity-view";
+import ActivityBand from "./ActivityBand";
+import PonteBridge, { type BridgeCenter, type BridgeRouteLabels } from "./PonteBridge";
 
-const ROUTES: RouteKey[] = ["find", "structure", "check", "investigate"];
+/**
+ * The Ponte Trade entrance (North Star entry architecture, section 5).
+ *
+ * The hierarchy is fixed by the North Star and is the reason this file is
+ * ordered the way it is:
+ *
+ *   header -> recent market activity -> Ponte Trade -> "What's your deal?"
+ *   -> two-route bridge -> search -> popular areas -> trust -> footer
+ *
+ * Two things this page no longer does, both deliberate:
+ *
+ *   - It offers two primary routes, not four. Check a company and Investigate a
+ *     signal are contextual and downstream; they stay reachable through search
+ *     and from the journeys that own them.
+ *   - It has no voice control. Browser support is inconsistent, accuracy across
+ *     accents is not good enough for a first impression, and most visitors are
+ *     not native English speakers. Typing and search are the interaction. Voice
+ *     survives inside journeys (the Find picker, the Check composer), where it
+ *     assists rather than greets.
+ *
+ * The market data (the band, the popular areas) is read on the server and
+ * handed down as already-rendered strings, so this component stays a thin
+ * interaction layer and the page never issues a client query.
+ */
 
-// Which of a route's four facts read as optional / unknown, so colour never
-// carries the only meaning (the fact word itself always states it too).
-const FACT_TONE: Record<RouteKey, string[]> = {
-  find: ["", "opt", "opt", "opt"],
-  structure: ["", "", "", "opt"],
-  check: ["", "", "unk", "opt"],
-  investigate: ["", "", "unk", "opt"],
-};
+export interface PopularArea {
+  /** Sector id from HS_CATEGORIES. */
+  id: number;
+  label: string;
+  /** Locale-relative path into Explore. */
+  href: string;
+  /** Real record count, already formatted. */
+  count: string;
+}
 
-// BCP-47 recognition tag for the *interface* locale. This only sets the voice
-// recogniser's starting language; the user can still speak any language and the
-// edited transcript is classified language-independently. Add a tag here when an
-// interface locale is added (see LANGUAGES.md).
-const SPEECH_LANG: Record<string, string> = {
-  en: "en-US",
-};
-
-export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boolean }) {
+export default function PonteLanding({
+  rtl,
+  activity,
+  popular,
+}: {
+  rtl: boolean;
+  activity: ActivityBandItem[];
+  popular: PopularArea[];
+}) {
   const t = useTranslations("home");
   const router = useRouter();
   const bold = useCallback((chunks: ReactNode) => <b>{chunks}</b>, []);
 
-  const [activeRoute, setActiveRoute] = useState<RouteKey | null>(null);
-  const [objective, setObjective] = useState("");
+  const [query, setQuery] = useState("");
   const [clarify, setClarify] = useState(false);
   const [clarifyReply, setClarifyReply] = useState("");
   const [interpreting, setInterpreting] = useState(false);
-  const [needProduct, setNeedProduct] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [exampleIndex, setExampleIndex] = useState(0);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [voiceOpen, setVoiceOpen] = useState(false);
   const [live, setLive] = useState("");
 
-  const fieldRef = useRef<HTMLTextAreaElement | null>(null);
+  const fieldRef = useRef<HTMLInputElement | null>(null);
 
   const announce = useCallback((message: string) => {
     setLive("");
     window.setTimeout(() => setLive(message), 50);
   }, []);
 
-  // Reduced motion is read once on the client, so the server render is stable.
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduceMotion(mq.matches);
-    const onChange = () => setReduceMotion(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const center: BridgeCenter = {
+    eyebrow: t("gateway.centerEyebrow"),
+    title: t("gateway.centerTitle"),
+    titleEm: t("gateway.centerTitleEm"),
+    hint: t("gateway.centerHint"),
+  };
 
-  const paused = activeRoute !== null || objective.trim() !== "" || focused;
+  const routeLabels: Record<BridgeRoute, BridgeRouteLabels> = {
+    explore: { title: t("routes.explore.label"), support: t("routes.explore.support") },
+    deal: { title: t("routes.deal.label"), support: t("routes.deal.support") },
+  };
 
-  // Rotate the example placeholder only while the field is empty, unfocused and
-  // no route is chosen. It begins in English (index 0, same on server and
-  // client, so no hydration mismatch) and returns to English each cycle.
-  useEffect(() => {
-    if (reduceMotion || paused) return undefined;
-    const id = window.setInterval(() => {
-      setExampleIndex((i) => (i + 1) % ROTATING_EXAMPLES.length);
-    }, 3600);
-    return () => window.clearInterval(id);
-  }, [reduceMotion, paused]);
-
-  const grow = useCallback(() => {
-    const el = fieldRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
-
-  const example = ROTATING_EXAMPLES[exampleIndex];
-  const placeholder = activeRoute ? t(`routes.${activeRoute}.placeholder`) : example.text;
-  const fieldDir = objective
-    ? "auto"
-    : activeRoute
-      ? rtl
-        ? "rtl"
-        : "ltr"
-      : example.dir;
-  const fieldLang = objective ? undefined : activeRoute ? locale : example.lang;
-
-  const center: BridgeCenter = activeRoute
-    ? {
-        eyebrow: t(`routes.${activeRoute}.label`),
-        title: t(`routes.${activeRoute}.title`),
-        titleEm: t(`routes.${activeRoute}.titleEm`),
-        hint: t(`routes.${activeRoute}.hint`),
-      }
-    : {
-        eyebrow: t("gateway.centerEyebrow"),
-        title: t("gateway.centerTitle"),
-        titleEm: t("gateway.centerTitleEm"),
-        hint: t("gateway.centerHint"),
-      };
-
-  const labels = useMemo(
-    () =>
-      ROUTES.reduce(
-        (acc, key) => {
-          acc[key] = t(`routes.${key}.label`);
-          return acc;
-        },
-        {} as Record<RouteKey, string>,
-      ),
-    [t],
+  /**
+   * A deliberate click on a bridge route: a direct entrance. The page leaves at
+   * once, with no objective, no product and no second step. Anything already
+   * typed rides along; the journey collects whatever it still needs.
+   */
+  const openRoute = useCallback(
+    (key: BridgeRoute) => {
+      const text = query.trim();
+      const facts = text ? inferIntent(text, "find").facts : undefined;
+      const { destination, events } = bridgeNavigation(key, facts);
+      for (const e of events) track(e.name, e.meta);
+      router.push(destination);
+    },
+    [query, router],
   );
-
-  // The route Ponte read from an objective. It only reflects the reading on the
-  // page; the navigation that follows is the caller's business.
-  const selectRoute = useCallback((key: RouteKey) => {
-    setActiveRoute(key);
-    setClarify(false);
-    setNeedProduct(false);
-    track("route_suggested", { route: key });
-  }, []);
 
   const navigate = useCallback(
     (route: RouteKey, text: string, factsOverride?: ExtractedFacts) => {
@@ -139,29 +110,12 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
     [router],
   );
 
-  // A deliberate click on a bridge route or its marker: a direct entrance.
-  // The route lights up and the page leaves for that journey immediately -- no
-  // objective, no Continue, no timeout. Anything already typed or spoken rides
-  // along; nothing else is asked for here, because the journey collects what it
-  // still needs.
-  const openRoute = useCallback(
-    (key: RouteKey) => {
-      const text = objective.trim();
-      const facts = text ? inferIntent(text, key).facts : undefined;
-      const { destination, events } = directRouteNavigation(key, facts);
-      setActiveRoute(key);
-      setClarify(false);
-      setNeedProduct(false);
-      for (const e of events) track(e.name, e.meta);
-      router.push(destination);
-    },
-    [objective, router],
-  );
-
-  // The AI fallback: for anything the deterministic matcher cannot resolve (any
-  // language, any product outside its small vocabulary), ask the server to read
-  // the objective. Returns true when it navigated or answered, false when the
-  // caller should fall back to the deterministic clarify path. Never throws.
+  /**
+   * The AI fallback: for anything the deterministic matcher cannot resolve (any
+   * language, any product outside its small vocabulary), ask the server to read
+   * the search. Returns true when it navigated or answered, false when the
+   * caller should fall back. Never throws.
+   */
   const interpretWithAi = useCallback(
     async (text: string): Promise<boolean> => {
       setInterpreting(true);
@@ -175,7 +129,6 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
         if (!data?.ok) return false;
 
         if (data.route) {
-          selectRoute(data.route as RouteKey);
           navigate(data.route as RouteKey, text, {
             raw: text,
             product: data.product ?? undefined,
@@ -183,8 +136,8 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
           });
           return true;
         }
-        // No route, but the model gave a reply in the user's language: show it
-        // rather than a generic prompt, so the visitor is never met with nothing.
+        // No route, but the model gave a reply in the visitor's language: show
+        // it rather than a generic prompt, so nobody is met with nothing.
         if (data.reply) {
           setClarifyReply(data.reply as string);
           setClarify(true);
@@ -196,100 +149,38 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
         setInterpreting(false);
       }
     },
-    [announce, navigate, selectRoute],
+    [announce, navigate],
   );
 
-  const submit = useCallback(
-    async (raw?: string) => {
-      const text = (raw ?? objective).trim();
+  /**
+   * Search. A specific search bypasses the visual drill-down and opens the
+   * market it names; anything the interpreter cannot place opens Explore rather
+   * than an apology, because the market universe is always a useful answer.
+   */
+  const submit = useCallback(async () => {
+    const text = query.trim();
+    if (!text) {
+      announce(t("search.emptyAnnounce"));
+      fieldRef.current?.focus();
+      return;
+    }
 
-      if (activeRoute) {
-        if (activeRoute === "find" && !inferIntent(text, "find").facts.product) {
-          // A route is already chosen but no product was read from the text.
-          // Try the AI (the product may be in another language) before asking.
-          if (text && (await interpretWithAi(text))) return;
-          setNeedProduct(true);
-          announce(t("find.needProductAnnounce"));
-          fieldRef.current?.focus();
-          return;
-        }
-        navigate(activeRoute, text);
-        return;
-      }
+    const result = inferIntent(text);
+    const resolvedByMatcher =
+      result.route && !(result.route === "find" && result.needsClarification);
+    if (resolvedByMatcher) {
+      navigate(result.route as RouteKey, text);
+      return;
+    }
 
-      if (!text) {
-        announce(t("clarify.emptyAnnounce"));
-        fieldRef.current?.focus();
-        return;
-      }
+    if (await interpretWithAi(text)) return;
 
-      const result = inferIntent(text);
-      const resolvedByMatcher =
-        result.route && !(result.route === "find" && result.needsClarification);
-      if (resolvedByMatcher) {
-        selectRoute(result.route as RouteKey);
-        navigate(result.route as RouteKey, text);
-        return;
-      }
-
-      // The matcher could not fully resolve it. Ask the AI (any language, any
-      // product); only if that is unavailable do we fall back to clarify.
-      if (await interpretWithAi(text)) return;
-
-      if (result.route === "find") {
-        selectRoute("find");
-        setNeedProduct(true);
-        announce(t("find.needProductAnnounce"));
-        fieldRef.current?.focus();
-        return;
-      }
-      setClarify(true);
-      announce(t("clarify.announce"));
-    },
-    [objective, activeRoute, announce, navigate, selectRoute, interpretWithAi, t],
-  );
-
-  const onVoiceUse = useCallback(
-    (text: string) => {
-      setVoiceOpen(false);
-      setObjective(text);
-      window.requestAnimationFrame(grow);
-      submit(text);
-    },
-    [grow, submit],
-  );
-
-  const voiceLabels: VoiceLabels = {
-    title: t("voiceSheet.title"),
-    requesting: t("voiceSheet.requesting"),
-    listening: t("voiceSheet.listening"),
-    ready: t("voiceSheet.ready"),
-    editHint: t("voiceSheet.editHint"),
-    noSpeech: t("voiceSheet.noSpeech"),
-    noSpeechHint: t("voiceSheet.noSpeechHint"),
-    denied: t("voiceSheet.denied"),
-    deniedHint: t("voiceSheet.deniedHint"),
-    unsupported: t("voiceSheet.unsupported"),
-    unsupportedHint: t("voiceSheet.unsupportedHint"),
-    errorLabel: t("voiceSheet.error"),
-    errorHint: t("voiceSheet.errorHint"),
-    stop: t("voiceSheet.stop"),
-    reRecord: t("voiceSheet.reRecord"),
-    continueLabel: t("voiceSheet.continueLabel"),
-    tryAgain: t("voiceSheet.tryAgain"),
-    typeInstead: t("voiceSheet.typeInstead"),
-    close: t("voiceSheet.close"),
-  };
-
-  const support: ReactNode = interpreting
-    ? t("voice.sub")
-    : clarify
-      ? clarifyReply || t.rich("clarify.prompt", { b: bold })
-      : needProduct
-        ? t.rich("find.needProductSupport", { b: bold })
-        : activeRoute
-          ? t.rich(`routes.${activeRoute}.support`, { b: bold })
-          : t("voice.sub");
+    // Nothing could be read from the words. Explore, filtered by what was
+    // typed, is still market activity: never an empty result page.
+    const { destination, events } = bridgeNavigation("explore", { raw: text });
+    for (const e of events) track(e.name, e.meta);
+    router.push(destination);
+  }, [query, announce, navigate, interpretWithAi, router, t]);
 
   return (
     <>
@@ -317,116 +208,111 @@ export default function PonteLanding({ locale, rtl }: { locale: string; rtl: boo
           <span className="lockup__tld">.trade</span>
         </Link>
         <div className="lhead__actions">
-          <span className="lhead__pos">{t("header.tradeClarity")}</span>
+          <Link className="lhead__link" href="/explore">
+            {t("routes.explore.label")}
+          </Link>
+          <Link className="lhead__link" href="/structure">
+            {t("routes.deal.label")}
+          </Link>
         </div>
       </header>
+
+      <ActivityBand
+        items={activity}
+        labels={{ title: t("activity.title"), note: t("activity.note") }}
+      />
 
       <main className="land">
         <div className="land__top">
           <section className="obj" aria-label={t("hero.regionLabel")}>
             <div className="obj__eyebrow">
-              <span className="eyebrow">{t("eyebrow")}</span>
+              <span className="eyebrow">{t("brand")}</span>
             </div>
             <h1 className="obj__q">
               {t("headline")}
               <em>{t("supporting")}</em>
             </h1>
-
-            <div className="talk">
-              <button
-                type="button"
-                className={`mic${voiceOpen ? " listening" : ""}`}
-                aria-label={t("voice.ariaLabel")}
-                onClick={() => {
-                  track("voice_started");
-                  setVoiceOpen(true);
-                }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="9" y="3" width="6" height="11" rx="3" />
-                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-                </svg>
-              </button>
-              <span className="talk__label">
-                <span className="talk__cta">{t("voice.cta")}</span>
-                <span className="talk__sub">{support}</span>
-              </span>
-            </div>
-
-            <div className="obj__type">
-              <span className="obj__or">{t("type.or")}</span>
-              <div className="obj__ask">
-                <textarea
-                  ref={fieldRef}
-                  className="obj__field"
-                  rows={1}
-                  dir={fieldDir}
-                  lang={fieldLang}
-                  value={objective}
-                  placeholder={placeholder}
-                  autoComplete="off"
-                  aria-label={t("type.ariaLabel")}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  onChange={(e) => {
-                    setObjective(e.target.value);
-                    setClarify(false);
-                    setClarifyReply("");
-                    setNeedProduct(false);
-                    grow();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      submit();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className={`obj__go${interpreting ? " is-busy" : ""}`}
-                  aria-label={t("type.continueLabel")}
-                  aria-busy={interpreting}
-                  disabled={interpreting}
-                  onClick={() => submit()}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </button>
-              </div>
-              <p className="obj__ai">{t("ai.disclosure")}</p>
-            </div>
           </section>
 
           <section className="gatewrap" aria-label={t("gateway.regionLabel")}>
-            <PonteBridge active={activeRoute} center={center} labels={labels} onOpen={openRoute} />
-            <div className="rfacts" aria-live="polite">
-              {activeRoute
-                ? [1, 2, 3, 4].map((n, i) => (
-                    <span key={n} className={`rfact ${FACT_TONE[activeRoute][i]}`.trim()}>
-                      {t(`routes.${activeRoute}.fact${n}`)}{" "}
-                      <span className="q">{t(`routes.${activeRoute}.fact${n}q`)}</span>
-                    </span>
-                  ))
-                : null}
+            <PonteBridge center={center} labels={routeLabels} onOpen={openRoute} />
+          </section>
+
+          <section className="lsearch" aria-label={t("search.regionLabel")}>
+            <label className="lsearch__l" htmlFor="ponte-search">
+              {t("search.label")}
+            </label>
+            <div className="obj__ask">
+              <input
+                id="ponte-search"
+                ref={fieldRef}
+                className="obj__field"
+                type="search"
+                dir={rtl ? "rtl" : "ltr"}
+                value={query}
+                placeholder={t("search.placeholder")}
+                autoComplete="off"
+                enterKeyHint="search"
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setClarify(false);
+                  setClarifyReply("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void submit();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={`obj__go${interpreting ? " is-busy" : ""}`}
+                aria-label={t("search.go")}
+                aria-busy={interpreting}
+                disabled={interpreting}
+                onClick={() => void submit()}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
             </div>
+            <p className="lsearch__h">
+              {interpreting
+                ? t("search.reading")
+                : clarify
+                  ? clarifyReply || t("search.clarify")
+                  : t("search.hint")}
+            </p>
+            <p className="obj__ai">{t("ai.disclosure")}</p>
+          </section>
+
+          {popular.length > 0 && (
+            <section className="popular" aria-label={t("popular.title")}>
+              <h2 className="popular__t">{t("popular.title")}</h2>
+              <ul className="popular__l">
+                {popular.map((area) => (
+                  <li key={area.id}>
+                    <Link className="popular__i" href={area.href}>
+                      <span className="popular__n">{area.label}</span>
+                      <span className="popular__c">
+                        {t("popular.records", { count: area.count })}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section className="ltrust" aria-label={t("trustTitle")}>
+            <h2 className="ltrust__t">{t("trustTitle")}</h2>
+            <p className="ltrust__p">{t.rich("trustBody", { b: bold })}</p>
+            <p className="ltrust__p">{t.rich("trust", { b: bold })}</p>
           </section>
         </div>
-
-        <div className="land__foot">
-          <div className="re">{t.rich("trust", { b: bold })}</div>
-        </div>
       </main>
-
-      <VoiceSheet
-        open={voiceOpen}
-        lang={SPEECH_LANG[locale] ?? "en-US"}
-        labels={voiceLabels}
-        announce={announce}
-        onClose={() => setVoiceOpen(false)}
-        onUse={onVoiceUse}
-      />
     </>
   );
 }
