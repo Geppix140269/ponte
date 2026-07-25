@@ -1,64 +1,68 @@
 # Master roadmap
 
-This roadmap reflects the governing architecture and the implementation already present on `main`.
+This roadmap follows the governing `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`. Work is organised around complete journeys, not collections of similarly styled pages.
 
-## Phase 0 — Reconcile and orient
+## Phase 0 — Repository-to-architecture gap report
 
-- Import authority documents.
-- Reconcile repository, production database, feature flags, hosting and live routes.
-- Map routes, components, APIs, tables and lifecycle services to the Route Atlas.
-- Produce a Codex onboarding audit.
+No implementation, migration or global style change.
 
-**Exit:** one truthful current-state record and an approved next milestone.
+Deliver the complete route, component, API, database, lifecycle and production gap report; identify reusable infrastructure, visual debt, workflow/data debt, L1-L4 dependencies, schema drift and migration hazards; assess the merged gateway; and propose the smallest truthful Phase 1 vertical slice. Stop for Giuseppe's approval.
 
-## Completed foundation — Founding launch integrity
+## Phase 1 — First agentic vertical slice
 
-- Separate Market Signals and Qualified Opportunities.
-- Purpose-separated business verification.
-- Publication integrity and expiry.
-- Controlled introductions.
-- Truthful copy and founding invitation mechanics.
+Build the smallest truthful version of:
 
-## Completed journey — Find and request
+> Mission setup → meaningful Commercial Development → evidence chain → recommended action → prepared response or investigation → exact preview → human approval → recorded Workspace outcome
 
-- F01/F02/F03/F04/F05.
-- O05-O07 minimum.
-- Context-preserving account gate.
-- Separate Qualified Opportunity and Market Signal lanes.
+Primary Route Atlas families:
 
-## Completed journey — Structure and submit
+- E01-E03
+- M01-M04
+- D01-D04
+- X01-X07
+- G01-G06
+- H01-H03 and H07
 
-- S01-S06.
-- Facts, gaps and progressive completion.
-- Public/private/reviewer preview.
-- Save/submit account boundary.
-- H04 and A03 reuse.
+Use the Balcorp-style proof described in the governing brief. Keep Qualified Opportunities, Market Signals and any Trade Movements distinct.
 
-## Candidate next milestone A — First agentic vertical slice
+## Phase 2 — Discovery and opportunity request
 
-- M01-M04 Commercial Mission setup.
-- D01-D04 Commercial Development and evidence chain.
-- X01-X07 prepared action, exact preview, approval and execution record.
-- H01-H03 and H07 Workspace briefing/outcomes.
+Complete F01-F06, F02/F03, O05-O07 minimum, relevant authentication/resumption, no-result and saved-watch states.
 
-**Outcome:** Ponte understands a meaningful threshold, explains evidence, prepares the next action and does not commit the business without approval.
+The repository already contains substantial Journey 1 implementation. Phase 0 must determine whether Phase 2 means retain, complete, correct or retire specific existing work rather than rebuild it.
 
-## Candidate next milestone B — Check and verify
+## Phase 3 — Structure and submit
 
-- K01-K09.
-- Evidence receipt.
-- Own-business versus counterparty purpose.
-- Compatibility mapping from existing L1-L4 fields.
-- H05, B01/B02 minimum and A02 minimum.
+Complete S01-S06, public/private/reviewer preview, Passport reuse, human review entry, H04 and A03 minimum.
 
-**Outcome:** The user understands exactly what was checked, when, from which source, what remains unknown and what the result means.
+The repository already contains substantial Journey 2 implementation. Phase 0 must determine what remains rather than repeat it.
 
-## Later milestones
+## Phase 4 — Business check and verification compatibility
 
-1. Market Signal investigation and Ponte Desk: I01-I07, H06, A05, P02-P03, T02.
-2. Business Passport and Vault: B01-B08.
-3. Complete controlled introductions and messaging: O01-O07, T01, T03, A06.
-4. Admin, resilience and operational exception handling: A01-A09.
-5. Remaining content, account and Brand v5 convergence after complete journeys are approved.
+Complete K01-K09, purpose-separated checks, evidence receipt, safe compatibility mapping from existing L1-L4 fields, H05, B01/B02 minimum and A02 minimum.
 
-Codex must not choose between candidate A and B without the onboarding audit and owner approval.
+Any migration requires separate approval after the Phase 0 dependency report.
+
+## Phase 5 — Market Signal investigation and Ponte Desk
+
+Complete I01-I07, P02-P03, T02, H06, A05 and safe provenance/status handling.
+
+## Phase 6 — Business Passport and Vault
+
+Complete B01-B08, progressive completion, asset versioning, purpose-specific selection, team roles and action permissions.
+
+## Phase 7 — Controlled introductions and messaging
+
+Complete O01-O07, T01, T03, disclosure blockers, post-introduction thread, document sharing and A06.
+
+## Phase 8 — Admin, resilience and operations
+
+Complete A01-A09, source and notification failures, agent/action exceptions, operational SLAs, audit export and shared recovery states.
+
+## Phase 9 — Remaining content and Brand v5 convergence
+
+Only after complete journeys are approved: repaint or replace remaining legacy pages, complete content/account/legal/pricing/email/admin surfaces, retire dead routes and remove obsolete style aliases.
+
+## Current roadmap position
+
+Stage One creates the repository-native operating layer and imports the governing brief. The next action is the Phase 0 Codex audit. No Phase 1 implementation begins without Giuseppe's explicit approval.
