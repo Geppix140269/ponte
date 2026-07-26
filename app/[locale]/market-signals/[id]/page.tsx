@@ -11,6 +11,7 @@ import { sectorForChapter } from "@/lib/taxonomy/market";
 import DeskShell from "@/components/desk/DeskShell";
 import KnowledgeBoundary, { type BoundaryItem } from "@/components/desk/KnowledgeBoundary";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import InvestigateButton from "@/components/signals/InvestigateButton";
 import "@/components/desk/desk.css";
 
 /**
@@ -94,6 +95,11 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
   const record = toDeskRecord(signal);
   const facts = factsFor(record, { context: "detail-grid" });
   const sector = sectorForChapter(signal.chapter);
+  // The action must match the side of the record. A buyer requirement is
+  // answered by somebody who can supply it; a seller offer is answered by
+  // somebody who would source it. The same control under two labels would be
+  // a lie about what the member is declaring.
+  const isRequirement = record.cls === "requirement";
 
   return (
     <div className="detail">
@@ -141,6 +147,58 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
             </div>
           ))}
         </dl>
+
+        {/* The action module, above the evidence boundary and immediately below
+            the key facts.
+
+            This is the commercial point of the screen. A member who can meet
+            the requirement says so here; a member who needs something
+            established asks here. Both are the EXISTING Block D requests
+            (`signal_investigations`, `request_kind`), reached through the
+            existing InvestigateButton: the form is filled anonymously, the
+            account gate opens only at Send, and the same request is submitted
+            once on return without retyping.
+
+            Neither action reveals or contacts the party behind the signal, and
+            neither claims a contact route exists. That is the difference
+            between a Market Signal and an introduction, and it is why the
+            explanation sits beside the buttons rather than instead of them. */}
+        <div className="panel actpanel">
+          <div className="panel__h">
+            <PonteIcon name="deal.submit" size={16} label="Acting on a record" />
+            <b>Act on this signal</b>
+            <span>reading is open, acting needs an account</span>
+          </div>
+
+          <div className="actpanel__b">
+            <p className="actpanel__lead">
+              Ponte has not yet established a contact route for this signal. You can ask Ponte to
+              investigate it, or register that you may be able to meet it. Both are worked by a
+              person, and neither contacts anyone named in the source.
+            </p>
+
+            <div className="actpanel__a">
+              <InvestigateButton
+                signalId={signal.id}
+                kind="capability"
+                initialType={isRequirement ? "supplier" : "buyer"}
+                label={
+                  isRequirement ? "I may be able to supply this" : "I may be interested in sourcing this"
+                }
+              />
+              <InvestigateButton
+                signalId={signal.id}
+                variant="secondary"
+                label="Ask Ponte to investigate this signal"
+              />
+            </div>
+
+            <p className="actpanel__fine">
+              Your work is preserved if you are asked to sign in, and the request is sent once on
+              return.
+            </p>
+          </div>
+        </div>
 
         {/* Region 1: what Ponte HAS established, each with what it rests on. */}
         <div className="panel" style={{ marginTop: 12 }}>
@@ -202,29 +260,6 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
           </div>
         </div>
 
-        {/* There is deliberately no Act panel on this screen.
-            Act is the next station and the rail shows it halted, which is the
-            truthful report of where the journey stands. The four outcomes
-            (investigate, watch, participate, request an introduction) are Slice
-            2 work: each needs an action-aware registration contract and a real
-            resource behind it. Rendering them now as disabled controls would
-            put future product on a live page, and a control that announces its
-            own unavailability is still a control.
-
-            What remains is a statement, not an affordance: communication is
-            unavailable on this record class, which was true before this
-            redesign and stays true after it. */}
-        <div className="gate" style={{ marginTop: 12 }}>
-          <PonteIcon name="participation.commsoff" size={20} />
-          <div>
-            <b>Communication unavailable</b>
-            <p>
-              No channel exists between you and any party named in the source. One opens only
-              after an investigation establishes a contact route and both parties agree to an
-              introduction.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Region 2: the ink knowledge boundary. This screen only. */}
