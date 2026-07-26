@@ -35,11 +35,14 @@ import type { Rail } from "@/lib/desk/journey";
  * responsible for not creating. It returns when Explore is rebuilt on the Desk,
  * which is not this slice.
  */
-export type DeskNavKey = "market" | "deal" | "about";
+export type DeskNavKey = "market" | "deal" | "records" | "about";
 
 const NAV: { key: DeskNavKey; label: string; href: string }[] = [
   { key: "market", label: "Market Signals", href: "/market-signals" },
   { key: "deal", label: "Start a deal", href: "/structure" },
+  // A member's own records. Owner-scoped and signed-out safe: it explains
+  // itself rather than 404ing or bouncing a visitor to a login wall.
+  { key: "records", label: "Your records", href: "/opportunities" },
   { key: "about", label: "How Ponte works", href: "/about" },
 ];
 
