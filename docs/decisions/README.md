@@ -27,4 +27,5 @@ decisions, their rationale, alternatives and consequences.
 
 | ADR | Decision | Status |
 |---|---|---|
+| [ADR-0002](ADR-0002-founder-capacity-and-paid-ponte-desk.md) | Founder capacity and paid Ponte Desk fulfilment | Accepted by owner; effective on merge |
 | [ADR-0001](ADR-0001-unified-trade-market.md) | Unified trade market with three primary families | Accepted by owner; effective on merge |
