@@ -4,15 +4,16 @@ import {
   type ActivityBreakdown,
   type ActivityItem,
 } from "../board/activity-logic";
+import { MARKET_FAMILIES, type MarketFamily } from "../taxonomy/market";
 
 /**
  * The Explore market universe: three families, and the counts under them.
  *
  * Pure. It is handed the merged activity stream and the sector definitions (the
  * approved HS categories, which stay the single source of truth in
- * components/hs/hsCategories.tsx and are passed in rather than re-declared
- * here), and it returns counts. No query, no React, so the counting rules are
- * unit-tested directly and the page stays a thin shell over two bounded reads.
+ * lib/taxonomy/market.ts and are passed in rather than re-declared here), and it
+ * returns counts. No query, no React, so the counting rules are unit-tested
+ * directly and the page stays a thin shell over two bounded reads.
  *
  * Honesty rules encoded here, not left to the template:
  *   - a sector count is a count of market records, never of verified or
@@ -24,9 +25,10 @@ import {
  *     an invented zero dressed up as a category.
  */
 
-export type FamilyKey = "products" | "services" | "distribution";
+export type FamilyKey = MarketFamily;
 
-export const FAMILY_KEYS: readonly FamilyKey[] = ["products", "services", "distribution"];
+/** Never re-declare the family list in Explore; derive it from the taxonomy. */
+export const FAMILY_KEYS: readonly FamilyKey[] = MARKET_FAMILIES.map((family) => family.key);
 
 /** The minimum a sector definition must provide: an id and a chapter span. */
 export interface SectorSpan {
