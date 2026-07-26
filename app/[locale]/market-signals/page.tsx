@@ -110,9 +110,6 @@ export default async function MarketSignalsPage({
                   <Link className="b" href="/market-signals">
                     Try the read again
                   </Link>
-                  <Link className="b b--2" href="/explore">
-                    Explore the market instead
-                  </Link>
                 </div>
               </div>
             </div>
@@ -130,9 +127,6 @@ export default async function MarketSignalsPage({
                 <div className="empty__a">
                   <Link className="b" href="/structure">
                     Bring a requirement or offer to the desk
-                  </Link>
-                  <Link className="b b--2" href="/explore">
-                    Explore the market
                   </Link>
                 </div>
               </div>

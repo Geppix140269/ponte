@@ -7,7 +7,7 @@ import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import { factsFor } from "@/lib/desk/facts";
 import { railForScreen } from "@/lib/desk/journey";
-import { PRODUCT_SECTORS, sectorForChapter } from "@/lib/taxonomy/market";
+import { sectorForChapter } from "@/lib/taxonomy/market";
 import DeskShell from "@/components/desk/DeskShell";
 import KnowledgeBoundary, { type BoundaryItem } from "@/components/desk/KnowledgeBoundary";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
@@ -94,7 +94,6 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
   const record = toDeskRecord(signal);
   const facts = factsFor(record, { context: "detail-grid" });
   const sector = sectorForChapter(signal.chapter);
-  const sectorIndex = sector ? PRODUCT_SECTORS.findIndex((s) => s.key === sector.key) : -1;
 
   return (
     <div className="detail">
@@ -203,64 +202,29 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
           </div>
         </div>
 
-        {/* Act is the next station, and it is halted. The actions are named so
-            a reader can see what the journey offers, and each is marked
-            unavailable rather than shown as a live control that does nothing.
-            Wiring them, and the action-aware registration each one needs, is
-            the next slice. */}
-        <div className="panel" style={{ marginTop: 12 }}>
-          <div className="panel__h">
-            <PonteIcon name="deal.submit" size={16} label="Acting on a record" />
-            <b>Act on this signal</b>
-            <span>reading is open, acting needs an account</span>
-          </div>
-          <div className="acts">
-            <span className="act act--2" aria-disabled="true">
-              Ask Ponte to investigate
-              <span>Not yet available on this build</span>
-            </span>
-            <span className="act act--2" aria-disabled="true">
-              Submit a matching offer
-              <span>Not yet available on this build</span>
-            </span>
-            <span className="act act--2" aria-disabled="true">
-              Watch this signal
-              <span>Not yet available on this build</span>
-            </span>
-            <span className="act act--2" aria-disabled="true">
-              Request an introduction
-              <span>No contact route has been established for this signal</span>
-            </span>
-          </div>
-          <div className="erow erow--review" style={{ borderTop: "1px solid var(--rule)" }}>
-            <PonteIcon name="participation.commsoff" size={18} />
+        {/* There is deliberately no Act panel on this screen.
+            Act is the next station and the rail shows it halted, which is the
+            truthful report of where the journey stands. The four outcomes
+            (investigate, watch, participate, request an introduction) are Slice
+            2 work: each needs an action-aware registration contract and a real
+            resource behind it. Rendering them now as disabled controls would
+            put future product on a live page, and a control that announces its
+            own unavailability is still a control.
+
+            What remains is a statement, not an affordance: communication is
+            unavailable on this record class, which was true before this
+            redesign and stays true after it. */}
+        <div className="gate" style={{ marginTop: 12 }}>
+          <PonteIcon name="participation.commsoff" size={20} />
+          <div>
             <b>Communication unavailable</b>
-            <span>
-              A channel opens only after an investigation establishes a contact route and both
-              parties agree to an introduction.
-            </span>
-          </div>
-          <div className="erow erow--gap">
-            <PonteIcon
-              name="participation.registration"
-              size={18}
-              label="Registration required to act"
-            />
-            <b>Registration required to act</b>
-            <span>
-              Reading is open. Saving, investigating and submitting need an account, and your work
-              is preserved across it.
-            </span>
+            <p>
+              No channel exists between you and any party named in the source. One opens only
+              after an investigation establishes a contact route and both parties agree to an
+              introduction.
+            </p>
           </div>
         </div>
-
-        {sector && sectorIndex >= 0 ? (
-          <p style={{ marginTop: 14 }}>
-            <Link className="b b--2" href={`/explore?sector=${sectorIndex}`}>
-              More in {sector.label}
-            </Link>
-          </p>
-        ) : null}
       </div>
 
       {/* Region 2: the ink knowledge boundary. This screen only. */}

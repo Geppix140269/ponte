@@ -1,4 +1,4 @@
-# PT-PRODUCT-2026-07-26-02 — English-First Language and Localisation Policy
+# PT-PRODUCT-2026-07-26-02 — English-Only Interface and Multilingual Input Policy
 
 **Status:** Approved
 **Status date:** 26 July 2026
@@ -10,11 +10,20 @@
 
 ## The policy
 
-Ponte Trade is an **English-first, single-interface-language platform**.
+Ponte Trade has an **English-only interface with multilingual input**.
 
-English is the canonical and sole interface language. This is a product
-decision, not a temporary state pending translation work, and it is not
-conditional on demand.
+Four statements, and they are the whole policy:
+
+1. The interface, and every piece of content Ponte itself controls, is English
+   only.
+2. Multilingual natural-language input remains supported. A member may state an
+   objective in any language.
+3. AI may interpret and translate that input, and may translate member-entered
+   content for display.
+4. No i18n-level parallel interface is maintained.
+
+English being the sole interface language is a product decision, not a temporary
+state pending translation work, and it is not conditional on demand.
 
 ## Why this document exists
 
@@ -51,17 +60,21 @@ For any current or future work:
    separate, deliberate migration**, with its own plan, its own URL-preservation
    evidence and its own owner approval. It is not incidental cleanup.
 
-## What this policy does not touch
+## Multilingual input is unaffected
 
-Natural-language **input** may still be interpreted in any language. A member may
-type or speak an objective in Portuguese, Arabic or Mandarin; AI may detect the
+Natural-language **input** may be interpreted in any language. A member may type
+or speak an objective in Portuguese, Arabic or Mandarin; AI may detect the
 language and normalise it into the canonical English commercial object; and
-member-entered content may still be displayed translated where that capability
-exists (`listing_translations`).
+member-entered content may be displayed translated where that capability exists
+(`listing_translations`).
+
+What stays English is the interface and the content Ponte controls: labels,
+copy, classifications, evidence statements and every word Ponte writes about a
+record.
 
 **Input language is not interface language.** Nothing in this policy reduces
-Ponte's ability to receive the world's languages. It fixes only the language
-Ponte's own interface speaks.
+Ponte's ability to receive the world's languages, or to translate on the way in
+and on the way out. It fixes only the language Ponte's own interface speaks.
 
 Accessibility states, the reactivation path documented in `LANGUAGES.md`, and
 the deferred translation snapshots in `messages/_deferred/` are all preserved as
@@ -69,14 +82,14 @@ they stand. Preserving them is not evidence of an intention to use them.
 
 ## Relationship to earlier decisions
 
-This supersedes and hardens the 25 July 2026 decision-log entry **"English-only
-interface"**, which established English as the sole interface language but left
-it framed as a deferral: nine languages "deferred until real market demand
-justifies reactivation". That framing is what allows the i18n scaffolding to be
-read as a roadmap.
+This hardens the 25 July 2026 decision-log entry **"English-only interface"**,
+which established English as the sole interface language but left it framed as a
+deferral: nine languages "deferred until real market demand justifies
+reactivation". That framing is what allows the i18n scaffolding to be read as a
+roadmap.
 
-What changes: single-language is now the stated product architecture, and the
-scaffolding is explicitly named legacy. What is retained: every operational
+What changes: an English-only interface with multilingual input is now the
+stated product architecture, and the scaffolding is explicitly named legacy. What is retained: every operational
 consequence of the 25 July decision, including the permanent redirects from old
 locale-prefixed URLs, the fallback of unsupported browser locales to English,
 the self-hiding language switcher, and the retained deferred snapshots.

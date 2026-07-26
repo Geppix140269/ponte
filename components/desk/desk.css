@@ -282,6 +282,10 @@
 .ponte-desk .b--block { width: 100%; }
 .ponte-desk .b[aria-disabled="true"] { opacity: 0.42; pointer-events: none; }
 
+/* The Desk action primitive: a labelled action with its own consequence line
+   underneath. Part of the delivered system and unused in this slice, because
+   the Act outcomes it belongs to are Slice 2 and no future control ships on a
+   live page. Kept here rather than re-derived later. */
 .ponte-desk .act {
   display: block; width: 100%; text-align: left; padding: 14px 16px;
   border-radius: var(--dk-radius); border: 1px solid var(--ink);
@@ -620,18 +624,26 @@
   background: var(--rule); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); overflow: hidden; margin-top: 24px;
 }
-.ponte-desk .fams a { background: var(--raised); padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 9px; }
+/* A family tile is a link only when its destination genuinely exists. The
+   others are the same tile without the affordance: no hover, no pointer, and
+   no disabled styling either, because they are not disabled controls. They are
+   statements about a part of the market Ponte does not yet route into. */
+.ponte-desk .fams > * { background: var(--raised); padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 9px; }
 .ponte-desk .fams a:hover { background: var(--sunken); }
 .ponte-desk .fams b { font-size: 14px; font-weight: 600; }
 .ponte-desk .fams span { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.5; }
+.ponte-desk .fams .soon { color: var(--mute); }
 
 .ponte-desk .sectors {
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
   background: var(--rule); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); overflow: hidden;
 }
-.ponte-desk .sectors a { background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
-.ponte-desk .sectors a:hover { background: var(--sunken); }
+/* The sector grid is the taxonomy, not a filter. The board cannot be narrowed
+   by sector yet (every public signal carries a null HS code), so these are not
+   links: fifteen tiles that all opened the same unfiltered board would be a
+   filter that does not filter. */
+.ponte-desk .sectors > * { background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
 .ponte-desk .sectors b { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
 .ponte-desk .sectors span { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
 

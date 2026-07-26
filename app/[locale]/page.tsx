@@ -62,10 +62,37 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
   };
 }
 
-const FAMILY_NOTE: Record<string, string> = {
-  products: "15 HS sectors, chapters 01 to 97",
-  services: "Freight, customs, inspection, finance",
-  distribution: "Distributors, agents, market entry",
+/**
+ * The three equal market families, and where each one actually goes today.
+ *
+ * Products routes into Market Signals, which is a real board with real records.
+ * Trade services and Distribution have no inventory in production: no stored
+ * service listing exists, seek-versus-offer is not persisted, and distribution
+ * has taxonomy but no canonical records. So they do not link.
+ *
+ * They are not rendered as disabled buttons either. A greyed-out control says
+ * "this is broken, or you are not allowed"; neither is true. They are two
+ * statements about parts of the market Ponte recognises and does not yet route
+ * into, which is the honest thing to say and is the same thing the taxonomy
+ * already says elsewhere.
+ *
+ * Linking them to `/explore` to keep them clickable would send a visitor one
+ * click out of the Desk and into the chrome it replaces. That is the seam this
+ * page must not open.
+ */
+const FAMILY: Record<string, { note: string; href?: string; forthcoming?: string }> = {
+  products: {
+    note: "15 HS sectors, chapters 01 to 97",
+    href: "/market-signals",
+  },
+  services: {
+    note: "Freight, customs, inspection, finance",
+    forthcoming: "Recognised as a market. No service records are published yet.",
+  },
+  distribution: {
+    note: "Distributors, agents, market entry",
+    forthcoming: "Recognised as a market. No distribution records are published yet.",
+  },
 };
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
@@ -93,13 +120,24 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </p>
 
               <div className="fams">
-                {MARKET_FAMILIES.map((family) => (
-                  <Link key={family.key} href="/explore">
-                    <PonteIcon name={family.icon} size={26} />
-                    <b>{family.label}</b>
-                    <span>{FAMILY_NOTE[family.key]}</span>
-                  </Link>
-                ))}
+                {MARKET_FAMILIES.map((family) => {
+                  const entry = FAMILY[family.key];
+                  const body = (
+                    <>
+                      <PonteIcon name={family.icon} size={26} />
+                      <b>{family.label}</b>
+                      <span>{entry.note}</span>
+                      {entry.forthcoming ? <span className="soon">{entry.forthcoming}</span> : null}
+                    </>
+                  );
+                  return entry.href ? (
+                    <Link key={family.key} href={entry.href}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <div key={family.key}>{body}</div>
+                  );
+                })}
               </div>
             </div>
 
@@ -161,30 +199,39 @@ export default async function HomePage({ params }: { params: { locale: string } 
           )}
         </section>
 
-        {/* Navigation, not measurement. No count is printed, because every
-            public signal in production currently carries a null HS code and a
-            count derived from that would be a zero the market contradicts. */}
+        {/* The taxonomy, not a filter and not a measurement.
+            No count is printed, because every public signal in production
+            currently carries a null HS code and a count derived from that would
+            be a zero the market contradicts (Issue #42).
+            No link either, for the same reason: the board cannot yet be
+            narrowed by sector, so fifteen tiles that all opened the same
+            unfiltered board would be a filter that does not filter. The one
+            link is the one that does what it says. */}
         <section className="sec">
           <div className="sech">
             <div>
               <h2>
                 <PonteIcon name="market.family.products" size={18} />
-                Browse by sector
+                The product sectors
               </h2>
               <p className="d">
                 The HS taxonomy Ponte classifies products against. These are the sectors the
-                market is organised into, not a measure of what is active in them. Chapters 71 and
-                91 to 92 belong to no sector and are reported rather than hidden.
+                market is organised into, not a measure of what is active in them, and the board
+                cannot yet be narrowed to one: no public signal currently carries an HS code.
+                Chapters 71 and 91 to 92 belong to no sector and are reported rather than hidden.
               </p>
             </div>
+            <Link href="/market-signals">
+              Read all Market Signals<span aria-hidden="true"> &rarr;</span>
+            </Link>
           </div>
           <div className="sectors">
-            {PRODUCT_SECTORS.map((sector, i) => (
-              <Link key={sector.key} href={`/explore?sector=${i}`}>
+            {PRODUCT_SECTORS.map((sector) => (
+              <div key={sector.key}>
                 <PonteIcon name={sector.icon} size={22} />
                 <b>{sector.label}</b>
                 <span>{sector.range}</span>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

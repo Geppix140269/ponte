@@ -26,11 +26,19 @@ import type { Rail } from "@/lib/desk/journey";
  * placeholder that would read as one.
  */
 
-export type DeskNavKey = "market" | "explore" | "deal" | "about";
+/**
+ * Navigation, and only to surfaces that are in the Desk system.
+ *
+ * `/explore` is deliberately absent. It still exists and is still reachable
+ * from the legacy application, but it renders the pre-Desk chrome, and sending
+ * a visitor from a Desk page straight into it is the seam this navigation is
+ * responsible for not creating. It returns when Explore is rebuilt on the Desk,
+ * which is not this slice.
+ */
+export type DeskNavKey = "market" | "deal" | "about";
 
 const NAV: { key: DeskNavKey; label: string; href: string }[] = [
   { key: "market", label: "Market Signals", href: "/market-signals" },
-  { key: "explore", label: "Explore", href: "/explore" },
   { key: "deal", label: "Start a deal", href: "/structure" },
   { key: "about", label: "How Ponte works", href: "/about" },
 ];

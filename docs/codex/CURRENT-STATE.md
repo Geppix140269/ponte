@@ -2,7 +2,7 @@
 
 **Reconciled:** 26 July 2026  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
-**Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-FIRST-LANGUAGE-POLICY.md`  
+**Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
@@ -32,7 +32,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Ponte Desk interface, slice 1 (landing, Market Signals listing, Market Signal detail) | Implemented on branch `claude/ponte-desk-interface-671b92` | Not deployed | Desk page system, journey rail, ruled fact register, Atlas ink boundary on signal detail. Desktop and 390px verified locally against production data. Stops before merge for owner visual review. |
 | Desk commercial-fact authority (`lib/desk/facts.ts`) | Implemented on branch | Not deployed | `factsFor(record, context)` is the single authority at every width. Contexts differ in count only. `lib/desk/adapter.ts` is the one production boundary; no component reads a signal column. |
 | Desk journey rail (`lib/desk/journey.ts`) | Implemented on branch | Not deployed | R-FIND and R-SUBMIT, four stations each. Journey stations only, never navigation. The landing has no rail. Review is not a station and does not move the rail. |
-| English-first language policy `PT-PRODUCT-2026-07-26-02` | Approved authority on branch | Operating rule | Single interface language as product architecture. `next-intl` and `[locale]` are legacy compatibility infrastructure; their removal is a separate deliberate migration, not incidental cleanup. |
+| English-only interface policy `PT-PRODUCT-2026-07-26-02` | Approved authority on branch | Operating rule | Interface and Ponte-controlled content are English only; multilingual input stays supported and may be interpreted and translated. `next-intl` and `[locale]` are legacy compatibility infrastructure; their removal is a separate deliberate migration, not incidental cleanup. |
 | Unified three-family market contract | Accepted and on `main` via PR #41 | Not implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
 | Issue #42 Phase A reconciliation | Complete on branch `issue-42/phase-a-audit`; PR #44 ready for owner review | Production-verified for market-record scope | Repository audit, compatibility matrix, SELECT-only production probe and final report are complete. No runtime or database change is included. |
 | Explore the market | On `main` | Production data defect verified | Public activity is real, but family and sector membership depend on incomplete legacy inference. |
