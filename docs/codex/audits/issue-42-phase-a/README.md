@@ -9,14 +9,12 @@ reconciliation required before Ponte Trade changes its market-record model.
   market contract to the current repository.
 - `REPOSITORY-RISK-FINDINGS.md` - high-risk contradictions found during the
   repository audit, separated from later implementation work.
-- `PRODUCTION-PROBE.sql` - SELECT-only production queries for current schema,
-  RLS, policies, lifecycle values, counts, HS coverage, provenance and drift.
-- `PRODUCTION-PROBE-COMPACT.sql` - SELECT-only follow-up that returns the
-  remaining evidence as one result table, with one JSON payload per section, so
-  it can be copied or exported from Supabase in one action.
-- `PRODUCTION-PROBE-RESULTS-2026-07-26.md` - dated production evidence supplied
-  from the Supabase SQL Editor. The first recorded result is the Section 15
-  summary count output; the remaining probe result sets are still required.
+- `PRODUCTION-PROBE.sql` - original SELECT-only production query set.
+- `PRODUCTION-PROBE-COMPACT.sql` - SELECT-only one-result follow-up used for the
+  complete production inspection.
+- `PRODUCTION-PROBE-RESULTS-2026-07-26.md` - reconciled production evidence.
+- `PHASE-A-FINAL-REPORT.md` - final audit verdict, production findings, risks and
+  Phase B boundary.
 
 The active execution plan is:
 
@@ -26,23 +24,18 @@ The active execution plan is:
 
 Repository audit: complete for the systems named in Issue #42 Phase A.
 
-Production probe: partially executed by Giuseppe Funaro in the Supabase
-production SQL Editor. The recorded summary result proves 3,517 public Market
-Signals, 2 approved and currently reconfirmed listings before owner eligibility,
-0 approved legacy service listings, and 0 public Market Signals with an HS code.
-The remaining schema, policy, provenance, duplicate, classification and drift
-result sets have not yet been recorded.
+Production reconciliation: complete for the market-record scope. Giuseppe
+Funaro executed the compact SELECT-only probe in the Supabase production SQL
+Editor at `2026-07-26T10:45:41.549418` UTC. The results have been reconciled in
+the dated evidence file and final report.
 
 No migration, runtime code change, data backfill, external source activation or
 production write is included.
 
 ## Completion rule
 
-Phase A remains in progress until one of the following occurs:
+Phase A is complete and ready for owner review.
 
-1. the remaining production probe outputs are executed and their dated results
-   are reconciled here; or
-2. Giuseppe explicitly accepts the partial production evidence and defers the
-   remaining live inspection.
-
-Neither outcome automatically authorises Phase B or a migration.
+This does not automatically authorise Phase B, a migration, source activation,
+merge or deployment. Phase B may begin only after the owner accepts the audit
+boundary and directs it.
