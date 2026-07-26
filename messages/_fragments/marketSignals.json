@@ -76,6 +76,45 @@
       "sending": "Sending...",
       "error": "Failed, try again.",
       "received": "Request received"
+    },
+    "capability": {
+      "title": {
+        "supplier": "Tell Ponte what you can supply",
+        "buyer": "Tell Ponte what you would buy"
+      },
+      "intro": {
+        "supplier": "You are answering this signal, so Ponte asks what you can supply rather than what you want established. Your reply goes to the Ponte desk; no third party is contacted or revealed automatically.",
+        "buyer": "You are answering this signal, so Ponte asks what you would buy rather than what you want established. Your reply goes to the Ponte desk; no third party is contacted or revealed automatically."
+      },
+      "roleStated": "Ponte will record you as: {role}.",
+      "capabilityLabel": {
+        "supplier": "What you can supply",
+        "buyer": "What you would buy"
+      },
+      "capabilityPlaceholder": {
+        "supplier": "Product, grade or specification, and how it is packed and shipped",
+        "buyer": "Product, grade or specification, and the terms you would buy on"
+      },
+      "volumeLabel": {
+        "supplier": "Volume, frequency and earliest shipment",
+        "buyer": "Volume, frequency and when you would take it"
+      },
+      "volumePlaceholder": {
+        "supplier": "e.g. 3 x 40ft per month from March",
+        "buyer": "e.g. 2 x 40ft per month from March"
+      },
+      "geographyLabel": {
+        "supplier": "Where you ship from",
+        "buyer": "Where you would take delivery"
+      },
+      "geographyPlaceholder": {
+        "supplier": "Port, country or the corridor you serve",
+        "buyer": "Port, country or the corridor you buy into"
+      },
+      "evidenceLabel": "Certifications or evidence you can provide",
+      "introCheckbox": "I would like a qualified introduction if Ponte confirms this signal.",
+      "submit": "Send this to the desk",
+      "received": "Sent to the desk"
     }
   }
 }

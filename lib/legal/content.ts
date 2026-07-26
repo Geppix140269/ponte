@@ -60,6 +60,27 @@ export const ABOUT: LegalDoc = {
         "Introduce. Connects two businesses only once there is a genuine commercial fit, and only with both sides' knowledge.",
       ],
     },
+    // Moved here from the landing page. It is the account of how a record is
+    // labelled, which is reference a visitor reads once and not an entrance, so
+    // the landing links to it in a line instead of reprinting the argument.
+    { t: "h2", text: "What Ponte shows you" },
+    {
+      t: "p",
+      text: "Every record says what it is. Ponte does not present one kind as another, and does not claim a counterparty is safe.",
+    },
+    {
+      t: "list",
+      items: [
+        "Market Signal. An indication Ponte has seen in the open market and has not confirmed. Nobody behind it has been contacted, and nothing about them is disclosed.",
+        "Member Requirement. A requirement posted by a member, reviewed by the desk before publication.",
+        "Member Offer. An offer posted by a member, reviewed by the desk before publication.",
+        "Service Requirement. A trade service a member is looking for, reviewed on the same terms.",
+      ],
+    },
+    {
+      t: "p",
+      text: "Start freely. Reading the board needs no account; you are asked to join only when an action needs to be saved or sent.",
+    },
     { t: "h2", text: "What Ponte does not do" },
     {
       t: "p",

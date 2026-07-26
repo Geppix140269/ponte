@@ -9,18 +9,30 @@ import {
   cleanInvestigation,
   investigationIsComplete,
   type InvestigationRequest,
+  type RequestKind,
   type RequesterType,
 } from "@/lib/signals/investigation";
 
 /**
- * "Ask Ponte to investigate" on a Market Signal (brief Block D).
+ * The two member actions on a Market Signal (brief Block D).
  *
- * A structured request behind the account gate, in place of the old link to a
- * generic contact form. The visitor fills it anonymously; the gate confirms
- * their email on Send and the same request is submitted without re-typing. It
- * enters the admin investigation queue and never reveals or contacts the third
- * party behind the signal, which is the whole reason a Market Signal is a
- * signal and not an introduction.
+ * Both are structured requests behind the account gate, filled anonymously; the
+ * gate confirms the member's email on Send and the same request is submitted
+ * without re-typing. Both enter the admin queue, and neither reveals or
+ * contacts the third party behind the signal, which is the whole reason a
+ * Market Signal is a signal and not an introduction.
+ *
+ * What they are NOT is the same questionnaire. They ask different questions
+ * because they are different acts:
+ *
+ *   investigate  You want the desk to establish something. It asks what.
+ *   capability   You are answering the signal. It asks what you can supply, or
+ *                what you would buy, and never asks a supplier what it wants
+ *                Ponte to establish, which is not the supplier's question.
+ *
+ * On a capability declaration the role is already known from the button that
+ * opened it (a supply button means a potential supplier), so it is stated
+ * rather than asked.
  *
  * Chrome reads from the "marketSignals" message namespace (Block E), so the
  * form localises with the rest of the site. The CTA `label` is resolved by the
@@ -28,9 +40,11 @@ import {
  */
 
 const EMPTY: InvestigationRequest = {
+  request_kind: "investigate",
   requesting_business: "",
   requester_type: null,
   establish_goal: "",
+  capability: "",
   indicative: "",
   geography: "",
   evidence: "",
@@ -41,12 +55,19 @@ export default function InvestigateButton({
   signalId,
   label,
   variant = "primary",
+  kind = "investigate",
   initialType = null,
 }: {
   signalId: string;
   label: string;
   variant?: "primary" | "secondary";
-  /** Pre-selects the requester type, for a role-primed contextual CTA. */
+  /** Which act this button performs. Decides the questions asked. */
+  kind?: RequestKind;
+  /**
+   * The requester's role. On a capability declaration it is known from the
+   * button and is shown rather than asked; on an investigation it only
+   * pre-selects the field.
+   */
   initialType?: RequesterType | null;
 }) {
   const t = useTranslations("marketSignals");
@@ -55,11 +76,17 @@ export default function InvestigateButton({
   const [gateOpen, setGateOpen] = useState(false);
   const [form, setForm] = useState<InvestigationRequest>({
     ...EMPTY,
+    request_kind: kind,
     requester_type: initialType,
   });
   const pending = useRef<InvestigationRequest>(EMPTY);
   const inFlight = useRef(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  const capability = kind === "capability";
+  /** "supplier" and "buyer" are the only roles a capability button can carry. */
+  const side: "supplier" | "buyer" = initialType === "buyer" ? "buyer" : "supplier";
+  const title = capability ? t(`capability.title.${side}`) : t("cta.askPonte");
 
   useEffect(() => {
     if (formOpen) {
@@ -116,7 +143,9 @@ export default function InvestigateButton({
 
   if (status === "sent") {
     return (
-      <span className="sigsheet__done">{t("investigate.received")}</span>
+      <span className="sigsheet__done">
+        {capability ? t("capability.received") : t("investigate.received")}
+      </span>
     );
   }
 
@@ -142,13 +171,15 @@ export default function InvestigateButton({
             onSubmit={onSubmit}
             role="dialog"
             aria-modal="true"
-            aria-label={t("cta.askPonte")}
+            aria-label={title}
             className="sigsheet__panel"
           >
             <div className="sigsheet__head">
               <div>
-                <h2 className="sigsheet__t serif">{t("cta.askPonte")}</h2>
-                <p className="sigsheet__intro">{t("investigate.intro")}</p>
+                <h2 className="sigsheet__t serif">{title}</h2>
+                <p className="sigsheet__intro">
+                  {capability ? t(`capability.intro.${side}`) : t("investigate.intro")}
+                </p>
               </div>
               <button
                 type="button"
@@ -176,92 +207,137 @@ export default function InvestigateButton({
                 />
               </div>
 
-              <div>
-                <label htmlFor="inv-type" className="sigsheet__l">
-                  {t("investigate.typeLabel")}
-                </label>
-                <select
-                  id="inv-type"
-                  required
-                  value={form.requester_type ?? ""}
-                  onChange={(e) =>
-                    set({ requester_type: (e.target.value || null) as InvestigationRequest["requester_type"] })
-                  }
-                  className="sigsheet__i"
-                >
-                  <option value="">{t("investigate.typeSelect")}</option>
-                  {REQUESTER_TYPES.map((rt) => (
-                    <option key={rt} value={rt}>
-                      {t(`investigate.requesterType.${rt}`)}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* The role is asked only when it is genuinely open. A capability
+                  declaration was opened by a button that already said it. */}
+              {capability ? (
+                <p className="sigsheet__role">
+                  {t("capability.roleStated", {
+                    role: t(`investigate.requesterType.${side}`),
+                  })}
+                </p>
+              ) : (
+                <div>
+                  <label htmlFor="inv-type" className="sigsheet__l">
+                    {t("investigate.typeLabel")}
+                  </label>
+                  <select
+                    id="inv-type"
+                    required
+                    value={form.requester_type ?? ""}
+                    onChange={(e) =>
+                      set({ requester_type: (e.target.value || null) as InvestigationRequest["requester_type"] })
+                    }
+                    className="sigsheet__i"
+                  >
+                    <option value="">{t("investigate.typeSelect")}</option>
+                    {REQUESTER_TYPES.map((rt) => (
+                      <option key={rt} value={rt}>
+                        {t(`investigate.requesterType.${rt}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              <div>
-                <label htmlFor="inv-goal" className="sigsheet__l">
-                  {t("investigate.goalLabel")}
-                </label>
-                <textarea
-                  id="inv-goal"
-                  required
-                  rows={3}
-                  value={form.establish_goal}
-                  onChange={(e) => set({ establish_goal: e.target.value })}
-                  className="sigsheet__i sigsheet__i--area"
-                  placeholder={t("investigate.goalPlaceholder")}
-                />
-              </div>
+              {capability ? (
+                <>
+                  <div>
+                    <label htmlFor="inv-capability" className="sigsheet__l">
+                      {t(`capability.capabilityLabel.${side}`)}
+                    </label>
+                    <textarea
+                      id="inv-capability"
+                      required
+                      rows={3}
+                      value={form.capability}
+                      onChange={(e) => set({ capability: e.target.value })}
+                      className="sigsheet__i sigsheet__i--area"
+                      placeholder={t(`capability.capabilityPlaceholder.${side}`)}
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="inv-indicative" className="sigsheet__l">
-                  {t("investigate.indicativeLabel")}
-                  <span className="sigsheet__opt">{t("investigate.optional")}</span>
-                </label>
-                <input
-                  id="inv-indicative"
-                  value={form.indicative}
-                  onChange={(e) => set({ indicative: e.target.value })}
-                  className="sigsheet__i"
-                  placeholder={t("investigate.indicativePlaceholder")}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="inv-indicative" className="sigsheet__l">
+                      {t(`capability.volumeLabel.${side}`)}
+                      <span className="sigsheet__opt">{t("investigate.optional")}</span>
+                    </label>
+                    <input
+                      id="inv-indicative"
+                      value={form.indicative}
+                      onChange={(e) => set({ indicative: e.target.value })}
+                      className="sigsheet__i"
+                      placeholder={t(`capability.volumePlaceholder.${side}`)}
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="inv-geography" className="sigsheet__l">
-                  {t("investigate.geographyLabel")} <span className="sigsheet__opt">{t("investigate.optional")}</span>
-                </label>
-                <input
-                  id="inv-geography"
-                  value={form.geography}
-                  onChange={(e) => set({ geography: e.target.value })}
-                  className="sigsheet__i"
-                  placeholder={t("investigate.geographyPlaceholder")}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="inv-geography" className="sigsheet__l">
+                      {t(`capability.geographyLabel.${side}`)}
+                      <span className="sigsheet__opt">{t("investigate.optional")}</span>
+                    </label>
+                    <input
+                      id="inv-geography"
+                      value={form.geography}
+                      onChange={(e) => set({ geography: e.target.value })}
+                      className="sigsheet__i"
+                      placeholder={t(`capability.geographyPlaceholder.${side}`)}
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="inv-evidence" className="sigsheet__l">
-                  {t("investigate.evidenceLabel")}
-                  <span className="sigsheet__opt">{t("investigate.optional")}</span>
-                </label>
-                <input
-                  id="inv-evidence"
-                  value={form.evidence}
-                  onChange={(e) => set({ evidence: e.target.value })}
-                  className="sigsheet__i"
-                  placeholder={t("investigate.evidencePlaceholder")}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="inv-evidence" className="sigsheet__l">
+                      {t("capability.evidenceLabel")}
+                      <span className="sigsheet__opt">{t("investigate.optional")}</span>
+                    </label>
+                    <input
+                      id="inv-evidence"
+                      value={form.evidence}
+                      onChange={(e) => set({ evidence: e.target.value })}
+                      className="sigsheet__i"
+                      placeholder={t("investigate.evidencePlaceholder")}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="inv-goal" className="sigsheet__l">
+                      {t("investigate.goalLabel")}
+                    </label>
+                    <textarea
+                      id="inv-goal"
+                      required
+                      rows={3}
+                      value={form.establish_goal}
+                      onChange={(e) => set({ establish_goal: e.target.value })}
+                      className="sigsheet__i sigsheet__i--area"
+                      placeholder={t("investigate.goalPlaceholder")}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="inv-geography" className="sigsheet__l">
+                      {t("investigate.geographyLabel")}{" "}
+                      <span className="sigsheet__opt">{t("investigate.optional")}</span>
+                    </label>
+                    <input
+                      id="inv-geography"
+                      value={form.geography}
+                      onChange={(e) => set({ geography: e.target.value })}
+                      className="sigsheet__i"
+                      placeholder={t("investigate.geographyPlaceholder")}
+                    />
+                  </div>
+                </>
+              )}
 
               <label className="sigsheet__check">
                 <input
                   type="checkbox"
                   checked={form.wants_intro}
                   onChange={(e) => set({ wants_intro: e.target.checked })}
-
                 />
-                {t("investigate.introCheckbox")}
+                {capability ? t("capability.introCheckbox") : t("investigate.introCheckbox")}
               </label>
             </div>
 
@@ -270,7 +346,11 @@ export default function InvestigateButton({
               disabled={!ready || status === "sending"}
               className="fbtn fbtn--block sigsheet__submit"
             >
-              {status === "sending" ? t("investigate.sending") : t("investigate.submit")}
+              {status === "sending"
+                ? t("investigate.sending")
+                : capability
+                  ? t("capability.submit")
+                  : t("investigate.submit")}
             </button>
             {status === "error" && (
               <p className="sigsheet__err">{t("investigate.error")}</p>

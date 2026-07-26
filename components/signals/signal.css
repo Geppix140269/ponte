@@ -166,6 +166,15 @@
   text-transform: none;
   font-weight: 500;
 }
+/* The role on a capability declaration: stated, because the button that opened
+   the form already said it. A fact, not a field. */
+.ponte-find .sigsheet__role {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  border-left: 2px solid var(--rule-strong);
+  padding-left: 12px;
+}
 .ponte-find .sigsheet__i {
   width: 100%;
   border: 0;

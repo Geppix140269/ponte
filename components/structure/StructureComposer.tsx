@@ -10,6 +10,7 @@ import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components
 import {
   emptyDraft,
   openGaps,
+  asksFor,
   bucketize,
   blockers as computeBlockers,
   toSubmitPayload,
@@ -17,14 +18,16 @@ import {
   type Intent,
   type CompletionField,
 } from "@/lib/structure/draft";
-
-// Tap vocabularies (from the design handoff). All selectable; no typing.
-const INCOTERMS = ["EXW", "FOB", "CIF", "CFR", "DDP"];
-const UNITS = ["MT", "kg", "containers", "TEU"];
-const PAYMENTS = ["LC at sight", "LC 30d", "TT advance", "CAD", "Open account"];
-const VALIDITIES = [7, 30, 60, 90];
-const ROLES = ["Principal", "Producer", "Distributor", "Agent (mandated)", "Intermediary"];
-const FREQS = ["Spot", "Monthly", "Quarterly", "Annual contract"];
+import {
+  INCOTERM_GROUPS,
+  INCOTERM_MEANING,
+  PAYMENT_GROUPS,
+  ROLE_GROUPS,
+  VALIDITY_DAYS,
+  UNITS,
+  FREQUENCIES,
+  type TapGroup,
+} from "@/lib/structure/vocabulary";
 
 // Origin/destination are stored as country NAMES (they display in the
 // opportunity and ride into the submit payload), so the searchable picker,
@@ -37,7 +40,46 @@ const codeForName = (name: string | null): string =>
 type Step = "intent" | "structuring" | "facts" | "complete" | "preview" | "submit" | "received" | "error";
 type Chapter = { chapter: string; chapter_title: string };
 type Heading = { heading: string; heading_title: string };
-type Hit = { code: string; display: string; short_title: string | null };
+/**
+ * An HS row as the catalogue returns it. `display` is the DOTTED CODE
+ * ("1005.90"), not a description, which is why nothing here may fall back to
+ * it for a label: doing so printed a code where the product name belongs and
+ * stored "1005.90" as the product on the listing.
+ */
+type Hit = {
+  code: string;
+  display: string;
+  description: string;
+  short_title: string | null;
+  chapter_title?: string;
+};
+
+/**
+ * What this code IS, in words. The WCO writes "Family; the specific thing", and
+ * the specific thing is the half that tells two neighbouring codes apart:
+ * 1005.10 and 1005.90 are both "Cereals", and are "maize (corn), seed" and
+ * "maize (corn), other than seed". Leading with the family would print the same
+ * name twice and pick the wrong product as easily as the right one.
+ *
+ * The friendly short title wins when the catalogue has one; most rows have
+ * none, which is why this fallback carries the weight.
+ */
+function hsName(h: Hit): string {
+  const short = h.short_title?.trim();
+  if (short) return short;
+  const full = (h.description ?? "").trim();
+  const cut = full.indexOf(";");
+  const specific = cut >= 0 ? full.slice(cut + 1).trim() : "";
+  const name = specific || full;
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : h.code;
+}
+
+/** The full official wording, when it says more than the name already did. */
+function hsDetail(h: Hit): string | null {
+  const full = (h.description ?? "").trim();
+  if (!full || full === hsName(h)) return null;
+  return full;
+}
 
 const STEP_MARK: Partial<Record<Step, string>> = {
   intent: "S01", facts: "S02", complete: "S03", preview: "S04", submit: "S05", received: "S06",
@@ -53,6 +95,25 @@ export default function StructureComposer() {
   const go = (s: Step) => setStack((st) => [...st, s]);
   const replace = (s: Step) => setStack((st) => [...st.slice(0, -1), s]);
   const back = () => setStack((st) => (st.length > 1 ? st.slice(0, -1) : st));
+
+  /**
+   * Editing one fact, rather than walking the whole record.
+   *
+   * Without this there was no way back INTO a fact once it had been passed:
+   * the preview printed "not stated" with no control on it, and Resolve on the
+   * submit screen popped one step to the same preview, which resolved nothing.
+   * A non-null queue means the completion step is open on exactly these fields
+   * and returns to wherever it was opened from.
+   */
+  const [editing, setEditing] = useState<CompletionField[] | null>(null);
+  const editField = useCallback((field: CompletionField) => {
+    setEditing([field]);
+    setStack((st) => [...st, "complete"]);
+  }, []);
+  const runCompletion = useCallback(() => {
+    setEditing(null);
+    setStack((st) => [...st, "complete"]);
+  }, []);
 
   // Submit + gate
   const [gateOpen, setGateOpen] = useState(false);
@@ -116,16 +177,27 @@ export default function StructureComposer() {
       <div className="fmain">
         {step === "intent" && <IntentStep draft={draft} set={set} onNext={() => go("structuring")} t={t} />}
         {step === "structuring" && <Structuring onDone={() => replace("facts")} t={t} />}
-        {step === "facts" && <FactsStep draft={draft} onComplete={() => go("complete")} onAdd={() => go("complete")} t={t} />}
-        {step === "complete" && <CompleteStep draft={draft} set={set} onDone={() => go("preview")} t={t} />}
-        {step === "preview" && <PreviewStep draft={draft} onNext={() => go("submit")} t={t} />}
+        {step === "facts" && <FactsStep draft={draft} onComplete={runCompletion} onAdd={editField} t={t} />}
+        {step === "complete" && (
+          <CompleteStep
+            draft={draft}
+            set={set}
+            fields={editing}
+            // The walk through every gap ends at the preview; a single edit
+            // returns to the screen that asked for it.
+            onDone={() => (editing ? back() : go("preview"))}
+            t={t}
+          />
+        )}
+        {step === "preview" && <PreviewStep draft={draft} onNext={() => go("submit")} onEdit={editField} t={t} />}
         {step === "submit" && (
           <SubmitStep
             draft={draft}
             submitting={submitting}
             onSubmit={() => doSend(false)}
             onSaveDraft={() => doSend(true)}
-            onResolve={() => back()}
+            onResolve={editField}
+            onVerify={() => router.push("/verify")}
             t={t}
           />
         )}
@@ -219,10 +291,7 @@ function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<St
         <div className="hscrumb"><button onClick={() => setMode("browse")}>{t("hs.browse")}</button></div>
         <input className="snote hssearch" style={{ minHeight: "auto", padding: "10px 12px" }} value={query} placeholder={t("hs.searchPlaceholder")} aria-label={t("hs.searchPlaceholder")} onChange={(e) => setQuery(e.target.value)} />
         {hits.map((h) => (
-          <button key={h.code} className="hsrow leaf" onClick={() => pick(h.short_title ?? h.display, h.code)}>
-            <span>{h.short_title ?? h.display}</span>
-            <span className="hsrow__code">{h.code}</span>
-          </button>
+          <HsCodeRow key={h.code} hit={h} picked={draft.hsCode === h.code} onPick={pick} />
         ))}
       </div>
     );
@@ -262,13 +331,36 @@ function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<St
         </button>
       ))}
       {level === "codes" && codes.map((c) => (
-        <button key={c.code} className={`hsrow leaf${draft.hsCode === c.code ? " is-picked" : ""}`} onClick={() => pick(c.short_title ?? c.display, c.code)}>
-          <span>{c.short_title ?? c.display}</span><span className="hsrow__code">HS {c.code}</span>
-        </button>
+        <HsCodeRow key={c.code} hit={c} picked={draft.hsCode === c.code} onPick={pick} />
       ))}
 
       <button className="paste-toggle" onClick={() => setMode("search")}>{t("hs.searchInstead")}</button>
     </div>
+  );
+}
+
+/**
+ * One six-digit code, as a product a trader can recognise.
+ *
+ * The code alone is not a choice anyone can make: "1005.90" says nothing, and
+ * a list of them is a list of numbers. So the row leads with what the code IS,
+ * carries the official wording underneath when it adds anything (the WCO
+ * qualifier is often the whole distinction between two neighbouring codes), and
+ * keeps the number where a number belongs, at the end.
+ */
+function HsCodeRow({ hit, picked, onPick }: { hit: Hit; picked: boolean; onPick: (product: string, code: string) => void }) {
+  const detail = hsDetail(hit);
+  return (
+    <button
+      className={`hsrow leaf hsrow--desc${picked ? " is-picked" : ""}`}
+      onClick={() => onPick(hsName(hit), hit.code)}
+    >
+      <span className="hsrow__b">
+        <span className="hsrow__n">{hsName(hit)}</span>
+        {detail && <span className="hsrow__d">{detail}</span>}
+      </span>
+      <span className="hsrow__code">HS {hit.display || hit.code}</span>
+    </button>
   );
 }
 
@@ -294,7 +386,7 @@ function Structuring({ onDone, t }: { onDone: () => void; t: T }) {
 }
 
 // ---- S02 facts & gaps ------------------------------------------------------
-function FactsStep({ draft, onComplete, onAdd, t }: { draft: StructureDraft; onComplete: () => void; onAdd: () => void; t: T }) {
+function FactsStep({ draft, onComplete, onAdd, t }: { draft: StructureDraft; onComplete: () => void; onAdd: (f: CompletionField) => void; t: T }) {
   const b = bucketize(draft);
   return (
     <section className="sstep reveal">
@@ -309,7 +401,7 @@ function FactsStep({ draft, onComplete, onAdd, t }: { draft: StructureDraft; onC
       {b.missing.length > 0 && (
         <Bucket label={`${t("facts.missing")} · ${b.missing.length}`}>
           {b.missing.map((k) => (
-            <div className="sfact" key={k}><span className="sfact__k">{t(`field.${k}`)}</span><button className="sval sval--add" onClick={onAdd}>{t("facts.add")} →</button></div>
+            <div className="sfact" key={k}><span className="sfact__k">{t(`field.${k}`)}</span><button className="sval sval--add" onClick={() => onAdd(k as CompletionField)}>{t("facts.add")} →</button></div>
           ))}
         </Bucket>
       )}
@@ -339,38 +431,93 @@ function Bucket({ label, children }: { label: string; children: React.ReactNode 
 }
 
 // ---- S03 progressive completion -------------------------------------------
-function CompleteStep({ draft, set, onDone, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; onDone: () => void; t: T }) {
-  const [queue] = useState<CompletionField[]>(() => openGaps(draft));
+/**
+ * The one screen that asks for a fact, used two ways: walking every open gap in
+ * order (`fields` null), or opened on a named fact to change it (`fields` set).
+ * Editing shows no progress bar and no Skip, because there is nothing to skip
+ * past: the member came here to answer one question.
+ */
+function CompleteStep({ draft, set, fields, onDone, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; fields: CompletionField[] | null; onDone: () => void; t: T }) {
+  const editing = fields !== null;
+  const [queue] = useState<CompletionField[]>(() => fields ?? openGaps(draft));
   const [i, setI] = useState(0);
   const field = queue[i];
   const total = queue.length;
   const next = () => (i + 1 < total ? setI(i + 1) : onDone());
 
-  if (!field) { onDone(); return null; }
+  // Nothing left to ask: leave, without rendering an empty question. The exit
+  // is deferred to an effect so it is never a state change during a render.
+  useEffect(() => {
+    if (!field) onDone();
+  }, [field, onDone]);
+  if (!field) return null;
 
   return (
     <section className="sstep">
-      <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("complete.eyebrow")}</span></div>
-      <div className="readiness" style={{ margin: "12px 0 20px" }}>
-        <div className="readiness__track"><div className="readiness__fill" style={{ width: `${(i / total) * 100}%` }} /></div>
-        <span className="readiness__label">{t("complete.remaining", { n: total - i })}</span>
-      </div>
+      <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{editing ? t("complete.editEyebrow") : t("complete.eyebrow")}</span></div>
+      {!editing && (
+        <div className="readiness" style={{ margin: "12px 0 20px" }}>
+          <div className="readiness__track"><div className="readiness__fill" style={{ width: `${(i / total) * 100}%` }} /></div>
+          <span className="readiness__label">{t("complete.remaining", { n: total - i })}</span>
+        </div>
+      )}
       <div className="qwrap">
         <h2 className="q serif">{t(`ask.${field}`)}</h2>
         <QControl field={field} draft={draft} set={set} t={t} />
       </div>
       <div className="qnav">
-        <button className="fbtn fbtn--ghost" onClick={next}>{t("complete.skip")}</button>
-        <button className="fbtn" onClick={next}>{i + 1 < total ? t("complete.next") : t("complete.done")}</button>
+        {!editing && <button className="fbtn fbtn--ghost" onClick={next}>{t("complete.skip")}</button>}
+        <button className="fbtn" onClick={next}>
+          {editing ? t("complete.save") : i + 1 < total ? t("complete.next") : t("complete.done")}
+        </button>
       </div>
     </section>
   );
 }
 
-function QControl({ field, draft, set, t }: { field: CompletionField; draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
-  const chips = (opts: string[], value: string | null, onPick: (v: string) => void) => (
-    <div className="chiprow">{opts.map((o) => <button key={o} className="fchip" aria-pressed={value === o} onClick={() => onPick(o)}>{o}</button>)}</div>
+/** A flat row of chips, for a vocabulary short enough to read at a glance. */
+function Chips({ options, value, onPick }: { options: readonly string[]; value: string | null; onPick: (v: string) => void }) {
+  return (
+    <div className="chiprow">
+      {options.map((o) => (
+        <button key={o} className="fchip" aria-pressed={value === o} onClick={() => onPick(o)}>{o}</button>
+      ))}
+    </div>
   );
+}
+
+/**
+ * A grouped vocabulary. Real trade vocabularies are long (eleven incoterms,
+ * five families of payment term), and a long undifferentiated chip cloud is
+ * as unusable as a list that was cut short. The group heading is what makes
+ * the length readable, so it is a heading, not a divider.
+ */
+function ChipGroups({ groups, value, onPick, meaning }: { groups: readonly TapGroup[]; value: string | null; onPick: (v: string) => void; meaning?: Record<string, string> }) {
+  return (
+    <div className="tapgroups">
+      {groups.map((g, gi) => (
+        <div className="tapgroup" key={g.label ?? `g${gi}`}>
+          {g.label && <div className="tapgroup__l">{g.label}</div>}
+          <div className="chiprow">
+            {g.options.map((o) => (
+              <button
+                key={o}
+                className={`fchip${meaning ? " fchip--two" : ""}`}
+                aria-pressed={value === o}
+                onClick={() => onPick(o)}
+              >
+                <span className="fchip__t">{o}</span>
+                {meaning?.[o] && <span className="fchip__d">{meaning[o]}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QControl({ field, draft, set, t }: { field: CompletionField; draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
   switch (field) {
     case "quantity":
       return (
@@ -380,8 +527,8 @@ function QControl({ field, draft, set, t }: { field: CompletionField; draft: Str
             <span className="stepval">{(draft.quantity ?? 10000).toLocaleString()}</span>
             <button className="step" onClick={() => set({ quantity: (draft.quantity ?? 10000) + 5000 })} aria-label="+">+</button>
           </div>
-          {chips(UNITS, draft.unit, (v) => set({ unit: v }))}
-          {chips(FREQS, draft.frequency, (v) => set({ frequency: v }))}
+          <Chips options={UNITS} value={draft.unit} onPick={(v) => set({ unit: v })} />
+          <Chips options={FREQUENCIES} value={draft.frequency} onPick={(v) => set({ frequency: v })} />
         </div>
       );
     case "origin":
@@ -389,26 +536,66 @@ function QControl({ field, draft, set, t }: { field: CompletionField; draft: Str
     case "destination":
       return <CountryPicker value={codeForName(draft.destination)} onChange={(code) => set({ destination: nameForCode(code) })} />;
     case "incoterm":
-      return chips(INCOTERMS, draft.incoterm, (v) => set({ incoterm: v }));
+      return <ChipGroups groups={INCOTERM_GROUPS} value={draft.incoterm} onPick={(v) => set({ incoterm: v })} meaning={INCOTERM_MEANING} />;
     case "payment":
-      return chips(PAYMENTS, draft.payment, (v) => set({ payment: v }));
+      return <ChipGroups groups={PAYMENT_GROUPS} value={draft.payment} onPick={(v) => set({ payment: v })} />;
     case "validity":
-      return <div className="chiprow">{VALIDITIES.map((d) => <button key={d} className="spill" aria-pressed={draft.validityDays === d} onClick={() => set({ validityDays: d })}>{t("complete.days", { n: d })}</button>)}</div>;
+      // A horizon, plus the honest answer that there is no end date. Both are
+      // declarations; only silence is undeclared.
+      return (
+        <div className="chiprow">
+          {VALIDITY_DAYS.map((d) => (
+            <button key={d} className="spill" aria-pressed={draft.validity === d} onClick={() => set({ validity: d })}>{t("complete.days", { n: d })}</button>
+          ))}
+          <button className="spill" aria-pressed={draft.validity === "standing"} onClick={() => set({ validity: "standing" })}>{t("complete.standing")}</button>
+        </div>
+      );
     case "role":
-      return chips(ROLES, draft.role, (v) => set({ role: v }));
+      return <ChipGroups groups={ROLE_GROUPS} value={draft.role} onPick={(v) => set({ role: v })} />;
     case "note":
       return <textarea className="snote" placeholder={t("ask.notePlaceholder")} value={draft.note ?? ""} onChange={(e) => set({ note: e.target.value })} />;
   }
 }
 
 // ---- S04 public / private / reviewer --------------------------------------
-function PreviewStep({ draft, onNext, t }: { draft: StructureDraft; onNext: () => void; t: T }) {
+function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNext: () => void; onEdit: (f: CompletionField) => void; t: T }) {
   const [tab, setTab] = useState<"public" | "private" | "reviewer">("public");
   const ns = t("field.notStated");
-  const row = (k: string, v: string | null) => (
-    <div className="lrow" key={k}><span className="lrow__k">{k}</span><span className={`lrow__v${v ? "" : " ns"}`}>{v ?? ns}</span></div>
+
+  /**
+   * A row of the record. Every fact that was tapped can be tapped again here:
+   * the preview was previously read-only, so a member who saw "not stated" on
+   * their own listing had no way to state it, and the record they were about to
+   * submit was the last place they could still fix it.
+   */
+  const row = (k: string, v: string | null, edit?: CompletionField) => (
+    <div className="lrow" key={k}>
+      <span className="lrow__k">{k}</span>
+      <span className={`lrow__v${v ? "" : " ns"}`}>{v ?? ns}</span>
+      {edit && (
+        <button className="lrow__e" onClick={() => onEdit(edit)}>
+          {v ? t("preview.edit") : t("preview.add")}
+        </button>
+      )}
+    </div>
   );
   const kind = draft.intent === "offer" ? t("intent.sell") : draft.intent === "service" ? t("intent.service") : t("intent.buy");
+  // The route reads as the end(s) this member actually decides.
+  const routeValue = (): string | null => {
+    const from = draft.origin;
+    const to = draft.destination;
+    if (from && to) return `${from} → ${to}`;
+    if (from) return t("preview.shipsFrom", { place: from });
+    if (to) return t("preview.deliveredTo", { place: to });
+    return null;
+  };
+  const routeField: CompletionField = asksFor(draft.intent, "origin") ? "origin" : "destination";
+  const validityValue =
+    draft.validity === "standing"
+      ? t("complete.standing")
+      : typeof draft.validity === "number"
+        ? t("complete.days", { n: draft.validity })
+        : null;
   return (
     <section className="sstep reveal">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("preview.eyebrow")}</span></div>
@@ -426,11 +613,11 @@ function PreviewStep({ draft, onNext, t }: { draft: StructureDraft; onNext: () =
             {row(t("field.kind"), kind)}
             {row(t("field.product"), draft.product)}
             {row(t("field.hsCode"), draft.hsCode ? `HS ${draft.hsCode}` : null)}
-            {row(t("field.quantity"), draft.quantity ? `${draft.quantity}${draft.unit ? ` ${draft.unit}` : ""}` : null)}
-            {row(t("field.frequency"), draft.frequency)}
-            {row(t("field.route"), draft.origin || draft.destination ? `${draft.origin ?? ns} → ${draft.destination ?? ns}` : null)}
-            {row(t("field.incoterm"), draft.incoterm)}
-            {row(t("field.validity"), draft.validityDays ? t("complete.days", { n: draft.validityDays }) : null)}
+            {row(t("field.quantity"), draft.quantity ? `${draft.quantity.toLocaleString()}${draft.unit ? ` ${draft.unit}` : ""}` : null, "quantity")}
+            {row(t("field.frequency"), draft.frequency, "quantity")}
+            {row(t("field.route"), routeValue(), routeField)}
+            {row(t("field.incoterm"), draft.incoterm, "incoterm")}
+            {row(t("field.validity"), validityValue, "validity")}
           </div>
         </div>
       )}
@@ -440,9 +627,9 @@ function PreviewStep({ draft, onNext, t }: { draft: StructureDraft; onNext: () =
           <div className="ledger2">
             {row(t("private.identity"), t("preview.reviewerOnly"))}
             {row(t("private.contact"), t("preview.withheld"))}
-            {row(t("field.payment"), draft.payment)}
-            {row(t("field.role"), draft.role)}
-            {row(t("field.note"), draft.note)}
+            {row(t("field.payment"), draft.payment, "payment")}
+            {row(t("field.role"), draft.role, "role")}
+            {row(t("field.note"), draft.note, "note")}
           </div>
         </div>
       )}
@@ -464,7 +651,7 @@ function PreviewStep({ draft, onNext, t }: { draft: StructureDraft; onNext: () =
 }
 
 // ---- S05 save / submit -----------------------------------------------------
-function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, t }: { draft: StructureDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: () => void; t: T }) {
+function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVerify, t }: { draft: StructureDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: (f: CompletionField) => void; onVerify: () => void; t: T }) {
   const blocks = computeBlockers(draft);
   return (
     <section className="sstep">
@@ -476,7 +663,14 @@ function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, t }: 
           <div className="block" key={b.key}>
             <div className="block__t">{t(`blocker.${b.key}`)}</div>
             <div className="block__d">{t(`blocker.${b.key}Desc`)}</div>
-            {b.resolve && <button className="block__r" onClick={onResolve}>{t("submit.resolve")} →</button>}
+            {/* Resolve opens the fact itself. It used to step back one screen,
+                which landed on the same summary and changed nothing. */}
+            {b.resolve === "complete" && (
+              <button className="block__r" onClick={() => onResolve(b.key as CompletionField)}>{t("submit.resolve")} →</button>
+            )}
+            {b.resolve === "verify" && (
+              <button className="block__r" onClick={onVerify}>{t("submit.verifyNow")} →</button>
+            )}
           </div>
         ))}
       </div>

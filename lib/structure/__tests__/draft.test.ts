@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import {
   emptyDraft,
   openGaps,
+  queueFor,
   bucketize,
   blockers,
   synthesiseDetails,
@@ -37,12 +38,39 @@ const OPTS = { draft: false, nowIso: "2026-07-24T00:00:00.000Z" };
 // ---- completion queue ------------------------------------------------------
 test("openGaps returns unfilled fields in the fixed order", () => {
   const g = openGaps(draft());
-  assert.deepEqual(g, ["quantity", "origin", "destination", "incoterm", "payment", "validity", "role", "note"]);
+  assert.deepEqual(g, ["quantity", "destination", "incoterm", "payment", "validity", "role", "note"]);
 });
 
 test("openGaps drops fields already filled", () => {
   const g = openGaps(draft({ quantity: 25000, incoterm: "CIF", role: "buyer" }));
-  assert.deepEqual(g, ["origin", "destination", "payment", "validity", "note"]);
+  assert.deepEqual(g, ["destination", "payment", "validity", "note"]);
+});
+
+// ---- the end of the route this member actually decides ---------------------
+test("a seller is asked where it ships from, never where it goes", () => {
+  const q = queueFor("offer");
+  assert.ok(q.includes("origin"), "a seller states the origin");
+  assert.ok(!q.includes("destination"), "where it goes is the buyer's decision");
+  assert.deepEqual(openGaps(draft({ intent: "offer" })), [
+    "quantity", "origin", "incoterm", "payment", "validity", "role", "note",
+  ]);
+});
+
+test("a buyer is asked where it goes, never where it comes from", () => {
+  const q = queueFor("requirement");
+  assert.ok(q.includes("destination"));
+  assert.ok(!q.includes("origin"), "the origin is whoever can supply it");
+});
+
+test("a trade service declares both ends of the corridor", () => {
+  const q = queueFor("service");
+  assert.ok(q.includes("origin") && q.includes("destination"));
+});
+
+test("the end that is not asked is never a gap or a blocker", () => {
+  const offer = draft({ intent: "offer", quantity: 25000, origin: "Argentina" });
+  assert.ok(!bucketize(offer).missing.includes("destination"));
+  assert.ok(!blockers(offer).some((b) => b.key === "destination"));
 });
 
 // ---- buckets ---------------------------------------------------------------
@@ -53,7 +81,7 @@ test("bucketize puts known facts in commercial and gaps in missing", () => {
   assert.ok(b.commercial.includes("hsCode"));
   assert.ok(b.commercial.includes("quantity"));
   assert.ok(b.commercial.includes("incoterm"));
-  assert.ok(b.missing.includes("origin"));
+  assert.ok(b.missing.includes("destination"));
   assert.ok(b.missing.includes("role"));
   assert.ok(!b.missing.includes("quantity"));
 });
@@ -76,7 +104,7 @@ test("blockers lists open decisive facts plus business verification", () => {
 });
 
 test("a fully tapped draft still blocks on business verification only", () => {
-  const full = draft({ quantity: 25000, incoterm: "CIF", validityDays: 30, role: "buyer" });
+  const full = draft({ quantity: 25000, incoterm: "CIF", validity: 30, role: "buyer" });
   assert.deepEqual(blockers(full).map((b) => b.key), ["businessVerification"]);
 });
 
@@ -107,7 +135,7 @@ test("offer and service change the opening clause", () => {
 
 // ---- submit payload --------------------------------------------------------
 test("toSubmitPayload maps fields, derives a dated validity, carries details", () => {
-  const p = toSubmitPayload(draft({ quantity: 25000, incoterm: "CIF", validityDays: 30, role: "buyer" }), OPTS);
+  const p = toSubmitPayload(draft({ quantity: 25000, incoterm: "CIF", validity: 30, role: "buyer" }), OPTS);
   assert.equal(p.type, "requirement");
   assert.equal(p.product, "Refined sugar");
   assert.equal(p.hs_code, "170199");
@@ -117,6 +145,20 @@ test("toSubmitPayload maps fields, derives a dated validity, carries details", (
   assert.equal(p.valid_until, "2026-08-23"); // 2026-07-24 + 30 days
   assert.equal(p.draft, false);
   assert.ok(typeof p.details === "string" && (p.details as string).length > 0);
+});
+
+test("a standing validity is a declared horizon with no end date", () => {
+  const p = toSubmitPayload(draft({ validity: "standing" }), OPTS);
+  assert.equal(p.validity_type, "standing");
+  assert.equal(p.valid_until, null);
+  assert.match(synthesiseDetails(draft({ validity: "standing" })), /Open until withdrawn\./);
+});
+
+test("a half-stated route is written as the half it is, with nothing invented", () => {
+  const d = synthesiseDetails(draft({ intent: "offer", origin: "Argentina" }));
+  assert.match(d, /Ships from: Argentina\./);
+  assert.ok(!/unspecified/.test(d), "no unspecified end is printed as a fact");
+  assert.match(synthesiseDetails(draft({ destination: "Italy" })), /Delivered to: Italy\./);
 });
 
 test("toSubmitPayload leaves validity undeclared when no pill was chosen", () => {

@@ -10,7 +10,7 @@ import { bridgeNavigation, type BridgeRoute } from "@/lib/landing/bridge";
 import { track } from "@/lib/landing/analytics";
 import type { ActivityBandItem } from "@/lib/board/activity-view";
 import ActivityBand from "./ActivityBand";
-import PonteBridge, { type BridgeCenter, type BridgeRouteLabels } from "./PonteBridge";
+import PonteFlow, { type FlowCaption, type FlowRouteLabels } from "./PonteFlow";
 
 /**
  * The Ponte Trade entrance (North Star entry architecture, section 5).
@@ -59,6 +59,14 @@ export default function PonteLanding({
   const t = useTranslations("home");
   const router = useRouter();
   const bold = useCallback((chunks: ReactNode) => <b>{chunks}</b>, []);
+  const aboutLink = useCallback(
+    (chunks: ReactNode) => (
+      <Link className="lnote__a" href="/about">
+        {chunks}
+      </Link>
+    ),
+    [],
+  );
 
   const [query, setQuery] = useState("");
   const [clarify, setClarify] = useState(false);
@@ -73,14 +81,12 @@ export default function PonteLanding({
     window.setTimeout(() => setLive(message), 50);
   }, []);
 
-  const center: BridgeCenter = {
+  const caption: FlowCaption = {
     eyebrow: t("gateway.centerEyebrow"),
-    title: t("gateway.centerTitle"),
-    titleEm: t("gateway.centerTitleEm"),
     hint: t("gateway.centerHint"),
   };
 
-  const routeLabels: Record<BridgeRoute, BridgeRouteLabels> = {
+  const routeLabels: Record<BridgeRoute, FlowRouteLabels> = {
     explore: { title: t("routes.explore.label"), support: t("routes.explore.support") },
     deal: { title: t("routes.deal.label"), support: t("routes.deal.support") },
   };
@@ -235,7 +241,7 @@ export default function PonteLanding({
           </section>
 
           <section className="gatewrap" aria-label={t("gateway.regionLabel")}>
-            <PonteBridge center={center} labels={routeLabels} onOpen={openRoute} />
+            <PonteFlow caption={caption} labels={routeLabels} onOpen={openRoute} />
           </section>
 
           <section className="lsearch" aria-label={t("search.regionLabel")}>
@@ -306,11 +312,13 @@ export default function PonteLanding({
             </section>
           )}
 
-          <section className="ltrust" aria-label={t("trustTitle")}>
-            <h2 className="ltrust__t">{t("trustTitle")}</h2>
-            <p className="ltrust__p">{t.rich("trustBody", { b: bold })}</p>
-            <p className="ltrust__p">{t.rich("trust", { b: bold })}</p>
-          </section>
+          {/* What a record is, how the desk treats it and when an account is
+              needed used to be printed here in full. It is reference, not an
+              entrance: it belongs on About, which now carries it, and this page
+              links to it in one line rather than reprinting the argument. */}
+          <p className="lnote">
+            {t.rich("trustLink", { b: bold, a: aboutLink })}
+          </p>
         </div>
       </main>
     </>

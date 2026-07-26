@@ -49,7 +49,7 @@ class TestCustomEvent<T> {
 };
 
 /* eslint-disable import/first */
-import PonteBridge from "../../../components/home/landing/PonteBridge";
+import PonteFlow from "../../../components/home/landing/PonteFlow";
 import PonteLanding from "../../../components/home/landing/PonteLanding";
 import { pushed, resetRouter } from "../../__mocks__/i18n-navigation";
 import { bridgeDestination, BRIDGE_ROUTES, type BridgeRoute } from "../bridge";
@@ -92,7 +92,7 @@ function bridgeOf(page: Mounted): TestElement {
 
 /** The bridge, mounted with the landing page's own handler: the real wiring. */
 function mountBridge(page: Mounted): Mounted {
-  return mount(PonteBridge as unknown as (p: unknown) => unknown, bridgeOf(page).props);
+  return mount(PonteFlow as unknown as (p: unknown) => unknown, bridgeOf(page).props);
 }
 
 function routeButtons(bridge: Mounted): Map<BridgeRoute, TestElement> {
@@ -246,8 +246,8 @@ test("each route carries a text name and a supporting line, never a number alone
 });
 
 test("the bridge holds no destination or feature-flag knowledge", () => {
-  const bridge = mount(PonteBridge as unknown as (p: unknown) => unknown, {
-    center: { eyebrow: "", title: "", titleEm: "", hint: "" },
+  const bridge = mount(PonteFlow as unknown as (p: unknown) => unknown, {
+    caption: { eyebrow: "", hint: "" },
     labels: {
       explore: { title: "1", support: "a" },
       deal: { title: "2", support: "b" },

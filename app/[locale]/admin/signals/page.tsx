@@ -92,9 +92,12 @@ type Signal = {
 type Investigation = {
   id: string;
   signal_id: string;
+  /** "investigate" (asked the desk something) or "capability" (can supply/buy). */
+  request_kind: string | null;
   requesting_business: string | null;
   requester_type: string | null;
   establish_goal: string | null;
+  capability: string | null;
   indicative: string | null;
   geography: string | null;
   evidence: string | null;
@@ -167,6 +170,11 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
               <div key={r.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-[12px] text-gray-2">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="text-cream">{r.requesting_business ?? "Unnamed business"}</span>
+                  {/* Which act this was. A capability declaration is an answer
+                      to the signal; an investigation is a question about it. */}
+                  <span className="badge uppercase">
+                    {r.request_kind === "capability" ? "can supply / buy" : "investigate"}
+                  </span>
                   {r.requester_type && <span className="badge uppercase">{r.requester_type}</span>}
                   {r.wants_intro && <span className="text-gold">wants introduction</span>}
                   <span className="ml-auto">{fmt(r.created_at)}</span>
@@ -174,6 +182,11 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
                 {r.establish_goal && (
                   <p className="mt-1.5 border-l-2 border-white/10 pl-3 leading-relaxed">
                     Establish: {r.establish_goal}
+                  </p>
+                )}
+                {r.capability && (
+                  <p className="mt-1.5 border-l-2 border-white/10 pl-3 leading-relaxed">
+                    Can supply / would buy: {r.capability}
                   </p>
                 )}
                 <div className="mt-1 grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
@@ -266,12 +279,12 @@ export default async function AdminSignalsPage({
 
   const all = (data ?? []) as Signal[];
 
-  // Investigation requests, grouped by signal, so a reviewer sees who asked and
-  // what they want established right beside the signal's controls.
+  // Member requests, grouped by signal, so a reviewer sees who asked what, and
+  // who says they can supply it, right beside the signal's controls.
   const bySignal = new Map<string, Investigation[]>();
   const { data: invData } = await adminSb
     .from("signal_investigations")
-    .select("id, signal_id, requesting_business, requester_type, establish_goal, indicative, geography, evidence, wants_intro, created_at")
+    .select("id, signal_id, request_kind, requesting_business, requester_type, establish_goal, capability, indicative, geography, evidence, wants_intro, created_at")
     .order("created_at", { ascending: false });
   for (const r of (invData ?? []) as Investigation[]) {
     const arr = bySignal.get(r.signal_id) ?? [];

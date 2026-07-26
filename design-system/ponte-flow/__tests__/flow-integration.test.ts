@@ -118,7 +118,7 @@ test("no screen pastes Flow SVG markup", () => {
   for (const file of appFiles) {
     const src = readFileSync(file, "utf8");
     // The shell's own wordmark is hand-authored brand art, not a Flow asset.
-    if (file.includes("PonteShell") || file.includes("PonteLanding") || file.includes("PonteBridge")) continue;
+    if (file.includes("PonteShell") || file.includes("PonteLanding") || file.includes("PonteFlow")) continue;
     assert.ok(
       !/stroke-width="1\.75"/.test(src),
       `${file} looks like it contains pasted Flow markup`,
