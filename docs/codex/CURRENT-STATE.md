@@ -4,6 +4,7 @@
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Monetisation decision:** `docs/decisions/ADR-0002-founder-capacity-and-paid-ponte-desk.md`  
 **Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
@@ -28,6 +29,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 |---|---|---|---|
 | Source-of-truth operating procedure | On `main` via PR #41 | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
 | Unified three-family market contract | Accepted and on `main` via PR #41 | Not implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
+| Founder-capacity and paid Ponte Desk model | Designed on branch `decision/founder-assisted-monetisation-mvp` | Not implemented | Free work must be platform self-service or agent-assisted. Founder or human intervention requires a scoped and paid Ponte Desk entitlement. Exact package prices remain configurable MVP hypotheses. |
 | Issue #42 Phase A reconciliation | Complete on branch `issue-42/phase-a-audit`; PR #44 ready for owner review | Production-verified for market-record scope | Repository audit, compatibility matrix, SELECT-only production probe and final report are complete. No runtime or database change is included. |
 | Explore the market | On `main` | Production data defect verified | Public activity is real, but family and sector membership depend on incomplete legacy inference. |
 | Product Market Signals | On `main` | 3,517 approved and unexpired rows | All 3,517 carry a source category and none carries an HS code, so current HS-derived sector counts cannot classify them. |
@@ -82,6 +84,19 @@ desk_radar.side: offer | requirement
 
 These values cannot prove all seven accepted intents. `record_origin` remains truthfully separated by source table and must stay that way.
 
+## Monetisation and fulfilment truth
+
+The accepted logical fulfilment model is:
+
+```text
+Fulfilment mode: Platform self-service | Agent-assisted | Ponte Desk
+Founder intervention: paid or explicitly entitled only
+Free participation: no founder work item or service-level promise
+Desk work: scope -> fee -> acceptance -> payment/entitlement -> work -> deliverable -> outcome
+```
+
+This is a designed architecture decision only. Production does not yet persist a canonical fulfilment mode, Desk quote, payment entitlement, capacity state or paid-case lifecycle. Existing investigation and Ponte Desk concepts are reusable, but the commercial gate is not implemented.
+
 ## Classification truth
 
 The current public sector path is:
@@ -120,7 +135,9 @@ Duplicate checks and investigation-count reconciliation returned zero defects.
 ## Immediate next actions
 
 1. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
-2. After explicit owner direction, Phase B designs the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration.
-3. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
-4. A later pre-migration report and owner approval are required before any production schema or backfill change.
-5. Issue #42 remains open until all implementation phases are complete.
+2. Owner reviews the ADR-0002 branch and approves or revises the founder-capacity and Ponte Desk commercial boundary before merge.
+3. After explicit owner direction, design the smallest MVP service catalogue and Desk case lifecycle without yet applying a production migration or Stripe change.
+4. After explicit owner direction, Phase B designs the smallest backwards-compatible market application contract and adapters. Phase B must not apply a database migration.
+5. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
+6. A later pre-migration report and owner approval are required before any production schema or backfill change.
+7. Issue #42 remains open until all implementation phases are complete.
