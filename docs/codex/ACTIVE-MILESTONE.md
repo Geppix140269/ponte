@@ -1,70 +1,119 @@
-# Active milestone — North Star entry architecture, PR 1
+# Active milestone - Issue 42 Phase A market reconciliation
 
-**Authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
-**Status:** Implemented on branch, open for owner review, not merged.
-
-This milestone supersedes the previous active milestone (Phase 0 Codex
-onboarding and gap report), summarised at the foot of this file for history.
-The owner directed a controlled refactor of the entry experience against the
-North Star reset rather than a further audit pass.
+**Authority:** `docs/decisions/ADR-0001-unified-trade-market.md`
+**Issue:** #42
+**ExecPlan:** `docs/plans/active/ISSUE-42-PHASE-A-MARKET-RECONCILIATION.md`
+**Branch:** `issue-42/phase-a-audit`
+**Status:** In progress; repository audit written, production probe pending.
 
 ## Objective
 
-Deliver the first phase of the North Star entry architecture: an entrance that
-gives a visitor value immediately, offers two primary journeys, and never leads
-with emptiness.
+Reconcile the accepted three-family market contract against the current
+repository and production database before any new schema, migration, ingestion
+pipeline or composer implementation is proposed.
 
-## In scope (PR 1)
+The accepted market has three equal families:
 
-- The North Star authority document, and marking the superseded four-route
-  instructions as historical.
-- Recent market activity band, from real public records, on the landing.
-- Two-route bridge (Explore the market, Start a deal) with direct navigation.
-- Removal of the voice control and of any layout space it reserved.
-- Search field below the bridge.
-- Popular or recent areas, derived from real counts.
-- Trust and evidence explanation.
-- Desktop and mobile.
-- Start a Deal routing into the existing Structure composer, with Source a
-  product / Supply a product / Offer a trade service as the first choices.
-- Initial `/explore` route shell.
+1. Products
+2. Trade services
+3. Distribution and representation
 
-## Out of scope (later phases)
+Each family contains externally observed Market Signals and member-created
+Member Opportunities. Every future market record must have one family, one
+origin and one family-valid intent.
 
-- PR 2: the Explore universe drill-down (sector, chapter, subcategory,
-  product), pagination and progressive loading.
-- PR 3: the unified market activity screen, filters, and the rewrite of `/find`
-  away from a Qualified-Opportunities-first result.
-- PR 4: Start a Deal refinement, including duration and the remaining
-  commercial terms, and service-specific fields.
-- Verification, communication, investigation execution and monetisation.
-- Any migration, production flag change or deployment.
+## In scope
+
+- Audit `listings`, `desk_radar`, `signal_investigations` and related tables.
+- Audit member and signal public readers.
+- Audit the unified activity model and count semantics.
+- Audit Structure/Start a deal draft and submission payloads.
+- Audit Explore family and product-sector classification.
+- Audit publication, validity, reconfirmation, expiry, withdrawal and owner
+  eligibility rules.
+- Audit import mapping, provenance, source governance and deduplication.
+- Deliver a field-by-field compatibility matrix to ADR-0001.
+- Prepare and execute a SELECT-only production probe.
+- Record exact live schema, counts, HS coverage and drift.
+- Stop for owner review.
+
+## Out of scope
+
+- Runtime code changes.
+- Database migrations or backfills.
+- Production writes of any kind.
+- Public UI, count or empty-state changes.
+- New external source activation, API ingestion or web scraping.
+- Phase B shared-contract design.
+- Phase C member creation flows.
+- Phase D external ingestion adapters.
+- Phase E classification backfill.
+- Phase F Explore and count convergence.
+- Merge or deployment without owner approval.
 
 ## Definition of done
 
-1. The North Star authority exists and the superseded instructions are marked.
-2. Only two primary bridge routes render, and each navigates directly.
-3. The voice control is absent, with no reserved space.
-4. "Ponte Trade - What's your deal?" remains central, with search prominent
-   below the bridge.
-5. Recent market activity is visible above the bridge, from real data, with
-   truthful classifications and working reduced-motion behaviour.
-6. Explore opens a useful first screen with the three approved families and the
-   existing HS categories and icons, requiring no registration.
-7. Start a Deal reaches the existing composer, keeps preview before
-   registration and keeps the existing AccountGate on save and submit.
-8. `npm run verify` is run and its exact result recorded.
-9. A deploy preview is available and the pull request stops before merge for
-   owner review.
+1. The ExecPlan exists and remains current.
+2. The repository audit covers all systems named in Issue #42 Phase A.
+3. The compatibility matrix maps every canonical family, origin, intent and core
+   record field to current implementation evidence.
+4. A read-only production probe records columns, types, constraints, indexes,
+   triggers, functions, policies and RLS for the relevant tables.
+5. Exact production counts and HS coverage are recorded with dated evidence.
+6. Production drift is written down rather than silently corrected.
+7. High-risk contradictions discovered during the audit are recorded.
+8. No migration or runtime implementation is included.
+9. `npm run verify` and the deploy preview pass.
+10. The pull request remains unmerged until Giuseppe reviews it.
+
+## Current findings
+
+Repository-proven:
+
+- `listings.type` supports only `offer`, `requirement` and `service`.
+- `desk_radar.side` supports only `offer` and `requirement`.
+- There is no current persisted Distribution and representation class.
+- The existing service path does not distinguish seeking from offering.
+- Services remain tied to the product/HS-shaped Structure draft.
+- Imported product signals are deliberately written with no HS code.
+- Product sector counts therefore cannot claim most imported signals.
+- A signal capability declaration is an action, not a native Member Opportunity.
+- The current member head count does not apply all row-level visibility rules.
+- External provenance storage is useful, but source terms and removal governance
+  are not complete in a central source register.
+- The repository contains a verification-level type mismatch: the seed script
+  writes a text enum while public eligibility code performs a numeric conversion.
+
+Production-proven findings: none yet in this phase.
+
+## Required evidence still pending
+
+Run and retain the output of:
+
+`docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE.sql`
+
+The execution record must state project, date/time, executor and database role.
+If a query fails because production differs from the repository, record the
+failure as drift and stop before changing the database.
+
+## Completion boundary
+
+Phase A completion authorises no implementation by itself. After the audit is
+accepted, Phase B may propose the smallest backwards-compatible shared record
+contract. Any migration remains a separate owner-approved step subject to the
+pre-migration report in `docs/codex/DATABASE-STATE.md`.
 
 ---
 
-## Superseded milestone (history): Phase 0 Codex onboarding and gap report
+## Completed milestone history
 
-Phase 0 asked for a repository-to-architecture gap report before any new
-implementation, with no product UI or behaviour change. Its record is in the
-repository history and in `docs/codex/CODEX-ONBOARDING-AUDIT.md`. The
-deliverables that remain useful (route, component and API inventories; the
-Qualified Opportunity and Market Signal confusion map; authentication
-boundaries that lose work) are not cancelled. They are simply no longer the
-blocking gate in front of the entry work the owner has now directed.
+### Source-of-truth governance and unified logical contract
+
+PR #41 merged the repository operating procedure, ADR-0001, canonical taxonomy,
+logical schemas, cross-agent entry points and governance checks.
+
+### North Star entry architecture
+
+PRs #36-40 delivered the two-route entrance, market activity, Explore shell,
+Flow taxonomy integration, count corrections and composer refinements. The
+remaining inventory and classification defects are now governed by Issue #42.
