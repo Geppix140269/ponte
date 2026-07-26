@@ -1,0 +1,84 @@
+name: Product decision proposal
+description: Recombine an idea from ChatGPT, Claude, Codex, a meeting or research into the Ponte Trade decision process.
+title: "[Proposal] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is a proposal inbox item. It is not product authority until Giuseppe accepts it, the canonical records are updated and the change is merged to `main`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and intended outcome
+      description: What is wrong, missing or newly possible, and who benefits?
+      placeholder: Describe the current problem and the user or business outcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed decision
+      description: State the proposed decision in one clear sentence, then add necessary detail.
+      placeholder: "Ponte Trade will..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence, constraints and alternatives
+      description: Include relevant facts, screenshots, data, legal or technical constraints, and alternatives considered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Areas affected
+      description: Identify product journeys, routes, domain objects, data, copy, design, privacy, lifecycle, operations and analytics that may change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source conversation or self-contained summary
+      description: Link the source where possible, or paste enough context that the issue stands alone without the original conversation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: authority
+    attributes:
+      label: Known authority or ADR impact
+      description: List governing documents, accepted ADRs or schema contracts that this proposal may update, conflict with or supersede.
+
+  - type: textarea
+    id: questions
+    attributes:
+      label: Open questions and requested owner decision
+      description: What must Giuseppe decide? What remains uncertain?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: proposed_status
+    attributes:
+      label: Proposal status
+      options:
+        - Proposed — awaiting owner decision
+        - Deferred candidate
+        - Reconsideration of an accepted decision
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: truth
+    attributes:
+      label: Source-of-truth acknowledgement
+      options:
+        - label: I understand that this issue does not alter Ponte Trade architecture or authorise implementation until the owner accepts it and the repository authorities are updated.
+          required: true

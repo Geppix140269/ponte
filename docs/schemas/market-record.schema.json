@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ponte.trade/schemas/market-record.schema.json",
+  "title": "Ponte Trade logical market record",
+  "description": "Canonical logical contract for externally observed Market Signals and member-created Member Opportunities across the three primary market families. This is not a production database migration.",
+  "type": "object",
+  "required": [
+    "id",
+    "market_family",
+    "record_origin",
+    "intent",
+    "title",
+    "summary",
+    "lifecycle_status",
+    "published_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "market_family": {
+      "enum": ["products", "services", "distribution"]
+    },
+    "record_origin": {
+      "enum": ["market_signal", "member_opportunity"]
+    },
+    "intent": {
+      "enum": [
+        "source_product",
+        "offer_product",
+        "seek_trade_service",
+        "offer_trade_service",
+        "seek_distribution_partner",
+        "offer_distribution_or_representation",
+        "seek_brands_or_products_to_represent"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycle_status": {
+      "enum": [
+        "draft",
+        "pending_review",
+        "active",
+        "paused",
+        "expired",
+        "withdrawn",
+        "rejected",
+        "archived"
+      ]
+    },
+    "published_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "origin_country": {
+      "type": ["string", "null"],
+      "description": "ISO 3166-1 alpha-2 when known."
+    },
+    "target_markets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "product_sector_key": {
+      "type": ["string", "null"]
+    },
+    "service_category_key": {
+      "type": ["string", "null"]
+    },
+    "distribution_mode_key": {
+      "type": ["string", "null"]
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "member_owner": {
+      "$ref": "#/$defs/memberOwner"
+    },
+    "classification": {
+      "$ref": "#/$defs/classification"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "market_family": { "const": "products" }
+        },
+        "required": ["market_family"]
+      },
+      "then": {
+        "properties": {
+          "intent": {
+            "enum": ["source_product", "offer_product"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "market_family": { "const": "services" }
+        },
+        "required": ["market_family"]
+      },
+      "then": {
+        "properties": {
+          "intent": {
+            "enum": ["seek_trade_service", "offer_trade_service"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "market_family": { "const": "distribution" }
+        },
+        "required": ["market_family"]
+      },
+      "then": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "seek_distribution_partner",
+              "offer_distribution_or_representation",
+              "seek_brands_or_products_to_represent"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_origin": { "const": "market_signal" }
+        },
+        "required": ["record_origin"]
+      },
+      "then": {
+        "required": ["source"],
+        "not": {
+          "required": ["member_owner"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_origin": { "const": "member_opportunity" }
+        },
+        "required": ["record_origin"]
+      },
+      "then": {
+        "required": ["member_owner"],
+        "not": {
+          "required": ["source"]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["source_name", "source_reference", "observed_at"],
+      "properties": {
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": ["string", "null"],
+          "format": "uri"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "attribution": {
+          "type": ["string", "null"]
+        },
+        "evidence_limitations": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "memberOwner": {
+      "type": "object",
+      "required": ["created_by_member_id", "owner_business_id", "created_at"],
+      "properties": {
+        "created_by_member_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner_business_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "enum": ["member_selected", "source_mapped", "rule_based", "ai_assisted", "human_reviewed"]
+        },
+        "confidence": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "review_status": {
+          "enum": ["not_required", "pending", "confirmed", "rejected"]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

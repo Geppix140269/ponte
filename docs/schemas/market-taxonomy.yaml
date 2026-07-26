@@ -1,0 +1,86 @@
+schema_version: 1
+status: canonical-logical-contract
+owner: Giuseppe Funaro
+decision: docs/decisions/ADR-0001-unified-trade-market.md
+
+# Stable internal keys. Labels are interface copy and may be refined separately.
+market_families:
+  - key: products
+    label: Physical products
+    sort: 1
+    intents:
+      - key: source_product
+        label: Source a product
+        side: demand
+      - key: offer_product
+        label: Offer a product
+        side: supply
+
+  - key: services
+    label: Trade services
+    sort: 2
+    intents:
+      - key: seek_trade_service
+        label: Seek a trade service
+        side: demand
+      - key: offer_trade_service
+        label: Offer a trade service
+        side: supply
+
+  - key: distribution
+    label: Distribution and representation
+    sort: 3
+    intents:
+      - key: seek_distribution_partner
+        label: Seek a distributor, agent or representative
+        side: demand
+      - key: offer_distribution_or_representation
+        label: Offer distribution or representation
+        side: supply
+      - key: seek_brands_or_products_to_represent
+        label: Seek products or brands to distribute or represent
+        side: demand
+
+record_origins:
+  - key: market_signal
+    label: Market Signal
+    description: Commercial intent observed from a legitimate external source.
+    requires:
+      - source_name
+      - source_reference
+      - observed_at
+    must_preserve:
+      - provenance
+      - evidence_limitations
+      - source_terms
+
+  - key: member_opportunity
+    label: Member Opportunity
+    description: Commercial intent created directly by a Ponte Trade member or member business.
+    requires:
+      - created_by_member_id
+      - owner_business_id
+      - created_at
+    must_preserve:
+      - permissions
+      - publication_status
+      - member_accountability
+
+lifecycle_statuses:
+  - draft
+  - pending_review
+  - active
+  - paused
+  - expired
+  - withdrawn
+  - rejected
+  - archived
+
+invariants:
+  - Every public market record has exactly one market_family.
+  - Every market record has exactly one record_origin.
+  - Every market record has exactly one intent valid for its market_family.
+  - Market Signals and Member Opportunities remain distinct in data, language, actions and disclosure.
+  - Externally sourced records retain provenance, attribution, expiry and source limitations.
+  - Member Opportunities retain creating member, business ownership and publication permissions.
+  - Public counts are derived from active real records and never manufactured.

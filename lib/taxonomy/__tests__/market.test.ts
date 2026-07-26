@@ -4,17 +4,22 @@
 // Run: npx tsx lib/taxonomy/__tests__/market.test.ts
 //
 // F3 single source · F4 the chapter gap stays detectable · F5 typed constants
-// for Trade Services and Distribution. Plus the rule that every icon reference
-// in the taxonomy resolves to a real delivered asset.
+// for Trade Services and Distribution. ADR-0001 adds the three-family,
+// two-origin and family-valid intent contract. Plus the rule that every icon
+// reference in the taxonomy resolves to a real delivered asset.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   DISTRIBUTION_MODES,
   MARKET_FAMILIES,
+  MARKET_INTENTS,
+  MARKET_RECORD_ORIGINS,
   PRODUCT_SECTORS,
   TRADE_SERVICES,
   UNASSIGNED_CHAPTERS,
+  intentsForFamily,
+  isIntentForFamily,
   sectorForChapter,
   uncoveredChapters,
 } from "../market";
@@ -87,12 +92,18 @@ test("the HS picker derives its categories rather than restating them", () => {
   }
 });
 
+test("Explore derives its family list from the canonical taxonomy", () => {
+  const src = readFileSync("lib/explore/families.ts", "utf8");
+  assert.ok(src.includes("MARKET_FAMILIES"), "Explore must import MARKET_FAMILIES");
+  assert.ok(!src.includes('readonly FamilyKey[] = ["products", "services", "distribution"]'));
+});
+
 test("Explore and Find read the same 15 sectors", () => {
   assert.equal(PRODUCT_SECTORS.length, 15);
   assert.equal(new Set(PRODUCT_SECTORS.map((s) => s.key)).size, 15);
 });
 
-// ---- F5: typed constants exist ------------------------------------------------
+// ---- F5: typed constants exist -----------------------------------------------
 
 test("Trade Services and Distribution are typed constants, not component copy", () => {
   assert.equal(TRADE_SERVICES.length, 10);
@@ -108,7 +119,49 @@ test("sort orders are unique and stable within each family", () => {
   }
 });
 
-// ---- every icon reference resolves --------------------------------------------
+// ---- ADR-0001: family, origin and intent are separate dimensions -------------
+
+test("there are exactly three primary market families", () => {
+  assert.deepEqual(
+    MARKET_FAMILIES.map((family) => family.key),
+    ["products", "services", "distribution"],
+  );
+});
+
+test("there are exactly two record origins", () => {
+  assert.deepEqual(
+    MARKET_RECORD_ORIGINS.map((origin) => origin.key),
+    ["market_signal", "member_opportunity"],
+  );
+});
+
+test("every family has explicit demand and supply-capable intents", () => {
+  for (const family of MARKET_FAMILIES) {
+    const intents = intentsForFamily(family.key);
+    assert.ok(intents.length >= 2, `${family.key} has fewer than two intents`);
+    assert.ok(intents.some((intent) => intent.side === "demand"), `${family.key} has no demand intent`);
+    assert.ok(intents.some((intent) => intent.side === "supply"), `${family.key} has no supply intent`);
+    assert.equal(new Set(intents.map((intent) => intent.sort)).size, intents.length);
+  }
+});
+
+test("intent keys are globally unique and valid only for their own family", () => {
+  assert.equal(new Set(MARKET_INTENTS.map((intent) => intent.key)).size, MARKET_INTENTS.length);
+  for (const intent of MARKET_INTENTS) {
+    assert.equal(isIntentForFamily(intent.family, intent.key), true);
+    for (const other of MARKET_FAMILIES) {
+      if (other.key !== intent.family) {
+        assert.equal(
+          isIntentForFamily(other.key, intent.key),
+          false,
+          `${intent.key} was accepted for ${other.key}`,
+        );
+      }
+    }
+  }
+});
+
+// ---- every icon reference resolves ------------------------------------------
 
 test("every taxonomy icon reference is a real registered Flow key", () => {
   const all = [...MARKET_FAMILIES, ...PRODUCT_SECTORS, ...TRADE_SERVICES, ...DISTRIBUTION_MODES];
