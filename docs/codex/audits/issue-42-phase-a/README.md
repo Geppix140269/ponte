@@ -11,6 +11,9 @@ reconciliation required before Ponte Trade changes its market-record model.
   repository audit, separated from later implementation work.
 - `PRODUCTION-PROBE.sql` - SELECT-only production queries for current schema,
   RLS, policies, lifecycle values, counts, HS coverage, provenance and drift.
+- `PRODUCTION-PROBE-COMPACT.sql` - SELECT-only follow-up that returns the
+  remaining evidence as one result table, with one JSON payload per section, so
+  it can be copied or exported from Supabase in one action.
 - `PRODUCTION-PROBE-RESULTS-2026-07-26.md` - dated production evidence supplied
   from the Supabase SQL Editor. The first recorded result is the Section 15
   summary count output; the remaining probe result sets are still required.
