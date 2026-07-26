@@ -452,12 +452,20 @@
 .ponte-desk .rhead .cor .sep { color: var(--mute); }
 .ponte-desk .rhead .cor .src { margin-left: auto; color: var(--ink-3); }
 
+/* The rules are drawn ON the cells, not by letting a darker container show
+   through 1px gaps. A record states as many facts as it states, so the last
+   row is usually part-filled, and with a contrasting container that leftover
+   space reads as a broken or still-loading cell. The container is now the same
+   paper as the cells, so an unfilled track is simply nothing. */
 .ponte-desk .factgrid {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px;
-  background: var(--rule); border: 1px solid var(--rule);
+  background: var(--raised); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); overflow: hidden; margin: 12px 0 0;
 }
-.ponte-desk .factgrid > div { background: var(--raised); padding: 12px 14px; min-width: 0; }
+.ponte-desk .factgrid > div {
+  background: var(--raised); padding: 12px 14px; min-width: 0;
+  box-shadow: 0 0 0 1px var(--rule);
+}
 .ponte-desk .factgrid dt {
   font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
@@ -696,7 +704,10 @@
   .ponte-desk .rec { grid-template-columns: minmax(0, 1fr); }
   .ponte-desk .rec__f { border-left: 0; border-top: 1px solid var(--rule); border-radius: 0 0 var(--dk-radius) var(--dk-radius); }
   .ponte-desk .erow { grid-template-columns: 22px minmax(0, 1fr); }
-  .ponte-desk .erow span { grid-column: 2; }
+  /* :not(.pf-icon) is load-bearing. PonteIcon renders a <span>, so a bare
+     `span` selector here pushed the ICON into column 2, displaced the title
+     into column 1, and set every evidence row one word wide. */
+  .ponte-desk .erow > span:not(.pf-icon) { grid-column: 2; }
   .ponte-desk .srcband ul { grid-template-columns: 1fr; }
 }
 
@@ -716,8 +727,11 @@
     padding: 12px 18px 13px; gap: 14px; flex-wrap: wrap;
   }
   .ponte-desk .rail__name { margin: 0; text-align: left; flex: none; }
-  .ponte-desk .rail__stations { flex-direction: row; flex: 1; min-width: 200px; }
-  .ponte-desk .st { padding-bottom: 0; flex: 1; }
+  .ponte-desk .rail__stations { flex-direction: row; flex: 1; min-width: 200px; gap: 8px; }
+  /* Station labels must not run together into one word, and must not break
+     mid-word either: "OBJECTI / VE" is not a station name. They stay whole. */
+  .ponte-desk .st { padding-bottom: 0; flex: 1; min-width: 0; }
+  .ponte-desk .st b { max-width: 100%; white-space: nowrap; }
   .ponte-desk .st__n { width: 18px; height: 18px; }
   .ponte-desk .st__n::after {
     top: 8px; left: 50%; width: calc(100% + 40px); height: 1.75px; transform: none;
@@ -775,8 +789,19 @@
   .ponte-desk .reg__a { justify-content: flex-start; }
   .ponte-desk .empty, .ponte-desk .err, .ponte-desk .srcband { grid-template-columns: minmax(0, 1fr); }
   .ponte-desk .empty > .pf-icon, .ponte-desk .err > .pf-icon, .ponte-desk .srcband > .pf-icon { display: none; }
-  .ponte-desk .rail__stations { min-width: 0; }
-  .ponte-desk .st b { font-size: 8px; max-width: none; }
+  /* At this width the carried record no longer fits beside four stations
+     without squeezing them, so the rail takes two rows: the journey and its
+     stations, then the record it is carrying. Still one rail, still stations
+     only, still not navigation. */
+  .ponte-desk .rail { flex-wrap: wrap; row-gap: 11px; }
+  .ponte-desk .rail__name { order: 1; }
+  .ponte-desk .rail__stations { order: 2; min-width: 0; }
+  .ponte-desk .rail__origin {
+    order: 3; flex-basis: 100%; display: flex; align-items: baseline; gap: 9px;
+    padding: 10px 0 0; border-left: 0; border-top: 1px solid rgba(242, 239, 232, 0.14);
+  }
+  .ponte-desk .rail__origin b { margin: 0; }
+  .ponte-desk .st b { font-size: 8px; }
 }
 
 /* Motion is restrained and always optional. The rail pulse is the only
