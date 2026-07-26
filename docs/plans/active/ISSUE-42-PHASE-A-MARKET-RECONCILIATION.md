@@ -1,12 +1,13 @@
 # Issue 42 Phase A - market-record reconciliation
 
-**Issue:** #42
-**Branch:** `issue-42/phase-a-audit`
-**Status:** In progress
-**Started:** 26 July 2026
-**Owner decision:** Start Phase A only. Audit and reconcile before proposing implementation or migration.
+**Issue:** #42  
+**Branch:** `issue-42/phase-a-audit`  
+**Status:** Complete; awaiting owner review in PR #44  
+**Started:** 26 July 2026  
+**Completed:** 26 July 2026  
+**Owner decision:** Audit and reconcile before proposing implementation or migration.
 
-## 1. Purpose and user outcome
+## Purpose and outcome
 
 Ponte Trade has accepted one unified market with three equal families:
 
@@ -14,13 +15,11 @@ Ponte Trade has accepted one unified market with three equal families:
 2. Trade services
 3. Distribution and representation
 
-Each family must contain both externally observed Market Signals and Ponte member-created Member Opportunities. The current application only partially represents that model. Phase A establishes the exact compatibility boundary between the accepted contract and the current repository and production database.
+Each family must contain externally observed Market Signals and Ponte member-created Member Opportunities. Phase A established the exact compatibility boundary between that contract and the current repository and production database.
 
-The user outcome of this phase is not a new screen. It is a dependable implementation baseline: every later database, ingestion, composer, Explore, search and count change can be designed against verified facts rather than assumptions.
+The outcome is an evidence-based implementation baseline. No user-facing feature, migration, backfill, source activation or production write was included.
 
-## 2. Authority consulted
-
-Read and governing for this plan:
+## Authority
 
 - `AGENTS.md`
 - `docs/codex/SOURCE-OF-TRUTH-SOP.md`
@@ -29,273 +28,160 @@ Read and governing for this plan:
 - `docs/schemas/market-record.schema.json`
 - `lib/taxonomy/market.ts`
 - `docs/codex/DATABASE-STATE.md`
-- `docs/codex/CURRENT-STATE.md`
-- `.agent/PLANS.md`
 - Issue #42
 
-Supporting repository evidence inspected:
+## Deliverables
 
-- `lib/board/live-deals.ts`
-- `lib/board/market-signals.ts`
-- `lib/board/market-activity.ts`
-- `lib/board/activity-logic.ts`
-- `lib/explore/families.ts`
-- `lib/market-signals/logic.ts`
-- `lib/market-signals/import-map.ts`
-- `lib/structure/draft.ts`
-- `app/api/marketplace/submit/route.ts`
-- `lib/listings/publication-gate.ts`
-- relevant migrations dated 22-26 July 2026
-- `scripts/import-market-signals.ts`
+1. This ExecPlan.
+2. `docs/codex/audits/issue-42-phase-a/COMPATIBILITY-MATRIX.md`.
+3. `docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE.sql`.
+4. `docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE-COMPACT.sql`.
+5. `docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE-RESULTS-2026-07-26.md`.
+6. `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`.
+7. Updated `docs/codex/CURRENT-STATE.md`.
+8. Updated `docs/codex/ACTIVE-MILESTONE.md`.
+9. PR #44, stopped before merge.
 
-## 3. Current implementation discovered
+## Repository findings
 
-### 3.1 Member records
+### Member Opportunities
 
-Member-created commercial records are stored in `listings` and use the legacy `type` vocabulary:
+Member commercial records live in `listings` and use the legacy type vocabulary:
 
 - `offer`
 - `requirement`
 - `service`
 
-The current code can infer product offer, product requirement and one service class from those values. It cannot prove the accepted seven intents, and it cannot represent Distribution and representation.
+That vocabulary cannot prove the seven accepted canonical intents. The Structure draft and submit path remain product-shaped, and a service is still routed through product/HS concepts. Distribution has no persisted representation.
 
-The Structure draft and submit route are product-shaped. A service still requires a `product` and is routed through the HS product picker. The service class currently means an offered service; there is no native seek-service intent.
+Valuable controls already exist and should be preserved: drafts, submission, desk review, validity, reconfirmation, verification, sanctions checks, desk-approved public text, material-change review and owner eligibility.
 
-Member publication already has valuable controls that should be preserved:
+### Market Signals
 
-- draft, submission, desk review and approval states;
-- validity and reconfirmation;
-- current member-business verification;
-- sanctions cleanliness;
-- required commercial facts;
-- desk-approved public qualification and limitations;
-- material changes returning an approved record to review;
-- owner eligibility checked on public reads.
+External signals live in `desk_radar` and remain factually separate from member listings. Public reads require `approved_signal`, current public expiry and a named safe column projection. Source identity, source URL, raw prose, counterparty identity and notes remain internal.
 
-### 3.2 External records
+Signals persist only `side = offer | requirement`; they do not persist market family or canonical intent.
 
-External Market Signals are stored in `desk_radar` and remain factually separate from member listings. The public reader requires `approved_signal` and a current public expiry and selects an explicit public column list that excludes source identity, source URL, raw prose, counterparty identity and notes.
+### Signal and listing actions
 
-The current external signal model has only two sides:
+`signal_investigations` and `listing_connections` are actions linked to inventory. A capability declaration on a signal is not a native Member Opportunity unless a member explicitly converts, reviews and submits it through a future workflow.
 
-- `offer`
-- `requirement`
+### Public activity and counts
 
-It has no persisted market family or canonical intent. The Go4WorldBusiness import maps every record as a product-shaped offer or requirement. It sets `hs_code` to null because the source workbook has no clean HS field. This is the direct reason imported product signals can count as Products while no product sector can claim them.
+The public activity layer merges independently filtered Member Opportunities and Market Signals while retaining origin class. The Market Signal count applies status and expiry. The listing head count applies only `status = approved`, while row visibility also applies validity, reconfirmation and owner eligibility.
 
-The import preserves useful internal provenance in `import_meta`, `source_platform`, `source_url`, `raw_description`, `dedupe_key` and `import_batch`. It does not yet provide a repository source register containing terms-of-use, permitted public fields, attribution obligations, removal procedure and refresh policy.
+## Production probe
 
-### 3.3 Signal actions
+Giuseppe Funaro executed the SELECT-only compact probe in the Supabase production SQL Editor at `2026-07-26T10:45:41.549418` UTC using database role `postgres` on PostgreSQL 17.6.
 
-`signal_investigations` stores member actions on an external Market Signal. `request_kind` distinguishes:
+### Production inventory
 
-- `investigate`
-- `capability`
+| Measure | Result |
+|---|---:|
+| Total Market Signal rows | 6,735 |
+| Approved signal rows | 3,543 |
+| Approved and unexpired public signals | 3,517 |
+| Public requirements | 2,526 |
+| Public offers | 991 |
+| Total listings | 4 |
+| Approved listings | 2 |
+| Approved/current before owner eligibility | 2 |
+| Approved/current with bound passing member-business verification | 0 |
+| Desk-managed listings | 2 |
+| Legacy service rows | 0 |
+| Signal investigations | 1 |
 
-A capability declaration is currently subordinate to the external signal. It is not a standalone Member Opportunity and therefore must not be counted as native member supply or demand without a deliberate conversion workflow.
+### Product classification
 
-### 3.4 Public activity and counts
+- HS catalogue: 5,613 rows across 97 chapters.
+- Approved listings with HS: 2 of 2.
+- Public signals with HS: 0 of 3,517.
+- Public signals with source category but no HS: 3,517.
+- Invalid listing or signal HS values: 0.
+- Active records in unassigned chapters 71/91/92: 0.
 
-`getMarketActivity` merges two independently filtered readers:
+This proves the product-sector failure is structural. The current Explore bucketing requires an HS chapter, but every public signal lacks an HS code. Because every public signal has a source category, Phase E can evaluate deterministic source-category mapping before AI classification.
 
-- public member listings;
-- public Market Signals.
+### Import integrity
 
-The merged presentation retains record class, which should be preserved. Current `ActivityKind` values are:
+The `g4wb_v2` batch contains 6,441 rows: 3,543 approved and 2,898 private. All have canonical id, source platform, source URL, import metadata and dedupe key.
 
-- `market_signal`
-- `member_requirement`
-- `member_offer`
-- `service_requirement`
+The probe found zero:
 
-There are two semantic problems:
+- duplicate canonical-id groups;
+- duplicate dedupe-key groups;
+- duplicate investigation-request groups;
+- investigation-count mismatches.
 
-1. `service_requirement` is produced by a listing whose legacy type is `service`, but the Structure copy describes that path as offering a service.
-2. no ActivityKind represents Distribution and representation.
+There are 294 older private rows outside the batch. They remain excluded from public reclassification until provenance and source-governance review.
 
-The total count uses direct `head: true` counts. The signal count applies status and public expiry. The listing count applies only `status = approved`, so it is an upper bound rather than the exact count of records surviving validity, reconfirmation and owner-eligibility filtering.
+### Verification and public eligibility
 
-### 3.5 Explore classification
+Production stores `profiles.verification_level` as a text enum: six `unverified`, one `company_verified`, one null. There is no passing verification with `purpose = member_business`; two such cases are in `review`.
 
-Explore imports the canonical family keys, but family membership is still inferred from legacy ActivityKind values:
+The two approved/current listings therefore fail the bound passing member-business verification layer. The current exact Member Opportunity inventory under that contract is zero.
 
-- `service_requirement` becomes Trade services;
-- every other activity becomes Products;
-- Distribution always returns no records.
+The application also converts the text verification enum with JavaScript `Number(...)` before a numeric threshold comparison. That comparison cannot encode the stored enum hierarchy and requires separate corrective work.
 
-Product-sector membership requires an HS chapter. Imported signals have no HS code, so they remain product records while all sector counts can remain zero.
+### RLS and policies
 
-### 3.6 Production evidence status
+RLS is enabled on the relevant core tables. The signal table remains closed to public/member reads, and action records preserve owner/requester boundaries.
 
-Repository migrations and previous pull-request reports provide historical evidence, but Phase A does not treat those reports as a current production probe.
+The authenticated approved-listing policy checks only `status = approved`. A Phase B/security review must inspect table grants and ensure direct authenticated reads cannot bypass validity, reconfirmation, owner eligibility or safe-column projections.
 
-A read-only production probe is required to establish:
+## Compatibility conclusions
 
-- current columns, constraints, indexes, triggers, functions, policies and RLS;
-- actual status and type vocabularies in stored rows;
-- exact active counts by legacy source and type;
-- HS coverage and sector coverage;
-- duplicate and provenance coverage;
-- current source batches and expiry behaviour;
-- drift between the live database and repository migrations.
+1. Neither `listings` nor `desk_radar` persists `market_family`.
+2. Neither source persists the seven canonical intents.
+3. `record_origin` is truthfully separated by source table and must remain distinct.
+4. Trade services has no stored production inventory.
+5. Distribution has no canonical stored representation; one keyword candidate is not a classification.
+6. Product signals cannot enter current HS-derived sectors.
+7. Import provenance and duplicate protection are strong reusable foundations.
+8. Member listing publication and Market Signal privacy controls should be adapted, not weakened or replaced.
 
-The probe is prepared in `docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE.sql`. It has not been executed in this branch because no authorised production database connection is available in this session.
+## Validation result
 
-## 4. Scope
+| Requirement | Result |
+|---|---|
+| ExecPlan current | Complete |
+| Repository audit | Complete |
+| Compatibility matrix | Complete |
+| SELECT-only production inspection | Complete |
+| Exact counts and HS coverage | Complete |
+| Provenance and duplicate checks | Complete |
+| Drift and risks recorded | Complete |
+| Runtime/database changes absent | Complete |
+| CI and Netlify preview | Required on final PR head |
+| Owner review before merge | Pending |
 
-### Included
+## Phase boundary
 
-- repository audit of member listings, Market Signals and signal actions;
-- public-reader and count semantics;
-- Structure draft and submit payload;
-- Explore family and sector classification;
-- publication, expiry, withdrawal, verification and review controls;
-- import, provenance and deduplication behaviour;
-- field-by-field compatibility matrix to ADR-0001;
-- read-only production probe specification;
-- current-state documentation.
+No migration is permitted by this plan. No production state was changed.
 
-### Excluded
+After owner acceptance, Phase B may design the smallest backwards-compatible application contract and adapters for family, origin, canonical intent, lifecycle normalisation and classification. Phase B must stop before migration.
 
-- database migrations;
-- schema changes;
-- production SQL execution;
-- data backfill;
-- UI or composer changes;
-- source activation, scraping or API ingestion;
-- public count or empty-state changes;
-- production deployment;
-- closing Issue #42.
+Any later database or backfill proposal requires the pre-migration report in `docs/codex/DATABASE-STATE.md` and explicit owner approval.
 
-## 5. Product rules
-
-The audit must preserve these non-negotiable distinctions:
-
-- A Market Signal is externally observed and unconfirmed. It is not renamed a Member Opportunity.
-- A Member Opportunity is created and owned by a Ponte member or an explicitly authorised Ponte-managed account.
-- The three families are equal market families, not Products plus two directories.
-- Every future record must have one family, one origin and one family-valid intent.
-- No missing family or classification may be solved by inventing records, demand, supply or counts.
-- Public records must retain truthful lifecycle, attribution limitations and privacy boundaries.
-- Contact disclosure and commercial execution remain controlled actions.
-
-## 6. Technical design of the audit
-
-Phase A produces documents, not runtime changes.
-
-### Deliverables
-
-1. This ExecPlan.
-2. `docs/codex/audits/issue-42-phase-a/COMPATIBILITY-MATRIX.md`.
-3. `docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE.sql`.
-4. An updated `docs/codex/CURRENT-STATE.md` recording Phase A status and the production-evidence boundary.
-5. An updated `docs/codex/ACTIVE-MILESTONE.md` making Issue #42 Phase A the active milestone.
-6. A draft pull request that stops before merge.
-
-### Evidence levels
-
-Every conclusion is marked as one of:
-
-- **Repository-proven:** directly established by current `main` code or migrations.
-- **Historically reported:** stated in a merged PR or prior production report but not re-probed in this phase.
-- **Production-proven:** established by the read-only production probe.
-- **Unknown:** not supported yet.
-
-No historically reported fact is promoted to Production-proven without a current probe result.
-
-## 7. Migration plan
-
-No migration is permitted in Phase A.
-
-The compatibility matrix may identify fields that are absent, overloaded or semantically incompatible. It must not prescribe the final database alteration. Phase B may design a backwards-compatible application contract after Phase A evidence is accepted. Any later database proposal requires the pre-migration report defined in `docs/codex/DATABASE-STATE.md` and explicit owner approval.
-
-Rollback is therefore simple: close the audit PR without merge. No runtime or production state changes.
-
-## 8. Experience states
-
-No user-facing experience changes in this phase.
-
-The audit must nevertheless record the states later implementation must handle:
-
-- loading and database-unavailable reads;
-- truly empty family;
-- family inventory not yet classified;
-- uncertain product classification;
-- expired or withdrawn record;
-- member no longer publicly eligible;
-- source record removed or no longer permitted;
-- duplicate external signal;
-- action subordinate to a signal versus standalone opportunity;
-- resumed member draft;
-- blocked publication and returned-to-review states.
-
-## 9. Validation
-
-Required before Phase A is called complete:
-
-- all compatibility-matrix statements link to repository evidence or production-probe output;
-- the production probe contains SELECT-only statements;
-- current production schema and record counts are recorded, or the phase remains explicitly blocked on that evidence;
-- no migration or runtime change appears in the diff;
-- `npm run verify` passes in CI;
-- Netlify preview passes even though this is documentation-only;
-- PR remains unmerged until owner approval.
-
-## 10. Rollout and safe-disable
-
-There is no product rollout. The audit documents become authoritative only after owner review and merge.
-
-If a finding is disputed, mark it unresolved in the matrix rather than forcing a decision. If production contradicts repository expectations, stop and record the drift before any implementation proposal.
-
-## 11. Progress log
+## Progress log
 
 ### 26 July 2026
 
 Completed:
 
-- owner authorised Issue #42 Phase A;
-- created branch `issue-42/phase-a-audit` from `main`;
-- inspected the governing contract and database guardrails;
-- inspected member listing readers, signal readers, unified activity and counts;
-- inspected Structure draft and submit payload;
-- inspected listing publication controls;
-- inspected signal lifecycle and investigation migrations;
-- inspected Go4WorldBusiness import mapping, provenance and deduplication;
-- identified the legacy service semantic mismatch and missing distribution representation;
-- identified the exact reason product totals can coexist with zero sector counts;
-- prepared the initial compatibility matrix and read-only production probe.
+- owner authorised Phase A;
+- created the branch and draft PR;
+- inspected the governing contract and relevant repository systems;
+- created the compatibility matrix and risk register;
+- prepared SELECT-only full and compact production probes;
+- production probe executed by Giuseppe Funaro;
+- reconciled schema, policies, counts, classification, provenance, duplicates and verification state;
+- produced the final report;
+- updated current state and active milestone;
+- stopped before merge or implementation.
 
 Remaining:
 
-- execute the read-only production probe through an authorised production connection;
-- attach the resulting output or a dated production-state report;
-- reconcile any live drift with repository migrations;
-- fill exact active counts and classification coverage in the matrix;
-- run CI and preview checks on the draft PR;
-- owner review and decision on whether Phase A is complete enough to merge.
-
-## 12. Decisions and discoveries
-
-1. The accepted logical contract is substantially richer than the current persisted vocabularies.
-2. `listings.type` is overloaded and cannot prove all seven member intents.
-3. `desk_radar.side` cannot prove family or service/distribution intent.
-4. Imported signals deliberately carry no HS code, so the current sector-count failure is structural, not merely a rendering bug.
-5. The current service ActivityKind is named as a requirement while its creation path is an offer.
-6. Distribution is taxonomy-only in the current activity pipeline.
-7. A capability declaration on a Market Signal is an action, not automatically a native Member Opportunity.
-8. The total public listing count is an upper bound because its head count does not apply per-row validity, reconfirmation and owner eligibility.
-9. Existing member-publication and Market Signal privacy controls are reusable and should not be weakened by unification.
-10. Production inspection is still required before any migration design.
-
-## 13. Final evidence
-
-Not yet complete. This section will record:
-
-- production probe date and executor;
-- production schema evidence;
-- exact count and classification results;
-- final audit commit;
-- pull request and checks;
-- owner review outcome;
-- any unresolved limitations carried into Phase B.
+- final CI and Netlify checks on the latest head;
+- owner review and merge decision for PR #44;
+- explicit owner direction before Phase B begins.
