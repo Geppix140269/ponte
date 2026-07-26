@@ -1,12 +1,10 @@
 # Current state
 
-**Reconciled:** 26 July 2026
-**Repository:** `Geppix140269/ponte`
-**Canonical branch:** `main`
-**Canonical commit at Phase A start:** `accd1cc8b03bee19f4c143bf2314b7025de016fc`
-**Governing authority (entry experience):** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
-**Governing authority (everything downstream of entry):** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
-**Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`
+**Reconciled:** 26 July 2026  
+**Repository:** `Geppix140269/ponte`  
+**Canonical branch:** `main`  
+**Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
 
@@ -22,34 +20,46 @@ Use only these labels:
 - Blocked
 - Deprecated
 
-Code on `main` is not automatically deployed, enabled or production-verified.
-An accepted ADR is not proof that its implementation is complete.
-A merged audit is not proof that production matches the repository.
+Code on `main` is not automatically deployed, enabled or production-verified. An accepted ADR is not proof that its implementation is complete.
 
 ## Implementation summary
 
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
-| Source-of-truth operating procedure | On `main` via PR #41 | Operating rule, not a production feature | `AGENTS.md`, `CLAUDE.md`, the SOP, ADR system, proposal intake, PR checklist and governance checks are canonical. |
-| Unified three-family market contract | Accepted and on `main` via PR #41 | Production database and end-to-end flows not reconciled | ADR-0001 defines Products, Trade services, and Distribution and representation as equal families, each containing Market Signals and Member Opportunities. |
-| Issue #42 Phase A reconciliation | Implemented on branch `issue-42/phase-a-audit`; production probe pending | Not production-verified | Repository compatibility matrix and a SELECT-only production probe are prepared. No migration, runtime change, source activation or deployment is included. |
-| Founding-launch integrity Blocks A-F | On `main` | Production database changes recorded as applied; deployed state needs direct confirmation | Separates Market Signals and member opportunities, purpose-binds business verification, strengthens publication gates, controlled introductions and founding lifecycle. |
-| North Star entrance: two routes and market activity | On `main` via PR #36; visual flow refinement via PR #40 | PR #40 reports live exercise, but Phase A has not independently verified the deployed SHA | Two direct routes: Explore the market and Start a deal. Activity band, search, popular areas and trust/evidence explanation are implemented. |
-| Explore the market | On `main` via PR #36; Flow taxonomy integration via PR #38; count correction via PR #39 | Owner screenshots show the deployed surface; exact data state requires probe | Three families and 15 product sectors render. Product totals use count queries, but family and sector membership still depend on legacy classifications. |
-| Canonical market taxonomy | On `main` | Logical contract, not a production data contract | `lib/taxonomy/market.ts` defines families, origins, intents, product sectors, service categories and distribution modes. |
-| Product market inventory | On `main` | Active records reported; exact count and mapping quality pending probe | Imported product signals deliberately have no HS code in the current mapper, so they can count as Products while no sector claims them. |
-| Trade services inventory | Partially implemented | Thin or zero on current surface | One legacy member `service` type exists. It does not distinguish seeking from offering, and external service signals are not ingested/classified. |
-| Distribution and representation inventory | Designed in taxonomy; no current record/activity proof | Empty or shown without count | Distribution modes exist in taxonomy only. Member creation and external ingestion are incomplete. |
-| Unified market-activity read | On `main` | Live state requires direct verification | Member records and Market Signals are merged for presentation while retaining their true origin class. Row reads are bounded. |
-| Journey 1 - Find | On `main` | Feature-flag and live-route status require confirmation | Product discovery, signal detail and controlled actions exist. It is not aligned to all three families and seven intents. |
-| Journey 2 - Structure & Submit / Start a deal | On `main`; blockers fixed in PRs #37, #39 and #40 | PR #40 reports live exercise | Current persisted types are `offer`, `requirement`, `service`. Services remain product-shaped; distribution paths do not exist. |
-| Market Signal investigation | Partially implemented and extended on `main` via PR #40 | PR #40 reports additive migration applied and live forms exercised | Investigation and capability declarations are separate actions. A capability declaration remains subordinate to a signal, not a standalone Member Opportunity. |
-| Check and verify journey K01-K09 | Partially implemented; review fixes on `main` | Existing surfaces may be live; complete journey not production-verified | Registry, sanctions, admin and receipt infrastructure are reusable. |
-| Commercial Missions M01-M07 | Not started or unconfirmed pending audit | Not production-verified | Existing reusable structures must be mapped before schema proposals. |
-| Commercial Developments D01-D05 | Not started or unconfirmed pending audit | Not production-verified | Must remain a cited, private Mission-specific synthesis. |
-| Prepared actions and approvals X01-X07 | Partially implemented infrastructure | Not production-verified as a complete journey | Controlled introductions and account resumption provide reusable pieces. |
-| Business Passport and Vault B01-B08 | Partially implemented or missing pending audit | Not production-verified | Person, business and membership must not be permanently merged. |
-| Complete admin operations A01-A09 | Partially implemented | Individual queues may be live; complete priority model not verified | Existing listing, verification, signal and investigation review surfaces are reusable candidates. |
+| Source-of-truth operating procedure | On `main` via PR #41 | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
+| Unified three-family market contract | Accepted and on `main` via PR #41 | Not implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
+| Issue #42 Phase A reconciliation | Complete on branch `issue-42/phase-a-audit`; PR #44 ready for owner review | Production-verified for market-record scope | Repository audit, compatibility matrix, SELECT-only production probe and final report are complete. No runtime or database change is included. |
+| Explore the market | On `main` | Production data defect verified | Public activity is real, but family and sector membership depend on incomplete legacy inference. |
+| Product Market Signals | On `main` | 3,517 approved and unexpired rows | All 3,517 carry a source category and none carries an HS code, so current HS-derived sector counts cannot classify them. |
+| Native Member Opportunities | On `main` | 0 exact visible under current eligibility contract | Four listing rows exist; two are approved/current and desk-managed, but zero have a bound passing member-business verification. |
+| Trade services inventory | Partially implemented | 0 legacy service rows | No stored service listing exists; seek versus offer is not persisted; external service signals are not classified. |
+| Distribution and representation inventory | Taxonomy only | No canonical inventory | One signal matched distribution-related keywords, but keyword discovery is not canonical classification. |
+| Start a deal | On `main` for legacy product-shaped paths | Incomplete | Persisted types remain `offer`, `requirement`, `service`; services and distribution are not modelled correctly. |
+| Market Signal investigation | On `main` | 1 investigation row | Investigation/capability records are actions on signals, not native opportunities. |
+| Product HS catalogue | On `main` | 5,613 rows across 97 chapters | The two approved listings have valid HS codes; public signals have none. |
+| Import provenance and dedupe | On `main` | Production-verified strong | All 6,441 `g4wb_v2` rows have canonical ids, source platform, source URL, import metadata and dedupe keys; no duplicate groups were found. |
+| Verification/publication eligibility | On `main` | Production defect confirmed | `profiles.verification_level` is a text enum while code applies `Number(...)`; no passing `member_business` verification exists in production. |
+
+## Production inventory truth
+
+The 26 July 2026 production probe established:
+
+| Measure | Result |
+|---|---:|
+| Total Market Signal rows | 6,735 |
+| Approved signal rows | 3,543 |
+| Approved and unexpired public signals | 3,517 |
+| Public signal requirements | 2,526 |
+| Public signal offers | 991 |
+| Total listings | 4 |
+| Approved listings | 2 |
+| Approved/current before owner eligibility | 2 |
+| Approved/current with bound passing member-business verification | 0 |
+| Desk-managed listings | 2 |
+| Legacy service listings | 0 |
+| Signal investigations | 1 |
+
+Twenty-six rows remain stored as `approved_signal` after their public expiry. Current readers exclude them correctly, but stored status and public-active lifecycle are not identical.
 
 ## Current market-model truth
 
@@ -61,112 +71,56 @@ Record origin: Market Signal | Member Opportunity
 Intent: one family-valid seeking or offering intent
 ```
 
-This model is recorded in ADR-0001, `lib/taxonomy/market.ts` and
-`docs/schemas/`. The existing database and public activity model do not yet
-represent every combination. Phase A has established the following as
-Repository-proven:
+Production confirms that neither `listings` nor `desk_radar` persists `market_family` or canonical `intent`.
 
-- `listings.type` stores only `offer`, `requirement` or `service`;
-- `desk_radar.side` stores only `offer` or `requirement`;
-- the current service path describes an offered service while ActivityKind names
-  it `service_requirement`;
-- no current record or ActivityKind proves Distribution and representation;
-- imported product Market Signals are written with `hs_code = null`;
-- a Market Signal capability declaration is an action, not a native opportunity;
-- existing `ActivityKind` values do not expose the full family/origin/intent
-  contract.
+Current production vocabularies are:
 
-Therefore the three-family architecture is **accepted and partially encoded**,
-not end-to-end implemented.
+```text
+listings.type: offer | requirement | service
+desk_radar.side: offer | requirement
+```
 
-## High-risk Phase A discovery
+These values cannot prove all seven accepted intents. `record_origin` remains truthfully separated by source table and must stay that way.
 
-The repository contains an unresolved verification-level type mismatch:
+## Classification truth
 
-- `scripts/seed-ponte-managed-qos.ts` states that
-  `profiles.verification_level` is a text enum and writes
-  `company_verified`;
-- `lib/listings/publication-gate.ts` converts that value with
-  `Number(verification_level)` and compares it with numeric level 2.
+The current public sector path is:
 
-In JavaScript, `Number('company_verified')` is `NaN`, and `NaN < 2` is false.
-That means the numeric comparison does not prove the textual verification level
-is eligible. The other bound-verification checks still apply, but the level
-check itself is not trustworthy for a text enum.
+```text
+record.hs_code -> two-digit chapter -> PRODUCT_SECTORS range
+```
 
-Phase A does not patch this behaviour. The production probe must confirm the live
-column type and stored values. A targeted corrective PR should then be separated
-from the market-schema work if the mismatch is confirmed.
+Production proves:
 
-## Data-quality and empty-state defects
+- 3,517 of 3,517 public signals have no HS code;
+- 3,517 of 3,517 have a source category;
+- 2 of 2 approved listings have valid HS codes;
+- no active record sits in unassigned chapters 71, 91 or 92.
 
-The current public Explore surface can show a non-zero Products total while all
-product sectors show zero, because many product records have no HS chapter. It
-can also show empty Trade services and Distribution families because those
-pipelines are incomplete.
+Therefore the zero product-sector problem is structural, not cosmetic. Phase E should evaluate a deterministic source-category mapping before AI-assisted classification.
 
-Required outcome, not yet implemented:
+## Verification and security findings
 
-1. reconcile reported product totals against active underlying records;
-2. classify and backfill product sectors with confidence and review handling;
-3. ingest legitimate, source-linked service and distribution Market Signals;
-4. support member-created opportunities for every accepted intent;
-5. derive public counts from active real records;
-6. hide meaningless zero cards and keep uncertain classifications in an internal
-   quality workflow rather than exposing implementation failure copy.
+Production profile levels are text values: six `unverified`, one `company_verified`, and one null. Two `member_business` verification cases are in `review`; there is no passing `member_business` verification.
 
-No fabricated records, counts or liquidity may be used to solve the empty state.
+The application converts the text enum through JavaScript `Number(...)` before a numeric threshold comparison. That level check does not represent the stored enum correctly and requires a separate corrective review.
 
-## Count semantics discovered in Phase A
+RLS is enabled on all core tables inspected. `desk_radar` remains closed to member/public reads. Investigation and connection policies preserve ownership boundaries.
 
-- The Market Signal head count applies `approved_signal` and public expiry.
-- The member-listing head count applies only `status = approved`.
-- The row reader additionally applies validity, 90-day reconfirmation and current
-  owner eligibility.
-- The displayed overall total can therefore overstate currently visible member
-  inventory.
-- Family and sector counts are computed from bounded rows and legacy inferred
-  kinds, not from canonical family-specific count queries.
+The `Authenticated read approved listings` policy is broader than the canonical public reader because its row condition checks only `status = approved`. A Phase B/security review must inspect table grants and ensure direct authenticated reads cannot bypass validity, reconfirmation, owner eligibility or safe-column projections.
 
-## Localisation
+## Import and provenance truth
 
-Ponte is English-only. English is the canonical and sole interface language.
-All other interface languages are deferred, with translations retained in
-`messages/_deferred/` and old locale-prefixed URLs redirected to English.
-Multilingual input, AI language detection and translated display of member
-content are preserved.
+The `g4wb_v2` batch contains 6,441 rows: 3,543 approved and 2,898 private. All imported rows have complete canonical identity, source and import metadata under the current import contract.
 
-## Recent merged implementation evidence
+There are 294 older private rows outside that batch: 204 without source metadata and 90 legacy `go4world` rows without canonical ids/import metadata. They must remain outside public reclassification until source governance is reviewed.
 
-- PR #36: North Star two-route entry, market activity and Explore shell.
-- PR #37: HS lookup CDN cache-key correction.
-- PR #38: Ponte Flow design-system integration and canonical taxonomy.
-- PR #39: chapter paging, home route, Products link and total count correction.
-- PR #40: landing flow refinement, separate signal actions and composer fixes.
-- PR #41: source-of-truth SOP, ADR-0001 and unified logical market contract.
-
-## Production unknowns requiring evidence
-
-Before claiming the complete application or unified market model is live, record:
-
-1. the deployed commit SHA for `ponte.trade`;
-2. production values of relevant journey flags;
-3. current production schema versus the migration ledger;
-4. exact active counts by family, origin and intent;
-5. exact visible member count after validity, reconfirmation and owner eligibility;
-6. product HS and sector-classification coverage;
-7. the live data type and value vocabulary of `profiles.verification_level`;
-8. expiry, deduplication, provenance and source-term behaviour for each external source;
-9. direct exercise of all three Start a deal families and accepted intents after they exist.
-
-The read-only query set is in
-`docs/codex/audits/issue-42-phase-a/PRODUCTION-PROBE.sql`.
+Duplicate checks and investigation-count reconciliation returned zero defects.
 
 ## Immediate next actions
 
-1. Execute the Phase A read-only production probe through an authorised database connection.
-2. Record the output, execution date, project and executor without changing production.
-3. Reconcile live drift in the compatibility matrix.
-4. Run CI and preview checks on the Phase A draft PR.
-5. Stop for owner review before merge.
-6. Do not begin Phase B contract design or any migration until Phase A evidence is accepted.
+1. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
+2. After explicit owner direction, Phase B designs the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration.
+3. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
+4. A later pre-migration report and owner approval are required before any production schema or backfill change.
+5. Issue #42 remains open until all implementation phases are complete.
