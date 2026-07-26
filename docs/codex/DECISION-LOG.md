@@ -2,6 +2,16 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 26 July 2026 — Founder capacity is a paid Ponte Desk entitlement
+
+**Decision:** Ponte Trade has three explicit fulfilment modes: platform self-service, agent-assisted and Ponte Desk. Free participation and free product actions must be completed without founder involvement. Any work that requires Giuseppe or another human to investigate, contact, negotiate, prepare bespoke commercial work or manage a case must be explicitly scoped, priced, accepted and paid—or covered by another recorded contractual entitlement—before substantive work begins.
+
+**Why:** At MVP stage the founder is Ponte's scarce operating resource. His involvement can create exceptional value for early customers, but unpriced human effort would convert free access into hidden consulting obligations, reduce capacity for paying customers and prevent Ponte from learning which workflows should be automated by the agent.
+
+**Commercial consequence:** Launch monetisation should begin with free self-service and agent-assisted participation plus fixed-fee Ponte Desk engagements. Recurring subscriptions should be added when recurring value is predominantly platform-delivered. Success, referral or transaction fees should be added only where Ponte materially supports execution and attribution and payment rules are clear. A low-cost subscription must never imply uncapped founder access.
+
+**Affected areas:** `docs/decisions/ADR-0002-founder-capacity-and-paid-ponte-desk.md`, investigations, Ponte Desk, Work Items, quotes and payment entitlements, Workspace and admin queues, service catalogue and pricing, customer copy, capacity controls, analytics and future agent automation.
+
 ## 26 July 2026 — Repository source-of-truth operating procedure
 
 **Decision:** Conversations with ChatGPT, Codex, Claude, humans, meetings and research are working inputs. The merged `Geppix140269/ponte` repository is the only canonical operating memory. `docs/codex/SOURCE-OF-TRUTH-SOP.md` governs proposal intake, owner decisions, ADRs, implementation, cross-agent handover and current-state updates. The procedure applies equally to every agent and contributor.
