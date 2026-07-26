@@ -49,7 +49,12 @@ function rendersOwnChrome(path: string): boolean {
     path === "/privacy" ||
     path === "/terms" ||
     path === "/workspace" ||
-    path.startsWith("/workspace/")
+    path.startsWith("/workspace/") ||
+    // Verification is the last step of a deal. It rendered in the obsidian
+    // chrome, so a member who reached the final blocker in Start a Deal left
+    // the cream product mid-task and arrived in the old one.
+    path === "/verify" ||
+    path === "/verification"
   );
 }
 export default function ChromeGate({

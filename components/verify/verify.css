@@ -1,0 +1,330 @@
+/* ======================================================================
+   Ponte Trade, verification journey (/verify, /verification).
+
+   Scoped under .ponte-find, which is the shared public design system: the
+   heritage-light token block, the type scale and the shared controls (fbtn,
+   fphead__*, sigsheet__*) all come from components/find/find.css, imported once
+   by PonteShell. Only what those do not already cover lives here.
+
+   The journey's rule holds: no boxes. Structure comes from typography,
+   whitespace and hairline rules, not from rounded cards with shadows. The one
+   exception is a status rule inset on the left of an outcome, which is how the
+   rest of the product states a reserved semantic without using colour alone.
+   ====================================================================== */
+
+.ponte-find .vwrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: var(--s-7) var(--gutter) var(--s-8);
+}
+.ponte-find .vbody {
+  margin-top: var(--s-6);
+}
+
+/* A quiet way back to the other verification type, or to the explainer. */
+.ponte-find .vback {
+  display: inline-block;
+  margin-top: var(--s-4);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: 2px;
+  transition: border-color var(--dur-1);
+}
+.ponte-find .vback:hover { border-bottom-color: var(--gold); }
+
+/* ---- the two services ---------------------------------------------------- */
+.ponte-find .vchoices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+.ponte-find .vchoice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--s-5) 2px;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  transition: border-color var(--dur-1);
+}
+.ponte-find .vchoice:hover { border-bottom-color: var(--gold); }
+.ponte-find .vchoice__n {
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding-top: 5px;
+}
+.ponte-find .vchoice:hover .vchoice__n { color: var(--gold-ink); }
+.ponte-find .vchoice__b { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.ponte-find .vchoice__t {
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+  transition: color var(--dur-1);
+}
+.ponte-find .vchoice:hover .vchoice__t { color: var(--gold-ink); }
+.ponte-find .vchoice__d { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+
+/* ---- signed out ---------------------------------------------------------- */
+.ponte-find .vgate {
+  border-top: 1px solid var(--ink);
+  padding-top: var(--s-5);
+}
+.ponte-find .vgate__t {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.ponte-find .vgate__p {
+  margin: var(--s-3) 0 var(--s-5);
+  max-width: 52ch;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ---- the request form ---------------------------------------------------- */
+.ponte-find .vform { border-top: 1px solid var(--ink); padding-top: var(--s-5); }
+
+/* Balance and price, on one line, because they are one thought: what you have
+   and what this costs. */
+.ponte-find .vbal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--rule);
+}
+.ponte-find .vbal__l {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ponte-find .vbal__n { font-size: 24px; font-weight: 500; color: var(--gold-ink); }
+.ponte-find .vbal__u { font-size: 12.5px; color: var(--ink-3); }
+.ponte-find .vbal__c {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ponte-find .vshort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  background: var(--gold-tint);
+}
+.ponte-find .vshort__p { flex: 1 1 220px; font-size: 13px; color: var(--gold-ink); margin: 0; }
+
+.ponte-find .vfields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  margin-top: var(--s-5);
+}
+
+/* The form controls are defined here rather than borrowed from another
+   journey's sheet. An earlier pass reused the signals classes, which this page
+   does not import, so every input fell through to the obsidian application's
+   global input styling and rendered dark grey on cream. A control must be
+   styled by a file the page actually loads. */
+.ponte-find .vlabel {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+.ponte-find .vopt {
+  margin-left: 6px;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+  text-transform: none;
+  font-weight: 500;
+}
+.ponte-find .vfield {
+  width: 100%;
+  border: 0;
+  border-bottom: 1.5px solid var(--rule-strong);
+  border-radius: 0;
+  background: none;
+  padding: 8px 2px;
+  font-family: var(--f-sans);
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color var(--dur-1);
+}
+.ponte-find .vfield::placeholder { color: var(--mute); }
+.ponte-find .vfield:focus { border-bottom-color: var(--ink); }
+.ponte-find select.vfield { appearance: none; cursor: pointer; }
+.ponte-find .vpair { display: grid; gap: var(--s-5); }
+@media (min-width: 640px) {
+  .ponte-find .vpair { grid-template-columns: 1fr 1fr; }
+}
+.ponte-find .vhint { margin-top: 6px; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+.ponte-find .vnote {
+  margin-top: var(--s-5);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* The attestation is a deliberate act, so it is given its own well and its own
+   weight rather than sitting inline with the hints. */
+.ponte-find .vattest {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  background: var(--sunken);
+  cursor: pointer;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.ponte-find .vattest input { margin-top: 3px; accent-color: var(--gold); flex: none; }
+
+.ponte-find .vsubmit { margin-top: var(--s-5); }
+.ponte-find .verr { margin-top: var(--s-4); font-size: 13.5px; color: var(--neg); }
+
+/* ---- outcome and candidate selection ------------------------------------- */
+.ponte-find .vres { border-top: 1px solid var(--ink); padding-top: var(--s-5); }
+.ponte-find .vres__eb {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ponte-find .vres__t {
+  margin-top: var(--s-2);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.ponte-find .vres__p {
+  margin-top: var(--s-3);
+  max-width: 60ch;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.ponte-find .vres__free { margin-top: var(--s-3); font-size: 13px; color: var(--pos); }
+.ponte-find .vres__meta { margin-top: var(--s-4); font-size: 12.5px; line-height: 1.6; color: var(--ink-3); }
+
+/* An outcome states its class with a left status rule and a reserved colour,
+   never with gold and never with colour alone: the heading says it too. */
+.ponte-find .vres--out { padding-left: var(--s-4); border-left: 3px solid var(--rule-strong); }
+.ponte-find .vres--out.is-pos { border-left-color: var(--pos); }
+.ponte-find .vres--out.is-review { border-left-color: var(--review); }
+.ponte-find .vres--out.is-neg { border-left-color: var(--neg); }
+.ponte-find .vres--out.is-pos .vres__t { color: var(--pos); }
+.ponte-find .vres--out.is-review .vres__t { color: var(--review); }
+.ponte-find .vres--out.is-neg .vres__t { color: var(--neg); }
+
+.ponte-find .vreason { margin-top: var(--s-4); padding-left: var(--s-3); border-left: 2px solid var(--rule); }
+.ponte-find .vreason__l {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.ponte-find .vreason__p { margin-top: 4px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+
+.ponte-find .vacts { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: var(--s-6); }
+
+.ponte-find .vcands { list-style: none; margin: var(--s-5) 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.ponte-find .vcand {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4) 2px;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background var(--dur-1);
+}
+.ponte-find .vcand.is-picked { background: var(--gold-tint); }
+.ponte-find .vcand.is-off { cursor: not-allowed; opacity: 0.6; }
+.ponte-find .vcand__r { margin-top: 4px; accent-color: var(--gold); flex: none; }
+.ponte-find .vcand__b { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ponte-find .vcand__n { font-size: 14.5px; line-height: 1.35; color: var(--ink); }
+.ponte-find .vcand__fs { display: grid; gap: 2px; }
+.ponte-find .vcand__f { font-size: 12.5px; line-height: 1.5; margin: 0; }
+.ponte-find .vcand__fk { color: var(--ink-3); }
+.ponte-find .vcand__fv { color: var(--ink-2); }
+.ponte-find .vcand__off { font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+
+/* ---- the disclaimer ------------------------------------------------------ */
+/* What a verification is NOT. It keeps a well of its own so a redesign cannot
+   quietly demote it into body copy. */
+.ponte-find .vdisc { margin-top: var(--s-7); padding: var(--s-5); background: var(--sunken); }
+.ponte-find .vdisc__h {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.ponte-find .vdisc__p { margin-top: var(--s-3); font-size: 13.5px; line-height: 1.65; color: var(--ink-2); }
+
+/* ---- the public explainer ------------------------------------------------ */
+.ponte-find .vex { margin-top: var(--s-7); }
+.ponte-find .vex__h {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 6px;
+}
+.ponte-find .vex__p { margin-top: var(--s-4); max-width: 62ch; font-size: 14.5px; line-height: 1.65; color: var(--ink-2); }
+.ponte-find .vsteps { list-style: none; margin: var(--s-4) 0 0; padding: 0; }
+.ponte-find .vstep { display: flex; gap: var(--s-4); padding: var(--s-4) 2px; border-bottom: 1px solid var(--rule); }
+.ponte-find .vstep__n {
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding-top: 3px;
+}
+.ponte-find .vstep__b { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ponte-find .vstep__t { font-size: 15px; color: var(--ink); }
+.ponte-find .vstep__d { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+
+@media (max-width: 640px) {
+  .ponte-find .vwrap { padding: var(--s-5) 20px var(--s-7); }
+  .ponte-find .vbal__c { margin-left: 0; width: 100%; }
+}
