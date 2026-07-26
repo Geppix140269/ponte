@@ -38,6 +38,23 @@ alter table signal_investigations
 alter table signal_investigations
   add column if not exists capability text;
 
+-- How the desk reaches this member, and in what language. The desk works an
+-- investigation by asking questions back, so a phone number is part of the
+-- request rather than something chased afterwards; the language is asked so the
+-- call is placed by someone who can actually be understood. Nullable, because
+-- rows created before this migration have neither.
+alter table signal_investigations
+  add column if not exists contact_phone text;
+
+alter table signal_investigations
+  add column if not exists contact_language text;
+
+comment on column signal_investigations.contact_phone is
+  'A number the requesting member asked the desk to call them on. Never shown to any other member, and never to the party behind the signal.';
+
+comment on column signal_investigations.contact_language is
+  'The language the member asked to be called in, from the closed list in lib/signals/investigation.ts.';
+
 alter table signal_investigations
   drop constraint if exists signal_investigations_kind_check;
 alter table signal_investigations

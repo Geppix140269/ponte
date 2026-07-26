@@ -81,6 +81,8 @@ export async function POST(req: NextRequest) {
     request_kind: request.request_kind,
     requesting_business: request.requesting_business,
     requester_type: request.requester_type,
+    contact_phone: request.contact_phone,
+    contact_language: request.contact_language || null,
     establish_goal: request.establish_goal || null,
     capability: request.capability || null,
     indicative: request.indicative || null,
@@ -114,6 +116,8 @@ export async function POST(req: NextRequest) {
         : `Investigation requested on Market Signal ${signalId} (${lookup.signal.product}).`,
       `Requesting business: ${request.requesting_business}`,
       `Requester is: ${REQUESTER_TYPE_LABELS[request.requester_type as RequesterType]}`,
+      `Call them on: ${request.contact_phone}` +
+        (request.contact_language ? ` (speaks ${request.contact_language})` : ""),
       request.request_kind === "capability"
         ? `Can supply / would buy: ${request.capability}`
         : `Wants Ponte to establish: ${request.establish_goal}`,

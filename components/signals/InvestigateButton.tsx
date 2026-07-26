@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Icon } from "@/components/icons";
 import AccountGate from "@/components/AccountGate";
 import {
+  CONTACT_LANGUAGES,
   REQUESTER_TYPES,
   cleanInvestigation,
   investigationIsComplete,
@@ -43,6 +44,8 @@ const EMPTY: InvestigationRequest = {
   request_kind: "investigate",
   requesting_business: "",
   requester_type: null,
+  contact_phone: "",
+  contact_language: "English",
   establish_goal: "",
   capability: "",
   indicative: "",
@@ -206,6 +209,46 @@ export default function InvestigateButton({
                   placeholder={t("investigate.businessPlaceholder")}
                 />
               </div>
+
+              {/* How the desk reaches them. Both requests are worked by a
+                  person who needs to ask a question back, so the number is
+                  asked for here rather than chased later, and the language is
+                  asked so the call is placed by someone who can be understood.
+                  Neither is ever shown to another member. */}
+              <div className="sigsheet__pair">
+                <div>
+                  <label htmlFor="inv-phone" className="sigsheet__l">
+                    {t("investigate.phoneLabel")}
+                  </label>
+                  <input
+                    id="inv-phone"
+                    required
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={form.contact_phone}
+                    onChange={(e) => set({ contact_phone: e.target.value })}
+                    className="sigsheet__i"
+                    placeholder={t("investigate.phonePlaceholder")}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="inv-language" className="sigsheet__l">
+                    {t("investigate.languageLabel")}
+                  </label>
+                  <select
+                    id="inv-language"
+                    value={form.contact_language}
+                    onChange={(e) => set({ contact_language: e.target.value })}
+                    className="sigsheet__i"
+                  >
+                    {CONTACT_LANGUAGES.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="sigsheet__fine">{t("investigate.phoneNote")}</p>
 
               {/* The role is asked only when it is genuinely open. A capability
                   declaration was opened by a button that already said it. */}

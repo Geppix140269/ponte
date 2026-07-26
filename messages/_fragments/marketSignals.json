@@ -54,6 +54,10 @@
       "close": "Close",
       "businessLabel": "Your business",
       "businessPlaceholder": "Registered company name",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "Include the country code",
+      "languageLabel": "Language for the call",
+      "phoneNote": "The desk works these by asking questions back, so it needs a number it can call you on. Your number is never shown to any other member, and never to whoever is behind this signal.",
       "typeLabel": "You are a",
       "typeSelect": "Select",
       "requesterType": {

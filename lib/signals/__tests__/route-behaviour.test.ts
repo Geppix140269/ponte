@@ -66,7 +66,7 @@ test("investigation success creates one request and one desk notification", asyn
   __resetEmail();
 
   const res = await investigatePOST(
-    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", goal: "who is behind it" }),
+    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", phone: "+39 010 555 0101", contact_language: "Italian", goal: "who is behind it" }),
   );
 
   assert.equal(res.status, 200);
@@ -90,7 +90,7 @@ test("duplicate investigation is a no-op: no second notification, no count write
   __resetEmail();
 
   const res = await investigatePOST(
-    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", goal: "who is behind it" }),
+    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", phone: "+39 010 555 0101", contact_language: "Italian", goal: "who is behind it" }),
   );
 
   assert.equal(res.status, 200);

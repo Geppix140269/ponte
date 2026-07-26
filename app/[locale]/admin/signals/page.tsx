@@ -96,6 +96,8 @@ type Investigation = {
   request_kind: string | null;
   requesting_business: string | null;
   requester_type: string | null;
+  contact_phone: string | null;
+  contact_language: string | null;
   establish_goal: string | null;
   capability: string | null;
   indicative: string | null;
@@ -190,6 +192,14 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
                   </p>
                 )}
                 <div className="mt-1 grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+                  {/* How to reach them. Admin only, like everything else on
+                      this card, and never shown to another member. */}
+                  {r.contact_phone && (
+                    <span className="text-cream">
+                      Call: {r.contact_phone}
+                      {r.contact_language ? ` (${r.contact_language})` : ""}
+                    </span>
+                  )}
                   {r.indicative && <span>Indicative: {r.indicative}</span>}
                   {r.geography && <span>Geography: {r.geography}</span>}
                   {r.evidence && <span className="sm:col-span-2">Evidence: {r.evidence}</span>}
@@ -284,7 +294,7 @@ export default async function AdminSignalsPage({
   const bySignal = new Map<string, Investigation[]>();
   const { data: invData } = await adminSb
     .from("signal_investigations")
-    .select("id, signal_id, request_kind, requesting_business, requester_type, establish_goal, capability, indicative, geography, evidence, wants_intro, created_at")
+    .select("id, signal_id, request_kind, requesting_business, requester_type, contact_phone, contact_language, establish_goal, capability, indicative, geography, evidence, wants_intro, created_at")
     .order("created_at", { ascending: false });
   for (const r of (invData ?? []) as Investigation[]) {
     const arr = bySignal.get(r.signal_id) ?? [];
