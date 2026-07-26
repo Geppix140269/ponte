@@ -1,341 +1,327 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { formatPosted } from "@/lib/listing-terms";
+import { landingFontVars } from "@/components/home/landing/fonts";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
-import { getMarketActivity } from "@/lib/board/market-activity";
-import { geographyOf, toBandItems, type ActivityLabels } from "@/lib/board/activity-view";
-import PonteShell from "@/components/shell/PonteShell";
-import RecordList from "@/components/explore/RecordList";
-import InvestigateButton from "@/components/signals/InvestigateButton";
+import { toDeskRecord } from "@/lib/desk/adapter";
+import { factsFor } from "@/lib/desk/facts";
+import { railForScreen } from "@/lib/desk/journey";
+import { sectorForChapter } from "@/lib/taxonomy/market";
+import DeskShell from "@/components/desk/DeskShell";
+import KnowledgeBoundary, { type BoundaryItem } from "@/components/desk/KnowledgeBoundary";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
-import type { FlowIconKey, FlowLabelledKey } from "@/design-system/ponte-flow/generated/flow-icon-keys";
-import { PRODUCT_SECTORS, sectorForChapter } from "@/lib/taxonomy/market";
-import "@/components/explore/explore.css";
-import "@/components/signals/signal.css";
+import "@/components/desk/desk.css";
+
+/**
+ * R-FIND station 3, Record: one Market Signal, in The Desk.
+ *
+ * Three visually distinct regions, and the distinction is the argument:
+ *
+ *   Region 1, raised paper.  What Ponte HAS established, each item with what
+ *                            it rests on.
+ *   Region 2, ink.           What Ponte has NOT established. This is the Atlas
+ *                            knowledge boundary, used here and on no other
+ *                            screen in the product. It carries the same weight
+ *                            as region 1 because the limit of what is known is
+ *                            what a reader is actually deciding against.
+ *   Region 3, sunken well.   The source and evidence boundary: how many sources
+ *                            were read, what was opened, who was contacted.
+ *
+ * The rail sits at Record with Act halted. The halt is not a refusal and not an
+ * error: it says the journey needs the member to choose, and that every choice
+ * at Act needs an account. Wiring those choices is the next slice; the station
+ * states the condition now rather than pretending Act is reachable.
+ *
+ * What this page will not do, in any state: call a signal vetted, verified,
+ * reviewed before publication or a safe counterparty; name its source platform
+ * or link its source URL; or print a placeholder where a fact is absent. An
+ * unstated fact reads "Not stated" through `factsFor`, and a fact whose absence
+ * is not commercially meaningful is not printed at all.
+ */
 
 export const dynamic = "force-dynamic";
 
-/**
- * One Market Signal, inside the Ponte Trade shell.
- *
- * This route used to render the legacy obsidian application: its own header and
- * footer, the lowercase "ponte." lockup, marketplace and fees navigation, and a
- * "every listing is reviewed by the desk before it goes live" line sitting
- * directly above a record whose entire point is that Ponte has NOT confirmed
- * it. The North Star landing links here from its activity band, so a visitor
- * one click in left the new product, entered the old one, and was told the
- * opposite of the truth about what they were looking at.
- *
- * It now mounts the shared PonteShell and states its classification plainly and
- * repeatedly: a Market Signal is an indication seen in the open market that
- * Ponte has not confirmed. Nothing on this page calls it vetted, verified,
- * reviewed before publication, or a safe counterparty.
- *
- * Every fact the legacy page carried is preserved: side, quantity, corridor,
- * Incoterm, payment, HS code, signal date, the description, what Ponte knows,
- * what Ponte has not established, and both actions.
- *
- * Reading it requires no account. The account gate sits where it always sat, on
- * the investigation request itself, which is the first thing that would spend
- * Ponte's resources or disclose the visitor.
- */
-
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string };
-}): Promise<Metadata> {
-  const t = await getTranslations({ locale: params.locale, namespace: "marketSignals" });
-  // The root layout template already appends " | Ponte Trade"; no brand suffix
-  // here, so the title never carries the brand twice.
-  return {
-    title: t("label"),
-    robots: { index: false },
-  };
+export async function generateMetadata(): Promise<Metadata> {
+  // The root layout template already appends the brand; no suffix here, so the
+  // title never carries it twice. Not indexed: a signal is a dated indication,
+  // and a stale search result is a claim about a market that has moved.
+  return { title: "Market Signal", robots: { index: false } };
 }
 
 /**
- * One commercial fact.
+ * What Ponte has not established about a public signal.
  *
- * The Flow icon is the field's own parent icon at 20px, which resolves to the
- * authored reduced drawing where one exists. It sits beside the visible field
- * name and is therefore decorative: the word is the label, the icon is not.
- *
- * Deliberately no icon for the VALUE. Incoterms, currencies, units and
- * frequencies keep their exact text, per the handoff's rejected-icons rule; a
- * drawing per Incoterm would be 11 near-identical glyphs carrying nothing the
- * three letters do not already say.
+ * These are properties of the record class, not guesses about this row, and
+ * each is derived from something structurally true of how a signal is read:
+ * one public source, read once, never confirmed with anybody. A row-specific
+ * boundary needs investigation findings, which belong to the investigation
+ * workspace and do not exist yet. Nothing here is invented to fill the column.
  */
-function Fact({
-  icon,
-  label,
-  value,
-  notStated,
-}: {
-  /** A decorative field icon: one that never carries meaning on its own. */
-  icon: Exclude<FlowIconKey, FlowLabelledKey>;
-  label: string;
-  value: string | null;
-  notStated: string;
-}) {
-  return (
-    // Block children, not spans: the shared .qfact__k / .qfact__v rules stack a
-    // label above its value and space them with a margin, which an inline span
-    // silently ignores, running "SIDE" and "Buyer demand" together.
-    <div className="qfact">
-      <div className="qfact__k">
-        <PonteIcon name={icon} size={20} className="qfact__i" />
-        {label}
-      </div>
-      <div className={`qfact__v${value ? "" : " ns"}`}>{value ?? notStated}</div>
-    </div>
-  );
-}
-
-async function Detail({ signal, locale }: { signal: MarketSignal; locale: string }) {
-  const t = await getTranslations("marketSignals");
-  const th = await getTranslations("home");
-  const te = await getTranslations("explore");
-
-
-  // Only the ends the record actually states. The legacy page printed a literal
-  // "?" for a missing end ("? to United Arab Emirates"), which is a punctuation
-  // mark pretending to be a fact on a page whose whole subject is what is and
-  // is not known. An unstated end now falls through to "Not stated" like every
-  // other unstated fact.
-  const corridor = geographyOf(signal, { route: (from, to) => th("activity.route", { from, to }) });
-
-  const sideLabel =
-    signal.side === "requirement"
-      ? t("card.sideBuyer")
-      : signal.side === "offer"
-        ? t("card.sideSeller")
-        : signal.side;
-  const notStated = t("card.notStated");
-
-  // The sector, from the canonical taxonomy. A signal whose chapter is
-  // unassigned (71, 91, 92) or absent gets no sector row at all rather than
-  // being filed under the nearest family: product-authority finding F4.
-  const sector = sectorForChapter(signal.chapter);
-  const sectorIndex = sector ? PRODUCT_SECTORS.findIndex((s) => s.key === sector.key) : -1;
-
-  // Related recent activity, so the page is a deeper level of the market rather
-  // than a dead end. Same bounded read the landing and Explore use.
-  const { items } = await getMarketActivity();
-  const labels: ActivityLabels = {
-    kind: {
-      market_signal: th("kinds.marketSignal"),
-      member_requirement: th("kinds.memberRequirement"),
-      member_offer: th("kinds.memberOffer"),
-      service_requirement: th("kinds.serviceRequirement"),
+function boundaryFor(signal: MarketSignal): BoundaryItem[] {
+  const items: BoundaryItem[] = [
+    {
+      claim: "Whether the indication is still current",
+      because: "The source is not updated after it is read, and Ponte reads it once",
     },
-    route: (from, to) => th("activity.route", { from, to }),
-    today: th("activity.today"),
-    daysAgo: (days) => th("activity.daysAgo", { days }),
-  };
-  const related = toBandItems(
-    items.filter((i) => i.key !== `signal:${signal.id}`).slice(0, 6),
-    Date.now(),
-    labels,
-  );
+    {
+      claim: "Who is behind it, and whether they are willing to be approached",
+      because: "No party named in the source has been contacted",
+    },
+    {
+      claim: "Whether anything stated in it is accurate",
+      because: "Ponte publishes what the source says, and has not verified it",
+    },
+  ];
+
+  if (!signal.payment) {
+    items.push({
+      claim: "Payment terms and instrument",
+      because: "Not stated in the source",
+    });
+  }
+  if (!signal.hsCode) {
+    items.push({
+      claim: "The product's HS classification",
+      because: "The source states no HS code, and Ponte has not assigned one to this record",
+    });
+  }
+
+  return items;
+}
+
+function Detail({ signal, objective }: { signal: MarketSignal; objective: string | null }) {
+  const record = toDeskRecord(signal);
+  const facts = factsFor(record, { context: "detail-grid" });
+  const sector = sectorForChapter(signal.chapter);
 
   return (
-    <>
-      <nav className="excrumb" aria-label={te("crumb.label")}>
-        <Link href="/">{te("crumb.home")}</Link>
-        <span aria-hidden="true">/</span>
-        <Link href="/explore">{te("crumb.explore")}</Link>
-        <span aria-hidden="true">/</span>
-        <span>{t("detail.eyebrow")}</span>
-      </nav>
-
-      <header className="exhead">
-        <div className="exhead__eb">
-          <span className="exhead__rule" aria-hidden="true" />
-          {/* The classification, first and as a word, never as a colour. */}
-          <span className="sigkind">{t("detail.eyebrow")}</span>
-        </div>
-        <h1 className="exhead__h serif">{signal.product}</h1>
-
-        {/* The unverified status is stated next to the title, not buried in a
-            footnote, because it is the single most important fact here. */}
-        <p className="sigunv">
-          <b>{t("badge")}</b> {t("disclaimer")}
-        </p>
-
-        {signal.description && <p className="exhead__d">{signal.description}</p>}
-      </header>
-
-      <section className="exsec" aria-label={t("detail.knownHeading")}>
-        <div className="exsec__h">
-          <h2 className="exsec__t">{t("detail.knownHeading")}</h2>
-        </div>
-        <div className="qfacts">
-          <Fact icon="deal.role" label={t("detail.fact.side")} value={sideLabel} notStated={notStated} />
-          <Fact
-            icon="deal.quantity"
-            label={t("detail.fact.quantity")}
-            value={signal.quantity ? `${signal.quantity}${signal.unit ? ` ${signal.unit}` : ""}` : null}
-            notStated={notStated}
-          />
-          <Fact icon="deal.destination" label={t("detail.fact.corridor")} value={corridor} notStated={notStated} />
-          <Fact icon="deal.delivery" label={t("detail.fact.incoterm")} value={signal.incoterm} notStated={notStated} />
-          <Fact icon="deal.payment" label={t("detail.fact.payment")} value={signal.payment} notStated={notStated} />
-          <Fact icon="deal.category" label={t("detail.fact.hsCode")} value={signal.hsCode} notStated={notStated} />
-          <Fact
-            icon="deal.timing"
-            label={t("detail.fact.signalDate")}
-            value={formatPosted(signal.spottedAt, locale)}
-            notStated={notStated}
-          />
-        </div>
-      </section>
-
-      {sector && (
-        <section className="exsec" aria-label={t("detail.sectorHeading")}>
-          <div className="exsec__h">
-            <h2 className="exsec__t">{t("detail.sectorHeading")}</h2>
-          </div>
-          {/* The sector is navigation, so it is a link into Explore rather than
-              a decoration. The 24px asset is the sector default. */}
-          <Link className="sigsector" href={`/explore?sector=${sectorIndex}`}>
-            <PonteIcon name={sector.icon} size={24} />
-            <span className="sigsector__t">{sector.label}</span>
-            <span className="sigsector__r">{sector.range}</span>
+    <div className="detail">
+      <div className="detail__m">
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <Link href={objective ? `/market-signals?objective=${encodeURIComponent(objective)}` : "/market-signals"}>
+            Market Signals
           </Link>
-        </section>
-      )}
+          <span aria-hidden="true">/</span>
+          <span>{record.ref}</span>
+        </nav>
 
-      <section className="exsec" aria-label={t("detail.unknownHeading")}>
-        <div className="exsec__h">
-          <h2 className="exsec__t">{t("detail.unknownHeading")}</h2>
-        </div>
-        <ul className="sigunk">
-          {(["u1", "u2", "u3", "u4"] as const).map((k) => (
-            <li key={k}>{t(`detail.unknowns.${k}`)}</li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Two different acts, and two different questionnaires. Asking the desk
-          to establish something is not the same as saying you can supply it, so
-          the second button asks what you can supply rather than what you want
-          established. Both sit behind the account gate, and neither reveals or
-          contacts the third party, which the copy below says, so nobody reads a
-          click as an introduction. */}
-      <section className="exsec" aria-label={t("detail.actionsHeading")}>
-        <div className="exsec__h">
-          <h2 className="exsec__t">{t("detail.actionsHeading")}</h2>
-        </div>
-        <p className="exsec__d">{t("detail.actionsNote")}</p>
-        {/* Registration is a gate the visitor can pass now, so it uses the
-            gate asset and says what it gates. It is labelled because the icon
-            is the only carrier of "registration required" in this row. */}
-        <p className="sigbound">
-          <PonteIcon
-            name="participation.registration"
-            size={20}
-            label={t("detail.registrationNote")}
-          />
-          <span>{t("detail.registrationNote")}</span>
-        </p>
-
-        <div className="sigacts">
-          <InvestigateButton signalId={signal.id} label={t("cta.askPonte")} />
-          <InvestigateButton
-            signalId={signal.id}
-            label={signal.side === "requirement" ? t("cta.secondarySupply") : t("cta.secondaryBuy")}
-            variant="secondary"
-            kind="capability"
-            initialType={signal.side === "requirement" ? "supplier" : "buyer"}
-          />
-        </div>
-      </section>
-
-      {/* Communication is unavailable, and the rule is that the condition must
-          always be stated. It is not a block, a warning or a finding about
-          anyone: no channel exists yet, and the sentence says what would open
-          one. `participation.commson` is never rendered here, because the
-          product does not permit communication at all. */}
-      <section className="exsec" aria-label={t("detail.commsHeading")}>
-        <div className="exsec__h">
-          <h2 className="exsec__t">{t("detail.commsHeading")}</h2>
-        </div>
-        <p className="sigbound">
-          <PonteIcon name="participation.commsoff" size={20} />
-          <span>{t("detail.commsUnavailable")}</span>
-        </p>
-      </section>
-
-      {related.length > 0 && (
-        <section className="exsec" aria-label={te("activity.title")}>
-          <div className="exsec__h">
-            <h2 className="exsec__t">{te("activity.title")}</h2>
+        <div className="rhead">
+          <span className="cls">Market Signal, {record.clsLabel}</span>
+          <h1 className="serif">{record.title}</h1>
+          <div className="cor">
+            {record.corridor ? (
+              <>
+                <PonteIcon name="primitive.span" size={18} />
+                <span>{record.corridor}</span>
+                <span className="sep" aria-hidden="true">
+                  /
+                </span>
+              </>
+            ) : null}
+            <span>{record.ref}</span>
+            {sector ? (
+              <>
+                <span className="sep" aria-hidden="true">
+                  /
+                </span>
+                <PonteIcon name={sector.icon} size={16} />
+                <span>{sector.label}</span>
+              </>
+            ) : null}
+            <span className="src">Read {record.readLabel}</span>
           </div>
-          <RecordList
-            items={related}
-            labels={{ view: te("record.view"), listLabel: te("record.listLabel") }}
-          />
-        </section>
-      )}
-
-      <section className="exdeal" aria-label={te("deal.title")}>
-        <div>
-          <p className="exdeal__t">{te("deal.title")}</p>
-          <p className="exdeal__d">{te("deal.lead")}</p>
         </div>
-        <Link className="fbtn" href="/structure">
-          {te("deal.cta")}
-        </Link>
-      </section>
-    </>
+
+        <dl className="factgrid">
+          {facts.map((fact) => (
+            <div key={fact.key}>
+              <dt>{fact.label}</dt>
+              <dd className={fact.missing ? "na" : undefined}>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* Region 1: what Ponte HAS established, each with what it rests on. */}
+        <div className="panel" style={{ marginTop: 12 }}>
+          <div className="panel__h">
+            <PonteIcon name="evidence.evprov" size={16} />
+            <b>What Ponte has established</b>
+            <span>each item carries what it rests on</span>
+          </div>
+          <div className="erow erow--pos">
+            <PonteIcon name="evidence.evprov" size={18} />
+            <b>The indication exists in a public source</b>
+            <span>Read {record.readLabel}, and published only while approved</span>
+          </div>
+          <div className="erow erow--pos">
+            <PonteIcon name="evidence.evprov" size={18} />
+            <b>The record as the source states it</b>
+            <span>Recorded as printed, in Ponte&apos;s own words, never the source prose</span>
+          </div>
+          {sector ? (
+            <div className="erow erow--pos">
+              <PonteIcon name={sector.icon} size={18} />
+              <b>{sector.label}</b>
+              <span>Classified by Ponte, HS chapters {sector.range}</span>
+            </div>
+          ) : (
+            <div className="erow erow--gap">
+              <PonteIcon name="deal.category" size={18} />
+              <b>Sector not assigned</b>
+              <span>The source states no HS code, so Ponte files this record under no sector</span>
+            </div>
+          )}
+        </div>
+
+        {/* Region 3: the source and evidence boundary. */}
+        <div className="srcband">
+          <PonteIcon name="profile.document" size={20} />
+          <div>
+            <b>Source and evidence boundary</b>
+            <p>
+              One public source, read once. Ponte has not contacted any party named in it, has not
+              seen documents behind it, and holds no relationship with anyone in it. The source
+              itself is not published: naming it would expose provenance a public signal must not
+              carry.
+            </p>
+            <ul>
+              <li>
+                <b>Sources used</b> 1
+              </li>
+              <li>
+                <b>Documents opened</b> none
+              </li>
+              <li>
+                <b>Parties contacted</b> none
+              </li>
+              <li>
+                <b>Confirmed with any party</b> no
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* There is deliberately no Act panel on this screen.
+            Act is the next station and the rail shows it halted, which is the
+            truthful report of where the journey stands. The four outcomes
+            (investigate, watch, participate, request an introduction) are Slice
+            2 work: each needs an action-aware registration contract and a real
+            resource behind it. Rendering them now as disabled controls would
+            put future product on a live page, and a control that announces its
+            own unavailability is still a control.
+
+            What remains is a statement, not an affordance: communication is
+            unavailable on this record class, which was true before this
+            redesign and stays true after it. */}
+        <div className="gate" style={{ marginTop: 12 }}>
+          <PonteIcon name="participation.commsoff" size={20} />
+          <div>
+            <b>Communication unavailable</b>
+            <p>
+              No channel exists between you and any party named in the source. One opens only
+              after an investigation establishes a contact route and both parties agree to an
+              introduction.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Region 2: the ink knowledge boundary. This screen only. */}
+      <KnowledgeBoundary items={boundaryFor(signal)} />
+    </div>
   );
 }
 
 /**
  * The signal existed but is no longer public: expired, withdrawn, unavailable
- * or not approved. A tombstone with no facts, so a stale shared link cannot
- * resurrect a signal, and a route back into the live market.
+ * or never approved.
+ *
+ * A tombstone with no facts, so a stale shared link cannot resurrect a signal,
+ * and no invented reason, because the source publishes none. Ponte keeps the
+ * reference rather than deleting the record: a record it published is not one
+ * it makes disappear from counts and search results without a trace.
  */
-async function Tombstone() {
-  const t = await getTranslations("marketSignals");
-  const te = await getTranslations("explore");
+function Invalid({ id }: { id: string }) {
   return (
-    <header className="exhead">
-      <div className="exhead__eb">
-        <span className="exhead__rule" aria-hidden="true" />
-        <span className="sigkind">{t("detail.eyebrow")}</span>
+    <div className="detail__m" style={{ maxWidth: 860 }}>
+      <nav className="crumbs" aria-label="Breadcrumb">
+        <Link href="/market-signals">Market Signals</Link>
+        <span aria-hidden="true">/</span>
+        <span>{id}</span>
+      </nav>
+
+      <div className="err">
+        <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
+        <div>
+          <b>This signal is no longer available</b>
+          <p>
+            It has left the public board: a signal is published only while it is approved and
+            inside its ninety-day public life. Ponte keeps the reference and the read date so the
+            record does not disappear silently from counts or search results, but the content can
+            no longer be shown.
+          </p>
+        </div>
       </div>
-      <h1 className="exhead__h serif">{t("detail.tombstone")}</h1>
-      <p className="exhead__d">{te("activity.lead")}</p>
-      <p style={{ marginTop: 24 }}>
-        <Link className="fbtn fbtn--secondary" href="/explore">
-          {te("nav.explore")}
+
+      <div className="panel" style={{ marginTop: 12 }}>
+        <div className="panel__h">
+          <PonteIcon name="evidence.evprov" size={16} />
+          <b>What Ponte retains</b>
+          <span>immutable</span>
+        </div>
+        <div className="erow erow--pos">
+          <PonteIcon name="evidence.evprov" size={18} />
+          <b>The reference</b>
+          <span>{id}</span>
+        </div>
+        <div className="erow erow--gap">
+          <PonteIcon name="participation.boundary" size={18} label="Boundary of what is known" />
+          <b>Why it left the board</b>
+          <span>Not established. Ponte does not infer a reason the source never published.</span>
+        </div>
+      </div>
+
+      <p style={{ marginTop: 14 }}>
+        <Link className="b" href="/market-signals">
+          Back to Market Signals
         </Link>
       </p>
-    </header>
+    </div>
   );
 }
 
 export default async function MarketSignalPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; id: string };
+  searchParams?: { objective?: string };
 }) {
   setRequestLocale(params.locale);
+
+  const objective = searchParams?.objective?.trim() || null;
   const result = await getMarketSignal(params.id);
 
   if (result.state === "missing") notFound();
 
+  // A record that cannot be read is still a position on the journey: the member
+  // is at Record, and Act is still what comes next. The rail does not change
+  // because the record turned out to be a tombstone.
+  const rail = railForScreen("signal", {
+    objectiveStated: Boolean(objective),
+    origin: result.state === "visible" ? toDeskRecord(result.signal).ref : params.id,
+  });
+
   return (
-    <PonteShell locale={params.locale} current="explore">
-      {result.state === "gone" ? (
-        <Tombstone />
-      ) : (
-        <Detail signal={result.signal} locale={params.locale} />
-      )}
-    </PonteShell>
+    <div className={`ponte-desk ${landingFontVars}`}>
+      <DeskShell rail={rail} current="market" objective={objective}>
+        {result.state === "gone" ? (
+          <Invalid id={params.id} />
+        ) : (
+          <Detail signal={result.signal} objective={objective} />
+        )}
+      </DeskShell>
+    </div>
   );
 }

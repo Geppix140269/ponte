@@ -1,0 +1,819 @@
+/* ======================================================================
+   PONTE TRADE, THE DESK, production interface system.
+
+   Scoped under .ponte-desk so the heritage-light tokens override the app's
+   obsidian tokens locally, exactly as .ponte-landing and .ponte-find do. The
+   tokens are the design system's own values from ponte-system.css; the layout
+   is ponte-desk.css, adapted from the prototype's two fixed widths (1320 and
+   390) into one responsive page system.
+
+   Three things this file exists to hold, none of them decoration:
+
+   1. The journey rail and the global command bar are DIFFERENT SYSTEMS and
+      look it. The rail is ink, vertical, unlabelled by product section, and
+      carries positions. The command bar is paper, horizontal, and carries
+      navigation. Nothing crosses.
+   2. Records are raised paper on a sunken ground. A Market Signal keeps its
+      dashed left rule and slate classification; a reviewed record keeps a
+      solid ink rule. The two never share a treatment.
+   3. The ink knowledge boundary is used on the Market Signal detail and
+      nowhere else. It is the Atlas borrowing, and borrowing it twice would
+      make it a decoration rather than a statement.
+
+   Two borrowings only, as approved: the Ledger fact register on dense
+   listings, and the Atlas ink boundary on signal detail.
+   ====================================================================== */
+
+.ponte-desk {
+  /* ---- Surfaces (heritage light) ---- */
+  --surface: #fcfbf7;
+  --raised: #ffffff;
+  --sunken: #f2efe6;
+  --rule: #e5dfd2;
+  --rule-strong: #d5cebc;
+
+  /* ---- Ink ---- */
+  --ink: #0f0f0e;
+  --ink-2: #3a3733;
+  --ink-3: #6e6a61;
+  --mute: #9a958a;
+
+  /* ---- Brand signal, never a status ---- */
+  --gold: #c9973a;
+  --gold-ink: #8a6520;
+  --gold-tint: #f5ecd8;
+
+  /* ---- Semantic states, reserved meanings, off the accent ---- */
+  --pos: #0f6e3d;
+  --pos-tint: #e9f1ec;
+  --pos-line: #bfd8c7;
+  --neg: #b4402a;
+  --neg-tint: #f7eae6;
+  --neg-line: #e6c3b8;
+  --review: #4e6472;
+  --review-tint: #eaeff1;
+  --review-line: #c4d2d8;
+  --declared: #6f695e;
+  --declared-tint: #f1eee7;
+
+  /* ---- Focus ---- */
+  --focus: #1e5fa8;
+  --select: #dce8f4;
+
+  /* ---- Type ---- */
+  --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+  --f-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Elevation, restrained: character comes from rules, not shadow ---- */
+  --e-1: 0 1px 0 var(--rule);
+  --e-2: 0 1px 0 var(--rule), 0 18px 36px -28px rgba(15, 15, 14, 0.16);
+
+  /* ---- Motion ---- */
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+
+  /* ---- Desk layout constants, authoritative ---- */
+  --dk-rail: 96px;
+  --dk-cmd: 56px;
+  --dk-gut: 28px;
+  --dk-boundary: 400px;
+  --dk-radius: 9px;
+  --dk-radius-in: 5px;
+
+  /* ---- Fact-register columns, desktop ---- */
+  --reg-cls: 136px;
+  --reg-fact: 132px;
+  --reg-src: 132px;
+  --reg-act: 96px;
+
+  background: var(--sunken);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.ponte-desk *,
+.ponte-desk *::before,
+.ponte-desk *::after { box-sizing: border-box; }
+.ponte-desk .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.ponte-desk .serif { font-family: var(--f-serif); }
+.ponte-desk a { color: var(--ink); text-decoration: none; }
+.ponte-desk a:hover { color: var(--gold-ink); }
+.ponte-desk h1, .ponte-desk h2, .ponte-desk h3 { margin: 0; font-weight: 500; }
+.ponte-desk p { margin: 0; text-wrap: pretty; }
+.ponte-desk button { font: inherit; cursor: pointer; }
+.ponte-desk ::selection { background: var(--select); }
+
+/* Focus is visible, colour-independent, and never removed. The ink variant
+   raises contrast against the rail and the knowledge boundary. */
+.ponte-desk :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus);
+  border-radius: var(--dk-radius-in);
+}
+.ponte-desk .dk-ink :where(a, button, [tabindex]):focus-visible {
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #6fa8e0;
+}
+
+/* ======================================================================
+   1. GLOBAL COMMAND BAR, a separate system from the rail
+   ====================================================================== */
+.ponte-desk .cmd {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0 var(--dk-gut);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: var(--dk-cmd);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.ponte-desk .cmd__lockup { display: inline-flex; align-items: center; gap: 9px; flex: none; }
+.ponte-desk .cmd__chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--ink); color: var(--surface);
+}
+.ponte-desk .cmd__chip svg { width: 19px; height: 19px; }
+.ponte-desk .cmd__dot { fill: var(--gold); }
+.ponte-desk .cmd__word { font-family: var(--f-serif); font-size: 19px; font-weight: 500; letter-spacing: -0.015em; }
+.ponte-desk .cmd__tld { font-family: var(--f-mono); font-size: 11px; color: var(--mute); }
+
+.ponte-desk .cmd__obj {
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius);
+  padding: 0 13px;
+  min-height: 36px;
+}
+.ponte-desk .cmd__obj:hover { border-color: var(--ink-3); }
+.ponte-desk .cmd__obj span { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+.ponte-desk .cmd__obj b {
+  font-size: 13px; color: var(--ink); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.ponte-desk .cmd__k {
+  margin-left: auto; flex: none; font-family: var(--f-mono); font-size: 10px;
+  color: var(--mute); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 6px;
+}
+.ponte-desk .cmd__nav { display: flex; gap: 20px; margin-left: auto; }
+.ponte-desk .cmd__nav a {
+  font-size: 13px; font-weight: 500; color: var(--ink-3);
+  padding: 3px 0; border-bottom: 1.5px solid transparent; white-space: nowrap;
+}
+.ponte-desk .cmd__nav a[aria-current] { color: var(--ink); border-bottom-color: var(--ink); }
+.ponte-desk .cmd__nav a:hover { color: var(--ink); }
+
+/* ======================================================================
+   2. THE JOURNEY RAIL, journey stations and journey state only
+   ====================================================================== */
+.ponte-desk .dk-app {
+  display: grid;
+  grid-template-columns: var(--dk-rail) minmax(0, 1fr);
+  align-items: start;
+  min-height: calc(100vh - var(--dk-cmd));
+}
+.ponte-desk .dk-app--norail { grid-template-columns: minmax(0, 1fr); }
+.ponte-desk .dk-main { min-width: 0; display: flex; flex-direction: column; }
+
+.ponte-desk .rail {
+  background: var(--ink);
+  color: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 24px;
+  position: sticky;
+  top: var(--dk-cmd);
+  align-self: stretch;
+  min-height: calc(100vh - var(--dk-cmd));
+}
+.ponte-desk .rail__name {
+  font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(242, 239, 232, 0.4);
+  margin: 0 0 18px; text-align: center; line-height: 1.5;
+}
+.ponte-desk .rail__stations {
+  display: flex; flex-direction: column; align-items: center; width: 100%;
+  list-style: none; margin: 0; padding: 0;
+}
+
+.ponte-desk .st {
+  position: relative; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding-bottom: 34px;
+}
+.ponte-desk .st:last-child { padding-bottom: 0; }
+.ponte-desk .st__n { position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
+.ponte-desk .st__n::after {
+  content: ""; position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+  width: 1.75px; height: 34px; background: rgba(242, 239, 232, 0.5);
+}
+.ponte-desk .st:last-child .st__n::after { display: none; }
+.ponte-desk .st i { display: block; width: 9px; height: 9px; border-radius: 50%; background: rgba(242, 239, 232, 0.32); }
+.ponte-desk .st b {
+  font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.09em;
+  text-transform: uppercase; color: rgba(242, 239, 232, 0.42);
+  text-align: center; line-height: 1.3; font-weight: 500; max-width: 84px;
+}
+/* The four route conditions, plus active. The only conditions a rail may
+   express. Each is a shape and a weight as well as a colour. */
+.ponte-desk .st--done i { background: var(--surface); width: 11px; height: 11px; }
+.ponte-desk .st--done b { color: rgba(242, 239, 232, 0.8); }
+.ponte-desk .st--here i { background: var(--gold); width: 13px; height: 13px; box-shadow: 0 0 0 4px rgba(217, 172, 85, 0.2); }
+.ponte-desk .st--here b { color: var(--surface); font-weight: 700; }
+.ponte-desk .st--halt i { background: #9db4c0; width: 11px; height: 11px; }
+.ponte-desk .st--halt b { color: #9db4c0; font-weight: 600; }
+.ponte-desk .st--reserved i { background: none; border: 1.5px dashed rgba(242, 239, 232, 0.3); }
+.ponte-desk .st--reserved b { color: rgba(242, 239, 232, 0.34); }
+.ponte-desk .st--reserved .st__n::after,
+.ponte-desk .st--halt .st__n::after {
+  background: repeating-linear-gradient(180deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+}
+.ponte-desk .st--active i { background: var(--gold); width: 13px; height: 13px; animation: dk-pt 1.9s var(--ease) infinite; }
+.ponte-desk .st--active b { color: var(--surface); font-weight: 700; }
+@keyframes dk-pt {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(217, 172, 85, 0.28); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 172, 85, 0); }
+}
+
+.ponte-desk .rail__origin {
+  margin-top: auto; width: 100%; padding: 14px 8px 0;
+  border-top: 1px solid rgba(242, 239, 232, 0.14); text-align: center;
+}
+.ponte-desk .rail__origin b {
+  display: block; font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(242, 239, 232, 0.36); margin-bottom: 4px;
+}
+.ponte-desk .rail__origin span {
+  font-family: var(--f-mono); font-size: 9.5px; color: rgba(242, 239, 232, 0.7);
+  overflow-wrap: anywhere;
+}
+
+/* ======================================================================
+   3. BUTTONS
+   ====================================================================== */
+.ponte-desk .b {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 15px; border-radius: var(--dk-radius); min-height: 38px;
+  font-size: 13px; font-weight: 600;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--surface);
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .b:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-desk .b--2 { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
+.ponte-desk .b--2:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
+.ponte-desk .b--lg { min-height: 46px; padding: 12px 20px; font-size: 14px; }
+.ponte-desk .b--sm { min-height: 32px; padding: 6px 11px; font-size: 12px; }
+.ponte-desk .b--block { width: 100%; }
+.ponte-desk .b[aria-disabled="true"] { opacity: 0.42; pointer-events: none; }
+
+/* The Desk action primitive: a labelled action with its own consequence line
+   underneath. Part of the delivered system and unused in this slice, because
+   the Act outcomes it belongs to are Slice 2 and no future control ships on a
+   live page. Kept here rather than re-derived later. */
+.ponte-desk .act {
+  display: block; width: 100%; text-align: left; padding: 14px 16px;
+  border-radius: var(--dk-radius); border: 1px solid var(--ink);
+  background: var(--ink); color: var(--surface); font-size: 13.5px; font-weight: 600;
+  transition: background var(--dur-1), color var(--dur-1), border-color var(--dur-1);
+}
+.ponte-desk .act:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-desk .act span { display: block; font-family: var(--f-mono); font-weight: 400; font-size: 11px; opacity: 0.72; margin-top: 4px; }
+.ponte-desk .act--2 { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
+.ponte-desk .act--2:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
+.ponte-desk .act[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+
+/* ======================================================================
+   4. SURFACES
+   ====================================================================== */
+.ponte-desk .sec { padding: var(--dk-gut); }
+.ponte-desk .sec + .sec { padding-top: 0; }
+.ponte-desk .sech { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+.ponte-desk .sech h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.005em; display: flex; align-items: center; gap: 10px; }
+.ponte-desk .sech .d { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; max-width: 620px; line-height: 1.5; }
+.ponte-desk .sech a { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+
+.ponte-desk .panel {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); box-shadow: var(--e-1); overflow: hidden;
+}
+.ponte-desk .panel + .panel { margin-top: 12px; }
+.ponte-desk .panel__h {
+  padding: 11px 16px; border-bottom: 1px solid var(--rule);
+  background: var(--sunken); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ponte-desk .panel__h b {
+  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.ponte-desk .panel__h span { margin-left: auto; font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); }
+
+.ponte-desk .kicker {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gold-ink);
+  display: flex; align-items: center; gap: 9px;
+}
+.ponte-desk .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold); flex: none; }
+
+/* The classification token, before every record title. A word, never a
+   colour alone, and never an icon alone. */
+.ponte-desk .cls {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 7px; color: var(--review);
+}
+.ponte-desk .cls::before {
+  content: ""; width: 6px; height: 6px; border: 1.5px dashed var(--review);
+  border-radius: 50%; flex: none;
+}
+.ponte-desk .cls--opp { color: var(--ink); }
+.ponte-desk .cls--opp::before { border: 0; background: var(--gold); width: 7px; height: 7px; }
+
+/* ======================================================================
+   5. FACT REGISTER, the Ledger borrowing, dense listings only
+   One DOM at every width. The desktop row IS the mobile card: below the
+   register breakpoint the grid collapses to areas and the third fact cell
+   is dropped, which is why the 390px row can only ever be a prefix of the
+   desktop row rather than a second, drifting list.
+   ====================================================================== */
+.ponte-desk .reg {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden; box-shadow: var(--e-1);
+}
+.ponte-desk .reg__head,
+.ponte-desk .reg__row {
+  display: grid;
+  grid-template-columns:
+    var(--reg-cls) minmax(0, 1fr) var(--reg-fact) var(--reg-fact) var(--reg-fact)
+    var(--reg-src) var(--reg-act);
+}
+.ponte-desk .reg__head { background: var(--sunken); border-bottom: 1px solid var(--rule-strong); }
+.ponte-desk .reg__head > span {
+  padding: 9px 14px; font-family: var(--f-mono); font-size: 9.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); font-weight: 600;
+}
+.ponte-desk .reg__row { border-bottom: 1px solid var(--rule); align-items: start; transition: background var(--dur-1); }
+.ponte-desk .reg__row:last-child { border-bottom: 0; }
+.ponte-desk .reg__row:hover { background: color-mix(in srgb, var(--sunken) 55%, transparent); }
+.ponte-desk .reg__row > * { padding: 13px 14px; min-width: 0; }
+.ponte-desk .reg__cls { border-left: 3px dashed var(--review-line); }
+.ponte-desk .reg__row--opp .reg__cls { border-left: 3px solid var(--ink); }
+.ponte-desk .reg__cls u {
+  display: block; text-decoration: none; font-family: var(--f-mono);
+  font-size: 9.5px; color: var(--mute); margin-top: 6px; overflow-wrap: anywhere;
+}
+.ponte-desk .reg__t h3 { font-size: 14.5px; font-weight: 600; line-height: 1.35; margin: 0 0 7px; letter-spacing: -0.004em; }
+.ponte-desk .reg__t .cor {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--f-mono); font-size: 11px; color: var(--ink-2);
+}
+.ponte-desk .reg__t .cor .hs { color: var(--mute); }
+.ponte-desk .reg__f dt {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--mute); margin-bottom: 3px;
+}
+.ponte-desk .reg__f dd { margin: 0; font-family: var(--f-mono); font-size: 12px; color: var(--ink); line-height: 1.4; overflow-wrap: anywhere; }
+.ponte-desk .reg__f dd.na { color: var(--mute); }
+.ponte-desk .reg__src { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.55; }
+.ponte-desk .reg__a { display: flex; justify-content: flex-end; }
+.ponte-desk .reg__a a {
+  font-family: var(--f-mono); font-size: 11px;
+  border-bottom: 1px solid var(--rule-strong); padding-bottom: 1px; white-space: nowrap;
+}
+.ponte-desk .reg__a a:hover { border-color: var(--gold-ink); }
+
+.ponte-desk .reg__band {
+  background: var(--ink); color: var(--surface); padding: 8px 16px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.ponte-desk .reg__band .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex: none; }
+.ponte-desk .reg__band .r { margin-left: auto; color: rgba(242, 239, 232, 0.6); }
+
+/* ======================================================================
+   6. RECORD SURFACES, detail heads and short listings
+   ====================================================================== */
+.ponte-desk .rec {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-left: 3px dashed var(--review-line); border-radius: var(--dk-radius);
+  box-shadow: var(--e-1); display: grid; grid-template-columns: minmax(0, 1fr) 320px;
+}
+.ponte-desk .rec + .rec { margin-top: 8px; }
+.ponte-desk .rec:hover { border-left-color: var(--review); }
+.ponte-desk .rec--opp { border-left: 3px solid var(--ink); }
+.ponte-desk .rec__m { padding: 15px 18px; min-width: 0; }
+.ponte-desk .rec__top { display: flex; align-items: center; gap: 11px; margin-bottom: 9px; flex-wrap: wrap; }
+.ponte-desk .rec__top .r { font-family: var(--f-mono); font-size: 10.5px; color: var(--mute); }
+.ponte-desk .rec__top .a { margin-left: auto; font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); }
+.ponte-desk .rec h3 { font-size: 15px; font-weight: 600; line-height: 1.4; margin: 0 0 10px; letter-spacing: -0.004em; }
+.ponte-desk .rec__cor {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2);
+}
+.ponte-desk .rec__f {
+  border-left: 1px solid var(--rule); padding: 15px 18px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; align-content: start;
+  background: color-mix(in srgb, var(--sunken) 40%, transparent);
+  border-radius: 0 var(--dk-radius) var(--dk-radius) 0; margin: 0; min-width: 0;
+}
+.ponte-desk .rec__f dt { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--mute); }
+.ponte-desk .rec__f dd { margin: 1px 0 0; font-family: var(--f-mono); font-size: 12px; color: var(--ink); overflow-wrap: anywhere; }
+.ponte-desk .rec__f dd.na { color: var(--mute); }
+
+/* The record head on a detail page. */
+.ponte-desk .rhead {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-left: 3px dashed var(--review); border-radius: var(--dk-radius);
+  padding: 20px 22px; box-shadow: var(--e-1);
+}
+.ponte-desk .rhead h1 {
+  font-family: var(--f-serif); font-size: 31px; line-height: 1.14;
+  letter-spacing: -0.018em; font-weight: 500; margin: 12px 0 14px; max-width: 760px;
+}
+.ponte-desk .rhead .cor {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--f-mono); font-size: 12.5px; padding-top: 14px; border-top: 1px solid var(--rule);
+}
+.ponte-desk .rhead .cor .sep { color: var(--mute); }
+.ponte-desk .rhead .cor .src { margin-left: auto; color: var(--ink-3); }
+
+/* The rules are drawn ON the cells, not by letting a darker container show
+   through 1px gaps. A record states as many facts as it states, so the last
+   row is usually part-filled, and with a contrasting container that leftover
+   space reads as a broken or still-loading cell. The container is now the same
+   paper as the cells, so an unfilled track is simply nothing. */
+.ponte-desk .factgrid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px;
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden; margin: 12px 0 0;
+}
+.ponte-desk .factgrid > div {
+  background: var(--raised); padding: 12px 14px; min-width: 0;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.ponte-desk .factgrid dt {
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px;
+}
+.ponte-desk .factgrid dd { margin: 0; font-family: var(--f-mono); font-size: 14px; overflow-wrap: anywhere; }
+.ponte-desk .factgrid dd.na { color: var(--mute); }
+
+/* Evidence rows. */
+.ponte-desk .erow {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) 250px; gap: 13px;
+  padding: 12px 16px; border-bottom: 1px solid var(--rule); align-items: baseline;
+}
+.ponte-desk .erow:last-child { border-bottom: 0; }
+.ponte-desk .erow b { font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+.ponte-desk .erow span { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); line-height: 1.5; }
+.ponte-desk .erow--pos { box-shadow: inset 3px 0 0 var(--pos); }
+.ponte-desk .erow--gap { box-shadow: inset 3px 0 0 var(--rule-strong); }
+.ponte-desk .erow--gap b { font-weight: 500; color: var(--ink-2); }
+.ponte-desk .erow--review { box-shadow: inset 3px 0 0 var(--review); }
+
+/* The source and evidence boundary. Its own surface, region 3. */
+.ponte-desk .srcband {
+  background: var(--sunken); border: 1px solid var(--rule-strong);
+  border-left: 3px solid var(--ink); border-radius: var(--dk-radius);
+  padding: 16px 18px; margin-top: 12px;
+  display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px;
+}
+.ponte-desk .srcband > div > b {
+  display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink); margin-bottom: 7px;
+}
+.ponte-desk .srcband p { font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.ponte-desk .srcband ul {
+  list-style: none; margin: 10px 0 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px;
+}
+.ponte-desk .srcband li { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 8px; }
+.ponte-desk .srcband li b { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+
+/* ======================================================================
+   7. THE INK KNOWLEDGE BOUNDARY, Market Signal detail ONLY
+   The Atlas borrowing. It states the limit of Ponte's knowledge in the same
+   weight as its findings, because the limit is what a reader decides against.
+   ====================================================================== */
+.ponte-desk .boundary {
+  background: var(--ink); color: var(--surface);
+  padding: 26px 28px 32px; display: flex; flex-direction: column; gap: 20px;
+  align-self: stretch; min-width: 0;
+}
+.ponte-desk .boundary h2 { font-family: var(--f-serif); font-size: 23px; font-weight: 500; letter-spacing: -0.012em; color: var(--surface); }
+.ponte-desk .boundary .d { font-size: 12.5px; color: rgba(242, 239, 232, 0.55); line-height: 1.55; }
+.ponte-desk .boundary ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgba(242, 239, 232, 0.35); }
+.ponte-desk .boundary__h { display: flex; align-items: flex-start; gap: 14px; }
+.ponte-desk .boundary__h .pf-icon { flex: none; color: var(--gold); margin-top: 3px; }
+.ponte-desk .boundary li {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 13px 0; border-bottom: 1px dashed rgba(242, 239, 232, 0.16);
+}
+.ponte-desk .boundary li b { font-size: 13.5px; font-weight: 500; line-height: 1.45; color: rgba(242, 239, 232, 0.94); }
+.ponte-desk .boundary li span { font-family: var(--f-mono); font-size: 11px; color: rgba(242, 239, 232, 0.5); line-height: 1.5; }
+.ponte-desk .boundary__f { margin-top: auto; border: 1px dashed rgba(242, 239, 232, 0.26); padding: 14px 16px; }
+.ponte-desk .boundary__f b {
+  display: block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+}
+.ponte-desk .boundary__f p { font-size: 12.5px; line-height: 1.6; color: rgba(242, 239, 232, 0.68); }
+
+/* ======================================================================
+   8. STATES: loading, empty, error
+   ====================================================================== */
+.ponte-desk .sk {
+  background: linear-gradient(
+    90deg, var(--sunken) 25%,
+    color-mix(in srgb, var(--sunken) 55%, var(--rule)) 50%, var(--sunken) 75%);
+  background-size: 200% 100%;
+  animation: dk-sh 1.4s ease infinite;
+  border-radius: 3px; display: block;
+}
+@keyframes dk-sh { to { background-position: -200% 0; } }
+
+.ponte-desk .empty {
+  background: var(--raised); border: 1px dashed var(--rule-strong);
+  border-radius: var(--dk-radius); padding: 22px 24px;
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 16px;
+}
+.ponte-desk .empty > div > b { font-size: 15px; font-weight: 600; display: block; margin-bottom: 5px; }
+.ponte-desk .empty p { font-size: 13px; color: var(--ink-2); line-height: 1.6; max-width: 640px; }
+.ponte-desk .empty__a { display: flex; gap: 9px; margin-top: 14px; flex-wrap: wrap; }
+
+.ponte-desk .err {
+  background: var(--neg-tint); border: 1px solid var(--neg-line);
+  border-radius: var(--dk-radius); padding: 16px 18px;
+  display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px;
+}
+.ponte-desk .err > div > b { color: var(--neg); font-size: 14px; display: block; margin-bottom: 4px; }
+.ponte-desk .err p { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+
+.ponte-desk .notice {
+  background: var(--review-tint); border: 1px solid var(--review-line);
+  border-radius: var(--dk-radius); padding: 14px 16px;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px;
+  color: var(--ink-2); font-size: 13px; line-height: 1.6;
+}
+.ponte-desk .notice > div > b { color: var(--review); display: block; margin-bottom: 3px; font-size: 13px; }
+
+.ponte-desk .gate {
+  border: 1px dashed var(--rule-strong); border-radius: var(--dk-radius);
+  background: var(--sunken); padding: 14px 15px;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 11px;
+}
+.ponte-desk .gate > div > b { font-size: 13px; display: block; margin-bottom: 4px; }
+.ponte-desk .gate p { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+
+/* ======================================================================
+   9. LANDING, the Desk system
+   ====================================================================== */
+.ponte-desk .hero { background: var(--surface); border-bottom: 1px solid var(--rule-strong); padding: 34px var(--dk-gut) 0; }
+.ponte-desk .hero__top {
+  display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 44px;
+  align-items: start; padding-bottom: 26px;
+}
+.ponte-desk .hero h1 {
+  font-family: var(--f-serif); font-size: clamp(32px, 4.2vw, 50px); line-height: 1.04;
+  letter-spacing: -0.026em; font-weight: 500; margin: 14px 0 16px; max-width: 740px; text-wrap: balance;
+}
+.ponte-desk .hero h1 em { font-style: italic; font-weight: 400; }
+.ponte-desk .hero__p { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); max-width: 620px; }
+
+.ponte-desk .ask {
+  border: 1px solid var(--ink); border-radius: var(--dk-radius);
+  background: var(--raised); overflow: hidden; box-shadow: var(--e-2);
+}
+.ponte-desk .ask__h {
+  background: var(--ink); color: var(--surface); padding: 10px 15px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.ponte-desk .ask__b { padding: 14px 15px; }
+.ponte-desk .ask__in {
+  width: 100%; font: inherit; font-family: var(--f-serif); font-size: 16.5px; line-height: 1.45;
+  color: var(--ink); background: transparent; border: 0; resize: vertical; min-height: 84px;
+}
+.ponte-desk .ask__in::placeholder { color: var(--ink-3); }
+/* The field fills the panel, so the panel carries the focus. Removing the
+   field's own outline is only allowed because the ring below replaces it. */
+.ponte-desk .ask__in:focus { outline: none; }
+.ponte-desk .ask:focus-within {
+  border-color: var(--focus);
+  box-shadow: var(--e-2), 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
+}
+.ponte-desk .ask__r {
+  border-top: 1px solid var(--rule); padding: 12px 15px;
+  display: flex; flex-direction: column; gap: 9px; background: var(--sunken);
+}
+.ponte-desk .ask__note { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.55; }
+.ponte-desk .ask__f {
+  padding: 9px 15px; border-top: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: 10px; color: var(--ink-3);
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+
+.ponte-desk .fams {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
+  background: var(--rule); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden; margin-top: 24px;
+}
+/* A family tile is a link only when its destination genuinely exists. The
+   others are the same tile without the affordance: no hover, no pointer, and
+   no disabled styling either, because they are not disabled controls. They are
+   statements about a part of the market Ponte does not yet route into. */
+.ponte-desk .fams > * { background: var(--raised); padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 9px; }
+.ponte-desk .fams a:hover { background: var(--sunken); }
+.ponte-desk .fams b { font-size: 14px; font-weight: 600; }
+.ponte-desk .fams span { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.5; }
+.ponte-desk .fams .soon { color: var(--mute); }
+
+.ponte-desk .sectors {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
+  background: var(--rule); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden;
+}
+/* The sector grid is the taxonomy, not a filter. The board cannot be narrowed
+   by sector yet (every public signal carries a null HS code), so these are not
+   links: fifteen tiles that all opened the same unfiltered board would be a
+   filter that does not filter. */
+.ponte-desk .sectors > * { background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ponte-desk .sectors b { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+.ponte-desk .sectors span { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
+
+.ponte-desk .norail {
+  padding: 10px var(--dk-gut) 12px;
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3);
+  border-top: 1px solid var(--rule);
+}
+
+.ponte-desk .closing {
+  padding: 22px 24px; display: flex; align-items: center;
+  justify-content: space-between; gap: 32px; flex-wrap: wrap;
+}
+.ponte-desk .closing h2 { font-family: var(--f-serif); font-size: 26px; font-weight: 500; margin-bottom: 6px; letter-spacing: -0.014em; }
+.ponte-desk .closing p { font-size: 14px; color: var(--ink-2); max-width: 660px; }
+.ponte-desk .closing__a { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Detail page: main plus the ink boundary. */
+.ponte-desk .detail { display: grid; grid-template-columns: minmax(0, 1fr) var(--dk-boundary); align-items: start; }
+.ponte-desk .detail__m { padding: var(--dk-gut); min-width: 0; }
+.ponte-desk .crumbs {
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3);
+  display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.ponte-desk .acts { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ======================================================================
+   10. RESPONSIVE, down to 390
+   The register never scrolls sideways and no screen is ever clipped: each
+   breakpoint drops a column into the row's own stack rather than letting
+   the grid overflow its track.
+   ====================================================================== */
+@media (max-width: 1180px) {
+  .ponte-desk { --dk-boundary: 340px; --reg-fact: 116px; --reg-src: 112px; }
+  /* The third fact leaves the register first, so the visible facts stay a
+     prefix of the desktop order rather than a different selection. */
+  .ponte-desk .reg__head, .ponte-desk .reg__row {
+    grid-template-columns: 118px minmax(0, 1fr) var(--reg-fact) var(--reg-fact) var(--reg-src) var(--reg-act);
+  }
+  .ponte-desk .reg__head > span:nth-child(5),
+  .ponte-desk .reg__row > *:nth-child(5) { display: none; }
+  .ponte-desk .erow { grid-template-columns: 22px minmax(0, 1fr) 200px; }
+}
+
+@media (max-width: 1000px) {
+  .ponte-desk .detail { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .hero__top { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .ponte-desk .sectors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ponte-desk .factgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ponte-desk .rec { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .rec__f { border-left: 0; border-top: 1px solid var(--rule); border-radius: 0 0 var(--dk-radius) var(--dk-radius); }
+  .ponte-desk .erow { grid-template-columns: 22px minmax(0, 1fr); }
+  /* :not(.pf-icon) is load-bearing. PonteIcon renders a <span>, so a bare
+     `span` selector here pushed the ICON into column 2, displaced the title
+     into column 1, and set every evidence row one word wide. */
+  .ponte-desk .erow > span:not(.pf-icon) { grid-column: 2; }
+  .ponte-desk .srcband ul { grid-template-columns: 1fr; }
+}
+
+/* The register breakpoint. Below it the grid row becomes a stacked record,
+   using the same DOM: nothing is re-authored, so nothing can drift. */
+@media (max-width: 860px) {
+  .ponte-desk {
+    --dk-gut: 18px;
+    --dk-rail: 0px;
+  }
+
+  /* The rail rotates: still journey stations only, still ink, still not
+     navigation. It sits under the command bar and above the work. */
+  .ponte-desk .dk-app { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .rail {
+    position: static; min-height: 0; flex-direction: row; align-items: center;
+    padding: 12px 18px 13px; gap: 14px; flex-wrap: wrap;
+  }
+  .ponte-desk .rail__name { margin: 0; text-align: left; flex: none; }
+  .ponte-desk .rail__stations { flex-direction: row; flex: 1; min-width: 200px; gap: 8px; }
+  /* Station labels must not run together into one word, and must not break
+     mid-word either: "OBJECTI / VE" is not a station name. They stay whole. */
+  .ponte-desk .st { padding-bottom: 0; flex: 1; min-width: 0; }
+  .ponte-desk .st b { max-width: 100%; white-space: nowrap; }
+  .ponte-desk .st__n { width: 18px; height: 18px; }
+  .ponte-desk .st__n::after {
+    top: 8px; left: 50%; width: calc(100% + 40px); height: 1.75px; transform: none;
+  }
+  .ponte-desk .st--reserved .st__n::after,
+  .ponte-desk .st--halt .st__n::after {
+    background: repeating-linear-gradient(90deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+  }
+  .ponte-desk .rail__origin {
+    margin-top: 0; width: auto; padding: 0 0 0 14px; text-align: left;
+    border-top: 0; border-left: 1px solid rgba(242, 239, 232, 0.14);
+  }
+
+  .ponte-desk .reg { border-radius: var(--dk-radius); border: 0; background: none; box-shadow: none; overflow: visible; }
+  .ponte-desk .reg__head { display: none; }
+  .ponte-desk .reg__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    background: var(--raised); border: 1px solid var(--rule);
+    border-left: 3px dashed var(--review-line); border-radius: var(--dk-radius);
+    box-shadow: var(--e-1); padding: 13px 15px; gap: 0 12px;
+  }
+  .ponte-desk .reg__row--opp { border-left: 3px solid var(--ink); }
+  .ponte-desk .reg__row + .reg__row { margin-top: 8px; }
+  .ponte-desk .reg__row > * { padding: 0; }
+  .ponte-desk .reg__cls { grid-column: 1 / -1; border-left: 0; display: flex; align-items: center; gap: 9px; }
+  .ponte-desk .reg__cls u { margin: 0 0 0 auto; }
+  .ponte-desk .reg__t { grid-column: 1 / -1; margin: 8px 0 9px; }
+  /* Exactly two facts at this width, and they are the first two of the
+     desktop three. The fourth cell was already dropped above. */
+  .ponte-desk .reg__f {
+    padding: 9px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    margin: 0;
+  }
+  .ponte-desk .reg__f + .reg__f { border-left: 0; }
+  .ponte-desk .reg__src { grid-column: 1; margin-top: 9px; }
+  .ponte-desk .reg__a { grid-column: 2; margin-top: 9px; align-items: center; }
+
+  .ponte-desk .rhead h1 { font-size: 26px; }
+  .ponte-desk .acts { grid-template-columns: 1fr; }
+  .ponte-desk .cmd { flex-wrap: wrap; padding: 10px var(--dk-gut); gap: 12px; }
+  .ponte-desk .cmd__obj { order: 3; max-width: none; flex-basis: 100%; }
+  .ponte-desk .cmd__nav { gap: 16px; overflow-x: auto; scrollbar-width: none; }
+  .ponte-desk .cmd__nav::-webkit-scrollbar { display: none; }
+  .ponte-desk .boundary { padding: 22px 18px 24px; }
+  .ponte-desk .boundary h2 { font-size: 21px; }
+}
+
+@media (max-width: 520px) {
+  .ponte-desk .fams { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .sectors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ponte-desk .factgrid { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .reg__row { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .reg__f + .reg__f { border-top: 0; }
+  .ponte-desk .reg__src, .ponte-desk .reg__a { grid-column: 1; }
+  .ponte-desk .reg__a { justify-content: flex-start; }
+  .ponte-desk .empty, .ponte-desk .err, .ponte-desk .srcband { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .empty > .pf-icon, .ponte-desk .err > .pf-icon, .ponte-desk .srcband > .pf-icon { display: none; }
+  /* At this width the carried record no longer fits beside four stations
+     without squeezing them, so the rail takes two rows: the journey and its
+     stations, then the record it is carrying. Still one rail, still stations
+     only, still not navigation. */
+  .ponte-desk .rail { flex-wrap: wrap; row-gap: 11px; }
+  .ponte-desk .rail__name { order: 1; }
+  .ponte-desk .rail__stations { order: 2; min-width: 0; }
+  .ponte-desk .rail__origin {
+    order: 3; flex-basis: 100%; display: flex; align-items: baseline; gap: 9px;
+    padding: 10px 0 0; border-left: 0; border-top: 1px solid rgba(242, 239, 232, 0.14);
+  }
+  .ponte-desk .rail__origin b { margin: 0; }
+  .ponte-desk .st b { font-size: 8px; }
+}
+
+/* Motion is restrained and always optional. The rail pulse is the only
+   looping animation in the system, and it is the first thing to go. */
+@media (prefers-reduced-motion: reduce) {
+  .ponte-desk *,
+  .ponte-desk *::before,
+  .ponte-desk *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ponte-desk .st--active i { box-shadow: 0 0 0 3px rgba(217, 172, 85, 0.28); }
+}
