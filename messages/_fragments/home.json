@@ -27,8 +27,6 @@
     "gateway": {
       "regionLabel": "Choose where to begin",
       "centerEyebrow": "Two ways to begin",
-      "centerTitle": "See the market.",
-      "centerTitleEm": "Or start a deal.",
       "centerHint": "One click opens the route"
     },
     "routes": {
@@ -49,15 +47,13 @@
       "hint": "Try a product, a route, a service or a company name.",
       "reading": "Reading what you typed...",
       "clarify": "Ponte kept your words. Open the market universe, or try naming a product, a route or a company.",
-      "emptyAnnounce": "Type a product, market, company or service, or choose a route on the bridge."
+      "emptyAnnounce": "Type a product, market, company or service, or choose a route on the flow."
     },
     "popular": {
       "title": "Where the activity is",
       "records": "{count} market records"
     },
-    "trustTitle": "What Ponte shows you",
-    "trustBody": "<b>Every record says what it is.</b> A Market Signal is an indication Ponte has seen in the open market and has not confirmed. A Member Requirement or Member Offer was posted by a member and reviewed before publication. Ponte does not present one as the other, and does not claim a counterparty is safe.",
-    "trust": "<b>Start freely.</b> Join only when an action needs to be saved or sent.",
+    "trustLink": "<b>Every record says what it is</b>, and starting costs nothing: join only when an action needs to be saved or sent. <a>How Ponte reads and labels a record</a>.",
     "ai": {
       "disclosure": "Ponte uses AI to understand what you type."
     }

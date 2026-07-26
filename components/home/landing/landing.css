@@ -415,112 +415,99 @@ body:has(.ponte-landing) {
   align-items: center;
   width: 100%;
 }
-/* The two routes are the bridge's two points, so the bridge is a three-column
-   row: label, arch, label. The labels sit at the piers, level with their own
-   markers. No second set of route cards below; the endpoints are the control.
-   A grid rather than absolute positioning, so a longer supporting line reflows
-   instead of colliding with the arch. */
-/* The middle track is sized explicitly rather than by content: the arch is an
-   absolutely-positioned SVG over an aspect-ratio box, so a content-sized track
-   would resolve its width from a child that has none, and collapse to zero. */
-.ponte-landing .gate {
+/* The two routes are the flow's two points, so the flow is a three-column row:
+   label, rail, label. The labels sit at the ends of the rail, level with their
+   own markers. No second set of route cards below; the endpoints are the
+   control. A grid rather than absolute positioning, so a longer supporting line
+   reflows instead of colliding with the rail. */
+.ponte-landing .flow {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr minmax(0, 420px) 1fr;
+  grid-template-columns: 1fr minmax(0, 360px) 1fr;
   align-items: center;
   gap: 0 28px;
   width: 100%;
 }
-.ponte-landing .gate__stage {
-  position: relative;
+.ponte-landing .flow__stage {
   width: 100%;
-  aspect-ratio: 1 / 0.82;
+  text-align: center;
 }
-.ponte-landing .gate__svg {
-  position: absolute;
-  inset: 0;
+.ponte-landing .flow__svg {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  margin: 10px 0;
+  overflow: visible;
 }
-.ponte-landing .g-portal {
-  fill: var(--ink);
-}
-.ponte-landing .g-open {
-  fill: var(--surface);
-}
-.ponte-landing .g-ring {
-  fill: none;
+.ponte-landing .f-rail {
   stroke: var(--rule-strong);
   stroke-width: 1;
-  opacity: 0.7;
 }
-.ponte-landing .g-dot {
-  fill: var(--raised);
+.ponte-landing .f-dot {
+  fill: var(--surface);
   stroke: var(--ink);
-  stroke-width: 2;
+  stroke-width: 1.5;
   transition:
     fill var(--dur-2),
     stroke var(--dur-2);
 }
-.ponte-landing .g-dot.hot {
+.ponte-landing .f-dot.hot {
   stroke: var(--gold);
+  fill: var(--gold-tint);
 }
-.ponte-landing .g-dotn {
+.ponte-landing .f-dotn {
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   fill: var(--ink);
   text-anchor: middle;
   dominant-baseline: central;
 }
-
-/* ---- archway centre ---- */
-.ponte-landing .gate__center {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  width: 54%;
-  text-align: center;
+/* The dot that runs the route. It travels the rail from 01 to 02, fading in as
+   it leaves the first marker and out as it reaches the second, so the loop has
+   no visible jump back. Pure decoration, and it never moves anything else. */
+.ponte-landing .f-run {
+  fill: var(--gold);
+  animation: ponte-flow-run 3.4s var(--ease) infinite;
 }
-.ponte-landing .gate__ceb {
+@keyframes ponte-flow-run {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  /* 270 user units: the dot starts 14 past marker 01 (at x 32) and finishes on
+     the centre of marker 02 (at x 302), so it arrives rather than stopping
+     short of where it was going. */
+  100% {
+    transform: translateX(270px);
+    opacity: 0;
+  }
+}
+.ponte-landing .flow__eb {
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--gold-ink);
-  transition: opacity var(--dur-2);
 }
-.ponte-landing .gate__ct {
-  font-family: var(--f-serif);
-  font-size: clamp(20px, 2.6vw, 28px);
-  font-weight: 500;
-  line-height: 1.06;
-  letter-spacing: -0.015em;
-  margin-top: 8px;
-  color: var(--ink);
-  transition: opacity var(--dur-2);
-}
-.ponte-landing .gate__ct em {
-  display: block;
-  font-style: italic;
-  color: var(--gold-ink);
-  font-weight: 400;
-}
-.ponte-landing .gate__ch {
+.ponte-landing .flow__hint {
   font-family: var(--f-mono);
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin-top: 12px;
-  transition: opacity var(--dur-2);
 }
 
-/* ---- the two route labels, at the piers ----------------------------------
+/* ---- the two route labels, at the ends of the rail ------------------------
    Unboxed, in the editorial manner of the rest of the page: a mono number, a
-   serif name and one supporting line, set against the arch rather than inside
-   a card. Hovering or focusing a label lights it and its marker together, so
+   serif name and one supporting line, set beside the rail rather than inside a
+   card. Hovering or focusing a label lights it and its marker together, so
    the pairing reads without depending on colour. */
 .ponte-landing .rlabel {
   display: flex;
@@ -634,33 +621,28 @@ body:has(.ponte-landing) {
   color: var(--ink-3);
 }
 
-/* ---- trust and evidence ---- */
-.ponte-landing .ltrust {
+/* ---- what a record is: one line, and a link to the full account ---- */
+.ponte-landing .lnote {
   width: 100%;
   max-width: 720px;
   border-top: 1px solid var(--rule);
-  padding-top: 24px;
-}
-.ponte-landing .ltrust__t {
-  font-family: var(--f-mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 12px;
-}
-.ponte-landing .ltrust__p {
-  font-size: 14px;
+  padding-top: 18px;
+  font-size: 13.5px;
   line-height: 1.6;
   color: var(--ink-2);
 }
-.ponte-landing .ltrust__p + .ltrust__p {
-  margin-top: 10px;
-}
-.ponte-landing .ltrust__p b {
+.ponte-landing .lnote b {
   color: var(--ink);
   font-weight: 600;
+}
+.ponte-landing .lnote__a {
+  color: var(--gold-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  transition: border-color var(--dur-1);
+}
+.ponte-landing .lnote__a:hover {
+  border-bottom-color: var(--gold);
 }
 
 /* ---- header links ---- */
@@ -723,12 +705,9 @@ body:has(.ponte-landing) {
   .ponte-landing .obj__q {
     font-size: clamp(44px, 11vw, 68px);
   }
-  .ponte-landing .gate {
+  .ponte-landing .flow {
     width: 100%;
     gap: 0 20px;
-  }
-  .ponte-landing .gate__stage {
-    max-width: 400px;
   }
   .ponte-landing .aband__head {
     padding-left: 32px;
@@ -736,18 +715,20 @@ body:has(.ponte-landing) {
   }
 }
 @media (max-width: 860px) {
-  /* Below this the arch and two flanking labels stop fitting side by side, so
-     the bridge becomes a column: the arch, then its two endpoints listed under
-     it in order. Still labels, still unboxed, still the same two controls. */
-  .ponte-landing .gate {
+  /* Below this the rail and two flanking labels stop fitting side by side, so
+     the flow becomes a column: the first route, the rail the dot runs along,
+     then the second. The dot still travels from 01 to 02, and the reading order
+     is unchanged. Still labels, still unboxed, still the same two controls. */
+  .ponte-landing .flow {
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 0;
   }
-  .ponte-landing .gate__stage {
-    grid-row: 1;
+  .ponte-landing .flow__stage {
+    grid-row: 2;
     width: min(420px, 100%);
     max-width: 420px;
+    padding: 6px 0 2px;
   }
   .ponte-landing .rlabel {
     width: 100%;
@@ -758,7 +739,7 @@ body:has(.ponte-landing) {
     padding: 16px 2px;
   }
   .ponte-landing .rlabel--explore {
-    grid-row: 2;
+    grid-row: 1;
     justify-self: center;
   }
   .ponte-landing .rlabel--deal {
@@ -794,9 +775,6 @@ body:has(.ponte-landing) {
     align-items: flex-start;
     gap: 6px;
   }
-  .ponte-landing .gate__stage {
-    aspect-ratio: 1 / 0.72;
-  }
   /* The phone band never animates: it is a scroller the reader drives, so a
      record is never moving under a thumb. */
   .ponte-landing .aband__track {
@@ -812,24 +790,12 @@ body:has(.ponte-landing) {
   .ponte-landing .aband__i:first-child {
     padding-left: 20px;
   }
-  /* On the smaller mobile bridge the opening only reaches full width lower down,
-     where the arch has straightened. Sit the archway message there and narrow
-     it, so it never rides onto the black crown or spills over the arch walls. */
-  .ponte-landing .gate__center {
-    top: 66%;
-    width: 48%;
-  }
-  .ponte-landing .gate__ceb {
-    font-size: 8px;
+  .ponte-landing .flow__eb {
+    font-size: 9px;
     letter-spacing: 0.12em;
   }
-  .ponte-landing .gate__ct {
-    font-size: 16px;
-    margin-top: 5px;
-  }
-  .ponte-landing .gate__ch {
-    font-size: 8px;
-    margin-top: 7px;
+  .ponte-landing .flow__hint {
+    font-size: 8.5px;
   }
 }
 
@@ -843,12 +809,16 @@ body:has(.ponte-landing) {
   .ponte-landing .aband__echo {
     display: none;
   }
-  .ponte-landing .gate__ceb,
-  .ponte-landing .gate__ct,
-  .ponte-landing .gate__ch,
   .ponte-landing .rlabel,
   .ponte-landing .rlabel__t,
-  .ponte-landing .rlabel__n {
+  .ponte-landing .rlabel__n,
+  .ponte-landing .f-dot {
     transition: none !important;
+  }
+  /* The travelling dot is decoration, so it stops rather than slows: it rests
+     at the first marker, where the route begins. */
+  .ponte-landing .f-run {
+    animation: none;
+    opacity: 1;
   }
 }

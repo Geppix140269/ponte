@@ -23,6 +23,16 @@ export function isIntent(v: unknown): v is Intent {
   return typeof v === "string" && (INTENTS as readonly string[]).includes(v);
 }
 
+/**
+ * How long the offer or requirement stays open: a day count, or "standing" for
+ * one with no end date. Both are real answers; null means undeclared.
+ */
+export type Validity = number | "standing";
+
+export function isValidity(v: unknown): v is Validity {
+  return v === "standing" || (typeof v === "number" && v > 0);
+}
+
 /** The whole tapped record. Every commercial field is a selected value. */
 export type StructureDraft = {
   intent: Intent | null;
@@ -35,8 +45,8 @@ export type StructureDraft = {
   destination: string | null;
   incoterm: string | null;
   payment: string | null;
-  /** Validity as a day count from a pill (7/30/60/90); a date is derived at submit. */
-  validityDays: number | null;
+  /** A day count from a pill, or "standing"; a date is derived at submit. */
+  validity: Validity | null;
   role: string | null;
   /** The one optional free-text note. */
   note: string | null;
@@ -46,7 +56,7 @@ export function emptyDraft(): StructureDraft {
   return {
     intent: null, product: null, hsCode: null, quantity: null, unit: null,
     frequency: null, origin: null, destination: null, incoterm: null,
-    payment: null, validityDays: null, role: null, note: null,
+    payment: null, validity: null, role: null, note: null,
   };
 }
 
@@ -62,6 +72,32 @@ export const COMPLETION_QUEUE = [
 ] as const;
 export type CompletionField = (typeof COMPLETION_QUEUE)[number];
 
+/**
+ * Which end of the route this member actually decides.
+ *
+ * A seller knows where the goods ship FROM; where they end up is the buyer's
+ * decision, and asking a seller for a destination invites an invented answer or
+ * an unnecessary constraint on their own listing. A buyer is the mirror image:
+ * they know where it has to land, and the origin is whoever can supply it. A
+ * trade service covers a corridor, so it declares both ends.
+ *
+ * The field that is not asked is not a gap, is not a blocker and is not printed
+ * as "not stated": it was never this member's fact to give. It stays on the
+ * draft so a member who does want to state it loses nothing.
+ */
+export function asksFor(intent: Intent | null, field: "origin" | "destination"): boolean {
+  if (intent === "offer") return field === "origin";
+  if (intent === "requirement") return field === "destination";
+  return true; // service, or intent not yet chosen
+}
+
+/** The completion steps that apply to this draft's intent, in order. */
+export function queueFor(intent: Intent | null): CompletionField[] {
+  return COMPLETION_QUEUE.filter((f) =>
+    f === "origin" || f === "destination" ? asksFor(intent, f) : true,
+  );
+}
+
 function isFilled(draft: StructureDraft, field: CompletionField): boolean {
   switch (field) {
     case "quantity": return has(draft.quantity);
@@ -69,7 +105,7 @@ function isFilled(draft: StructureDraft, field: CompletionField): boolean {
     case "destination": return has(draft.destination);
     case "incoterm": return has(draft.incoterm);
     case "payment": return has(draft.payment);
-    case "validity": return has(draft.validityDays);
+    case "validity": return has(draft.validity);
     case "role": return has(draft.role);
     case "note": return has(draft.note);
   }
@@ -77,7 +113,7 @@ function isFilled(draft: StructureDraft, field: CompletionField): boolean {
 
 /** The still-open completion steps, in order. `note` appears only if unfilled. */
 export function openGaps(draft: StructureDraft): CompletionField[] {
-  return COMPLETION_QUEUE.filter((f) => !isFilled(draft, f));
+  return queueFor(draft.intent).filter((f) => !isFilled(draft, f));
 }
 
 /** The four honest buckets for S02. Values are field keys; the UI supplies copy. */
@@ -102,9 +138,11 @@ export function bucketize(draft: StructureDraft): FactBuckets {
   }
 
   // The decisive fields that, when open, are worth asking for. Not every open
-  // field is a gap worth surfacing (a note never is); these are the ones a
-  // reviewer needs to see resolved.
+  // field is a gap worth surfacing (a note never is, and the end of the route
+  // this member does not decide never is); these are the ones a reviewer needs
+  // to see resolved.
   const missing = (["quantity", "origin", "destination", "incoterm", "payment", "validity", "role"] as const)
+    .filter((f) => (f === "origin" || f === "destination" ? asksFor(draft.intent, f) : true))
     .filter((f) => !isFilled(draft, f));
 
   // Evidence is authority to act, deferred to review (never uploaded pre-account).
@@ -133,7 +171,7 @@ export function blockers(draft: StructureDraft): Blocker[] {
   const out: Blocker[] = [];
   if (!has(draft.quantity)) out.push({ key: "quantity", resolve: "complete" });
   if (!has(draft.incoterm)) out.push({ key: "incoterm", resolve: "complete" });
-  if (!has(draft.validityDays)) out.push({ key: "validity", resolve: "complete" });
+  if (!has(draft.validity)) out.push({ key: "validity", resolve: "complete" });
   if (!has(draft.role)) out.push({ key: "role", resolve: "complete" });
   // Publication always needs a current member-business verification.
   out.push({ key: "businessVerification", resolve: "verify" });
@@ -163,14 +201,20 @@ export function synthesiseDetails(draft: StructureDraft): string {
       (draft.frequency ? ` (${draft.frequency})` : "") + ".";
     parts.push(q);
   }
-  if (has(draft.origin) || has(draft.destination)) {
-    const from = draft.origin ?? "unspecified origin";
-    const to = draft.destination ?? "unspecified destination";
-    parts.push(`Route: ${from} to ${to}.`);
+  // One end of the route is often the only end this member decides, so a
+  // half-stated route is written as the half it is rather than padded with an
+  // "unspecified" the reader could mistake for a fact.
+  if (has(draft.origin) && has(draft.destination)) {
+    parts.push(`Route: ${draft.origin} to ${draft.destination}.`);
+  } else if (has(draft.origin)) {
+    parts.push(`Ships from: ${draft.origin}.`);
+  } else if (has(draft.destination)) {
+    parts.push(`Delivered to: ${draft.destination}.`);
   }
   if (has(draft.incoterm)) parts.push(`Incoterm: ${draft.incoterm}.`);
   if (has(draft.payment)) parts.push(`Payment terms: ${draft.payment}.`);
-  if (has(draft.validityDays)) parts.push(`Valid for ${draft.validityDays} days.`);
+  if (draft.validity === "standing") parts.push("Open until withdrawn.");
+  else if (has(draft.validity)) parts.push(`Valid for ${draft.validity} days.`);
   if (has(draft.role)) parts.push(`Stated role: ${draft.role}.`);
   if (has(draft.note)) parts.push(draft.note!.trim());
 
@@ -189,10 +233,14 @@ export function toSubmitPayload(
   draft: StructureDraft,
   opts: { draft: boolean; nowIso: string },
 ): Record<string, unknown> {
+  // "standing" is a declared horizon with no end date, which is exactly what
+  // the listings table means by validity_type 'standing' (and it requires
+  // valid_until to be null). A day count derives a date; nothing declares
+  // neither.
+  const standing = draft.validity === "standing";
+  const days = typeof draft.validity === "number" ? draft.validity : 0;
   const validUntil =
-    draft.validityDays && draft.validityDays > 0
-      ? new Date(Date.parse(opts.nowIso) + draft.validityDays * DAY_MS).toISOString().slice(0, 10)
-      : null;
+    days > 0 ? new Date(Date.parse(opts.nowIso) + days * DAY_MS).toISOString().slice(0, 10) : null;
 
   return {
     type: draft.intent,
@@ -206,8 +254,8 @@ export function toSubmitPayload(
     incoterm: draft.incoterm,
     payment_terms: draft.payment,
     submitter_role: draft.role,
-    validity_type: validUntil ? "dated" : null,
-    valid_until: validUntil,
+    validity_type: standing ? "standing" : validUntil ? "dated" : null,
+    valid_until: standing ? null : validUntil,
     key_notes: draft.note,
     details: synthesiseDetails(draft),
     draft: opts.draft,

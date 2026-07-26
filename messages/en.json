@@ -602,8 +602,6 @@
     "gateway": {
       "regionLabel": "Choose where to begin",
       "centerEyebrow": "Two ways to begin",
-      "centerTitle": "See the market.",
-      "centerTitleEm": "Or start a deal.",
       "centerHint": "One click opens the route"
     },
     "routes": {
@@ -624,15 +622,13 @@
       "hint": "Try a product, a route, a service or a company name.",
       "reading": "Reading what you typed...",
       "clarify": "Ponte kept your words. Open the market universe, or try naming a product, a route or a company.",
-      "emptyAnnounce": "Type a product, market, company or service, or choose a route on the bridge."
+      "emptyAnnounce": "Type a product, market, company or service, or choose a route on the flow."
     },
     "popular": {
       "title": "Where the activity is",
       "records": "{count} market records"
     },
-    "trustTitle": "What Ponte shows you",
-    "trustBody": "<b>Every record says what it is.</b> A Market Signal is an indication Ponte has seen in the open market and has not confirmed. A Member Requirement or Member Offer was posted by a member and reviewed before publication. Ponte does not present one as the other, and does not claim a counterparty is safe.",
-    "trust": "<b>Start freely.</b> Join only when an action needs to be saved or sent.",
+    "trustLink": "<b>Every record says what it is</b>, and starting costs nothing: join only when an action needs to be saved or sent. <a>How Ponte reads and labels a record</a>.",
     "ai": {
       "disclosure": "Ponte uses AI to understand what you type."
     }
@@ -900,6 +896,10 @@
       "close": "Close",
       "businessLabel": "Your business",
       "businessPlaceholder": "Registered company name",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "Include the country code",
+      "languageLabel": "Language for the call",
+      "phoneNote": "The desk works these by asking questions back, so it needs a number it can call you on. Your number is never shown to any other member, and never to whoever is behind this signal.",
       "typeLabel": "You are a",
       "typeSelect": "Select",
       "requesterType": {
@@ -922,6 +922,45 @@
       "sending": "Sending...",
       "error": "Failed, try again.",
       "received": "Request received"
+    },
+    "capability": {
+      "title": {
+        "supplier": "Tell Ponte what you can supply",
+        "buyer": "Tell Ponte what you would buy"
+      },
+      "intro": {
+        "supplier": "You are answering this signal, so Ponte asks what you can supply rather than what you want established. Your reply goes to the Ponte desk; no third party is contacted or revealed automatically.",
+        "buyer": "You are answering this signal, so Ponte asks what you would buy rather than what you want established. Your reply goes to the Ponte desk; no third party is contacted or revealed automatically."
+      },
+      "roleStated": "Ponte will record you as: {role}.",
+      "capabilityLabel": {
+        "supplier": "What you can supply",
+        "buyer": "What you would buy"
+      },
+      "capabilityPlaceholder": {
+        "supplier": "Product, grade or specification, and how it is packed and shipped",
+        "buyer": "Product, grade or specification, and the terms you would buy on"
+      },
+      "volumeLabel": {
+        "supplier": "Volume, frequency and earliest shipment",
+        "buyer": "Volume, frequency and when you would take it"
+      },
+      "volumePlaceholder": {
+        "supplier": "e.g. 3 x 40ft per month from March",
+        "buyer": "e.g. 2 x 40ft per month from March"
+      },
+      "geographyLabel": {
+        "supplier": "Where you ship from",
+        "buyer": "Where you would take delivery"
+      },
+      "geographyPlaceholder": {
+        "supplier": "Port, country or the corridor you serve",
+        "buyer": "Port, country or the corridor you buy into"
+      },
+      "evidenceLabel": "Certifications or evidence you can provide",
+      "introCheckbox": "I would like a qualified introduction if Ponte confirms this signal.",
+      "submit": "Send this to the desk",
+      "received": "Sent to the desk"
     }
   },
   "marketplace": {
@@ -1253,15 +1292,18 @@
       "skip": "Skip",
       "next": "Next",
       "done": "Done",
-      "days": "{n} days"
+      "days": "{n} days",
+      "editEyebrow": "Change one detail",
+      "save": "Save",
+      "standing": "Open until I withdraw it"
     },
     "ask": {
       "quantity": "How much, and how often?",
       "origin": "Where does it ship from?",
-      "destination": "Where does it go?",
+      "destination": "Where does it need to go?",
       "incoterm": "On what incoterm?",
       "payment": "What payment terms?",
-      "validity": "How long is this valid?",
+      "validity": "How long does this stay open?",
       "role": "What is your role?",
       "note": "Anything a reviewer should know?",
       "notePlaceholder": "Optional note for the reviewer"
@@ -1277,7 +1319,11 @@
       "reviewerNote": "What a Ponte reviewer assesses. Dated evidence, never a score.",
       "reviewerOnly": "Shown to Ponte reviewer only",
       "withheld": "Withheld until introduction",
-      "cta": "Continue to submit"
+      "cta": "Continue to submit",
+      "edit": "Edit",
+      "add": "Add",
+      "shipsFrom": "Ships from {place}",
+      "deliveredTo": "Delivered to {place}"
     },
     "reviewer": {
       "facts": "Material facts complete",
@@ -1296,7 +1342,8 @@
       "sub": "{n} things must be resolved before Ponte can publish. You can save a draft now and finish later.",
       "resolve": "Resolve",
       "submit": "Submit for Ponte review",
-      "saveDraft": "Save draft"
+      "saveDraft": "Save draft",
+      "verifyNow": "Verify my business"
     },
     "blocker": {
       "quantity": "Quantity not set",

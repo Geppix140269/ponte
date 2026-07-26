@@ -36,6 +36,7 @@ import {
   isRequesterType,
   REQUESTER_TYPES,
   REQUESTER_TYPE_LABELS,
+  CONTACT_LANGUAGES,
 } from "../investigation";
 import {
   ADMIN_SETTABLE_STATUSES,
@@ -131,6 +132,8 @@ test("interest: the role vocabulary and labels line up", () => {
 const FULL_INVESTIGATION = {
   requesting_business: "Harbor Trading SpA",
   requester_type: "supplier",
+  contact_phone: "+39 010 555 0101",
+  contact_language: "Italian",
   establish_goal: "Who is behind this and whether it is still current.",
   indicative: "3 x 40ft per month from March",
   geography: "Genoa",
@@ -146,8 +149,8 @@ test("investigation: a complete request passes and round-trips its fields", () =
   assert.equal(r.wants_intro, true);
 });
 
-test("investigation: business, requester type and the ask are mandatory", () => {
-  for (const drop of ["requesting_business", "requester_type", "establish_goal"]) {
+test("investigation: business, requester type, a phone number and the ask are mandatory", () => {
+  for (const drop of ["requesting_business", "requester_type", "contact_phone", "establish_goal"]) {
     const raw = { ...FULL_INVESTIGATION } as Record<string, unknown>;
     delete raw[drop];
     const r = cleanInvestigation(raw);
@@ -160,11 +163,32 @@ test("investigation: geography, indicative and evidence are optional", () => {
   const r = cleanInvestigation({
     requesting_business: "Harbor Trading SpA",
     requester_type: "buyer",
+    contact_phone: "+39 010 555 0101",
     establish_goal: "Whether a qualified introduction can be arranged.",
   });
   assert.equal(investigationIsComplete(r), true);
   assert.equal(r.indicative, "");
   assert.equal(r.geography, "");
+});
+
+test("investigation: the desk is given a number to call, in a language it can staff", () => {
+  const r = cleanInvestigation(FULL_INVESTIGATION);
+  assert.equal(r.contact_phone, "+39 010 555 0101");
+  assert.equal(r.contact_language, "Italian");
+  // A language off the closed list staffs nothing, so it is not stored as one.
+  assert.equal(cleanInvestigation({ ...FULL_INVESTIGATION, contact_language: "Klingon" }).contact_language, "");
+  assert.ok(CONTACT_LANGUAGES.includes("English"));
+});
+
+test("investigation: a capability declaration asks for a number too", () => {
+  const r = cleanInvestigation({
+    request_kind: "capability",
+    requesting_business: "Harbor Trading SpA",
+    requester_type: "supplier",
+    capability: "Yellow maize, 15% moisture, bagged.",
+  });
+  assert.equal(investigationIsComplete(r), false);
+  assert.ok(missingInvestigationFields(r).includes("contact_phone"));
 });
 
 test("investigation: an unknown requester type is rejected", () => {

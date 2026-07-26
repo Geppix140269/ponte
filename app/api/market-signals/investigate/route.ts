@@ -16,7 +16,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * "Ask Ponte to investigate" on a Market Signal (brief Block D, tests 6-10).
+ * The two member actions on a Market Signal (brief Block D, tests 6-10):
+ * "Ask Ponte to investigate", and declaring that you can supply or would buy.
+ * They are separate requests with separate substance (`request_kind`), and the
+ * uniqueness rule keeps one of each per member per signal.
  *
  * The request enters an admin investigation queue and does exactly two things
  * to the outside world: it records what the REQUESTER told us, and it notifies
@@ -75,9 +78,13 @@ export async function POST(req: NextRequest) {
   const { error: insertErr } = await supabase.from("signal_investigations").insert({
     signal_id: signalId,
     requester_id: user.id,
+    request_kind: request.request_kind,
     requesting_business: request.requesting_business,
     requester_type: request.requester_type,
-    establish_goal: request.establish_goal,
+    contact_phone: request.contact_phone,
+    contact_language: request.contact_language || null,
+    establish_goal: request.establish_goal || null,
+    capability: request.capability || null,
     indicative: request.indicative || null,
     geography: request.geography || null,
     evidence: request.evidence || null,
@@ -104,10 +111,16 @@ export async function POST(req: NextRequest) {
     country: request.geography || "-",
     product: lookup.signal.product,
     details: [
-      `Investigation requested on Market Signal ${signalId} (${lookup.signal.product}).`,
+      request.request_kind === "capability"
+        ? `Capability declared on Market Signal ${signalId} (${lookup.signal.product}).`
+        : `Investigation requested on Market Signal ${signalId} (${lookup.signal.product}).`,
       `Requesting business: ${request.requesting_business}`,
       `Requester is: ${REQUESTER_TYPE_LABELS[request.requester_type as RequesterType]}`,
-      `Wants Ponte to establish: ${request.establish_goal}`,
+      `Call them on: ${request.contact_phone}` +
+        (request.contact_language ? ` (speaks ${request.contact_language})` : ""),
+      request.request_kind === "capability"
+        ? `Can supply / would buy: ${request.capability}`
+        : `Wants Ponte to establish: ${request.establish_goal}`,
       request.indicative ? `Indicative quantity/timing/capability: ${request.indicative}` : "",
       request.geography ? `Geography: ${request.geography}` : "",
       request.evidence ? `Certifications/evidence they can provide: ${request.evidence}` : "",

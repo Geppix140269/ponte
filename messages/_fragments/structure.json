@@ -79,15 +79,18 @@
       "skip": "Skip",
       "next": "Next",
       "done": "Done",
-      "days": "{n} days"
+      "days": "{n} days",
+      "editEyebrow": "Change one detail",
+      "save": "Save",
+      "standing": "Open until I withdraw it"
     },
     "ask": {
       "quantity": "How much, and how often?",
       "origin": "Where does it ship from?",
-      "destination": "Where does it go?",
+      "destination": "Where does it need to go?",
       "incoterm": "On what incoterm?",
       "payment": "What payment terms?",
-      "validity": "How long is this valid?",
+      "validity": "How long does this stay open?",
       "role": "What is your role?",
       "note": "Anything a reviewer should know?",
       "notePlaceholder": "Optional note for the reviewer"
@@ -103,7 +106,11 @@
       "reviewerNote": "What a Ponte reviewer assesses. Dated evidence, never a score.",
       "reviewerOnly": "Shown to Ponte reviewer only",
       "withheld": "Withheld until introduction",
-      "cta": "Continue to submit"
+      "cta": "Continue to submit",
+      "edit": "Edit",
+      "add": "Add",
+      "shipsFrom": "Ships from {place}",
+      "deliveredTo": "Delivered to {place}"
     },
     "reviewer": {
       "facts": "Material facts complete",
@@ -122,7 +129,8 @@
       "sub": "{n} things must be resolved before Ponte can publish. You can save a draft now and finish later.",
       "resolve": "Resolve",
       "submit": "Submit for Ponte review",
-      "saveDraft": "Save draft"
+      "saveDraft": "Save draft",
+      "verifyNow": "Verify my business"
     },
     "blocker": {
       "quantity": "Quantity not set",

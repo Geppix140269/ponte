@@ -219,9 +219,12 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
         </ul>
       </section>
 
-      {/* Both actions open the same structured investigation request behind the
-          account gate. Neither reveals or contacts the third party, and the
-          copy below says so, so nobody reads a click as an introduction. */}
+      {/* Two different acts, and two different questionnaires. Asking the desk
+          to establish something is not the same as saying you can supply it, so
+          the second button asks what you can supply rather than what you want
+          established. Both sit behind the account gate, and neither reveals or
+          contacts the third party, which the copy below says, so nobody reads a
+          click as an introduction. */}
       <section className="exsec" aria-label={t("detail.actionsHeading")}>
         <div className="exsec__h">
           <h2 className="exsec__t">{t("detail.actionsHeading")}</h2>
@@ -245,6 +248,7 @@ async function Detail({ signal, locale }: { signal: MarketSignal; locale: string
             signalId={signal.id}
             label={signal.side === "requirement" ? t("cta.secondarySupply") : t("cta.secondaryBuy")}
             variant="secondary"
+            kind="capability"
             initialType={signal.side === "requirement" ? "supplier" : "buyer"}
           />
         </div>
