@@ -28,6 +28,10 @@ type TaxonomyIcon = Exclude<FlowIconKey, FlowLabelledKey>;
  *       constants, so Explore, search and the composer cannot each keep their
  *       own list.
  *
+ * ADR-0001 extends that rule: family, record origin and commercial intent are
+ * independent canonical dimensions. Every market record belongs to exactly one
+ * family, has exactly one origin, and carries an intent valid for that family.
+ *
  * Every entry carries what F3 requires: stable key, display label, coverage,
  * parent family, sort order and its Flow icon reference. The reduced icon is
  * not restated: the registry already pairs it with the standard asset, and
@@ -38,6 +42,80 @@ type TaxonomyIcon = Exclude<FlowIconKey, FlowLabelledKey>;
  */
 
 export type MarketFamily = "products" | "services" | "distribution";
+
+export type MarketRecordOrigin = "market_signal" | "member_opportunity";
+
+export const MARKET_RECORD_ORIGINS: readonly {
+  key: MarketRecordOrigin;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: "market_signal",
+    label: "Market Signal",
+    description: "Commercial intent observed from a legitimate external source.",
+  },
+  {
+    key: "member_opportunity",
+    label: "Member Opportunity",
+    description: "Commercial intent created directly by a Ponte Trade member or member business.",
+  },
+];
+
+export type MarketSide = "demand" | "supply";
+
+export type MarketIntent =
+  | "source_product"
+  | "offer_product"
+  | "seek_trade_service"
+  | "offer_trade_service"
+  | "seek_distribution_partner"
+  | "offer_distribution_or_representation"
+  | "seek_brands_or_products_to_represent";
+
+export interface MarketIntentDefinition {
+  key: MarketIntent;
+  label: string;
+  family: MarketFamily;
+  side: MarketSide;
+  sort: number;
+}
+
+export const MARKET_INTENTS: readonly MarketIntentDefinition[] = [
+  { key: "source_product", label: "Source a product", family: "products", side: "demand", sort: 1 },
+  { key: "offer_product", label: "Offer a product", family: "products", side: "supply", sort: 2 },
+  { key: "seek_trade_service", label: "Seek a trade service", family: "services", side: "demand", sort: 1 },
+  { key: "offer_trade_service", label: "Offer a trade service", family: "services", side: "supply", sort: 2 },
+  {
+    key: "seek_distribution_partner",
+    label: "Seek a distributor, agent or representative",
+    family: "distribution",
+    side: "demand",
+    sort: 1,
+  },
+  {
+    key: "offer_distribution_or_representation",
+    label: "Offer distribution or representation",
+    family: "distribution",
+    side: "supply",
+    sort: 2,
+  },
+  {
+    key: "seek_brands_or_products_to_represent",
+    label: "Seek products or brands to distribute or represent",
+    family: "distribution",
+    side: "demand",
+    sort: 3,
+  },
+];
+
+export function intentsForFamily(family: MarketFamily): readonly MarketIntentDefinition[] {
+  return MARKET_INTENTS.filter((intent) => intent.family === family);
+}
+
+export function isIntentForFamily(family: MarketFamily, intent: unknown): intent is MarketIntent {
+  return typeof intent === "string" && intentsForFamily(family).some((candidate) => candidate.key === intent);
+}
 
 export const MARKET_FAMILIES: readonly {
   key: MarketFamily;
