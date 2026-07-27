@@ -2,7 +2,38 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
-<<<<<<< HEAD
+## 27 July 2026 — Phase 2 shared foundation: implementation decisions
+
+**Context:** Slice 2 of the Constitution-led rebuild ExecPlan, branch `design/phase-2-foundation-tokens`. Foundation only. No route was redesigned, no Bridge primitive was built, and no legacy removal was begun.
+
+**Decisions recorded because the authorities did not settle them:**
+
+1. **The Desk keeps its token vocabulary; only the values were centralised.** 21 Desk custom properties now resolve through `var(--pf-*)`. The names are retained rather than replaced route by route, because the duplication that mattered was of values, not names. Recorded in `design-system/ponte-flow/documentation/compatibility-aliases.md`.
+
+2. **Nine local extensions are recorded rather than promoted.** Eight tints and hairlines plus one elevation shadow have no approved `--pf-` counterpart. Adding them to the token file is an owner decision under CODEOWNERS, so they are documented and fenced by a test instead of invented into the authority. Proposal to promote all nine is in the same file.
+
+3. **Two literal colours on the Desk's ink panels were deliberately not aliased.** They are the `[data-theme="dark"]` values of `--pf-focus` and `--pf-review`. Neither `var(--pf-*)` nor `.inverse` scoping works, because the rail paints light tokens as foreground on a hand-built dark ground. Recorded as gap DS-1 for the slice that owns those panels.
+
+4. **The progress floor is 20.** Constitution section 9 gives a band of 18 to 25; the delivered engine contract and the `--pf-progress-floor` token both give exactly 20. The narrower authority governs and the two agree.
+
+5. **Uniform progress weights are refused at runtime.** Section 9 requires irregular increments and names "20, 40, 60, 80". Equal weights are the only way to build an even ladder, so the validator rejects them rather than trusting review to notice.
+
+6. **Nothing completed returns `null`, not `0`.** "Ponte must never display 0%" is enforced by the type rather than by every caller remembering it.
+
+7. **The icon law is enforced as a ratchet.** `check-governance.mjs` records the 11 files importing lucide and the 16 containing authored SVG. The lists may shrink and may never grow, so a new violation fails a check while the existing legacy migrates on its own schedule.
+
+8. **The brand lockup renders through one shared component**, per the owner's ruling that it is an identity asset rather than an interface icon. It was found in four files, not the two the Phase 1 audit recorded, and had already drifted between copies. Every surface still renders exactly what it rendered before; which variant is canonical is gap DS-2.
+
+**Correction to the Phase 1 audit, third of three:** finding 0.3 was wrong. The Ponte Flow tokens, motion CSS and reduced-motion contract **are** imported into the application, and have been since commit `0bb84fa`. The audit grepped for three leaf filenames under `app/` and `components/`; the bundle file that imports them lives in `design-system/`. Verified at runtime. The real defect was the duplication the audit found itself at A.2. Recorded in `docs/codex/audits/constitution-rebuild/GAP-REGISTER.md` section 4.
+
+**Escalated, not decided:** `/marketplace` carries three functions that exist nowhere else — the owner-side decision on an inbound introduction, listing reconfirmation, and the account brief. The presumption that it is a legacy route to retire does not hold as things stand. Nothing was removed. See `docs/codex/audits/constitution-rebuild/MARKETPLACE-DEPENDENCY-FINDING.md`.
+
+**Not design-approved:** screenshot capture was unavailable in the implementing environment, so this slice carries no visual evidence. Constitution sections 17 and 21 make desktop and 390 x 844 review mandatory before design approval is complete. The repository checks pass; the design gate is open.
+
+**Incidental repair:** this file contained committed merge-conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>> origin/main`) introduced by commit `077ec5e` and present on `main`. Both sides held complete, distinct entries. The three marker lines were removed and **both sides kept**, which is what an append-only log requires; no entry was chosen over another and no content was changed.
+
+**Affected areas:** `components/desk/desk.css`, `components/ponte/` (new), `lib/ponte/` (new), `scripts/check-governance.mjs`, `app/[locale]/dev/foundation/` (new, development-only), `design-system/ponte-flow/documentation/compatibility-aliases.md` (new), `docs/codex/audits/constitution-rebuild/GAP-REGISTER.md` (new), `docs/codex/audits/constitution-rebuild/MARKETPLACE-DEPENDENCY-FINDING.md` (new), `docs/plans/active/constitution-led-interface-rebuild.md`, `docs/codex/CURRENT-STATE.md`.
+
 ## 27 July 2026 — Constitution-led rebuild of the complete interface (ADR-0010)
 
 **Decision:** Giuseppe Funaro authorises a Constitution-led redesign of the complete Ponte Trade interface. The Constitution now applies to every public, authenticated and administrative route, every shared interface component, every meaningful lifecycle state, and desktop, mobile, keyboard, screen-reader and reduced-motion behaviour.
@@ -18,7 +49,6 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Open, not decided here:** whether `/marketplace` is rebuilt or retired; whether the brand lockup rendered as inline SVG is an interface icon under section 7; whether `--gold-tint` is promoted into the Flow tokens.
 
 **Affected areas:** `docs/decisions/ADR-0010-constitution-led-interface-rebuild.md` (new), `docs/plans/active/constitution-led-interface-rebuild.md` (new), `docs/codex/audits/constitution-rebuild/PHASE-1-AUDIT.md` (new), `docs/codex/CURRENT-STATE.md`, `docs/codex/00-START-HERE.md`.
-=======
 ## 27 July 2026 — Starter Deal Room provides the first real product experience
 
 **Decision:** Ponte will provide a limited Starter Deal Room before ongoing paid use. The customer-facing language is Starter Deal Room or Starter Access rather than “Freemium Plan”. It is available at organisation level, requires no credit card, includes the real core progress loop and creates no founder, Ponte Desk or specialist obligation.
@@ -70,7 +100,6 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** Product definition is accepted; implementation is not started or authorised. No screen design, technical architecture, schema, migration, runtime code, production action, deployment, electronic-signature platform, trade-payment execution, escrow, trade-finance execution or autonomous negotiation is included. Issue #51 tracks the remaining product-definition outputs required before Design; issue #52 tracks the Deal Room commercial model required before monetisation implementation.
 
 **Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`, `docs/decisions/ADR-0008-deal-room-product-contract.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #50, #51 and #52.
->>>>>>> origin/main
 
 ## 27 July 2026 — Ponte Design Constitution and Bridge System are binding authorities
 

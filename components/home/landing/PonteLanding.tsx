@@ -10,6 +10,7 @@ import { bridgeNavigation, type BridgeRoute } from "@/lib/landing/bridge";
 import { track } from "@/lib/landing/analytics";
 import type { ActivityBandItem } from "@/lib/board/activity-view";
 import ActivityBand from "./ActivityBand";
+import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import PonteFlow, { type FlowCaption, type FlowRouteLabels } from "./PonteFlow";
 
 /**
@@ -195,24 +196,7 @@ export default function PonteLanding({
       </div>
 
       <header className="lhead">
-        <Link className="lockup" href="/" aria-label={t("header.homeAria")}>
-          <span className="lockup__chip">
-            <svg className="lockup__mark" viewBox="0 0 120 120" aria-hidden="true">
-              <path
-                d="M22 98 L22 60 C22 35 98 35 98 60 L98 98"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="11"
-                strokeLinejoin="miter"
-                strokeLinecap="square"
-              />
-              <line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" strokeWidth="5" />
-              <circle className="lockup__dot" cx="60" cy="41" r="10" />
-            </svg>
-          </span>
-          <span className="lockup__word">Ponte</span>
-          <span className="lockup__tld">.trade</span>
-        </Link>
+        <PonteLockup scope="landing" label={t("header.homeAria")} />
         <div className="lhead__actions">
           <Link className="lhead__link" href="/explore">
             {t("routes.explore.label")}

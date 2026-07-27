@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import PonteLockup from "@/components/ponte/brand/PonteLockup";
 
 /**
  * The Find journey's own light chrome: a cream sticky nav with the bridge
@@ -22,24 +23,7 @@ export default async function FindChrome({
   return (
     <>
       <header className="fnav">
-        <Link className="flockup" href="/" aria-label={t("nav.home")}>
-          <span className="flockup__chip">
-            <svg width="20" height="20" viewBox="0 0 120 120" aria-hidden="true">
-              <path
-                d="M22 98 L22 60 C22 35 98 35 98 60 L98 98"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="11"
-                strokeLinejoin="miter"
-                strokeLinecap="square"
-              />
-              <line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" strokeWidth="5" />
-              <circle className="flockup__dot" cx="60" cy="41" r="10" />
-            </svg>
-          </span>
-          <span className="flockup__word serif">Ponte</span>
-          <span className="flockup__tld">.trade</span>
-        </Link>
+        <PonteLockup scope="find" label={t("nav.home")} />
         <nav className="fnav__links">
           <Link
             className={`fnav__link${current === "opportunities" ? " is-current" : ""}`}
