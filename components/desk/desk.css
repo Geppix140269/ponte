@@ -748,6 +748,13 @@
   transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
 }
 .ponte-desk .dklogin .btn-primary:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+/* The rule above sets box-shadow:none to drop the obsidian glow, and it
+   outranks the shared :focus-visible ring (:where() carries no specificity).
+   Without this the submit button lost its keyboard focus indicator entirely. */
+.ponte-desk .dklogin .btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--raised), 0 0 0 4px var(--focus);
+}
 /* Text and accent utilities, re-pointed. Lime and cyan are obsidian accents
    with no place in this system; they become ink and slate. */
 .ponte-desk .dklogin .text-ink { color: var(--ink); }
