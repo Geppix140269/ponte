@@ -679,6 +679,69 @@
 .ponte-desk .gate p { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
 
 /* ======================================================================
+   8b. THE LIVE SIGNAL STRIP
+   Real records, restrained movement, and three ways out of it: hover,
+   keyboard focus, and reduced motion. It clips its own track, so the page
+   never gains a horizontal scrollbar at any width.
+   ====================================================================== */
+.ponte-desk .strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; gap: 0;
+  max-width: 100%; overflow: hidden;
+}
+.ponte-desk .strip__k {
+  flex: none; display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 16px; height: 46px;
+  border-right: 1px solid var(--rule); background: var(--sunken);
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+}
+.ponte-desk .strip__k .pf-icon { color: var(--review); }
+.ponte-desk .strip__w { flex: 1; min-width: 0; overflow: hidden; }
+.ponte-desk .strip__track {
+  display: flex; align-items: stretch; width: max-content;
+  animation: dk-strip 90s linear infinite;
+}
+.ponte-desk .strip__half { display: flex; align-items: stretch; }
+/* Both ways out of the movement. */
+.ponte-desk .strip:hover .strip__track,
+.ponte-desk .strip:focus-within .strip__track { animation-play-state: paused; }
+
+.ponte-desk .strip__i {
+  flex: none; display: inline-flex; align-items: baseline; gap: 10px;
+  padding: 0 18px; height: 46px; line-height: 46px;
+  border-right: 1px solid var(--rule); white-space: nowrap;
+}
+.ponte-desk .strip__i:hover { background: var(--sunken); }
+.ponte-desk .strip__c {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 600; color: var(--review);
+}
+.ponte-desk .strip__t { font-size: 13px; font-weight: 500; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; }
+.ponte-desk .strip__r { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); }
+
+@keyframes dk-strip {
+  from { transform: translateX(0); }
+  /* Exactly half the track, which is one full copy of the records. */
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 860px) {
+  .ponte-desk .strip__k { padding: 0 12px; height: 42px; }
+  .ponte-desk .strip__i { height: 42px; line-height: 42px; padding: 0 14px; }
+  .ponte-desk .strip__t { max-width: 34ch; }
+}
+
+/* Reduced motion is a different presentation, not a slower one: the track
+   stops being a marquee and becomes a list the member scrolls themselves. */
+@media (prefers-reduced-motion: reduce) {
+  .ponte-desk .strip__w { overflow-x: auto; }
+  .ponte-desk .strip__track { animation: none; transform: none; }
+  .ponte-desk .strip__half { display: none; }
+}
+
+/* ======================================================================
    9. LANDING, the Desk system
    ====================================================================== */
 .ponte-desk .hero { background: var(--surface); border-bottom: 1px solid var(--rule-strong); padding: 34px var(--dk-gut) 0; }

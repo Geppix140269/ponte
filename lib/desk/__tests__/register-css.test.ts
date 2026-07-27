@@ -143,6 +143,39 @@ test("reduced motion is honoured, and the rail pulse is what it turns off", () =
   );
 });
 
+test("the signal strip is escapable, optional, and cannot widen the page", () => {
+  // A marquee is hostile in three specific ways, and each has one rule.
+  assert.ok(
+    /\.strip:hover .strip__track[\s\S]{0,120}animation-play-state:\s*paused/.test(css),
+    "the strip does not pause on hover",
+  );
+  assert.ok(
+    /\.strip:focus-within .strip__track[\s\S]{0,120}animation-play-state:\s*paused/.test(css),
+    "the strip does not pause on keyboard focus, so tabbing is chased by the animation",
+  );
+
+  const reduced = css.slice(css.indexOf("prefers-reduced-motion"));
+  assert.ok(
+    /\.strip__track\s*\{[^}]*animation:\s*none/.test(reduced),
+    "reduced motion slows the strip instead of stopping it",
+  );
+  assert.ok(
+    /\.strip__half\s*\{[^}]*display:\s*none/.test(reduced),
+    "reduced motion leaves the duplicated half visible, so the list reads twice",
+  );
+  assert.ok(
+    /\.strip__w\s*\{[^}]*overflow-x:\s*auto/.test(reduced),
+    "reduced motion gives no way to reach the rest of the list",
+  );
+
+  // The track is deliberately wider than any viewport, so the strip must clip
+  // it. Without this the PAGE gains a horizontal scrollbar at every width.
+  assert.ok(
+    /\.strip__w\s*\{[^}]*overflow:\s*hidden/.test(css),
+    "the strip does not clip its own track",
+  );
+});
+
 test("focus is never removed, and the ink surfaces get their own ring", () => {
   assert.ok(/focus-visible/.test(css), "no focus-visible styling at all");
   assert.ok(

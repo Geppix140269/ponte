@@ -10,6 +10,7 @@ import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
 import AskPonte from "@/components/desk/AskPonte";
 import RecordCard from "@/components/desk/RecordCard";
+import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
@@ -51,8 +52,10 @@ import "@/components/desk/desk.css";
 
 export const dynamic = "force-dynamic";
 
-/** How many signals the entrance shows before handing over to the listing. */
+/** How many signals the entrance shows as records before the full board. */
 const LANDING_SIGNALS = 4;
+/** How many the live strip carries. Enough to move; all of them real. */
+const STRIP_SIGNALS = 14;
 
 export async function generateMetadata({ params }: { params: { locale: Locale } }) {
   return {
@@ -73,25 +76,26 @@ const FAMILY_SCOPE: Record<string, string> = {
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
-  const board = await readMarketSignals(LANDING_SIGNALS);
-  const records = board.state === "ok" ? board.signals.slice(0, LANDING_SIGNALS).map(toDeskRecord) : [];
+  const board = await readMarketSignals(STRIP_SIGNALS);
+  const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
+  const records = live.slice(0, LANDING_SIGNALS);
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       {/* rail is omitted, not empty: no journey has started. */}
       <DeskShell rail={null}>
+        {/* Directly below the navigation. Real records only: when the read
+            returns nothing the strip renders nothing rather than a placeholder. */}
+        <SignalStrip records={live} />
+
         <section className="hero">
           <div className="hero__top">
             <div>
-              <p className="kicker">Cross-border trade in physical goods</p>
-              <h1>
-                Who is buying, who is selling, and <em>what can actually be established.</em>
-              </h1>
+              <p className="kicker">Ponte Trade</p>
+              <h1>Global trade, from signal to deal.</h1>
               <p className="hero__p">
-                Ponte reads named public trade sources and publishes what they say. Separately,
-                buyers, manufacturers, distributors and trade-service providers submit
-                requirements and offers that Ponte reviews before publication. The two are never
-                mixed, and neither is ever presented as the other.
+                Find market signals, post opportunities, offer trade services and find
+                distribution partners.
               </p>
 
               {/* Every family is actionable. A family with no externally
@@ -130,7 +134,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </div>
             </div>
 
-            <AskPonte placeholder="I mill refined sugar in Santos and want to find buyers in South Asia" />
+            <AskPonte placeholder="I need a distributor in Spain for industrial coatings" />
           </div>
 
         </section>
