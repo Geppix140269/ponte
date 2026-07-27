@@ -4,12 +4,15 @@
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
+**Deal-to-Room hierarchy:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`  
 **Deal Room monetisation authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`  
+**Launch pricing proposal:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
 **Deal Room decision:** `docs/decisions/ADR-0003-deal-room-product-contract.md`  
 **Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`  
+**Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`  
 **Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
@@ -33,12 +36,14 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Source-of-truth operating procedure | On `main` via PR #41 | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
-| Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No Design, code, schema, migration, deployment or production action. Issues #50 and #51 track authority recording and remaining product definition. |
-| Deal Room monetisation policy | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | The upstream market creates liquidity; an active Deal Room is the primary paid commercial environment. Entitlement is required conceptually, but payer rules, prices, Stripe, billing, schema and runtime paywalls are not designed or implemented. Issue #52 tracks the commercial model. |
+| Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No Design, code, schema, migration, deployment or production action. |
+| Deal-to-Room and Sub-Room Model | Designed and owner-accepted on branch | Not started | Structured Deals may be published free. One paid master Deal Room corresponds to one Deal and may contain any number of private related sub-rooms. Five room slots mean five concurrent master Deals, not five conversations. |
+| Deal Room monetisation policy | Designed and owner-accepted on branch | Not started | The upstream market creates liquidity; an active master Deal Room is the primary paid commercial environment. Entitlement is required conceptually. |
+| Launch pricing and entitlement configuration | Designed on branch; proposed for owner approval | Not started | Proposed: €149/month or €1,490/year for five concurrent master Deal Rooms, unlimited related sub-rooms, 25 concurrent external guest organisations and five internal users; credits provide pay-as-you-go master-room and guest capacity. Numerical values are not yet accepted. |
 | Ponte Desk interface, slice 1 (landing, Market Signals listing, Market Signal detail) | Implemented on branch `claude/ponte-desk-interface-671b92` | Not deployed | Desk page system, journey rail, ruled fact register, Atlas ink boundary on signal detail. Desktop and 390px verified locally against production data. Stops before merge for owner visual review. |
 | Desk commercial-fact authority (`lib/desk/facts.ts`) | Implemented on branch | Not deployed | `factsFor(record, context)` is the single authority at every width. Contexts differ in count only. `lib/desk/adapter.ts` is the one production boundary; no component reads a signal column. |
 | Desk journey rail (`lib/desk/journey.ts`) | Implemented on branch | Not deployed | R-FIND and R-SUBMIT, four stations each. Journey stations only, never navigation. The landing has no rail. Review is not a station and does not move the rail. |
-| English-only interface policy `PT-PRODUCT-2026-07-26-02` | Approved authority on branch | Operating rule | Interface and Ponte-controlled content are English only; multilingual input stays supported and may be interpreted and translated. `next-intl` and `[locale]` are legacy compatibility infrastructure; their removal is a separate deliberate migration, not incidental cleanup. |
+| English-only interface policy `PT-PRODUCT-2026-07-26-02` | Approved authority on branch | Operating rule | Interface and Ponte-controlled content are English only; multilingual input stays supported and may be interpreted and translated. `next-intl` and `[locale]` are legacy compatibility infrastructure. |
 | Unified three-family market contract | Accepted and on `main` via PR #41 | Not implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
 | Issue #42 Phase A reconciliation | Complete on branch `issue-42/phase-a-audit`; PR #44 ready for owner review | Production-verified for market-record scope | Repository audit, compatibility matrix, SELECT-only production probe and final report are complete. No runtime or database change is included. |
 | Explore the market | On `main` | Production data defect verified | Public activity is real, but family and sector membership depend on incomplete legacy inference. |
@@ -54,17 +59,35 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 
 ## Deal Room product truth
 
-The owner accepted the Deal Room foundation and its commercial boundary on 27 July 2026.
+The owner accepted the Deal Room foundation, commercial boundary and master-room hierarchy on 27 July 2026.
 
-The accepted product lifecycle is:
+The accepted hierarchy is:
+
+```text
+Structured Deal — free to create and publish when eligible
+  -> paid master Deal Room — one entitlement for one Deal
+       -> private counterparty sub-room A
+       -> private counterparty sub-room B
+       -> private service-provider sub-room
+       -> private internal-approval sub-room
+       -> any further related sub-rooms
+```
+
+One active master Deal Room consumes one subscription slot or pay-as-you-go activation. Private related sub-rooms do not consume additional master-room slots. External guest organisations may consume included guest capacity or credits.
+
+A master room may be sponsored by the Deal owner, an eligible interested counterparty, Ponte where authorised, or an institution. The sponsor may invite participants as sponsored guests. Paying does not confer ownership of the posted Deal or another participant's decision authority.
+
+Sub-rooms are isolated permission boundaries. A counterparty cannot see another counterparty's identity, terms, documents, progress, blockers or outcome unless deliberately admitted to the same sub-room.
+
+The accepted product lifecycle remains:
 
 ```text
 Credible commercial interest
-  -> proposed room
+  -> proposed master Deal Room
   -> Deal Room-ready Business Passport
   -> versioned participation terms and NDA acceptance
   -> required commercial entitlement
-  -> required principal participants admitted
+  -> required principal participants admitted to the relevant sub-room
   -> procedure proposed and agreed
   -> conditions, evidence, decisions and blockers progressed
   -> Ready to proceed, qualified no-go or other intentional closure
@@ -76,20 +99,32 @@ The procedure is the central object. Progress is separated into named commercial
 The accepted commercial funnel is:
 
 ```text
-Create upstream liquidity
-  -> help users discover and structure commercial intent
+Create upstream liquidity through free structured Deals
   -> establish credible interest
-  -> propose a Deal Room
-  -> obtain a valid entitlement
-  -> activate and monetise transaction progression
+  -> open and fund a master Deal Room
+  -> create private sub-rooms for counterparties and providers
+  -> monetise controlled transaction progression
   -> offer optional agent, Ponte Desk, specialist and outcome-related layers
 ```
 
-A proposed room may be previewed before payment. A standard active Deal Room is not a permanently free product. Entitlement may be paid, included, sponsored, promotional or audibly waived. Payment does not grant visibility, disclosure or decision authority.
+A proposed master room may be previewed before final entitlement consumption. A standard active master Deal Room is not a permanently free product. Entitlement may be paid, included, sponsored, promotional or audibly waived. Payment does not grant visibility, disclosure or decision authority.
 
-The earlier broad MVP exclusion of “payments” applies to trade settlement, escrow, trade finance and payments between the commercial parties. A Deal Room entitlement gate is required product capability. Exact payer rules, packages, prices, billing sequence, Stripe integration, tax, refunds and entitlement lifecycle remain **Not started** under issue #52.
+The earlier broad MVP exclusion of “payments” applies to trade settlement, escrow, trade finance and payments between the commercial parties. A Deal Room entitlement gate is required product capability.
 
-This entire Deal Room capability is **Designed**, not implemented. No Deal Room screen, table, migration, signature flow, entitlement gate, billing path, permission engine, notification path or production behaviour is created by the accepted authorities. Issue #51 must complete the detailed journey, screen register, conceptual domain model, permission matrix, state machine, progress model and delivery plan before Design begins. Issue #52 must complete the commercial model before monetisation implementation.
+The proposed numerical launch configuration is:
+
+- €149 per month or €1,490 per year;
+- five concurrent active master Deal Rooms;
+- unlimited related private sub-rooms under each master room;
+- 25 concurrent external guest organisations;
+- five internal organisation members;
+- 60 credits for a 90-day pay-as-you-go master room including two external guest organisations;
+- five credits for an additional guest organisation;
+- 20 credits for a 30-day extension or temporary extra master-room slot.
+
+These numerical terms are **proposed, not owner-accepted**. No price, Stripe, billing, tax, schema or production charging is authorised.
+
+This entire Deal Room capability is **Designed**, not implemented. No Deal Room screen, sub-room, table, migration, signature flow, entitlement gate, billing path, permission engine, notification path or production behaviour is created by the accepted authorities.
 
 ## Production inventory truth
 
@@ -170,12 +205,12 @@ Duplicate checks and investigation-count reconciliation returned zero defects.
 
 ## Immediate next actions
 
-1. Review and merge the Deal Room authority PR only after confirming that it records the accepted product and commercial foundations accurately; merge does not authorise implementation or charging.
-2. Complete issue #51's remaining Deal Room product-definition outputs and stop for owner approval before Design.
-3. Complete issue #52's Deal Room commercial model and stop for owner approval before pricing, entitlement or Stripe implementation.
-4. Reconcile open PR #47 with ADR-0004: founder-capacity and paid Ponte Desk boundaries remain valid, but Deal Room is the wider primary monetisation environment.
-5. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
-6. After explicit owner direction, Phase B designs the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration.
-7. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
-8. A later pre-migration report and owner approval are required before any production schema or backfill change.
+1. Product owner approves or revises the proposed launch prices and allowances in `PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`.
+2. Review and merge the Deal Room authority PR only after confirming that it records the accepted product, commercial and master-room foundations accurately; merge does not authorise implementation or charging.
+3. Complete issue #51's remaining detailed Deal Room journey, screen register, domain model, permissions, state machine, progress model and delivery plan.
+4. Complete issue #52's legal, billing, tax, refund, Stripe and unit-economics implementation requirements after commercial approval.
+5. Reconcile open PR #47 with ADR-0004 and ADR-0005: founder-capacity and paid Ponte Desk boundaries remain valid, but Deal Room is the wider primary monetisation environment.
+6. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
+7. The verification-level type defect and approved-listing direct-read policy remain explicit security/integrity work.
+8. A pre-migration report and owner approval are required before any production schema or backfill change.
 9. Issue #42 remains open until all implementation phases are complete.
