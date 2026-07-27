@@ -850,7 +850,16 @@
   font-family: var(--f-serif); font-size: clamp(32px, 5vw, 58px); line-height: 1.02;
   letter-spacing: -0.026em; font-weight: 500; margin: 14px 0 16px; max-width: 20ch; text-wrap: balance;
 }
-.ponte-desk .hero h1 em { font-style: italic; font-weight: 400; }
+/* The authorised editorial emphasis.
+   --gold-ink is the AA-safe gold text token (#8a6520 on cream), not --gold,
+   which the Flow colour rules reserve for rules and caps rather than text.
+   Gold here is approved editorial emphasis under Constitution section 6; it
+   carries no status, and it appears once in the heading. */
+.ponte-desk .hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold-ink);
+}
 .ponte-desk .hero__p { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); max-width: 62ch; }
 
 .ponte-desk .ask {

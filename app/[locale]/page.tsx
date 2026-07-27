@@ -91,7 +91,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
           <div className="hero__top">
             <div>
               <p className="kicker">Ponte Trade</p>
-              <h1>Global trade, from signal to deal.</h1>
+              {/* Constitution v1 section 5 and bridge/v1/APPROVAL.md both name this
+                  exact structure. The emphasis is one deliberate differentiated
+                  phrase, in approved serif italic and the AA-safe gold text
+                  token, and it is the only emphasis in the heading. */}
+              <h1>
+                Global trade, from <em>signal to deal.</em>
+              </h1>
               <p className="hero__p">
                 Find market signals, post opportunities, offer trade services and find
                 distribution partners.
