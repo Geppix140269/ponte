@@ -2,6 +2,20 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 27 July 2026 — Free Deals lead to paid master Deal Rooms with private sub-rooms
+
+**Decision:** A complete structured Deal may be created, reviewed and published without a Deal Room fee. When a participant decides to progress that Deal, the participant opens and sponsors one paid master Deal Room linked to the Deal. The master room is the entitlement unit and may contain any number of private related sub-rooms for counterparties, providers, advisers and internal workstreams.
+
+**Commercial counting:** One active master Deal Room consumes one subscription slot or pay-as-you-go activation. Private sub-rooms do not consume additional master-room slots. Five subscription slots therefore mean five concurrent master Deals, not five counterparty conversations. Admitted external guest organisations may consume the included guest allowance or credits.
+
+**Privacy:** Counterparty and provider sub-rooms are isolated permission boundaries. A participant cannot see another sub-room's existence, participants, terms, evidence, progress, blockers or outcome unless deliberately admitted. The authorised master-room sponsor and internal team may see the private sub-room portfolio.
+
+**Sponsorship:** The Deal owner, an eligible interested counterparty, Ponte where authorised, or an institution may sponsor the master room. An interested participant may open a room around another member's posted Deal and invite the Deal owner as a sponsored guest. Payment does not transfer ownership of the Deal or another participant's decision authority.
+
+**Launch pricing status:** The branch proposes, but the owner has not yet accepted, a €149 monthly/€1,490 annual subscription including five concurrent master Deal Rooms, unlimited related sub-rooms, 25 concurrent external guest organisations and five internal users. The credit proposal is 60 credits for a 90-day master room including two external guest organisations, 5 credits per additional guest organisation and 20 credits for a 30-day extension or temporary extra master-room slot.
+
+**Affected areas:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`, `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #51 and #52 and PR #53.
+
 ## 27 July 2026 — The Deal Room is Ponte's primary monetisation boundary
 
 **Decision:** Ponte creates upstream liquidity through Market Signals, Member Opportunities, trade-service activity, distribution and representation activity, structured commercial intent and controlled qualification. When credible commercial interest moves to structured transaction progression, the parties enter a Deal Room. The Deal Room is the paid commercial environment and Ponte's primary monetisation boundary.
