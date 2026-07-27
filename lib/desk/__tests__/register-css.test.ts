@@ -176,6 +176,33 @@ test("the signal strip is escapable, optional, and cannot widen the page", () =>
   );
 });
 
+test("no Desk grid draws its hairlines by showing a container through 1px gaps", () => {
+  // This defect has now appeared three times: the detail fact grid, the
+  // landing family panels, and the landing sector grid. The mechanism is
+  // always the same. A grid sets `gap: 1px` over `background: var(--rule)`,
+  // so the rules between cells are the container peeking through. It works
+  // only while every track is filled; the moment a row is part-filled, the
+  // container shows across the remainder and reads as a broken or
+  // still-loading tile.
+  //
+  // The fix is always the same too: put the rules on the cells and give the
+  // container the same paper. This asserts the pattern is gone rather than
+  // fixed case by case.
+  const grids: string[] = [];
+  const re = /\.ponte-desk\s+\.[\w-]+\s*\{[^}]*\}/g;
+  let hit: RegExpExecArray | null;
+  while ((hit = re.exec(css)) !== null) grids.push(hit[0]);
+
+  for (const rule of grids) {
+    if (!/display:\s*grid/.test(rule)) continue;
+    if (!/gap:\s*1px/.test(rule)) continue;
+    assert.ok(
+      !/background:\s*var\(--rule\)/.test(rule),
+      `a Desk grid still shows --rule through its gaps, which breaks on a part-filled row:\n${rule.slice(0, 140)}`,
+    );
+  }
+});
+
 test("the Google button is proved by a rendered iframe, never by its container", () => {
   // The fault this guards against was in the VERIFICATION, not the product:
   // checking that the container div exists says nothing, because Google

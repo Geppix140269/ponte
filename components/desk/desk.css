@@ -929,16 +929,23 @@
 .ponte-desk .fam__go--1:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 .ponte-desk .fam__go--1:hover span { color: rgba(15, 15, 14, 0.7); }
 
+/* Same rule as the fact grid: the hairlines are drawn ON the tiles, not by
+   letting a darker container show through 1px gaps. Fifteen sectors across
+   six columns leaves three empty tracks in the last row, and with a
+   contrasting container those read as three phantom tiles. */
 .ponte-desk .sectors {
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
-  background: var(--rule); border: 1px solid var(--rule);
-  border-radius: var(--dk-radius); overflow: hidden;
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden; align-items: start;
 }
 /* The sector grid is the taxonomy, not a filter. The board cannot be narrowed
    by sector yet (every public signal carries a null HS code), so these are not
    links: fifteen tiles that all opened the same unfiltered board would be a
    filter that does not filter. */
-.ponte-desk .sectors > * { background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ponte-desk .sectors > * {
+  background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
 .ponte-desk .sectors b { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
 .ponte-desk .sectors span { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
 
