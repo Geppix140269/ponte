@@ -2,40 +2,32 @@
 
 **Status date:** 27 July 2026  
 **Repository:** `Geppix140269/ponte`  
-**Canonical branch:** `main`  
-**Canonical commit before this governance proposal:** `6c18af51b907b57d1a063ad51cfdb451e112ad03`
+**Canonical branch:** `main`
 
 ## Product definition
 
 Ponte Trade is a commercial intelligence and controlled-execution layer for cross-border trade.
 
-It helps a business state an objective, structure commercial facts, inspect distinct evidence classes, understand what matters, prepare the next action and proceed through controlled approval and disclosure.
-
 Canonical brand line:
 
 > Cross-border trade, with greater clarity.
 
-Operating spine:
+Ponte's market is organised around Products, Trade services, and Distribution and representation. Market Signals and structured member-created Deals create upstream liquidity.
 
-> Business identity → Commercial Mission → Observed evidence → Company-specific interpretation → Recommended action → Human approval where required → Execution → Recorded outcome → Better mission memory
+After credible commercial interest, the Deal Room provides the downstream PROGRESS layer: formal admission, an agreed procedure, structured evidence and decisions, blockers, next actions and durable history.
 
-Ponte Trade's market is organised around three equal primary families — Products, Trade services, and Distribution and representation — with externally observed Market Signals and member-created Member Opportunities available in each. See ADR-0001 and the canonical taxonomy.
-
-After credible commercial interest, the accepted Deal Room foundation provides the downstream PROGRESS layer: formal participant admission, an agreed procedure, structured evidence and decisions, blockers, next actions and durable history. This is designed product authority, not implemented behaviour. See ADR-0003 and the Deal Room Product Contract v1.
-
-The current commercial architecture is equally explicit: the upstream market creates liquidity, while the active master Deal Room is Ponte's primary paid commercial environment. A commercial-entitlement gate is required conceptually for active room progression. See ADR-0004 and the Deal Room Monetisation Policy.
-
-The accepted hierarchy is:
+The commercial model is:
 
 ```text
-Free structured Deal
-  -> paid master Deal Room for that Deal
-       -> any number of private related sub-rooms
+Free Market Access and structured Deals
+  -> one limited Starter Deal Room experience per verified organisation
+  -> ongoing paid Portfolio subscription or Ponte Credits
+  -> optional paid agent, Ponte Desk and specialist services
 ```
 
-One master Deal Room consumes one paid room entitlement or subscription slot. Private counterparty, provider and internal sub-rooms beneath it do not consume additional master-room slots. Five subscription room slots mean five concurrent master Deals, not five conversations. External guest organisations may consume included guest capacity or credits. See ADR-0005 and the Deal-to-Room and Sub-Room Model.
+One master Deal Room corresponds to one Deal and may contain private counterparty, provider, adviser and internal sub-rooms. Paid sub-room creation does not consume another master-room slot.
 
-The day-one launch pricing document currently proposes a €149 monthly portfolio subscription with five concurrent master Deal Rooms, unlimited related sub-rooms, 25 concurrent external guest organisations and five internal users, plus a credit alternative. Those numerical values are **proposed, not accepted**, until the owner approves the pricing authority. No charging, billing, Stripe, schema or runtime implementation is authorised by the proposal.
+These Deal Room foundations are designed product authority, not implemented behaviour.
 
 ## Operating procedure
 
@@ -48,56 +40,51 @@ Conversations are workshops. The merged repository is the operating memory.
 When documents conflict, use this order:
 
 0. A later owner-accepted ADR in `docs/decisions/` that explicitly supersedes a named earlier decision within its scope. An ADR is not implementation status.
-1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience.
-1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-Only Interface and Multilingual Input Policy.
-1b. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` — accepted downstream Deal Room PROGRESS authority.
-1c. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — accepted commercial authority for master Deal Room monetisation.
-1d. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` — accepted free Deal, paid master-room and private sub-room hierarchy.
-1e. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` — proposed numerical launch pricing and allowances; not binding until owner approval.
-2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — governing downstream implementation authority where later accepted authorities do not restate the matter.
-3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence.
-4. Supporting long-form authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`.
+1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — current entry authority.
+1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-only interface with multilingual input.
+1b. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` — downstream Deal Room product authority.
+1c. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — Deal Room monetisation authority, including the Starter-access exception.
+1d. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` — master-room and private sub-room hierarchy.
+1e. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md` — accepted Starter principle and proposed limits.
+1f. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` — proposed consolidated launch model; not binding until owner approval.
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — governing downstream implementation authority where later accepted authorities do not restate the decision.
+3. Verified live technical and legal constraints.
+4. Supporting long-form source authorities in `docs/codex/AUTHORITY-MANIFEST.md`.
 5. Existing engineering, lifecycle, security and production authorities.
-6. Machine-readable contracts in `lib/taxonomy/` and `docs/schemas/` where they implement accepted authority.
-7. This reconciled Codex layer for current implementation, deployment, decision and roadmap status.
+6. Machine-readable and code-level contracts implementing accepted authority.
+7. Reconciled Codex current-state and roadmap records.
 
-The source-of-truth SOP governs the process, not product meaning. It tells contributors how to record, change and implement authority.
+The SOP governs process, not product meaning.
 
 ## Current implementation headline
 
-`main` already contains substantial founding-launch, entry, Explore, Find, Structure, verification and market-activity work. Exact implementation and production status lives only in `CURRENT-STATE.md`.
+`main` contains substantial entry, Explore, Find, Structure, verification and market-activity work. Exact status must be checked in `CURRENT-STATE.md`.
 
-The Deal Room product, monetisation and master-room hierarchy are accepted on the dedicated decision branch but are not implemented. The numerical launch pricing configuration remains proposed. No room, sub-room, entitlement, billing or production capability may be claimed until `CURRENT-STATE.md` records evidence.
+The Deal Room, master-room hierarchy, Starter access, entitlement, billing and production charging are not implemented.
 
 ## Read next
 
 0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
-1. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`
-2. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`
-3. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`
-4. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`
-5. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
-6. `SOURCE-OF-TRUTH-SOP.md`
-7. `../decisions/README.md` and relevant accepted ADRs
-8. `CURRENT-STATE.md`
-9. `FEATURE-FLAGS.md`
-10. `DATABASE-STATE.md`
-11. `KNOWN-ISSUES.md`
-12. `DECISION-LOG.md`
-13. `DO-NOT-REOPEN.md`
-14. `MASTER-ROADMAP.md`
-15. `ACTIVE-MILESTONE.md`
-16. `.agent/PLANS.md`
+1. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` for transaction progression
+2. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` for master rooms and sub-rooms
+3. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` for commercial boundaries
+4. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md` for Starter access
+5. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` for proposed launch limits and pricing
+6. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+7. `SOURCE-OF-TRUTH-SOP.md`
+8. `../decisions/README.md`
+9. `CURRENT-STATE.md`
+10. `FEATURE-FLAGS.md`
+11. `DATABASE-STATE.md`
+12. `KNOWN-ISSUES.md`
+13. `DECISION-LOG.md`
+14. `DO-NOT-REOPEN.md`
+15. `MASTER-ROADMAP.md`
+16. `ACTIVE-MILESTONE.md`
+17. `.agent/PLANS.md`
 
 ## Completion discipline
 
-A feature is only **production-verified** when all of the following are recorded:
+A feature is only production-verified when code, database state, feature flags, deployment, user journey and known limitations are all recorded.
 
-- code is on `main`;
-- required database changes are confirmed;
-- the production feature flag is confirmed;
-- the deployed route is checked directly;
-- the expected user journey is exercised;
-- failures and limitations are written down.
-
-A decision is only **binding** when the owner has accepted it, its affected canonical records are updated, and it is merged to `main`.
+A decision is only binding when the owner has accepted it, affected canonical records are updated, and it is merged to `main`.
