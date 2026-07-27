@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight, Building2, Search, ShieldCheck } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { getBalance, COST_VERIFICATION_L2 } from "@/lib/credits";
 import { VERIFICATION_DISCLAIMER } from "@/lib/verification/pipeline";
+import PonteShell from "@/components/shell/PonteShell";
 import VerifyForm, { type VerifyPurpose } from "@/components/VerifyForm";
+import "@/components/verify/verify.css";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,13 @@ export async function generateMetadata({
  *
  * `?for=business` and `?for=counterparty` select the two paths. The English
  * chrome here is Block B's; Block E folds it into the message fragments.
+ *
+ * This route used to render the legacy obsidian application. A member who
+ * reached the last blocker on a deal, business verification, left the cream
+ * editorial product mid-task and landed in the old black-and-lime one: same
+ * session, same job, different product. It now mounts the shared PonteShell
+ * like every other public route. Nothing about what a verification means,
+ * costs or claims changed with the paint.
  */
 
 const MODE: Record<
@@ -55,6 +63,22 @@ const MODE: Record<
       "Run a private check on another company against company registers, VIES, GLEIF and the published sanctions lists. This does not verify your own business or change your account.",
   },
 };
+
+/** The two services, as the choice screen states them. */
+const CHOICES: { purpose: VerifyPurpose; href: string; num: string; body: string }[] = [
+  {
+    purpose: "member_business",
+    href: "/verify?for=business",
+    num: "01",
+    body: "Verify the business you represent. Sets your Business checked status.",
+  },
+  {
+    purpose: "counterparty_check",
+    href: "/verify?for=counterparty",
+    num: "02",
+    body: "A private check on another company. Does not change your account.",
+  },
+];
 
 function modeFor(param: string | undefined): VerifyPurpose | null {
   if (param === "business") return "member_business";
@@ -88,120 +112,67 @@ export default async function VerifyPage({
   const intro = mode ? MODE[mode].intro : t("request.intro");
 
   return (
-    <>
-      <section className="container-px pt-16 pb-8">
-        <span className="pill">{t("request.pill")}</span>
-        <h1
-          className="serif text-white mt-6 mb-4 max-w-2xl"
-          style={{
-            fontWeight: 400,
-            fontSize: "clamp(36px, 5vw, 60px)",
-            lineHeight: 1.04,
-            letterSpacing: "-0.015em",
-          }}
-        >
-          {heading}
-        </h1>
-        <p className="max-w-2xl text-[15.5px] leading-relaxed text-gray-2">
-          {intro}
-        </p>
+    <PonteShell locale={params.locale}>
+      <div className="vwrap">
+        <div className="fphead__eb">
+          <span className="fphead__rule" aria-hidden="true" />
+          <span className="eyebrow">{t("request.pill")}</span>
+        </div>
+        <h1 className="fphead__h serif">{heading}</h1>
+        <p className="fphead__def">{intro}</p>
+
         {mode ? (
-          <Link
-            href="/verify"
-            className="mt-4 inline-flex items-center gap-2 text-[12px] uppercase text-gold hover:text-cream"
-            style={{ letterSpacing: "0.16em" }}
-          >
-            Both verification types <ArrowRight className="h-3.5 w-3.5" />
+          <Link className="vback" href="/verify">
+            Both verification types
           </Link>
         ) : (
-          <Link
-            href="/verification"
-            className="mt-4 inline-flex items-center gap-2 text-[12px] uppercase text-gold hover:text-cream"
-            style={{ letterSpacing: "0.16em" }}
-          >
-            {t("request.explainerLink")} <ArrowRight className="h-3.5 w-3.5" />
+          <Link className="vback" href="/verification">
+            {t("request.explainerLink")}
           </Link>
         )}
-      </section>
 
-      <section className="container-px pb-16">
-        <div className="max-w-2xl">
+        <div className="vbody">
           {!mode ? (
-            // The deliberate choice. Two distinct services, not a preselected one.
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Link
-                href="/verify?for=business"
-                className="glass flex flex-col p-7 transition-colors hover:border-gold/40"
-              >
-                <Building2 className="h-6 w-6 text-gold" />
-                <h2 className="serif text-white mt-4" style={{ fontSize: 20, fontWeight: 500 }}>
-                  Verify my business
-                </h2>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-gray-2">
-                  Verify the business you represent. Sets your Business checked status.
-                </p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] uppercase text-gold" style={{ letterSpacing: "0.16em" }}>
-                  Start <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </Link>
-              <Link
-                href="/verify?for=counterparty"
-                className="glass flex flex-col p-7 transition-colors hover:border-gold/40"
-              >
-                <Search className="h-6 w-6 text-gold" />
-                <h2 className="serif text-white mt-4" style={{ fontSize: 20, fontWeight: 500 }}>
-                  Check a counterparty
-                </h2>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-gray-2">
-                  A private check on another company. Does not change your account.
-                </p>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] uppercase text-gold" style={{ letterSpacing: "0.16em" }}>
-                  Start <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </Link>
-            </div>
+            // The deliberate choice. Two distinct services, not a preselected
+            // one, and unboxed in the manner of the rest of the journey.
+            <ul className="vchoices">
+              {CHOICES.map((c) => (
+                <li key={c.purpose}>
+                  <Link className="vchoice" href={c.href}>
+                    <span className="vchoice__n" aria-hidden="true">{c.num}</span>
+                    <span className="vchoice__b">
+                      <span className="vchoice__t serif">{MODE[c.purpose].title}</span>
+                      <span className="vchoice__d">{c.body}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           ) : user ? (
             <VerifyForm balance={balance} cost={COST_VERIFICATION_L2} purpose={mode} />
           ) : (
-            <div className="glass p-8 text-center">
-              <ShieldCheck className="mx-auto h-8 w-8 text-gold" />
-              <h2
-                className="serif text-white mt-5"
-                style={{ fontSize: 26, fontWeight: 500 }}
-              >
-                {t("request.signedOut.heading")}
-              </h2>
-              <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-gray-2">
-                {t("request.signedOut.body")}
-              </p>
+            // Signed out. The service is still explained, because a member who
+            // cannot act yet should still learn what the act would be.
+            <div className="vgate">
+              <h2 className="vgate__t serif">{t("request.signedOut.heading")}</h2>
+              <p className="vgate__p">{t("request.signedOut.body")}</p>
               <Link
+                className="fbtn"
                 href={`/login?next=/verify?for=${searchParams.for}`}
-                className="btn-gold mt-7"
               >
-                {t("request.signedOut.button")} <ArrowRight className="h-4 w-4" />
+                {t("request.signedOut.button")}
               </Link>
             </div>
           )}
 
-          <div
-            className="mt-6 rounded-2xl border p-6"
-            style={{
-              background: "rgba(232,160,32,0.08)",
-              borderColor: "rgba(232,160,32,0.35)",
-            }}
-          >
-            <p
-              className="text-[10px] uppercase text-gold"
-              style={{ letterSpacing: "0.22em" }}
-            >
-              {t("request.disclaimerHeading")}
-            </p>
-            <p className="mt-3 text-[13.5px] leading-relaxed text-cream">
-              {VERIFICATION_DISCLAIMER}
-            </p>
+          {/* The disclaimer is the one thing here a redesign must not soften:
+              it says what a verification is NOT. */}
+          <div className="vdisc">
+            <p className="vdisc__h">{t("request.disclaimerHeading")}</p>
+            <p className="vdisc__p">{VERIFICATION_DISCLAIMER}</p>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </PonteShell>
   );
 }

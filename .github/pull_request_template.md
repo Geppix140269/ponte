@@ -32,6 +32,25 @@
 - [ ] The active ExecPlan is updated when `.agent/PLANS.md` requires one.
 - [ ] Feature-flag and database-state records are updated when applicable.
 
+## Design Constitution check
+
+Complete for every UI, component, icon, motion, copy-composition or visual change. Mark not applicable only when the change cannot affect a rendered interface.
+
+- [ ] `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` was consulted.
+- [ ] Approved Ponte components are used.
+- [ ] Approved tokens are used; no hard-coded visual values were introduced.
+- [ ] Approved Ponte Flow icons are used; no ad hoc interface SVG was introduced.
+- [ ] No generic substitute replaced an approved Ponte treatment.
+- [ ] Editorial typography and approved gold emphasis are preserved where applicable.
+- [ ] Bridge language is preserved where applicable.
+- [ ] Desktop reference was reviewed.
+- [ ] Mobile at 390 × 844 was reviewed.
+- [ ] Reduced-motion behaviour was reviewed.
+- [ ] Keyboard, focus and non-colour state carriers were reviewed.
+- [ ] No page-specific visual convention or silent simplification was introduced.
+- [ ] Visual evidence is attached or linked.
+- [ ] Explicit design approval is recorded for any authority amendment or exception.
+
 ## Validation and evidence
 
 - [ ] Targeted tests pass.

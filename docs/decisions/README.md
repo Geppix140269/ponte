@@ -28,7 +28,7 @@ decisions, their rationale, alternatives and consequences.
 | ADR | Decision | Status |
 |---|---|---|
 | [ADR-0001](ADR-0001-unified-trade-market.md) | Unified trade market with three primary families | Accepted by owner; effective on merge |
-| ADR-0002 | Reserved by open PR #47; not part of this branch | Proposed outside `main` |
+| [ADR-0002](ADR-0002-ponte-design-constitution.md) | Binding Ponte Design Constitution and Bridge System authority | Accepted by owner; effective on merge |
 | [ADR-0003](ADR-0003-deal-room-product-contract.md) | Deal Room as the controlled PROGRESS layer | Accepted by owner; effective on merge |
 | [ADR-0004](ADR-0004-deal-room-monetisation-boundary.md) | Master Deal Room as Ponte's primary monetisation boundary | Accepted by owner; effective on merge |
 | [ADR-0005](ADR-0005-free-deals-and-counterparty-room-branches.md) | Free structured Deals with paid master Deal Rooms and private sub-rooms | Accepted by owner; effective on merge |

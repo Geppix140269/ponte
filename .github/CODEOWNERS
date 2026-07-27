@@ -4,6 +4,12 @@
 
 *       @Geppix140269
 
+# Binding design authorities and shared design implementation.
+/design/authority/             @Geppix140269
+/design-system/                @Geppix140269
+/components/desk/              @Geppix140269
+/components/home/landing/      @Geppix140269
+
 # Anything that can lose money, leak data, or take the site down.
 /.github/                 @Geppix140269
 /docs/platform/           @Geppix140269

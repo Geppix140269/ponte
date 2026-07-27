@@ -40,7 +40,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **MVP correction:** The prior broad exclusion of “payments” from the Deal Room MVP applies to settlement, escrow, trade-finance execution and payments between trading parties. A commercial-entitlement gate for ongoing Deal Room activation is required product capability, though no pricing, Stripe, billing, schema or runtime implementation is authorised yet.
 
-**Affected areas:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`, `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issue #52 and open PR #47.
+**Affected areas:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`, `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issue #52. Note: PR #47 was closed as superseded by this Deal Room-centred model; its surviving founder-capacity boundary is preserved above.
 
 ## 27 July 2026 — Deal Room adopted as the controlled PROGRESS layer
 
@@ -53,6 +53,18 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** Product definition is accepted; implementation is not started or authorised. No screen design, technical architecture, schema, migration, runtime code, production action, deployment, electronic-signature platform, trade-payment execution, escrow, trade-finance execution or autonomous negotiation is included. Issue #51 tracks the remaining product-definition outputs required before Design; issue #52 tracks the Deal Room commercial model required before monetisation implementation.
 
 **Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`, `docs/decisions/ADR-0003-deal-room-product-contract.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #50, #51 and #52.
+
+## 27 July 2026 — Ponte Design Constitution and Bridge System are binding authorities
+
+**Decision:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` is approved as the binding visual and interaction authority for every Ponte-controlled production interface. The corrected Ponte Bridge System under `design/authority/bridge/v1/` is approved for family and action selection, task completion, commercial journey, counterparty connection, multi-party Deal Room progress, mobile bridge behaviour, reduced motion and the gold italic landing-headline treatment.
+
+**Why:** Approved design work repeatedly drifted during implementation toward generic SaaS cards, plain black typography and locally invented treatments. Technical checks could pass while the recognisable Ponte identity disappeared. The repository therefore needs enforceable design law, not advisory design references.
+
+**Binding consequences:** visual conformity is part of correctness; approved treatments may not be silently simplified or replaced; missing or conflicting authority is a stop condition; exceptions require explicit written approval from Giuseppe Funaro and a versioned amendment; authority paths require owner review; UI PRs must complete the Design Constitution gate and provide desktop, 390 × 844 mobile and reduced-motion evidence.
+
+**Implementation boundary:** this authority PR does not redesign production pages. A separate scoped PR may replace only the temporary landing family/action card grid with the approved bridges and restore `Global trade, from <em>signal to deal.</em>`, preserving navigation, authentication, routes, data and business logic.
+
+**Affected areas:** `design/authority/*`, ADR-0002, `AGENTS.md`, `docs/codex/00-START-HERE.md`, `docs/codex/CURRENT-STATE.md`, `.github/CODEOWNERS`, `.github/pull_request_template.md`, and `scripts/check-governance.mjs`.
 
 ## 26 July 2026 — Ponte Desk is the selected interface implementation
 
@@ -130,7 +142,9 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 ## 25 July 2026 — English-first localisation (superseded same day by English-only)
 
-**Decision:** Ponte was initially defined as English-first with Spanish supported.
+**Decision:** Ponte is an English-first platform. English is the canonical product and operational language; Spanish is the only additional fully supported interface language. Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are removed from the active interface build and deferred until real market demand justifies reactivation.
+
+**Why:** Maintaining ten fully localised interfaces was disproportionate complexity for the current stage. Reducing to two actively supported interface languages cuts all translation-parity, review and CI burden without a redesign or any schema change.
 
 **Status:** Superseded the same day by the English-only decision. Retained for history.
 
