@@ -8,7 +8,6 @@ import { toDeskRecord } from "@/lib/desk/adapter";
 import { PRODUCT_SECTORS } from "@/lib/taxonomy/market";
 import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
-import AskPonte from "@/components/desk/AskPonte";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
@@ -133,10 +132,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 ))}
               </div>
             </div>
-
-            <AskPonte placeholder="I need a distributor in Spain for industrial coatings" />
           </div>
-
         </section>
 
         <section className="sec">
