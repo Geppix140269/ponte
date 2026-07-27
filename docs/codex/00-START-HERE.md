@@ -1,6 +1,6 @@
 # Ponte Trade — start here
 
-**Status date:** 26 July 2026  
+**Status date:** 27 July 2026  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Canonical commit before this governance proposal:** `6c18af51b907b57d1a063ad51cfdb451e112ad03`
@@ -24,6 +24,19 @@ Products, Trade services, and Distribution and representation — with externall
 observed Market Signals and member-created Member Opportunities available in
 each. See ADR-0001 and the canonical taxonomy.
 
+After credible commercial interest, the accepted Deal Room foundation provides
+the downstream PROGRESS layer: formal participant admission, an agreed procedure,
+structured evidence and decisions, blockers, next actions and durable history.
+This is designed product authority, not implemented behaviour. See ADR-0003 and
+the Deal Room Product Contract v1.
+
+The current commercial architecture is equally explicit: the upstream market
+creates liquidity, while the active Deal Room is Ponte's primary paid commercial
+environment. A commercial-entitlement gate is required conceptually for active
+room progression, but prices, payer rules, Stripe, billing, schema and runtime
+implementation remain unapproved. See ADR-0004 and the Deal Room Monetisation
+Policy.
+
 ## Operating procedure
 
 `docs/codex/SOURCE-OF-TRUTH-SOP.md` governs how ideas from ChatGPT, Codex,
@@ -40,7 +53,9 @@ When documents conflict, use this order:
    named earlier decision within its scope. An ADR is not implementation status.
 1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience (landing, the primary routes, Explore, market-activity presentation, Start a Deal entry). It supersedes all earlier landing, gateway and primary-entry instructions, including anything below that defines four primary routes, makes Qualified Opportunities the primary Explore result, or treats Market Signals as a secondary fallback. Amended 26 July 2026: Ponte Desk is the selected visual and behavioural implementation, and §5 of that document now carries the Desk composition. Within the entry surfaces the order is: this authority, then the final Ponte Desk handoff for UX and visual behaviour, then Ponte Flow for semantic icon and motion implementation, then repository and production as implementation reality.
 1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-Only Interface and Multilingual Input Policy. The interface and all Ponte-controlled content are English only; multilingual natural-language input remains supported and AI may interpret and translate it; no i18n-level parallel interface is maintained. The `next-intl` and `[locale]` structure is legacy compatibility infrastructure, not future product architecture. Do not add locale abstractions, translation keys for parity, language selectors or locale routes.
-2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry.
+1b. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` — the accepted authority for the downstream Deal Room PROGRESS layer. It supplies separate Business Passport approval for Deal Room admission and supersedes the blanket Deal Room deferral only within its stated product-definition scope. It does not authorise Design, code, schema, migration or production action.
+1c. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — the accepted commercial authority for Deal Room monetisation. The upstream market creates liquidity; an active Deal Room requires a valid commercial entitlement. The policy amends the broad MVP payment exclusion so only trade settlement, escrow, trade-finance execution and payments between trading parties remain excluded. It does not authorise prices, charging, Stripe, schema, runtime paywalls or deployment.
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry that the North Star, Deal Room Product Contract, Deal Room Monetisation Policy or later accepted ADRs do not restate.
 3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report the conflict before changing direction.
 4. The underlying long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, when present, for additional depth that does not conflict with the governing brief.
 5. Existing engineering, lifecycle, security and production authorities in the repository.
@@ -66,6 +81,10 @@ The repository also contains a canonical market taxonomy under
 contract. The production database and all creation/ingestion paths are not yet
 fully reconciled to that logical contract.
 
+The Deal Room product and monetisation foundations are accepted on the dedicated
+decision branch but are not implemented. No room, entitlement, billing or
+production capability may be claimed until `CURRENT-STATE.md` records evidence.
+
 ## Critical current truth
 
 Code existing on `main` does not prove it is enabled or live. Find and Structure are controlled by public environment flags, and the currently served public root must be checked against the canonical repository before any production claim.
@@ -73,18 +92,20 @@ Code existing on `main` does not prove it is enabled or live. Find and Structure
 Read next:
 
 0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
-1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
-2. `SOURCE-OF-TRUTH-SOP.md`
-3. `../decisions/README.md` and relevant accepted ADRs
-4. `CURRENT-STATE.md`
-5. `FEATURE-FLAGS.md`
-6. `DATABASE-STATE.md`
-7. `KNOWN-ISSUES.md`
-8. `DECISION-LOG.md`
-9. `DO-NOT-REOPEN.md`
-10. `MASTER-ROADMAP.md`
-11. `ACTIVE-MILESTONE.md`
-12. `.agent/PLANS.md`
+1. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` when work concerns post-interest transaction progression
+2. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` when work concerns pricing, entitlement, Ponte Desk or paid transaction support
+3. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+4. `SOURCE-OF-TRUTH-SOP.md`
+5. `../decisions/README.md` and relevant accepted ADRs
+6. `CURRENT-STATE.md`
+7. `FEATURE-FLAGS.md`
+8. `DATABASE-STATE.md`
+9. `KNOWN-ISSUES.md`
+10. `DECISION-LOG.md`
+11. `DO-NOT-REOPEN.md`
+12. `MASTER-ROADMAP.md`
+13. `ACTIVE-MILESTONE.md`
+14. `.agent/PLANS.md`
 
 ## Completion discipline
 
