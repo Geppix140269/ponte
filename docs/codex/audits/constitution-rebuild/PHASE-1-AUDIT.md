@@ -33,7 +33,7 @@ A full-application rebuild is therefore wider than the merged authority.
 Constitution §24 makes conflicting authority a stop condition. AGENTS.md holds
 that a conversation is a proposal input until accepted **and merged**.
 
-**Required before Phase 3:** an accepted ADR-0003 (or versioned amendment to
+**Required before Phase 3:** an accepted ADR-0008 (or versioned amendment to
 ADR-0002) recording the full-rebuild scope, plus an ExecPlan. Without it, the
 next contributor reads `main` and correctly concludes the rebuild was
 unauthorised. ADR-0002's rejection of an app-wide repaint must be explicitly
@@ -460,7 +460,7 @@ recorded mobile review.**
 
 | # | Slice | Risk | Depends on |
 |---|---|---|---|
-| **0** | ADR-0003 + ExecPlan recording full-rebuild scope; commit `.agent/PLANS.md` | — | Owner |
+| **0** | ADR-0008 + ExecPlan recording full-rebuild scope; commit `.agent/PLANS.md` | — | Owner |
 | **1** | **Landing headline gold italic** | **Very low** | Already authorised |
 | **2** | Flow token + motion CSS import; retire the parallel Desk token set | Medium | — |
 | **3** | **Bridge React primitives + progress primitive** | **High** | G1, G2 |
@@ -679,7 +679,7 @@ Geometry source: `design/authority/bridge/v1/source/ponte-bridge.css`, 216 lines
 |---|---|
 | **Verified specification** | Six motion verbs; authored-end-state contract; honesty rule; no amber; gold on hover only; semantic colour beside the icon; Lottie never authored; loading-duration law; 89 keys and 126 assets; Bridge class vocabulary and measured geometry |
 | **Repository implementation** | 5 of 28 routes on target; 6 visual systems at about 5,500 CSS lines; 25 of 28 routes without lifecycle states; 23 of 28 without mobile review; 11 lucide files; 18 raw SVG files |
-| **Genuine authority conflict** | ADR-0002 narrow boundary versus full rebuild — **resolved by ADR-0003** |
+| **Genuine authority conflict** | ADR-0002 narrow boundary versus full rebuild — **resolved by ADR-0010** |
 | **Design-system gaps** | G1 Bridge primitives, G2 progress, G3 token import, G4 motion layer, G5 state vocabulary, G6a to G6d icons, G7 shared state components |
 | **Legacy violations** | lucide imports; raw SVGs; hard-coded hex; obsidian lime and coral colour-only state |
 | **Intentional compatibility layer** | `desk.css` token aliasing with identical values; `next-intl` and `[locale]` under the English-only policy; `messages/en.json` stale login keys, shipped but unrendered |
@@ -687,4 +687,4 @@ Geometry source: `design/authority/bridge/v1/source/ponte-bridge.css`, 216 lines
 
 ## G. Governance note
 
-The Phase 1 audit is accepted as the repository audit baseline per ADR-0003, subject to final review in the governance PR. Its two corrected findings (A.1, A.2) are recorded here rather than silently edited above.
+The Phase 1 audit is accepted as the repository audit baseline per ADR-0010, subject to final review in the governance PR. Its two corrected findings (A.1, A.2) are recorded here rather than silently edited above.

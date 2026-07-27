@@ -1,7 +1,7 @@
 # ExecPlan — Constitution-led interface rebuild
 
 **Status:** Active
-**Authority:** ADR-0003, Ponte Design Constitution v1, Bridge System v1
+**Authority:** ADR-0010, Ponte Design Constitution v1, Bridge System v1
 **Audit baseline:** `docs/codex/audits/constitution-rebuild/PHASE-1-AUDIT.md`
 **Format:** `.agent/PLANS.md`
 
@@ -24,7 +24,7 @@ verification or completion that has not happened.
 
 Binding, in Constitution §2 order:
 
-1. `docs/decisions/ADR-0003` (this programme's scope), `ADR-0002`
+1. `docs/decisions/ADR-0008` (this programme's scope), `ADR-0002`
 2. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`
 3. `design/authority/bridge/v1/` — README, APPROVAL, implementation notes, `source/ponte-bridge.css`
 4. `design-system/ponte-flow/` — tokens, registry, icons, motion, 10 documentation files
@@ -51,7 +51,7 @@ From the Phase 1 audit, verified against the repository at `71b3817`:
 
 ## 4. Scope
 
-**In:** all 28 user-facing routes, the 5 administrative routes (per ADR-0003),
+**In:** all 28 user-facing routes, the 5 administrative routes (per ADR-0010),
 all 55 shared components, all applicable lifecycle states, desktop and
 390 × 844, keyboard, screen reader, reduced motion.
 
@@ -61,7 +61,7 @@ all 55 shared components, all applicable lifecycle states, desktop and
   lifecycle rules, commercial behaviour (§12 below);
 - database migrations;
 - feature-flag values;
-- the `/marketplace` retire-or-rebuild decision (ADR-0003 leaves it open);
+- the `/marketplace` retire-or-rebuild decision (ADR-0010 leaves it open);
 - Lottie or any new animation runtime.
 
 ## 5. Product rules
@@ -135,9 +135,9 @@ production verification.
 
 ## 11. Progress log
 
-- **27 Jul 2026** — Phase 1 audit completed and accepted as baseline. ADR-0003
+- **27 Jul 2026** — Phase 1 audit completed and accepted as baseline. ADR-0010
   drafted. Headline correction opened as PR #60 (separately, already
-  authorised). Phase 2 not started; blocked on ADR-0003 merge.
+  authorised). Phase 2 not started; blocked on ADR-0010 merge.
 
 ## 12. Decisions and discoveries
 

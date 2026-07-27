@@ -1,4 +1,4 @@
-# ADR-0003 — Constitution-led rebuild of the complete Ponte Trade interface
+# ADR-0010 — Constitution-led rebuild of the complete Ponte Trade interface
 
 - **Status:** Accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
