@@ -3,24 +3,25 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { AlertCircle, BadgeCheck, Clock, ListChecks, ShieldCheck } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { MEMBER_BUSINESS_ATTESTATION } from "@/lib/verification/purpose";
-
-const FIELD =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
-
-const LABEL = "block text-[11px] uppercase text-gray-2";
-const LABEL_STYLE = { letterSpacing: "0.16em" } as const;
 
 /** What this check is for. Only 'member_business' can move the member's badge. */
 export type VerifyPurpose = "member_business" | "counterparty_check";
 
 /**
- * Block B copy for the two purposes, in English for now. The rest of this form
- * still reads the `verification` message namespace; Block E folds these lines in
- * and rebuilds the locales. Kept here, not inferred from the page, so the button
- * a member presses and the purpose the server records are the same thing.
+ * The verification request form (Block B), in the Brand v5 heritage-light
+ * journey chrome.
+ *
+ * The paint changed; the rules did not. The purposes, the attestation gate, the
+ * credit cost stated before anything is spent, the 401/402/429 paths, the
+ * candidate disambiguation that resumes the case already paid for, and the
+ * three outcomes are exactly as they were. Verified, review and failed keep the
+ * reserved semantic colours rather than gold, because gold is a brand signal
+ * here and never a verification status.
+ *
+ * Block E folds the remaining English lines into the message fragments; the
+ * rest already reads the `verification` namespace.
  */
 const PURPOSE_COPY: Record<
   VerifyPurpose,
@@ -75,9 +76,9 @@ function Detail({
   mono?: boolean;
 }) {
   return (
-    <p className="text-[12.5px] leading-relaxed text-gray-2">
-      <span className="text-gray-2/70">{label}: </span>
-      <span className={mono ? "mono text-cream" : "text-cream"}>
+    <p className="vcand__f">
+      <span className="vcand__fk">{label}: </span>
+      <span className={mono ? "vcand__fv mono" : "vcand__fv"}>
         {value || fallback}
       </span>
     </p>
@@ -237,46 +238,33 @@ export default function VerifyForm({
     const capped = total > candidates.length;
 
     return (
-      <div className="glass p-8">
-        <ListChecks className="h-8 w-8 text-gold" />
-        <h2
-          className="serif text-white mt-5"
-          style={{ fontSize: 26, fontWeight: 500 }}
-        >
-          {t("request.select.title")}
-        </h2>
-        <p className="mt-3 text-[14px] leading-relaxed text-gray-2">
-          {t("request.select.body")}
-        </p>
-        <p className="mt-3 text-[13px] leading-relaxed text-gold">
-          {t("request.select.noCharge")}
-        </p>
+      <section className="vres">
+        <div className="vres__head">
+          <span className="vres__eb">{t("request.select.count", { count: total })}</span>
+          <h2 className="vres__t serif">{t("request.select.title")}</h2>
+        </div>
+        <p className="vres__p">{t("request.select.body")}</p>
+        <p className="vres__free">{t("request.select.noCharge")}</p>
 
-        <p className="mt-5 text-[12.5px] text-gray-2">
-          {capped
-            ? t("request.select.capped", { total, shown: candidates.length })
-            : t("request.select.count", { count: total })}
-        </p>
+        {capped && (
+          <p className="vres__meta">
+            {t("request.select.capped", { total, shown: candidates.length })}
+          </p>
+        )}
 
-        <ul className="mt-5 grid gap-3">
+        <ul className="vcands">
           {candidates.map((c, i) => {
             const usable = Boolean(c.regNumber);
             const chosen = usable && picked === c.regNumber;
             return (
               <li key={`${c.regNumber ?? "no-number"}-${i}`}>
                 <label
-                  className={`flex gap-3 rounded-xl border p-4 ${
-                    usable ? "cursor-pointer" : "cursor-not-allowed opacity-60"
-                  } ${
-                    chosen
-                      ? "border-gold bg-gold/10"
-                      : "border-white/10 bg-white/[0.03]"
-                  }`}
+                  className={`vcand${chosen ? " is-picked" : ""}${usable ? "" : " is-off"}`}
                 >
                   <input
                     type="radio"
                     name="candidate"
-                    className="mt-1 accent-gold"
+                    className="vcand__r"
                     value={c.regNumber ?? ""}
                     checked={chosen}
                     disabled={!usable}
@@ -285,11 +273,11 @@ export default function VerifyForm({
                       setError("");
                     }}
                   />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14.5px] leading-snug text-cream">
+                  <span className="vcand__b">
+                    <span className="vcand__n">
                       {c.companyName ?? t("request.select.unknown")}
-                    </p>
-                    <div className="mt-2 grid gap-1">
+                    </span>
+                    <span className="vcand__fs">
                       <Detail
                         label={t("request.select.numberLabel")}
                         value={c.regNumber}
@@ -311,65 +299,58 @@ export default function VerifyForm({
                         value={c.address}
                         fallback={t("request.select.unknown")}
                       />
-                    </div>
+                    </span>
                     {!usable && (
-                      <p className="mt-2 text-[11.5px] leading-relaxed text-gray-2">
-                        {t("request.select.noNumber")}
-                      </p>
+                      <span className="vcand__off">{t("request.select.noNumber")}</span>
                     )}
-                  </div>
+                  </span>
                 </label>
               </li>
             );
           })}
         </ul>
 
-        {error && <p className="mt-5 text-sm text-red-400">{error}</p>}
+        {error && <p className="verr">{error}</p>}
 
-        <div className="mt-7 flex flex-wrap gap-3">
+        <div className="vacts">
           <button
             type="button"
             onClick={onSelect}
             disabled={resuming || !picked}
-            className="btn-gold disabled:opacity-60"
+            className="fbtn"
           >
-            <ShieldCheck className="h-4 w-4" />
             {resuming
               ? t("request.select.working")
               : t("request.select.continue")}
           </button>
-          <button type="button" onClick={reset} className="btn-ghost-light">
+          <button type="button" onClick={reset} className="fbtn fbtn--ghost">
             {t("request.select.startOver")}
           </button>
         </div>
-      </div>
+      </section>
     );
   }
 
   if (status === "done" && outcome) {
     const verified = outcome.status === "auto_verified";
     const review = outcome.status === "review";
-    const Icon = verified ? BadgeCheck : review ? Clock : AlertCircle;
-    const tone = verified
-      ? "text-positive"
-      : review
-        ? "text-gold"
-        : "text-red-400";
+    // The outcome tone is a reserved semantic, never the brand gold.
+    const tone = verified ? "is-pos" : review ? "is-review" : "is-neg";
 
     return (
-      <div className="glass p-8">
-        <Icon className={`h-8 w-8 ${tone}`} />
-        <h2
-          className="serif text-white mt-5"
-          style={{ fontSize: 26, fontWeight: 500 }}
-        >
-          {verified
-            ? t("request.result.verifiedTitle")
-            : review
-              ? t("request.result.reviewTitle")
-              : t("request.result.failedTitle")}
-        </h2>
-        <p className="mt-3 text-[14px] leading-relaxed text-gray-2">
+      <section className={`vres vres--out ${tone}`}>
+        <div className="vres__head">
+          {/* The status rule and the heading carry the outcome between them;
+              an eyebrow here would only repeat the heading. */}
+          <h2 className="vres__t serif">
+            {verified
+              ? t("request.result.verifiedTitle")
+              : review
+                ? t("request.result.reviewTitle")
+                : t("request.result.failedTitle")}
+          </h2>
+        </div>
+        <p className="vres__p">
           {verified
             ? t("request.result.verifiedBody")
             : review
@@ -377,61 +358,43 @@ export default function VerifyForm({
               : t("request.result.failedBody")}
         </p>
         {outcome.reason && (
-          <p className="mt-4 border-l-2 border-white/10 pl-3 text-[13px] leading-relaxed text-gray-2">
-            <span
-              className="mono text-[10px] uppercase text-gray-2"
-              style={LABEL_STYLE}
-            >
-              {t("request.result.reasonLabel")}
-            </span>
-            <br />
-            {outcome.reason}
-          </p>
+          <div className="vreason">
+            <span className="vreason__l">{t("request.result.reasonLabel")}</span>
+            <p className="vreason__p">{outcome.reason}</p>
+          </div>
         )}
-        <p className="mt-4 text-[12.5px] leading-relaxed text-gray-2">
-          {copy.resultNote}
-        </p>
-        <button type="button" onClick={reset} className="btn-gold mt-7">
-          {t("request.result.again")}
-        </button>
-      </div>
+        <p className="vres__meta">{copy.resultNote}</p>
+        <div className="vacts">
+          <button type="button" onClick={reset} className="fbtn">
+            {t("request.result.again")}
+          </button>
+        </div>
+      </section>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="glass p-7 md:p-8">
+    <form onSubmit={onSubmit} className="vform">
       {/* Balance and price, stated before anything is spent. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[11px] uppercase text-gray-2" style={LABEL_STYLE}>
-            {t("request.balance.label")}
-          </span>
-          <span className="serif text-gold" style={{ fontSize: 24, fontWeight: 500 }}>
-            {balance ?? "-"}
-          </span>
-          <span className="text-[12px] text-gray-2">
-            {t("request.balance.unit")}
-          </span>
-        </div>
-        <span className="text-[12.5px] text-gray-2">
-          {t("request.balance.cost", { cost })}
-        </span>
+      <div className="vbal">
+        <span className="vbal__l">{t("request.balance.label")}</span>
+        <span className="vbal__n serif">{balance ?? "-"}</span>
+        <span className="vbal__u">{t("request.balance.unit")}</span>
+        <span className="vbal__c">{t("request.balance.cost", { cost })}</span>
       </div>
 
       {short && (
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <p className="flex-1 text-[13px] text-gold">
-            {t("request.balance.short")}
-          </p>
-          <Link href="/pricing" className="btn-ghost-light">
+        <div className="vshort">
+          <p className="vshort__p">{t("request.balance.short")}</p>
+          <Link href="/pricing" className="fbtn fbtn--ghost">
             {t("request.balance.topUp")}
           </Link>
         </div>
       )}
 
-      <div className="mt-6 grid gap-5">
+      <div className="vfields">
         <div>
-          <label className={LABEL} style={LABEL_STYLE} htmlFor="v-name">
+          <label className="vlabel" htmlFor="v-name">
             {t("request.fields.nameLabel")}
           </label>
           <input
@@ -440,38 +403,34 @@ export default function VerifyForm({
             onChange={(e) => setName(e.target.value)}
             maxLength={200}
             placeholder={t("request.fields.namePlaceholder")}
-            className={`${FIELD} mt-2`}
+            className="vfield"
           />
         </div>
 
         <div>
-          <label className={LABEL} style={LABEL_STYLE} htmlFor="v-country">
+          <label className="vlabel" htmlFor="v-country">
             {t("request.fields.countryLabel")}
           </label>
           <select
             id="v-country"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className={`${FIELD} mt-2`}
+            className="vfield"
           >
-            <option value="" className="bg-navy">
-              {t("request.fields.countryPlaceholder")}
-            </option>
+            <option value="">{t("request.fields.countryPlaceholder")}</option>
             {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code} className="bg-navy">
+              <option key={c.code} value={c.code}>
                 {c.name}
               </option>
             ))}
           </select>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="vpair">
           <div>
-            <label className={LABEL} style={LABEL_STYLE} htmlFor="v-reg">
-              {t("request.fields.regLabel")}{" "}
-              <span className="text-gray-2/70">
-                {t("request.fields.optional")}
-              </span>
+            <label className="vlabel" htmlFor="v-reg">
+              {t("request.fields.regLabel")}
+              <span className="vopt">{t("request.fields.optional")}</span>
             </label>
             <input
               id="v-reg"
@@ -479,19 +438,15 @@ export default function VerifyForm({
               onChange={(e) => setRegNumber(e.target.value)}
               maxLength={60}
               placeholder={t("request.fields.regPlaceholder")}
-              className={`${FIELD} mt-2`}
+              className="vfield"
             />
-            <p className="mt-2 text-[11.5px] leading-relaxed text-gray-2">
-              {t("request.fields.regHint")}
-            </p>
+            <p className="vhint">{t("request.fields.regHint")}</p>
           </div>
 
           <div>
-            <label className={LABEL} style={LABEL_STYLE} htmlFor="v-vat">
-              {t("request.fields.vatLabel")}{" "}
-              <span className="text-gray-2/70">
-                {t("request.fields.optional")}
-              </span>
+            <label className="vlabel" htmlFor="v-vat">
+              {t("request.fields.vatLabel")}
+              <span className="vopt">{t("request.fields.optional")}</span>
             </label>
             <input
               id="v-vat"
@@ -499,43 +454,37 @@ export default function VerifyForm({
               onChange={(e) => setVat(e.target.value)}
               maxLength={40}
               placeholder={t("request.fields.vatPlaceholder")}
-              className={`${FIELD} mt-2`}
+              className="vfield"
             />
-            <p className="mt-2 text-[11.5px] leading-relaxed text-gray-2">
-              {t("request.fields.vatHint")}
-            </p>
+            <p className="vhint">{t("request.fields.vatHint")}</p>
           </div>
         </div>
       </div>
 
       {/* What this check is for, stated plainly, and for the business path an
           explicit attestation before a badge-granting check runs. */}
-      <p className="mt-6 text-[12.5px] leading-relaxed text-gray-2">{copy.note}</p>
+      <p className="vnote">{copy.note}</p>
       {isBusiness && copy.attest && (
-        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <label className="vattest">
           <input
             type="checkbox"
-            className="mt-0.5 accent-gold"
             checked={attested}
             onChange={(e) => {
               setAttested(e.target.checked);
               setError("");
             }}
           />
-          <span className="text-[13.5px] leading-relaxed text-cream">
-            {copy.attest}
-          </span>
+          <span>{copy.attest}</span>
         </label>
       )}
 
-      {error && <p className="mt-5 text-sm text-red-400">{error}</p>}
+      {error && <p className="verr">{error}</p>}
 
       <button
         type="submit"
         disabled={status === "sending" || short || (isBusiness && !attested)}
-        className="btn-gold mt-7 w-full justify-center disabled:opacity-60"
+        className="fbtn fbtn--lg fbtn--block vsubmit"
       >
-        <ShieldCheck className="h-4 w-4" />
         {status === "sending" ? t("request.working") : t("request.submit")}
       </button>
     </form>

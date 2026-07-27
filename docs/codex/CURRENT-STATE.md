@@ -42,6 +42,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Trade services inventory | Partially implemented | 0 legacy service rows at 26 July probe | Member creation paths exist after PR #49, but canonical persisted family/intent is not yet first-class. |
 | Distribution and representation inventory | Taxonomy and member creation paths | No canonical external inventory at 26 July probe | Canonical persisted family/intent remains future data-contract work. |
 | Verification/publication eligibility | On `main` | Production defect confirmed | Stored verification vocabulary and numeric code comparison require separate integrity work. |
+| Check and verify journey, request surfaces | Implemented on branch `claude/verify-journey-brand`, PR #45 | Not deployed | `/verify`, `VerifyForm` and the `/verification` explainer now mount PonteShell in heritage-light and are bared in ChromeGate, so reaching business verification from the Start a deal blockers no longer drops the member into the obsidian application mid-task. Every line of copy is unchanged: purposes, the attestation gate, the credit cost stated before anything is spent, the 401/402/429 paths, candidate selection resuming a paid case, and the full disclaimer. Plan: `docs/plans/active/verification-journey-brand-v5.md`. |
 
 ## Design authority truth
 
