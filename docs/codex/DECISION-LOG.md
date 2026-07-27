@@ -2,6 +2,18 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 27 July 2026 — Starter Deal Room provides the first real product experience
+
+**Decision:** Ponte will provide a limited Starter Deal Room before ongoing paid use. The customer-facing language is Starter Deal Room or Starter Access rather than “Freemium Plan”. It is available at organisation level, requires no credit card, includes the real core progress loop and creates no founder, Ponte Desk or specialist obligation.
+
+**Recommended limits awaiting numerical approval:** one Starter master Deal Room per verified organisation; 30 active days beginning with the first required external principal admission; up to three private sub-rooms, two external guest organisations and two internal users; core admission, NDA, procedure, evidence, clarification, blockers, decisions, milestones, progress and basic AI recap included. On expiry the room becomes read-only and upgrades without loss of history.
+
+**Commercial purpose:** The Starter room lets a new organisation feel the Deal Room’s momentum before paying. It is limited by scale and duration rather than being reduced to a static demo. Ongoing use converts to the Portfolio subscription or Ponte Credits. Sponsored participation in another organisation’s room does not consume the guest organisation’s own future Starter entitlement.
+
+**Implementation boundary:** The principle is accepted, while numerical limits remain proposed. No screen, schema, identity enforcement, AI quota, Stripe, charging, deployment or production activation is authorised.
+
+**Affected areas:** `docs/decisions/ADR-0006-starter-deal-room-access.md`, `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md`, `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`, `docs/codex/AUTHORITY-MANIFEST.md`, issue #52 and PR #53.
+
 ## 27 July 2026 — Free Deals lead to paid master Deal Rooms with private sub-rooms
 
 **Decision:** A complete structured Deal may be created, reviewed and published without a Deal Room fee. When a participant decides to progress that Deal, the participant opens and sponsors one paid master Deal Room linked to the Deal. The master room is the entitlement unit and may contain any number of private related sub-rooms for counterparties, providers, advisers and internal workstreams.
@@ -14,19 +26,19 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Launch pricing status:** The branch proposes, but the owner has not yet accepted, a €149 monthly/€1,490 annual subscription including five concurrent master Deal Rooms, unlimited related sub-rooms, 25 concurrent external guest organisations and five internal users. The credit proposal is 60 credits for a 90-day master room including two external guest organisations, 5 credits per additional guest organisation and 20 credits for a 30-day extension or temporary extra master-room slot.
 
-**Affected areas:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`, `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #51 and #52 and PR #53.
+**Affected areas:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`, `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #51 and #52 and PR #53.
 
 ## 27 July 2026 — The Deal Room is Ponte's primary monetisation boundary
 
 **Decision:** Ponte creates upstream liquidity through Market Signals, Member Opportunities, trade-service activity, distribution and representation activity, structured commercial intent and controlled qualification. When credible commercial interest moves to structured transaction progression, the parties enter a Deal Room. The Deal Room is the paid commercial environment and Ponte's primary monetisation boundary.
 
-**Commercial rule:** A proposed room and its admission requirements may be previewed before payment, but a standard active Deal Room requires a valid commercial entitlement. The payer may be the initiator, one or more principal parties, a sponsor or institution, a subscription with defined room capacity, a promotional entitlement or an auditable owner-approved waiver. Payment does not confer disclosure, visibility or decision authority.
+**Commercial rule:** A proposed room and its admission requirements may be previewed before payment, but a standard active Deal Room requires a valid commercial entitlement. The Starter Deal Room is the accepted limited first-use exception. The payer may otherwise be the initiator, one or more principal parties, a sponsor or institution, a subscription with defined room capacity, a promotional entitlement or an auditable owner-approved waiver. Payment does not confer disclosure, visibility or decision authority.
 
-**Monetisation around the room:** Permitted model families include room activation, participant or organisation access, active-room capacity, self-managed or agent-assisted workflow, Ponte-facilitated or managed procedure, investigation and verification services, specialist services coordinated through the room, portfolio subscriptions with defined room capacity and transaction-related fees where attribution, legality and operational rules are clear. Exact prices, packages, payer rules and fee conditions remain to be designed under issue #52.
+**Monetisation around the room:** Permitted model families include room activation, participant or organisation access, active-room capacity, self-managed or agent-assisted workflow, Ponte-facilitated or managed procedure, investigation and verification services, specialist services coordinated through the room, portfolio subscriptions with defined room capacity and transaction-related fees where attribution, legality and operational rules are clear.
 
 **Relationship to Ponte Desk:** Paid Ponte Desk and founder-capacity boundaries remain valid but are subordinate to the wider Deal Room model. Human assistance is one paid layer inside the Deal Room ecosystem; self-managed and agent-assisted Deal Rooms are also monetised products.
 
-**MVP correction:** The prior broad exclusion of “payments” from the Deal Room MVP applies to settlement, escrow, trade-finance execution and payments between trading parties. A commercial-entitlement gate for Deal Room activation is required product capability, though no pricing, Stripe, billing, schema or runtime implementation is authorised yet.
+**MVP correction:** The prior broad exclusion of “payments” from the Deal Room MVP applies to settlement, escrow, trade-finance execution and payments between trading parties. A commercial-entitlement gate for ongoing Deal Room activation is required product capability, though no pricing, Stripe, billing, schema or runtime implementation is authorised yet.
 
 **Affected areas:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`, `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issue #52 and open PR #47.
 
@@ -68,7 +80,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **What is untouched:** natural-language input in any language, AI language detection and normalisation, translated display of member content, accessibility states, the reactivation path in `LANGUAGES.md`, the deferred snapshots in `messages/_deferred/`, and the permanent redirects from old locale-prefixed URLs. Input language is not interface language.
 
-**Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` (new), `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`. No code change; the policy governs future work.
+**Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`. No code change; the policy governs future work.
 
 ## 26 July 2026 — Repository source-of-truth operating procedure
 
@@ -98,73 +110,49 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **What changed:** Two bridge routes, both navigating directly; the voice control and its bottom sheet removed with no reserved layout space; a recent market activity band above the masthead built from real public records; the search field beneath the bridge; popular areas derived from real counts; a trust and evidence explanation; and a new `/explore` market universe over Products, Trade services, and Distribution and representation.
 
-**What is preserved:** Check a company and Investigate a signal remain reachable downstream and through search, which still resolves the older `RouteKey` vocabulary through `lib/landing/routing.ts`; that file remains the sole destination authority, so `NEXT_PUBLIC_STRUCTURE_JOURNEY` still decides where Start a deal lands. Market Signals and member records stay separate in data, status, language and actions; only the presentation hierarchy is unified, and every record prints its own true class. Voice input inside journeys (the Find picker, the Check composer, the introduction request) is untouched. Structure keeps its composer, preview, AccountGate, submission payload and Workspace continuation; only its S01 copy changed, to Source a product / Supply a product / Offer a trade service.
+**What is preserved:** Check a company and Investigate a signal remain reachable downstream and through search, which still resolves the older `RouteKey` vocabulary through `lib/landing/routing.ts`; that file remains the sole destination authority, so `NEXT_PUBLIC_STRUCTURE_JOURNEY` still decides where Start a deal lands. Market Signals and member records stay separate in data, status, language and actions; only the presentation hierarchy is unified, and every record prints its own true class. Voice input inside journeys is untouched.
 
-**What was deliberately not done:** No migration, no flag change, no monetisation, no verification work, no rewrite of `/find` (PR 3), and no sector drill-down below one level (PR 2). `Reviewed Opportunity` and `Distribution Opportunity` are not used as classifications, because no field in the current schema proves them.
+**What was deliberately not done:** No migration, no flag change, no monetisation, no verification work, no rewrite of `/find`, and no sector drill-down below one level.
 
-**Affected areas:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` (new), `app/[locale]/page.tsx`, `app/[locale]/explore/page.tsx` (new), `components/home/landing/*` (`VoiceSheet.tsx` deleted), `components/explore/*` (new), `components/ChromeGate.tsx`, `lib/board/activity-logic.ts`, `lib/board/activity-view.ts`, `lib/board/market-activity.ts`, `lib/explore/families.ts`, `lib/landing/bridge.ts` (all new), `lib/landing/analytics.ts`, `lib/landing/examples.ts` (deleted), `messages/_fragments/home.json`, `messages/_fragments/explore.json` (new), `messages/_fragments/structure.json`, and the tests in `lib/board/__tests__/market-activity.test.ts` (new) and `lib/landing/__tests__/bridge-navigation.test.tsx` (rewritten).
+**Affected areas:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, entry and Explore components, routing, analytics, messages and tests.
 
 ## 25 July 2026 — The four bridge routes are direct entrances (superseded by the North Star entry reset above)
 
-**Decision:** A click on one of the four named routes across the gateway bridge — the label or its bridge marker — navigates immediately to that route's journey. It no longer only selects the route, changes the centre copy and focuses the objective field. No objective text, product, company or Continue press is required first; the destination journey collects whatever it still needs.
+**Decision:** A click on one of the four named routes across the gateway bridge navigates immediately to that route's journey. It no longer only selects the route and focuses the objective field.
 
-**Why:** Find, Structure and Check are built journeys. Selecting a route without going anywhere made the application look stuck on the landing page and turned a deliberate decision into a second, avoidable step.
-
-**What is preserved:** The natural-language path is unchanged — an objective may still be typed or spoken, Ponte still reads the route and the facts, still asks when the input is ambiguous or a Find objective names no product, and still carries `intent`, `product` and `company` to the destination. Words already typed ride along with a direct click. `lib/landing/routing.ts` remains the sole destination authority, so the journey feature flags keep deciding between each journey and its fallback. The bridge component knows nothing about routing or flags.
-
-**Analytics:** A direct click emits `route_suggested` then `route_confirmed`. It emits `intent_submitted` only when an objective was actually supplied, so a bare route click is never reported as a submitted objective.
-
-**Affected areas:** `components/home/landing/PonteBridge.tsx` (`onSelect` → `onOpen`), `components/home/landing/PonteLanding.tsx`, `lib/landing/direct-route.ts` (new), `lib/landing/routing.ts` (flags read per call so both states are testable; inlining behaviour unchanged), `lib/landing/__tests__/direct-route.test.ts` and `lib/landing/__tests__/bridge-navigation.test.tsx` (new).
+**Why:** Selecting a route without going anywhere made the application look stuck and turned a deliberate decision into a second avoidable step.
 
 ## 25 July 2026 — English-only interface
 
-**Decision:** Ponte's interface is English-only. English is the canonical product and operational language and the sole interface language. Spanish, Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are all deferred until real market demand justifies reactivation. (This supersedes the same-day "English-first" step below, which had kept Spanish as a second interface language; the owner narrowed the scope to English-only.)
+**Decision:** Ponte's interface is English-only. English is the canonical product and operational language and the sole interface language. Other interface languages are deferred until real demand justifies reactivation.
 
-**Why:** Maintaining multiple fully localised interfaces was disproportionate complexity for the current stage. A single interface language cuts all translation-parity, review and CI burden without a redesign or any schema change.
-
-**What is preserved:** Multilingual natural-language and voice *input* in any language, AI language detection and normalisation into the canonical English commercial object, optional translated display of member-entered content (`listing_translations`), and the reactivation path. Deferred translations (including Spanish) are retained in `messages/_deferred/`. Old locale-prefixed URLs (including `/es/…`) are permanently (308) redirected to their canonical English path, so no bookmark 404s. Unsupported browser locales fall back to English. The language switcher hides itself while only one interface language is active.
-
-**Affected areas:** `i18n/routing.ts`, `i18n/request.ts`, `middleware.ts`, `lib/i18n/removed-locales.ts`, `components/LanguageSwitcher.tsx`, `app/sitemap.ts` and `lib/seo.ts` (data-driven), `messages/_deferred/*`, `scripts/check-messages.mjs`, locale tests, `LANGUAGES.md`, `AGENTS.md`. Supersedes the earlier "Preserve ten-locale support" instruction. Impact report: `docs/codex/LOCALISATION-SIMPLIFICATION-IMPACT.md`.
+**Why:** Maintaining multiple fully localised interfaces was disproportionate complexity for the current stage.
 
 ## 25 July 2026 — English-first localisation (superseded same day by English-only)
 
-**Decision:** Ponte is an English-first platform. English is the canonical product and operational language; Spanish is the only additional fully supported interface language. Chinese, Arabic, French, Portuguese, Russian, German, Hindi and Italian are removed from the active interface build and deferred until real market demand justifies reactivation.
+**Decision:** Ponte was initially defined as English-first with Spanish supported.
 
-**Why:** Maintaining ten fully localised interfaces was disproportionate complexity for the current stage. Reducing to two actively supported interface languages cuts translation-parity, review and CI burden without a redesign or any schema change.
-
-**Status:** Superseded the same day by the English-only decision above. Retained for history.
+**Status:** Superseded the same day by the English-only decision. Retained for history.
 
 ## 25 July 2026 — Governing implementation authority
 
 **Decision:** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` is the single self-contained governing implementation authority for the current development cycle.
 
-**Why:** It consolidates the product architecture, Brand v5, messaging and copy, route register, experience blueprints, technical boundaries, implementation programme and acceptance suite. It governs conflicts with older material unless a verified live technical or legal constraint is discovered and reported.
-
 ## 25 July 2026 — Phase 0 before new implementation
 
-**Decision:** Codex must complete the repository-to-architecture gap report defined in section 13 of the governing brief before implementing new product behaviour.
-
-**Why:** The repository already contains substantial Journey 1 and Journey 2 work, but the programme sequence, deployment state, feature flags, schema state and newer agentic architecture are not yet fully reconciled.
+**Decision:** Codex must complete the repository-to-architecture gap report defined in the governing brief before implementing new product behaviour.
 
 ## 25 July 2026 — Phase 1 direction
 
-**Decision:** After Phase 0 and Giuseppe's approval, the governing programme's next target is the smallest truthful agentic vertical slice:
-
-> Mission setup → meaningful Commercial Development → evidence chain → recommended action → prepared response or investigation → exact preview → human approval → recorded Workspace outcome
-
-**Why:** This is the first complete proof of Ponte as a commercial intelligence and controlled-execution layer rather than a marketplace surface.
+**Decision:** After Phase 0 and Giuseppe's approval, the governing programme's next target is the smallest truthful agentic vertical slice.
 
 ## 25 July 2026 — Codex handover model
 
-**Decision:** The repository, not a chat transcript, is the operating memory for future agents. Codex receives `AGENTS.md`, the governing authority, reconciled status, flags, database guardrails, roadmap and versioned ExecPlans.
-
-**Why:** Code was ahead of the visible site and knowledge was fragmented across chats, File Library documents, PR descriptions and stale repository notes.
+**Decision:** The repository, not a chat transcript, is the operating memory for future agents.
 
 ## 24 July 2026 — Journey-level implementation
 
 **Decision:** Apply Brand v5 while implementing complete connected journeys. Do not repaint the legacy application globally before correcting the product flow.
-
-**Why:** A global repaint would preserve the obsolete marketplace-first information architecture under new styling.
 
 ## 24 July 2026 — Product category
 
@@ -178,15 +166,15 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 ## 24 July 2026 — Authentication boundary
 
-**Decision:** Let visitors receive useful value first. Authenticate only when Ponte must save, submit, disclose, spend or perform a material external action. Preserve and resume the pending work.
+**Decision:** Let visitors receive useful value first. Authenticate only when Ponte must save, submit, disclose, spend or perform a material external action. Preserve and resume pending work.
 
 ## 24 July 2026 — Trust presentation
 
-**Decision:** Preserve L1-L4 storage temporarily for compatibility, but do not use numbered tiers or a Trust Score as the principal user-facing trust representation. Show evidence type, source, date, result, limitations and expiry instead.
+**Decision:** Do not use numbered tiers or a Trust Score as the principal user-facing trust representation. Show evidence type, source, date, result, limitations and expiry instead.
 
 ## 24 July 2026 — Human control
 
-**Decision:** AI may observe, structure, analyse, recommend and prepare. Publication, verification, disclosure, payment, third-party contact and commercial commitments require the relevant deterministic workflow and human approval.
+**Decision:** AI may observe, structure, analyse, recommend and prepare. Publication, verification, disclosure, payment, third-party contact and commercial commitments require deterministic workflow and human approval.
 
 ## 23 July 2026 — No fabricated traction
 
