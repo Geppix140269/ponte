@@ -1,119 +1,155 @@
-# ADR-0005 — Free posted Deals and isolated paid counterparty Deal Rooms
+# ADR-0005 — Free structured Deals, paid master Deal Rooms and private sub-rooms
 
 - **Status:** Accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Source:** Dedicated Deal Room product-definition conversation
-- **Supersedes within scope:** Any model in which publishing a complete Deal requires payment, one Deal can have only one transaction workspace, all interested counterparties share one room, or the owner of the posted Deal must always pay for the room
+- **Supersedes within scope:** Any model in which publishing a complete Deal requires payment, each counterparty branch consumes a separate Deal Room slot, all counterparties share one negotiation space, or the owner of the posted Deal must always pay for progression
 
 ## Context
 
-Ponte creates liquidity by allowing members to publish structured commercial intent across Products, Trade services, and Distribution and representation. Charging merely to publish a complete commercial requirement, offer, service or distribution intention would weaken participation and liquidity.
+Ponte creates liquidity by allowing members to publish disciplined commercial intent across Products, Trade services, and Distribution and representation. Charging merely to publish a complete requirement, offer, service or distribution intention would weaken participation and liquidity.
 
-A posted Deal may attract several credible counterparties. Those counterparties may compete, propose different commercial terms or require different supporting providers. They must not be placed in one shared workspace where they can see one another's identity, documents, negotiations or progress.
+The paid value-bearing object is not an individual message thread or counterparty branch. It is the master Deal Room created around one defined commercial Deal. A business may use that master room to progress the same Deal with several counterparties and supporting providers through separate private sub-rooms.
 
-The party that decides to progress a specific bilateral or multi-party commercial path may be the owner of the posted Deal or an interested counterparty. The commercial architecture must therefore separate the owner of the posted Deal from the initiator, sponsor and administrator of an individual Deal Room.
+For example, a seller offering a defined sugar quantity from Brazil may buy one master Deal Room for that Deal and create private sub-rooms for several potential buyers, an inspection company, a logistics provider or other authorised participants. Those participants must not see one another's negotiations or evidence unless deliberately admitted to the same sub-room.
 
 ## Decision
 
 A complete structured Deal may be created, submitted, reviewed and published without a Deal Room fee.
 
-“Deal” is the customer-facing description of a structured member-created commercial intention. Until a separate terminology decision changes the internal contract, it maps to the existing Member Opportunity concept and its accepted family and intent taxonomy.
+“Deal” is the customer-facing description of a structured member-created commercial intention. Until a later terminology decision changes the internal contract, it maps to the existing Member Opportunity concept and its accepted family and intent taxonomy.
 
-A posted Deal is an upstream market object. It may remain available without any Deal Room being opened.
+A posted Deal is an upstream market object. It may remain available without a Deal Room.
 
-Each serious counterparty progression path uses its own isolated Deal Room.
+When a participant chooses to progress that Deal, the participant opens and commercially sponsors a **master Deal Room** linked to the Deal.
 
-One posted Deal may therefore have zero, one or many linked Deal Rooms. For example, if the Deal owner is progressing with five different counterparties, the system creates five separate counterparty rooms linked to the same parent Deal.
+One paid master Deal Room:
 
-Each active counterparty room:
+- corresponds to one defined Deal scope;
+- consumes one active Deal Room entitlement or subscription slot;
+- holds the canonical room overview, sponsor, shared procedure framework, entitlements and owner-side portfolio view;
+- may contain any number of private sub-rooms related to that Deal, subject to plan, guest-entitlement, security and anti-abuse rules; and
+- remains the parent audit and lifecycle object for all of its sub-rooms.
 
-- has its own participants and roles;
-- has its own admission and NDA acceptance;
-- has its own entitlement and sponsor;
-- has its own procedure, conditions, evidence, decisions and blockers;
-- has its own progress and closure history; and
-- consumes its own active-room entitlement or credit activation.
+Private sub-rooms do **not** consume additional master Deal Room slots.
 
-The rooms are not channels inside a shared room. They are separate permission boundaries.
+## Sub-room model
 
-## Room initiation
+A sub-room is a permission-isolated workspace beneath the master Deal Room. It may represent:
 
-A Deal Room linked to a posted Deal may be proposed by:
+- one counterparty negotiation;
+- one service-provider engagement;
+- one adviser or specialist workstream;
+- one internal decision workstream; or
+- another authorised participant group directly related to the master Deal.
+
+Each sub-room may have its own:
+
+- participants and roles;
+- admission and NDA acceptance;
+- visibility boundary;
+- discussion and clarification record;
+- evidence and documents;
+- proposed or agreed commercial terms;
+- tasks, conditions and blockers;
+- branch progress and outcome.
+
+The master Deal Room may show the sponsor an aggregate private portfolio view, but external participants see only the sub-room or sub-rooms to which they are admitted.
+
+## Master-room initiation
+
+A master Deal Room linked to a posted Deal may be opened and sponsored by:
 
 - the Deal owner;
 - an eligible interested counterparty;
 - Ponte where authorised; or
 - an approved institution or programme sponsor.
 
-The initiator may invite the owner of the posted Deal into a room that the initiator sponsors. The invited Deal owner does not need to purchase a separate plan merely to participate as the sponsored guest in that room.
+An interested participant may therefore open a paid master Deal Room around another member's posted Deal and invite that Deal owner into a private sub-room. The invited Deal owner does not need to purchase a separate plan merely to participate as the sponsored guest.
+
+If the Deal owner has already opened a master Deal Room for the Deal, an interested participant may be invited into a new private sub-room under that master room. A separate master room is not required merely because a new counterparty joins.
 
 The following concepts remain separate:
 
 - **Deal owner** — controls the posted Deal;
-- **Room initiator** — creates the proposed counterparty room;
-- **Room sponsor** — supplies the commercial entitlement;
-- **Room administrator** — manages invitations and permitted room settings;
-- **Principal participant** — acts as a commercial party in the transaction;
-- **Payer** — pays for the entitlement where payment is used.
+- **Master-room initiator** — creates the proposed master Deal Room;
+- **Master-room sponsor** — supplies the commercial entitlement;
+- **Master-room administrator** — manages permitted master-room settings and sub-room creation;
+- **Sub-room administrator** — manages one sub-room within granted permissions;
+- **Principal participant** — acts as a commercial party;
+- **Supporting participant** — provides an authorised service or advice;
+- **Payer** — funds the entitlement where payment is used.
 
-One person or organisation may hold several of these roles, but payment does not create commercial decision authority or access rights.
+One person or organisation may hold several roles, but payment does not create ownership of another participant's Deal, commercial decision authority or access rights.
 
 ## Privacy and competition boundary
 
-A participant in one counterparty room must not receive access to:
+A participant in one private sub-room must not receive access to:
 
-- the existence or identity of other counterparties;
-- another room's participants;
-- another room's messages, evidence or documents;
-- another room's procedure, commercial terms or progress;
-- another room's blockers, decisions or outcome.
+- the existence or identity of other counterparties or sub-rooms;
+- another sub-room's participants;
+- another sub-room's messages, evidence or documents;
+- another sub-room's procedure, commercial terms or progress;
+- another sub-room's blockers, decisions or outcome.
 
-The Deal owner may see a private portfolio view grouping all linked rooms. Ponte may see linked rooms only under its administrative and facilitation permissions. Counterparties see only the room or rooms in which they are admitted.
+The master-room sponsor and authorised internal team may see the private sub-room portfolio. Ponte may see linkages only under its operational and facilitation permissions.
 
-The interface must not reveal that other commercial branches exist unless the Deal owner deliberately discloses that fact or a legal or procedural requirement demands it.
+The interface must not reveal that competing branches exist unless the Deal owner or authorised sponsor deliberately discloses that fact and the disclosure is lawful and appropriate.
 
-## Duplicate-room rule
+## Duplicate master-room rule
 
-The system should normally permit only one active room for the same parent Deal and the same pair of principal organisations.
+The default is one active master Deal Room per Deal and sponsoring organisation.
 
-A second parallel room between the same principal organisations requires a recorded reason, such as a distinct product lot, territory, legal entity, procedure or commercial mandate.
+A second master Deal Room for the same Deal and sponsor requires a recorded reason, such as:
+
+- a materially different product lot;
+- a different territory or exclusivity scope;
+- a different legal entity;
+- a different distribution mandate;
+- a separate procurement process; or
+- a distinct legal or compliance procedure.
+
+Independent counterparties may sponsor their own master Deal Rooms around a posted Deal when they do not participate in the Deal owner's existing master room. Those rooms remain separate commercial and permission objects.
 
 ## Parent Deal lifecycle
 
-Opening or closing one linked room does not automatically close the parent Deal or any other branch.
+Opening or closing a master room or sub-room does not automatically close or modify the posted Deal.
 
-When a room reaches a material commitment or completion outcome, Ponte should prompt the Deal owner to review:
+When a branch reaches a material commitment or completion outcome, Ponte should prompt the Deal owner to review:
 
 - remaining quantity or capacity;
 - geographic or exclusivity scope;
 - whether the public Deal remains current;
-- whether other room branches should continue;
+- whether other sub-rooms should continue;
 - whether the Deal should be paused, partially allocated, fully allocated, expired or closed.
 
 No room may silently alter the public Deal without the required owner approval and review workflow.
 
 ## Commercial consequence
 
-The free posted Deal creates liquidity. Each active counterparty room captures value.
+The free structured Deal creates liquidity. The paid master Deal Room captures value.
 
-A subscription with five concurrent active rooms may therefore support five branches of one Deal, five unrelated Deals, or any combination. A pay-as-you-go user consumes one room activation for each branch that becomes active.
+A subscription with five concurrent active Deal Rooms therefore supports five master Deals. Each master Deal Room may contain any number of private sub-rooms related to that Deal without consuming additional master-room slots.
 
-Invitations are charged or counted only when they create an admitted external guest or organisation under the accepted launch entitlement policy. Sending, correcting or resending an invitation does not itself consume a guest entitlement.
+Pay-as-you-go credits are charged for master-room activation and may also be charged for admitted external guest organisations, premium capabilities or assisted services. Merely creating another private sub-room under an entitled master Deal Room does not consume another master-room activation.
+
+Invitations are charged or counted only when they create an admitted external guest organisation under the accepted launch entitlement policy. Sending, correcting or resending an invitation does not itself consume a guest entitlement.
 
 ## Guardrails
 
 - Do not charge merely to submit a complete structured Deal.
 - Do not describe a free posted Deal as a free active Deal Room.
-- Do not put competing counterparties into a shared room.
-- Do not make the Deal owner pay when another participant has chosen to initiate and sponsor the room.
-- Do not let room sponsorship transfer control of the parent Deal.
-- Do not disclose parallel branches or their commercial facts across permission boundaries.
-- Do not auto-close or modify the parent Deal because one branch changes state.
+- Do not charge another master-room slot for each private counterparty sub-room.
+- Do not put competing counterparties into a shared negotiation space.
+- Do not make the Deal owner pay when another participant has chosen to initiate and sponsor a master room.
+- Do not let room sponsorship transfer control of the posted Deal.
+- Do not disclose parallel sub-rooms or their commercial facts across permission boundaries.
+- Do not auto-close or modify the posted Deal because one sub-room changes state.
 
 ## Implementation boundary
 
-This ADR records the product and commercial architecture only. It does not authorise runtime code, schema changes, migrations, payment collection, pricing, Stripe configuration, deployment or production action.
+This ADR records the product and commercial architecture only. It does not authorise runtime code, schema changes, migrations, payment collection, exact pricing, Stripe configuration, deployment or production action.
 
 The detailed domain model, permission matrix, lifecycle, screens and entitlement implementation remain subject to the accepted product-definition and delivery process.
 
