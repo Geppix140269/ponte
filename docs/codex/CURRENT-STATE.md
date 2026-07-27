@@ -1,9 +1,15 @@
 # Current state
 
 **Reconciled:** 27 July 2026  
+<<<<<<< HEAD
+**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
+**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0010 (complete-interface scope)  
+**Bridge authority:** `design/authority/bridge/v1/` (merged, no production primitive yet)  
+=======
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)
 **Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` and ADR-0002, pending merge of the authority PR
 **Bridge authority:** `design/authority/bridge/v1/`, pending merge of the authority PR
+>>>>>>> origin/main
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
 **Deal-to-Room hierarchy:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`  
@@ -13,7 +19,7 @@
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`
-**Deal Room decision:** `docs/decisions/ADR-0003-deal-room-product-contract.md`
+**Deal Room decision:** `docs/decisions/ADR-0008-deal-room-product-contract.md`
 **Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`
 **Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`
 **Starter Deal Room decision:** `docs/decisions/ADR-0006-starter-deal-room-access.md`
@@ -90,13 +96,19 @@ The current production landing has:
 - the Market Signals section below;
 - real restored commercial routes.
 
-The approved next visual slice is deliberately narrow:
+**Superseded by ADR-0010 (27 July 2026).** The narrow boundary below was the
+first-implementation limit recorded after PR #58. ADR-0010 widens the
+Constitution's scope to the complete interface, delivered through controlled
+journey PRs. The delivery discipline is unchanged: one journey per PR, each
+complete at desktop and mobile, each with its own evidence and owner approval.
 
-1. replace the temporary family/action grid with the approved Family and Action Bridges;
-2. render `Global trade, from <em>signal to deal.</em>` using the approved gold italic emphasis;
+The first two items remain the first two slices:
+
+1. render `Global trade, from <em>signal to deal.</em>` using the approved gold italic emphasis (PR #60);
+2. replace the temporary family/action grid with the approved Family and Action Bridges;
 3. preserve all current production navigation, authentication, data, actions and destinations.
 
-No other landing redesign is authorised by this decision.
+Programme sequencing is governed by `docs/plans/active/constitution-led-interface-rebuild.md`.
 
 ## Deal Room product truth
 

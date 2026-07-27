@@ -2,6 +2,23 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+<<<<<<< HEAD
+## 27 July 2026 — Constitution-led rebuild of the complete interface (ADR-0010)
+
+**Decision:** Giuseppe Funaro authorises a Constitution-led redesign of the complete Ponte Trade interface. The Constitution now applies to every public, authenticated and administrative route, every shared interface component, every meaningful lifecycle state, and desktop, mobile, keyboard, screen-reader and reduced-motion behaviour.
+
+**What it supersedes, exactly:** only the narrow implementation boundary recorded after PR #58, which limited first implementation to the landing family/action grid and the headline. It does not supersede the Constitution, its quality controls, the PR design gate, the visual evidence requirements, or ADR-0002's prohibition on an uncontrolled application-wide repaint. That prohibition survives: this decision widens what the Constitution governs, not how implementation is delivered. One journey per PR remains binding.
+
+**Preserved:** routes, authentication, permissions, schemas, data contracts, lifecycle truth, publication rules, verification rules, commercial logic and protected production behaviour.
+
+**Evidence base:** `docs/codex/audits/constitution-rebuild/PHASE-1-AUDIT.md` established 5 of 28 user-facing routes on the target system, six competing visual systems at roughly 5,500 CSS lines, all 12 approved motion components unimplemented with the Flow motion and token stylesheets imported nowhere, all six Bridge types without a production primitive, 25 of 28 routes without route-level lifecycle states, and 23 of 28 without a recorded 390 x 844 review.
+
+**Two audit findings were corrected on full reading:** `.agent/PLANS.md` is tracked on `main` and is the authoritative ExecPlan standard; and `desk.css` does not diverge from the approved tokens, since every value is byte-identical, making it an unauthorised compatibility layer rather than a second design system.
+
+**Open, not decided here:** whether `/marketplace` is rebuilt or retired; whether the brand lockup rendered as inline SVG is an interface icon under section 7; whether `--gold-tint` is promoted into the Flow tokens.
+
+**Affected areas:** `docs/decisions/ADR-0010-constitution-led-interface-rebuild.md` (new), `docs/plans/active/constitution-led-interface-rebuild.md` (new), `docs/codex/audits/constitution-rebuild/PHASE-1-AUDIT.md` (new), `docs/codex/CURRENT-STATE.md`, `docs/codex/00-START-HERE.md`.
+=======
 ## 27 July 2026 — Starter Deal Room provides the first real product experience
 
 **Decision:** Ponte will provide a limited Starter Deal Room before ongoing paid use. The customer-facing language is Starter Deal Room or Starter Access rather than “Freemium Plan”. It is available at organisation level, requires no credit card, includes the real core progress loop and creates no founder, Ponte Desk or specialist obligation.
@@ -48,11 +65,12 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Progress and engagement:** The Deal Room may use named commercial stages, stable weighted procedural completion, meaningful milestones and momentum to make genuine transaction progress visible and motivating. Procedural completion is never a Trust Score, risk score, value score or probability of closing. Points, coins, public leaderboards, popularity badges, random rewards, artificial countdowns and penalties for legitimate due diligence are excluded.
 
-**Authority effect:** ADR-0003 and `PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` provide the separate approval contemplated by the North Star for Business Passport, only for Deal Room admission product definition. They supersede the Master Implementation Brief's blanket Deal Room deferral only for product definition. Ponte remains a wider commercial-intelligence and controlled-execution product, not primarily a Deal Room.
+**Authority effect:** ADR-0008 and `PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` provide the separate approval contemplated by the North Star for Business Passport, only for Deal Room admission product definition. They supersede the Master Implementation Brief's blanket Deal Room deferral only for product definition. Ponte remains a wider commercial-intelligence and controlled-execution product, not primarily a Deal Room.
 
 **Implementation boundary:** Product definition is accepted; implementation is not started or authorised. No screen design, technical architecture, schema, migration, runtime code, production action, deployment, electronic-signature platform, trade-payment execution, escrow, trade-finance execution or autonomous negotiation is included. Issue #51 tracks the remaining product-definition outputs required before Design; issue #52 tracks the Deal Room commercial model required before monetisation implementation.
 
-**Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`, `docs/decisions/ADR-0003-deal-room-product-contract.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #50, #51 and #52.
+**Affected areas:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`, `docs/decisions/ADR-0008-deal-room-product-contract.md`, `docs/decisions/README.md`, `docs/codex/00-START-HERE.md`, `docs/codex/AUTHORITY-MANIFEST.md`, `docs/codex/CURRENT-STATE.md`, issues #50, #51 and #52.
+>>>>>>> origin/main
 
 ## 27 July 2026 — Ponte Design Constitution and Bridge System are binding authorities
 

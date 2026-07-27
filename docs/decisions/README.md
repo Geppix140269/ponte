@@ -34,3 +34,4 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0005](ADR-0005-free-deals-and-counterparty-room-branches.md) | Free structured Deals with paid master Deal Rooms and private sub-rooms | Accepted by owner; effective on merge |
 | [ADR-0006](ADR-0006-starter-deal-room-access.md) | Starter Deal Room access before ongoing paid use | Principle accepted; numerical limits proposed |
 | [ADR-0007](ADR-0007-deal-passport.md) | Deal Passport as the durable evidence-backed transaction-history layer | Accepted by owner; effective on merge |
+| [ADR-0010](ADR-0010-constitution-led-interface-rebuild.md) | Constitution-led rebuild of the complete interface | Accepted by owner; effective on merge |
