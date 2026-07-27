@@ -25,55 +25,103 @@
    ====================================================================== */
 
 .ponte-desk {
+  /* ======================================================================
+     COMPATIBILITY ALIASES onto the Ponte Flow token authority.
+
+     Every name below is the Desk's own vocabulary; every VALUE now comes
+     from `--pf-*`, declared once on :root by
+     design-system/ponte-flow/ponte-flow.css and imported by app/globals.css.
+
+     These were previously re-declared here as literal hex. The values were
+     byte-identical to their Flow counterparts, so this conversion changes no
+     rendered colour, it changes where the colour comes from. Re-declaring
+     meant a future change to an approved token would drift silently past the
+     Desk, which is what Constitution section 6 ("approved tokens are the sole
+     colour source") and section 20 (primitives implemented centrally) forbid.
+
+     Do not add a new literal colour to this block. A colour that has no
+     `--pf-` counterpart is a design gap to escalate, not a value to invent
+     here. The four local extensions below are recorded, not precedents.
+
+     Authority: ADR-0010; ExecPlan `constitution-led-interface-rebuild` section 6
+     step 1; PHASE-1-AUDIT section A.2.
+     ====================================================================== */
+
   /* ---- Surfaces (heritage light) ---- */
-  --surface: #fcfbf7;
-  --raised: #ffffff;
-  --sunken: #f2efe6;
-  --rule: #e5dfd2;
-  --rule-strong: #d5cebc;
+  --surface: var(--pf-surface);
+  --raised: var(--pf-raised);
+  --sunken: var(--pf-sunken);
+  --rule: var(--pf-rule);
+  --rule-strong: var(--pf-rule-strong);
 
   /* ---- Ink ---- */
-  --ink: #0f0f0e;
-  --ink-2: #3a3733;
-  --ink-3: #6e6a61;
-  --mute: #9a958a;
+  --ink: var(--pf-ink);
+  --ink-2: var(--pf-ink-2);
+  --ink-3: var(--pf-ink-3);
+  --mute: var(--pf-mute);
 
   /* ---- Brand signal, never a status ---- */
-  --gold: #c9973a;
-  --gold-ink: #8a6520;
-  --gold-tint: #f5ecd8;
+  --gold: var(--pf-gold);
+  --gold-ink: var(--pf-gold-ink);
 
   /* ---- Semantic states, reserved meanings, off the accent ---- */
-  --pos: #0f6e3d;
-  --pos-tint: #e9f1ec;
-  --pos-line: #bfd8c7;
-  --neg: #b4402a;
-  --neg-tint: #f7eae6;
-  --neg-line: #e6c3b8;
-  --review: #4e6472;
-  --review-tint: #eaeff1;
-  --review-line: #c4d2d8;
-  --declared: #6f695e;
-  --declared-tint: #f1eee7;
+  --pos: var(--pf-positive);
+  --neg: var(--pf-danger);
+  --review: var(--pf-review);
+  --declared: var(--pf-declared);
 
   /* ---- Focus ---- */
-  --focus: #1e5fa8;
-  --select: #dce8f4;
+  --focus: var(--pf-focus);
+  --select: var(--pf-select);
+
+  /* ======================================================================
+     LOCAL EXTENSIONS, values with no approved `--pf-` counterpart.
+
+     Each is a wash or hairline derived from a semantic token above, used to
+     tint a row or draw a status rule at a weight the base token is too strong
+     for. The Flow set defines the semantic colour but not its surface tint,
+     so these cannot be aliased today. They are recorded in
+     design-system/ponte-flow/documentation/compatibility-aliases.md as
+     candidates for promotion into the approved token set, and they are the
+     only literal colours this file may declare.
+
+     `--gold-tint` is the one the Phase 1 audit named explicitly (section A.2).
+     It is a gold wash on the kicker and the boundary heading. It is a surface,
+     never a status: Constitution section 6 keeps gold off verification,
+     approval, warning and success, and a tint does not soften that rule.
+     ====================================================================== */
+  --gold-tint: #f5ecd8;
+  --pos-tint: #e9f1ec;
+  --pos-line: #bfd8c7;
+  --neg-tint: #f7eae6;
+  --neg-line: #e6c3b8;
+  --review-tint: #eaeff1;
+  --review-line: #c4d2d8;
+  --declared-tint: #f1eee7;
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
   --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
   --f-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
 
-  /* ---- Elevation, restrained: character comes from rules, not shadow ---- */
+  /* ---- Elevation, restrained: character comes from rules, not shadow ----
+     Local extension, recorded with the tints above: the approved Flow set
+     defines no shadow token, so the ink shadow in --e-2 has nothing to alias
+     onto. --e-1 is built from the aliased --rule and holds no value of its own. */
   --e-1: 0 1px 0 var(--rule);
   --e-2: 0 1px 0 var(--rule), 0 18px 36px -28px rgba(15, 15, 14, 0.16);
 
   /* ---- Motion ---- */
-  --dur-1: 120ms;
-  --dur-2: 220ms;
-  --dur-3: 420ms;
-  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  /* Aliases onto the approved Flow timing scale. The Desk's three durations
+     are the Flow micro/enter/deliberate steps under shorter names; the easing
+     curve is the same cubic-bezier. The Flow scale carries four longer
+     durations the Desk does not use (crossing, loop, lane, signal), those
+     belong to the H-series components and are read from `--pf-*` directly by
+     the motion layer, not re-aliased here. */
+  --dur-1: var(--pf-dur-micro);
+  --dur-2: var(--pf-dur-enter);
+  --dur-3: var(--pf-dur-deliberate);
+  --ease: var(--pf-ease);
 
   /* ---- Desk layout constants, authoritative ---- */
   --dk-rail: 96px;
@@ -117,6 +165,16 @@
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus);
   border-radius: var(--dk-radius-in);
 }
+/* NOT ALIASED, recorded gap DS-1. #6fa8e0 is exactly the Flow `--pf-focus`
+   value under `[data-theme="dark"]`, hand-written here because this rule fires
+   on an ink panel. It cannot be written `var(--pf-focus)`: that resolves to the
+   light-mode blue, which is the wrong contrast on ink. It cannot be fixed by
+   scoping `.dk-ink` with `.inverse` either, that would flip every `--pf-*` on
+   the subtree, and the rail deliberately paints light tokens as FOREGROUND on a
+   hand-built dark ground (see `.st--done i` below). Flipping them would turn
+   those markers black. The Desk's ink panels are an un-migrated inverse surface;
+   giving them the approved inverse path is a design decision for the journey
+   slice that owns them, not a foundation alias. */
 .ponte-desk .dk-ink :where(a, button, [tabindex]):focus-visible {
   box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #6fa8e0;
 }
@@ -249,6 +307,12 @@
 .ponte-desk .st--done b { color: rgba(242, 239, 232, 0.8); }
 .ponte-desk .st--here i { background: var(--gold); width: 13px; height: 13px; box-shadow: 0 0 0 4px rgba(217, 172, 85, 0.2); }
 .ponte-desk .st--here b { color: var(--surface); font-weight: 700; }
+/* NOT ALIASED, recorded gap DS-1, same cause as the ink focus ring above.
+   #9db4c0 is the Flow `--pf-review` value under `[data-theme="dark"]`: the
+   halted point on an ink rail. `var(--pf-review)` would give the light-mode
+   slate, which sinks into the ink. The halted condition still carries its
+   meaning without colour, the marker is a distinct size and the label a
+   distinct weight, and `.st__n::after` states the condition in words. */
 .ponte-desk .st--halt i { background: #9db4c0; width: 11px; height: 11px; }
 .ponte-desk .st--halt b { color: #9db4c0; font-weight: 600; }
 .ponte-desk .st--reserved i { background: none; border: 1.5px dashed rgba(242, 239, 232, 0.3); }

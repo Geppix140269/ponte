@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import JourneyRail from "./JourneyRail";
 import DeskAccount from "./DeskAccount";
+import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import type { Rail } from "@/lib/desk/journey";
 
 /**
@@ -45,27 +46,6 @@ const NAV: { key: DeskNavKey; label: string; href: string }[] = [
   { key: "about", label: "How Ponte works", href: "/about" },
 ];
 
-function Lockup() {
-  return (
-    <Link className="cmd__lockup" href="/" aria-label="Ponte Trade, home">
-      <span className="cmd__chip">
-        <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
-          <path
-            d="M22 98 L22 60 C22 35 98 35 98 60 L98 98"
-            stroke="currentColor"
-            strokeWidth="11"
-            strokeLinejoin="miter"
-          />
-          <line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" strokeWidth="5" />
-          <circle className="cmd__dot" cx="60" cy="41" r="10" />
-        </svg>
-      </span>
-      <span className="cmd__word serif">Ponte</span>
-      <span className="cmd__tld">.trade</span>
-    </Link>
-  );
-}
-
 export interface DeskShellProps {
   children: ReactNode;
   /** The journey position, or null for a screen that has no journey. */
@@ -95,7 +75,7 @@ export default async function DeskShell({ children, rail, current, objective }: 
   return (
     <>
       <header className="cmd">
-        <Lockup />
+        <PonteLockup />
 
         {stated ? (
           <Link className="cmd__obj" href="/">

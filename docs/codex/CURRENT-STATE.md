@@ -85,6 +85,39 @@ Until the authority PR is merged, these files are implemented on branch and are 
 
 After merge, any UI contributor must stop rather than improvise when the Constitution is silent or conflicting.
 
+### Shared foundation implemented (Phase 2 slice 2, 27 July 2026)
+
+The approved system now has production plumbing. What exists, and what does not:
+
+| Layer | State |
+|---|---|
+| **Tokens** | Ponte Flow is the production token authority. `app/globals.css` imports the bundle above the Tailwind directives; `--pf-*` is declared on `:root`. The Desk's 21 duplicated properties are now aliases and hold no values of their own. |
+| **Icons** | `PonteIcon` is the sole renderer: semantic keys only, `currentColor` preserved, reduced variants below each key's own threshold, and an unknown key throws rather than rendering a hole. `check-governance.mjs` ratchets the legacy lucide and authored-SVG lists so they can only shrink. |
+| **Brand lockup** | One shared component, `components/ponte/brand/PonteLockup.tsx`, serving all four surfaces. The owner ruled it an identity asset, not an interface icon; the Constitution's icon law is unchanged for interface icons. |
+| **Motion** | The Flow motion CSS and the reduced-motion contract are live in production and were already imported (see the correction below). `lib/ponte/motion.ts` reads the approved specification rather than restating it. No component is activated on any journey yet. |
+| **Progress** | `lib/ponte/progress.ts`: pure, deterministic, weights summing to 100, floor 20, never 0, irregular increments, 100 only when the procedure completes. Approved band copy included. |
+| **Lifecycle states** | `components/ponte/state/LifecycleState.tsx`: loading, waiting, blocked, active, under review, completed, error. Distinct in words, marker geometry and colour, in that order. **No route has been retrofitted.** |
+| **Bridge primitives** | Still none. Slice 3, `design/phase-2-bridge-primitives`. |
+
+**Correction to the Phase 1 audit.** Its finding 0.3, that the Flow tokens and
+motion CSS were "imported nowhere", was wrong. They have been imported since
+commit `0bb84fa`; the audit's grep looked for the leaf filenames under `app/` and
+`components/` and missed the bundle file in `design-system/`. Verified at runtime.
+The genuine defect was the duplication the audit identified itself at A.2.
+Recorded in `docs/codex/audits/constitution-rebuild/GAP-REGISTER.md` section 4.
+
+**Open gaps** are registered in that same file: three icon commissions (G6a to
+G6c), the Bridge primitives (G1), the journey and connection state vocabulary
+(G5), and four design-system gaps (DS-1 to DS-4). A gap is a stop-and-escalate
+condition, not permission to improvise.
+
+**`/marketplace` is not a straightforward retirement.** It carries the owner-side
+decision on an inbound introduction, listing reconfirmation and the account
+brief, none of which exists elsewhere. Escalated in
+`docs/codex/audits/constitution-rebuild/MARKETPLACE-DEPENDENCY-FINDING.md`.
+Separately, `/api/marketplace/*` is current infrastructure: Start a Deal and Find
+both post to it.
+
 ## Landing visual baseline
 
 The current production landing has:

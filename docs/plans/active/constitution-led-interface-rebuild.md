@@ -138,6 +138,16 @@ production verification.
 - **27 Jul 2026** — Phase 1 audit completed and accepted as baseline. ADR-0010
   drafted. Headline correction opened as PR #60 (separately, already
   authorised). Phase 2 not started; blocked on ADR-0010 merge.
+- **27 Jul 2026** — Slice 2 (`design/phase-2-foundation-tokens`) implemented.
+  Token authority consolidated (21 Desk aliases, no rendered change, verified in
+  the browser); icon renderer confirmed and the brand lockup consolidated from
+  four copies into one shared component; motion and reduced-motion layers
+  confirmed live and given shared primitives; deterministic progress engine
+  built; seven lifecycle-state primitives built. 72 new tests. `governance:check`
+  and `verify` pass. Bridge primitives (slice 3) deliberately not started.
+  `/marketplace` investigated and escalated: three unique functions found.
+  **Screenshot capture unavailable in the implementing environment; visual
+  evidence is outstanding and is recorded as such in section 13.**
 
 ## 12. Decisions and discoveries
 
@@ -145,18 +155,87 @@ production verification.
   `main`. The audit's finding §0.2 was wrong and is corrected in place.
 - **Correction:** `desk.css` does not diverge from approved tokens. Values are
   identical; the defect is duplication, not invention.
-- Flow tokens and motion CSS are imported nowhere — the largest single
-  compliance gap and the reason Phase 2 leads.
+- ~~Flow tokens and motion CSS are imported nowhere~~ — **also wrong, corrected
+  in slice 2.** `app/globals.css:7` imports the Flow bundle, which imports the
+  tokens, the motion CSS and the reduced-motion contract. It has since commit
+  `0bb84fa`. The audit grepped for the three leaf filenames under `app/` and
+  `components/` and the bundle file legitimately hid them. Verified at runtime:
+  `--pf-*` resolves at `:root`, the `pf-draw` keyframes are in the CSSOM, the
+  `prefers-reduced-motion` rule is loaded. The real defect was the narrower one
+  the audit found itself at A.2 — the Desk held a duplicate copy — and that is
+  what slice 2 fixed. See `docs/codex/audits/constitution-rebuild/GAP-REGISTER.md`
+  section 4.
+- Consequently "all 12 motion components are 0% implemented" conflated the layer
+  with its use. The layer ships and is live; no component is *used* on a route.
+  Each journey activates what its screens call for.
 - The Bridge System has no production primitive; this is engineering, not
   styling, and is the critical path.
 - `rejected-icons.md` records seven deliberate non-icons. Their absence is a
   decision, not a gap, and must not be "fixed".
+- **The brand lockup was duplicated four times, not twice.** The audit recorded
+  `DeskShell` and `Logo.tsx`. `Logo.tsx` is the legacy obsidian mark, a different
+  drawing. The Ponte arch was in `DeskShell`, `FindChrome`, `PonteShell` and
+  `PonteLanding`, identical in geometry but dressed by three stylesheets, and it
+  had already drifted between copies (gap DS-2). One shared component now serves
+  all four with each surface rendering exactly what it rendered before.
+- **The progress floor is 20**, not a range. Constitution §9 says the first value
+  "normally begins between 18% and 25%"; the delivered engine contract and the
+  `--pf-progress-floor` token both say 20. The narrower authority governs and the
+  two agree.
+- **Uniform progress weights are rejected at runtime.** §9 requires irregular
+  increments and names "20, 40, 60, 80" as the thing to avoid; equal weights are
+  the only way to build an even ladder, so the validator refuses them.
+- **`/marketplace` is not simply legacy.** Three functions exist nowhere else:
+  the owner-side connection decision, listing reconfirmation, and the account
+  brief. Escalated, not resolved. See
+  `docs/codex/audits/constitution-rebuild/MARKETPLACE-DEPENDENCY-FINDING.md`.
+- **The `/api/marketplace/*` namespace is current infrastructure**, not legacy:
+  Start a Deal posts to `/api/marketplace/submit` and Find posts to
+  `/api/marketplace/interest`. Retiring the pages and retiring the API are
+  separate questions, and only the first is arguable.
 
 ## 13. Final evidence
 
 To be completed per slice: commits, PR URLs, check results, deploy preview,
 production verification and stated limitations. Nothing is claimed as deployed
 or production-verified without independent evidence.
+
+### Slice 2 — foundation (tokens, icons, motion, progress, lifecycle)
+
+**Repository checks, all passing:**
+
+- `npm run governance:check` — governance contract (18 files) plus the new icon
+  law ratchet (11 lucide, 16 authored SVG, 1 shared lockup).
+- `npm run verify` — exit 0. Messages, encoding, governance, 72 new tests on top
+  of the existing suite, `tsc --noEmit`, `next build`.
+
+**Runtime verification** on a local dev server, measured rather than eyeballed:
+
+- All 17 aliased Desk colour tokens resolve to the identical Flow values. Zero
+  mismatches. Rendered surfaces on `/` and `/market-signals` unchanged
+  (`--sunken` #F2EFE6 ground, `--ink` #0F0F0E text, cream command bar).
+- `--pf-*` present at `:root`; `pf-draw` keyframes in the CSSOM;
+  `prefers-reduced-motion` rule loaded.
+- Lockup renders identically per scope: Desk butt-capped and CSS-sized; Find
+  square-capped and attribute-sized at 20px; gold keystone #C9973A throughout.
+- 390 × 844: no horizontal page overflow on `/`, `/market-signals` or
+  `/dev/foundation`.
+- Reduced motion via the `[data-reduced-motion="1"]` hook: both animated states
+  stop; every label, colour and state string byte-identical before and after. A
+  removal, not a redraw.
+
+**Environment failure, recorded separately per section 9.** Screenshot capture
+was unavailable in the implementing environment (the browser pane does not
+composite frames there), so **no desktop or 390 × 844 image evidence is attached
+to this slice.** Constitution section 17 and section 21 require visual review
+before design approval is complete, and this slice therefore **cannot be treated
+as design-approved on the checks alone.**
+
+`/dev/foundation` was added so the review is possible: it renders the seven
+lifecycle states, the progress engine's real output and the motion register, it
+404s in production, and `/dev/` is already bared by ChromeGate. The outstanding
+evidence is a desktop and a 390 × 844 capture of that page plus `/` and
+`/market-signals`, with the reduced-motion setting on and off.
 
 ---
 

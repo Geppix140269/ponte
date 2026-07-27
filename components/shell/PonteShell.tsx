@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { isRtl } from "@/i18n/routing";
 import PonteFooter from "@/components/PonteFooter";
+import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import "@/components/find/find.css";
 
 /**
@@ -51,24 +52,7 @@ export default async function PonteShell({
   return (
     <div className={`ponte-find ${landingFontVars}`} dir={isRtl(locale) ? "rtl" : "ltr"}>
       <header className="fnav">
-        <Link className="flockup" href="/" aria-label={t("home")}>
-          <span className="flockup__chip">
-            <svg width="20" height="20" viewBox="0 0 120 120" aria-hidden="true">
-              <path
-                d="M22 98 L22 60 C22 35 98 35 98 60 L98 98"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="11"
-                strokeLinejoin="miter"
-                strokeLinecap="square"
-              />
-              <line x1="12" y1="98" x2="108" y2="98" stroke="currentColor" strokeWidth="5" />
-              <circle className="flockup__dot" cx="60" cy="41" r="10" />
-            </svg>
-          </span>
-          <span className="flockup__word serif">Ponte</span>
-          <span className="flockup__tld">.trade</span>
-        </Link>
+        <PonteLockup scope="find" label={t("home")} />
         <nav className="fnav__links" aria-label={t("navLabel")}>
           <Link
             className={`fnav__link${current === "explore" ? " is-current" : ""}`}

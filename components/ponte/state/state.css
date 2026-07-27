@@ -1,0 +1,239 @@
+/* ======================================================================
+   Ponte lifecycle states, the shared surface for the seven states every
+   journey has to be able to express.
+
+   Gap G7 in the Phase 1 audit: 25 of 28 user-facing routes had no loading,
+   error or empty treatment at all, and Constitution section 19 makes a
+   happy-path-only component incomplete. This is the central implementation
+   those routes will compose, built once here rather than seven times badly.
+
+   ----------------------------------------------------------------------
+   Colour is never the only carrier
+   ----------------------------------------------------------------------
+   Constitution section 6 and section 18 both require it, so every state is
+   distinguished three ways over: by its WORDS, by its MARKER GEOMETRY, and
+   only then by colour. Read in greyscale, with colour blindness, or in a
+   printout, each state is still identifiable:
+
+     active / loading   filled point WITH a tail        : work happening now
+     waiting            filled point, NO tail           : a person must act
+     under review       filled point inside a ring      : a review is open
+     blocked / error    point crossed by a bar          : stopped
+     completed          filled point on a solid rule    : stage finished
+
+   The vocabulary is the four route conditions from the Flow state
+   definitions. There are four conditions and seven states, so states share
+   geometry and are separated by their label. That is the intended design,
+   not a shortcut: the words carry the meaning and the drawing reinforces it.
+
+   ----------------------------------------------------------------------
+   What must not animate
+   ----------------------------------------------------------------------
+   Only `active` and `loading` move, and only while the platform is actually
+   doing the work. A halted point means a PERSON is the blocker; the state
+   definitions are explicit that it must not animate and must never pulse for
+   attention. `under review` carries the same prohibition for a stronger
+   reason: no decision exists yet, and a moving line would imply one is being
+   formed.
+
+   Every rule below is authored in its settled state, so the reduced-motion
+   block removes movement and nothing else. Nothing is redrawn.
+
+   Tokens only. A colour with no --pf-* counterpart is a gap to escalate.
+   ====================================================================== */
+
+.pst {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--f-sans, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pf-ink-2);
+}
+
+/* The marker column. Sized in its own right so the label baseline does not
+   shift between states; a row of records must not jitter as states differ. */
+.pst__mark {
+  position: relative;
+  flex: none;
+  align-self: center;
+  width: 14px;
+  height: 14px;
+}
+
+.pst__point {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: var(--pf-r-pill);
+  background: currentColor;
+}
+
+.pst__label {
+  font-weight: 600;
+  color: var(--pf-ink);
+}
+
+/* The condition, stated in text. Required for blocked, and available to any
+   state that needs to say what would change it. */
+.pst__detail {
+  color: var(--pf-ink-3);
+  font-weight: 400;
+}
+
+.pst__detail::before {
+  content: ": ";
+  color: var(--pf-mute);
+}
+
+/* ---- Active and loading: a real process is underway NOW ---------------- */
+/* Gold is the moving point here, which is its approved meaning. It is not a
+   status: nothing about this state says approved, verified or successful. */
+.pst--active,
+.pst--loading {
+  color: var(--pf-gold);
+}
+
+/* The tail: two trailing points at the authored opacities, which is what makes
+   a moving point readable as movement even when it is standing still. */
+.pst--active .pst__mark::before,
+.pst--active .pst__mark::after,
+.pst--loading .pst__mark::before,
+.pst--loading .pst__mark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: var(--pf-r-pill);
+  background: currentColor;
+}
+
+.pst--active .pst__mark::before,
+.pst--loading .pst__mark::before {
+  left: 0;
+  opacity: 0.34;
+}
+
+.pst--active .pst__mark::after,
+.pst--loading .pst__mark::after {
+  left: -5px;
+  opacity: 0.2;
+}
+
+.pst--active .pst__point,
+.pst--loading .pst__point {
+  animation: pst-travel var(--pf-dur-loop) var(--pf-ease) infinite;
+}
+
+/* Authored end state: the point at rest. The keyframes travel TOWARD it, so
+   removing the animation leaves the point exactly where it belongs. */
+@keyframes pst-travel {
+  0% {
+    transform: translateX(-3px);
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(3px);
+    opacity: 0.55;
+  }
+}
+
+/* ---- Waiting: the member must act. A halted point. -------------------- */
+/* Slate, no tail, and it does not move. The honesty rule: a moving point would
+   claim the platform is working when it is waiting for a person. */
+.pst--waiting {
+  color: var(--pf-review);
+}
+
+/* ---- Under review: a review is open and a person must complete it ------ */
+/* The ring is the distinction from waiting, readable without colour. The
+   reserved route ahead uses the authored 3/5 dash: the next stage exists but
+   no decision has been made. It must not animate: there is nothing to show. */
+.pst--review {
+  color: var(--pf-review);
+}
+
+.pst--review .pst__mark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid currentColor;
+  border-radius: var(--pf-r-pill);
+  opacity: var(--pf-opacity-secondary);
+}
+
+.pst--review .pst__point {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+}
+
+/* ---- Blocked and error: stopped, and red ------------------------------ */
+/* Constitution section 6: danger or blocked is red. The bar across the point
+   is what carries it in greyscale. Blocked always states its condition; a
+   disabled thing with no reason given is section 12's failure. */
+.pst--blocked,
+.pst--error {
+  color: var(--pf-danger);
+}
+
+.pst--blocked .pst__mark::after,
+.pst--error .pst__mark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  margin-top: -1px;
+  background: currentColor;
+}
+
+/* Error additionally hollows the point, so blocked and error are not the same
+   drawing in a greyscale printout. */
+.pst--error .pst__point {
+  background: var(--pf-surface);
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+/* ---- Completed: the stated stage is genuinely complete ---------------- */
+/* The approved positive token, and a solid rule under the point: a completed
+   route is solid throughout. It says the stage finished, and nothing more:
+   not verified, not approved, not successful. */
+.pst--completed {
+  color: var(--pf-positive);
+}
+
+.pst--completed .pst__mark::after {
+  content: "";
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+}
+
+/* ---- Reduced motion: a removal, never a redraw ------------------------ */
+/* Both hooks, matching the approved contract: the OS setting and the
+   in-product toggle must produce identical output. The point stops at its
+   authored resting position; the label, the marker geometry and the stated
+   condition are untouched, so no information is lost with the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .pst__point {
+    animation: none !important;
+  }
+}
+
+[data-reduced-motion="1"] .pst__point {
+  animation: none !important;
+}
