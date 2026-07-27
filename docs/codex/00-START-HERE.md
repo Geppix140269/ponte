@@ -33,9 +33,29 @@ the Deal Room Product Contract v1.
 The current commercial architecture is equally explicit: the upstream market
 creates liquidity, while the active Deal Room is Ponte's primary paid commercial
 environment. A commercial-entitlement gate is required conceptually for active
-room progression, but prices, payer rules, Stripe, billing, schema and runtime
-implementation remain unapproved. See ADR-0004 and the Deal Room Monetisation
-Policy.
+room progression. See ADR-0004 and the Deal Room Monetisation Policy.
+
+The accepted hierarchy is:
+
+```text
+Free structured Deal
+  -> paid master Deal Room for that Deal
+       -> any number of private related sub-rooms
+```
+
+One master Deal Room consumes one paid room entitlement or subscription slot.
+Private counterparty, provider and internal sub-rooms beneath it do not consume
+additional master-room slots. Five subscription room slots mean five concurrent
+master Deals, not five conversations. External guest organisations may consume
+the included guest allowance or credits. See ADR-0005 and the Deal-to-Room and
+Sub-Room Model.
+
+The day-one launch pricing document currently proposes a €149 monthly portfolio
+subscription with five concurrent master Deal Rooms, unlimited related sub-rooms,
+25 concurrent external guest organisations and a credits alternative. Those
+numbers are **proposed, not accepted**, until the owner approves the pricing
+authority. No charging, billing, Stripe, schema or runtime implementation is
+authorised by the proposal.
 
 ## Operating procedure
 
@@ -54,8 +74,10 @@ When documents conflict, use this order:
 1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience (landing, the primary routes, Explore, market-activity presentation, Start a Deal entry). It supersedes all earlier landing, gateway and primary-entry instructions, including anything below that defines four primary routes, makes Qualified Opportunities the primary Explore result, or treats Market Signals as a secondary fallback. Amended 26 July 2026: Ponte Desk is the selected visual and behavioural implementation, and §5 of that document now carries the Desk composition. Within the entry surfaces the order is: this authority, then the final Ponte Desk handoff for UX and visual behaviour, then Ponte Flow for semantic icon and motion implementation, then repository and production as implementation reality.
 1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-Only Interface and Multilingual Input Policy. The interface and all Ponte-controlled content are English only; multilingual natural-language input remains supported and AI may interpret and translate it; no i18n-level parallel interface is maintained. The `next-intl` and `[locale]` structure is legacy compatibility infrastructure, not future product architecture. Do not add locale abstractions, translation keys for parity, language selectors or locale routes.
 1b. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` — the accepted authority for the downstream Deal Room PROGRESS layer. It supplies separate Business Passport approval for Deal Room admission and supersedes the blanket Deal Room deferral only within its stated product-definition scope. It does not authorise Design, code, schema, migration or production action.
-1c. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — the accepted commercial authority for Deal Room monetisation. The upstream market creates liquidity; an active Deal Room requires a valid commercial entitlement. The policy amends the broad MVP payment exclusion so only trade settlement, escrow, trade-finance execution and payments between trading parties remain excluded. It does not authorise prices, charging, Stripe, schema, runtime paywalls or deployment.
-2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry that the North Star, Deal Room Product Contract, Deal Room Monetisation Policy or later accepted ADRs do not restate.
+1c. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — the accepted commercial authority for Deal Room monetisation. The upstream market creates liquidity; an active Deal Room requires a valid commercial entitlement. The policy amends the broad MVP payment exclusion so only trade settlement, escrow, trade-finance execution and payments between trading parties remain excluded. It does not authorise exact prices, charging, Stripe, schema, runtime paywalls or deployment.
+1d. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` — the accepted hierarchy for free structured Deals, paid master Deal Rooms and private related sub-rooms. One master room consumes one commercial entitlement; its private sub-rooms do not consume additional master-room slots.
+1e. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` — proposed day-one pricing and entitlement configuration. It is not binding until owner approval and does not authorise production charging.
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry that the North Star, Deal Room Product Contract, Deal Room Monetisation Policy, accepted branching model or later accepted ADRs do not restate.
 3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report the conflict before changing direction.
 4. The underlying long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, when present, for additional depth that does not conflict with the governing brief.
 5. Existing engineering, lifecycle, security and production authorities in the repository.
@@ -81,8 +103,9 @@ The repository also contains a canonical market taxonomy under
 contract. The production database and all creation/ingestion paths are not yet
 fully reconciled to that logical contract.
 
-The Deal Room product and monetisation foundations are accepted on the dedicated
-decision branch but are not implemented. No room, entitlement, billing or
+The Deal Room product, monetisation and master-room hierarchy are accepted on the
+dedicated decision branch but are not implemented. The launch numerical pricing
+configuration remains proposed. No room, sub-room, entitlement, billing or
 production capability may be claimed until `CURRENT-STATE.md` records evidence.
 
 ## Critical current truth
@@ -93,19 +116,21 @@ Read next:
 
 0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
 1. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` when work concerns post-interest transaction progression
-2. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` when work concerns pricing, entitlement, Ponte Desk or paid transaction support
-3. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
-4. `SOURCE-OF-TRUTH-SOP.md`
-5. `../decisions/README.md` and relevant accepted ADRs
-6. `CURRENT-STATE.md`
-7. `FEATURE-FLAGS.md`
-8. `DATABASE-STATE.md`
-9. `KNOWN-ISSUES.md`
-10. `DECISION-LOG.md`
-11. `DO-NOT-REOPEN.md`
-12. `MASTER-ROADMAP.md`
-13. `ACTIVE-MILESTONE.md`
-14. `.agent/PLANS.md`
+2. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` when work concerns the Deal, master-room or sub-room hierarchy
+3. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` when work concerns entitlement, Ponte Desk or paid transaction support
+4. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` when work concerns the proposed launch prices and allowances
+5. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+6. `SOURCE-OF-TRUTH-SOP.md`
+7. `../decisions/README.md` and relevant accepted ADRs
+8. `CURRENT-STATE.md`
+9. `FEATURE-FLAGS.md`
+10. `DATABASE-STATE.md`
+11. `KNOWN-ISSUES.md`
+12. `DECISION-LOG.md`
+13. `DO-NOT-REOPEN.md`
+14. `MASTER-ROADMAP.md`
+15. `ACTIVE-MILESTONE.md`
+16. `.agent/PLANS.md`
 
 ## Completion discipline
 
