@@ -1,69 +1,69 @@
-# ADR-0004 — Deal Room is the primary monetisation boundary
+# ADR-0004 — The master Deal Room is Ponte's primary monetisation boundary
 
 - **Status:** Accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Source issue:** #52
 - **Current status:** Non-negotiable commercial architecture until explicitly superseded by the owner
-- **Supersedes within scope:** Any commercial model that treats generic platform access, market-data access, free-form founder assistance or an unrelated subscription as Ponte's primary launch monetisation engine
+- **Supersedes within scope:** Any commercial model that treats generic platform access, market-data access, free-form founder assistance, an unrelated subscription or individual counterparty sub-rooms as Ponte's primary launch monetisation unit
 
 ## Context
 
-Ponte must create enough market activity and commercial liquidity to become useful. Market Signals, Member Opportunities, trade-service requirements and offers, and distribution or representation opportunities feed the platform and help participants discover relevant commercial intent.
+Ponte must create enough market activity and commercial liquidity to become useful. Market Signals, structured Deals, trade-service requirements and offers, and distribution or representation opportunities feed the platform and help participants discover relevant commercial intent.
 
-Charging too early for basic discovery would weaken liquidity. At the same time, the product needs a clear moment when commercial value becomes sufficiently concrete to support payment.
+Charging to create or publish a complete structured Deal would weaken liquidity. The clear value threshold occurs when a participant chooses to progress one defined Deal inside a controlled paid environment.
 
-The accepted Deal Room Product Contract defines that moment. A Deal Room begins only after credible commercial interest and provides the structured procedure, evidence, decisions, blockers, responsibilities and next actions needed to progress a transaction.
+The accepted Deal Room Product Contract defines that environment. ADR-0005 further clarifies its hierarchy: one paid master Deal Room corresponds to one Deal and may contain any number of private related sub-rooms.
 
-An earlier open proposal, PR #47, defines paid Ponte Desk human fulfilment and protects founder capacity. That boundary remains compatible but is narrower than this decision. Ponte Desk is one monetised layer inside the broader paid Deal Room environment; it is not the whole monetisation architecture.
+An earlier open proposal, PR #47, defines paid Ponte Desk human fulfilment and protects founder capacity. That boundary remains compatible but is narrower than this decision. Ponte Desk is one monetised layer inside the broader paid master Deal Room environment.
 
 ## Decision
 
-Ponte Trade's primary monetisation boundary is the Deal Room.
+Ponte Trade's primary monetisation boundary is the **master Deal Room**.
 
-Ponte creates upstream liquidity through open or low-friction discovery, Market Signals, Member Opportunities, structured commercial intent, trade-service activity, distribution and representation activity, and controlled qualification or introduction paths.
+Ponte creates upstream liquidity through open or low-friction discovery, Market Signals, structured member-created Deals, trade-service activity, distribution and representation activity, and controlled qualification or introduction paths.
 
-When credible commercial interest moves from discovery or connection into structured transaction progression, the parties enter a Deal Room. The Deal Room is the paid commercial environment.
+A complete eligible structured Deal may be submitted, reviewed and published without a Deal Room fee.
 
-A proposed room and its admission requirements may be previewed before payment. An active room that unlocks protected transaction progression requires a valid commercial entitlement. That entitlement may be paid by:
+When credible commercial interest moves from discovery or connection into structured transaction progression, a participant opens and commercially sponsors one master Deal Room linked to that Deal.
 
-- the room initiator;
-- one principal party;
-- multiple or all principal parties;
+One active master Deal Room:
+
+- consumes one subscription room slot or pay-as-you-go activation;
+- may contain any number of private related sub-rooms;
+- remains the parent commercial, entitlement, audit and lifecycle object;
+- may use included guest capacity or credits for admitted external organisations.
+
+Private sub-room creation does not consume another master-room entitlement.
+
+A proposed master room and its admission requirements may be previewed before final entitlement consumption. Protected active progression requires a valid commercial entitlement.
+
+The entitlement may be supplied by:
+
+- the Deal owner;
+- an eligible interested counterparty;
+- the master-room initiator;
+- one or more principal parties;
 - a sponsor, association or institution;
-- a subscription that explicitly includes Deal Room capacity;
+- a subscription that explicitly includes master-room capacity;
+- Ponte Credits;
 - a promotional or founding entitlement; or
 - an auditable owner-approved waiver.
 
-The exact payer, pricing unit, package names, included participants, limits and timing are configurable commercial decisions to be defined under issue #52. They are not fixed by this ADR.
-
-Every launch revenue mechanism must be anchored to a Deal Room or a clearly Deal Room-related service. Possible mechanisms include:
-
-- room activation or creation fees;
-- participant or organisation access;
-- self-managed, agent-assisted, Ponte-facilitated or Ponte-managed room packages;
-- enhanced workflow, evidence, verification or reporting services;
-- Market Signal investigation and counterparty work that leads into or supports a room;
-- specialist inspection, logistics, compliance, legal, finance or other professional services coordinated through the room;
-- portfolio or subscription plans that include defined active-room capacity;
-- transaction, success, referral or completion fees where attribution, legality, payment and operational rules are clear.
-
-These are permitted model families, not approved prices or implementation scope.
+The exact numerical prices and included allowances are defined in the launch-pricing authority and remain proposed until owner approval.
 
 ## Commercial funnel
 
-The governing commercial funnel is:
-
 ```text
-Create liquidity
-  -> help users discover and structure commercial intent
-  -> establish credible interest
-  -> invite the parties into a Deal Room
-  -> monetise transaction progression
-  -> offer paid assisted, specialist and outcome-related layers around the room
+Create liquidity through free structured Deals
+  -> establish credible commercial interest
+  -> open and entitle one master Deal Room for the Deal
+  -> create private counterparty and provider sub-rooms
+  -> monetise controlled transaction progression
+  -> offer paid assisted, specialist and outcome-related layers
 ```
 
-The upstream layer is the acquisition and liquidity engine. The Deal Room is the monetisation and controlled-execution engine.
+The upstream layer is the acquisition and liquidity engine. The master Deal Room is the monetisation and controlled-execution engine.
 
 ## Relationship to Ponte Desk
 
@@ -74,74 +74,84 @@ The founder-capacity and paid Ponte Desk principles remain valid:
 - scope, deliverables, exclusions, timing, permitted external actions and payment terms must be accepted before work starts;
 - low-cost access must never imply uncapped human assistance.
 
-However, Ponte Desk is an optional fulfilment mode or paid layer within the Deal Room-centred commercial architecture. A self-managed or agent-assisted Deal Room is still a monetised product even when no Ponte human participates.
+However, Ponte Desk is an optional fulfilment mode or paid layer within the Deal Room-centred architecture. A self-managed or agent-assisted master Deal Room is still a monetised product even when no Ponte human participates.
 
 ## Guardrails
 
 - Do not place the principal liquidity-creation layer behind a paywall that prevents Ponte from building an active market.
+- Do not charge merely to create or publish a complete eligible structured Deal.
+- Do not charge another master-room activation for each private related sub-room.
 - Do not describe payment as verification, trust, reduced risk, higher likelihood of closing or preferential truth status.
-- Do not let a participant gain access to protected active-room content merely because another unrelated platform feature was purchased.
+- Do not let a payer obtain ownership of another participant's Deal or access, disclosure or decision rights that were not separately granted.
 - Do not begin substantive Ponte Desk or specialist work without an explicit entitlement.
-- Do not invent prices, packages, discounts, transaction fees or success-fee obligations before approval.
+- Do not invent or activate prices, discounts, transaction fees or success-fee obligations before approval.
 - Do not create hidden recurring charges or automatic renewals without clear acceptance.
-- Do not let a payment failure erase already supplied data or destroy a durable transaction record; access and progression policy must be explicit.
-- Sponsored, promotional and waived access must be auditable so it does not silently redefine the standard commercial model.
+- Do not let a payment failure erase already supplied data or destroy a durable transaction record.
+- Sponsored, promotional and waived access must be auditable.
 
 ## Consequences
 
-- Discovery and liquidity creation are optimised for participation and relevance rather than immediate paywall conversion.
-- The product's main conversion event becomes movement from credible interest into an active Deal Room.
-- Deal Room activation, entitlement and billing become core product concepts in the future domain and lifecycle model.
-- Room previews, admission, payment and participant acceptance must be sequenced carefully so no party pays for a room that cannot meet its minimum activation conditions without a defined policy.
-- Workspace, notifications, analytics, admin and support must distinguish proposed, entitled, active, sponsored, waived, expired, suspended and closed rooms.
-- Subscription models, if used, must express room capacity or room-related value rather than silently reintroducing generic access as the primary paid product.
-- Paid verification, investigation, Ponte Desk and specialist services should normally attach to a room, a proposed room or a clear path into one.
-- Unit economics are measured around room creation, activation, participation, progression, assistance and outcome.
+- Discovery and structured Deal creation are optimised for participation and relevance rather than immediate paywall conversion.
+- The product's main conversion event is movement from a free structured Deal into an entitled master Deal Room.
+- Master-room activation, entitlement, billing, sub-room hierarchy and guest capacity become core product concepts.
+- Five subscription slots mean five concurrent master Deals, not five conversations.
+- Counterparty and provider sub-rooms may scale within the master room without multiplying room-slot cost.
+- Guest organisations may consume included capacity or credits.
+- Workspace, notifications, analytics, admin and support must distinguish proposed, reserved, entitled, active, sponsored, waived, expired, suspended and closed master rooms.
+- Paid verification, investigation, Ponte Desk and specialist services should attach to a master room or specific sub-room.
+- Unit economics are measured around master-room activation, guest participation, progression, assistance and outcome.
 
 ## Implementation boundary
 
-This ADR records the commercial architecture only. It does not authorise:
+This ADR records commercial architecture only. It does not authorise:
 
-- exact prices or package names;
+- production charging;
 - a pricing page;
 - Stripe changes;
 - invoice or tax configuration;
 - entitlement tables or migrations;
 - runtime paywalls;
 - production feature flags;
-- charging a user;
 - external commercial communication;
 - transaction or success-fee collection; or
 - deployment.
 
-Issue #52 must define and obtain approval for payer rules, package structure, admission/payment sequence, room capacity, sponsorship and waiver policy, refunds, expiry, abandonment, disputes, Stripe safety, tax, analytics and unit economics before implementation.
+The launch-pricing document currently remains proposed. Issue #52 must complete owner approval of the numerical package and the legal, tax, billing, refund, Stripe-safety and unit-economics work before implementation.
 
 ## Rejected alternatives
 
 ### Discovery-first paywall
 
-Rejected because restricting the market-activity and liquidity layer would make it harder for Ponte to become useful and active.
+Rejected because restricting the liquidity layer would make Ponte less useful and active.
 
 ### Paid Ponte Desk as the only revenue model
 
 Rejected because human assistance is capacity-constrained and does not monetise self-managed or agent-assisted transaction progression.
 
+### One paid room per counterparty branch
+
+Rejected because the value-bearing object is the Deal. One master Deal Room must support multiple private counterparty and provider sub-rooms without consuming another master-room slot for each discussion.
+
 ### Generic subscription as the primary monetisation engine
 
-Rejected because the most valuable and defensible moment is active transaction progression. A subscription may later include room capacity, but it must remain tied to Deal Room value.
+Rejected because the most valuable and defensible unit is active master Deal progression. A subscription is acceptable only when it expresses explicit master-room and guest capacity.
 
 ### Success fees as the only revenue model
 
 Rejected because attribution, delay, legal structure and collection risk make them unsuitable as the sole launch model.
 
-### Free Deal Rooms to maximise activity
+### Free active master Deal Rooms
 
-Rejected as the standard model because the Deal Room is where Ponte delivers controlled transaction progression and captures value. Promotional, sponsored or waived rooms require explicit auditable policy.
+Rejected as the standard model because the master room is where Ponte delivers controlled transaction progression and captures value. Promotional, sponsored or waived rooms require explicit auditable policy.
 
 ## Related records
 
 - `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`
+- `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`
+- `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`
+- `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`
 - `docs/decisions/ADR-0003-deal-room-product-contract.md`
+- `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`
 - open PR #47 and its proposed ADR-0002
 - `docs/codex/DECISION-LOG.md`
 - `docs/codex/CURRENT-STATE.md`
