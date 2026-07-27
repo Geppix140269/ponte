@@ -32,6 +32,11 @@ export default function DeskAccount({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
   const params = useSearchParams();
 
+  // A Sign in control on the sign-in page is a button that leads to where you
+  // already are. It is removed rather than replaced: the page itself is the
+  // account affordance, and a second one would only compete with it.
+  if (pathname === "/login") return null;
+
   if (signedIn) {
     return (
       <Link className="cmd__acct" href="/opportunities">

@@ -687,11 +687,29 @@
    black and lime. Each override below is one of those utilities, and nothing
    here changes behaviour.
    ====================================================================== */
-.ponte-desk .dklogin { display: flex; justify-content: center; padding: 56px var(--dk-gut); }
+/* Set down from the header rather than pinned under it, so the page does not
+   read as stranded at the top, and not so far down that it falls out of view
+   on a short viewport. */
+.ponte-desk .dklogin {
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: clamp(40px, 9vh, 92px) var(--dk-gut) 72px;
+}
 .ponte-desk .dklogin__card {
-  width: 100%; max-width: 440px;
+  width: 100%; max-width: 428px;
+  /* Warm paper, the same raised surface every other Desk record sits on. The
+     previous card read blue-grey against the cream ground. */
   background: var(--raised); border: 1px solid var(--rule-strong);
-  border-radius: var(--dk-radius); box-shadow: var(--e-2); padding: 30px 28px;
+  border-radius: var(--dk-radius); box-shadow: var(--e-2);
+  padding: 32px 30px 30px;
+}
+.ponte-desk .dklogin__h {
+  font-family: var(--f-serif); font-size: 30px; line-height: 1.12;
+  letter-spacing: -0.018em; font-weight: 500; margin: 16px 0 10px; color: var(--ink);
+}
+.ponte-desk .dklogin__sub { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin-bottom: 24px; }
+.ponte-desk .dklogin__note {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule);
+  font-size: 12.5px; line-height: 1.55; color: var(--ink-3);
 }
 .ponte-desk .dklogin .pill {
   display: inline-flex; align-items: center; gap: 7px;
@@ -713,11 +731,11 @@
   text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
 }
 .ponte-desk .dklogin .field {
-  width: 100%; font: inherit; font-size: 14px; color: var(--ink);
-  background: var(--surface); border: 1px solid var(--rule-strong);
-  border-radius: var(--dk-radius-in); padding: 10px 12px; min-height: 42px;
+  width: 100%; font: inherit; font-size: 14.5px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--ink-3);
+  border-radius: var(--dk-radius-in); padding: 11px 13px; min-height: 44px;
 }
-.ponte-desk .dklogin .field::placeholder { color: var(--mute); }
+.ponte-desk .dklogin .field::placeholder { color: var(--ink-3); opacity: 1; }
 .ponte-desk .dklogin .field:focus {
   outline: none; border-color: var(--focus);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent);

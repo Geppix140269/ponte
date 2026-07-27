@@ -119,14 +119,17 @@ export default function DeskLoginForm() {
       />
       <section className="sec dklogin">
         <div className="dklogin__card">
-          <span className="pill">{t("pill")}</span>
-          <h1 className="display mt-6 mb-2 text-[32px] text-ink">
-            {otp.step === "code" ? t("code.heading") : t("title")}
+          {/* The normal Ponte eyebrow, not a pill with a status dot. A dot is
+              a state marker everywhere else in this system, and nothing here
+              has a state. */}
+          <p className="kicker">Ponte access</p>
+          <h1 className="dklogin__h serif">
+            {otp.step === "code" ? t("code.heading") : "Sign in to Ponte"}
           </h1>
-          <p className="mb-7 text-[14px] text-muted">
+          <p className="dklogin__sub">
             {otp.step === "code"
               ? t("code.sentTo", { email: otp.email })
-              : t("subtitle")}
+              : "Access your records, investigations and trade activity."}
           </p>
 
           {linkError && otp.step === "email" && (
@@ -231,6 +234,13 @@ export default function DeskLoginForm() {
                   <p className="text-sm text-coral">{errorCopy}</p>
                 )}
               </form>
+
+              {/* Below the options, because it answers a question the member
+                  only has once they have seen them. It says what signing in
+                  does, and nothing about how it works. */}
+              <p className="dklogin__note">
+                New to Ponte? Signing in creates your account.
+              </p>
             </div>
           )}
         </div>
