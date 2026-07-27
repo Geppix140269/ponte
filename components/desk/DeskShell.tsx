@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { createClient } from "@/lib/supabase/server";
 import JourneyRail from "./JourneyRail";
+import DeskAccount from "./DeskAccount";
 import type { Rail } from "@/lib/desk/journey";
 
 /**
@@ -35,14 +37,11 @@ import type { Rail } from "@/lib/desk/journey";
  * responsible for not creating. It returns when Explore is rebuilt on the Desk,
  * which is not this slice.
  */
-export type DeskNavKey = "market" | "deal" | "records" | "about";
+export type DeskNavKey = "market" | "deal" | "about";
 
 const NAV: { key: DeskNavKey; label: string; href: string }[] = [
   { key: "market", label: "Market Signals", href: "/market-signals" },
   { key: "deal", label: "Start a deal", href: "/structure" },
-  // A member's own records. Owner-scoped and signed-out safe: it explains
-  // itself rather than 404ing or bouncing a visitor to a login wall.
-  { key: "records", label: "Your records", href: "/opportunities" },
   { key: "about", label: "How Ponte works", href: "/about" },
 ];
 
@@ -77,8 +76,21 @@ export interface DeskShellProps {
   objective?: string | null;
 }
 
-export default function DeskShell({ children, rail, current, objective }: DeskShellProps) {
+export default async function DeskShell({ children, rail, current, objective }: DeskShellProps) {
   const stated = objective?.trim();
+
+  // Whether there is a session, and nothing else about it. The header needs to
+  // know which door to show; it does not need a profile, so it does not read
+  // one.
+  let signedIn = false;
+  try {
+    const { data } = await createClient().auth.getUser();
+    signedIn = Boolean(data?.user);
+  } catch {
+    // An unreadable session is a signed-out header, which is the safe way to
+    // be wrong: it offers a door rather than hiding one.
+    signedIn = false;
+  }
 
   return (
     <>
@@ -104,6 +116,13 @@ export default function DeskShell({ children, rail, current, objective }: DeskSh
             </Link>
           ))}
         </nav>
+
+        {/* Suspense because the control reads the current search params to
+            build its return path, and useSearchParams opts a subtree into
+            client rendering. */}
+        <Suspense fallback={null}>
+          <DeskAccount signedIn={signedIn} />
+        </Suspense>
       </header>
 
       <div className={`dk-app${rail ? "" : " dk-app--norail"}`}>

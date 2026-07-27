@@ -178,6 +178,19 @@
 .ponte-desk .cmd__nav a[aria-current] { color: var(--ink); border-bottom-color: var(--ink); }
 .ponte-desk .cmd__nav a:hover { color: var(--ink); }
 
+/* The account slot. Sits after the navigation and behind its own rule, so it
+   reads as a different kind of thing from a place in the product. */
+.ponte-desk .cmd__acct {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-left: 18px; padding: 7px 14px;
+  border: 1px solid var(--rule-strong); border-radius: var(--dk-radius);
+  background: var(--raised); color: var(--ink);
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .cmd__acct:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
+
 /* ======================================================================
    2. THE JOURNEY RAIL, journey stations and journey state only
    ====================================================================== */
@@ -879,6 +892,10 @@
   .ponte-desk .cmd__obj { order: 3; max-width: none; flex-basis: 100%; }
   .ponte-desk .cmd__nav { gap: 16px; overflow-x: auto; scrollbar-width: none; }
   .ponte-desk .cmd__nav::-webkit-scrollbar { display: none; }
+  /* At this width the lockup and the account slot share the top row, and the
+     navigation drops beneath them. The door stays visible without scrolling. */
+  .ponte-desk .cmd__nav { order: 4; flex-basis: 100%; margin-left: 0; }
+  .ponte-desk .cmd__acct { margin-left: auto; padding: 6px 12px; font-size: 12.5px; }
   .ponte-desk .boundary { padding: 22px 18px 24px; }
   .ponte-desk .boundary h2 { font-size: 21px; }
 }
