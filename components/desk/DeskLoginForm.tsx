@@ -43,6 +43,7 @@ export default function DeskLoginForm() {
   const t = useTranslations("login");
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [linkError, setLinkError] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [nonces, setNonces] = useState<{ raw: string; hashed: string } | null>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -91,7 +92,7 @@ export default function DeskLoginForm() {
 
     window.google.accounts.id.renderButton(buttonRef.current, {
       type: "standard",
-      theme: "filled_black",
+      theme: "outline",
       size: "large",
       text: "continue_with",
       shape: "rectangular",
@@ -99,6 +100,59 @@ export default function DeskLoginForm() {
       width: 360,
       locale: "en",
     });
+
+    /**
+     * Whether the button actually MOUNTED, which is not the same question as
+     * whether we asked for one.
+     *
+     * Google Identity Services creates the iframe and then collapses it to
+     * 0x0 when the page origin is not an authorised JavaScript origin for the
+     * client, and it logs nothing when it does. A Netlify deploy preview mints
+     * a new subdomain per pull request, so that is the normal case there. The
+     * container is therefore no evidence at all: only a rendered iframe with
+     * real dimensions proves the member has a Google button to press.
+     *
+     * Until that is true the whole Google area stays hidden, along with the
+     * divider that would otherwise separate it from nothing. No error is
+     * shown, because nothing has failed from the member's point of view: the
+     * email code is a complete route on its own.
+     */
+    const host = buttonRef.current;
+    const mounted = () => {
+      const frame = host.querySelector("iframe");
+      if (!frame) return false;
+      const { width, height } = frame.getBoundingClientRect();
+      return width > 0 && height > 0;
+    };
+
+    if (mounted()) {
+      setGoogleReady(true);
+      return;
+    }
+
+    // The iframe arrives asynchronously and may be resized after insertion, so
+    // both events are watched rather than polled.
+    const observer = new MutationObserver(() => {
+      if (mounted()) setGoogleReady(true);
+    });
+    observer.observe(host, { childList: true, subtree: true, attributes: true });
+
+    const resize = new ResizeObserver(() => {
+      if (mounted()) setGoogleReady(true);
+    });
+    resize.observe(host);
+
+    // A backstop for the case where the iframe is inserted at zero size and
+    // never changes again, which is exactly what an unauthorised origin does.
+    const settle = window.setTimeout(() => {
+      if (mounted()) setGoogleReady(true);
+    }, 1500);
+
+    return () => {
+      observer.disconnect();
+      resize.disconnect();
+      window.clearTimeout(settle);
+    };
   }, [scriptLoaded, nonces, t]);
 
   const errorCopy =
@@ -187,19 +241,25 @@ export default function DeskLoginForm() {
             </div>
           ) : (
             <div className="space-y-5">
+              {/* The host is always mounted, because Google needs somewhere to
+                  render into before we can know whether it will. It is hidden
+                  until the button proves itself, so an empty 40px slot never
+                  appears above the email form. */}
               {GOOGLE_CLIENT_ID ? (
-                <div ref={buttonRef} className="flex justify-center" />
-              ) : (
-                <div className="glass-tight p-4 text-[12px] text-muted">
-                  {t("googleDisabled")}
+                <div className={googleReady ? "dklogin__g" : "dklogin__g dklogin__g--wait"}>
+                  <div ref={buttonRef} className="flex justify-center" />
                 </div>
-              )}
+              ) : null}
+
               {googleError && <p className="text-sm text-coral">{googleError}</p>}
 
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-label text-muted">
-                <span className="h-px flex-1 bg-white/10" /> {t("or")}{" "}
-                <span className="h-px flex-1 bg-white/10" />
-              </div>
+              {/* The divider exists only when there are two things to divide. */}
+              {googleReady ? (
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-label text-muted">
+                  <span className="h-px flex-1 bg-white/10" /> {t("or")}{" "}
+                  <span className="h-px flex-1 bg-white/10" />
+                </div>
+              ) : null}
 
               <form
                 onSubmit={(e) => {

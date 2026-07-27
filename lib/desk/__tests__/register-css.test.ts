@@ -176,6 +176,58 @@ test("the signal strip is escapable, optional, and cannot widen the page", () =>
   );
 });
 
+test("the Google button is proved by a rendered iframe, never by its container", () => {
+  // The fault this guards against was in the VERIFICATION, not the product:
+  // checking that the container div exists says nothing, because Google
+  // Identity Services creates the iframe and then collapses it to 0x0 on an
+  // unauthorised origin without logging anything. Only measured dimensions
+  // prove a member has a button to press.
+  const form = readFileSync("components/desk/DeskLoginForm.tsx", "utf8");
+
+  assert.ok(form.includes("googleReady"), "there is no explicit readiness state");
+  assert.ok(
+    /querySelector\(["']iframe["']\)/.test(form),
+    "readiness is not established from the rendered iframe",
+  );
+  assert.ok(
+    /getBoundingClientRect\(\)[\s\S]{0,160}width > 0 && height > 0/.test(form),
+    "readiness does not require non-zero rendered dimensions",
+  );
+
+  // The area and its divider are both gated on that state.
+  assert.ok(
+    /googleReady \? "dklogin__g" : "dklogin__g dklogin__g--wait"/.test(form),
+    "the Google area is not gated on readiness",
+  );
+  assert.ok(
+    /\{googleReady \?[\s\S]{0,200}tracking-label/.test(form),
+    "the OR divider is not gated on readiness, so it can be orphaned",
+  );
+
+  // The waiting host must stay measurable. display:none has no dimensions,
+  // which would make the button permanently unprovable.
+  assert.ok(
+    /\.dklogin__g--wait\s*\{[^}]*height:\s*0[^}]*overflow:\s*hidden/.test(css),
+    "the waiting Google host is not clipped to zero height",
+  );
+  assert.ok(
+    !/\.dklogin__g--wait\s*\{[^}]*display:\s*none/.test(css),
+    "the waiting Google host uses display:none, so it can never be measured",
+  );
+
+  // Unavailability is not an error. The email code is a complete route.
+  assert.ok(
+    !/googleDisabled/.test(form),
+    "an unavailable Google button still renders a failure notice",
+  );
+
+  // The button is Google's own, in the theme that suits the Desk card.
+  assert.ok(/theme:\s*"outline"/.test(form), "the Google button is not the outline theme");
+  assert.ok(!/filled_black/.test(form), "the obsidian Google theme is still requested");
+  assert.ok(/renderButton/.test(form), "the official Google button was replaced by a custom one");
+  assert.ok(/signInWithIdToken/.test(form), "the Google identity flow changed");
+});
+
 test("focus is never removed, and the ink surfaces get their own ring", () => {
   assert.ok(/focus-visible/.test(css), "no focus-visible styling at all");
   assert.ok(

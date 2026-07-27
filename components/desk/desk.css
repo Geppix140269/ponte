@@ -707,6 +707,13 @@
   letter-spacing: -0.018em; font-weight: 500; margin: 16px 0 10px; color: var(--ink);
 }
 .ponte-desk .dklogin__sub { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin-bottom: 24px; }
+/* The Google host, before it has proved itself.
+   Clipped to zero height rather than display:none, because a hidden element
+   has no dimensions and the readiness check measures the iframe inside it.
+   display:none would make the button permanently unprovable. */
+.ponte-desk .dklogin__g--wait { height: 0; overflow: hidden; }
+.ponte-desk .dklogin__g--wait > * { pointer-events: none; }
+
 .ponte-desk .dklogin__note {
   margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule);
   font-size: 12.5px; line-height: 1.55; color: var(--ink-3);
