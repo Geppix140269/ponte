@@ -2,8 +2,8 @@
 
 **Reconciled:** 27 July 2026  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
-**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` and ADR-0002, pending merge of the authority PR  
-**Bridge authority:** `design/authority/bridge/v1/`, pending merge of the authority PR  
+**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0003 (complete-interface scope)  
+**Bridge authority:** `design/authority/bridge/v1/` (merged, no production primitive yet)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
@@ -75,13 +75,19 @@ The current production landing has:
 - the Market Signals section below;
 - real restored commercial routes.
 
-The approved next visual slice is deliberately narrow:
+**Superseded by ADR-0003 (27 July 2026).** The narrow boundary below was the
+first-implementation limit recorded after PR #58. ADR-0003 widens the
+Constitution's scope to the complete interface, delivered through controlled
+journey PRs. The delivery discipline is unchanged: one journey per PR, each
+complete at desktop and mobile, each with its own evidence and owner approval.
 
-1. replace the temporary family/action grid with the approved Family and Action Bridges;
-2. render `Global trade, from <em>signal to deal.</em>` using the approved gold italic emphasis;
+The first two items remain the first two slices:
+
+1. render `Global trade, from <em>signal to deal.</em>` using the approved gold italic emphasis (PR #60);
+2. replace the temporary family/action grid with the approved Family and Action Bridges;
 3. preserve all current production navigation, authentication, data, actions and destinations.
 
-No other landing redesign is authorised by this decision.
+Programme sequencing is governed by `docs/plans/active/constitution-led-interface-rebuild.md`.
 
 ## Production inventory truth
 

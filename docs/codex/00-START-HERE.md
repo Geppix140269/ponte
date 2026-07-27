@@ -33,7 +33,7 @@ When documents conflict, use this order:
 0. A later owner-accepted ADR in `docs/decisions/` that explicitly supersedes a named earlier decision within its scope. An ADR is not implementation status.
 1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience.
 1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-only interface and multilingual input policy.
-1b. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` — the binding authority for every Ponte-controlled visual and interaction decision. Within its scope, approved packages under `design/authority/` and approved Ponte Flow assets under `design-system/ponte-flow/` are implementation authorities, not inspiration. Visual conformity is part of correctness.
+1b. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` with ADR-0002 and ADR-0003 — the binding authority for every Ponte-controlled visual and interaction decision. Within its scope, approved packages under `design/authority/` and approved Ponte Flow assets under `design-system/ponte-flow/` are implementation authorities, not inspiration. Visual conformity is part of correctness.
 2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing implementation authority for everything downstream of entry.
 3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report conflicts before changing direction.
 4. The long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, where they do not conflict with the governing authorities.
