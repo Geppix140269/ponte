@@ -1,6 +1,9 @@
 name: Import approved Bridge package
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - governance/ponte-design-constitution-v1
@@ -10,14 +13,27 @@ permissions:
 
 jobs:
   import-package:
-    if: github.event.head_commit.message == 'Stage exact approved Bridge package'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'Stage exact approved Bridge package'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: governance/ponte-design-constitution-v1
           fetch-depth: 0
 
+      - name: Determine whether import is required
+        id: required
+        shell: bash
+        run: |
+          if test -f 'design/authority/bridge/v1/source/Ponte Bridge System.html' \
+            && test -f 'design/authority/bridge/v1/reference/mobile-3-action-revealed-390x844.png'; then
+            echo 'value=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'value=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download and verify source archive
+        if: steps.required.outputs.value == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -27,6 +43,7 @@ jobs:
           echo 'd45d809d2917a6265e368ade5f52c319bbd83937a29070b7b4a338445975d616  /tmp/ponte-bridge.zip' | sha256sum --check --strict
 
       - name: Import exact approved files
+        if: steps.required.outputs.value == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -102,6 +119,7 @@ jobs:
           node --check 'design/authority/bridge/v1/source/ponte-bridge-demos.js'
 
       - name: Commit exact package
+        if: steps.required.outputs.value == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -109,4 +127,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A design/authority/bridge/v1
           git commit -m 'Import exact approved Ponte Bridge package'
-          git push
+          git push origin HEAD:governance/ponte-design-constitution-v1
