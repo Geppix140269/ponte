@@ -1,11 +1,13 @@
 # Current state
 
-**Reconciled:** 26 July 2026  
+**Reconciled:** 27 July 2026  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
+**Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Deal Room decision:** `docs/decisions/ADR-0003-deal-room-product-contract.md`  
 **Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
@@ -29,6 +31,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Source-of-truth operating procedure | On `main` via PR #41 | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
+| Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No Design, code, schema, migration, deployment or production action. Issues #50 and #51 track authority recording and remaining product definition. |
 | Ponte Desk interface, slice 1 (landing, Market Signals listing, Market Signal detail) | Implemented on branch `claude/ponte-desk-interface-671b92` | Not deployed | Desk page system, journey rail, ruled fact register, Atlas ink boundary on signal detail. Desktop and 390px verified locally against production data. Stops before merge for owner visual review. |
 | Desk commercial-fact authority (`lib/desk/facts.ts`) | Implemented on branch | Not deployed | `factsFor(record, context)` is the single authority at every width. Contexts differ in count only. `lib/desk/adapter.ts` is the one production boundary; no component reads a signal column. |
 | Desk journey rail (`lib/desk/journey.ts`) | Implemented on branch | Not deployed | R-FIND and R-SUBMIT, four stations each. Journey stations only, never navigation. The landing has no rail. Review is not a station and does not move the rail. |
@@ -45,6 +48,26 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Product HS catalogue | On `main` | 5,613 rows across 97 chapters | The two approved listings have valid HS codes; public signals have none. |
 | Import provenance and dedupe | On `main` | Production-verified strong | All 6,441 `g4wb_v2` rows have canonical ids, source platform, source URL, import metadata and dedupe keys; no duplicate groups were found. |
 | Verification/publication eligibility | On `main` | Production defect confirmed | `profiles.verification_level` is a text enum while code applies `Number(...)`; no passing `member_business` verification exists in production. |
+
+## Deal Room product truth
+
+The owner accepted the Deal Room foundation on 27 July 2026. The accepted product definition is:
+
+```text
+Credible commercial interest
+  -> proposed room
+  -> Deal Room-ready Business Passport
+  -> versioned participation terms and NDA acceptance
+  -> required principal participants admitted
+  -> procedure proposed and agreed
+  -> conditions, evidence, decisions and blockers progressed
+  -> Ready to proceed, qualified no-go or other intentional closure
+  -> durable permission-controlled history
+```
+
+The procedure is the central object. Progress is separated into named commercial stage, stable weighted procedural completion, milestones and momentum. It is not a Trust Score or probability of closing.
+
+This is **Designed**, not implemented. No Deal Room screen, table, migration, signature flow, permission engine, notification path or production behaviour is created by the accepted authority. Issue #51 must complete the detailed journey, screen register, conceptual domain model, permission matrix, state machine, progress model and delivery plan before Design begins.
 
 ## Production inventory truth
 
@@ -125,8 +148,10 @@ Duplicate checks and investigation-count reconciliation returned zero defects.
 
 ## Immediate next actions
 
-1. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
-2. After explicit owner direction, Phase B designs the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration.
-3. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
-4. A later pre-migration report and owner approval are required before any production schema or backfill change.
-5. Issue #42 remains open until all implementation phases are complete.
+1. Review and merge the Deal Room authority PR only after confirming that it records the accepted foundation accurately; merge does not authorise implementation.
+2. Complete issue #51's remaining Deal Room product-definition outputs and stop for owner approval before Design.
+3. Owner reviews and decides whether to merge PR #44 as the accepted Phase A evidence package.
+4. After explicit owner direction, Phase B designs the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration.
+5. The verification-level type defect and approved-listing direct-read policy are handled as explicit security/integrity work, not hidden inside a market-schema migration.
+6. A later pre-migration report and owner approval are required before any production schema or backfill change.
+7. Issue #42 remains open until all implementation phases are complete.
