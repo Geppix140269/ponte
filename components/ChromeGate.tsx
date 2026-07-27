@@ -35,6 +35,10 @@ function rendersOwnChrome(path: string): boolean {
     path === "/explore" ||
     path.startsWith("/explore/") ||
     path === "/market-signals" ||
+    path === "/opportunities" ||
+    // The sign-in door. It rendered in the legacy obsidian application, which
+    // meant the Desk's own Sign in control led one click out of the Desk.
+    path === "/login" ||
     path.startsWith("/market-signals/") ||
     // The design-system specimen sheets, which exist to be looked at against
     // the handoff and should not be framed by the chrome they are replacing.

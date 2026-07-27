@@ -1,11 +1,13 @@
 # Current state
 
-**Reconciled:** 26 July 2026  
+**Reconciled:** 27 July 2026  
+**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
+**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` and ADR-0002, pending merge of the authority PR  
+**Bridge authority:** `design/authority/bridge/v1/`, pending merge of the authority PR  
+**Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
-**Canonical commit before this governance proposal:** `6c18af51b907b57d1a063ad51cfdb451e112ad03`  
-**Governing authority (entry experience):** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
-**Governing authority (everything downstream of entry):** `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+**Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`
 
 ## Status vocabulary
 
@@ -21,32 +23,86 @@ Use only these labels:
 - Blocked
 - Deprecated
 
-Code on `main` is not automatically deployed, enabled or production-verified.
-An accepted ADR is not proof that its implementation is complete.
+Code on `main` is not automatically deployed, enabled or production-verified. An accepted ADR is not proof that its implementation is complete.
 
 ## Implementation summary
 
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
-| Source-of-truth operating procedure | Implemented on branch `governance/source-of-truth-sop`; awaiting PR review | Not applicable until merged | Adds the common SOP, ADR system, Claude entry point, proposal intake form, PR checklist and mandatory cross-agent rules. |
-| Unified three-family market contract | Accepted decision; logical contract implemented on governance branch | Production database and end-to-end flows not reconciled | ADR-0001 defines Products, Trade services, and Distribution and representation as equal families, each containing Market Signals and Member Opportunities. Code taxonomy now defines family, origin and valid intent. No production migration is authorised by this branch. |
-| Founding-launch integrity Blocks A-F | On `main` | Production database changes recorded as applied; deployed state needs direct confirmation | Separates Market Signals and Qualified Opportunities, purpose-binds business verification, strengthens publication gates, controlled introductions and founding lifecycle. |
-| North Star entrance: two routes and market activity | On `main` via PR #36; visual flow refinement via PR #40 | Recent PR #40 reports live exercise, but this reconciliation did not independently verify the deployed SHA | Two direct routes: Explore the market and Start a deal. Activity band, search, popular areas and trust/evidence explanation are implemented. The heavy arch was replaced with a lightweight directional flow. |
-| Explore the market | On `main` via PR #36; Flow taxonomy/icon integration via PR #38; count correction via PR #39 | Screens supplied by the owner show the current deployed surface; deployed commit not independently checked here | Three families and 15 product sectors render from real data. Product totals now use count queries rather than the 300-row read cap. Products is clickable. Deeper classification and inventory gaps remain. |
-| Canonical market taxonomy | On `main` for families, product sectors, service categories and distribution modes; origin and intent extension on governance branch | Not a production data contract yet | `lib/taxonomy/market.ts` is the code source. Explore now derives its family keys from it rather than restating them. Tests enforce the three families, two origins and family-valid intents. |
-| Product market inventory | On `main` | Active records visible; exact production count and mapping quality require verification | Thousands of product Market Signals are reported elsewhere in the product. Many imported records lack HS classification, producing empty sector counts despite non-zero product activity. Public zero grids and internal mapping explanations remain a product/data-quality defect. |
-| Trade services inventory | Partially implemented | Thin or zero on current surface | Current activity logic can prove member service records only. There is no complete external service-signal ingestion and classification pipeline. Member creation supports an offer-service entry at a high level, but the service-specific composer and end-to-end contract are incomplete. |
-| Distribution and representation inventory | Designed in taxonomy; no classified market records in current activity model | Empty or shown without a count | Distribution modes exist as typed taxonomy constants, but existing records are not classified into the family and member creation/ingestion are not complete. |
-| Unified market-activity read | On `main` | Live state requires direct verification | Existing public member records and Market Signals are presented together while retaining their true class. Counts use dedicated count queries; row reads remain bounded. |
-| Journey 1 — Find | On `main` | Feature-flag and live-route status require direct confirmation | Product discovery, separate factual classes, signal detail and controlled actions exist. It is not yet fully aligned to the new family/origin/intent contract. |
-| Journey 2 — Structure & Submit / Start a deal | On `main`; blockers fixed in PRs #37, #39 and #40 | PR #40 reports live exercise and an applied additive investigation migration | Product lookup cache, chapter paging, route home, seller geography logic, commercial vocabularies and preview editing were improved. Trade-service and distribution-specific creation remain incomplete. |
-| Market Signal investigation | Partially implemented and extended on `main` via PR #40 | PR #40 reports additive migration applied and live forms exercised | Investigation and capability declarations are separate request kinds; phone and contact language are captured for the desk. Full investigation lifecycle and Desk operations remain incomplete. |
-| Check and verify journey K01-K09 | Partially implemented; review fixes on `main`; request journey moved to Brand v5 | Existing surfaces may be live; full Brand v5 journey not production-verified | Existing verification, registry, sanctions, admin and receipt infrastructure are reusable. `/verify` and `/verification` now mount PonteShell in heritage-light, so reaching business verification from the Start a Deal blockers no longer drops the member into the obsidian application mid-task; see `docs/plans/active/verification-journey-brand-v5.md`. Verification meaning, cost, attestation and disclaimer are unchanged. Complete compatibility mapping and evidence journey remain later work. |
-| Commercial Missions M01-M07 | Not started or unconfirmed pending audit | Not production-verified | The governing architecture defines Missions as the persistent objective and agentic centrepiece. Existing reusable structures must be mapped before schema proposals. |
-| Commercial Developments D01-D05 | Not started or unconfirmed pending audit | Not production-verified | Must remain a cited, private Mission-specific synthesis, distinct from a listing or generic AI answer. |
-| Prepared actions and approvals X01-X07 | Partially implemented infrastructure | Not production-verified as a complete journey | Controlled introductions and account resumption provide reusable pieces. Complete exact-preview, approval, idempotent execution and recorded outcome require mapping. |
-| Business Passport and Vault B01-B08 | Partially implemented or missing pending audit | Not production-verified | Existing profiles, verification records and storage may be reusable. Person, business and membership must not be permanently merged. |
-| Complete admin operations A01-A09 | Partially implemented | Individual queues may be live; complete priority model not verified | Existing opportunity, verification, signal and investigation review surfaces are reusable candidates. No one-click AI approval. |
+| Source-of-truth operating procedure | On `main` | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
+| Ponte Design Constitution v1 | Implemented on branch `governance/ponte-design-constitution-v1` | Not deployed; authority only | Owner approved 27 July 2026. Becomes binding when merged. Includes ADR-0002, CODEOWNERS, PR design gate and governance enforcement. |
+| Ponte Bridge System v1 | Implemented on the authority branch | Not implemented in production | Approved for Family, Action, Completion, Journey, Counterparty and Deal Room bridges, mobile, reduced motion and gold italic landing emphasis. |
+| Ponte Desk and commercial journey repair | On `main` via PR #49, merge commit `85f0338d251e68cea583793adaea2379d77ddc03` | Deployed; production baseline visually inspected | Landing actions, services/distribution composer paths, signal actions, sign-in and Your records are restored. The current family/action card grid is temporary. |
+| Landing bridge implementation | Not started | Current card grid remains live | Must be a separate PR after the authority PR merges. Scope: replace only family/action cards and restore approved gold italic headline; preserve navigation, auth, routes, data and Market Signals. |
+| English-only interface policy | On `main` | Operating rule | Interface and Ponte-controlled content are English only; multilingual input remains supported. |
+| Unified three-family market contract | On `main` via ADR-0001 | Not fully implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
+| Issue #42 Phase A reconciliation | Complete evidence package | Production-verified for market-record scope | No runtime or database change. |
+| Product Market Signals | On `main` | 3,517 approved and unexpired rows at 26 July probe | Public signals have source category but no HS code. |
+| Native Member Opportunities | On `main` | 0 exact public records under the current eligibility contract at 26 July probe | Four listing rows existed; two approved/current, zero with passing bound member-business verification. |
+| Trade services inventory | Partially implemented | 0 legacy service rows at 26 July probe | Member creation paths exist after PR #49, but canonical persisted family/intent is not yet first-class. |
+| Distribution and representation inventory | Taxonomy and member creation paths | No canonical external inventory at 26 July probe | Canonical persisted family/intent remains future data-contract work. |
+| Verification/publication eligibility | On `main` | Production defect confirmed | Stored verification vocabulary and numeric code comparison require separate integrity work. |
+| Check and verify journey, request surfaces | Implemented on branch `claude/verify-journey-brand`, PR #45 | Not deployed | `/verify`, `VerifyForm` and the `/verification` explainer now mount PonteShell in heritage-light and are bared in ChromeGate, so reaching business verification from the Start a deal blockers no longer drops the member into the obsidian application mid-task. Every line of copy is unchanged: purposes, the attestation gate, the credit cost stated before anything is spent, the 401/402/429 paths, candidate selection resuming a paid case, and the full disclaimer. Plan: `docs/plans/active/verification-journey-brand-v5.md`. |
+
+## Design authority truth
+
+The approved design system is not advisory.
+
+The authority branch currently establishes:
+
+- `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`;
+- `design/authority/bridge/v1/README.md`;
+- `design/authority/bridge/v1/APPROVAL.md`;
+- approved Bridge CSS and implementation notes;
+- ADR-0002;
+- mandatory contributor instructions;
+- owner review for design authorities and shared design-system paths;
+- a mandatory PR Design Constitution checklist;
+- governance checks requiring the authority files and references.
+
+Until the authority PR is merged, these files are implemented on branch and are not yet binding repository authority.
+
+After merge, any UI contributor must stop rather than improvise when the Constitution is silent or conflicting.
+
+## Landing visual baseline
+
+The current production landing has:
+
+- production navigation and session-aware Sign in / Your records;
+- a scrolling strip of real Market Signals;
+- the concise headline `Global trade, from signal to deal.`;
+- a temporary three-column family/action card grid;
+- the Market Signals section below;
+- real restored commercial routes.
+
+The approved next visual slice is deliberately narrow:
+
+1. replace the temporary family/action grid with the approved Family and Action Bridges;
+2. render `Global trade, from <em>signal to deal.</em>` using the approved gold italic emphasis;
+3. preserve all current production navigation, authentication, data, actions and destinations.
+
+No other landing redesign is authorised by this decision.
+
+## Production inventory truth
+
+The 26 July 2026 production probe established:
+
+| Measure | Result |
+|---|---:|
+| Total Market Signal rows | 6,735 |
+| Approved signal rows | 3,543 |
+| Approved and unexpired public signals | 3,517 |
+| Public signal requirements | 2,526 |
+| Public signal offers | 991 |
+| Total listings | 4 |
+| Approved listings | 2 |
+| Approved/current before owner eligibility | 2 |
+| Approved/current with bound passing member-business verification | 0 |
+| Desk-managed listings | 2 |
+| Legacy service listings | 0 |
+| Signal investigations | 1 |
+
+Twenty-six rows remained stored as `approved_signal` after public expiry. Current readers excluded them correctly, but stored status and public-active lifecycle were not identical.
 
 ## Current market-model truth
 
@@ -58,76 +114,27 @@ Record origin: Market Signal | Member Opportunity
 Intent: one family-valid seeking or offering intent
 ```
 
-This model is recorded in ADR-0001, `lib/taxonomy/market.ts` and
-`docs/schemas/`. The existing database and public activity model do not yet
-represent every combination. In particular:
+At the 26 July probe, production confirmed that neither `listings` nor `desk_radar` persisted `market_family` or canonical `intent` as first-class fields.
 
-- imported product Market Signals often lack a reliable HS chapter;
-- external Trade service signals are not yet ingested and classified;
-- Distribution and representation records are not yet classified;
-- member-created service and distribution flows are not complete;
-- existing `ActivityKind` values do not yet expose the full family/origin/intent
-  contract.
+Current production vocabularies were:
 
-Therefore the three-family architecture is **accepted and partially encoded**,
-not yet end-to-end implemented.
+```text
+listings.type: offer | requirement | service
+desk_radar.side: offer | requirement
+```
 
-## Data-quality and empty-state defects
+These values cannot prove all accepted intents. PR #49 carries canonical family/intent through member journeys but does not authorise or apply a database migration.
 
-The current public Explore surface can show a non-zero Products total while all
-product sectors show zero, because many product records have no HS chapter. It
-can also show empty Trade services and Distribution families because those
-pipelines are incomplete.
+## Verification and security findings
 
-Required outcome, not yet implemented:
+Production profile levels were text values while application code performed a numeric conversion before threshold comparison. No passing `member_business` verification existed at the 26 July probe.
 
-1. reconcile reported product totals against the underlying active records;
-2. classify and backfill product sectors with confidence and review handling;
-3. ingest legitimate, source-linked service and distribution Market Signals;
-4. support member-created opportunities for every accepted intent;
-5. derive public counts from active real records;
-6. hide meaningless zero cards and keep uncertain classifications in an
-   internal quality workflow rather than exposing implementation failure copy.
-
-No fabricated records, counts or liquidity may be used to solve the empty state.
-
-## Localisation
-
-Ponte is English-only. English is the canonical and sole interface language.
-All other interface languages, including Spanish, are deferred, with
-translations retained in `messages/_deferred/` and old locale-prefixed URLs
-redirected to English. Multilingual input, AI language detection and translated
-display of member content are preserved.
-
-## Recent merged implementation evidence
-
-- PR #36: North Star two-route entry, market activity and Explore shell.
-- PR #37: HS lookup CDN cache-key correction.
-- PR #38: Ponte Flow design-system integration and canonical taxonomy.
-- PR #39: chapter paging, home route, Products link and accurate total counts.
-- PR #40: landing flow refinement, separate signal actions and composer fixes.
-
-## Production unknowns requiring evidence
-
-Before claiming the complete application or the new market model is live, record:
-
-1. the deployed commit SHA for `ponte.trade`;
-2. production values of relevant journey flags;
-3. direct exercise of all three Start a deal families and intents;
-4. current production schema versus the migration ledger;
-5. exact active counts by family, origin and intent;
-6. classification coverage and confidence for product sectors;
-7. expiry, deduplication, provenance and source-term behaviour for every
-   external ingestion source.
+RLS was enabled on inspected core tables. Investigation and connection policies preserved ownership boundaries. The approved-listing direct-read policy and verification type mismatch remain separate security and integrity work.
 
 ## Immediate next actions
 
-1. Review and merge the source-of-truth governance pull request after checks.
-2. Create an owner-approved ExecPlan for the unified market-record implementation.
-3. Audit the current database and activity readers against ADR-0001 before
-   proposing migrations.
-4. Implement the smallest backwards-compatible vertical slice that supports all
-   member-created intents and truthful counts.
-5. Build separate, legitimate ingestion pipelines for Trade services and
-   Distribution and representation, with provenance, deduplication and expiry.
-6. Repair product sector classification and remove meaningless public zero states.
+1. Review and merge the Design Constitution authority PR after checks pass.
+2. Open a separate landing bridge implementation PR using the merged authorities.
+3. Verify that PR at desktop and 390 × 844, including keyboard and reduced motion, before merge.
+4. Continue market-data, verification and schema work only through their existing explicit plans; do not hide them inside design implementation.
+5. Do not start an uncontrolled app-wide repaint. Apply the Constitution through scoped journey-level PRs.

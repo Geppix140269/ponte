@@ -58,8 +58,31 @@ export { PUBLIC_SIGNAL_COLUMNS, INTERNAL_SIGNAL_COLUMNS } from "@/lib/market-sig
  * named, and only approved, unexpired rows survive the filter.
  */
 export async function getMarketSignals(limit = 60): Promise<MarketSignal[]> {
+  const result = await readMarketSignals(limit);
+  return result.state === "ok" ? result.signals : [];
+}
+
+/**
+ * The board read, with the failure kept distinguishable from the emptiness.
+ *
+ * `getMarketSignals` collapses both to an empty array, which is right for a
+ * caller that only wants rows, and wrong for a surface that has to tell a
+ * member the truth. "Ponte read the sources and found nothing on this corridor"
+ * and "Ponte could not read the sources" are different sentences with different
+ * next actions, and a board that prints the first when the second happened is
+ * reporting a finding that never occurred. Every screen that renders an empty
+ * state reads this, not the array.
+ */
+export type MarketSignalBoard =
+  | { state: "ok"; signals: MarketSignal[] }
+  | { state: "unavailable" };
+
+export async function readMarketSignals(limit = 60): Promise<MarketSignalBoard> {
   noStore();
-  if (!isSupabaseConfigured()) return [];
+  // Not configured is not a failure to report to a visitor: there is nothing
+  // to read here, and saying "the sources could not be read" would invent an
+  // outage. It is the empty board.
+  if (!isSupabaseConfigured()) return { state: "ok", signals: [] };
 
   try {
     const sb = createAdminClient();
@@ -77,12 +100,12 @@ export async function getMarketSignals(limit = 60): Promise<MarketSignal[]> {
       .map((r) => mapSignalRow(r as SignalRow));
 
     await decorateChapters(sb, signals);
-    return signals;
+    return { state: "ok", signals };
   } catch {
-    // The table or the new columns may not exist yet. An empty board hides
-    // itself, which is the correct thing to show when we cannot prove there is
-    // an approved signal live.
-    return [];
+    // The table or the columns may not exist, or the read genuinely failed.
+    // Either way Ponte cannot say what is live, and must not imply it looked
+    // and found nothing.
+    return { state: "unavailable" };
   }
 }
 

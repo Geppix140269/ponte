@@ -1,10 +1,66 @@
 # Ponte Trade North Star entry architecture
 
-**Status date:** 25 July 2026
+**Status date:** 26 July 2026 (amended; first issued 25 July 2026)
 **Repository:** `Geppix140269/ponte`
 **Product owner:** Giuseppe Funaro
 **Source:** `Ponte_Trade_North_Star_Reset_Master_Claude_Code_Brief.md`, received 25 July 2026
+**Amending source:** Ponte Trade interface-redesign handoff, Direction 02 "The Desk", received 26 July 2026
 **Base commit at reconciliation:** `4fe880d7c5701b37d97b04542ad3678b69395555`
+
+---
+
+## Amendment, 26 July 2026: Ponte Desk is the selected entry implementation
+
+This document remains the entry authority. Its product principles are unchanged.
+What changed on 26 July 2026 is the **visual and behavioural implementation** of
+the entry surfaces, and this amendment records that inside the existing
+authority rather than beside it. There is no second landing specification.
+
+**The exact prior decision superseded:** the entry composition defined in
+§5 "Landing page" of this document as first issued on 25 July 2026, and recorded
+in the decision log as *25 July 2026, "North Star entry reset: two primary
+routes"* — specifically its two-route bridge, its search field beneath the
+bridge, its "popular or recent areas" row derived from counts, and its trust and
+evidence explanation block as the landing's composition.
+
+**What supersedes it:** the Ponte Desk interface system, selected by the owner on
+26 July 2026, with two documented borrowings: The Ledger fact register on dense
+result sets, and the Atlas ink knowledge boundary on Market Signal detail. Ponte
+Flow remains the semantic icon and motion implementation.
+
+**What is retained without change:**
+
+- every product principle in §3, and in particular §3.1 value before
+  registration, §3.2 never lead with emptiness, §3.3 Market Signals are day-one
+  product content, §3.4 user language overrides database language, and §3.5
+  current product truth overrides future copy;
+- §2 who Ponte serves, §4 participation and trust model, §7 to §14, and §17
+  non-negotiable exclusions;
+- the separation of Market Signals and Member Opportunities in data, status,
+  language and actions;
+- `lib/landing/routing.ts` as the sole destination authority for the older
+  `RouteKey` vocabulary, and the journey feature flags that read it. Nothing in
+  the Desk implementation changes a flag or a destination.
+
+**What the Desk adds that this document did not previously define:**
+
+- a **journey rail** that carries journey positions only, on R-FIND
+  (Objective, Discover, Record, Act) and R-SUBMIT (Objective, Compose, Preview,
+  Conclude). The rail is never navigation, and a screen with no journey has no
+  rail. `lib/desk/journey.ts` is the contract;
+- a **single commercial-fact authority**, `lib/desk/facts.ts`, with the
+  production adapter in `lib/desk/adapter.ts`. Every surface reads
+  `factsFor(record, context)`; contexts differ in count only, never in which
+  facts or their order;
+- a **global command bar** that is visibly a different system from the rail and
+  carries all product navigation.
+
+**Authority order for the entry surfaces**, unchanged in shape and now explicit:
+
+1. approved Ponte product authorities and the source-of-truth SOP;
+2. the final Ponte Desk handoff, for UX and visual behaviour;
+3. Ponte Flow, for semantic icon and motion implementation;
+4. repository and production, as current implementation reality.
 
 > This document supersedes all earlier landing, gateway and primary-entry instructions.
 
@@ -125,33 +181,58 @@ Verification is not implemented or priced in this phase.
 
 ## 5. Landing page
 
+**Amended 26 July 2026.** The hierarchy below is the Ponte Desk composition and
+replaces the two-route bridge composition first issued here on 25 July 2026.
+
 Required hierarchy, in this order:
 
-1. Global header
-2. Prominent recent-market-activity band
-3. Ponte Trade
-4. "What's your deal?"
-5. Two-route bridge
-6. Main search field below the bridge
-7. Popular or recent areas
-8. Trust and evidence explanation
+1. Global command bar (navigation; a separate system from the journey rail)
+2. **No journey rail.** Nothing has started, so there is no position to show.
+   The absence is the design, and the page says so in one line.
+3. Hero: the market proposition, and the three equal market families
+4. The objective console ("Ask Ponte"), carrying the member's own words into
+   R-FIND verbatim
+5. Market Signals, as raised working records on the sunken page ground
+6. Qualified Opportunities, in their own section, when any exist
+7. Browse by sector: navigation over the HS taxonomy
+8. Bring a record to the desk
 9. Footer
 
-### 5.1 The bridge
+### 5.1 The objective console replaces the bridge
 
-The bridge remains the central brand device with exactly two routes.
+The two-route bridge is retired as the landing's central device. Its job, giving
+a visitor one obvious way in, is done by the objective console plus the three
+market families, and its two destinations remain reachable: Explore from the
+command bar and the family tiles, Start a deal from the command bar and the
+closing block.
 
-**01 Explore the market** - See current demand, supply, services and commercial
-activity.
+The console carries the typed objective forward without interpreting it. It does
+not classify, does not extract a product, and does not run a search the member
+did not ask for. The stated objective appears on the command bar of the journey
+it opens, and marks the Objective station taken; an objective the member never
+stated leaves that station reserved rather than claiming a step nobody took.
 
-**02 Start a deal** - Source a product, supply a product or offer a trade
-service.
+### 5.2 Nothing on the entrance may be manufactured
 
-Clicking either route navigates directly. The bridge must not retain Check a
-company, Investigate a signal, four numbered route points, or a route-selection
-state that leaves the visitor on the landing page.
+Binding, and the reason the Desk prototype's own composition is not reproduced
+in full:
 
-### 5.2 Voice is not a primary feature
+- **No pulse or activity strip without a production query behind every value.**
+  The prototype carried four live measures. None has a production source, so the
+  module is omitted rather than filled.
+- **No measured sector counts.** Every public Market Signal in production
+  currently carries a null HS code, so an HS-derived count reads zero on every
+  sector while the market is demonstrably busy. The sector grid is navigation,
+  is headed "Browse by sector", and prints the HS range each sector covers. It
+  must not be headed "Active sectors" or "Busiest sectors" and must not print a
+  count until the classification defect (Issue #42) is resolved.
+- **No prototype content presented as live.** Sample records, references and
+  dates from the handoff are not shipped as data.
+- **No large empty reviewed-record state**, per §3.2. When no reviewed record
+  qualifies, the section is omitted and the activity that does exist carries the
+  page.
+
+### 5.3 Voice is not a primary feature
 
 The large "Click and talk" control is removed: inconsistent browser support,
 unreliable performance across accents, poor first-impression risk, and most
@@ -162,11 +243,12 @@ Voice input elsewhere in the product (the Find product picker, the Check
 composer, the introduction request) is unaffected: it is an assist inside a
 journey, not the front door.
 
-### 5.3 Search field
+### 5.4 Search
 
-The search field sits under the bridge. Placeholder: "Search products, markets,
-companies or services". It handles broad exploration and specific intent, and a
-specific search bypasses the visual category drill-down.
+Search remains available from the command bar and from Explore. It is no longer
+a landing element sitting under a bridge that no longer exists. It handles broad
+exploration and specific intent, and a specific search bypasses the visual
+category drill-down.
 
 ## 6. Recent market activity band
 
@@ -292,12 +374,26 @@ supports the claim.
 
 ## 15. Design authority
 
-The current Ponte Trade Brand Book is the visual authority. No new corporate
-identity. New elements (two-point bridge, activity band, sector universe,
-category containers, mixed record presentation, Start a Deal controls) are
-derived from the existing typography, spacing, colour, icon and motion rules,
-with the design decision documented in the pull request. Avoid generic SaaS
-cards and unrelated visual redesign.
+**Amended 26 July 2026.** The Ponte Desk interface system is the selected visual
+and behavioural implementation for the entry surfaces and the R-FIND and
+R-SUBMIT journeys. It sits under the Ponte Trade Brand Book, which remains the
+brand authority: no new corporate identity, and gold stays a brand signal rather
+than a status.
+
+Two borrowings are approved and no others: The Ledger fact register on dense
+result sets, and the Atlas ink knowledge boundary on Market Signal detail. The
+ink boundary is used on that one screen; a second use makes it decoration.
+
+Ponte Flow remains the semantic icon and motion implementation, reached only
+through the existing registry and the typed `PonteIcon` component. There is no
+second design-system layer, no generic icon substitution, and no return to the
+legacy black-and-lime application styling.
+
+Implementation contracts: `components/desk/desk.css` (the page system, scoped
+under `.ponte-desk`), `lib/desk/facts.ts` (the commercial-fact authority),
+`lib/desk/adapter.ts` (the production boundary) and `lib/desk/journey.ts` (the
+rail). A screen that computes its own facts, or puts navigation on the rail, is
+a defect against this section.
 
 ## 16. Implementation sequence
 

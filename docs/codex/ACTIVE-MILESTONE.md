@@ -1,70 +1,90 @@
-# Active milestone — North Star entry architecture, PR 1
+# Active milestone - Issue 42 Phase A market reconciliation
 
-**Authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
-**Status:** Implemented on branch, open for owner review, not merged.
-
-This milestone supersedes the previous active milestone (Phase 0 Codex
-onboarding and gap report), summarised at the foot of this file for history.
-The owner directed a controlled refactor of the entry experience against the
-North Star reset rather than a further audit pass.
+**Authority:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Issue:** #42  
+**ExecPlan:** `docs/plans/active/ISSUE-42-PHASE-A-MARKET-RECONCILIATION.md`  
+**Branch:** `issue-42/phase-a-audit`  
+**Status:** Complete; ready for owner review in PR #44.
 
 ## Objective
 
-Deliver the first phase of the North Star entry architecture: an entrance that
-gives a visitor value immediately, offers two primary journeys, and never leads
-with emptiness.
+Reconcile the accepted three-family market contract against the current repository and production database before any new schema, migration, ingestion pipeline or composer implementation is proposed.
 
-## In scope (PR 1)
+The accepted market has three equal families:
 
-- The North Star authority document, and marking the superseded four-route
-  instructions as historical.
-- Recent market activity band, from real public records, on the landing.
-- Two-route bridge (Explore the market, Start a deal) with direct navigation.
-- Removal of the voice control and of any layout space it reserved.
-- Search field below the bridge.
-- Popular or recent areas, derived from real counts.
-- Trust and evidence explanation.
-- Desktop and mobile.
-- Start a Deal routing into the existing Structure composer, with Source a
-  product / Supply a product / Offer a trade service as the first choices.
-- Initial `/explore` route shell.
+1. Products
+2. Trade services
+3. Distribution and representation
 
-## Out of scope (later phases)
+Each family contains externally observed Market Signals and member-created Member Opportunities. Every future market record must have one family, one origin and one family-valid intent.
 
-- PR 2: the Explore universe drill-down (sector, chapter, subcategory,
-  product), pagination and progressive loading.
-- PR 3: the unified market activity screen, filters, and the rewrite of `/find`
-  away from a Qualified-Opportunities-first result.
-- PR 4: Start a Deal refinement, including duration and the remaining
-  commercial terms, and service-specific fields.
-- Verification, communication, investigation execution and monetisation.
-- Any migration, production flag change or deployment.
+## Completed scope
+
+- Audited `listings`, `desk_radar`, `signal_investigations` and related tables.
+- Audited member and signal public readers.
+- Audited unified activity and count semantics.
+- Audited Structure/Start a deal draft and submission payloads.
+- Audited Explore family and product-sector classification.
+- Audited publication, validity, reconfirmation, expiry, withdrawal and owner eligibility.
+- Audited import mapping, provenance and deduplication.
+- Delivered the field-by-field compatibility matrix.
+- Executed the SELECT-only production probe through the Supabase production SQL Editor.
+- Recorded exact production schema, constraints, RLS/policies, counts, HS coverage, provenance and drift.
+- Produced `PHASE-A-FINAL-REPORT.md`.
+- Stopped before migration, runtime implementation, merge or deployment.
 
 ## Definition of done
 
-1. The North Star authority exists and the superseded instructions are marked.
-2. Only two primary bridge routes render, and each navigates directly.
-3. The voice control is absent, with no reserved space.
-4. "Ponte Trade - What's your deal?" remains central, with search prominent
-   below the bridge.
-5. Recent market activity is visible above the bridge, from real data, with
-   truthful classifications and working reduced-motion behaviour.
-6. Explore opens a useful first screen with the three approved families and the
-   existing HS categories and icons, requiring no registration.
-7. Start a Deal reaches the existing composer, keeps preview before
-   registration and keeps the existing AccountGate on save and submit.
-8. `npm run verify` is run and its exact result recorded.
-9. A deploy preview is available and the pull request stops before merge for
-   owner review.
+| Requirement | Result |
+|---|---|
+| ExecPlan current | Complete |
+| Repository audit | Complete |
+| Compatibility matrix | Complete |
+| Production columns/types/constraints/indexes/triggers/functions/policies/RLS | Complete for Issue #42 scope |
+| Exact counts and HS coverage | Complete |
+| Drift and risks recorded | Complete |
+| Migration/runtime changes absent | Complete |
+| CI and deploy preview | Must pass on final PR head |
+| Owner review before merge | Pending |
+
+## Production-proven findings
+
+- 6,735 total Market Signal rows.
+- 3,543 rows stored as `approved_signal`; 3,517 remain approved and unexpired.
+- 2,526 active public requirements and 991 active public offers.
+- 4 total listings; 2 approved/current and desk-managed.
+- 0 approved/current listings have a bound passing member-business verification.
+- 0 legacy service listing rows exist.
+- 3,517 of 3,517 public signals have no HS code, while all 3,517 have a source category.
+- 2 of 2 approved listings have valid HS codes.
+- 6,441 `g4wb_v2` rows have complete canonical id, source URL, import metadata and dedupe key.
+- No duplicate identity groups or investigation-count mismatches were found.
+- One signal matched distribution-related keywords, but keyword matching is not canonical classification.
+- Production stores `profiles.verification_level` as a text enum while the application performs a numeric conversion/threshold.
+- The authenticated approved-listing RLS row condition does not encode validity, reconfirmation or owner eligibility; grants require a targeted security review.
+
+## Out of scope and still prohibited
+
+- Runtime code changes.
+- Database migrations or backfills.
+- Production writes.
+- UI, count or empty-state changes.
+- External source activation or scraping.
+- Phase B contract implementation.
+- Merge or deployment without owner approval.
+
+## Completion boundary
+
+Phase A completion authorises no production change. After Giuseppe accepts and merges PR #44, Phase B may design the smallest backwards-compatible application contract and adapters. Phase B must not apply a database migration. Any later migration requires the pre-migration report in `docs/codex/DATABASE-STATE.md` and explicit owner approval.
 
 ---
 
-## Superseded milestone (history): Phase 0 Codex onboarding and gap report
+## Completed milestone history
 
-Phase 0 asked for a repository-to-architecture gap report before any new
-implementation, with no product UI or behaviour change. Its record is in the
-repository history and in `docs/codex/CODEX-ONBOARDING-AUDIT.md`. The
-deliverables that remain useful (route, component and API inventories; the
-Qualified Opportunity and Market Signal confusion map; authentication
-boundaries that lose work) are not cancelled. They are simply no longer the
-blocking gate in front of the entry work the owner has now directed.
+### Source-of-truth governance and unified logical contract
+
+PR #41 merged the repository operating procedure, ADR-0001, canonical taxonomy, logical schemas, cross-agent entry points and governance checks.
+
+### North Star entry architecture
+
+PRs #36-40 delivered the two-route entrance, market activity, Explore shell, Flow taxonomy integration, count corrections and composer refinements.

@@ -153,15 +153,35 @@ test("the signal route never animates an unconfirmed signal", () => {
   assert.ok(!/@keyframes|animation:/.test(css), "the signal stylesheet animates something");
 });
 
-test("a missing or unreadable signal stays in the Ponte shell", () => {
+test("a missing or unreadable signal stays inside the current product shell", () => {
   // Found on the PR 38 preview: notFound() fell through to the global 404,
   // which is still the legacy obsidian page with a btn-gold and a link to the
   // old Catalogue. A stale signal link dropped the visitor out of the new
   // product entirely, which is the leak this route was migrated to close.
+  //
+  // The property is "the 404 stays in whatever chrome this route currently
+  // renders", not "the 404 renders one named component". When the segment moved
+  // to the Desk system, PonteShell became the wrong shell for it: a Desk route
+  // whose 404 rendered the shell the Desk replaces would reopen the same leak
+  // one layer down. So the assertion names the shells that are current, and a
+  // future migration updates this list rather than deleting the check.
   const notFound = "app/[locale]/market-signals/not-found.tsx";
   assert.ok(existsSync(notFound), "the market-signal segment needs its own not-found boundary");
   const src = readFileSync(notFound, "utf8");
-  assert.ok(src.includes("PonteShell"), "the not-found page must render the shared shell");
+  const CURRENT_SHELLS = ["DeskShell", "PonteShell"];
+  assert.ok(
+    CURRENT_SHELLS.some((shell) => src.includes(shell)),
+    `the not-found page must render a current shell (${CURRENT_SHELLS.join(" or ")})`,
+  );
+  // And it must render the SAME shell as the route it covers, or a visitor
+  // crosses a chrome boundary on a mistyped link.
+  const detail = readFileSync("app/[locale]/market-signals/[id]/page.tsx", "utf8");
+  const shellOf = (text: string) => CURRENT_SHELLS.find((shell) => text.includes(shell));
+  assert.equal(
+    shellOf(src),
+    shellOf(detail),
+    "the not-found boundary renders a different shell from the route it covers",
+  );
   // Strip comments first: the file explains which legacy classes it exists to
   // avoid, and naming one in prose is not shipping it.
   const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*/g, "");

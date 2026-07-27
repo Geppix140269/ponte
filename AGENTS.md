@@ -9,10 +9,12 @@ Before changing code, read these files in order:
    current authority for the entry experience and supersedes all earlier
    landing, gateway and primary-entry instructions.
 2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` in full.
-3. `docs/codex/00-START-HERE.md`.
-4. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
-5. Relevant accepted ADRs under `docs/decisions/`.
-6. Every status, decision and roadmap file linked from the start page.
+3. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` before any visual, UI,
+   icon, motion, component or interaction work.
+4. `docs/codex/00-START-HERE.md`.
+5. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
+6. Relevant accepted ADRs under `docs/decisions/`.
+7. Every status, decision and roadmap file linked from the start page.
 
 ## Source of truth
 
@@ -29,11 +31,32 @@ Before changing code, read these files in order:
 - The Master Implementation Brief is the governing product and implementation
   authority for everything downstream of entry that the North Star does not
   restate.
+- The Ponte Design Constitution governs every Ponte-controlled visual and
+  interaction decision. Approved assets under `design/authority/` and
+  `design-system/ponte-flow/` are implementation authorities, not inspiration.
 - Do not treat a local clone, chat transcript, design export, deployed page or
   stale document as more authoritative than the reconciled repository record.
 - The complete authority order is defined in `docs/codex/00-START-HERE.md`.
 - `CLAUDE.md` is a tool entry point only; it delegates to these common rules and
   must never evolve into a second product authority.
+
+## Design Constitution — non-negotiable
+
+For any UI or visual change:
+
+- Use only approved Ponte components, tokens, icons and motion.
+- Do not replace an approved treatment with a generic equivalent.
+- Do not introduce page-specific colours, fonts, icons, radii, shadows or motion.
+- Do not substitute cards, tabs or a generic stepper for the approved Bridge System.
+- Do not flatten approved gold italic editorial emphasis.
+- Do not create raw interface SVGs outside the approved Ponte Flow registry.
+- Review mobile at 390 × 844 and reduced motion.
+- Attach visual evidence and complete the PR Design Constitution check.
+- If the authority is missing, ambiguous or conflicting, stop and request owner approval.
+- Exceptions require an explicit versioned owner-approved amendment.
+
+Functional correctness does not override design correctness. A successful build
+is not design approval. Absence of objection is not approval.
 
 ## Non-negotiable product rules
 
@@ -70,7 +93,7 @@ Before changing code, read these files in order:
 - Existing L1-L4 fields may remain for compatibility, but numbered tiers or a
   Trust Score must not become the primary user-facing trust model.
 - Gold is a brand signal, not a verification, warning, approval or review status.
-- Apply Brand v5 journey by journey. Do not begin an app-wide repaint.
+- Apply the Constitution journey by journey. Do not begin an uncontrolled app-wide repaint.
 
 ## Engineering rules
 
@@ -119,4 +142,5 @@ Stop and request owner approval before:
 - changing production feature flags or hosting;
 - merging a pull request;
 - changing verification data, L1-L4 compatibility or user-facing trust representation;
+- changing or excepting the Design Constitution or approved authority assets;
 - executing an external or commercial action not already covered by a recorded approval policy.
