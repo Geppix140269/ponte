@@ -42,8 +42,7 @@ export default function AskPonte({ placeholder }: { placeholder: string }) {
       }}
     >
       <div className="ask__h">
-        <span>Ask Ponte</span>
-        <span>In your own words</span>
+        <span>What is your next move?</span>
       </div>
 
       <div className="ask__b">
@@ -70,17 +69,13 @@ export default function AskPonte({ placeholder }: { placeholder: string }) {
 
       <div className="ask__r">
         <button className="b b--block" type="submit">
-          Read the market against this
+          Start
         </button>
-        <p className="ask__note">
-          Your words are carried as stated. Ponte does not read a product, a quantity or a market
-          into them.
-        </p>
       </div>
 
       <div className="ask__f">
         <span>No account needed to look</span>
-        <span>Ponte will not invent a product</span>
+        <span>Your words are carried as stated</span>
       </div>
     </form>
   );

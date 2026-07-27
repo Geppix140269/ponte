@@ -178,6 +178,19 @@
 .ponte-desk .cmd__nav a[aria-current] { color: var(--ink); border-bottom-color: var(--ink); }
 .ponte-desk .cmd__nav a:hover { color: var(--ink); }
 
+/* The account slot. Sits after the navigation and behind its own rule, so it
+   reads as a different kind of thing from a place in the product. */
+.ponte-desk .cmd__acct {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-left: 18px; padding: 7px 14px;
+  border: 1px solid var(--rule-strong); border-radius: var(--dk-radius);
+  background: var(--raised); color: var(--ink);
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .cmd__acct:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
+
 /* ======================================================================
    2. THE JOURNEY RAIL, journey stations and journey state only
    ====================================================================== */
@@ -506,6 +519,92 @@
 .ponte-desk .srcband li b { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
 
 /* ======================================================================
+   6b. THE ACTION MODULE, and the restored Block D request sheet
+
+   InvestigateButton is reused unchanged: it already carries the two request
+   kinds, the account gate, the 401 handoff and the run-once guard. What it
+   does NOT carry is a look, because it was authored against the .ponte-find
+   scope. Rather than fork the component, its class hooks are given Desk
+   values here, so the same logic renders as part of this system instead of
+   importing the chrome the Desk replaces.
+   ====================================================================== */
+.ponte-desk .actpanel { border-color: var(--rule-strong); }
+.ponte-desk .actpanel__b { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ponte-desk .actpanel__lead { font-size: 13.5px; line-height: 1.6; color: var(--ink-2); max-width: 660px; }
+.ponte-desk .actpanel__a { display: flex; gap: 10px; flex-wrap: wrap; }
+.ponte-desk .actpanel__fine { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.55; }
+
+/* The shared trigger, in Desk clothes. */
+.ponte-desk .fbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border-radius: var(--dk-radius); min-height: 46px;
+  font-size: 14px; font-weight: 600;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--surface);
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .fbtn:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-desk .fbtn--secondary { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
+.ponte-desk .fbtn--secondary:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
+.ponte-desk .fbtn--block { width: 100%; }
+.ponte-desk .fbtn[disabled] { opacity: 0.42; pointer-events: none; }
+.ponte-desk .sigsheet__done {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-radius: var(--dk-radius); background: var(--pos-tint);
+  border: 1px solid var(--pos-line); color: var(--pos); font-size: 13px; font-weight: 600;
+}
+
+/* The request sheet. */
+.ponte-desk .sigsheet {
+  position: fixed; inset: 0; z-index: 90; background: rgba(15, 15, 14, 0.55);
+  display: flex; align-items: flex-end; justify-content: center; padding: 0;
+  overflow-y: auto;
+}
+.ponte-desk .sigsheet__panel {
+  background: var(--surface); border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius) var(--dk-radius) 0 0;
+  width: 100%; max-width: 560px; padding: 22px; display: flex; flex-direction: column; gap: 16px;
+  max-height: 92vh; overflow-y: auto; box-shadow: var(--e-2);
+}
+.ponte-desk .sigsheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ponte-desk .sigsheet__t { font-family: var(--f-serif); font-size: 22px; font-weight: 500; letter-spacing: -0.012em; }
+.ponte-desk .sigsheet__intro { font-size: 13px; line-height: 1.6; color: var(--ink-2); margin-top: 6px; }
+.ponte-desk .sigsheet__close { background: none; border: 0; color: var(--ink-3); padding: 4px; border-radius: var(--dk-radius-in); }
+.ponte-desk .sigsheet__close:hover { color: var(--ink); background: var(--sunken); }
+.ponte-desk .sigsheet__fields { display: flex; flex-direction: column; gap: 14px; }
+.ponte-desk .sigsheet__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ponte-desk .sigsheet__l {
+  display: block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+}
+.ponte-desk .sigsheet__i, .ponte-desk .snote {
+  width: 100%; font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--raised); border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius-in); padding: 9px 11px; min-height: 40px;
+}
+.ponte-desk .sigsheet__i:focus, .ponte-desk .snote:focus {
+  outline: none; border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent);
+}
+.ponte-desk .sigsheet__i--area { min-height: 84px; resize: vertical; line-height: 1.5; }
+.ponte-desk .sigsheet__opt { font-family: var(--f-mono); font-size: 9.5px; color: var(--mute); margin-left: 6px; text-transform: none; letter-spacing: 0; }
+.ponte-desk .sigsheet__fine, .ponte-desk .sigsheet__role {
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.55;
+}
+.ponte-desk .sigsheet__check { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.ponte-desk .sigsheet__submit { margin-top: 4px; }
+.ponte-desk .sigsheet__err { font-size: 12.5px; color: var(--neg); }
+
+@media (min-width: 641px) {
+  .ponte-desk .sigsheet { align-items: center; padding: 24px; }
+  .ponte-desk .sigsheet__panel { border-radius: var(--dk-radius); }
+}
+@media (max-width: 520px) {
+  .ponte-desk .sigsheet__pair { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .actpanel__a { flex-direction: column; align-items: stretch; }
+  .ponte-desk .actpanel__a .fbtn { width: 100%; }
+}
+
+/* ======================================================================
    7. THE INK KNOWLEDGE BOUNDARY, Market Signal detail ONLY
    The Atlas borrowing. It states the limit of Ponte's knowledge in the same
    weight as its findings, because the limit is what a reader decides against.
@@ -580,19 +679,179 @@
 .ponte-desk .gate p { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
 
 /* ======================================================================
+   8a. THE SIGN-IN DOOR
+
+   The login form is the previous page component moved intact, so the auth
+   flow is untouched. It still carries the app's obsidian utility classes,
+   and inside .ponte-desk those must resolve to Desk values or the door stays
+   black and lime. Each override below is one of those utilities, and nothing
+   here changes behaviour.
+   ====================================================================== */
+/* Set down from the header rather than pinned under it, so the page does not
+   read as stranded at the top, and not so far down that it falls out of view
+   on a short viewport. */
+.ponte-desk .dklogin {
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: clamp(40px, 9vh, 92px) var(--dk-gut) 72px;
+}
+.ponte-desk .dklogin__card {
+  width: 100%; max-width: 428px;
+  /* Warm paper, the same raised surface every other Desk record sits on. The
+     previous card read blue-grey against the cream ground. */
+  background: var(--raised); border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius); box-shadow: var(--e-2);
+  padding: 32px 30px 30px;
+}
+.ponte-desk .dklogin__h {
+  font-family: var(--f-serif); font-size: 30px; line-height: 1.12;
+  letter-spacing: -0.018em; font-weight: 500; margin: 16px 0 10px; color: var(--ink);
+}
+.ponte-desk .dklogin__sub { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin-bottom: 24px; }
+/* The Google host, before it has proved itself.
+   Clipped to zero height rather than display:none, because a hidden element
+   has no dimensions and the readiness check measures the iframe inside it.
+   display:none would make the button permanently unprovable. */
+.ponte-desk .dklogin__g--wait { height: 0; overflow: hidden; }
+.ponte-desk .dklogin__g--wait > * { pointer-events: none; }
+
+.ponte-desk .dklogin__note {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule);
+  font-size: 12.5px; line-height: 1.55; color: var(--ink-3);
+}
+.ponte-desk .dklogin .pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold-ink);
+  background: var(--gold-tint); border: 1px solid var(--rule);
+  border-radius: var(--r-pill, 999px); padding: 4px 11px;
+}
+.ponte-desk .dklogin .display {
+  font-family: var(--f-serif); font-weight: 500; letter-spacing: -0.018em; line-height: 1.1;
+}
+.ponte-desk .dklogin .glass-tight {
+  background: var(--sunken); border: 1px solid var(--rule); border-radius: var(--dk-radius-in);
+}
+.ponte-desk .dklogin .rounded-field { border-radius: var(--dk-radius-in); }
+.ponte-desk .dklogin .tracking-label { letter-spacing: 0.12em; }
+.ponte-desk .dklogin .field-label {
+  display: block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+}
+.ponte-desk .dklogin .field {
+  width: 100%; font: inherit; font-size: 14.5px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--ink-3);
+  border-radius: var(--dk-radius-in); padding: 11px 13px; min-height: 44px;
+}
+.ponte-desk .dklogin .field::placeholder { color: var(--ink-3); opacity: 1; }
+.ponte-desk .dklogin .field:focus {
+  outline: none; border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent);
+}
+.ponte-desk .dklogin .btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 12px 20px; border-radius: var(--dk-radius);
+  border: 1px solid var(--ink); background: var(--ink); color: var(--surface);
+  font-size: 14px; font-weight: 600; box-shadow: none;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .dklogin .btn-primary:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+/* The rule above sets box-shadow:none to drop the obsidian glow, and it
+   outranks the shared :focus-visible ring (:where() carries no specificity).
+   Without this the submit button lost its keyboard focus indicator entirely. */
+.ponte-desk .dklogin .btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--raised), 0 0 0 4px var(--focus);
+}
+/* Text and accent utilities, re-pointed. Lime and cyan are obsidian accents
+   with no place in this system; they become ink and slate. */
+.ponte-desk .dklogin .text-ink { color: var(--ink); }
+.ponte-desk .dklogin .text-muted { color: var(--ink-3); }
+.ponte-desk .dklogin .text-lime { color: var(--gold-ink); }
+.ponte-desk .dklogin .text-cyan { color: var(--review); }
+.ponte-desk .dklogin .text-coral { color: var(--neg); }
+.ponte-desk .dklogin .bg-lime\/10 { background: var(--gold-tint); }
+.ponte-desk .dklogin .bg-cyan\/10 { background: var(--review-tint); }
+.ponte-desk .dklogin .border-lime\/35 { border-color: var(--rule-strong); }
+.ponte-desk .dklogin .border-cyan\/35 { border-color: var(--review-line); }
+.ponte-desk .dklogin .bg-white\/10 { background: var(--rule); }
+
+/* ======================================================================
+   8b. THE LIVE SIGNAL STRIP
+   Real records, restrained movement, and three ways out of it: hover,
+   keyboard focus, and reduced motion. It clips its own track, so the page
+   never gains a horizontal scrollbar at any width.
+   ====================================================================== */
+.ponte-desk .strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; gap: 0;
+  max-width: 100%; overflow: hidden;
+}
+.ponte-desk .strip__k {
+  flex: none; display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 16px; height: 46px;
+  border-right: 1px solid var(--rule); background: var(--sunken);
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+}
+.ponte-desk .strip__k .pf-icon { color: var(--review); }
+.ponte-desk .strip__w { flex: 1; min-width: 0; overflow: hidden; }
+.ponte-desk .strip__track {
+  display: flex; align-items: stretch; width: max-content;
+  animation: dk-strip 90s linear infinite;
+}
+.ponte-desk .strip__half { display: flex; align-items: stretch; }
+/* Both ways out of the movement. */
+.ponte-desk .strip:hover .strip__track,
+.ponte-desk .strip:focus-within .strip__track { animation-play-state: paused; }
+
+.ponte-desk .strip__i {
+  flex: none; display: inline-flex; align-items: baseline; gap: 10px;
+  padding: 0 18px; height: 46px; line-height: 46px;
+  border-right: 1px solid var(--rule); white-space: nowrap;
+}
+.ponte-desk .strip__i:hover { background: var(--sunken); }
+.ponte-desk .strip__c {
+  font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 600; color: var(--review);
+}
+.ponte-desk .strip__t { font-size: 13px; font-weight: 500; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; }
+.ponte-desk .strip__r { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); }
+
+@keyframes dk-strip {
+  from { transform: translateX(0); }
+  /* Exactly half the track, which is one full copy of the records. */
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 860px) {
+  .ponte-desk .strip__k { padding: 0 12px; height: 42px; }
+  .ponte-desk .strip__i { height: 42px; line-height: 42px; padding: 0 14px; }
+  .ponte-desk .strip__t { max-width: 34ch; }
+}
+
+/* Reduced motion is a different presentation, not a slower one: the track
+   stops being a marquee and becomes a list the member scrolls themselves. */
+@media (prefers-reduced-motion: reduce) {
+  .ponte-desk .strip__w { overflow-x: auto; }
+  .ponte-desk .strip__track { animation: none; transform: none; }
+  .ponte-desk .strip__half { display: none; }
+}
+
+/* ======================================================================
    9. LANDING, the Desk system
    ====================================================================== */
 .ponte-desk .hero { background: var(--surface); border-bottom: 1px solid var(--rule-strong); padding: 34px var(--dk-gut) 0; }
-.ponte-desk .hero__top {
-  display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 44px;
-  align-items: start; padding-bottom: 26px;
-}
+/* One column. The hero used to reserve a 400px right rail for the objective
+   console; with the console gone, keeping the track would leave an empty
+   column and strand the headline at two-thirds width. */
+.ponte-desk .hero__top { padding-bottom: 26px; }
 .ponte-desk .hero h1 {
-  font-family: var(--f-serif); font-size: clamp(32px, 4.2vw, 50px); line-height: 1.04;
-  letter-spacing: -0.026em; font-weight: 500; margin: 14px 0 16px; max-width: 740px; text-wrap: balance;
+  font-family: var(--f-serif); font-size: clamp(32px, 5vw, 58px); line-height: 1.02;
+  letter-spacing: -0.026em; font-weight: 500; margin: 14px 0 16px; max-width: 20ch; text-wrap: balance;
 }
 .ponte-desk .hero h1 em { font-style: italic; font-weight: 400; }
-.ponte-desk .hero__p { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); max-width: 620px; }
+.ponte-desk .hero__p { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); max-width: 62ch; }
 
 .ponte-desk .ask {
   border: 1px solid var(--ink); border-radius: var(--dk-radius);
@@ -627,31 +886,66 @@
   display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
 }
 
+/* Three panels, top-aligned, each ending at its own content height.
+   The previous version was one bordered grid with 1px gaps showing a rule
+   colour through, which forces every cell to the height of the tallest and
+   left Trade services with a hole where a third action would have been. The
+   panels are now separate cards: aligned at the top, never stretched, and no
+   invented action to fill a box. */
 .ponte-desk .fams {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
-  background: var(--rule); border: 1px solid var(--rule);
-  border-radius: var(--dk-radius); overflow: hidden; margin-top: 24px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start; gap: 12px; margin-top: 30px;
 }
-/* A family tile is a link only when its destination genuinely exists. The
-   others are the same tile without the affordance: no hover, no pointer, and
-   no disabled styling either, because they are not disabled controls. They are
-   statements about a part of the market Ponte does not yet route into. */
-.ponte-desk .fams > * { background: var(--raised); padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 9px; }
-.ponte-desk .fams a:hover { background: var(--sunken); }
-.ponte-desk .fams b { font-size: 14px; font-weight: 600; }
-.ponte-desk .fams span { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.5; }
-.ponte-desk .fams .soon { color: var(--mute); }
+/* A family block: what the market is, then the ways into it.
+   Every family carries at least one real action, because a family with no
+   externally observed inventory is still a market a member can enter by
+   creating a record. Nothing here is styled as a control without being one. */
+.ponte-desk .fam {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); box-shadow: var(--e-1);
+  padding: 15px 16px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ponte-desk .fam__h { display: flex; align-items: flex-start; gap: 11px; }
+.ponte-desk .fam__h .pf-icon { flex: none; color: var(--ink-2); }
+.ponte-desk .fam__h b { font-size: 14px; font-weight: 600; display: block; }
+.ponte-desk .fam__h span { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 3px; }
+.ponte-desk .fam__a { display: flex; flex-direction: column; gap: 6px; }
+.ponte-desk .fam__go {
+  display: block; padding: 9px 11px; border-radius: var(--dk-radius-in);
+  border: 1px solid var(--rule); background: var(--surface);
+  font-size: 12.5px; font-weight: 600; line-height: 1.3;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .fam__go span {
+  display: block; font-family: var(--f-mono); font-size: 10px; font-weight: 400;
+  color: var(--ink-3); margin-top: 3px; line-height: 1.45;
+}
+.ponte-desk .fam__go:hover { background: var(--sunken); border-color: var(--ink-3); color: var(--ink); }
+.ponte-desk .fam__go:hover span { color: var(--ink-2); }
+/* The discovery entrance leads, where a family has one. */
+.ponte-desk .fam__go--1 { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.ponte-desk .fam__go--1 span { color: rgba(242, 239, 232, 0.66); }
+.ponte-desk .fam__go--1:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.ponte-desk .fam__go--1:hover span { color: rgba(15, 15, 14, 0.7); }
 
+/* Same rule as the fact grid: the hairlines are drawn ON the tiles, not by
+   letting a darker container show through 1px gaps. Fifteen sectors across
+   six columns leaves three empty tracks in the last row, and with a
+   contrasting container those read as three phantom tiles. */
 .ponte-desk .sectors {
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px;
-  background: var(--rule); border: 1px solid var(--rule);
-  border-radius: var(--dk-radius); overflow: hidden;
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden; align-items: start;
 }
 /* The sector grid is the taxonomy, not a filter. The board cannot be narrowed
    by sector yet (every public signal carries a null HS code), so these are not
    links: fifteen tiles that all opened the same unfiltered board would be a
    filter that does not filter. */
-.ponte-desk .sectors > * { background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; }
+.ponte-desk .sectors > * {
+  background: var(--raised); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
 .ponte-desk .sectors b { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
 .ponte-desk .sectors span { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); }
 
@@ -698,7 +992,6 @@
 
 @media (max-width: 1000px) {
   .ponte-desk .detail { grid-template-columns: minmax(0, 1fr); }
-  .ponte-desk .hero__top { grid-template-columns: minmax(0, 1fr); gap: 26px; }
   .ponte-desk .sectors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ponte-desk .factgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ponte-desk .rec { grid-template-columns: minmax(0, 1fr); }
@@ -775,6 +1068,10 @@
   .ponte-desk .cmd__obj { order: 3; max-width: none; flex-basis: 100%; }
   .ponte-desk .cmd__nav { gap: 16px; overflow-x: auto; scrollbar-width: none; }
   .ponte-desk .cmd__nav::-webkit-scrollbar { display: none; }
+  /* At this width the lockup and the account slot share the top row, and the
+     navigation drops beneath them. The door stays visible without scrolling. */
+  .ponte-desk .cmd__nav { order: 4; flex-basis: 100%; margin-left: 0; }
+  .ponte-desk .cmd__acct { margin-left: auto; padding: 6px 12px; font-size: 12.5px; }
   .ponte-desk .boundary { padding: 22px 18px 24px; }
   .ponte-desk .boundary h2 { font-size: 21px; }
 }

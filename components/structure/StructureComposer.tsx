@@ -28,6 +28,9 @@ import {
   FREQUENCIES,
   type TapGroup,
 } from "@/lib/structure/vocabulary";
+import { legacyTypeForIntent, needsHsCode } from "@/lib/structure/draft";
+import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
+import { MARKET_INTENTS } from "@/lib/taxonomy/market";
 
 // Origin/destination are stored as country NAMES (they display in the
 // opportunity and ride into the submit payload), so the searchable picker,
@@ -85,10 +88,30 @@ const STEP_MARK: Partial<Record<Step, string>> = {
   intent: "S01", facts: "S02", complete: "S03", preview: "S04", submit: "S05", received: "S06",
 };
 
-export default function StructureComposer() {
+export default function StructureComposer({
+  entrance = null,
+}: {
+  /**
+   * The canonical family and intent a landing entrance carried in, already
+   * validated against the taxonomy. When present the composer skips its own
+   * intent picker: the member has already said what they are doing, and asking
+   * again in a smaller vocabulary would lose the answer.
+   */
+  entrance?: { family: MarketFamily; intent: MarketIntent } | null;
+} = {}) {
   const t = useTranslations("structure");
   const router = useRouter();
-  const [draft, setDraft] = useState<StructureDraft>(emptyDraft);
+  const [draft, setDraft] = useState<StructureDraft>(() => {
+    const base = emptyDraft();
+    if (!entrance) return base;
+    return {
+      ...base,
+      canonical: { family: entrance.family, intent: entrance.intent },
+      // The legacy value the schema can store. The canonical pair above stays
+      // the authority; this is the shadow the constraint casts.
+      intent: legacyTypeForIntent(entrance.intent) ?? null,
+    };
+  });
   const [stack, setStack] = useState<Step[]>(["intent"]);
   const step = stack[stack.length - 1];
   const set = (patch: Partial<StructureDraft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -222,24 +245,54 @@ function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p:
     { key: "service", label: t("intent.service"), desc: t("intent.serviceDesc") },
   ];
   const ready = !!draft.intent && !!draft.product;
+
+  // A member who arrived through a family entrance has already said what they
+  // are doing. The canonical label is stated back to them rather than asking
+  // the same question again in the smaller legacy vocabulary, which cannot
+  // express distribution at all and cannot tell a service request from a
+  // service offer.
+  const canonicalLabel = draft.canonical
+    ? MARKET_INTENTS.find((i) => i.key === draft.canonical!.intent)?.label ?? null
+    : null;
+
+  // Only a product record is classified. A trade service and a distribution
+  // arrangement have no HS code, and pushing either through a six-digit
+  // drill-down would put a false classification on a real record.
+  const classify = needsHsCode(draft);
+
   return (
     <section className="sstep reveal">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("intent.eyebrow")}</span></div>
-      <h1 className="fphead__h serif">{t("intent.title")}</h1>
-      <div className="tapopts" role="group" aria-label={t("intent.title")}>
-        {intents.map((it) => (
-          <button key={it.key} className="tapopt" aria-pressed={draft.intent === it.key} onClick={() => set({ intent: it.key })}>
-            <span className="tapopt__t serif">{it.label}</span>
-            <span className="tapopt__d">{it.desc}</span>
-          </button>
-        ))}
-      </div>
+      <h1 className="fphead__h serif">{SUBJECT_HEADING[draft.canonical?.intent ?? ""] ?? t("intent.title")}</h1>
+
+      {canonicalLabel ? (
+        <p className="orpick__t" style={{ marginBottom: 18 }}>
+          {canonicalLabel}
+        </p>
+      ) : (
+        <div className="tapopts" role="group" aria-label={t("intent.title")}>
+          {intents.map((it) => (
+            <button key={it.key} className="tapopt" aria-pressed={draft.intent === it.key} onClick={() => set({ intent: it.key })}>
+              <span className="tapopt__t serif">{it.label}</span>
+              <span className="tapopt__d">{it.desc}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={`prodblock${draft.intent ? " on" : ""}`}>
-        <HsDrill draft={draft} set={set} t={t} />
+        {classify ? (
+          <HsDrill draft={draft} set={set} t={t} />
+        ) : (
+          <SubjectStep draft={draft} set={set} />
+        )}
         {draft.product && (
           <p className="orpick__t" style={{ marginTop: 16 }}>
-            {t("intent.chosen")}: <b style={{ color: "var(--ink)" }}>{draft.product}</b>
+            {/* "Product" is the right word for a product record and the wrong
+                word for a service or a distribution arrangement. The record
+                names itself with the noun it actually is. */}
+            {classify ? t("intent.chosen") : "Stated"}:{" "}
+            <b style={{ color: "var(--ink)" }}>{draft.product}</b>
             {draft.hsCode ? ` · HS ${draft.hsCode}` : ""}
           </p>
         )}
@@ -248,6 +301,64 @@ function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p:
         </div>
       </div>
     </section>
+  );
+}
+
+/** The heading each canonical entrance opens with, in the member's words. */
+const SUBJECT_HEADING: Record<string, string> = {
+  seek_trade_service: "What trade service do you need?",
+  offer_trade_service: "What trade service do you provide?",
+  seek_distribution_partner: "What market coverage are you looking for?",
+  offer_distribution_or_representation: "What territories and categories do you cover?",
+  seek_brands_or_products_to_represent: "What would you take to your market?",
+};
+
+const SUBJECT_PLACEHOLDER: Record<string, string> = {
+  seek_trade_service: "Pre-shipment inspection on West Africa corridors",
+  offer_trade_service: "Customs brokerage, Rotterdam and Antwerp",
+  seek_distribution_partner: "Distributor for personal care across the GCC",
+  offer_distribution_or_representation: "Exclusive distribution, six GCC markets, skin and hair care",
+  seek_brands_or_products_to_represent: "Food and beverage brands for the Italian market",
+};
+
+/**
+ * The subject of a non-product record, stated in the member's own words.
+ *
+ * This is the whole reason the HS drill-down is not universal. There is no HS
+ * code for "pre-shipment inspection on West African corridors", and no amount
+ * of drilling produces one. The record names what it is, and Ponte structures
+ * the rest from there.
+ *
+ * A distribution arrangement that later attaches a specific physical product
+ * may classify THAT product. The arrangement still has no code of its own, so
+ * none is asked for here.
+ */
+function SubjectStep({
+  draft,
+  set,
+}: {
+  draft: StructureDraft;
+  set: (p: Partial<StructureDraft>) => void;
+}) {
+  const intent = draft.canonical?.intent ?? "";
+  return (
+    <div>
+      <label htmlFor="subject" className="sigsheet__l" style={{ display: "block", marginBottom: 8 }}>
+        State it in one line
+      </label>
+      <input
+        id="subject"
+        className="snote hssearch"
+        style={{ minHeight: "auto", padding: "10px 12px", width: "100%" }}
+        value={draft.product ?? ""}
+        placeholder={SUBJECT_PLACEHOLDER[intent] ?? "State what this record is"}
+        onChange={(e) => set({ product: e.target.value })}
+      />
+      <p className="orpick__t" style={{ marginTop: 10 }}>
+        No HS code is asked for. A trade service and a distribution arrangement are not products,
+        and Ponte will not classify one as if it were.
+      </p>
+    </div>
   );
 }
 

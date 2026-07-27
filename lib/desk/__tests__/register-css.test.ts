@@ -143,6 +143,118 @@ test("reduced motion is honoured, and the rail pulse is what it turns off", () =
   );
 });
 
+test("the signal strip is escapable, optional, and cannot widen the page", () => {
+  // A marquee is hostile in three specific ways, and each has one rule.
+  assert.ok(
+    /\.strip:hover .strip__track[\s\S]{0,120}animation-play-state:\s*paused/.test(css),
+    "the strip does not pause on hover",
+  );
+  assert.ok(
+    /\.strip:focus-within .strip__track[\s\S]{0,120}animation-play-state:\s*paused/.test(css),
+    "the strip does not pause on keyboard focus, so tabbing is chased by the animation",
+  );
+
+  const reduced = css.slice(css.indexOf("prefers-reduced-motion"));
+  assert.ok(
+    /\.strip__track\s*\{[^}]*animation:\s*none/.test(reduced),
+    "reduced motion slows the strip instead of stopping it",
+  );
+  assert.ok(
+    /\.strip__half\s*\{[^}]*display:\s*none/.test(reduced),
+    "reduced motion leaves the duplicated half visible, so the list reads twice",
+  );
+  assert.ok(
+    /\.strip__w\s*\{[^}]*overflow-x:\s*auto/.test(reduced),
+    "reduced motion gives no way to reach the rest of the list",
+  );
+
+  // The track is deliberately wider than any viewport, so the strip must clip
+  // it. Without this the PAGE gains a horizontal scrollbar at every width.
+  assert.ok(
+    /\.strip__w\s*\{[^}]*overflow:\s*hidden/.test(css),
+    "the strip does not clip its own track",
+  );
+});
+
+test("no Desk grid draws its hairlines by showing a container through 1px gaps", () => {
+  // This defect has now appeared three times: the detail fact grid, the
+  // landing family panels, and the landing sector grid. The mechanism is
+  // always the same. A grid sets `gap: 1px` over `background: var(--rule)`,
+  // so the rules between cells are the container peeking through. It works
+  // only while every track is filled; the moment a row is part-filled, the
+  // container shows across the remainder and reads as a broken or
+  // still-loading tile.
+  //
+  // The fix is always the same too: put the rules on the cells and give the
+  // container the same paper. This asserts the pattern is gone rather than
+  // fixed case by case.
+  const grids: string[] = [];
+  const re = /\.ponte-desk\s+\.[\w-]+\s*\{[^}]*\}/g;
+  let hit: RegExpExecArray | null;
+  while ((hit = re.exec(css)) !== null) grids.push(hit[0]);
+
+  for (const rule of grids) {
+    if (!/display:\s*grid/.test(rule)) continue;
+    if (!/gap:\s*1px/.test(rule)) continue;
+    assert.ok(
+      !/background:\s*var\(--rule\)/.test(rule),
+      `a Desk grid still shows --rule through its gaps, which breaks on a part-filled row:\n${rule.slice(0, 140)}`,
+    );
+  }
+});
+
+test("the Google button is proved by a rendered iframe, never by its container", () => {
+  // The fault this guards against was in the VERIFICATION, not the product:
+  // checking that the container div exists says nothing, because Google
+  // Identity Services creates the iframe and then collapses it to 0x0 on an
+  // unauthorised origin without logging anything. Only measured dimensions
+  // prove a member has a button to press.
+  const form = readFileSync("components/desk/DeskLoginForm.tsx", "utf8");
+
+  assert.ok(form.includes("googleReady"), "there is no explicit readiness state");
+  assert.ok(
+    /querySelector\(["']iframe["']\)/.test(form),
+    "readiness is not established from the rendered iframe",
+  );
+  assert.ok(
+    /getBoundingClientRect\(\)[\s\S]{0,160}width > 0 && height > 0/.test(form),
+    "readiness does not require non-zero rendered dimensions",
+  );
+
+  // The area and its divider are both gated on that state.
+  assert.ok(
+    /googleReady \? "dklogin__g" : "dklogin__g dklogin__g--wait"/.test(form),
+    "the Google area is not gated on readiness",
+  );
+  assert.ok(
+    /\{googleReady \?[\s\S]{0,200}tracking-label/.test(form),
+    "the OR divider is not gated on readiness, so it can be orphaned",
+  );
+
+  // The waiting host must stay measurable. display:none has no dimensions,
+  // which would make the button permanently unprovable.
+  assert.ok(
+    /\.dklogin__g--wait\s*\{[^}]*height:\s*0[^}]*overflow:\s*hidden/.test(css),
+    "the waiting Google host is not clipped to zero height",
+  );
+  assert.ok(
+    !/\.dklogin__g--wait\s*\{[^}]*display:\s*none/.test(css),
+    "the waiting Google host uses display:none, so it can never be measured",
+  );
+
+  // Unavailability is not an error. The email code is a complete route.
+  assert.ok(
+    !/googleDisabled/.test(form),
+    "an unavailable Google button still renders a failure notice",
+  );
+
+  // The button is Google's own, in the theme that suits the Desk card.
+  assert.ok(/theme:\s*"outline"/.test(form), "the Google button is not the outline theme");
+  assert.ok(!/filled_black/.test(form), "the obsidian Google theme is still requested");
+  assert.ok(/renderButton/.test(form), "the official Google button was replaced by a custom one");
+  assert.ok(/signInWithIdToken/.test(form), "the Google identity flow changed");
+});
+
 test("focus is never removed, and the ink surfaces get their own ring", () => {
   assert.ok(/focus-visible/.test(css), "no focus-visible styling at all");
   assert.ok(

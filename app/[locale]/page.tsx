@@ -5,10 +5,11 @@ import { alternatesFor } from "@/lib/seo";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
 import { toDeskRecord } from "@/lib/desk/adapter";
-import { MARKET_FAMILIES, PRODUCT_SECTORS } from "@/lib/taxonomy/market";
+import { PRODUCT_SECTORS } from "@/lib/taxonomy/market";
+import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
-import AskPonte from "@/components/desk/AskPonte";
 import RecordCard from "@/components/desk/RecordCard";
+import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
@@ -50,8 +51,10 @@ import "@/components/desk/desk.css";
 
 export const dynamic = "force-dynamic";
 
-/** How many signals the entrance shows before handing over to the listing. */
+/** How many signals the entrance shows as records before the full board. */
 const LANDING_SIGNALS = 4;
+/** How many the live strip carries. Enough to move; all of them real. */
+const STRIP_SIGNALS = 14;
 
 export async function generateMetadata({ params }: { params: { locale: Locale } }) {
   return {
@@ -62,92 +65,74 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
   };
 }
 
-/**
- * The three equal market families, and where each one actually goes today.
- *
- * Products routes into Market Signals, which is a real board with real records.
- * Trade services and Distribution have no inventory in production: no stored
- * service listing exists, seek-versus-offer is not persisted, and distribution
- * has taxonomy but no canonical records. So they do not link.
- *
- * They are not rendered as disabled buttons either. A greyed-out control says
- * "this is broken, or you are not allowed"; neither is true. They are two
- * statements about parts of the market Ponte recognises and does not yet route
- * into, which is the honest thing to say and is the same thing the taxonomy
- * already says elsewhere.
- *
- * Linking them to `/explore` to keep them clickable would send a visitor one
- * click out of the Desk and into the chrome it replaces. That is the seam this
- * page must not open.
- */
-const FAMILY: Record<string, { note: string; href?: string; forthcoming?: string }> = {
-  products: {
-    note: "15 HS sectors, chapters 01 to 97",
-    href: "/market-signals",
-  },
-  services: {
-    note: "Freight, customs, inspection, finance",
-    forthcoming: "Recognised as a market. No service records are published yet.",
-  },
-  distribution: {
-    note: "Distributors, agents, market entry",
-    forthcoming: "Recognised as a market. No distribution records are published yet.",
-  },
+/** What each family covers, in the member's own vocabulary. */
+const FAMILY_SCOPE: Record<string, string> = {
+  products: "Physical goods, classified against the HS taxonomy",
+  services: "Freight, customs, inspection, certification, finance",
+  distribution: "Distributors, agents, representation, market entry",
 };
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
-  const board = await readMarketSignals(LANDING_SIGNALS);
-  const records = board.state === "ok" ? board.signals.slice(0, LANDING_SIGNALS).map(toDeskRecord) : [];
+  const board = await readMarketSignals(STRIP_SIGNALS);
+  const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
+  const records = live.slice(0, LANDING_SIGNALS);
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       {/* rail is omitted, not empty: no journey has started. */}
       <DeskShell rail={null}>
+        {/* Directly below the navigation. Real records only: when the read
+            returns nothing the strip renders nothing rather than a placeholder. */}
+        <SignalStrip records={live} />
+
         <section className="hero">
           <div className="hero__top">
             <div>
-              <p className="kicker">Cross-border trade in physical goods</p>
-              <h1>
-                Who is buying, who is selling, and <em>what can actually be established.</em>
-              </h1>
+              <p className="kicker">Ponte Trade</p>
+              <h1>Global trade, from signal to deal.</h1>
               <p className="hero__p">
-                Ponte reads named public trade sources and publishes what they say. Separately,
-                buyers, manufacturers, distributors and trade-service providers submit
-                requirements and offers that Ponte reviews before publication. The two are never
-                mixed, and neither is ever presented as the other.
+                Find market signals, post opportunities, offer trade services and find
+                distribution partners.
               </p>
 
+              {/* Every family is actionable. A family with no externally
+                  observed inventory is still a market a member can enter by
+                  creating a record, so Trade services and Distribution carry
+                  the same weight of action as Products. Nothing here is a card
+                  that looks interactive and does nothing. */}
               <div className="fams">
-                {MARKET_FAMILIES.map((family) => {
-                  const entry = FAMILY[family.key];
-                  const body = (
-                    <>
+                {marketEntrances().map((family) => (
+                  <section key={family.key} className="fam">
+                    <div className="fam__h">
                       <PonteIcon name={family.icon} size={26} />
-                      <b>{family.label}</b>
-                      <span>{entry.note}</span>
-                      {entry.forthcoming ? <span className="soon">{entry.forthcoming}</span> : null}
-                    </>
-                  );
-                  return entry.href ? (
-                    <Link key={family.key} href={entry.href}>
-                      {body}
-                    </Link>
-                  ) : (
-                    <div key={family.key}>{body}</div>
-                  );
-                })}
+                      <div>
+                        <b>{family.label}</b>
+                        <span>{FAMILY_SCOPE[family.key]}</span>
+                      </div>
+                    </div>
+
+                    <div className="fam__a">
+                      {family.discovery ? (
+                        <Link className="fam__go fam__go--1" href={family.discovery.href}>
+                          {family.discovery.label}
+                          <span>{family.discovery.note}</span>
+                        </Link>
+                      ) : null}
+
+                      {family.create.map((entrance) => (
+                        <Link key={entrance.intent} className="fam__go" href={entrance.href}>
+                          {entrance.label}
+                          <span>{entrance.note}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
             </div>
-
-            <AskPonte placeholder="I mill refined sugar in Santos and want to find buyers in South Asia" />
           </div>
-
-          <p className="norail mono">
-            No journey has started, so no journey rail is shown. State an objective, or open a
-            record, and the rail appears with the journey you are on.
-          </p>
         </section>
 
         <section className="sec">

@@ -33,8 +33,32 @@ export function isValidity(v: unknown): v is Validity {
   return v === "standing" || (typeof v === "number" && v > 0);
 }
 
+/**
+ * The canonical market pair the member chose on the way in.
+ *
+ * `intent` below is the LEGACY vocabulary that `listings.type` accepts today
+ * (`offer | requirement | service`, a check constraint). It cannot express
+ * distribution at all, and it cannot tell a service request from a service
+ * offer. So the canonical family and intent from `lib/taxonomy/market.ts` are
+ * carried alongside it, unmodified, from the landing entrance through the
+ * composer to the preview and into the submitted record.
+ *
+ * They are carried, not persisted to their own columns: `listings` has no
+ * `market_family` or `market_intent` column, and adding one is a migration
+ * that is out of scope here. `toSubmitPayload` therefore maps the canonical
+ * intent onto a legal `type` AND writes the canonical pair into the record's
+ * own text, so the member's actual choice survives on the record rather than
+ * being silently reduced to one of three legacy values.
+ */
+export type CanonicalPair = {
+  family: string;
+  intent: string;
+};
+
 /** The whole tapped record. Every commercial field is a selected value. */
 export type StructureDraft = {
+  /** The canonical family and intent, when the member entered through one. */
+  canonical: CanonicalPair | null;
   intent: Intent | null;
   product: string | null;
   hsCode: string | null;
@@ -54,10 +78,55 @@ export type StructureDraft = {
 
 export function emptyDraft(): StructureDraft {
   return {
+    canonical: null,
     intent: null, product: null, hsCode: null, quantity: null, unit: null,
     frequency: null, origin: null, destination: null, incoterm: null,
     payment: null, validity: null, role: null, note: null,
   };
+}
+
+/**
+ * The legacy `listings.type` a canonical intent maps onto.
+ *
+ * `listings.type` is constrained to ('offer','requirement','service'), so the
+ * seven canonical intents have to land on three values. The mapping is by
+ * COMMERCIAL SIDE, which is the part the constraint can actually express:
+ * a demand-side record is a requirement, a supply-side record is an offer, and
+ * a trade service keeps its own value because the schema already has one.
+ *
+ * Distribution is the case that proves why the canonical pair is carried
+ * separately: "seek a distribution partner" and "offer market coverage" are
+ * mapped here to `requirement` and `offer` so the row is storable, and neither
+ * legacy value says anything about distribution. Only the canonical intent
+ * does, which is why it travels with the record instead of being discarded at
+ * this boundary.
+ */
+const LEGACY_TYPE_FOR_INTENT: Record<string, Intent> = {
+  source_product: "requirement",
+  offer_product: "offer",
+  seek_trade_service: "service",
+  offer_trade_service: "service",
+  seek_distribution_partner: "requirement",
+  offer_distribution_or_representation: "offer",
+  seek_brands_or_products_to_represent: "requirement",
+};
+
+export function legacyTypeForIntent(intent: string): Intent | null {
+  return LEGACY_TYPE_FOR_INTENT[intent] ?? null;
+}
+
+/**
+ * Does this draft need an HS classification?
+ *
+ * Only a product record does. A trade service and a distribution arrangement
+ * have no HS code, and forcing either through a six-digit drill-down to reach
+ * a composer is how a real record acquires a false classification. The
+ * composer reads this instead of deciding for itself, and `openGaps` and
+ * `blockers` below never ask for a code the family does not have.
+ */
+export function needsHsCode(draft: StructureDraft): boolean {
+  if (!draft.canonical) return true; // legacy product-shaped entry
+  return draft.canonical.family === "products";
 }
 
 const has = (v: unknown): boolean => v !== null && v !== undefined && String(v).trim() !== "";
@@ -178,6 +247,28 @@ export function blockers(draft: StructureDraft): Blocker[] {
   return out;
 }
 
+/**
+ * The canonical intent, written into the record in words.
+ *
+ * This is how the member's actual choice survives a schema that cannot store
+ * it. "Distribution and representation, offering coverage" is unambiguous on
+ * the record even though `listings.type` will read `offer`.
+ */
+const CANONICAL_CLAUSE: Record<string, (subject: string) => string> = {
+  source_product: (s) => `Product requirement: ${s}.`,
+  offer_product: (s) => `Product offer: ${s}.`,
+  seek_trade_service: (s) => `Trade service requested: ${s}.`,
+  offer_trade_service: (s) => `Trade service offered: ${s}.`,
+  seek_distribution_partner: (s) => `Seeking a distribution partner for: ${s}.`,
+  offer_distribution_or_representation: (s) => `Offering distribution or representation: ${s}.`,
+  seek_brands_or_products_to_represent: (s) => `Seeking products or brands to represent: ${s}.`,
+};
+
+function canonicalClause(pair: CanonicalPair, subject: string): string {
+  const write = CANONICAL_CLAUSE[pair.intent];
+  return write ? write(subject) : `${pair.family}: ${subject}.`;
+}
+
 /** A stable label for an intent used in the synthesised details. */
 function intentClause(intent: Intent | null, product: string): string {
   if (intent === "offer") return `Supplier offer for ${product}.`;
@@ -194,7 +285,11 @@ function intentClause(intent: Intent | null, product: string): string {
  */
 export function synthesiseDetails(draft: StructureDraft): string {
   const product = (draft.product ?? "").trim();
-  const parts: string[] = [intentClause(draft.intent, product || "the stated product")];
+  const parts: string[] = [
+    draft.canonical
+      ? canonicalClause(draft.canonical, product || "the stated subject")
+      : intentClause(draft.intent, product || "the stated product"),
+  ];
 
   if (has(draft.quantity)) {
     const q = `Quantity: ${draft.quantity}${draft.unit ? ` ${draft.unit}` : ""}` +
@@ -242,8 +337,20 @@ export function toSubmitPayload(
   const validUntil =
     days > 0 ? new Date(Date.parse(opts.nowIso) + days * DAY_MS).toISOString().slice(0, 10) : null;
 
+  // The canonical intent decides the stored type when the member entered
+  // through a family entrance. The legacy picker still decides it otherwise.
+  const type = draft.canonical
+    ? legacyTypeForIntent(draft.canonical.intent) ?? draft.intent
+    : draft.intent;
+
   return {
-    type: draft.intent,
+    type,
+    // Carried, and readable on the record. `listings` cannot store these in
+    // their own columns yet, so they are sent as well as written into the
+    // details: an API that later gains the columns will already receive them,
+    // and until then the record still states what the member actually chose.
+    market_family: draft.canonical?.family ?? null,
+    market_intent: draft.canonical?.intent ?? null,
     product: draft.product,
     hs_code: draft.hsCode,
     quantity: draft.quantity,

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import StructureComposer from "@/components/structure/StructureComposer";
+import { entranceFromParams } from "@/lib/desk/entrances";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
 
@@ -23,11 +24,27 @@ export async function generateMetadata({
  * whole S01-S06 stack, the account gate and the submit. Full-bleed Brand v5
  * cream; ChromeGate drops the app's obsidian chrome on this route.
  */
-export default async function StructurePage({ params }: { params: { locale: string } }) {
+export default async function StructurePage({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams?: { family?: string; intent?: string };
+}) {
   setRequestLocale(params.locale);
+
+  // The canonical pair a family entrance carried in. Validated here, on the
+  // server, against the accepted taxonomy: a half-valid or cross-family pair
+  // resolves to null and the composer opens at its own first step rather than
+  // starting a member in a family they did not choose.
+  const entrance = entranceFromParams({
+    family: searchParams?.family,
+    intent: searchParams?.intent,
+  });
+
   return (
     <div className={landingFontVars} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
-      <StructureComposer />
+      <StructureComposer entrance={entrance} />
     </div>
   );
 }
