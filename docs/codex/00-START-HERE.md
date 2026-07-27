@@ -1,9 +1,8 @@
 # Ponte Trade — start here
 
-**Status date:** 26 July 2026  
+**Status date:** 27 July 2026  
 **Repository:** `Geppix140269/ponte`  
-**Canonical branch:** `main`  
-**Canonical commit before this governance proposal:** `6c18af51b907b57d1a063ad51cfdb451e112ad03`
+**Canonical branch:** `main`
 
 ## Product definition
 
@@ -19,16 +18,11 @@ Operating spine:
 
 > Business identity → Commercial Mission → Observed evidence → Company-specific interpretation → Recommended action → Human approval where required → Execution → Recorded outcome → Better mission memory
 
-Ponte Trade's market is organised around three equal primary families —
-Products, Trade services, and Distribution and representation — with externally
-observed Market Signals and member-created Member Opportunities available in
-each. See ADR-0001 and the canonical taxonomy.
+Ponte Trade's market is organised around three equal primary families — Products, Trade services, and Distribution and representation — with externally observed Market Signals and member-created Member Opportunities available in each. See ADR-0001 and the canonical taxonomy.
 
 ## Operating procedure
 
-`docs/codex/SOURCE-OF-TRUTH-SOP.md` governs how ideas from ChatGPT, Codex,
-Claude, humans, research and meetings become proposals, accepted decisions,
-implementation and recorded current state.
+`docs/codex/SOURCE-OF-TRUTH-SOP.md` governs how ideas from ChatGPT, Codex, Claude, humans, research and meetings become proposals, accepted decisions, implementation and recorded current state.
 
 Conversations are workshops. The merged repository is the operating memory.
 
@@ -36,35 +30,28 @@ Conversations are workshops. The merged repository is the operating memory.
 
 When documents conflict, use this order:
 
-0. A later owner-accepted ADR in `docs/decisions/` that explicitly supersedes a
-   named earlier decision within its scope. An ADR is not implementation status.
-1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience (landing, the primary routes, Explore, market-activity presentation, Start a Deal entry). It supersedes all earlier landing, gateway and primary-entry instructions, including anything below that defines four primary routes, makes Qualified Opportunities the primary Explore result, or treats Market Signals as a secondary fallback. Amended 26 July 2026: Ponte Desk is the selected visual and behavioural implementation, and §5 of that document now carries the Desk composition. Within the entry surfaces the order is: this authority, then the final Ponte Desk handoff for UX and visual behaviour, then Ponte Flow for semantic icon and motion implementation, then repository and production as implementation reality.
-1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-Only Interface and Multilingual Input Policy. The interface and all Ponte-controlled content are English only; multilingual natural-language input remains supported and AI may interpret and translate it; no i18n-level parallel interface is maintained. The `next-intl` and `[locale]` structure is legacy compatibility infrastructure, not future product architecture. Do not add locale abstractions, translation keys for parity, language selectors or locale routes.
-2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing self-contained implementation authority for everything downstream of entry.
-3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report the conflict before changing direction.
-4. The underlying long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, when present, for additional depth that does not conflict with the governing brief.
+0. A later owner-accepted ADR in `docs/decisions/` that explicitly supersedes a named earlier decision within its scope. An ADR is not implementation status.
+1. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md` — the current authority for the entry experience.
+1a. `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md` — English-only interface and multilingual input policy.
+1b. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` — the binding authority for every Ponte-controlled visual and interaction decision. Within its scope, approved packages under `design/authority/` and approved Ponte Flow assets under `design-system/ponte-flow/` are implementation authorities, not inspiration. Visual conformity is part of correctness.
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing implementation authority for everything downstream of entry.
+3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report conflicts before changing direction.
+4. The long-form source authorities listed in `docs/codex/AUTHORITY-MANIFEST.md`, where they do not conflict with the governing authorities.
 5. Existing engineering, lifecycle, security and production authorities in the repository.
-6. Machine-readable and code-level contracts in `lib/taxonomy/` and
-   `docs/schemas/`, where they implement an accepted authority or ADR.
+6. Machine-readable and code-level contracts in `lib/taxonomy/` and `docs/schemas/`, where they implement an accepted authority or ADR.
 7. This reconciled Codex layer — current implementation, deployment, decision and roadmap status.
 
-The source-of-truth SOP governs the process, not product meaning. It does not
-silently override product authorities; it tells contributors how to record,
-change and implement them.
+The source-of-truth SOP governs process, not product meaning. It does not silently override product authorities.
 
-The governing brief already consolidates the product architecture, Brand v5 rules, messaging and copy, route register, experience blueprints, technical boundaries, implementation sequence and acceptance suite. The remaining long-form sources are useful supporting authorities but are not required for the Phase 0 audit to begin.
+The Design Constitution is mandatory before UI, icon, typography, motion, layout or interaction work. Where it is silent or conflicts with truthful production constraints, stop and request owner approval. Do not improvise a generic substitute.
 
 ## Current implementation headline
 
-`main` already contains substantial founding-launch, entry, Explore, Find,
-Structure, verification and market-activity work. The exact status, including
-what is merged but not production-verified, lives only in `CURRENT-STATE.md` and
-must be checked before making a claim.
+`main` contains substantial founding-launch, entry, Explore, Find, Structure, verification and market-activity work. Exact status, including what is merged but not production-verified, lives only in `CURRENT-STATE.md` and must be checked before making a claim.
 
-The repository also contains a canonical market taxonomy under
-`lib/taxonomy/market.ts`. ADR-0001 adds the accepted family, origin and intent
-contract. The production database and all creation/ingestion paths are not yet
-fully reconciled to that logical contract.
+The repository also contains the canonical market taxonomy under `lib/taxonomy/market.ts`. ADR-0001 adds the accepted family, origin and intent contract. The production database and all creation and ingestion paths are not yet fully reconciled to that logical contract.
+
+ADR-0002 records the owner-approved Ponte Design Constitution and Bridge System authority. Its first implementation is deliberately separate from the authority PR.
 
 ## Critical current truth
 
@@ -74,17 +61,19 @@ Read next:
 
 0. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
 1. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
-2. `SOURCE-OF-TRUTH-SOP.md`
-3. `../decisions/README.md` and relevant accepted ADRs
-4. `CURRENT-STATE.md`
-5. `FEATURE-FLAGS.md`
-6. `DATABASE-STATE.md`
-7. `KNOWN-ISSUES.md`
-8. `DECISION-LOG.md`
-9. `DO-NOT-REOPEN.md`
-10. `MASTER-ROADMAP.md`
-11. `ACTIVE-MILESTONE.md`
-12. `.agent/PLANS.md`
+2. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`
+3. `design/authority/bridge/v1/README.md` when bridge, progress or connection UI is involved
+4. `SOURCE-OF-TRUTH-SOP.md`
+5. `../decisions/README.md` and relevant accepted ADRs
+6. `CURRENT-STATE.md`
+7. `FEATURE-FLAGS.md`
+8. `DATABASE-STATE.md`
+9. `KNOWN-ISSUES.md`
+10. `DECISION-LOG.md`
+11. `DO-NOT-REOPEN.md`
+12. `MASTER-ROADMAP.md`
+13. `ACTIVE-MILESTONE.md`
+14. `.agent/PLANS.md`
 
 ## Completion discipline
 
@@ -97,5 +86,12 @@ A feature is only **production-verified** when all of the following are recorded
 - the expected user journey is exercised;
 - failures and limitations are written down.
 
-A decision is only **binding** when the owner has accepted it, its affected
-canonical records are updated, and it is merged to `main`.
+A design implementation is only complete when:
+
+- the applicable Constitution rules and approved references were used;
+- desktop and 390 × 844 mobile evidence was reviewed;
+- reduced motion and keyboard focus were reviewed;
+- no silent simplification or generic substitution was introduced;
+- explicit owner design approval is recorded where required.
+
+A decision is only binding when the owner has accepted it, its affected canonical records are updated, and it is merged to `main`.

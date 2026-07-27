@@ -28,3 +28,4 @@ decisions, their rationale, alternatives and consequences.
 | ADR | Decision | Status |
 |---|---|---|
 | [ADR-0001](ADR-0001-unified-trade-market.md) | Unified trade market with three primary families | Accepted by owner; effective on merge |
+| [ADR-0002](ADR-0002-ponte-design-constitution.md) | Binding Ponte Design Constitution and Bridge System authority | Accepted by owner; effective on merge |

@@ -9,10 +9,15 @@ const requiredFiles = [
   "docs/codex/DECISION-LOG.md",
   "docs/decisions/README.md",
   "docs/decisions/ADR-0001-unified-trade-market.md",
+  "docs/decisions/ADR-0002-ponte-design-constitution.md",
   "docs/schemas/market-taxonomy.yaml",
   "docs/schemas/market-record.schema.json",
+  "design/authority/PONTE_DESIGN_CONSTITUTION_v1.md",
+  "design/authority/bridge/v1/README.md",
+  "design/authority/bridge/v1/APPROVAL.md",
   ".github/pull_request_template.md",
   ".github/ISSUE_TEMPLATE/product-decision.yml",
+  ".github/CODEOWNERS",
   "lib/taxonomy/market.ts",
 ];
 
@@ -34,6 +39,7 @@ requireText("AGENTS.md", [
   "docs/codex/SOURCE-OF-TRUTH-SOP.md",
   "docs/decisions/",
   "lib/taxonomy/market.ts",
+  "design/authority/PONTE_DESIGN_CONSTITUTION_v1.md",
 ]);
 requireText("CLAUDE.md", ["AGENTS.md", "docs/codex/SOURCE-OF-TRUTH-SOP.md"]);
 requireText("docs/codex/00-START-HERE.md", [
@@ -44,7 +50,24 @@ requireText("docs/codex/DECISION-LOG.md", [
   "One trade market, three equal primary families",
   "Repository source-of-truth operating procedure",
 ]);
-requireText("lib/explore/families.ts", ["MARKET_FAMILIES"]);
+requireText(".github/pull_request_template.md", [
+  "Design Constitution check",
+  "design/authority/PONTE_DESIGN_CONSTITUTION_v1.md",
+]);
+requireText(".github/CODEOWNERS", [
+  "/design/authority/",
+  "/design-system/",
+]);
+requireText("design/authority/PONTE_DESIGN_CONSTITUTION_v1.md", [
+  "Functional correctness does not override design correctness",
+  "Ponte must never display 0%",
+  "Stop and request owner approval",
+]);
+requireText("design/authority/bridge/v1/README.md", [
+  "APPROVED — AUTHORITATIVE",
+  "Ponte Family Bridge",
+  "Ponte Action Bridge",
+]);
 
 if (existsSync("docs/schemas/market-record.schema.json")) {
   try {
