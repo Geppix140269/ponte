@@ -1,0 +1,130 @@
+name: Import approved Bridge package
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - governance/ponte-design-constitution-v1
+
+permissions:
+  contents: write
+
+jobs:
+  import-package:
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'Stage exact approved Bridge package'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: governance/ponte-design-constitution-v1
+          fetch-depth: 0
+
+      - name: Determine whether import is required
+        id: required
+        shell: bash
+        run: |
+          if test -f 'design/authority/bridge/v1/source/Ponte Bridge System.html' \
+            && test -f 'design/authority/bridge/v1/reference/mobile-3-action-revealed-390x844.png'; then
+            echo 'value=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'value=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download and verify source archive
+        if: steps.required.outputs.value == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 \
+            'https://drive.usercontent.google.com/download?id=1JP3tHf_izTeho5D6IwARk1bWuHlK8ruu&export=download&confirm=t' \
+            --output /tmp/ponte-bridge.zip
+          echo 'd45d809d2917a6265e368ade5f52c319bbd83937a29070b7b4a338445975d616  /tmp/ponte-bridge.zip' | sha256sum --check --strict
+
+      - name: Import exact approved files
+        if: steps.required.outputs.value == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import shutil
+          import zipfile
+
+          repo = Path('.')
+          temp = Path('/tmp/ponte-bridge-extract')
+          shutil.rmtree(temp, ignore_errors=True)
+          temp.mkdir(parents=True)
+          with zipfile.ZipFile('/tmp/ponte-bridge.zip') as zf:
+              zf.extractall(temp)
+
+          package = temp / 'Ponte_Bridge_Implementation_Handoff_v1'
+          if not package.is_dir():
+              raise SystemExit('approved internal package folder missing')
+
+          target = repo / 'design/authority/bridge/v1'
+          shutil.rmtree(target / 'source/archive', ignore_errors=True)
+          mapping = {
+              '00_README.md': 'source/00_README.md',
+              '01_IMPLEMENTATION_NOTES.md': 'implementation/01_IMPLEMENTATION_NOTES.md',
+              'Ponte Bridge System.html': 'source/Ponte Bridge System.html',
+              'Ponte Landing - Bridge.html': 'source/Ponte Landing - Bridge.html',
+              'ponte-bridge-demos.js': 'source/ponte-bridge-demos.js',
+              'ponte-bridge.css': 'source/ponte-bridge.css',
+              'ponte-bridge.js': 'source/ponte-bridge.js',
+              'ponte-flow/tokens/ponte-flow-tokens.css': 'source/ponte-flow/tokens/ponte-flow-tokens.css',
+              'reference/desktop-0-full-composition.png': 'reference/desktop-0-full-composition.png',
+              'reference/desktop-1-family-neutral.png': 'reference/desktop-1-family-neutral.png',
+              'reference/desktop-2-products-selected.png': 'reference/desktop-2-products-selected.png',
+              'reference/desktop-3-trade-services-selected.png': 'reference/desktop-3-trade-services-selected.png',
+              'reference/desktop-4-distribution-selected.png': 'reference/desktop-4-distribution-selected.png',
+              'reference/mobile-1-family-neutral-390x844.png': 'reference/mobile-1-family-neutral-390x844.png',
+              'reference/mobile-2-family-selected-390x844.png': 'reference/mobile-2-family-selected-390x844.png',
+              'reference/mobile-3-action-revealed-390x844.png': 'reference/mobile-3-action-revealed-390x844.png',
+          }
+          expected = {
+              'source/00_README.md': '35d1a54d7b64f9e0c7b175c32e9795ed126a4993d7e89e25983b4ad34a26de41',
+              'implementation/01_IMPLEMENTATION_NOTES.md': 'fda3acb8893c0a088dd2f9b49f18e54c6dbb10bb4351517f6fc9f9e72979688b',
+              'source/Ponte Bridge System.html': '135027122074eed230bcce38ecca2dc7a679e26f424672c26328b9866b2d9b14',
+              'source/Ponte Landing - Bridge.html': 'ffe2a287a2604409ff56798b2b276d31a680c67278577df4847a077f95f82d36',
+              'source/ponte-bridge-demos.js': 'f909d08714825515e9297f603493016c4eae060e1f73355d8fbf4c580c558093',
+              'source/ponte-bridge.css': '90e20b416aeda96f6bdb87a6a80191038bae114fa554441c29329e0159296afa',
+              'source/ponte-bridge.js': '3ff3210464d3208c058bcd9b7feb80801c77dc23db28927c8997df8aa62b5f4f',
+              'source/ponte-flow/tokens/ponte-flow-tokens.css': 'dabc089f0b9822242cc0a3d8783c2b19ab0021ce98c82d9cfd8f6d1648483d5f',
+              'reference/desktop-0-full-composition.png': '7f494161afbda82b91c5ab9290bf62fd8c54fbf4800a5a310464641519e567c2',
+              'reference/desktop-1-family-neutral.png': '343a2ef342d042abdda78d34a0a1d0a0da37493db095aa69bd1a562278ac132c',
+              'reference/desktop-2-products-selected.png': '2481171d0c77bf2046352ad4794bb5fdae2ab39074bf979cbb7adee6adbffd8c',
+              'reference/desktop-3-trade-services-selected.png': '2919559e237ff1095ee34237d936bb4edbcf670e3dd325d3d6eecfe9c7baca87',
+              'reference/desktop-4-distribution-selected.png': 'a21cbe33a8f538c0d301cb05560cd17ecfc06e814b70ce1557067faee8e4472e',
+              'reference/mobile-1-family-neutral-390x844.png': '5d5512101ba04906a39fcbea83aea933ea55afa22bb15ada24f6d51cbcd9d10b',
+              'reference/mobile-2-family-selected-390x844.png': '99df430898b32b413ac933a0aa94fb23749d138e1d87977a8b7bd0fd53558faf',
+              'reference/mobile-3-action-revealed-390x844.png': '7b82ee19ff1f9e29dc37a92243f6060a978cb0353d221a4820cb64efc415c729',
+          }
+
+          for source_rel, target_rel in mapping.items():
+              source = package / source_rel
+              destination = target / target_rel
+              if not source.is_file():
+                  raise SystemExit(f'missing approved package file: {source_rel}')
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(source, destination)
+              digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+              if digest != expected[target_rel]:
+                  raise SystemExit(f'hash mismatch after import: {target_rel}')
+          print(f'ok approved Bridge package ({len(mapping)} files)')
+          PY
+          node --check 'design/authority/bridge/v1/source/ponte-bridge.js'
+          node --check 'design/authority/bridge/v1/source/ponte-bridge-demos.js'
+
+      - name: Commit exact package
+        if: steps.required.outputs.value == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A design/authority/bridge/v1
+          git commit -m 'Import exact approved Ponte Bridge package'
+          git push origin HEAD:governance/ponte-design-constitution-v1
