@@ -109,10 +109,18 @@ test("the freight-forwarding review has no quantity, unit, Incoterm, HS code or 
   }
 });
 
-test("the completed freight-forwarding record blocks only on verification", () => {
+test("the completed freight-forwarding record blocks only on the universal conditions", () => {
+  // The declaration and the business verification are publication-gate
+  // conditions applying to every family, not facts about the service. What
+  // matters here is that no service record is ever blocked on a product fact.
   const keys = blockers(FREIGHT).map((b) => b.key);
-  assert.deepEqual(keys, ["businessVerification"]);
+  assert.deepEqual(keys, ["declaration", "businessVerification"]);
   assert.equal(procedureFor(FREIGHT).submissionReadiness(FREIGHT).ready, true);
+});
+
+test("accepting the declaration leaves freight forwarding on verification alone", () => {
+  const declared: StructureDraft = { ...FREIGHT, declarationAccepted: true };
+  assert.deepEqual(blockers(declared).map((b) => b.key), ["businessVerification"]);
 });
 
 test("the freight-forwarding capacity is stored as a capability, never as a quantity", () => {
@@ -200,8 +208,13 @@ test("the distribution review has no shipment quantity, Incoterm, unit or HS cod
   }
 });
 
-test("the completed distribution record blocks only on verification", () => {
-  assert.deepEqual(blockers(DISTRIBUTION).map((b) => b.key), ["businessVerification"]);
+test("the completed distribution record blocks only on the universal conditions", () => {
+  assert.deepEqual(blockers(DISTRIBUTION).map((b) => b.key), ["declaration", "businessVerification"]);
+});
+
+test("accepting the declaration leaves distribution on verification alone", () => {
+  const declared: StructureDraft = { ...DISTRIBUTION, declarationAccepted: true };
+  assert.deepEqual(blockers(declared).map((b) => b.key), ["businessVerification"]);
 });
 
 test("an opening-order expectation is a relationship term, never a shipped quantity", () => {

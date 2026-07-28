@@ -1,4 +1,4 @@
-import type { MarketFamily } from "../../taxonomy/market";
+import { normaliseMarketFamily, type MarketFamily } from "../../taxonomy/market";
 import type { StructureDraft } from "../draft";
 import type { CompletionField } from "./types";
 import { statesOwnCapability } from "./shared";
@@ -31,11 +31,22 @@ export function procedureForFamily(family: MarketFamily): FamilyProcedure {
   return PROCEDURES[family];
 }
 
-/** The family a draft belongs to, canonical when known and products otherwise. */
+/**
+ * The family a draft belongs to.
+ *
+ * Absent means a legacy entrance, which is a Products record, and that fallback
+ * is deliberate: the pre-family composer produced exactly the product-shaped
+ * record it always did, and reading it as anything else would reclassify every
+ * record that predates the family entrances.
+ *
+ * An UNRECOGNISED family is a different thing entirely and no longer falls
+ * through to Products. It throws. Silently treating an unknown value as a
+ * product is how a trade service acquires a shipped quantity, an Incoterm and
+ * an HS classification it never had; the normaliser fails closed instead, and
+ * the legacy `trade_services` spelling is reconciled there rather than here.
+ */
 export function familyOf(draft: StructureDraft): MarketFamily {
-  const family = draft.canonical?.family;
-  if (family === "services" || family === "distribution" || family === "products") return family;
-  return "products";
+  return normaliseMarketFamily(draft.canonical?.family) ?? "products";
 }
 
 /** The procedure this draft follows. */

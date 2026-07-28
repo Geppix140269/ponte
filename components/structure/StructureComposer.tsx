@@ -133,6 +133,7 @@ const STEP_MARK: Partial<Record<Step, string>> = {
 
 export default function StructureComposer({
   entrance = null,
+  initial = null,
   icons = {},
 }: {
   /**
@@ -142,6 +143,13 @@ export default function StructureComposer({
    * again in a smaller vocabulary would lose the answer.
    */
   entrance?: { family: MarketFamily; intent: MarketIntent } | null;
+  /**
+   * A saved draft, read from the member's own listing row on the server.
+   *
+   * It supersedes `entrance`: a resumed record already knows its family, and
+   * the entrance is only a way of stating one that has not been chosen yet.
+   */
+  initial?: StructureDraft | null;
   /**
    * Category icons, rendered on the server and handed down as nodes.
    *
@@ -154,6 +162,10 @@ export default function StructureComposer({
   const t = useTranslations("structure");
   const router = useRouter();
   const [draft, setDraft] = useState<StructureDraft>(() => {
+    // A resumed draft wins. It already carries its family, its classification
+    // and the terms belonging to that family; applying an entrance over it
+    // would restate a choice the record has already made.
+    if (initial) return initial;
     const base = emptyDraft();
     if (!entrance) return base;
     return {

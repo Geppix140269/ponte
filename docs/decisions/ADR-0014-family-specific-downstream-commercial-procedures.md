@@ -1,4 +1,4 @@
-# ADR-0013 — Family-specific downstream commercial procedures
+# ADR-0014 — Family-specific downstream commercial procedures
 
 - **Status:** Proposed; effective when accepted by the product owner and merged
 - **Decision date:** 28 July 2026

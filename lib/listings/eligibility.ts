@@ -21,6 +21,7 @@
 //     listing is never described as a verified one. Completeness is a measure
 //     of how much the member stated. It is not evidence that any of it is true.
 
+import { normaliseMarketFamily } from "../taxonomy/market";
 import { checkPublicationGate, type GateListing, type GateSubmitter } from "./publication-gate";
 import { roleNeedsChain } from "./approval-minimum";
 import { isListingCurrent } from "./validity";
@@ -66,19 +67,16 @@ export function familyOf(listing: {
   market_family?: string | null;
   type?: string | null;
 }): ListingFamily {
-  switch (listing.market_family) {
-    case "products": return "products";
-    // `services` is the value the canonical taxonomy stores and the composer
-    // sends; `trade_services` is this module's own older spelling and is still
-    // written by rows created before the two were reconciled. Both mean a trade
-    // service. Reading only one of them worked by accident, because a service's
-    // legacy `type` is also `service` and the fallback caught it: an accident
-    // that would have stopped working the moment a service was stored under a
-    // different legacy type.
-    case "services":
-    case "trade_services": return "trade_services";
-    case "distribution": return "distribution";
-  }
+  // One boundary reconciles the two spellings and rejects anything else. This
+  // module keeps `trade_services` as its OWN vocabulary, because its rule names
+  // and issue codes are written in it; what it no longer does is decide for
+  // itself which stored strings are legitimate.
+  const family = normaliseMarketFamily(listing.market_family);
+  if (family === "products") return "products";
+  if (family === "services") return "trade_services";
+  if (family === "distribution") return "distribution";
+  // No family stored at all: a row predating the family columns. Its legacy
+  // `type` is the only signal, and `service` has always meant a trade service.
   return listing.type === "service" ? "trade_services" : "products";
 }
 

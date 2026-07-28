@@ -255,7 +255,7 @@ settings and possibly a Supabase project, and both are owner decisions.
 
 ## Written and NOT applied: family commercial terms
 
-`supabase/migrations/20260728d_family_commercial_terms.sql` (ADR-0013).
+`supabase/migrations/20260728d_family_commercial_terms.sql` (ADR-0014).
 
 Adds two nullable jsonb columns to `listings`, `service_terms` and
 `distribution_terms`, plus three CHECK constraints stating the cross-family

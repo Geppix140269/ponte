@@ -10,7 +10,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Not:** service capacity stored as a product quantity; a distribution opening order stored as a shipped quantity; a product field hidden rather than removed; or the composer duplicated per family.
 
-**Authority:** ADR-0013. Proposed; awaiting owner acceptance.
+**Authority:** ADR-0014. Proposed; awaiting owner acceptance.
 
 
 ## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)

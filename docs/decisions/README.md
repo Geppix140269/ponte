@@ -38,7 +38,7 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0011](ADR-0011-complete-market-discoverability-and-category-first-journeys.md) | Complete Market Signal discoverability and category-first Trade Services and Distribution journeys | Accepted by owner; effective on merge |
 | [ADR-0012](ADR-0012-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 | [ADR-0012](ADR-0012-market-classification-implementation-contract.md) | The market classification contract, as implemented (implements ADR-0011) | Proposed; awaiting owner review |
-| [ADR-0013](ADR-0013-family-specific-downstream-commercial-procedures.md) | Family-specific downstream commercial procedures for the shared composer (completes ADR-0011) | Proposed; awaiting owner review |
+| [ADR-0014](ADR-0014-family-specific-downstream-commercial-procedures.md) | Family-specific downstream commercial procedures for the shared composer (completes ADR-0011) | Proposed; awaiting owner review |
 | [ADR-0013](ADR-0013-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 
 ## Unresolved numbering collision on ADR-0012

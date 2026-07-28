@@ -18,7 +18,7 @@ Use this structure:
 
 ---
 
-## 2026-07-28 - Family-specific downstream composer (ADR-0013)
+## 2026-07-28 - Family-specific downstream composer (ADR-0014)
 
 ### Completed
 
@@ -33,7 +33,7 @@ Use this structure:
 
 ### Decisions
 
-- None taken. ADR-0013 is **proposed**, not accepted.
+- None taken. ADR-0014 is **proposed**, not accepted.
 
 ### Risks / discrepancies
 
@@ -43,14 +43,14 @@ Use this structure:
 
 ### Next
 
-1. Owner review of ADR-0013 and of PR for `fix/family-specific-downstream-composer`.
+1. Owner review of ADR-0014 and of PR for `fix/family-specific-downstream-composer`.
 2. On acceptance: merge, then apply `20260728d_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
 3. Validate `listings_product_fields_family` after inspecting any rows it reports.
 
 ### Evidence
 
 - Branch `fix/family-specific-downstream-composer`, based on `main` at `457eaf6`.
-- `docs/decisions/ADR-0013-family-specific-downstream-commercial-procedures.md`.
+- `docs/decisions/ADR-0014-family-specific-downstream-commercial-procedures.md`.
 - `lib/structure/__tests__/procedures.test.ts` (27 assertions, all seven canonical intents and the mandatory negative assertions) and `lib/structure/__tests__/downstream-journeys.test.ts` (16 assertions, the two worked journeys plus a sweep proving every message key each procedure emits exists in the catalogue).
 
 ---
