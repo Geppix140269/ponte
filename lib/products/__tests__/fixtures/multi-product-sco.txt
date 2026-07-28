@@ -1,0 +1,102 @@
+SANITISED TEST FIXTURE. Not a real offer, not a real company, not a real person.
+
+This reproduces the STRUCTURE of the multi-product soft corporate offer the owner
+supplied as the acceptance case on 28 July 2026: three distinct petroleum
+products in one document, a shared quantity, origin, delivery basis and contract
+term, and two alternative pricing and payment structures. Every identifying
+detail is invented. No licence number, website, address, recipient or signatory
+from the source document appears here, and none should ever be added.
+
+--------------------------------------------------------------------------
+
+Date: 24 July 2026
+Expiring date: 31 July 2026
+
+For the attention of
+EXAMPLE BUYER LIMITED
+
+Subject: Confirmation of Availability - Gasoil 10ppm (ULSD EN590) / D6 (Fuel Oil) / Jet
+
+Dear Client,
+
+I am writing on behalf of Example Trading Company to confirm the availability of
+Gasoil 10ppm (ULSD EN590), D6 (Fuel Oil) and Jet from our current inventory. As a
+supplier of petroleum products, we confirm that we hold sufficient stock to meet
+your stated requirements.
+
+PRODUCT SPECIFICATIONS
+
+Gasoil 10ppm (Ultra Low Sulfur Diesel - ULSD EN590)
+Gasoil 10ppm complies with international quality standards, with a maximum sulfur
+content of 10 ppm. It is suitable for automotive, industrial and marine
+applications.
+
+D6 Virgin Fuel Oil (Residual Fuel Oil / Heavy Fuel Oil)
+D6 Virgin Fuel Oil complies with international quality standards for residual
+heavy fuels. It is a high-viscosity, high-energy-content product used primarily
+in large-scale industrial, marine and power generation applications. It suits
+power plants, heavy industrial boilers and large marine vessels with pre-heating
+systems.
+
+Jet Fuel (Jet A-1)
+Jet A-1 complies with ASTM D1655 and DEF STAN 91-091. It has a maximum sulfur
+content of 0.3 percent, high thermal stability and a freeze point of -47 C. It is
+suitable for commercial and military aviation worldwide.
+
+OFFER DETAILS
+
+- Quantity available: 200,000 MT per month, per product
+- Origin: Asia / West Africa / India
+- Delivery: immediate shipment on CIF basis to Houston Port, or any other safe
+  world port
+- Contract structure: 24-month term contract
+
+PRICING AND TRANSACTION OPTIONS
+
+Option 1
+Pricing: local Platts minus 50 USD per MT
+Payment terms: 30 percent / 70 percent
+
+1. Seller issues Deal Recap.
+2. Buyer signs and returns the Deal Recap.
+3. Both parties sign the Sales and Purchase Agreement.
+4. Seller issues a commercial invoice for 30 percent of the first shipment value.
+5. Buyer pays and provides proof of payment.
+6. Seller grants the Buyer's representative a 3-day window to perform quantity
+   and quality inspection at the loading port.
+7. On successful inspection, Seller issues the invoice for the remaining 70
+   percent. The vessel sails after payment confirmation.
+8. At the discharge port the Buyer may optionally conduct a final inspection.
+9. On successful completion of the trial delivery, both parties proceed with the
+   monthly delivery schedule for the 24-month contract.
+
+Payment structure
+- 30 percent payable within 5 banking days of agreement signing, vessel
+  nomination and laycan confirmation.
+- 70 percent payable at the loading port against presentation of the commercial
+  invoice, an independent quantity and quality certificate, a full set of
+  original bills of lading and standard shipping documents.
+
+Option 2
+Pricing: local Platts minus 30 USD per MT
+Payment terms: bank instrument backed, payment at discharge
+
+1. Seller issues the Deal Recap.
+2. Buyer signs and returns the Deal Recap.
+3. Both parties sign the Sales and Purchase Agreement.
+4. Within 5 banking days of signing, the Buyer's bank issues an irrevocable,
+   revolving bank instrument covering 110 percent of the monthly contractual
+   quantity, valid for one year and renewable.
+5. On authentication of the bank instrument, the Seller's bank issues a
+   performance bond equal to 2 percent of its face value within 7 banking days.
+6. At the discharge port, after independent inspection by a mutually agreed
+   surveyor, the Buyer effects payment within 3 banking days against presentation
+   of the required commercial documents. The next monthly delivery schedule then
+   commences.
+
+We remain available to discuss the proposal and to agree next steps.
+
+Yours sincerely,
+
+A. Example, Director
+Example Trading Company

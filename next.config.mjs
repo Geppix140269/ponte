@@ -12,6 +12,21 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  /**
+   * Normally `.next`, and it must stay `.next` everywhere real.
+   *
+   * The one caller that overrides it is the visual-evidence run. It needs the
+   * production build on one port (that is what the landing evidence is captured
+   * against) and a development server on another, because the product intake
+   * state gallery 404s in production exactly like the Ponte Flow specimen sheet.
+   * Both servers write to the build directory, so sharing one meant `next dev`
+   * cleared the production build out from under `next start` and the whole
+   * suite failed on a missing build id.
+   *
+   * Set only by `playwright.config.ts`. Nothing in development, CI or
+   * deployment sets it, so the default is the only value that ever ships.
+   */
+  distDir: process.env.PONTE_DIST_DIR || ".next",
   webpack: (config) => {
     // pdfjs (react-pdf) optionally requires Node 'canvas'; not needed in-browser.
     config.resolve.alias.canvas = false;

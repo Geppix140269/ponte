@@ -204,15 +204,34 @@ test("partner type, sector, coverage and relationship are four separate question
 });
 
 // ---------------------------------------------------------------------------
-// Products keep the journey they had
+// Products keep a journey of their own
 // ---------------------------------------------------------------------------
 
-test("products still open on the HS category journey", async ({ page }) => {
-  await open(page, ENTRANCES.productSource);
-  await expect(page.locator(".hs__grid")).toBeVisible();
-  // No category picker is mounted for a product record at all.
+/*
+ * This assertion changed when ADR-0012 landed, and the change is the point.
+ *
+ * It used to read "products still open on the HS category journey", and the
+ * frame it captured (desktop-13-products-hs-unchanged.png) showed the HS
+ * chapter grid. That was true of products when this file was written and is
+ * not true of them now: ADR-0012 replaced the customs drill-down as the way IN
+ * with the AI intake, on the owner's instruction that an HS code must not be
+ * required before Ponte understands the product.
+ *
+ * What this file is actually for is unchanged and still holds: a product record
+ * is not routed through the SERVICE AND DISTRIBUTION category pickers. That is
+ * asserted below, alongside the browse route staying reachable, so the
+ * catalogue is a third way in rather than a removed one.
+ */
+test("products open on their own intake, not on either category picker", async ({ page }) => {
+  // Not `open()`: that helper waits for one of the two category grids, and the
+  // whole of this assertion is that a product record shows neither.
+  await page.goto(ENTRANCES.productSource, { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".pintake")).toBeVisible({ timeout: 20_000 });
+  // No ADR-0011 category picker is mounted for a product record at all.
   await expect(page.locator(".pcat__grid")).toHaveCount(0);
-  await shot(page, "desktop-13-products-hs-unchanged");
+  // And no customs code is demanded before the member has said anything.
+  await expect(page.locator(".hs__grid")).toHaveCount(0);
+  await shot(page, "desktop-13-products-open-on-intake");
 });
 
 // ---------------------------------------------------------------------------
