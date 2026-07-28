@@ -18,6 +18,66 @@ Use this structure:
 
 ---
 
+## 2026-07-28 — LAUNCH BLOCKER RESOLVED: canonical verification level applied to production
+
+### Completed
+
+- Applied `supabase/migrations/20260728d_verification_level_canonical.sql` to production (`cptglsmjmzcfpjndqfmc`) at **17:04:50 UTC**, with explicit owner authorisation, using `node scripts/db-query.mjs --file`.
+- SHA-256 `262e96b7dc4cdef1a91d493994cfd4fc9f6e705af149147b0bfa1261714a9930`, matching the file on `main` byte for byte.
+
+**Why this was a Launch Blocker.** Production already carried a five-value CHECK constraint on `profiles.verification_level` (`unverified, email_verified, phone_verified, company_verified, fully_verified`). The verification pipeline wrote the integer `2`, which Postgres coerced to the text `'2'` and the constraint rejected with SQLSTATE 23514. The update result was never checked, so **the write failed silently every time**: no member could reach `company_verified` through the intended pipeline. The only profile holding that value was written by the seed script. The same defect is recorded for the seed in commit `9fa0aa6`.
+
+**What the migration changed, exactly:**
+
+- One row backfilled: the single `NULL` `verification_level` became `'unverified'`.
+- The five-value constraint replaced with the three canonical values: `unverified`, `identity_verified`, `company_verified`. Safe as a narrowing because zero rows held any of the three retired values.
+- Default `'unverified'` restated (it was already the default).
+- Column set `NOT NULL`, possible only once the null was gone.
+- `set lock_timeout = '5s'` inside the transaction, so contention fails fast rather than blocking every write to `profiles`.
+
+Nothing else. `verifications` is not referenced by the file; no verification record was re-evaluated, promoted, demoted, approved or rejected.
+
+### Verified in production, after applying
+
+| Check | Result |
+|---|---|
+| `unverified` | **8** |
+| `company_verified` | **1** |
+| Null values | **0** |
+| Invalid values | **0** |
+| Column nullability | **`NO`**, default `'unverified'::text` |
+| Constraint | `CHECK (verification_level = ANY (ARRAY['unverified','identity_verified','company_verified']))` |
+| `verifications` | review 4, rejected 2, pending 2, verified 1 — **unchanged** |
+| Migration ledger | **40 → 41**, exactly this migration, sha matching |
+| publication-gate tests | 45 passed |
+| verification/level tests | 13 passed |
+| eligibility tests | 25 passed |
+| Production build | `✓ Compiled successfully` |
+| Smoke tests | `/`, `/market-signals`, `/find`, `/marketplace`, `/structure`, `/verify`, `/login` all 200 |
+| RLS on `profiles` | anon read still returns `[]` |
+
+### Decisions
+
+- Owner authorised the application, including the `NOT NULL` step, which was outside the originally enumerated change list and raised before applying.
+- Owner authorised the `lock_timeout` addition, merged as PR #92 so the applied file and the recorded file are identical.
+
+### Risks / discrepancies
+
+- None arising from this migration.
+
+### Next
+
+- None. This workstream is closed.
+
+### Evidence
+
+- PR #91 (application model, merged `f4bfde6`), PR #92 (`lock_timeout`, merged `3b09e4a`).
+- Issue #86 — the agreed value set, ranking and legacy-writer mapping.
+- `supabase/migrations/20260728d_verification_level_canonical.sql`, which carries its own probe, verify and rollback blocks.
+- `docs/proposals/verification-level-remediation.md`.
+
+---
+
 ## 2026-07-28 — Emergency build hotfix: PR #74 merge artefacts blocked deployment
 
 ### Completed
