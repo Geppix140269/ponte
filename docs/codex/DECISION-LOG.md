@@ -2,6 +2,20 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)
+
+**Decision:** Ponte is a self-publishing trade platform with automated eligibility controls, not a manually moderated noticeboard. A Member Opportunity publishes automatically when the member holds a current passing member-business verification with no unresolved sanctions candidate, every mandatory field for its market family is present and valid, the member has accepted the listing responsibility declaration, and no automated safety check has raised a high- or medium-severity flag. Human review becomes exception-based only, and `/admin/listings` becomes an exception console rather than the publication queue.
+
+**Sub-decisions taken explicitly by the owner:** Verification remains BLOCKING — automated publication does not lower the member-business bar, and an unverified member receives a blocking issue routing them to `/verify` rather than a published listing. The public qualification and limitations text survives, with the AI drafting it and the MEMBER confirming it before publication, so Ponte never publishes unattended model output and the `AGENTS.md` rule that AI must not silently publish continues to hold.
+
+**Accepted consequence:** the bottleneck moves rather than disappearing. Verification remains a desk function, and `CURRENT-STATE.md` recorded zero listings with a passing bound member-business verification at the 26 July probe. Automated publication will not produce a published listing until verification throughput improves. An unverified public board was judged the worse outcome.
+
+**In the same patch:** the quantity model gains a mode (exact, approximate, minimum, maximum, range, negotiable, on request), decimal support and separator-safe parsing, fixing a defect where the composer displayed `10,000` as a render-time fallback that the form state never held. The member/company/email/reference mapping defect in listing notifications is fixed by a type. All application-generated email moves to one shell derived from the approved Ponte Flow tokens, with a plain-text part on every message and no template inviting a reply by email.
+
+**Implementation boundary:** implemented on branch `fix/automated-listings-email-system` on 28 July 2026. At this record point the migration has NOT been applied to production, nothing has been deployed, the Supabase Auth templates have not been configured, and the admin exception console has not been rebuilt. Applying a production migration, deploying and merging remain subject to the stop conditions in `AGENTS.md`.
+
+**Affected areas:** `docs/decisions/ADR-0012-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728a_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
+
 ## 28 July 2026 — Close the public read and write hole on the migration ledger
 
 **Decision:** `public.schema_migrations` gets row level security with no policy,

@@ -36,4 +36,5 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0007](ADR-0007-deal-passport.md) | Deal Passport as the durable evidence-backed transaction-history layer | Accepted by owner; effective on merge |
 | [ADR-0010](ADR-0010-constitution-led-interface-rebuild.md) | Constitution-led rebuild of the complete interface | Accepted by owner; effective on merge |
 | [ADR-0011](ADR-0011-complete-market-discoverability-and-category-first-journeys.md) | Complete Market Signal discoverability and category-first Trade Services and Distribution journeys | Accepted by owner; effective on merge |
+| [ADR-0012](ADR-0012-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 | [ADR-0012](ADR-0012-market-classification-implementation-contract.md) | The market classification contract, as implemented (implements ADR-0011) | Proposed; awaiting owner review |

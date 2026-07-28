@@ -115,11 +115,24 @@
 .ponte-find .paste-toggle { display: inline-block; margin: var(--s-3) 0 0; font-family: var(--f-mono); font-size: 12px; color: var(--gold-ink); background: none; border: none; cursor: pointer; text-decoration: underline dashed; text-underline-offset: 3px; }
 .ponte-find .hssearch { width: 100%; margin-top: var(--s-3); }
 
-/* Steppers, chips, pills */
-.ponte-find .stepper { display: inline-flex; align-items: center; gap: var(--s-4); }
-.ponte-find .step { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule-strong); background: var(--raised); color: var(--ink); font-size: 20px; cursor: pointer; }
-.ponte-find .step:hover { border-color: var(--ink-3); }
-.ponte-find .stepval { font-family: var(--f-mono); font-size: 24px; color: var(--ink); min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
+/* Quantity, chips, pills */
+
+/* The +/- stepper is deliberately gone. It could only express a whole number in
+   fixed increments, and its displayed value was a render-time fallback that the
+   draft never held. A member who accepted what they saw submitted no quantity
+   at all. The replacement asks for the basis first and takes a typed figure,
+   because a real trade quantity is decimal, or a range, or not a number. */
+.ponte-find .qty { display: flex; flex-direction: column; gap: var(--s-3); }
+.ponte-find .qrow { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.ponte-find .qfield { display: flex; flex-direction: column; gap: 6px; min-width: 140px; flex: 1 1 140px; }
+.ponte-find .qfield__l { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qfield__i {
+  font-family: var(--f-mono); font-size: 20px; padding: 10px 12px;
+  border: 1px solid var(--rule-strong); background: var(--raised); color: var(--ink);
+  border-radius: var(--r-sm); font-variant-numeric: tabular-nums; width: 100%;
+}
+.ponte-find .qfield__i:focus { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--ink-3); }
+.ponte-find .qfield__i::placeholder { color: var(--mute); }
 .ponte-find .chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--s-2); }
 .ponte-find .spill {
   font-family: var(--f-mono); font-size: 12.5px; padding: 6px 14px;
@@ -207,6 +220,12 @@
 .ponte-find .rec-next { text-align: left; margin: var(--s-5) 0; }
 .ponte-find .rec-step { display: flex; justify-content: space-between; gap: var(--s-3); padding: 10px 0; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
 .ponte-find .rec-step b { color: var(--ink); font-weight: 600; }
+/* The exact blocking issues, with the form one tap away. A member told only
+   that "something is missing" has been told nothing they can act on. */
+.ponte-find .rec-issues { text-align: left; margin: var(--s-4) 0; padding-left: 20px; }
+.ponte-find .rec-issues li { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin-bottom: var(--s-2); }
+.ponte-find .rec-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); justify-content: center; margin-top: var(--s-4); }
+.ponte-find .rec-note { margin-top: var(--s-4); font-size: 12.5px; line-height: 1.6; color: var(--ink-3); }
 
 /* Structuring interstitial */
 .ponte-find .structing { text-align: center; padding: var(--s-8) 0; }

@@ -5,13 +5,18 @@ import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { checkPublicationGate } from "@/lib/listings/publication-gate";
-import {
-  sendListingReceived,
-  sendBrokerageSubmission,
-  sendConnectAccepted,
-} from "@/lib/email";
+import { publishOrHold } from "@/lib/listings/publish";
+import { sendConnectAccepted } from "@/lib/email";
 
-/** Promote a member's own draft to submitted, then alert the desk. */
+/**
+ * A member hands in their own draft.
+ *
+ * It now goes straight through the central validator rather than into a desk
+ * queue: a complete draft from a verified member is published by this call, and
+ * the member is told so. The two emails this used to send, "your listing is
+ * with the desk" and an operator alert ending "review in /admin/listings",
+ * were the manual queue, and both are gone.
+ */
 export async function submitDraftAction(formData: FormData): Promise<void> {
   const user = await getUser();
   if (!user) return;
@@ -26,26 +31,20 @@ export async function submitDraftAction(formData: FormData): Promise<void> {
     .eq("id", id)
     .eq("user_id", user.id)
     .eq("status", "draft")
-    .select("ref, type, product, origin, volume, details")
+    .select("id, ref")
     .maybeSingle();
   if (error || !listing) return;
 
-  const memberEmail = user.email ?? "";
-  await Promise.allSettled([
-    memberEmail
-      ? sendListingReceived(memberEmail, { ref: listing.ref, product: listing.product })
-      : Promise.resolve(),
-    sendBrokerageSubmission({
-      type: listing.type as "offer" | "requirement",
-      name: memberEmail || user.id,
-      company: `Marketplace listing ${listing.ref}`,
-      email: memberEmail || "unknown@ponte.trade",
-      country: listing.origin || "-",
-      product: listing.product,
-      volume: listing.volume || undefined,
-      details: `${listing.details}\n\n[draft submitted for vetting · review in /admin/listings]`,
-    }),
-  ]);
+  // Publication is a privileged transition and reads the submitter's live
+  // verification state, so it runs under the service role. Awaited: a send left
+  // dangling when the action returns is a send that never happens.
+  try {
+    const admin = createAdminClient();
+    const { data: row } = await admin.from("listings").select("*").eq("id", listing.id).maybeSingle();
+    if (row) await publishOrHold(admin as never, row as never);
+  } catch (err) {
+    console.error("[ponte] automated publication failed on draft submit:", err);
+  }
 
   revalidatePath("/marketplace");
 }

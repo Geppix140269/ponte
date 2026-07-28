@@ -42,7 +42,7 @@ test("openGaps returns unfilled fields in the fixed order", () => {
 });
 
 test("openGaps drops fields already filled", () => {
-  const g = openGaps(draft({ quantity: 25000, incoterm: "CIF", role: "buyer" }));
+  const g = openGaps(draft({ quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF", role: "buyer" }));
   assert.deepEqual(g, ["destination", "payment", "validity", "note"]);
 });
 
@@ -68,14 +68,14 @@ test("a trade service declares both ends of the corridor", () => {
 });
 
 test("the end that is not asked is never a gap or a blocker", () => {
-  const offer = draft({ intent: "offer", quantity: 25000, origin: "Argentina" });
+  const offer = draft({ intent: "offer", quantityMode: "exact", quantity: 25000, unit: "MT", origin: "Argentina" });
   assert.ok(!bucketize(offer).missing.includes("destination"));
   assert.ok(!blockers(offer).some((b) => b.key === "destination"));
 });
 
 // ---- buckets ---------------------------------------------------------------
 test("bucketize puts known facts in commercial and gaps in missing", () => {
-  const b = bucketize(draft({ quantity: 25000, incoterm: "CIF" }));
+  const b = bucketize(draft({ quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF" }));
   assert.ok(b.commercial.includes("intent"));
   assert.ok(b.commercial.includes("product"));
   assert.ok(b.commercial.includes("hsCode"));
@@ -104,7 +104,7 @@ test("blockers lists open decisive facts plus business verification", () => {
 });
 
 test("a fully tapped draft still blocks on business verification only", () => {
-  const full = draft({ quantity: 25000, incoterm: "CIF", validity: 30, role: "buyer" });
+  const full = draft({ quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF", validity: 30, role: "buyer" });
   assert.deepEqual(blockers(full).map((b) => b.key), ["businessVerification"]);
 });
 
@@ -116,8 +116,10 @@ test("synthesiseDetails is non-empty from product+intent alone", () => {
 });
 
 test("synthesiseDetails includes present facts and omits absent ones, no invention", () => {
-  const d = synthesiseDetails(draft({ quantity: 25000, unit: "MT", frequency: "monthly", incoterm: "CIF" }));
-  assert.match(d, /Quantity: 25000 MT \(monthly\)\./);
+  const d = synthesiseDetails(draft({ quantityMode: "exact", quantity: 25000, unit: "MT", frequency: "monthly", incoterm: "CIF" }));
+  // The quantity is written with its mode and its recurrence, so the record
+  // states the claim the member actually made rather than a bare figure.
+  assert.match(d, /Quantity: 25,000 MT per month\./);
   assert.match(d, /Incoterm: CIF\./);
   assert.ok(!/Route:/.test(d), "no route when origin and destination are absent");
   assert.ok(!/Payment/.test(d), "no payment when absent");
@@ -135,11 +137,13 @@ test("offer and service change the opening clause", () => {
 
 // ---- submit payload --------------------------------------------------------
 test("toSubmitPayload maps fields, derives a dated validity, carries details", () => {
-  const p = toSubmitPayload(draft({ quantity: 25000, incoterm: "CIF", validity: 30, role: "buyer" }), OPTS);
+  const p = toSubmitPayload(draft({ quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF", validity: 30, role: "buyer" }), OPTS);
   assert.equal(p.type, "requirement");
   assert.equal(p.product, "Refined sugar");
   assert.equal(p.hs_code, "170199");
   assert.equal(p.quantity, 25000);
+  assert.equal(p.quantity_mode, "exact");
+  assert.equal(p.unit, "MT");
   assert.equal(p.submitter_role, "buyer");
   assert.equal(p.validity_type, "dated");
   assert.equal(p.valid_until, "2026-08-23"); // 2026-07-24 + 30 days
