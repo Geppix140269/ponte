@@ -198,18 +198,22 @@ export default function StructureComposer({
           setGateOpen(true);
           return;
         }
-        const j = await res.json().catch(() => ({}));
+        // Scoped to the iteration, and only read inside it. The hotfix for
+        // PR #74 had to hoist this because the outcome block below read it
+        // after the loop; collecting outcomes per response removes that need.
+        const body: Record<string, unknown> = await res.json().catch(() => ({}));
         if (!res.ok) {
           replace("error");
           return;
         }
-        if (j.ref) refs.push(j.ref);
+        if (typeof body.ref === "string") refs.push(body.ref);
         outcomes.push({
-          status: typeof j.status === "string" ? j.status : "submitted",
-          blockingIssues: Array.isArray(j.blockingIssues) ? j.blockingIssues : [],
+          status: typeof body.status === "string" ? body.status : "submitted",
+          blockingIssues: Array.isArray(body.blockingIssues) ? body.blockingIssues : [],
           completenessScore:
-            typeof j.completenessScore === "number" ? j.completenessScore : null,
-          route: j.route === "verification" || j.route === "both" ? j.route : "listing",
+            typeof body.completenessScore === "number" ? body.completenessScore : null,
+          route:
+            body.route === "verification" || body.route === "both" ? body.route : "listing",
         });
       }
       setResultRef(refs.join(", "));
