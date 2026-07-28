@@ -1,4 +1,4 @@
-// Guards the three text faults that have actually reached production here.
+// Guards the four text faults that have actually reached this repository.
 //
 //   node scripts/check-encoding.mjs
 //
@@ -14,6 +14,13 @@
 //    instance found on 2026-07-22 was a double-encoded em dash, so the
 //    encoding fault and the style rule are the same fault twice.
 //
+// 4. NUL bytes. On 2026-07-28 lib/listings/safety.ts reached a pull request
+//    carrying one raw NUL, written where the escape sequence \x00 was meant.
+//    Git classifies any file containing a NUL as binary, so the file showed as
+//    "0 additions, 0 deletions" and its 12 KB of new safety logic could not be
+//    read in the diff at all. The code compiled and its tests passed, which is
+//    exactly why nothing else caught it. A source file is text.
+//
 // messages/ is already covered for em dashes by check-messages.mjs, and is
 // checked here for BOM and mojibake only, so the two scripts do not disagree.
 // lib/, scripts/, docs/ and supabase/ are engineering prose that never renders,
@@ -25,6 +32,9 @@ import { join } from "node:path";
 
 const EM_DASH = "—";
 const BOM = "﻿";
+// Written as an escape on purpose: a literal NUL here would be the very
+// fault this check exists to catch.
+const NUL = "\u0000";
 
 // Only where copy lives. Widening this to the whole repo would fail on SQL
 // comments and brief documents that no reader ever sees.
@@ -68,6 +78,14 @@ for (const file of files) {
     problems.push(`${file}:1  starts with a UTF-8 BOM`);
   }
 
+  const nul = text.indexOf(NUL);
+  if (nul !== -1) {
+    const line = text.slice(0, nul).split("\n").length;
+    problems.push(
+      `${file}:${line}  raw NUL byte; git will treat this file as binary`,
+    );
+  }
+
   const lines = text.split("\n");
   lines.forEach((line, i) => {
     const m = line.match(MOJIBAKE);
@@ -90,9 +108,13 @@ if (problems.length) {
   console.error(
     "\nBOM: re-save the file as UTF-8 without a signature." +
       "\nMojibake: the file was saved through a cp1252 round trip; repair the characters." +
-      "\nEm dash: rewrite the sentence. Use a comma, a colon, or two sentences.",
+      "\nEm dash: rewrite the sentence. Use a comma, a colon, or two sentences." +
+      "\nNUL byte: you almost certainly meant the escape sequence, not the byte." +
+      "\n  Write \\x00 or \\u0000 inside the string literal.",
   );
   process.exit(1);
 }
 
-console.log(`ok   ${files.length} text files: no BOM, no mojibake, no em dashes in app/ or components/`);
+console.log(
+  `ok   ${files.length} text files: no BOM, no NUL bytes, no mojibake, no em dashes in app/ or components/`,
+);
