@@ -13,9 +13,11 @@ Before changing code, read these files in order:
    icon, motion, component or interaction work.
 4. `docs/codex/00-START-HERE.md`.
 5. `docs/operations/OPERATIONS_LOG.md` and `docs/operations/OPEN_DECISIONS.md`.
-6. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
-7. Relevant accepted ADRs under `docs/decisions/`.
-8. Every status, decision and roadmap file linked from the start page.
+6. `docs/launch/README.md`, `docs/launch/LAUNCH-BLOCKERS.md` and
+   `docs/launch/POST-LAUNCH-BACKLOG.md`.
+7. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
+8. Relevant accepted ADRs under `docs/decisions/`.
+9. Every status, decision and roadmap file linked from the start page.
 
 ## Source of truth
 
@@ -57,6 +59,84 @@ Before changing code, read these files in order:
   link the canonical ADR, state document, PR or other evidence.
 - Keep both files concise and evidence-based. Do not paste chat transcripts,
   speculative plans or duplicated product specifications into them.
+
+## Launch Mode — mandatory delivery policy
+
+Launch Mode is active until the repository owner explicitly declares it closed.
+This policy applies to every existing and future development task, audit, review,
+production investigation and pull request, regardless of whether the work is
+performed by Claude, ChatGPT, Codex, another agent or a human developer.
+
+The objective during Launch Mode is to ship a stable, usable Ponte Trade product
+without allowing non-blocking engineering work to delay launch.
+
+Every newly discovered issue must be classified before implementation:
+
+### Launch Blocker
+
+A Launch Blocker is limited to an issue that prevents a real user from safely
+completing a core Ponte journey, prevents production build or deployment,
+creates an active material security or data-integrity risk, causes an
+access-control or publication control to fail open, creates a material legal or
+compliance barrier, or makes the repository unable to produce the production
+application safely.
+
+- Record it in `docs/launch/LAUNCH-BLOCKERS.md` before implementation begins or
+  in the same commit that begins the fix.
+- Implement only the minimum work required to remove the blocker.
+- Record verification evidence before marking it resolved.
+
+### Post-Launch Ticket
+
+Architecture improvements, refactoring, cleanup, additional guards, developer
+experience, future capability, performance work without a demonstrated launch
+impact, extra test coverage outside the critical path and other useful but
+non-blocking work must be recorded in
+`docs/launch/POST-LAUNCH-BACKLOG.md` and, when appropriate, in a GitHub issue.
+
+A Post-Launch Ticket must not be implemented during the current task unless the
+repository owner explicitly promotes it to Launch Blocker status or separately
+authorises that specific work.
+
+### Observation
+
+Information that does not yet justify implementation or a formal ticket belongs
+in the relevant audit, decision log or task report. It must not expand scope.
+
+### Owner authority and default rule
+
+Only the repository owner may promote deferred work, expand the authorised
+scope, close Launch Mode or approve work that delays launch. An agent may
+recommend a classification but may not silently make the business decision.
+When uncertain, classify the issue as Post-Launch and continue the authorised
+task.
+
+**Discovery is not approval.** Finding an adjacent problem does not authorise a
+new branch, code change, migration, test expansion, refactor or pull-request
+expansion. Log the issue and return to the authorised objective.
+
+Before implementation, state the authorised objective, classification, expected
+systems or files and explicit exclusions. Every closing report and pull request
+must state:
+
+- Delivered;
+- Launch Blockers discovered;
+- Post-Launch Tickets created or updated;
+- Production changes;
+- Scope confirmation.
+
+Use `None` explicitly when a section has no entries. No additional cleanup,
+refactoring or adjacent improvement is authorised merely because the main task
+is complete, the change is small, or the developer is already in the area.
+
+The mandatory decision test is:
+
+> Does this stop a real user from safely completing a core Ponte Trade journey
+> before launch, prevent production deployment, or create an immediate material
+> security, data-integrity or compliance risk?
+
+If yes, propose or record a Launch Blocker. If no, log a Post-Launch Ticket and
+continue shipping.
 
 ## Design Constitution — non-negotiable
 
@@ -149,6 +229,8 @@ For a behavioural change, update in the same pull request:
 - `docs/operations/OPERATIONS_LOG.md` when production, deployment, database,
   security or material operating state changes
 - `docs/operations/OPEN_DECISIONS.md` when an owner decision opens, changes or closes
+- `docs/launch/LAUNCH-BLOCKERS.md` when a blocker opens or closes
+- `docs/launch/POST-LAUNCH-BACKLOG.md` for every deferred non-blocking discovery
 
 ## Substantial work
 
