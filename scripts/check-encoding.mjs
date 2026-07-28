@@ -1,4 +1,4 @@
-// Guards the three text faults that have actually reached production here.
+// Guards the four text faults that have actually reached this repository.
 //
 //   node scripts/check-encoding.mjs
 //
@@ -13,6 +13,15 @@
 // 3. Em dashes, in app/ and components/. Banned in Ponte copy. Every mojibake
 //    instance found on 2026-07-22 was a double-encoded em dash, so the
 //    encoding fault and the style rule are the same fault twice.
+//
+// 4. NUL bytes, anywhere. On 2026-07-28 lib/listings/safety.ts reached main
+//    carrying one raw NUL, written where the escape sequence was meant. Git
+//    classifies any file containing a NUL as binary, so that file showed in
+//    the pull request as "Bin 12173 bytes" and its twelve kilobytes of new
+//    safety logic could not be read in the diff at all. It compiled, and its
+//    tests passed, which is precisely why nothing else caught it. A reviewer
+//    cannot review what the diff will not print, so this is checked
+//    everywhere rather than only where copy lives.
 //
 // messages/ is already covered for em dashes by check-messages.mjs, and is
 // checked here for BOM and mojibake only, so the two scripts do not disagree.
@@ -64,6 +73,16 @@ for (const file of files) {
     continue;
   }
 
+  // The byte, found by code point rather than by matching a literal. A NUL
+  // written into this file would make this check unreadable in its own diff.
+  const nulAt = [...text].findIndex((c) => c.charCodeAt(0) === 0);
+  if (nulAt !== -1) {
+    const line = text.slice(0, nulAt).split("\n").length;
+    problems.push(
+      `${file}:${line}  raw NUL byte; git will treat this file as binary`,
+    );
+  }
+
   if (text.startsWith(BOM)) {
     problems.push(`${file}:1  starts with a UTF-8 BOM`);
   }
@@ -90,9 +109,13 @@ if (problems.length) {
   console.error(
     "\nBOM: re-save the file as UTF-8 without a signature." +
       "\nMojibake: the file was saved through a cp1252 round trip; repair the characters." +
-      "\nEm dash: rewrite the sentence. Use a comma, a colon, or two sentences.",
+      "\nEm dash: rewrite the sentence. Use a comma, a colon, or two sentences." +
+      "\nNUL byte: you meant the escape sequence, not the byte. Write it as a" +
+      "\n  backslash escape inside the string literal.",
   );
   process.exit(1);
 }
 
-console.log(`ok   ${files.length} text files: no BOM, no mojibake, no em dashes in app/ or components/`);
+console.log(
+  `ok   ${files.length} text files: no BOM, no NUL bytes, no mojibake, no em dashes in app/ or components/`,
+);
