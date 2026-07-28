@@ -93,12 +93,28 @@ async function shot(target: Locator | Page, name: string): Promise<void> {
  */
 async function settled(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts?.ready);
-  let previous = -1;
-  for (let i = 0; i < 20; i++) {
-    const box = await block(page).boundingBox();
-    const height = Math.round(box?.height ?? -1);
-    if (height > 0 && height === previous) return;
-    previous = height;
+  let previous = "";
+  for (let i = 0; i < 25; i++) {
+    // Height alone is not enough. In elevation the curve is redrawn on the next
+    // frame and again once fonts resolve, which moves the nodes and the live
+    // segment without changing the block's height at all. The signature covers
+    // both, so a frame is only taken once the drawing has stopped moving too.
+    const signature = await page.evaluate(() => {
+      const el = document.querySelector(".pbridge");
+      const track = document.querySelector(".pbridge .br__vsvg .d-track");
+      const live = document.querySelector(".pbridge .br__vsvg .d-live");
+      return [
+        Math.round(el?.getBoundingClientRect().height ?? -1),
+        // The document offset too: `reveal` scrolls to the bridge, so anything
+        // above it reflowing by a pixel after fonts load moves the frame.
+        Math.round((el?.getBoundingClientRect().top ?? 0) + window.scrollY),
+        track?.getAttribute("d")?.length ?? 0,
+        live?.getAttribute("d")?.length ?? 0,
+        document.querySelectorAll(".pbridge .brst").length,
+      ].join("|");
+    });
+    if (!signature.startsWith("-1") && signature === previous) return;
+    previous = signature;
     await page.waitForTimeout(60);
   }
 }
@@ -672,6 +688,38 @@ for (const width of [320, 360, 390, 430]) {
 
     expect(overflow.page, `page scrolls horizontally: ${overflow.scrollWidth} > ${overflow.client}`).toBe(false);
     expect(overflow.offenders, "a bridge element extends past the viewport").toEqual([]);
+
+    /*
+      And vertically, which is the failure that actually shipped: the elevation
+      rows box kept an inline height left behind by the horizontal stage's `fit`,
+      because React reused the same div for both modes. The box stopped 44px
+      short of its own content and the last station's description ran over the
+      Market Signals section beneath it.
+
+      Two independent checks, because either alone would have missed it: the
+      rows box must contain its own stations, and the bridge must not reach the
+      section below it.
+    */
+    const vertical = await page.evaluate(() => {
+      const rows = document.querySelector(".pbridge > .br .br__rows") as HTMLElement | null;
+      const stations = Array.from(document.querySelectorAll(".pbridge > .br .brst"));
+      const last = stations[stations.length - 1];
+      const below = document.querySelectorAll("section.sec")[0];
+      if (!rows || !last || !below) return null;
+      return {
+        rowsInlineHeight: rows.style.height || null,
+        overflowsOwnBox: rows.scrollHeight > rows.offsetHeight,
+        gapToSectionBelow: Math.round(below.getBoundingClientRect().top - last.getBoundingClientRect().bottom),
+      };
+    });
+
+    expect(vertical, "the elevation rows were not found").not.toBeNull();
+    expect(vertical!.rowsInlineHeight, "the rows box has an inline height, which will clip its stations").toBeNull();
+    expect(vertical!.overflowsOwnBox, "the rows box is shorter than the stations inside it").toBe(false);
+    expect(
+      vertical!.gapToSectionBelow,
+      "the last station overlaps the section below the bridge",
+    ).toBeGreaterThan(0);
   });
 }
 
