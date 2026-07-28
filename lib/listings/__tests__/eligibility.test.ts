@@ -15,7 +15,7 @@ import {
 } from "../eligibility";
 import { runSafetyChecks, flagsBlockPublication } from "../safety";
 import { canTransition, isMemberWritableStatus, memberStatusLabel } from "../status";
-import { meetsMemberLevel } from "../publication-gate";
+import { meetsMemberBusinessFloor } from "../../verification/level";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -32,7 +32,7 @@ function test(name: string, fn: () => void): void {
 /** A submitter whose member-business verification is current and clean. */
 const VERIFIED: EligibilityContext = {
   submitter: {
-    verificationLevel: 2,
+    verificationLevel: "company_verified",
     business_verification_id: "v-1",
     verification: {
       purpose: "member_business",
@@ -141,7 +141,7 @@ test("the member declaration is required before Ponte publishes on their behalf"
 test("an unverified member does not publish, and is routed to verification", () => {
   const r = evaluateListing(productListing(), {
     ...VERIFIED,
-    submitter: { verificationLevel: 0, business_verification_id: null, verification: null },
+    submitter: { verificationLevel: "unverified", business_verification_id: null, verification: null },
   });
   assert.equal(r.publishable, false);
   const issue = r.blockingIssues.find((i) => i.code === "business_verification_required");
@@ -153,7 +153,7 @@ test("a suspended verification does not publish", () => {
   const r = evaluateListing(productListing(), {
     ...VERIFIED,
     submitter: {
-      verificationLevel: 1,
+      verificationLevel: "identity_verified",
       business_verification_id: "v-1",
       verification: { purpose: "member_business", status: "review", sanctions_hits: { clean: true, strongCount: 0 } },
     },
@@ -315,31 +315,46 @@ test("a member is never shown the raw stored status", () => {
 
 // ---- the level floor must fail closed ---------------------------------------
 
-test("a non-numeric verification level does not satisfy the member floor", () => {
-  // `Number("company_verified")` is NaN, and `NaN < 2` is false, so the old
-  // comparison FAILED OPEN: a profile carrying a text level passed a check that
-  // exists to stop exactly that. CURRENT-STATE records the stored-vocabulary
-  // drift that produces those values, so this is not hypothetical.
-  assert.equal(meetsMemberLevel("company_verified"), false);
-  assert.equal(meetsMemberLevel("verified"), false);
-  assert.equal(meetsMemberLevel(null), false);
-  assert.equal(meetsMemberLevel(undefined), false);
-  assert.equal(meetsMemberLevel(1), false);
-  // Only a real number at or above the floor passes.
-  assert.equal(meetsMemberLevel(2), true);
-  assert.equal(meetsMemberLevel("2"), true);
+test("the member floor is semantic, and every legacy form fails closed", () => {
+  // Two models were wrong here before, in opposite directions. `Number(level) < 2`
+  // FAILED OPEN, because `Number("company_verified")` is NaN and `NaN < 2` is
+  // false. Requiring a finite number then closed that hole but rejected the real
+  // stored values. The vocabulary is semantic now, so both are gone.
+  assert.equal(meetsMemberBusinessFloor("company_verified"), true);
+
+  assert.equal(meetsMemberBusinessFloor("identity_verified"), false);
+  assert.equal(meetsMemberBusinessFloor("unverified"), false);
+  assert.equal(meetsMemberBusinessFloor("verified"), false);
+  assert.equal(meetsMemberBusinessFloor(null), false);
+  assert.equal(meetsMemberBusinessFloor(undefined), false);
+  // The legacy integers, which are exactly what the old writers emitted.
+  assert.equal(meetsMemberBusinessFloor(1), false);
+  assert.equal(meetsMemberBusinessFloor(2), false);
+  assert.equal(meetsMemberBusinessFloor("2"), false);
 });
 
-test("a text verification level blocks publication rather than allowing it", () => {
-  const r = evaluateListing(productListing(), {
+test("the canonical level publishes, and a legacy numeric one does not", () => {
+  // This test previously asserted the opposite, under the interim numeric model
+  // in which a finite number >= 2 passed and every stored text value failed.
+  // The property it protects is unchanged: the level condition must be capable
+  // of failing. What changed is which values are real.
+  const ok = evaluateListing(productListing(), {
     ...VERIFIED,
-    submitter: {
-      ...VERIFIED.submitter,
-      verificationLevel: "company_verified" as never,
-    },
+    submitter: { ...VERIFIED.submitter, verificationLevel: "company_verified" },
   });
-  assert.equal(r.publishable, false, "a gate condition that cannot fail is not a gate condition");
-  assert.ok(r.blockingIssues.some((i) => i.code === "business_verification_not_current"));
+  assert.equal(ok.publishable, true, "company_verified is the floor and must publish");
+
+  for (const legacy of [2, "2", 1, "fully_verified", null]) {
+    const r = evaluateListing(productListing(), {
+      ...VERIFIED,
+      submitter: { ...VERIFIED.submitter, verificationLevel: legacy as never },
+    });
+    assert.equal(r.publishable, false, `${JSON.stringify(legacy)} must not publish`);
+    assert.ok(
+      r.blockingIssues.some((i) => i.code === "business_verification_not_current"),
+      `${JSON.stringify(legacy)} must fail on the level`,
+    );
+  }
 });
 
 console.log(`listings/eligibility: ${passed} passed`);

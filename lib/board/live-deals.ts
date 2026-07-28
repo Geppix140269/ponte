@@ -6,6 +6,7 @@ import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { usesCanonicalKeys, canonicalColumnFor, type InventoryQuery } from "@/lib/board/inventory";
+import { isVerificationLevel } from "../verification/level";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -62,7 +63,7 @@ export type LiveDeal = {
    * for a level that could not be read: unknown is not zero, and a radar item
    * must never render a tier badge.
    */
-  verificationLevel: number | null;
+  verificationLevel: string | null;
   /** Where the deal opens. Radar items have no public detail page yet. */
   href: string | null;
 };
@@ -165,10 +166,13 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         .from("profiles")
         .select("id, verification_level")
         .in("id", memberIds);
-      const byUser = new Map<string, number>();
+      const byUser = new Map<string, string>();
       for (const p of levels ?? []) {
-        const n = Number(p.verification_level);
-        if (Number.isFinite(n)) byUser.set(p.id, n);
+        // The canonical value travels, not a number. An unrecognised value is
+        // skipped, so it can never read as a level the member has not reached.
+        if (isVerificationLevel(p.verification_level)) {
+          byUser.set(p.id, p.verification_level);
+        }
       }
       for (let i = 0; i < deals.length; i++) {
         const level = byUser.get(liveRows[i].user_id);

@@ -16,8 +16,11 @@
 // Block B established.
 
 import { grantsMemberStatus } from "../verification/purpose";
+import { meetsMemberBusinessFloor, MEMBER_BUSINESS_MIN_LEVEL } from "../verification/level";
 import { meetsApprovalMinimum, type ApprovalFacts } from "./approval-minimum";
 import { isListingCurrent } from "./validity";
+
+export { MEMBER_BUSINESS_MIN_LEVEL };
 
 /** The desk-approved public text. Not raw model output (brief 5.3). */
 export type DeskVersion = {
@@ -38,35 +41,26 @@ export type GateListing = ApprovalFacts & {
  */
 export const PASSING_VERIFICATION_STATUSES = new Set(["auto_verified", "verified"]);
 
-/** A member business is granted at level 2; a re-screen suspension drops it. */
-export const MEMBER_BUSINESS_MIN_LEVEL = 2;
-
-/**
- * Does this stored level meet the member floor?
- *
- * The comparison used to be `Number(level ?? 0) < MIN`, which FAILS OPEN on any
- * non-numeric value: `Number("company_verified")` is `NaN`, and `NaN < 2` is
- * `false`, so the check quietly did not block. `CURRENT-STATE.md` records a
- * confirmed production defect about exactly this ("stored verification
- * vocabulary and numeric code comparison"), so the values that trigger it are
- * not hypothetical.
- *
- * A gate condition that cannot fail is not a gate condition. Anything that does
- * not parse to a finite number is treated as NOT meeting the floor, so the
- * failure mode is refusing to publish rather than publishing unverified.
- *
- * This does not repair the underlying column; that is separate integrity work
- * recorded in the audit. It makes this gate honest in the meantime.
- */
-export function meetsMemberLevel(level: unknown): boolean {
-  const n = typeof level === "number" ? level : Number(level);
-  return Number.isFinite(n) && n >= MEMBER_BUSINESS_MIN_LEVEL;
-}
+// The member-business floor lives in lib/verification/level.ts, which owns the
+// vocabulary, the ranking and the threshold. This gate asks it and does no
+// coercion of its own.
+//
+// Both previous models were wrong, in opposite directions, and the history is
+// worth keeping. The original comparison was `Number(level ?? 0) < 2`, which
+// FAILED OPEN on every value production actually stores:
+// `Number("company_verified")` is `NaN`, and `NaN < 2` is `false`, so the check
+// never fired. The interim repair required a finite number, which closed that
+// hole but then rejected the real stored values, so a genuinely verified member
+// could not publish.
+//
+// Both were symptoms of comparing a semantic value numerically. The vocabulary
+// is semantic end to end now, and an unrecognised value ranks -1, below
+// `unverified`, so the failure mode is refusing to publish.
 
 /** What the gate needs to know about the submitter's own business check. */
 export type GateSubmitter = {
-  /** The profile's LIVE verification level. A suspension drops this below 2. */
-  verificationLevel: number | null;
+  /** The profile's LIVE stored verification level. A suspension lowers it. */
+  verificationLevel: string | null;
   /** The profile's bound member-business verification, or null if none. */
   business_verification_id: string | null;
   /** The bound verification row, projected. Null if it could not be read. */
@@ -123,7 +117,7 @@ export function checkPublicationGate(
     if (!PASSING_VERIFICATION_STATUSES.has(submitter.verification.status ?? "")) {
       failures.push("verification_not_passing");
     }
-    if (!meetsMemberLevel(submitter.verificationLevel)) {
+    if (!meetsMemberBusinessFloor(submitter.verificationLevel)) {
       failures.push("verification_not_current");
     }
   }
@@ -174,7 +168,7 @@ export function checkPublicationGate(
  * still `approved`.
  */
 export function isPubliclyEligibleVerification(s: {
-  verificationLevel: number | null;
+  verificationLevel: string | null;
   business_verification_id: string | null;
   verification: { purpose: string | null; status: string | null } | null;
 }): boolean {
@@ -182,7 +176,7 @@ export function isPubliclyEligibleVerification(s: {
   if (!s.verification) return false;
   if (!grantsMemberStatus(s.verification.purpose)) return false;
   if (!PASSING_VERIFICATION_STATUSES.has(s.verification.status ?? "")) return false;
-  if (!meetsMemberLevel(s.verificationLevel)) return false;
+  if (!meetsMemberBusinessFloor(s.verificationLevel)) return false;
   return true;
 }
 

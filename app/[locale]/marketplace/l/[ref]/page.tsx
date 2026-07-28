@@ -26,6 +26,7 @@ import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
 import { truthfulLabels } from "@/lib/listings/public-labels";
 import type { Locale } from "@/i18n/routing";
+import { levelRank } from "@/lib/verification/level";
 
 // Languages a reader can flip the listing into. Each listing/language pair
 // is translated once by AI and cached in listing_translations.
@@ -140,7 +141,7 @@ async function getDeal(
     verification = v ?? null;
   }
   const ownerEligible = isPubliclyEligibleVerification({
-    verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    verificationLevel: profile ? (profile.verification_level ?? null) : null,
     business_verification_id: profile?.business_verification_id ?? null,
     verification,
   });
@@ -149,7 +150,7 @@ async function getDeal(
   return {
     deal: data as Deal,
     image,
-    trustLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    trustLevel: profile ? levelRank(profile.verification_level) : null,
     businessVerified: ownerEligible,
   };
 }

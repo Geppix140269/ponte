@@ -362,21 +362,22 @@ const SAMPLE_LABELS: DealLabels = {
   service: "service",
   notStated: "not stated",
   deskSourced: "Desk-sourced opportunity",
+  // Keyed by level RANK, per lib/verification/level.ts. Rank 0 (unverified)
+  // carries no badge, so it has no label. The retired 3 and 4 tiers described a
+  // model that does not exist.
   tier: {
     1: "Identity verified",
     2: "Business verified",
-    3: "Activity verified",
-    4: "Institutional",
   },
 };
 
 const SAMPLE_DEALS: LiveDeal[] = [
-  ["Refined white sugar, ICUMSA 45", "25,000", "MT", "CIF", "BR", "NL", "1701.99", 2, "offer", "member"],
-  ["Urea 46% granular", "12,000", "MT", "FOB", "EG", "BR", "3102.10", 0, "requirement", "member"],
-  ["Aluminium ingot A7, 99.7%", "1,000", "MT", "FOB", "AE", "TR", "7601.10", 4, "offer", "member"],
-  ["Copper cathode grade A", "500", "MT", "CIF", "ZA", "CN", "7403.11", 0, "offer", "radar"],
-  ["Basmati rice, 1121 sella", "8,000", "MT", "FOB", "IN", "GB", "1006.30", 3, "offer", "member"],
-  ["HMS 1&2 metal scrap", "20,000", "MT", "CFR", "US", "JP", "7204.49", 0, "requirement", "radar"],
+  ["Refined white sugar, ICUMSA 45", "25,000", "MT", "CIF", "BR", "NL", "1701.99", "company_verified", "offer", "member"],
+  ["Urea 46% granular", "12,000", "MT", "FOB", "EG", "BR", "3102.10", "unverified", "requirement", "member"],
+  ["Aluminium ingot A7, 99.7%", "1,000", "MT", "FOB", "AE", "TR", "7601.10", "company_verified", "offer", "member"],
+  ["Copper cathode grade A", "500", "MT", "CIF", "ZA", "CN", "7403.11", "unverified", "offer", "radar"],
+  ["Basmati rice, 1121 sella", "8,000", "MT", "FOB", "IN", "GB", "1006.30", "identity_verified", "offer", "member"],
+  ["HMS 1&2 metal scrap", "20,000", "MT", "CFR", "US", "JP", "7204.49", "unverified", "requirement", "radar"],
 ].map(
   ([product, quantity, unit, incoterm, from, to, hs, level, type, source], i) => ({
     id: `sample-${i}`,
@@ -396,7 +397,7 @@ const SAMPLE_DEALS: LiveDeal[] = [
     originCode: from as string,
     destinationCode: to as string,
     postedAt: `2026-07-${String(22 - i).padStart(2, "0")}T09:00:00Z`,
-    verificationLevel: (level as number) || null,
+    verificationLevel: (level as string) || null,
     href: null,
   }),
 );
