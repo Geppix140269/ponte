@@ -6,6 +6,17 @@ import {
   coverageScopeTakesCountries,
 } from "../taxonomy/distribution";
 import { PRODUCT_SECTORS, isIntentForFamily, type MarketFamily } from "../taxonomy/market";
+import {
+  serviceEngagementType,
+  servicePricingBasis,
+  serviceAvailability,
+  specialisationKeysFor,
+} from "../taxonomy/service-terms";
+import {
+  distributionChannel,
+  distributionCapability,
+  distributionTiming,
+} from "../taxonomy/distribution-terms";
 
 /**
  * The classification a listing carries, validated at the storage boundary.
@@ -41,7 +52,31 @@ export const CLASSIFICATION_COLUMNS = [
   "product_sector_key",
   "custom_category_label",
   "additional_details",
+  "service_terms",
+  "distribution_terms",
 ] as const;
+
+/** The commercial terms only a Trade Service has, as stored. */
+export type ServiceTermsColumn = {
+  scope: string | null;
+  engagement: string | null;
+  coverage_countries: string[];
+  trade_lanes: string | null;
+  specialisation_keys: string[];
+  capability: string | null;
+  pricing_basis: string | null;
+  availability: string | null;
+};
+
+/** The commercial terms only a Distribution opportunity has, as stored. */
+export type DistributionTermsColumn = {
+  objective: string | null;
+  product_scope: string | null;
+  channel_keys: string[];
+  capability_keys: string[];
+  commercial_expectations: string | null;
+  timing: string | null;
+};
 
 export type ClassificationColumns = {
   market_family: string | null;
@@ -55,7 +90,28 @@ export type ClassificationColumns = {
   product_sector_key: string | null;
   custom_category_label: string | null;
   additional_details: string | null;
+  service_terms: ServiceTermsColumn | null;
+  distribution_terms: DistributionTermsColumn | null;
 };
+
+/**
+ * The product-only commercial fields, and the families that may not send them.
+ *
+ * The requirement's negative assertions, enforced at the storage boundary
+ * rather than only in the composer. A client is not trusted to have removed
+ * them: the whole reason a mis-filed classification is worse than a missing one
+ * is that everything downstream believes it, and a shipped quantity on a trade
+ * service would be believed by the board, the search index and the emails.
+ */
+const PRODUCT_ONLY_FIELDS = [
+  "hs_code",
+  "quantity",
+  "quantity_mode",
+  "quantity_min",
+  "quantity_max",
+  "unit",
+  "incoterm",
+] as const;
 
 export type ClassificationResult =
   | { ok: true; columns: ClassificationColumns }
@@ -179,6 +235,46 @@ export function readClassification(body: Record<string, unknown>): Classificatio
     return { ok: false, error: "Unknown product sector.", field: "product_sector_key" };
   }
 
+  // ---- The commercial terms, refused across a family boundary --------------
+  //
+  // The same rule as the classification above, one level down. Before the
+  // family procedures existed every record carried the product commercial
+  // fields, so this boundary had nothing to check: quantity and Incoterm
+  // arrived on every payload by construction. They no longer do, and a payload
+  // that still sends them for a service or a distribution record is either a
+  // stale client or a forged request. Neither is repaired into a plausible
+  // record.
+  if (family && family !== "products") {
+    for (const key of PRODUCT_ONLY_FIELDS) {
+      if (has(body[key])) {
+        return {
+          ok: false,
+          error: `A ${key.replace(/_/g, " ")} cannot be stored on a ${family === "services" ? "trade service" : "distribution"} record.`,
+          field: key,
+        };
+      }
+    }
+  }
+  if (family && family !== "services" && body.service_terms) {
+    return {
+      ok: false,
+      error: "Trade-service terms cannot be stored on a record in another family.",
+      field: "service_terms",
+    };
+  }
+  if (family && family !== "distribution" && body.distribution_terms) {
+    return {
+      ok: false,
+      error: "Distribution terms cannot be stored on a record in another family.",
+      field: "distribution_terms",
+    };
+  }
+
+  const serviceTerms = readServiceTerms(body.service_terms, serviceKey);
+  if (!serviceTerms.ok) return serviceTerms.refusal;
+  const distributionTerms = readDistributionTerms(body.distribution_terms);
+  if (!distributionTerms.ok) return distributionTerms.refusal;
+
   // Territory codes belong to a scope that takes them. They are dropped rather
   // than refused: a member who changed Several countries to Worldwide has
   // withdrawn the territories, and refusing their submission over it would be
@@ -199,8 +295,109 @@ export function readClassification(body: Record<string, unknown>): Classificatio
       product_sector_key: sectorKey,
       custom_category_label: text(body.custom_category_label, 200),
       additional_details: text(body.additional_details, 2000),
+      service_terms: serviceTerms.value,
+      distribution_terms: distributionTerms.value,
     },
   };
+}
+
+const has = (v: unknown): boolean =>
+  v !== null && v !== undefined && String(v).trim() !== "" && !(Array.isArray(v) && v.length === 0);
+
+type TermsRead<T> = { ok: true; value: T | null } | { ok: false; refusal: ClassificationResult };
+
+/**
+ * Read the Trade Service terms, validating every key against the taxonomy.
+ *
+ * A specialisation is checked against the CHOSEN CATEGORY, not merely against
+ * the global list: "sea freight" is a real key, and it is not an answer a
+ * customs brokerage record can give. Storing it would put a transport mode on a
+ * record with no transport, and a member filtering for sea forwarders would
+ * find a customs broker.
+ */
+function readServiceTerms(raw: unknown, category: string | null): TermsRead<ServiceTermsColumn> {
+  if (!raw || typeof raw !== "object") return { ok: true, value: null };
+  const t = raw as Record<string, unknown>;
+
+  const engagement = text(t.engagement, 32);
+  if (engagement && !serviceEngagementType(engagement)) {
+    return { ok: false, refusal: { ok: false, error: "Unknown engagement type.", field: "service_terms" } };
+  }
+  const pricingBasis = text(t.pricing_basis, 32);
+  if (pricingBasis && !servicePricingBasis(pricingBasis)) {
+    return { ok: false, refusal: { ok: false, error: "Unknown engagement basis.", field: "service_terms" } };
+  }
+  const availability = text(t.availability, 32);
+  if (availability && !serviceAvailability(availability)) {
+    return { ok: false, refusal: { ok: false, error: "Unknown availability.", field: "service_terms" } };
+  }
+
+  const specialisations = keyList(t.specialisation_keys, 32);
+  const allowed = new Set(specialisationKeysFor(category));
+  for (const key of specialisations) {
+    if (!allowed.has(key)) {
+      return {
+        ok: false,
+        refusal: {
+          ok: false,
+          error: "That specialisation does not belong to the chosen service category.",
+          field: "service_terms",
+        },
+      };
+    }
+  }
+
+  const value: ServiceTermsColumn = {
+    scope: text(t.scope, 2000),
+    engagement,
+    coverage_countries: keyList(t.coverage_countries, 60).filter((c) => ISO2.test(c)),
+    trade_lanes: text(t.trade_lanes, 600),
+    specialisation_keys: specialisations,
+    capability: text(t.capability, 1000),
+    pricing_basis: pricingBasis,
+    availability,
+  };
+  const stated =
+    !!value.scope || !!value.engagement || value.coverage_countries.length > 0 ||
+    !!value.trade_lanes || value.specialisation_keys.length > 0 || !!value.capability ||
+    !!value.pricing_basis || !!value.availability;
+  return { ok: true, value: stated ? value : null };
+}
+
+/** Read the Distribution terms, validating every key against the taxonomy. */
+function readDistributionTerms(raw: unknown): TermsRead<DistributionTermsColumn> {
+  if (!raw || typeof raw !== "object") return { ok: true, value: null };
+  const t = raw as Record<string, unknown>;
+
+  const channels = keyList(t.channel_keys, 24);
+  for (const key of channels) {
+    if (!distributionChannel(key)) {
+      return { ok: false, refusal: { ok: false, error: "Unknown sales channel.", field: "distribution_terms" } };
+    }
+  }
+  const capabilities = keyList(t.capability_keys, 24);
+  for (const key of capabilities) {
+    if (!distributionCapability(key)) {
+      return { ok: false, refusal: { ok: false, error: "Unknown capability.", field: "distribution_terms" } };
+    }
+  }
+  const timing = text(t.timing, 32);
+  if (timing && !distributionTiming(timing)) {
+    return { ok: false, refusal: { ok: false, error: "Unknown timing.", field: "distribution_terms" } };
+  }
+
+  const value: DistributionTermsColumn = {
+    objective: text(t.objective, 2000),
+    product_scope: text(t.product_scope, 1000),
+    channel_keys: channels,
+    capability_keys: capabilities,
+    commercial_expectations: text(t.commercial_expectations, 2000),
+    timing,
+  };
+  const stated =
+    !!value.objective || !!value.product_scope || value.channel_keys.length > 0 ||
+    value.capability_keys.length > 0 || !!value.commercial_expectations || !!value.timing;
+  return { ok: true, value: stated ? value : null };
 }
 
 /**

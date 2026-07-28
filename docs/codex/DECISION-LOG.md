@@ -2,6 +2,17 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 - Family-specific downstream commercial procedures
+
+**Decision:** Ponte has one shared composer framework and three distinct downstream commercial procedures. Products, Trade services and Distribution and representation share the technical shell, the account gate, the submission orchestration and the design system. They do not share one product-shaped set of commercial questions, blockers, review rows or submission expectations.
+
+**The rule:** a member is only asked for facts relevant to their market family and canonical intent. Quantity, unit, frequency, route, Incoterm, packaging and HS classification belong to Products. Trade services state scope, coverage, specialisation, capability, engagement basis and availability. Distribution states objective, product or sector scope, territory, partner type, channels, capabilities, commercial expectations and timing.
+
+**Not:** service capacity stored as a product quantity; a distribution opening order stored as a shipped quantity; a product field hidden rather than removed; or the composer duplicated per family.
+
+**Authority:** ADR-0013. Proposed; awaiting owner acceptance.
+
+
 ## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)
 
 **Decision:** Ponte is a self-publishing trade platform with automated eligibility controls, not a manually moderated noticeboard. A Member Opportunity publishes automatically when the member holds a current passing member-business verification with no unresolved sanctions candidate, every mandatory field for its market family is present and valid, the member has accepted the listing responsibility declaration, and no automated safety check has raised a high- or medium-severity flag. Human review becomes exception-based only, and `/admin/listings` becomes an exception console rather than the publication queue.
