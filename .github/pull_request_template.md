@@ -2,6 +2,19 @@
 
 <!-- What user, business or operational outcome does this change produce? -->
 
+## Launch Mode classification
+
+- [ ] Planned launch work
+- [ ] Launch Blocker: `LB-___`
+- [ ] Post-launch work explicitly authorised by the repository owner
+
+Why this classification is correct:
+
+## Authorised scope
+
+- Expected files or systems:
+- Explicitly out of scope:
+
 ## Authority and decision
 
 - Governing authority consulted:
@@ -31,6 +44,8 @@
 - [ ] Relevant contracts under `lib/taxonomy/` or `docs/schemas/` are updated or confirmed unaffected.
 - [ ] The active ExecPlan is updated when `.agent/PLANS.md` requires one.
 - [ ] Feature-flag and database-state records are updated when applicable.
+- [ ] `docs/launch/LAUNCH-BLOCKERS.md` is updated when a blocker opens or closes.
+- [ ] `docs/launch/POST-LAUNCH-BACKLOG.md` indexes every deferred discovery.
 
 ## Design Constitution check
 
@@ -60,6 +75,28 @@ Complete for every UI, component, icon, motion, copy-composition or visual chang
 - [ ] No deployment, migration, production check or external action is claimed without evidence.
 
 Evidence:
+
+## Delivered
+
+<!-- Work completed within the authorised scope. -->
+
+## Launch Blockers discovered
+
+<!-- List each ID and status, or write: No new Launch Blockers discovered. -->
+
+## Post-Launch Tickets created or updated
+
+<!-- List each PL ID and GitHub issue, or write: No new Post-Launch Tickets. -->
+
+## Production changes
+
+<!-- List exact actions and evidence, or write: No production changes. -->
+
+## Scope confirmation
+
+- [ ] Final diff remains within the authorised scope.
+- [ ] No non-blocking discovery was implemented without explicit owner authorisation.
+- [ ] No additional cleanup, refactoring, guard improvement or adjacent fix was added merely because it was nearby.
 
 ## Rollout, rollback and approval
 
