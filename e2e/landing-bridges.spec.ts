@@ -79,20 +79,14 @@ async function shot(target: Locator | Page, name: string): Promise<void> {
 }
 
 /**
- * Move the pointer off the bridge, so what follows is the settled state rather
- * than a hover state.
+ * Move the pointer off the bridge, so each frame records the settled state
+ * rather than a hover state.
  *
- * This matters more than it looks. In the approved stylesheet
- * `.brst:hover:not([disabled]) .brst__n` is more specific than
- * `.brst--on .brst__n`, so a *selected* station under the cursor renders its
- * node at the 13px hover size instead of the 15px selected size. Clicking a
- * station leaves the pointer on it, so every screenshot taken straight after a
- * click would record a hover frame and every selected-node assertion would read
- * the wrong number.
- *
- * That specificity order is the approved package's own, and this suite does not
- * override it. It is recorded as a Bridge authority question (gap DS-8): a
- * chosen station arguably should not shrink when pointed at.
+ * Clicking a station leaves the pointer on it. Since DS-8 was fixed the
+ * selected node no longer changes under the cursor, but hover still lifts the
+ * pier and the description colour on whichever station the mouse happens to
+ * rest on, and a frame that captured that would be recording where the mouse
+ * was rather than what the interface does.
  */
 async function unhover(page: Page): Promise<void> {
   await page.mouse.move(0, 0);
@@ -102,6 +96,32 @@ async function unhover(page: Page): Promise<void> {
 /** The family stations, in order. */
 function stations(page: Page): Locator {
   return page.locator(".pbridge > .br .brst");
+}
+
+/**
+ * Wait until the revealed Action Bridge has measured itself.
+ *
+ * The three action bridges are all rendered and the unselected ones are
+ * `hidden`, which is what keeps every destination in the document without
+ * JavaScript. A hidden element has no height, so a bridge cannot measure its
+ * stations until it is shown: on reveal it lays out once at the CSS fallback
+ * height and again at the measured one.
+ *
+ * A member never sees that, because the reveal animation is longer than the
+ * extra pass. A screenshot can land between the two, which is what made one
+ * frame differ between otherwise identical runs.
+ */
+async function measured(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const wrap = document.querySelector(".pbridge .brx:not([hidden]) .br__deckwrap");
+          return wrap?.getAttribute("style")?.includes("--br-h") ?? false;
+        }),
+      { message: "the revealed action bridge never measured its stations" },
+    )
+    .toBe(true);
 }
 
 /**
@@ -162,9 +182,110 @@ test("desktop evidence: default and each family selected", async ({ page }) => {
     const open = page.locator(".pbridge .brx:not([hidden])");
     await expect(open).toHaveCount(1);
     await expect(open).toHaveAttribute("aria-label", new RegExp(`^${FAMILY_LABELS[family]}:`));
+    await measured(page);
 
     await shot(block(page), fileFor[family]);
   }
+});
+
+// ---------------------------------------------------------------------------
+// DS-8: a chosen station must not shrink when it is pointed at
+// ---------------------------------------------------------------------------
+
+test("DS-8: hovering the chosen station does not demote it", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+
+  const chosen = stations(page).nth(0);
+  await chosen.click();
+  await unhover(page);
+
+  const node = page.locator(".pbridge > .br .brst--on .brst__n");
+  const pier = page.locator(".pbridge > .br .brst--on .brst__p");
+
+  /*
+    Auto-retrying assertions throughout, because `.brst__n` transitions width,
+    height, background and border-colour over `--pf-dur-micro`. A plain read
+    straight after the click samples the transition in flight and gets a value
+    between the two states, which is how the first version of this test
+    reported 12.77px for a node that settles at 15.
+  */
+  const expectSelectedNode = async () => {
+    await expect(node).toHaveCSS("width", "15px");
+    await expect(node).toHaveCSS("height", "15px");
+    await expect(node).toHaveCSS("background-color", "rgb(138, 101, 32)"); // --pf-gold-ink
+    await expect(node).toHaveCSS("border-top-color", "rgb(138, 101, 32)");
+    await expect(pier).toHaveCSS("opacity", "1");
+    await expect(pier).toHaveCSS("width", "2px");
+  };
+
+  await expectSelectedNode();
+
+  // Now point at it. Every one of these was different before the fix: the node
+  // fell to 13px and the sunken grey, and the pier faded to .8.
+  await chosen.hover();
+  await expect(page.locator(".pbridge > .br .brst--on:hover")).toHaveCount(1);
+  await expectSelectedNode();
+  await measured(page);
+
+  // Captured while the pointer is still on the chosen station: this frame is
+  // the proof for DS-8, so it has to be a hover frame.
+  await shot(block(page), "desktop-9-selected-hover");
+
+  // The approved hover treatment for an UNSELECTED station is untouched: it
+  // still grows from 11px to 13px and takes the sunken fill.
+  const other = stations(page).nth(1);
+  await other.hover();
+  await expect(other.locator(".brst__n")).toHaveCSS("width", "13px");
+  await expect(other.locator(".brst__n")).toHaveCSS("background-color", "rgb(242, 239, 230)"); // --pf-sunken
+});
+
+// ---------------------------------------------------------------------------
+// DS-9: one deliberate focus treatment, not the Bridge's plus the Desk's
+// ---------------------------------------------------------------------------
+
+test("DS-9: a focused station carries one focus treatment, and it is strong", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+
+  await stations(page).nth(0).focus();
+  const focus = await page.evaluate(() => {
+    const el = document.querySelectorAll(".pbridge > .br .brst")[0] as HTMLElement;
+    const c = getComputedStyle;
+    return {
+      stationShadow: c(el).boxShadow,
+      stationOutlineWidth: c(el).outlineWidth,
+      nodeShadow: c(el.querySelector(".brst__n")!).boxShadow,
+      titleDecoration: c(el.querySelector(".brst__t")!).textDecorationLine,
+      titleDecorationColour: c(el.querySelector(".brst__t")!).textDecorationColor,
+    };
+  });
+
+  // The duplicate is gone: the Desk's blanket ring no longer draws a rectangle
+  // around the whole station block.
+  expect(focus.stationShadow, "the blanket Desk focus ring is still on the station").toBe("none");
+
+  // And what remains is the approved Bridge treatment, still two carriers: a
+  // ring on the node and an underline on the title, both in --pf-focus.
+  expect(focus.nodeShadow).toContain("rgb(30, 95, 168)"); // --pf-focus
+  expect(focus.titleDecoration).toBe("underline");
+  expect(focus.titleDecorationColour).toBe("rgb(30, 95, 168)");
+});
+
+test("DS-9: no other Desk control lost its focus ring", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+
+  // The fix is scoped to `.br .brst`. The command bar's own links sit in the
+  // same `.ponte-desk` scope and must still take the blanket ring.
+  const navShadow = await page.evaluate(() => {
+    const link = document.querySelector(".cmd__nav a, .cmd a[href='/market-signals']") as HTMLElement | null;
+    if (!link) return null;
+    link.focus();
+    return getComputedStyle(link).boxShadow;
+  });
+  expect(navShadow, "no command-bar link found to check").not.toBeNull();
+  expect(navShadow, "a Desk control outside the bridge lost its focus ring").toContain("rgb(30, 95, 168)");
 });
 
 // ---------------------------------------------------------------------------

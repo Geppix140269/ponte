@@ -14,7 +14,7 @@ implementer deciding the gap did not matter.
 
 ---
 
-## 1. Closed by this PR
+## 1. Closed
 
 | # | Gap | How it closed |
 |---|---|---|
@@ -22,7 +22,11 @@ implementer deciding the gap did not matter.
 | **G3** | Flow token import path; retire the parallel Desk set | 21 aliases; the import already existed (see §4) |
 | **G4** | Motion component layer and reduced-motion wiring | `lib/ponte/motion.ts`, `components/ponte/motion/FlowMotion.tsx`; CSS already imported (see §4) |
 | **G6d** | Brand lockup as inline SVG | Owner ruled it an identity asset. One shared component; four copies consolidated |
+| **DS-8** | A chosen Bridge station shrank when pointed at | Fixed in `bridge-integration.css`: the selected state is restored at a higher specificity than the approved hover rule. Unselected hover untouched |
+| **DS-9** | Two focus treatments on a Bridge station | Fixed in `bridge-integration.css`: the Desk blanket ring is removed inside `.br .brst` only. The approved node ring and title underline remain, at 5.9:1 |
 | **G7** | Route-level state components | `components/ponte/state/LifecycleState.tsx`, seven states, 16 tests |
+
+Rows above are closed by PR #62 (foundation) and PR #63 (landing bridges).
 
 G7 is closed as a **primitive**. The 25 routes that lack lifecycle states adopt
 it in their own journey slices; this PR deliberately retrofits none of them.
@@ -55,8 +59,6 @@ absence is a decision. They must not be "fixed".
 |---|---|---|---|
 | **DS-5** | **The approved Bridge engine source is missing** | `SOURCE-MANIFEST.md` and the implementation notes both name `source/ponte-bridge.js`. The repository holds only `source/archive/ponte-bridge.js.gz.b64.part01`, a 3 KB fragment of a gzip stream that does not decompress. The `Import approved Bridge package` workflow fails on the Google Drive checksum and always has. Reference PNGs are recorded by checksum only and are absent too. The complete `ponte-bridge.css` and the notes **are** present, and slice 4 was built from them | Verification of every `ENGINE DECISION` in `BridgeRoute`, and therefore the confidence of slices 5 to 11 |
 | **DS-6** | No icon slot on a Bridge station | The approved stylesheet has no rule for an icon inside `.brst`, and the landing scope requires Flow icons on the Family Bridge. Added as `brst__ic` in `bridge-integration.css`, as an addition rather than an override | Nothing today; wants an authority answer before more bridges carry icons |
-| **DS-8** | A chosen station shrinks when pointed at | In the approved stylesheet `.brst:hover:not([disabled]) .brst__n` outranks `.brst--on .brst__n`, so hovering the selected station takes its node from 15px to the 13px hover size. Not changed here | Nothing; an owner decision on the approved CSS |
-| **DS-9** | Two focus indicators on a bridge station | The Desk's blanket `:focus-visible` ring in `desk.css` and the Bridge's own approved focus treatment both apply. Redundant rather than wrong: section 12 prohibits removing focus indicators, not doubling them | Nothing |
 | **DS-7** | No abutment copy for the Family Bridge | `PB.route` takes `left`, `right` and `rightDashed` labels and `.br__ab` styles them, but no authority states what a family bridge's abutments should say. They are omitted rather than invented, which is why the deck currently has no end labels | Nothing; a composition decision for the owner |
 | **DS-1** | No approved on-ink focus or review value | The Desk's ink panels use the `[data-theme="dark"]` values of `--pf-focus` and `--pf-review` as literals. Neither `var(--pf-*)` nor `.inverse` scoping works. See `compatibility-aliases.md` §4 | The rail and knowledge-boundary slices |
 | **DS-2** | The lockup drifted between its four copies | Three carried `strokeLinecap="square"`, the Desk did not; the landing wordmark carried no `serif` class. Every surface still renders exactly what it did, but one of the two variants is canonical and nobody has said which | Nothing. Cosmetic, but it should be settled before the mark is used anywhere new |

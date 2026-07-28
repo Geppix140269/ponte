@@ -30,6 +30,7 @@ PONTE_EVIDENCE_BASE_URL=https://deploy-preview-63--ponte-trade.netlify.app npx p
 | `desktop-6-reduced-motion.png` | `prefers-reduced-motion: reduce`. Identical settled composition |
 | `desktop-7-runner-step-{1..5}-of-5.png` | The gold runner crossing, stepped at 0, 25, 50, 75 and 100% of its 620ms |
 | `desktop-8-runner-settled.png` | After settling. The runner is gone |
+| `desktop-9-selected-hover.png` | The chosen station **with the pointer on it**. Identical to `desktop-2` — the proof for DS-8 |
 | `mobile-1-family-neutral-390x844.png` | 390 x 844 viewport frame, vertical treatment |
 | `mobile-2-products-selected-390x844.png` | 390 x 844, Products chosen, actions revealed |
 | `mobile-3-page-390x844.png` | The whole landing at 390, so the bridge is seen in its place |
@@ -125,20 +126,62 @@ requires Ponte Flow icons on the Family Bridge and the approved stylesheet has
 no icon slot on a station. It is an **addition**, not an override: it sets
 position and inherits colour, so the icon law still holds. Gap DS-6.
 
-## 4. Observations for the owner
+## 4. DS-8 and DS-9, resolved
 
-Two things the approved stylesheet does that are worth a decision. Neither was
-changed here.
+Both were found while producing this evidence, and both are now fixed in
+`components/ponte/bridge/bridge-integration.css`. **The approved stylesheet was
+not edited**: it is the authority, CODEOWNERS protects it, and changing it would
+need an authority amendment. These are scoped corrections that let the approved
+source's own states hold.
 
-- **DS-8 — a chosen station shrinks when pointed at.**
-  `.brst:hover:not([disabled]) .brst__n` is more specific than
-  `.brst--on .brst__n`, so hovering the selected station takes its node from the
-  selected 15px down to the hover 13px. It reads as the selection weakening
-  under the cursor. Caught because the first evidence run measured 13px where it
-  expected 15px.
-- **DS-9 — two focus indicators.** The Desk's blanket
-  `:focus-visible` ring in `desk.css` and the Bridge's own approved focus
-  treatment both apply, so a focused station shows an outer rectangle as well as
-  the node ring and title underline. Not a violation, since Constitution
-  section 12 prohibits removing focus indicators rather than doubling them, but
-  it is redundant.
+### DS-8 — a chosen station no longer shrinks when pointed at
+
+In the approved source the hover rules outrank the selected ones:
+
+| Rule | Specificity | Effect |
+|---|---|---|
+| `.brst:hover:not([disabled]) .brst__n` | (0,4,0) | 13px, `--pf-sunken` fill |
+| `.brst--on .brst__n` | (0,2,0) | 15px, `--pf-gold-ink` fill |
+| `.brst:hover:not([disabled]) .brst__p` | (0,4,0) | opacity .8 |
+| `.brst--on .brst__p` | (0,2,0) | 2px, opacity 1 |
+
+So moving the pointer onto the family the member had already chosen took its
+node from 15px to 13px, swapped the gold for grey and faded the pier: the
+selection appeared to weaken under the cursor.
+
+The fix restores the selected state at a higher specificity, copying the values
+from `.brst--on` rather than inventing any. `box-shadow` is deliberately not
+restated, so a station that is both chosen and focused still shows its focus
+ring. **Hover on an unselected station is untouched** and still behaves exactly
+as approved — asserted in the suite, 11px to 13px with the sunken fill.
+
+`desktop-9-selected-hover.png` is the proof: it is a hover frame and it is
+identical to `desktop-2-products-selected.png`.
+
+### DS-9 — one focus treatment, not three
+
+`desk.css` puts a blanket ring on every focusable Desk control:
+
+```css
+.ponte-desk :where(a, button, ...):focus-visible   /* (0,2,0) */
+```
+
+`:where()` carries no specificity, so that is only `.ponte-desk` plus
+`:focus-visible`. It predates the Bridge and is right for ordinary Desk
+controls, which have no focus treatment of their own.
+
+A Bridge station does, and the approved source already draws focus twice:
+`.brst:focus-visible .brst__n` rings the node and `.brst:focus-visible .brst__t`
+underlines the title. All three applying meant a rectangle around the whole
+block **as well as** the ring and the underline.
+
+Only the blanket ring is removed, and only inside a bridge. What remains is
+still two carriers, and still compliant: the node ring is `--pf-focus-ring`, 2px
+of `--pf-focus` (#1E5FA8) on `--pf-surface` (#FCFBF7) at about **5.9:1**,
+comfortably past the 3:1 WCAG 1.4.11 asks of a focus indicator, plus a
+differently-shaped second indicator on the title. `desktop-5-keyboard-focus.png`
+shows the result.
+
+The suite asserts both halves: that the station itself carries no box-shadow,
+and that **a command-bar link outside the bridge still takes the blanket ring**,
+so nothing else in the Desk lost anything.
