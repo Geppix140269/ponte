@@ -16,6 +16,310 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Affected areas:** `docs/decisions/ADR-0012-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728a_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
 
+## 28 July 2026 — Close the public read and write hole on the migration ledger
+
+**Decision:** `public.schema_migrations` gets row level security with no policy,
+and `anon` and `authenticated` lose every privilege on it. `service_role` keeps
+its grants, stated explicitly. Applied to production as
+`20260728b_schema_migrations_rls.sql` with owner authorisation.
+
+**What was wrong.** The table had RLS disabled and both public roles held all
+seven privileges: SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES and
+TRIGGER. The anon key is in every browser. Proven live over the public internet
+before the repair: an unauthenticated `GET /rest/v1/schema_migrations` returned
+`HTTP 200` with real rows.
+
+**Why it is more than a privacy leak.** Reading the migration history is the
+smaller half. Anyone could also insert a row claiming a migration had been
+applied, or delete one saying it had. This table is the only record of what
+production has run, and two audits on 28 July read it as evidence. A ledger that
+unauthenticated callers can edit is not evidence, and the audits could not have
+known the difference.
+
+**The cause was tooling, not any migration.** `scripts/db-query.mjs` and
+`scripts/apply-migration.mjs` create the ledger with a bare
+`create table if not exists`, and Supabase's default privileges hand every new
+table in `public` to `anon` and `authenticated`. Every table this project
+declares deliberately carries RLS; this one was created as a side effect of
+recording something else, and so never got it. It stood open from its first row.
+
+**Both a revoke and RLS, not one.** The revoke is what closes it: PostgREST
+cannot reach a table the role has no privilege on. RLS with no policy is the
+lock that survives Supabase's default privileges being re-applied, because a
+restored grant does not restore a policy that was never written. Deny-all with
+zero policies is how eleven other tables here are already held.
+
+**Both scripts now re-assert it on every run** rather than trusting a one-off,
+so a ledger created fresh in another project is protected from its first row
+rather than from its first audit.
+
+**Nothing that writes loses access.** `postgres` owns the table and an owner
+bypasses RLS unless FORCE is set, which this deliberately does not set;
+`service_role` has `rolbypassrls`; both scripts connect as `postgres`; and no
+application code touches the table.
+
+**Verified from outside, after the fact.** With the anon key, SELECT, INSERT,
+UPDATE and DELETE all return `HTTP 401` with SQLSTATE `42501`, while the control
+in the same run, `desk_radar`, still returns `HTTP 200` with `[]` — so the
+denial is this table and not a bad key. Server side: RLS on, zero policies,
+grantees `postgres` and `service_role` only. The file is idempotent; running it
+twice changes nothing.
+
+**Not done:** no row in the ledger was edited, no other table was touched, no
+credential was rotated, and nothing was backfilled.
+
+**Affected areas:** `supabase/migrations/20260728b_schema_migrations_rls.sql`
+(new), `scripts/db-query.mjs`, `scripts/apply-migration.mjs`,
+`docs/codex/DATABASE-STATE.md`.
+
+## 28 July 2026 - The market family decides which classification journey opens
+
+**Two accepted decisions met on one screen.** ADR-0011 (category-first journeys)
+merged to `main` as `877448b` while ADR-0012 (AI product intake) was being built
+on PR #71. Both rewrote the composer's first step and `lib/structure/draft.ts`,
+and the merge conflicted in four files.
+
+**Owner decision: route by market family, and change neither ADR's meaning.**
+They are complementary journeys, not competing implementations.
+
+| Family | Decision | What opens the composer |
+|---|---|---|
+| Products | ADR-0012 | Describe naturally, upload a trade document, or browse categories |
+| Trade services | ADR-0011 | Category-first, on the canonical service taxonomy |
+| Distribution & Representation | ADR-0011 | Category-first, on the canonical distribution taxonomy |
+
+**Where the branch lives, and why there is only one.** `IntentStep`, on
+`needsHsCode(draft)`, which is already the single answer to "is this a product
+record". The composer is NOT duplicated: S02 to S06, the account gate, the resume,
+the preview and the submit are one stack for all three families.
+
+**Both data models are kept whole.** `Classification` keeps every ADR-0011 key;
+`DraftResolution` keeps every ADR-0012 layer; no field carries the other's
+meaning. The one place they meet is `productSector`: ADR-0011 wants a sector key
+on every record and the ADR-0012 cascade already derives one from the customs
+chapter, so `ResolvedProduct` now carries the sector KEY as well as its label and
+`applyResolution` writes it onto the draft. An underivable sector stays empty,
+because a gap is honest and a guessed classification is not.
+
+**No migration and none needed.** Old drafts predate both decisions; `emptyDraft`
+supplies every added field and a draft carrying none of them reads as the legacy
+product-shaped path exactly as it did. Two tests pin it.
+
+**Superseded, and removed rather than kept beside its replacement:** the local
+`SUBJECT_HEADING` map and the blank one-line `SubjectStep`. `lib/taxonomy/journey.ts`
+now holds every heading beside the questions it introduces.
+
+**Corrected because it had become false:** `e2e/category-journeys.spec.ts`
+asserted that products still open on the HS drill-down, which ADR-0012 removed on
+the owner's instruction that an HS code must not be required before Ponte
+understands a product. The assertion now pins what is still true, that a product
+record reaches neither category picker, and the stale frame was replaced.
+
+**Affected areas:** `components/structure/StructureComposer.tsx`,
+`lib/structure/draft.ts`, `lib/products/model.ts`, `lib/products/intake.ts`,
+`app/[locale]/structure/page.tsx`, `package.json`,
+`lib/structure/__tests__/family-routing.test.tsx` (new),
+`e2e/category-journeys.spec.ts`, `e2e/product-intake.spec.ts`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md`,
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no storage, no feature flag, no production
+configuration, no deployment and no merge. PR #71 remains open.
+
+## 28 July 2026 - The product resolver is a cascade, not a catalogue lookup
+
+**Blocking defect found at owner review.** Giuseppe typed `avocado` into Offer a
+product and Ponte answered "did not recognise that yet". The model stage was
+restricted to returning keys that already existed in Ponte's curated catalogue,
+so the twenty-five seeded products were the boundary of everything Ponte could
+understand. That does not satisfy the approved rule that users describe what they
+trade and Ponte identifies, structures and classifies it.
+
+**Decision: fix the architecture, not the data.** Adding `avocado` as a
+twenty-sixth entry would have left the ceiling exactly where it was.
+
+**What replaced it.** A six-stage cascade in `lib/products/cascade.ts`: exact
+over the curated catalogue, fuzzy correction of a curated term, unrestricted
+model identification, the HS 2022 catalogue lexically when the model is
+unavailable, Ponte-sector mapping derived from the surviving customs chapter, and
+a clarification only where the product itself is genuinely ambiguous.
+
+**The safety rule moved rather than being removed, and is stronger for it.** The
+old rule was a ceiling on what the model could say. The new one constrains what
+its answer may become: an identified product carries the new `ai_identified`
+provenance, is scored below any curated match, has every proposed customs code
+checked against the real catalogue and dropped if it does not exist, has its
+sector derived from that code rather than from the model, surfaces a spelling
+correction as a question rather than applying it, and cannot reach a draft until
+the member confirms it. AI may recommend; it still may not publish, verify or
+commit, and the separate rule against inventing commercial terms a document never
+stated is untouched.
+
+**Two catalogues, because they fail in opposite directions.** Verified against
+the deploy preview: `avocado` in HS 2022 returns 0804.40 avocados, and `gas oil`
+in the same index returns seamless steel drill pipe. A customs nomenclature has
+breadth and no commercial vocabulary; the curated catalogue has commercial depth
+and no breadth. Neither alone is a resolver.
+
+**Copy corrected at the owner's instruction.** The unmatched state's closing
+sentence, "Ponte will not guess a product you did not name", was shown to a
+member who had named their product correctly and blamed them for Ponte's limit.
+It now reads "We could not classify that confidently yet", states what Ponte
+tried, and offers four ways on. A test pins it so the sentence cannot return.
+
+**Deferred by owner decision, unchanged:** durable document storage (issue #72)
+and the microphone icon commission.
+
+**Affected areas:** `lib/products/cascade.ts`, `lib/products/identify.ts` and
+`lib/products/fuzzy.ts` (all new), `lib/products/model.ts`,
+`lib/products/intake.ts`, `lib/products/resolve.ts`, `lib/products/ai-resolve.ts`
+(deleted, superseded), `app/api/products/resolve`,
+`components/products/intake/*`, `app/[locale]/dev/product-intake/states.ts`,
+`e2e/product-intake.spec.ts`, `docs/schemas/product-resolution.schema.json`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md`,
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no feature flag, no deployment and no
+merge. PR #71 remains open pending design approval.
+
+## 28 July 2026 — AI product intake and document-to-deal, implemented
+
+**Decision implemented:** the owner-approved product decision recorded in
+`ADR-0012-ai-product-intake-and-document-to-deal-flow.md` (branch
+`product/ai-document-product-intake`, draft PR #68) and tracked in issue #67.
+Users describe or upload what they trade; Ponte identifies, structures and
+classifies it. Both product intents enter through one shared resolver. HS
+classification is downstream and confirmable, not the gate on the journey.
+
+**Decisions taken during implementation, because the authorities did not settle them:**
+
+1. **The commercial product vocabulary is a new layer, not an extension of the
+   HS catalogue.** `lib/products/catalogue.ts` holds normalised names, synonyms,
+   standards, grades and attributes. HS 2022 is a customs nomenclature and will
+   never say that `gas oil`, `EN 590` and `ULSD` are one product with one buyer
+   pool. The catalogue maps onto `PRODUCT_SECTORS` rather than restating it.
+
+2. **Resolution is deterministic first, semantic second.** The lexical stage is
+   pure, free and reproducible, which is what makes the `gas oil` acceptance
+   criterion a unit test rather than a manual check against a live service. The
+   metered semantic stage runs only when the lexical stage cannot answer, and it
+   may return catalogue keys and nothing else.
+
+3. **Product identification in a document is deterministic too.** The
+   three-product acceptance case is proved by `lib/products/scan.ts` running the
+   catalogue's synonym index over the text, with no model call. The model reads
+   the commercial terms, which genuinely need comprehension.
+
+4. **"Do not invent" is enforced by the parser, not requested by the prompt.**
+   Any extracted term arriving without the verbatim words it came from is
+   discarded and becomes `missing`. A fact Ponte cannot show the member is a
+   fact Ponte does not state.
+
+5. **`gas oil` is ambiguous, and stays ambiguous.** Three commercially different
+   grades match. The resolver asks which, naming the attribute they differ on,
+   and pre-selects nothing. Silently taking the top answer is named as a
+   rejected approach in the decision record.
+
+6. **"Verified by Ponte" is rendered as unavailable, not omitted.** Ponte does
+   not verify a product claim on this journey. Removing the row would collapse
+   four provenance states into three; leaving it as an empty box would imply a
+   verification a member could obtain.
+
+7. **Ponte's own product record is shown without a provenance marker.** The
+   normalised product, its category and its catalogue attributes are neither a
+   claim from the document nor a member confirmation. The first evidence run
+   printed "Extracted from document" beside a sulphur content that came out of
+   the catalogue, which is a false provenance claim on the one screen that must
+   not make any.
+
+8. **The uploaded document is not persisted.** Attaching it durably needs a
+   storage bucket, a retention rule and an RLS policy, all owner decisions. The
+   intake keeps it for the session and the review screen says so.
+
+9. **PDFs and images are read by the model as content blocks, not by a new
+   parser.** No new runtime dependency, and no second unmetered model path:
+   everything still goes through `lib/ai.ts`, which is what keeps every call
+   costed. `adm-zip` moves from devDependencies to dependencies for `.docx` and
+   `.xlsx`. Legacy binary `.doc` and `.xls` are blocked by name with a reason.
+
+10. **Voice is a text-labelled control.** The Ponte Flow registry has no
+    microphone key, and Constitution section 7 makes a missing icon a gap to
+    escalate rather than permission to draw one. Registered for commission.
+
+**Owner decisions taken on review, 28 July 2026.** Giuseppe reviewed the
+implementation report and ruled on the four questions it raised:
+
+1. **The ADR is renumbered to ADR-0012, and the ADR-0002 collision is not
+   retained.** Draft PR #68 had added a second `ADR-0002` beside
+   `ADR-0002-ponte-design-constitution.md`, which is on `main`, is a required
+   governance file and is cited by START-HERE, this log and section 25 of the
+   Constitution. The renumber is done at source on
+   `product/ai-document-product-intake` (commit `a4ba831`): the file is now
+   `docs/decisions/ADR-0012-ai-product-intake-and-document-to-deal-flow.md`, the
+   heading matches, and the previously missing row is added to the ADR index.
+   Not one word of the decision changed. Every reference in this log, in
+   `CURRENT-STATE.md` and in the ExecPlan resolves to ADR-0012.
+
+2. **Durable document storage is deferred, and session-based processing is
+   accepted for this release.** Retention, bucket architecture, access control,
+   deletion and RLS become a separate decision and work package, raised as
+   issue #72. The review screen already states the limit in words, so nothing on
+   screen implies an attachment the product does not provide.
+
+3. **No microphone icon is commissioned or introduced.** The
+   Constitution-compliant text-labelled voice control stays until an approved
+   Ponte Flow icon exists. This is now a closed question for this change and an
+   open commission for the design system.
+
+4. **The `import-approved-bridge-package` CI failure is recorded as pre-existing
+   and environmental**, on the condition that the canonical repository
+   verification and the Bridge manifest integrity check both pass. Both do: the
+   `verify` workflow succeeds, and `check-governance.mjs` verifies all 13
+   vendored Bridge files against `SOURCE-MANIFEST.md` byte for byte. The failing
+   workflow fetches the Bridge archive from Google Drive, which now returns an
+   interstitial page instead of the file, and it fails identically on every
+   branch including documentation-only ones.
+
+**Reconciled against ADR-0011, merged to `main` while this was in progress.**
+ADR-0011 section 5 requires **Trade services and Distribution** to begin with
+clickable canonical categories instead of a generic one-line subject field, and
+its Context records that "Products already begin with a structured
+classification journey". The two decisions therefore agree and do not overlap:
+this change governs the Products family only and leaves the non-product subject
+step exactly as it found it, for ADR-0011's own implementation to replace.
+
+One consequence: the renumber for the intake ADR is **ADR-0012**, not ADR-0011,
+which is now taken. Accepted by the owner and done at source the same day.
+
+**Incidental repair: committed merge-conflict markers.**
+`docs/codex/CURRENT-STATE.md` carried literal `<<<<<<< HEAD`, `=======` and
+`>>>>>>> origin/main` markers on `main` at lines 4 to 12. This change had to
+update that file anyway and its two sides were reconcilable without choosing
+between them, so they were folded into one header: the ADR-0010
+design-authority line from one side, the Ponte Desk entry-authority amendment
+from the other, and the Bridge line corrected to the truth after PR #58.
+
+`docs/codex/00-START-HERE.md` carried the same defect at lines 48 to 67, in the
+authority order every new contributor is told to read first. It was reported
+rather than repaired here, because its two sides disagreed in substance and
+choosing was the owner's call. It has since been resolved independently on
+`main` by commit `c0e73ab`, which kept both sides and renumbered the list. **No
+marker now remains in either file, or anywhere in the repository.** The interim
+entry raised in `docs/codex/KNOWN-ISSUES.md` was removed rather than left to go
+stale.
+
+**Affected areas:** `lib/products/` (new), `lib/documents/` (new),
+`app/api/products/` (new), `components/products/intake/` (new),
+`app/[locale]/dev/product-intake/` (new, development-only),
+`components/structure/StructureComposer.tsx`, `lib/structure/draft.ts`,
+`lib/ai.ts`, `app/[locale]/structure/page.tsx`, `docs/schemas/product-resolution.schema.json` (new),
+`playwright.config.ts`, `next.config.mjs`, `package.json`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md` (new),
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no feature flag, no deployment and no
+merge. Design approval is requested on the pull request with desktop, 390 x 844
+and reduced-motion evidence attached.
 ## 28 July 2026 — Complete Market Signal discoverability and category-first non-product journeys (ADR-0011)
 
 **Decision:** Every approved, unexpired and anonymised public Market Signal must be discoverable through search, filtering, hierarchical browsing or pagination. The current 60-record read may remain a page size but must not be presented as the total inventory or remain a terminal access cap. The approximately 160 newly supplied records must be reconciled through the existing identity, provenance, deduplication, privacy, approval and expiry rules; exact totals must be reported from the database rather than calculated as a hard-coded addition.
@@ -29,6 +333,127 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** Giuseppe issued the combined development brief to Claude Code on 28 July 2026. The product decision and implementation scope are accepted. At this record point no implementation branch, import result, schema migration, deployment or production verification for this scope has been evidenced. Applying a production migration, deploying or merging remains subject to the stop conditions in `AGENTS.md`.
 
 **Affected areas:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`, Market Signals listing and detail, Find, Structure/Start a Deal, `lib/taxonomy/market.ts`, public query projections, database indexes and optional additive schema work, import reconciliation, SEO and URL-state behaviour, `docs/codex/CURRENT-STATE.md`.
+
+## 28 July 2026 — Category-first classification for Trade services and Distribution
+
+**Context:** Owner requirement of 28 July 2026, implemented on branch
+`feature/category-first-market-taxonomy` and proposed as ADR-0012, which implements the owner-accepted ADR-0011. Trade
+services and Distribution opened on a blank line, "State it in one line", while
+Products had a progressive category journey. A sentence cannot be filtered,
+matched, counted or searched, so two of Ponte's three equal families could
+neither be described properly nor searched at all.
+
+**Decisions recorded because the authorities did not settle them:**
+
+1. **The Trade Services escape route is stored as `unlisted`, not `other`.** The
+   earlier ten-key list already used `other`, and it meant "Other trade-enabling
+   services": a real category with real subcategories. Reusing the key would
+   have made every stored `other` ambiguous, and reading one back would have
+   silently reclassified a member's trade-enabling record. The label a member
+   sees is unchanged. Found by a test written before the collision was noticed.
+
+2. **The legacy `route` value maps to `market_entry`, and is flagged.** The
+   requirement maps it to a "route-to-market partner", which is not one of the
+   twelve canonical types. `LEGACY_DISTRIBUTION_MAP.route` carries
+   `needsOwnerConfirmation: true` so the owner confirms it rather than
+   discovering it later.
+
+3. **A relationship term is never read back as a partner type.** `exclusive` and
+   `nonexclusive` sat in the same flat list as `distributor`. Answering "which
+   partner type is this?" with "exclusive" would keep the original error alive
+   under new names, so `canonicalPartnerType("exclusive")` returns null on
+   purpose.
+
+4. **An icon appears only where the Flow registry already has one.** Five of the
+   twelve partner types and both escape routes have no approved asset, and
+   drawing them would be an unapproved addition to the registry (Constitution
+   section 7). The grid reserves the icon column either way, so a partly drawn
+   list still aligns. The requirement asked for an icon "where available"; this
+   is what available means.
+
+5. **Category icons are rendered on the server and passed down as nodes.**
+   `PonteIcon` is a server component so the registry's markup never reaches the
+   browser bundle, and the pickers are client components. Importing the renderer
+   into a picker would quietly undo that; a second client-safe icon module would
+   give Ponte two icon renderers, which section 20 forbids.
+
+6. **Cross-family classification is refused in three places.** In the draft, in
+   the API, and in a database CHECK. The API is not the only writer a table
+   sees, and a mis-filed key is worse than a missing one because every filter,
+   count and match downstream trusts it.
+
+7. **`/find` opens on the three market families.** It previously opened on the
+   product picker, with products the only family that could be searched.
+   Products is now one tap away and unchanged.
+
+8. **A category filter that cannot be applied reports that, and never an empty
+   result.** No published record carries a canonical category yet. "No signal
+   matches ocean freight" and "Ponte cannot yet tell which signals are about
+   ocean freight" are different sentences with different next actions.
+
+9. **Nothing is backfilled.** No existing record has been classified into this
+   taxonomy, and writing a guess into those columns would invent a finding.
+
+**Corrections under review, 28 July 2026:**
+
+10. **Eligibility runs in the query, before the page is cut and before the count
+    is taken.** Applying the public-expiry rule afterwards to a fetched page
+    counted expired rows and returned short pages, which would have made offset
+    paging unstable before it was built.
+
+11. **Coverage is measured on every category-filtered read.** Reporting
+    "nothing is classified" only when the result was empty held for exactly as
+    long as nothing was classified. From the first classified record onwards,
+    every filter would have returned small confident results over an inventory
+    that was still almost entirely unclassified. There are now three states:
+    `unclassified` (nothing carries a category), `partial` (some do, and the
+    numbers are printed), and `ok` (all do, so an empty result is conclusive).
+
+12. **The family-coherence constraints are implications, not exemptions.** The
+    first draft opened `market_family is null or ...`, which permitted a service
+    category on a record belonging to no family. `desk_radar` carries the same
+    two constraints, and needs them more than `listings` does: a signal is
+    written by an importer, an admin action and any future backfill, none of
+    which passes through the member API's validation.
+
+13. **The legacy `route` value is preserved as `route_to_market`, not
+    consolidated into `market_entry`.** Consolidation cannot be undone: once
+    stored values have been read back through it, which records were `route` is
+    unrecoverable. Owner-approved 28 July 2026.
+
+**Not applied:** `supabase/migrations/20260728a_market_classification.sql` is
+written and reviewed and has **not** been run. A merge applies no migration in
+this repository. The write path tolerates the columns being absent and retries
+without them, and the classification still reaches the record through the
+synthesised `details`.
+
+> **Superseded the same day.** That paragraph was true when the decision was
+> recorded and is not true now: `20260728a` was applied to production by hand on
+> 28 July 2026 at 13:25:11 UTC with owner authorisation, and verified. See
+> `docs/codex/DATABASE-STATE.md`. Left in place rather than rewritten, because
+> this log records what was decided when, but a reader must not be able to reach
+> the false statement without the correction attached. Nothing is backfilled:
+> the columns exist and no record carries a category.
+
+## 28 July 2026 — Retire the Bridge package import workflow
+
+**Decision:** `.github/workflows/import-approved-bridge-package.yml` is removed. The approved Bridge package is vendored in the repository and verified on every run by `scripts/check-governance.mjs` against `design/authority/bridge/v1/SOURCE-MANIFEST.md`.
+
+**Why it was failing.** The workflow downloaded a zip from a Google Drive link and checked the **container** against a pinned SHA-256. That check had failed on every run the workflow ever had, including on the branch behind merged PR #58. The download now returns roughly 891 KB where the approved archive is 789,853 bytes, so the link no longer serves the file it was pinned to.
+
+**The pin itself was correct.** The owner-approved archive still hashes to exactly `d45d809d2917a6265e368ade5f52c319bbd83937a29070b7b4a338445975d616`. Nothing was wrong with the recorded value; the source behind the link changed.
+
+**But pinning a zip container was the wrong thing to pin, and that is the durable lesson.** Two copies of the approved package were found locally with **byte-identical contents** and **different container hashes**: a zip's bytes depend on timestamps, entry order and compression settings, none of which are the design authority. `SOURCE-MANIFEST.md` already records a SHA-256 for every **file**, which is the thing that actually has to be right, and those hashes are stable across any repackaging.
+
+**What replaces it.** Nothing needs to fetch anything. The package is in the repository, and the governance check hashes all 13 vendored files against the manifest on every run: no network, no external dependency, no expiring link, and it fails on a mismatch **or an absence**. That is strictly stronger than a one-time import, and it is what would have caught the outage described below on the first commit rather than weeks later.
+
+**What the failure cost.** While the workflow was failing, `source/ponte-bridge.js` and the nine reference renders were absent from the repository and nothing reported it. A landing bridge was built against an inferred straight-line geometry as a result, and was rejected by the owner. The vendored `ponte-bridge.css` had also drifted from its own recorded checksum, with its section comments stripped, and nothing reported that either. Both are corrected in PR #63.
+
+**Also removed by this decision:** nothing else. The workflow had no callers, and the `.import-trigger` and `.temporary-import-note` markers it used are removed in PR #63. `.temporary-import-note` itself recorded the requirement being satisfied here: "Temporary import workflow and marker files must be removed before final review."
+
+**Sequencing.** This should merge after PR #63, which is what puts the package and the manifest check on `main`. Merging it first would not regress anything, since a workflow that has never once succeeded protects nothing today, but it would leave `main` briefly with neither the fetch nor the vendored package.
+
+**Affected areas:** `.github/workflows/import-approved-bridge-package.yml` (deleted), `scripts/check-governance.mjs` (the replacement check, added in PR #63), `design/authority/bridge/v1/SOURCE-MANIFEST.md` (unchanged; it is the authority the check reads).
 
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 

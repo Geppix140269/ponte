@@ -3,15 +3,19 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
-import { readMarketSignals } from "@/lib/board/market-signals";
+import { searchSignalInventory, countSignalInventory } from "@/lib/board/inventory";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import { railForScreen } from "@/lib/desk/journey";
 import { alternatesFor } from "@/lib/seo";
 import DeskShell from "@/components/desk/DeskShell";
 import FactRegister from "@/components/desk/FactRegister";
 import RecordCard from "@/components/desk/RecordCard";
+import SignalFilters, { ActiveFilters, signalFilterHref } from "@/components/desk/SignalFilters";
+import { parseFindQuery, toInventoryQuery, hasActiveFilters } from "@/lib/find/query";
+import { presentBoard } from "@/lib/board/presentation";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
+import "@/components/ponte/category/category.css";
 
 /**
  * R-FIND station 2, Discover: the Market Signals listing, in The Desk.
@@ -81,14 +85,37 @@ export default async function MarketSignalsPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams?: { objective?: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
   setRequestLocale(params.locale);
 
-  const objective = searchParams?.objective?.trim() || null;
+  const objectiveRaw = searchParams?.objective;
+  const objective =
+    (typeof objectiveRaw === "string" ? objectiveRaw.trim() : "") || null;
   const rail = railForScreen("listing", { objectiveStated: Boolean(objective) });
-  const board = await readMarketSignals();
-  const records = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
+
+  // The board is now a search. The filters are canonical keys, they are applied
+  // in the query, and the count is a count of the complete inventory rather
+  // than of the page that came back.
+  const q = parseFindQuery(searchParams ?? {});
+  const [board, everything] = await Promise.all([
+    searchSignalInventory(toInventoryQuery(q), { limit: 60 }),
+    countSignalInventory(),
+  ]);
+  // Three states carry records. Only `ok` may present an empty result as a
+  // finding about the market.
+  const answered =
+    board.state === "ok" || board.state === "partial" || board.state === "coverage_unknown";
+  const records = answered ? board.signals.map(toDeskRecord) : [];
+  /** Eligible records matching the active filters, across the whole table. */
+  const matched = answered ? board.total : records.length;
+  /**
+   * What this page renders, decided by one table rather than by the nesting of
+   * a ternary chain. Only `ok` may present an emptiness as a finding.
+   */
+  const presentation = presentBoard(board.state, records.length, {
+    filtered: hasActiveFilters(q),
+  });
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -96,7 +123,43 @@ export default async function MarketSignalsPage({
         <section className="sec">
           <Intro />
 
-          {board.state === "unavailable" ? (
+          <SignalFilters q={q} />
+
+          {presentation.unclassified && board.state === "unclassified" ? (
+            /*
+             * Neither a result nor an emptiness.
+             *
+             * No published signal carries this classification, so filtering on
+             * it cannot answer. Printing "no signal matches" would be Ponte
+             * reporting a finding it never made, which is the same distinction
+             * this board already draws between nothing found and nothing read.
+             */
+            <div className="empty">
+              <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
+              <div>
+                <b>Ponte cannot filter signals by this category yet</b>
+                <p>
+                  {board.reason === "columns_absent"
+                    ? "The category fields are not yet live on the database, so this filter cannot be applied at all."
+                    : "No signal on the board carries a category in this taxonomy, so this filter would return an empty list rather than an answer."}{" "}
+                  That is a gap in what Ponte has classified, not a statement about the market.
+                  Signals read from here on are classified as they are approved; the signals already
+                  here have not been.
+                </p>
+                {typeof board.eligible === "number" && (
+                  <p>
+                    {board.eligible.toLocaleString()} signals are live on the board, and none of them
+                    carries a category.
+                  </p>
+                )}
+                <div className="empty__a">
+                  <Link className="b" href={signalFilterHref({})}>
+                    See every signal on the board
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : presentation.unavailable ? (
             <div className="err">
               <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
               <div>
@@ -113,30 +176,146 @@ export default async function MarketSignalsPage({
                 </div>
               </div>
             </div>
-          ) : records.length === 0 ? (
-            <div className="empty">
-              <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
-              <div>
-                <b>No signal is currently live on the public board</b>
-                <p>
-                  Ponte publishes a signal only while it is approved and inside its public life.
-                  Nothing found is not the same as nothing happening: sources publish late, a
-                  signal leaves the board ninety days after it was read, and some buying is never
-                  published at all.
-                </p>
-                <div className="empty__a">
-                  <Link className="b" href="/structure">
-                    Bring a requirement or offer to the desk
-                  </Link>
-                </div>
-              </div>
-            </div>
           ) : (
             <>
-              <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 10 }}>
-                {records.length === 1 ? "1 signal" : `${records.length} signals`}
+              <ActiveFilters q={q} />
+              {/*
+                The size of the blind spot, printed above the results rather
+                than below them. A category filter reads only the records that
+                carry a category; while most of the board does not, a result
+                shown without this reads as a statement about the market when
+                it is a statement about the classified part of it.
+              */}
+              {presentation.coverageNotice === "unknown" && (
+                <div className="empty" style={{ marginBottom: 12 }}>
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={20}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>Ponte cannot confirm how much of the board this filter searched</b>
+                    <p>
+                      The signals below are real. How many matching signals carry no category, and
+                      were therefore not searched, could not be counted, so this result cannot be
+                      treated as complete.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {presentation.coverageNotice === "partial" && board.state === "partial" && (
+                <div className="empty" style={{ marginBottom: 12 }}>
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={20}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>
+                      This filter can see {board.coverage.classified.toLocaleString()} of{" "}
+                      {board.coverage.eligible.toLocaleString()} matching signals
+                    </b>
+                    <p>
+                      {(board.coverage.eligible - board.coverage.classified).toLocaleString()}{" "}
+                      signals matching the rest of this search carry no category, so they were not
+                      searched.
+                      {records.length === 0
+                        ? " Nothing matched among the ones that do, which is not the same as nothing matching."
+                        : " What is below is real; it is not everything."}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {/*
+                The genuine emptiness, and the only state allowed to claim it.
+                It sits AFTER the coverage notices and is gated on the table,
+                because it used to sit before them: an empty partial result
+                rendered a whole-board claim and the notice explaining the
+                filter's blind spot was unreachable exactly when it mattered.
+              */}
+              {/*
+                The board is empty. A statement about the market, and only
+                printed when nothing was asked of it.
+              */}
+              {presentation.genuineEmpty === "board" && (
+                <div className="empty">
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={24}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>No signal is currently live on the public board</b>
+                    <p>
+                      Ponte publishes a signal only while it is approved and inside its public life.
+                      Nothing found is not the same as nothing happening: sources publish late, a
+                      signal leaves the board ninety days after it was read, and some buying is
+                      never published at all.
+                    </p>
+                    <div className="empty__a">
+                      <Link className="b" href="/structure">
+                        Bring a requirement or offer to the desk
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/*
+                The ANSWER is empty. A statement about the question, and a
+                different fact: the board may be full. Saying "no signal is
+                currently live" here would tell a member the market is dead
+                when they had simply asked about one corner of it.
+              */}
+              {presentation.genuineEmpty === "filters" && (
+                <div className="empty">
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={24}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>No signal matches these filters</b>
+                    <p>
+                      The board is not empty; this corner of it is. Widen the category, choose
+                      every market, or clear the filters to see what is live.
+                    </p>
+                    <div className="empty__a">
+                      <Link className="b" href={signalFilterHref({})}>
+                        Clear the filters
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {presentation.records && (
+                <>
+              {/*
+                The count is the whole matching eligible inventory, and the
+                range is what a member can actually see. Both are printed,
+                because a page length presented as a market size is a false
+                claim about how much is out there.
+
+                And where the two differ, the page says so plainly. Ponte can
+                now COUNT every eligible signal but a member cannot yet REACH
+                them: there is no pagination. Printing "3,517 signals, 60 shown"
+                and stopping would imply the rest are a scroll away.
+              */}
+              <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 4 }}>
+                {matched === 1 ? "1 signal" : `${matched.toLocaleString()} signals`}
+                {matched > records.length ? `, showing 1-${records.length}` : ""}
+                {everything !== null && matched < everything
+                  ? ` of ${everything.toLocaleString()} live on the board`
+                  : ""}
                 {records.length > REGISTER_THRESHOLD ? ", fact register" : ", record cards"}
               </p>
+              {matched > records.length && (
+                <p style={{ fontSize: 12, color: "var(--ink-3)", paddingBottom: 10 }}>
+                  The remaining {(matched - records.length).toLocaleString()} are counted but not yet
+                  reachable from this page. Paging through the whole inventory is not built.
+                </p>
+              )}
 
               {records.length > REGISTER_THRESHOLD ? (
                 <FactRegister records={records} label="Market Signals" />
@@ -146,6 +325,8 @@ export default async function MarketSignalsPage({
                     <RecordCard key={record.ref} record={record} />
                   ))}
                 </div>
+              )}
+                </>
               )}
             </>
           )}

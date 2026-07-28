@@ -9,7 +9,7 @@ import type {
  * means a future entry pointing at, say, `participation.boundary` is a compile
  * error rather than an icon that silently repeats itself to a screen reader.
  */
-type TaxonomyIcon = Exclude<FlowIconKey, FlowLabelledKey>;
+export type TaxonomyIcon = Exclude<FlowIconKey, FlowLabelledKey>;
 
 /**
  * The canonical market taxonomy: the single source of truth for the three

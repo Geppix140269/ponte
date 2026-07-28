@@ -7,6 +7,9 @@ import AccountGate from "@/components/AccountGate";
 import CountryPicker from "@/components/CountryPicker";
 import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
 import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
+import ProductIntake from "@/components/products/intake/ProductIntake";
+import type { CommercialTerms } from "@/lib/products/terms";
+import type { ResolvedProduct } from "@/lib/products/model";
 import {
   emptyDraft,
   openGaps,
@@ -15,7 +18,9 @@ import {
   blockers as computeBlockers,
   toSubmitPayload,
   draftQuantity,
+  submitPayloads,
   type StructureDraft,
+  type DraftResolution,
   type Intent,
   type CompletionField,
 } from "@/lib/structure/draft";
@@ -35,9 +40,17 @@ import {
   FREQUENCIES,
   type TapGroup,
 } from "@/lib/structure/vocabulary";
-import { legacyTypeForIntent, needsHsCode } from "@/lib/structure/draft";
+import { legacyTypeForIntent, needsHsCode, subjectFor } from "@/lib/structure/draft";
 import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
-import { MARKET_INTENTS } from "@/lib/taxonomy/market";
+import { MARKET_INTENTS, PRODUCT_SECTORS } from "@/lib/taxonomy/market";
+import { serviceCategory, serviceSubcategory } from "@/lib/taxonomy/services";
+import { partnerType, relationshipTerm, coverageScope } from "@/lib/taxonomy/distribution";
+import { journeyFor } from "@/lib/taxonomy/journey";
+import ClassifyStep from "./ClassifyStep";
+// The stylesheet is imported by the route, not here, matching find.css and
+// structure.css: a component that pulls CSS cannot be mounted by the unit
+// tests, which run under tsx and have no CSS loader.
+import type { CategoryIconMap } from "@/components/ponte/category/CategoryIcons";
 
 // Origin/destination are stored as country NAMES (they display in the
 // opportunity and ride into the submit payload), so the searchable picker,
@@ -97,6 +110,7 @@ const STEP_MARK: Partial<Record<Step, string>> = {
 
 export default function StructureComposer({
   entrance = null,
+  icons = {},
 }: {
   /**
    * The canonical family and intent a landing entrance carried in, already
@@ -105,6 +119,14 @@ export default function StructureComposer({
    * again in a smaller vocabulary would lose the answer.
    */
   entrance?: { family: MarketFamily; intent: MarketIntent } | null;
+  /**
+   * Category icons, rendered on the server and handed down as nodes.
+   *
+   * `PonteIcon` is a server component so the whole registry's markup stays out
+   * of the browser bundle. The pickers are client components, so the icons come
+   * in as props rather than by import. One renderer, one registry.
+   */
+  icons?: CategoryIconMap;
 } = {}) {
   const t = useTranslations("structure");
   const router = useRouter();
@@ -158,22 +180,31 @@ export default function StructureComposer({
   const doSend = useCallback(async (asDraft: boolean) => {
     setSubmitting(true);
     try {
-      const res = await fetch("/api/marketplace/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toSubmitPayload(draft, { draft: asDraft, nowIso: new Date().toISOString() })),
-      });
-      if (res.status === 401) {
-        pending.current = asDraft;
-        setGateOpen(true);
-        return;
+      // One payload, except for a multi-product document where the member chose
+      // separate drafts. The first response decides the gate and the error
+      // branch, so a 401 on the first record still preserves the whole intake
+      // rather than half-submitting it.
+      const payloads = submitPayloads(draft, { draft: asDraft, nowIso: new Date().toISOString() });
+      const refs: string[] = [];
+      for (const payload of payloads) {
+        const res = await fetch("/api/marketplace/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401) {
+          pending.current = asDraft;
+          setGateOpen(true);
+          return;
+        }
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          replace("error");
+          return;
+        }
+        if (j.ref) refs.push(j.ref);
       }
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        replace("error");
-        return;
-      }
-      setResultRef(j.ref ?? "");
+      setResultRef(refs.join(", "));
       setSavedDraft(asDraft);
       // The outcome is already decided by the time this resolves: automated
       // publication runs inside the request. So the member is told what
@@ -221,7 +252,7 @@ export default function StructureComposer({
       </div>
 
       <div className="fmain">
-        {step === "intent" && <IntentStep draft={draft} set={set} onNext={() => go("structuring")} t={t} />}
+        {step === "intent" && <IntentStep draft={draft} set={set} icons={icons} onNext={() => go("structuring")} t={t} />}
         {step === "structuring" && <Structuring onDone={() => replace("facts")} t={t} />}
         {step === "facts" && <FactsStep draft={draft} onComplete={runCompletion} onAdd={editField} t={t} />}
         {step === "complete" && (
@@ -271,7 +302,7 @@ export default function StructureComposer({
 type T = ReturnType<typeof useTranslations>;
 
 // ---- S01 intent -> product -------------------------------------------------
-function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; onNext: () => void; t: T }) {
+function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; icons: CategoryIconMap; onNext: () => void; t: T }) {
   const intents: { key: Intent; label: string; desc: string }[] = [
     { key: "requirement", label: t("intent.buy"), desc: t("intent.buyDesc") },
     { key: "offer", label: t("intent.sell"), desc: t("intent.sellDesc") },
@@ -284,24 +315,46 @@ function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p:
   // the same question again in the smaller legacy vocabulary, which cannot
   // express distribution at all and cannot tell a service request from a
   // service offer.
-  const canonicalLabel = draft.canonical
-    ? MARKET_INTENTS.find((i) => i.key === draft.canonical!.intent)?.label ?? null
-    : null;
+  //
+  // Where the journey supplies its own heading, that heading already states
+  // the intent in the member's own words ("What trade service do you need?"),
+  // and printing "Seek a trade service" underneath it says the same thing
+  // twice in a smaller voice.
+  const journey = journeyFor(draft.canonical?.family as MarketFamily, draft.canonical?.intent);
+  const canonicalLabel =
+    draft.canonical && !journey
+      ? MARKET_INTENTS.find((i) => i.key === draft.canonical!.intent)?.label ?? null
+      : null;
 
   // Only a product record is classified. A trade service and a distribution
   // arrangement have no HS code, and pushing either through a six-digit
   // drill-down would put a false classification on a real record.
   const classify = needsHsCode(draft);
 
+  // The product intake carries its own principal heading, and it is the one the
+  // Constitution's editorial emphasis belongs to. Printing the composer's
+  // heading above it would put two h1s and two propositions on one screen.
+  const intakeOwnsHeading = classify && !draft.product;
+
   return (
     <section className="sstep reveal">
-      <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("intent.eyebrow")}</span></div>
-      <h1 className="fphead__h serif">{SUBJECT_HEADING[draft.canonical?.intent ?? ""] ?? t("intent.title")}</h1>
+      {intakeOwnsHeading ? null : (
+        <>
+          <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("intent.eyebrow")}</span></div>
+          <h1 className="fphead__h serif">{journey?.heading ?? t("intent.title")}</h1>
+        </>
+      )}
 
-      {canonicalLabel ? (
-        <p className="orpick__t" style={{ marginBottom: 18 }}>
-          {canonicalLabel}
-        </p>
+      {/* The legacy three-option picker is for a member who arrived with no
+          canonical entrance at all. A member who chose a family already
+          answered this, and re-asking in a vocabulary that cannot express
+          distribution would lose their answer. */}
+      {draft.canonical ? (
+        canonicalLabel ? (
+          <p className="orpick__t" style={{ marginBottom: 18 }}>
+            {canonicalLabel}
+          </p>
+        ) : null
       ) : (
         <div className="tapopts" role="group" aria-label={t("intent.title")}>
           {intents.map((it) => (
@@ -314,86 +367,141 @@ function IntentStep({ draft, set, onNext, t }: { draft: StructureDraft; set: (p:
       )}
 
       <div className={`prodblock${draft.intent ? " on" : ""}`}>
+        {/* The family boundary, in one branch.
+            Ponte asks a product member what they trade and works the
+            classification out (ADR-0012); it asks a services or distribution
+            member which category their work sits in (ADR-0011). These are the
+            two accepted journeys, and neither is a fallback for the other. */}
         {classify ? (
-          <HsDrill draft={draft} set={set} t={t} />
+          draft.product ? (
+            <>
+              <p className="orpick__t" style={{ marginTop: 16 }}>
+                {t("intent.chosen")}: <b style={{ color: "var(--ink)" }}>{draft.product}</b>
+                {draft.hsCode ? ` · HS ${draft.hsCode}` : ""}
+              </p>
+              <div style={{ marginTop: 24 }}>
+                <button className="fbtn fbtn--lg" disabled={!ready} onClick={onNext}>{t("intent.cta")} →</button>
+              </div>
+            </>
+          ) : (
+            // The AI product intake: describe, upload or browse. Browse is the
+            // same HS drill-down it always was, passed in rather than forked,
+            // so a member who prefers the catalogue loses nothing. There is no
+            // Continue underneath it: the intake has its own confirmation, and
+            // a second one would be a weaker confirmation of the same thing.
+            <ProductIntake
+              intent={draft.canonical?.intent === "source_product" ? "source_product" : "offer_product"}
+              renderBrowse={() => <HsDrill draft={draft} set={set} t={t} />}
+              onResolved={(result) => {
+                set(applyResolution(draft, result));
+                onNext();
+              }}
+            />
+          )
         ) : (
-          <SubjectStep draft={draft} set={set} />
+          // Trade services and Distribution open on their own structured
+          // categories rather than a blank line, and the step owns its own
+          // Continue because it walks several questions before it is done.
+          <ClassifyStep draft={draft} set={set} icons={icons} onNext={onNext} t={t} />
         )}
-        {draft.product && (
-          <p className="orpick__t" style={{ marginTop: 16 }}>
-            {/* "Product" is the right word for a product record and the wrong
-                word for a service or a distribution arrangement. The record
-                names itself with the noun it actually is. */}
-            {classify ? t("intent.chosen") : "Stated"}:{" "}
-            <b style={{ color: "var(--ink)" }}>{draft.product}</b>
-            {draft.hsCode ? ` · HS ${draft.hsCode}` : ""}
-          </p>
-        )}
-        <div style={{ marginTop: 24 }}>
-          <button className="fbtn fbtn--lg" disabled={!ready} onClick={onNext}>{t("intent.cta")} →</button>
-        </div>
       </div>
     </section>
   );
 }
 
-/** The heading each canonical entrance opens with, in the member's words. */
-const SUBJECT_HEADING: Record<string, string> = {
-  seek_trade_service: "What trade service do you need?",
-  offer_trade_service: "What trade service do you provide?",
-  seek_distribution_partner: "What market coverage are you looking for?",
-  offer_distribution_or_representation: "What territories and categories do you cover?",
-  seek_brands_or_products_to_represent: "What would you take to your market?",
-};
-
-const SUBJECT_PLACEHOLDER: Record<string, string> = {
-  seek_trade_service: "Pre-shipment inspection on West Africa corridors",
-  offer_trade_service: "Customs brokerage, Rotterdam and Antwerp",
-  seek_distribution_partner: "Distributor for personal care across the GCC",
-  offer_distribution_or_representation: "Exclusive distribution, six GCC markets, skin and hair care",
-  seek_brands_or_products_to_represent: "Food and beverage brands for the Italian market",
-};
-
 /**
- * The subject of a non-product record, stated in the member's own words.
+ * The confirmed intake, folded onto the draft.
  *
- * This is the whole reason the HS drill-down is not universal. There is no HS
- * code for "pre-shipment inspection on West African corridors", and no amount
- * of drilling produces one. The record names what it is, and Ponte structures
- * the rest from there.
+ * Every value here was confirmed by the member on the review screen, which is
+ * why it may be written onto the record at all. Nothing arrives from the model
+ * unseen: a term the document did not state reached the review as `missing`,
+ * and a term the member did not fill is still missing here.
  *
- * A distribution arrangement that later attaches a specific physical product
- * may classify THAT product. The arrangement still has no code of its own, so
- * none is asked for here.
+ * The terms with no field on the draft (pricing basis, contract term,
+ * availability, validity dates, counterparties, signatories) are appended to
+ * the note as labelled lines rather than dropped. `listings` cannot store them
+ * and losing them would be worse than carrying them as words.
  */
-function SubjectStep({
-  draft,
-  set,
-}: {
-  draft: StructureDraft;
-  set: (p: Partial<StructureDraft>) => void;
-}) {
-  const intent = draft.canonical?.intent ?? "";
-  return (
-    <div>
-      <label htmlFor="subject" className="sigsheet__l" style={{ display: "block", marginBottom: 8 }}>
-        State it in one line
-      </label>
-      <input
-        id="subject"
-        className="snote hssearch"
-        style={{ minHeight: "auto", padding: "10px 12px", width: "100%" }}
-        value={draft.product ?? ""}
-        placeholder={SUBJECT_PLACEHOLDER[intent] ?? "State what this record is"}
-        onChange={(e) => set({ product: e.target.value })}
-      />
-      <p className="orpick__t" style={{ marginTop: 10 }}>
-        No HS code is asked for. A trade service and a distribution arrangement are not products,
-        and Ponte will not classify one as if it were.
-      </p>
-    </div>
-  );
+function applyResolution(
+  draft: StructureDraft,
+  result: {
+    products: ResolvedProduct[];
+    terms: CommercialTerms;
+    plan: string | null;
+    documentName: string | null;
+  },
+): Partial<StructureDraft> {
+  const [first, ...rest] = result.products;
+  if (!first) return {};
+
+  const value = (key: keyof CommercialTerms): string | null => result.terms[key].value;
+  const quantityText = value("quantity");
+  const quantityNumber = quantityText ? Number(quantityText.replace(/[^\d]/g, "")) : NaN;
+
+  const carried: [keyof CommercialTerms, string][] = [
+    ["pricingBasis", "Pricing basis"],
+    ["contractTerm", "Contract term"],
+    ["availability", "Availability"],
+    ["validity", "Validity"],
+    ["counterparties", "Named counterparties"],
+    ["signatories", "Signatories"],
+  ];
+  const extra = carried
+    .map(([key, label]) => (value(key) ? `${label}: ${value(key)}.` : null))
+    .filter((line): line is string => line !== null);
+
+  const toDraftResolution = (product: ResolvedProduct): DraftResolution => ({
+    originalWording: product.originalWording,
+    normalised: product.normalised,
+    productKey: product.productKey,
+    synonyms: product.synonyms,
+    categoryPath: product.categoryPath,
+    sector: product.sector,
+    attributes: product.attributes,
+    candidateHs: product.candidateHs,
+    searchText: product.searchText,
+    searchTerms: product.searchTerms,
+  });
+
+  return {
+    product: first.normalised,
+    // The one place the two accepted decisions meet on the data.
+    //
+    // ADR-0011 asks every record for a `productSector` key so a market can be
+    // filtered and counted; ADR-0012 already derived that sector, from the
+    // customs chapter the identification survived. Writing it here answers
+    // ADR-0011's question from ADR-0012's work rather than asking the member a
+    // second time. Empty stays empty: an underivable sector is a gap, and the
+    // ClassifyStep sector picker is still there for a member who wants to say.
+    productSector: first.sector || draft.productSector,
+    // Suggested, unconfirmed, and carried as such. It is not a gate and never
+    // was one on this route.
+    hsCode: first.candidateHs?.code ?? null,
+    resolution: toDraftResolution(first),
+    siblings: rest.map(toDraftResolution),
+    programme: result.plan === "programme",
+    documentName: result.documentName,
+    quantity: Number.isFinite(quantityNumber) && quantityNumber > 0 ? quantityNumber : draft.quantity,
+    unit: value("unit") ?? draft.unit,
+    frequency: value("recurrence") ?? draft.frequency,
+    origin: value("origin") ?? draft.origin,
+    destination: value("destination") ?? draft.destination,
+    incoterm: value("incoterm") ?? draft.incoterm,
+    payment: value("paymentStructure") ?? draft.payment,
+    note: [draft.note, ...extra].filter(Boolean).join(" ") || null,
+  };
 }
+/**
+ * The heading each canonical entrance opens with now lives in
+ * `lib/taxonomy/journey.ts`, alongside the ordered questions it introduces, so
+ * a heading and the questions under it cannot drift apart.
+ *
+ * The blank "State it in one line" field that used to stand here is gone. It
+ * was the only classification a trade service or a distribution arrangement
+ * ever received, and a sentence is not a classification: it cannot be
+ * filtered, matched, counted or searched, and it asked the member to guess
+ * Ponte's vocabulary. `ClassifyStep` asks the structured question instead.
+ */
 
 // The HS drill-down (chapter -> heading -> six-digit) with a search fallback.
 function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
@@ -841,7 +949,12 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
           <p className="pv__note">{t("preview.publicNote")}</p>
           <div className="ledger2">
             {row(t("field.kind"), kind)}
-            {row(t("field.product"), draft.product)}
+            {/* The subject is composed from the categories the member chose,
+                so a record built entirely by tapping still names itself. */}
+            {row(t("field.product"), subjectFor(draft))}
+            {/* The chosen classification is part of the public record, not
+                hidden metadata: it is what a counterparty filters on. */}
+            {classificationRows(draft).map((c) => row(t(`field.${c.field}`), c.value))}
             {row(t("field.hsCode"), draft.hsCode ? `HS ${draft.hsCode}` : null)}
             {row(t("field.quantity"), formatQuantity(draftQuantity(draft)), "quantity")}
             {row(t("field.frequency"), draft.frequency, "quantity")}
@@ -878,6 +991,51 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
       <div style={{ marginTop: 24 }}><button className="fbtn fbtn--secondary fbtn--lg" onClick={onNext}>{t("preview.cta")}</button></div>
     </section>
   );
+}
+
+/**
+ * The classification rows the preview prints, in journey order.
+ *
+ * Only what this record actually carries. A products record shows no partner
+ * type, a services record shows no coverage, and neither shows an empty row
+ * for the other family's questions: a fact that was never this member's to
+ * give is not a gap.
+ */
+function classificationRows(draft: StructureDraft): { field: string; value: string | null }[] {
+  const rows: { field: string; value: string | null }[] = [];
+  const family = draft.canonical?.family;
+
+  if (family === "services") {
+    rows.push({ field: "serviceCategory", value: serviceCategory(draft.serviceCategory)?.label ?? null });
+    const subs = draft.serviceSubcategories
+      .map((k) => serviceSubcategory(k)?.label)
+      .filter((l): l is string => !!l);
+    rows.push({ field: "serviceSubcategory", value: subs.length > 0 ? subs.join(", ") : null });
+  }
+
+  if (family === "distribution") {
+    rows.push({ field: "partnerType", value: partnerType(draft.distributionPartnerType)?.label ?? null });
+    const terms = draft.distributionRelationshipTerms
+      .map((k) => relationshipTerm(k)?.label)
+      .filter((l): l is string => !!l);
+    rows.push({ field: "relationship", value: terms.length > 0 ? terms.join(", ") : null });
+    const scope = coverageScope(draft.coverageScope)?.label ?? null;
+    rows.push({
+      field: "coverage",
+      value: scope && draft.territoryCodes.length > 0
+        ? `${scope} (${draft.territoryCodes.join(", ")})`
+        : scope,
+    });
+  }
+
+  if (family !== "products") {
+    rows.push({
+      field: "sector",
+      value: PRODUCT_SECTORS.find((s) => s.key === draft.productSector)?.label ?? null,
+    });
+  }
+
+  return rows;
 }
 
 // ---- S05 save / submit -----------------------------------------------------
