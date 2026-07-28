@@ -124,10 +124,21 @@ const LUCIDE_BASELINE = [
 /**
  * Files that still contain hand-authored <svg>. May shrink, never grow.
  *
- * `components/ponte/brand/PonteLockup.tsx` is the one permanent entry: the owner
- * ruled the brand lockup an identity asset rather than an interface icon, so it
- * stays an authored SVG. It is listed here rather than exempted so that the
- * count of authored drawings in the product is always visible in one place.
+ * Two entries are permanent, and neither is an interface icon:
+ *
+ * - `components/ponte/brand/PonteLockup.tsx` draws the brand lockup. The owner
+ *   ruled it an identity asset rather than an interface icon, so it stays an
+ *   authored SVG.
+ * - `components/ponte/bridge/BridgeRoute.tsx` draws the Bridge deck. It is
+ *   structural interaction geometry from the approved Bridge System, whose own
+ *   stylesheet defines `.br__deck path` and its stroke classes. Constitution
+ *   section 8 makes that package authoritative and section 7's prohibition is
+ *   on ad hoc *icons*; a deck is not one, and there is no registry key that
+ *   could express it.
+ *
+ * Both are listed rather than exempted, so the number of hand-authored drawings
+ * in the product stays visible in one place and each new one has to be argued
+ * for here.
  */
 const RAW_SVG_BASELINE = [
   "app/[locale]/dev/design/page.tsx",
@@ -144,6 +155,7 @@ const RAW_SVG_BASELINE = [
   "components/hs/hsCategories.tsx",
   "components/icons/index.tsx",
   "components/ponte/brand/PonteLockup.tsx",
+  "components/ponte/bridge/BridgeRoute.tsx",
   "components/signals/SignalCard.tsx",
   "components/structure/StructureComposer.tsx",
 ];

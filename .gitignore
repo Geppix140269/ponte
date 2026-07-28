@@ -53,3 +53,9 @@ build-verify.log
 
 # Design mockups previewed locally. Never shipped.
 *.local.html
+
+# Playwright: browsers, traces and run output. Evidence PNGs are committed
+# under docs/codex/audits/, but nothing generated at run time is.
+/e2e/.playwright/
+/playwright-report/
+/test-results/

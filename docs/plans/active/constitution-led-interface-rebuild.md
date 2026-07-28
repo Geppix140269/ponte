@@ -149,6 +149,15 @@ production verification.
   **Screenshot capture unavailable in the implementing environment; visual
   evidence is outstanding and is recorded as such in section 13.**
 
+- **27 Jul 2026** — Slice 4 (`design/landing-family-action-bridges`) implemented,
+  out of the audit's suggested order: the owner directed the landing bridges
+  before the full Bridge primitive set. The temporary three-column family/action
+  grid is replaced by the approved Family Bridge and revealed Action Bridge. All
+  nine destinations preserved and asserted. `BridgeRoute` is the first Bridge
+  React primitive (`PB.route`), built against the approved stylesheet because
+  **the approved engine source is missing from the repository** (see section 12).
+  26 new tests. `governance:check` and `verify` pass.
+
 ## 12. Decisions and discoveries
 
 - **Correction to the Phase 1 audit:** `.agent/PLANS.md` **is** tracked on
@@ -193,6 +202,28 @@ production verification.
   Start a Deal posts to `/api/marketplace/submit` and Find posts to
   `/api/marketplace/interest`. Retiring the pages and retiring the API are
   separate questions, and only the first is arguable.
+- **BLOCKING FOR THE BRIDGE PROGRAMME: the approved engine source is not in the
+  repository.** `design/authority/bridge/v1/source/ponte-bridge.js` is named by
+  `SOURCE-MANIFEST.md` and by the implementation notes, but the only artefact
+  present is `source/archive/ponte-bridge.js.gz.b64.part01`: a single 3 KB chunk
+  of a gzip stream that does not decompress. The CI job that would fetch the
+  package, `Import approved Bridge package`, fails on the Google Drive checksum
+  and has failed on every run it has ever had. The reference PNGs are likewise
+  recorded by checksum only and are not in the repository.
+
+  What **is** present and complete is `source/ponte-bridge.css`, which the README
+  calls the "approved visual and motion rules", plus the implementation notes.
+  The notes authorise translating the engine into React primitives, so slice 4
+  was built against those two. Every decision the missing engine would have made
+  is marked `ENGINE DECISION` in `components/ponte/bridge/BridgeRoute.tsx`, and
+  they are: the deck's path shape, the station composition order, the deck
+  wrapper's height, and the placement of the deck line. **These need checking
+  against the reference renders before the Bridge programme goes further**, since
+  slices 5 to 11 all build on this primitive.
+- The approved stylesheet has **no icon slot on a station** and the PR scope
+  requires Ponte Flow icons on the Family Bridge. `brst__ic` is added in
+  `components/ponte/bridge/bridge-integration.css` as an addition, not an
+  override. Recorded as a Bridge authority gap.
 
 ## 13. Final evidence
 

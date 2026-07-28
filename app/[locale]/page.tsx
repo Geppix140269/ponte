@@ -6,13 +6,19 @@ import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import { PRODUCT_SECTORS } from "@/lib/taxonomy/market";
-import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import LandingBridges from "@/components/ponte/bridge/LandingBridges";
+import { landingFamilies } from "@/lib/landing/families";
 import "@/components/desk/desk.css";
+// The approved Bridge stylesheet, imported from the authority package rather
+// than copied into the product. There is one source for the geometry, and a
+// change to it is a change to the authority, which is what CODEOWNERS protects.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
 
 /**
  * The entrance, in The Desk.
@@ -65,13 +71,6 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
   };
 }
 
-/** What each family covers, in the member's own vocabulary. */
-const FAMILY_SCOPE: Record<string, string> = {
-  products: "Physical goods, classified against the HS taxonomy",
-  services: "Freight, customs, inspection, certification, finance",
-  distribution: "Distributors, agents, representation, market entry",
-};
-
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
@@ -103,40 +102,17 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 distribution partners.
               </p>
 
-              {/* Every family is actionable. A family with no externally
+              {/* The approved Family Bridge, and the Action Bridge it reveals.
+                  Every family is actionable: a family with no externally
                   observed inventory is still a market a member can enter by
                   creating a record, so Trade services and Distribution carry
-                  the same weight of action as Products. Nothing here is a card
-                  that looks interactive and does nothing. */}
-              <div className="fams">
-                {marketEntrances().map((family) => (
-                  <section key={family.key} className="fam">
-                    <div className="fam__h">
-                      <PonteIcon name={family.icon} size={26} />
-                      <div>
-                        <b>{family.label}</b>
-                        <span>{FAMILY_SCOPE[family.key]}</span>
-                      </div>
-                    </div>
+                  the same weight of action as Products.
 
-                    <div className="fam__a">
-                      {family.discovery ? (
-                        <Link className="fam__go fam__go--1" href={family.discovery.href}>
-                          {family.discovery.label}
-                          <span>{family.discovery.note}</span>
-                        </Link>
-                      ) : null}
-
-                      {family.create.map((entrance) => (
-                        <Link key={entrance.intent} className="fam__go" href={entrance.href}>
-                          {entrance.label}
-                          <span>{entrance.note}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
+                  The destinations are not built here. `marketEntrances()`
+                  derives them from the canonical taxonomy, exactly as the
+                  replaced grid did, so every route and query string is the one
+                  that shipped before. */}
+              <LandingBridges families={landingFamilies()} />
             </div>
           </div>
         </section>
