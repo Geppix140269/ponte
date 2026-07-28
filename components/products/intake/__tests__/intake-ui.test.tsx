@@ -50,6 +50,7 @@ import {
   type IntakeAction,
   type ProductIntent,
 } from "../../../../lib/products/intake";
+import type { IdentifiedProduct, ProductCandidate } from "../../../../lib/products/model";
 import { resolveProduct } from "../../../../lib/products/resolve";
 import { scanForProducts } from "../../../../lib/products/scan";
 /* eslint-enable import/first */
@@ -364,11 +365,16 @@ test("a catalogue attribute the document repeated verbatim is not printed twice"
   assert.ok(both.includes("10 ppm maximum"), "Ponte's differing value was hidden");
 });
 
-test("the four provenance words are four different words", () => {
-  const words = new Set(Object.values(PROVENANCE_WORD));
-  assert.equal(words.size, 4, "two provenance states share one word, which collapses them");
+test("every provenance state has a word of its own", () => {
+  const words = Object.values(PROVENANCE_WORD);
+  assert.equal(new Set(words).size, words.length, "two provenance states share one word, which collapses them");
   assert.equal(PROVENANCE_WORD.ponte_verified, "Verified by Ponte");
   assert.notEqual(PROVENANCE_WORD.extracted, PROVENANCE_WORD.member_confirmed);
+  // The state added after the first owner review, and the reason the curated
+  // catalogue is no longer the boundary of what Ponte can understand. It must
+  // say plainly that the member has not agreed to it.
+  assert.match(PROVENANCE_WORD.ai_identified, /not yet confirmed/i);
+  assert.notEqual(PROVENANCE_WORD.ai_identified, PROVENANCE_WORD.member_confirmed);
 });
 
 test("each provenance carries its own marker class, so colour is not the only carrier", () => {
@@ -442,8 +448,8 @@ test("every failure state names what happened and offers a way on", () => {
     },
     {
       action: { type: "resolution", outcome: resolveProduct("intergalactic widgets") },
-      names: /did not recognise that yet/,
-      wayOn: /upload the document|browse/,
+      names: /could not classify that confidently yet/,
+      wayOn: /Add a little more detail/,
     },
   ];
 
@@ -462,9 +468,76 @@ test("a blocked format is a blocked state with a reason, not an error", () => {
   assert.ok(typeof shown!.props.detail === "string" && (shown!.props.detail as string).length > 10);
 });
 
-test("an unmatched product explains what Ponte looked for and refuses to guess", () => {
+test("the unmatched state describes Ponte's limit, and never blames the member", () => {
   const rendered = text(seeded({ type: "resolution", outcome: resolveProduct("intergalactic widgets") }));
-  assert.match(rendered, /will not guess a product you did not name/);
+
+  /*
+   * The copy the owner corrected in review.
+   *
+   * It used to read "Ponte will not guess a product you did not name", shown to
+   * a member who had named their product perfectly well: Ponte had failed to
+   * recognise `avocado` and the sentence blamed them for it. The sentence is
+   * gone, and this test is what stops it coming back.
+   */
+  assert.ok(
+    !/will not guess a product you did not name/.test(rendered),
+    "the sentence that blamed the member for Ponte's limit is back",
+  );
+  assert.ok(!/did not recognise/i.test(rendered), "the state still leads with what the member failed to do");
+
+  // What it says instead: Ponte's limit, what Ponte tried, and four ways on.
+  assert.match(rendered, /could not classify that confidently yet/);
+  assert.match(rendered, /product vocabulary, spelling correction and the customs nomenclature/);
+  assert.match(rendered, /Add a little more detail/);
+  assert.match(rendered, /upload a document/);
+  assert.match(rendered, /browse categories/);
+});
+
+test("a spelling correction is offered as a question, never applied silently", () => {
+  // A candidate carrying a correction makes the surface ask, because a
+  // correction the member cannot see is one they cannot refuse.
+  const identifiedAvocado: IdentifiedProduct = {
+    identified: true,
+    key: "identified:avocado-fresh",
+    name: "Avocado, fresh",
+    sector: "agri",
+    group: "Fresh fruit",
+    synonyms: [],
+    standards: [],
+    attributes: [],
+    hs: { code: "080440", description: "Fruit, edible; avocados, fresh or dried" },
+    hsCandidates: [{ code: "080440", description: "Fruit, edible; avocados, fresh or dried" }],
+    distinguisher: "The fresh fruit.",
+    correction: "avocado",
+    generic: "Avocado",
+    basis: "model",
+  };
+  const corrected: ProductCandidate = {
+    product: identifiedAvocado,
+    score: 0.8,
+    band: "close",
+    matchedOn: [{ kind: "semantic", term: 'read as "avocado"' }],
+  };
+  const page = seeded({
+    type: "resolution",
+    outcome: { kind: "candidates", candidates: [corrected], wording: "avogado" },
+  });
+  const rendered = text(page);
+  assert.match(rendered, /Did you mean avocado\?/);
+  assert.match(rendered, /You wrote/);
+  assert.match(rendered, /avogado/);
+
+  // And the identified product says so on its own row rather than passing as
+  // something Ponte already held.
+  const rows = descend(page, (el) => Array.isArray(el.props.candidates), "the candidate rows");
+  assert.match(text(rows), /Identified, not confirmed/);
+  // Split across JSX children, so matched in parts rather than as one string.
+  assert.match(text(rows), /Suggested customs classification: HS/);
+  assert.match(text(rows), /080440/);
+  assert.match(text(rows), /You confirm it later/);
+  // The sector is derived from the customs chapter, not taken from the model:
+  // 0804 is chapter 8, which the canonical taxonomy files under agriculture.
+  assert.match(text(rows), /Products \/ Agriculture & live animals \/ Fresh fruit/);
 });
 
 test("a multi-product document offers both plans and pre-selects neither", () => {

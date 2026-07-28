@@ -282,6 +282,18 @@
   border-style: dashed;
 }
 
+/* Identified by Ponte and not yet confirmed: an open square, drawn in the
+   review token. Weaker than a member confirmation, stronger than nothing, and
+   a different shape from both so it survives greyscale. */
+.ponte-find .pprov--identified::before {
+  border-style: solid;
+  transform: rotate(45deg);
+}
+
+.ponte-find .pprov--identified {
+  color: var(--review);
+}
+
 /* Confirmed by the member: a filled circle. */
 .ponte-find .pprov--member::before {
   border-radius: 50%;

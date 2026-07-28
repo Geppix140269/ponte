@@ -25,6 +25,7 @@ import type { DocumentExtraction } from "./extract-document";
 // From `terms`, not `extract-document`: this module runs in the browser, and
 // the extraction reaches the model through `lib/ai.ts`, which reaches Supabase.
 import { emptyTerms, TERM_KEYS, TERM_LABELS, type CommercialTerms } from "./terms";
+import { pathFor } from "./cascade";
 import { productByKey, sectorLabel } from "./catalogue";
 import {
   confirmed as confirmedValue,
@@ -190,7 +191,11 @@ function reviewForCandidate(
   shared: CommercialTerms,
   productTerms: CommercialTerms,
 ): ReviewState {
-  const resolved = resolveFrom(candidate, wording, sectorLabel(candidate.product.sector));
+  // `pathFor` rather than a bare sector label: an identified product may have
+  // no sector at all when no customs chapter was confirmed for it, and
+  // "Products / / Fresh fruit / Avocado" is not a category path.
+  const path = pathFor(candidate.product);
+  const resolved = { ...resolveFrom(candidate, wording, ""), categoryPath: path };
   return {
     products: [
       { id: candidate.product.key, product: resolved, documentAttributes: [], terms: productTerms, included: true },
@@ -417,9 +422,33 @@ export function intakeReducer(session: IntakeSession, action: IntakeAction): Int
       };
     }
 
-    case "confirm":
+    case "confirm": {
       if (session.stage.kind !== "review") return session;
-      return { ...session, stage: { kind: "confirmed", review: session.stage.review } };
+      /*
+       * The confirmation gate, and the reason `ai_identified` is safe.
+       *
+       * A product Ponte worked out arrives at the review marked as identified
+       * and not yet agreed to. Pressing Confirm is the member agreeing, and it
+       * is the only thing in the product that can turn that marker into
+       * "confirmed by you". Nothing reaches a draft without passing through
+       * here.
+       */
+      const review = session.stage.review;
+      return {
+        ...session,
+        stage: {
+          kind: "confirmed",
+          review: {
+            ...review,
+            products: review.products.map((entry) =>
+              entry.product.provenance === "ai_identified"
+                ? { ...entry, product: { ...entry.product, provenance: "member_confirmed" as const } }
+                : entry,
+            ),
+          },
+        },
+      };
+    }
 
     case "draftCreated":
       if (session.stage.kind !== "confirmed") return session;

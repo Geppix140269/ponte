@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { resolveProductSemantically } from "@/lib/products/ai-resolve";
+import { getHsCode, searchHsCodes } from "@/lib/hs";
+import { resolveThroughCascade } from "@/lib/products/cascade";
 import { resolveProduct } from "@/lib/products/resolve";
 
 export const runtime = "nodejs";
@@ -25,9 +26,16 @@ export const dynamic = "force-dynamic";
  * sign in before Ponte will understand their product is the behaviour this
  * change exists to remove.
  *
- * `semantic: false` forces the free deterministic path. The client uses it for
- * the keystroke-time preview so typing never spends a token; the Resolve action
- * asks for the full answer.
+ * `semantic: false` forces the free deterministic path over the curated
+ * catalogue only. The client uses it for a keystroke-time preview so typing
+ * never spends a token; the Resolve action asks for the full cascade.
+ *
+ * The cascade is wired to the real HS 2022 catalogue here, and only here:
+ * `getHsCode` checks that a customs code the model proposed actually exists
+ * before it is ever shown, and `searchHsCodes` is the deterministic fallback
+ * when the model is unavailable. Both degrade to empty rather than throwing
+ * when the catalogue table is absent, so a missing HS import weakens the answer
+ * and never breaks the journey.
  */
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -53,11 +61,20 @@ export async function POST(req: NextRequest) {
 
   const semantic = (body as { semantic?: unknown })?.semantic !== false;
 
-  // The lexical stage always runs and always answers. The semantic stage may
-  // fail, and when it does `resolveProductSemantically` returns the lexical
-  // outcome rather than an error, so this route has no failure branch that
-  // leaves the member with nothing.
-  const outcome = semantic ? await resolveProductSemantically(text) : resolveProduct(text);
+  // Every stage degrades to the one below it, so this route has no failure
+  // branch that leaves the member with nothing.
+  const outcome = semantic
+    ? await resolveThroughCascade(text, {
+        hsLookup: async (code) => {
+          const found = await getHsCode(code);
+          return found ? { code: found.code, description: found.short_title || found.description } : null;
+        },
+        hsSearch: async (query) => {
+          const hits = await searchHsCodes(query, 6);
+          return hits.map((h) => ({ code: h.code, description: h.short_title || h.description }));
+        },
+      })
+    : resolveProduct(text);
 
   return NextResponse.json({ ok: true, outcome });
 }

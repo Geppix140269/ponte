@@ -2,6 +2,62 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 - The product resolver is a cascade, not a catalogue lookup
+
+**Blocking defect found at owner review.** Giuseppe typed `avocado` into Offer a
+product and Ponte answered "did not recognise that yet". The model stage was
+restricted to returning keys that already existed in Ponte's curated catalogue,
+so the twenty-five seeded products were the boundary of everything Ponte could
+understand. That does not satisfy the approved rule that users describe what they
+trade and Ponte identifies, structures and classifies it.
+
+**Decision: fix the architecture, not the data.** Adding `avocado` as a
+twenty-sixth entry would have left the ceiling exactly where it was.
+
+**What replaced it.** A six-stage cascade in `lib/products/cascade.ts`: exact
+over the curated catalogue, fuzzy correction of a curated term, unrestricted
+model identification, the HS 2022 catalogue lexically when the model is
+unavailable, Ponte-sector mapping derived from the surviving customs chapter, and
+a clarification only where the product itself is genuinely ambiguous.
+
+**The safety rule moved rather than being removed, and is stronger for it.** The
+old rule was a ceiling on what the model could say. The new one constrains what
+its answer may become: an identified product carries the new `ai_identified`
+provenance, is scored below any curated match, has every proposed customs code
+checked against the real catalogue and dropped if it does not exist, has its
+sector derived from that code rather than from the model, surfaces a spelling
+correction as a question rather than applying it, and cannot reach a draft until
+the member confirms it. AI may recommend; it still may not publish, verify or
+commit, and the separate rule against inventing commercial terms a document never
+stated is untouched.
+
+**Two catalogues, because they fail in opposite directions.** Verified against
+the deploy preview: `avocado` in HS 2022 returns 0804.40 avocados, and `gas oil`
+in the same index returns seamless steel drill pipe. A customs nomenclature has
+breadth and no commercial vocabulary; the curated catalogue has commercial depth
+and no breadth. Neither alone is a resolver.
+
+**Copy corrected at the owner's instruction.** The unmatched state's closing
+sentence, "Ponte will not guess a product you did not name", was shown to a
+member who had named their product correctly and blamed them for Ponte's limit.
+It now reads "We could not classify that confidently yet", states what Ponte
+tried, and offers four ways on. A test pins it so the sentence cannot return.
+
+**Deferred by owner decision, unchanged:** durable document storage (issue #72)
+and the microphone icon commission.
+
+**Affected areas:** `lib/products/cascade.ts`, `lib/products/identify.ts` and
+`lib/products/fuzzy.ts` (all new), `lib/products/model.ts`,
+`lib/products/intake.ts`, `lib/products/resolve.ts`, `lib/products/ai-resolve.ts`
+(deleted, superseded), `app/api/products/resolve`,
+`components/products/intake/*`, `app/[locale]/dev/product-intake/states.ts`,
+`e2e/product-intake.spec.ts`, `docs/schemas/product-resolution.schema.json`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md`,
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no feature flag, no deployment and no
+merge. PR #71 remains open pending design approval.
+
 ## 28 July 2026 — AI product intake and document-to-deal, implemented
 
 **Decision implemented:** the owner-approved product decision recorded in

@@ -1,7 +1,7 @@
 "use client";
 
-import type { ProductCandidate } from "@/lib/products/model";
-import { categoryPathFor } from "@/lib/products/resolve";
+import { isLowConfidence, pathFor } from "@/lib/products/cascade";
+import { isIdentified, type ProductCandidate } from "@/lib/products/model";
 
 /**
  * The ranked candidates, as a register of rows.
@@ -42,7 +42,7 @@ const KIND_WORD: Record<string, string> = {
   exact_synonym: "trade term",
   all_tokens: "words matched",
   partial_tokens: "partly matched",
-  semantic: "read from your description",
+  semantic: "how Ponte read it",
 };
 
 export interface CandidateRowsProps {
@@ -56,8 +56,10 @@ export default function CandidateRows({ candidates, onChoose, ariaLabel }: Candi
   return (
     <div className="pcand" role="group" aria-label={ariaLabel}>
       {candidates.map((candidate) => {
-        const path = categoryPathFor(candidate.product);
+        const path = pathFor(candidate.product);
         const terms = candidate.matchedOn.slice(0, 4);
+        const identified = isIdentified(candidate.product);
+        const unsure = isLowConfidence(candidate);
         return (
           <button
             key={candidate.product.key}
@@ -68,7 +70,12 @@ export default function CandidateRows({ candidates, onChoose, ariaLabel }: Candi
           >
             <span className="pcand__h">
               <span className="pcand__n">{candidate.product.name}</span>
-              <span className="pcand__band">{BAND_WORD[candidate.band]}</span>
+              {/* Where Ponte's knowledge came from, in words, on every row.
+                  A curated product is one Ponte holds; an identified one is
+                  one Ponte worked out and you have not agreed to yet. */}
+              <span className="pcand__band">
+                {identified ? "Identified, not confirmed" : BAND_WORD[candidate.band]}
+              </span>
             </span>
 
             <span className="pcand__path">{path.join(" / ")}</span>
@@ -86,14 +93,30 @@ export default function CandidateRows({ candidates, onChoose, ariaLabel }: Candi
               ))}
             </span>
 
+            {unsure ? (
+              <span className="pcand__d">
+                Ponte is not confident about this one. Take it if it is right, or add a word or two of detail.
+              </span>
+            ) : null}
+
             {candidate.product.hs ? (
               <span className="pcand__hs">
                 {/* Suggested, and said so. The HS code is downstream of
-                    understanding the product, never the gate in front of it. */}
-                Suggested customs classification: HS {candidate.product.hs.code}. You confirm it later.
+                    understanding the product, never the gate in front of it.
+                    Every code shown here exists in HS 2022: one the model
+                    proposed and the catalogue could not confirm was dropped
+                    before it reached this row. */}
+                Suggested customs classification: HS {candidate.product.hs.code}
+                {candidate.product.hs.description ? `, ${candidate.product.hs.description}` : ""}. You confirm it later.
+                {isIdentified(candidate.product) && candidate.product.hsCandidates.length > 1
+                  ? ` Other possibilities: ${candidate.product.hsCandidates
+                      .slice(1)
+                      .map((c) => `HS ${c.code}`)
+                      .join(", ")}.`
+                  : ""}
               </span>
             ) : (
-              <span className="pcand__hs">No customs classification suggested yet.</span>
+              <span className="pcand__hs">No customs classification suggested yet. You can add one later.</span>
             )}
           </button>
         );

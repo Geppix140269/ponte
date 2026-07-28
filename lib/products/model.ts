@@ -15,10 +15,14 @@
 import type { MarketFamily } from "@/lib/taxonomy/market";
 
 /**
- * Where a value came from. Four states, never collapsed into one "verified"
- * treatment, because the Design Constitution section 14 says evidence,
- * declaration, review and verification are separate and the ADR names these
- * four exactly.
+ * Where a value came from. Never collapsed into one "verified" treatment,
+ * because Design Constitution section 14 says evidence, declaration, review and
+ * verification are separate states.
+ *
+ * The decision record names four; `ai_identified` is a fifth, added after the
+ * first owner review, and the note below `PRODUCED_PROVENANCE` says why. It
+ * sits *below* `member_confirmed`, not beside it: it is the weakest thing Ponte
+ * will put on a screen, and it says so in words.
  *
  * `ponte_verified` is declared here and is never produced by this journey.
  * Ponte does not verify a product claim today, and the review screen renders
@@ -26,10 +30,42 @@ import type { MarketFamily } from "@/lib/taxonomy/market";
  * obtained. It exists in the type so the four states stay visibly distinct and
  * so the day verification arrives it has somewhere to land.
  */
-export type Provenance = "extracted" | "member_confirmed" | "ponte_verified" | "missing";
+export type Provenance =
+  | "extracted"
+  | "ai_identified"
+  | "member_confirmed"
+  | "ponte_verified"
+  | "missing";
 
-/** The provenance values a member-facing surface may currently produce. */
-export const PRODUCED_PROVENANCE: readonly Provenance[] = ["extracted", "member_confirmed", "missing"];
+/**
+ * `ai_identified` is the fifth state, and it was added because the fourth was
+ * being asked to do a job it could not.
+ *
+ * The first build let the model return only keys that already existed in
+ * Ponte's curated catalogue. The intent was "AI must not invent a product". The
+ * effect was that the catalogue became the boundary of everything Ponte could
+ * understand: a member typing `avocado`, a product traded by the million
+ * tonne, was told Ponte found nothing close.
+ *
+ * The safety property is preserved by provenance rather than by a ceiling.
+ * Ponte may now identify any product a member names, and what it identifies
+ * arrives marked `ai_identified`: read as "Ponte worked this out, and you have
+ * not agreed to it yet". It can never become `member_confirmed` without the
+ * member saying so, it can never become `ponte_verified` on this journey at
+ * all, and no draft is created from it until it is confirmed.
+ *
+ * That is the same rule the decision record states: AI may extract, structure,
+ * compare, explain and recommend, and must not silently publish, verify or
+ * commit. Identifying a product the member has just named is recommending, not
+ * inventing. Inventing is asserting a commercial term the member never gave,
+ * which is a different rule and is still enforced separately.
+ */
+export const PRODUCED_PROVENANCE: readonly Provenance[] = [
+  "extracted",
+  "ai_identified",
+  "member_confirmed",
+  "missing",
+];
 
 /**
  * One fact, with where it came from and the words it came from.
@@ -83,15 +119,14 @@ export interface CandidateClassification {
 }
 
 /**
- * One product in the canonical Ponte vocabulary.
+ * What every product Ponte can rank has in common, however Ponte came to know
+ * it: a curated catalogue entry, or one identified from the member's own words.
  *
- * This is the layer the HS catalogue cannot provide. HS 2022 is a customs
- * nomenclature: it will tell you that 2710.19 covers certain petroleum oils,
- * and it will never tell you that a trader who writes "gas oil", one who writes
- * "EN590" and one who writes "ULSD 10ppm" all mean the same thing. That
- * knowledge is commercial, and it lives here.
+ * The shared shape is what lets the ranking, the candidate rows, the review
+ * screen and the draft treat both alike. What differs is provenance, and that
+ * is carried on the candidate rather than smuggled into the identity.
  */
-export interface CatalogueProduct {
+export interface ProductIdentity {
   /** Stable key. Never derived from the name. */
   key: string;
   /** The normalised Ponte product name, as a trader would recognise it. */
@@ -124,6 +159,59 @@ export interface CatalogueProduct {
    * candidate row, and the reason an ambiguity screen is answerable.
    */
   distinguisher: string;
+}
+
+/**
+ * One product in the curated Ponte vocabulary.
+ *
+ * This is the layer the HS catalogue cannot provide. HS 2022 is a customs
+ * nomenclature: it will tell you that 2710.19 covers certain petroleum oils,
+ * and it will never tell you that a trader who writes "gas oil", one who writes
+ * "EN590" and one who writes "ULSD 10ppm" all mean the same thing. That
+ * knowledge is commercial, and it lives here.
+ *
+ * It is depth, not breadth. `IdentifiedProduct` is the breadth.
+ */
+export type CatalogueProduct = ProductIdentity;
+
+/**
+ * A product Ponte worked out from what the member wrote, rather than one it
+ * already held.
+ *
+ * The whole point of the resolver after the first owner review: the curated
+ * catalogue is where Ponte knows a market deeply, and it must not be the limit
+ * of what Ponte can understand. An identified product is a real answer, is
+ * ranked beside curated ones, and is honest about being weaker: it says it was
+ * identified rather than confirmed, it carries its own confidence, and it
+ * cannot reach a draft without the member agreeing to it.
+ */
+export interface IdentifiedProduct extends ProductIdentity {
+  /** Always true. The discriminator against a curated entry. */
+  identified: true;
+  /**
+   * The spelling correction applied, when one was. `avogado` -> `avocado`.
+   * Surfaced as "Did you mean...?" rather than silently swapped, because a
+   * correction the member cannot see is a correction they cannot refuse.
+   */
+  correction: string | null;
+  /**
+   * The generic commercial product, when the member named a variety or a
+   * grade of one: "Avocado" for "Hass avocado". Null when the name is already
+   * generic.
+   */
+  generic: string | null;
+  /**
+   * Further candidate customs headings, downstream and confirmable. Every one
+   * has been checked against the real HS catalogue; an invented code does not
+   * survive that check.
+   */
+  hsCandidates: readonly { code: string; description: string }[];
+  /** How Ponte came to this. Shown so the member can judge it. */
+  basis: "model" | "customs_catalogue";
+}
+
+export function isIdentified(product: ProductIdentity): product is IdentifiedProduct {
+  return (product as IdentifiedProduct).identified === true;
 }
 
 /** Why a candidate matched, in the resolver's own terms. */
@@ -216,7 +304,15 @@ export function resolveFrom(
   candidate: ProductCandidate,
   originalWording: string,
   sectorLabel: string,
-  provenance: Provenance = "member_confirmed",
+  /**
+   * Defaults to how Ponte came by the product rather than to a confirmation.
+   *
+   * A curated product the member picked from a list they read is theirs; a
+   * product Ponte identified from their words is Ponte's until they say
+   * otherwise, and the review screen has to be able to say which. The
+   * confirmation itself happens in the reducer, on the Confirm action.
+   */
+  provenance: Provenance = isIdentified(candidate.product) ? "ai_identified" : "member_confirmed",
 ): ResolvedProduct {
   const p = candidate.product;
   const searchTerms = Array.from(
@@ -233,7 +329,7 @@ export function resolveFrom(
     normalised: p.name,
     productKey: p.key,
     synonyms: [...p.synonyms, ...p.standards],
-    categoryPath: ["Products", sectorLabel, p.group, p.name],
+    categoryPath: ["Products", sectorLabel, p.group, p.name].filter(Boolean),
     attributes: p.attributes,
     candidateHs: p.hs ? { code: p.hs.code, description: p.hs.description, confirmed: false } : null,
     searchText: [originalWording, p.name, ...p.synonyms, ...p.standards].join(" "),

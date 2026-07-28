@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import IntakeStateGallery from "./IntakeStateGallery";
-import { GALLERY } from "./states";
+import { gallery } from "./states";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
 import "@/design/authority/bridge/v1/source/ponte-bridge.css";
@@ -38,7 +38,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ProductIntakeStatesPage({
+export default async function ProductIntakeStatesPage({
   params,
   searchParams,
 }: {
@@ -49,7 +49,8 @@ export default function ProductIntakeStatesPage({
   setRequestLocale(params.locale);
 
   const only = searchParams?.only;
-  const states = only ? GALLERY.filter((s) => s.id === only) : GALLERY;
+  const all = await gallery();
+  const states = only ? all.filter((s) => s.id === only) : all;
   if (states.length === 0) notFound();
 
   return (

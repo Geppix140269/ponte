@@ -10,9 +10,11 @@
  * to the question. There was no notion of a synonym, a standard or a grade
  * anywhere in the product.
  *
- * This module is deterministic, pure and free. It is stage one; the metered
- * semantic stage in `./ai-resolve.ts` only runs when this one cannot answer
- * confidently, so the common case costs nothing and is reproducible in a test.
+ * This module is deterministic, pure and free. It is **stage one of the cascade
+ * in `./cascade.ts`**, which runs fuzzy correction, model identification and a
+ * customs-catalogue fallback behind it. It answers over Ponte's *curated*
+ * catalogue only, and a member naming something outside it is not this module's
+ * failure: it is where the cascade takes over.
  *
  * ## The two rules that shaped the scoring
  *

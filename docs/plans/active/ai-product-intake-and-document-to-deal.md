@@ -251,31 +251,63 @@ lib/taxonomy/market.ts               PRODUCT_SECTORS, the category hierarchy
 lib/hs/index.ts                      the candidate HS classification, downstream
 ```
 
-### The resolver
+### The resolver: a cascade, not a lookup
 
-Two stages, in this order, because the first is free and deterministic and the
-second costs tokens:
+**Rewritten after the first owner review.** The original design had two stages
+and one fatal property: the model could return only keys that already existed in
+the curated catalogue. The intent was "AI must not invent a product". The effect
+was that the catalogue became the boundary of everything Ponte could understand,
+and the owner found it by typing `avocado` and being told Ponte found nothing
+close. A resolver whose ceiling is its own seed data does not satisfy "users
+describe what they trade; Ponte identifies it".
 
-1. **Lexical and synonym stage** (`resolve.ts`, pure). Normalises the input
-   (case, punctuation, whitespace, `EN590` to `en 590`, `10ppm` to `10 ppm`),
-   then scores every catalogue entry over its name, synonyms, standards,
-   abbreviations and attribute terms. Scoring is transparent: exact synonym,
-   standard designation, all-token, partial-token, each with a fixed weight, and
-   each recorded as the candidate's `matchedOn` so the rationale is the truth
-   rather than prose.
-2. **Semantic stage** (`ai-resolve.ts`). Runs when the lexical stage returns no
-   confident candidate, or when the input is not recognisably English. Asks the
-   model to name the catalogue entries the description corresponds to, from the
-   catalogue's own keys, and to say why. **The model may only return keys that
-   exist**; anything else is discarded, so the model cannot invent a product.
-   Returns null on failure, and the lexical result stands.
+Six stages, in `lib/products/cascade.ts`, each falling through to the next:
 
-`gas oil` resolves at stage 1: it normalises to `gas oil`, which is a recorded
-synonym of `gasoil-10ppm-en590`, and also a partial-token match on
-`gasoil-500ppm`, `gasoil-50ppm` and `automotive-gasoil`. Four ranked candidates,
-top one not clear of the runner-up by the confirmation margin, so the state is
-`ambiguous` and the member is asked which grade. That is the required behaviour
-in both directions: never a no-op, and never a silent pick.
+| # | Stage | Cost | Answers |
+|---|---|---|---|
+| 1 | Exact, over the curated catalogue | free | `EN 590`, `ULSD`, `gas oil` |
+| 2 | Fuzzy, Damerau-Levenshtein over catalogue terms | free | `gasoill`, `icumsa 54` |
+| 3 | Model identification, unrestricted | metered | `avocado`, `avogado`, `mandorle` |
+| 4 | The HS 2022 catalogue, lexically | free | `avocado` when the model is down |
+| 5 | Sector mapping, from the surviving HS chapter | free | every identified product |
+| 6 | Clarification, only where genuinely ambiguous | free | `palm`, `sugar` |
+
+Stages 1, 2 and 4 are deterministic, so the common cases are reproducible in a
+unit test and cost nothing. Stage 3 is reached only when the free stages cannot
+answer.
+
+**Why two catalogues.** They fail in opposite directions, and the deploy preview
+proves it: `avocado` against the HS index returns 0804.40 *avocados* (breadth,
+no commercial vocabulary), while `gas oil` against the same index returns
+seamless steel drill pipe (a customs nomenclature has no idea what a trader
+means). The curated catalogue is depth where Ponte knows a market; HS 2022 is
+breadth across everything traded; the model spans both and handles spelling,
+language and form.
+
+### The safety property, restated
+
+The old rule was a ceiling on the output. The new rule is a constraint on what
+the output may *become*, and it is strictly stronger:
+
+1. an identified product carries provenance `ai_identified`, rendered as
+   "Identified by Ponte, not yet confirmed";
+2. it cannot reach a draft without the member confirming it. The reducer's
+   `confirm` case is the only thing that upgrades it, and `draftCreated` from an
+   unconfirmed review is a no-op;
+3. every HS code the model proposes is **checked against the real catalogue**
+   and dropped if it does not exist. The model may not mint classifications;
+4. the Ponte sector is **derived** from the surviving HS chapter through
+   `sectorForChapter`, not taken from the model;
+5. a spelling correction is surfaced as "Did you mean...?", never silently
+   applied;
+6. it is scored below an exact curated match, because Ponte knowing a product is
+   stronger evidence than Ponte working it out.
+
+This is the decision record's own rule: AI may extract, structure, compare,
+explain and recommend, and must not silently publish, verify or commit.
+Identifying a product the member just named is recommending. Asserting a
+commercial term they never gave is inventing, and that rule is unchanged and
+still enforced in `extract-document.ts`.
 
 ### Confidence
 
@@ -428,6 +460,12 @@ at 390 x 844 and at desktop.
 ## 9. Validation
 
 - Unit tests, all registered in `npm test`:
+  - `lib/products/__tests__/cascade.test.ts`, the nine cases required at owner
+    review: a known catalogue product, an ordinary product outside the
+    catalogue, a misspelling, an ambiguous generic term, materially different
+    processed forms, the model unavailable, a low-confidence identification,
+    user confirmation, and a downstream HS suggestion. Every stage is injected,
+    so all nine run with no network and no database
   - `lib/products/__tests__/resolve.test.ts` including the `gas oil` case
   - `lib/products/__tests__/catalogue.test.ts` (every entry maps to a real sector, no duplicate synonym across products)
   - `lib/products/__tests__/scan.test.ts` (the sanitised fixture yields exactly three products)
@@ -647,6 +685,44 @@ Two rules were wrong and both are fixed:
 
 The merge is now `mergeSemantic`, a pure exported function, so both rules and the
 "a model cannot invent a product" rule are unit-tested without a network call.
+
+### D12. The curated catalogue was the ceiling of what Ponte could understand
+
+**The blocking defect, found by the owner in review on 28 July 2026.** Typing
+`avocado` into Offer a product returned:
+
+> Ponte did not recognise that yet. Ponte looked for avocado in its product
+> vocabulary and found nothing close.
+
+Avocado is traded by the million tonne. Ponte had never heard of it because the
+model stage was restricted to returning keys that already existed in the curated
+catalogue, and the catalogue held twenty-five products.
+
+The restriction was written as a safety rule and it was the wrong safety rule.
+"AI must not invent a product" had been implemented as "AI may not name a
+product Ponte has not already been told about", which is a different and far
+stronger claim, and it made the seed data the limit of the product.
+
+**Fixed by replacing the ceiling with a cascade and a provenance state.** See
+the resolver section above for the six stages and the six constraints that
+replace it. The short version: Ponte may now identify anything a member names,
+and what it identifies is marked `ai_identified`, is scored below anything
+curated, has every customs code it proposes checked against the real HS
+catalogue, gets its Ponte sector derived from that code rather than from the
+model, and cannot reach a draft until the member confirms it.
+
+**Also corrected, at the owner's instruction:** the unmatched state used to end
+with "Ponte will not guess a product you did not name." It was shown to a member
+who had named their product perfectly well, and it blamed them for Ponte's
+limit. It now reads "We could not classify that confidently yet", says what
+Ponte tried, and offers four ways on. A test asserts the old sentence cannot
+come back.
+
+**And a third capture fault.** The evidence run screenshotted the Bridge before
+its layout effect had measured the deck, so one frame showed the stations piled
+at the left edge. It looked exactly like a broken bridge and was a race. The
+evidence now waits for the measured geometry before capturing; see the note on
+`settled()` in `e2e/product-intake.spec.ts`.
 
 ## 13. Final evidence
 

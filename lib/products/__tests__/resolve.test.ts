@@ -18,7 +18,6 @@ import assert from "node:assert/strict";
 import { PRODUCT_CATALOGUE, catalogueKeys, productByKey, sectorLabel } from "../catalogue";
 import { bandFor, resolveFrom } from "../model";
 import { categoryPathFor, distinguishingAttribute, normalise, resolveProduct } from "../resolve";
-import { mergeSemantic } from "../ai-resolve";
 import { PRODUCT_SECTORS } from "../../taxonomy/market";
 
 let passed = 0;
@@ -233,80 +232,6 @@ test("normalisation folds the spellings that mean the same thing", () => {
   assert.equal(normalise("EN590").text, normalise("EN 590").text);
   assert.equal(normalise("10ppm").text, normalise("10 ppm").text);
   assert.equal(normalise("Gas-Oil").compact, normalise("gasoil").compact);
-});
-
-// ---- the semantic stage, folded in ------------------------------------------
-//
-// `mergeSemantic` is pure, so the two rules that matter are tested without a
-// network call.
-
-test("the model cannot invent a product that is not in the catalogue", () => {
-  const lexical = resolveProduct("gas oil");
-  const merged = mergeSemantic(lexical, { matches: [{ key: "unobtainium", because: "it says so" }] }, "gas oil");
-  if (merged.kind === "none") throw new Error("an unknown key erased a real lexical answer");
-  for (const candidate of merged.candidates) {
-    assert.ok(productByKey(candidate.product.key), `${candidate.product.key} is not a catalogue product`);
-  }
-  // The lexical answer survives untouched when the model contributes nothing.
-  assert.deepEqual(keysOf(merged), keysOf(lexical));
-});
-
-test("agreement between both stages keeps the stronger evidence, not the weaker", () => {
-  const lexical = resolveProduct("gas oil");
-  if (lexical.kind !== "ambiguous") throw new Error("unreachable");
-  const top = lexical.candidates[0];
-  assert.equal(top.band, "close");
-
-  const merged = mergeSemantic(
-    lexical,
-    { matches: [{ key: "gasoil-10ppm-en590", because: "gas oil is the common name for gasoil 10ppm EN590" }] },
-    "gas oil",
-  );
-  if (merged.kind === "none") throw new Error("unreachable");
-  const after = merged.candidates.find((c) => c.product.key === "gasoil-10ppm-en590")!;
-
-  // The regression this pins: the model agreeing with the catalogue used to
-  // overwrite a 0.95 exact-synonym match with a 0.62 semantic one, so the band
-  // fell from "Close match" to "Likely match" on a deploy preview.
-  assert.equal(after.score, top.score, "the semantic score overwrote the stronger lexical one");
-  assert.equal(after.band, "close");
-  // And the model's reason is added rather than replacing the evidence.
-  assert.ok(after.matchedOn.some((m) => m.kind === "semantic"));
-  assert.ok(after.matchedOn.some((m) => m.kind !== "semantic"));
-  // Still ranked first.
-  assert.equal(merged.candidates[0].product.key, "gasoil-10ppm-en590");
-});
-
-test("a product only the model recognised is ranked below a lexical match", () => {
-  const lexical = resolveProduct("gas oil");
-  const merged = mergeSemantic(lexical, { matches: [{ key: "jet-a1", because: "aviation fuel" }] }, "gas oil");
-  if (merged.kind === "none") throw new Error("unreachable");
-  assert.equal(merged.candidates[0].product.key, "gasoil-10ppm-en590");
-  assert.ok(keysOf(merged).includes("jet-a1"));
-});
-
-test("the model's clarification is used when it has one, and a default when it does not", () => {
-  const lexical = resolveProduct("gas oil");
-  const withQuestion = mergeSemantic(
-    lexical,
-    { matches: [{ key: "gasoil-10ppm-en590" }], clarify: "Which sulphur specification do you need?" },
-    "gas oil",
-  );
-  assert.equal(withQuestion.kind, "ambiguous");
-  if (withQuestion.kind === "ambiguous") assert.match(withQuestion.question, /sulphur specification/);
-
-  const without = mergeSemantic(lexical, { matches: [{ key: "gasoil-10ppm-en590" }] }, "gas oil");
-  if (without.kind === "ambiguous") assert.match(without.question, /gas oil/);
-});
-
-test("an empty model answer never turns a real answer into nothing", () => {
-  const lexical = resolveProduct("gas oil");
-  const merged = mergeSemantic(lexical, {}, "gas oil");
-  assert.equal(merged.kind, "ambiguous");
-  assert.deepEqual(keysOf(merged), keysOf(lexical));
-  // And a genuinely unknown term still explains itself.
-  const unknown = mergeSemantic(resolveProduct("intergalactic widgets"), {}, "intergalactic widgets");
-  assert.equal(unknown.kind, "none");
 });
 
 console.log(`ok   ${passed} product resolver tests passed`);

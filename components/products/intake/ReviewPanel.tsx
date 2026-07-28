@@ -44,6 +44,7 @@ import type { Provenance, SourcedValue } from "@/lib/products/model";
 /** Exported so a test can assert the four states are four different words. */
 export const PROVENANCE_WORD: Record<Provenance, string> = {
   extracted: "Extracted from document",
+  ai_identified: "Identified by Ponte, not yet confirmed",
   member_confirmed: "Confirmed by you",
   ponte_verified: "Verified by Ponte",
   missing: "Not stated",
@@ -51,6 +52,7 @@ export const PROVENANCE_WORD: Record<Provenance, string> = {
 
 const PROVENANCE_CLASS: Record<Provenance, string> = {
   extracted: "pprov pprov--extracted",
+  ai_identified: "pprov pprov--identified",
   member_confirmed: "pprov pprov--member",
   ponte_verified: "pprov pprov--ponte",
   missing: "pprov pprov--missing",

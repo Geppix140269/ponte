@@ -81,8 +81,8 @@
     },
     "provenance": {
       "type": "string",
-      "enum": ["extracted", "member_confirmed", "ponte_verified", "missing"],
-      "description": "Where this came from. Four states, never collapsed into one generic verified treatment (Design Constitution section 14). `ponte_verified` is declared for completeness and is never produced by the product intake journey: Ponte does not verify a product claim there, and the review screen renders the row as unavailable rather than as an empty box implying one could be obtained."
+      "enum": ["extracted", "ai_identified", "member_confirmed", "ponte_verified", "missing"],
+      "description": "Where this came from. Never collapsed into one generic verified treatment (Design Constitution section 14). `ai_identified` means Ponte worked the product out from the member's own words rather than holding it in the curated catalogue; it is the weakest state Ponte will put on a screen, it always requires member confirmation before a draft is created, and it exists so the curated catalogue is not the boundary of what Ponte can understand. `ponte_verified` is declared for completeness and is never produced by the product intake journey: Ponte does not verify a product claim there, and the review screen renders the row as unavailable rather than as an empty box implying one could be obtained."
     }
   }
 }

@@ -43,6 +43,10 @@ const STATES = [
   "resolved",
   "candidates",
   "ambiguous",
+  "identified",
+  "corrected",
+  "low-confidence",
+  "identified-review",
   "unmatched",
   "browse",
   "extracted",
@@ -73,9 +77,37 @@ async function openState(page: Page, id: string): Promise<void> {
   // `section[...]`, not `[...]`: the lifecycle primitive carries its own
   // `data-state`, so the bare attribute selector matches two elements.
   await expect(page.locator(`section[data-state="${id}"]`)).toBeVisible();
-  // The intake is a client component; wait for it to have hydrated rather than
-  // capturing the server frame, which has no measured bridge geometry.
   await page.locator(".pintake").first().waitFor({ state: "visible" });
+  await settled(page);
+}
+
+/**
+ * Wait until the Bridge has actually measured itself.
+ *
+ * The deck is a cubic Bezier and the stations sit at measured fractions of its
+ * arc length, so `BridgeRoute` positions them from a layout effect after the
+ * ResizeObserver reports a width. Between hydration and that effect the
+ * stations are unpositioned and pile up at the left edge.
+ *
+ * Screenshotting in that window produced a frame that looked exactly like a
+ * broken bridge and was nothing of the kind. Waiting for the inline geometry is
+ * the difference between evidence and a race: horizontal decks get a `left` on
+ * every station, elevation decks get the drawn `.br__vsvg`, and a state with no
+ * Bridge at all (the review screens) is settled as soon as it renders.
+ */
+async function settled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const bridges = Array.from(document.querySelectorAll(".pintake .br"));
+    if (bridges.length === 0) return true;
+    return bridges.every((bridge) => {
+      const stations = Array.from(bridge.querySelectorAll<HTMLElement>(".brst"));
+      if (stations.length === 0) return true;
+      if (bridge.classList.contains("br--v")) return Boolean(bridge.querySelector(".br__vsvg"));
+      return stations.every((s) => s.style.left !== "" && s.style.width !== "");
+    });
+  }, undefined, { timeout: 20_000 });
+  // One more frame, so the fitted stage height is applied before the capture.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 }
 
 // ---------------------------------------------------------------------------
@@ -191,6 +223,7 @@ async function openIntake(page: Page, intent: "offer_product" | "source_product"
   await page.goto(`/en/structure?family=products&intent=${intent}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator(".pintake")).toBeVisible();
   await expect(page.locator(".pintake .br .brst").first()).toHaveAttribute("tabindex", "0");
+  await settled(page);
 }
 
 test.describe("the live product journey", () => {

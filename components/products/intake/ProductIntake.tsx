@@ -24,7 +24,7 @@ import {
   type ProductIntent,
   type ReviewState,
 } from "@/lib/products/intake";
-import type { ResolutionOutcome, ResolvedProduct } from "@/lib/products/model";
+import { isIdentified, type ProductCandidate, type ResolutionOutcome, type ResolvedProduct } from "@/lib/products/model";
 import { progressBand, progressValue } from "@/lib/ponte/progress";
 import CandidateRows from "./CandidateRows";
 import ReviewPanel from "./ReviewPanel";
@@ -92,6 +92,20 @@ const INTENT_COPY: Record<ProductIntent, { lead: string; emphasis: string; sub: 
     reviewLead: "This will become a sourcing requirement.",
   },
 };
+
+/**
+ * The spelling correction the top candidates agree on, if any.
+ *
+ * Read from the candidates rather than passed alongside them, so a correction
+ * can never be shown for an answer that did not actually come from one.
+ */
+function correctionOf(candidates: readonly ProductCandidate[]): string | null {
+  for (const candidate of candidates.slice(0, 2)) {
+    const product = candidate.product;
+    if (isIdentified(product) && product.correction) return product.correction;
+  }
+  return null;
+}
 
 /** The Web Speech constructor, where the browser has one. */
 type SpeechCtor = new () => {
@@ -399,10 +413,21 @@ export default function ProductIntake({
 
         {stage.kind === "resolved" || stage.kind === "candidates" ? (
           <>
+            {/* A correction is offered, never silently applied: a correction the
+                member cannot see is one they cannot refuse. */}
+            {correctionOf(stage.outcome.candidates) ? (
+              <LifecycleState
+                state="waiting"
+                label={`Did you mean ${correctionOf(stage.outcome.candidates)}?`}
+                detail={`You wrote "${stage.outcome.wording}". Ponte read it as ${correctionOf(stage.outcome.candidates)}. Choose below, or edit what you wrote.`}
+              />
+            ) : null}
             <p className="pintake__note">
               {stage.kind === "resolved"
                 ? "Ponte identified one product. Confirm it, or choose another route above."
-                : `Ponte found ${stage.outcome.candidates.length} products that fit. The closest is first.`}
+                : stage.outcome.candidates.length === 1
+                  ? "Ponte identified one product. Confirm it, or choose another route above."
+                  : `Ponte found ${stage.outcome.candidates.length} products that fit. The closest is first.`}
             </p>
             <CandidateRows
               candidates={stage.outcome.candidates}
@@ -416,7 +441,15 @@ export default function ProductIntake({
           <>
             {/* The clarification. Not an error, and nothing pre-selected: the
                 decision record rejects silently accepting the first answer. */}
-            <LifecycleState state="waiting" label="Ponte needs one decision from you" detail={stage.outcome.question} />
+            <LifecycleState
+              state="waiting"
+              label={
+                correctionOf(stage.outcome.candidates)
+                  ? `Did you mean ${correctionOf(stage.outcome.candidates)}?`
+                  : "Ponte needs one decision from you"
+              }
+              detail={stage.outcome.question}
+            />
             <CandidateRows
               candidates={stage.outcome.candidates}
               ariaLabel={stage.outcome.question}
@@ -427,18 +460,24 @@ export default function ProductIntake({
 
         {stage.kind === "unmatched" ? (
           <>
+            {/*
+              The copy the owner corrected.
+
+              It used to read "Ponte will not guess a product you did not name",
+              which was shown to a member who had named their product perfectly
+              well. Ponte had failed to recognise it, and the sentence blamed
+              them for Ponte's limit. A correctly spelled, commonly traded
+              product should not reach this state at all now; when something
+              does, the words say what Ponte could not do rather than what the
+              member did wrong.
+            */}
             <LifecycleState
               state="waiting"
-              label="Ponte did not recognise that yet"
-              detail={
-                stage.tried.length > 0
-                  ? `Ponte looked for ${stage.tried.slice(0, 6).join(", ")} in its product vocabulary and found nothing close.`
-                  : "Ponte found nothing close in its product vocabulary."
-              }
+              label="We could not classify that confidently yet"
+              detail="Ponte tried its product vocabulary, spelling correction and the customs nomenclature."
             />
             <p className="pintake__note">
-              Add a grade, a standard or a technical term and try again, upload the document you already have, or browse
-              the categories. Ponte will not guess a product you did not name.
+              Add a little more detail, choose a suggested interpretation, upload a document, or browse categories.
             </p>
           </>
         ) : null}
