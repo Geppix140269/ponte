@@ -1,0 +1,357 @@
+/* ======================================================================
+   Product intake, layout only.
+
+   Every value below is a token that already exists: the Brand v5 heritage-light
+   block in `components/find/find.css` (which this route already loads, because
+   the intake mounts inside the Structure composer) and the Ponte Flow bundle.
+   No colour, radius, shadow, font, easing or duration is declared here.
+
+   Constitution section 16 forbids inventing a page-local spacing scale, so the
+   spacing is `--s-*` throughout. Section 15 forbids a generic card grid as a
+   default composition, which is why the intake's structure is the Bridge and
+   this file styles the panels the Bridge reveals rather than a grid of tiles.
+
+   Scoped under `.ponte-find .pintake` so nothing here can reach another route.
+   ====================================================================== */
+
+.ponte-find .pintake {
+  display: block;
+}
+
+/* ----------------------------------------------------------------------
+   The principal sentence.
+
+   Constitution section 5: one deliberate differentiated phrase, approved serif
+   italic, AA-safe gold text token. One per heading, and only here.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .pintake__lead {
+  font-family: var(--f-serif);
+  font-size: 26px;
+  line-height: 1.24;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  margin: 0 0 var(--s-3);
+}
+
+.ponte-find .pintake__lead em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold-ink);
+}
+
+.ponte-find .pintake__sub {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 var(--s-5);
+  max-width: 52ch;
+}
+
+/* ----------------------------------------------------------------------
+   Progress. Never rendered at all before the first meaningful action, which
+   is why the component returns null rather than a bar at zero.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .pintake__prog {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  margin: 0 0 var(--s-5);
+}
+
+.ponte-find .pintake__prog b {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gold-ink);
+}
+
+.ponte-find .pintake__prog span {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ----------------------------------------------------------------------
+   The panel a chosen method reveals, below the bridge.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .pintake__panel {
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+
+.ponte-find .pintake__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+}
+
+.ponte-find .pintake__note {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: var(--s-3) 0 0;
+  max-width: 60ch;
+}
+
+.ponte-find .pintake__file {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ----------------------------------------------------------------------
+   Candidates. A register of rows, not a card grid: unequal content keeps its
+   natural height, per section 15.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .pcand {
+  border-top: 1px solid var(--ink);
+  margin-top: var(--s-4);
+}
+
+.ponte-find .pcand__r {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: var(--s-4) 0;
+  cursor: pointer;
+}
+
+.ponte-find .pcand__r:hover .pcand__n {
+  color: var(--gold-ink);
+}
+
+.ponte-find .pcand__h {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.ponte-find .pcand__n {
+  font-family: var(--f-serif);
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.ponte-find .pcand__band {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-left: auto;
+}
+
+/* A candidate row is a <button>, so its parts are spans. Without this they run
+   together on one line: the category path, the distinguisher and the matched
+   terms became one unreadable paragraph, which is what the first evidence run
+   showed. */
+.ponte-find .pcand__path,
+.ponte-find .pcand__why,
+.ponte-find .pcand__d,
+.ponte-find .pcand__hs {
+  display: block;
+}
+
+.ponte-find .pcand__path,
+.ponte-find .pcand__why,
+.ponte-find .pcand__d {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: var(--s-2);
+}
+
+.ponte-find .pcand__d {
+  color: var(--ink-2);
+}
+
+.ponte-find .pcand__why b {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.ponte-find .pcand__hs {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: var(--s-2);
+}
+
+/* ----------------------------------------------------------------------
+   The review register. Four provenance states, distinguished in words and in
+   marker geometry before any colour is applied, per section 14 and 18.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .prev {
+  border-top: 1px solid var(--ink);
+  margin-top: var(--s-4);
+}
+
+.ponte-find .prev__g {
+  margin-top: var(--s-5);
+}
+
+.ponte-find .prev__gl {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--ink);
+}
+
+.ponte-find .prow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+
+.ponte-find .prow__k {
+  flex: 0 0 34%;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.ponte-find .prow__v {
+  flex: 1 1 12ch;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.ponte-find .prow__v.ns {
+  color: var(--ink-3);
+}
+
+.ponte-find .prow__q {
+  flex: 1 0 100%;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-style: italic;
+  margin-top: var(--s-2);
+  padding-left: var(--s-3);
+  border-left: 1px solid var(--rule-strong);
+}
+
+.ponte-find .prow__e {
+  flex: none;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--gold-ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0 0 1px;
+  cursor: pointer;
+}
+
+/* The provenance marker: shape first, then colour. Greyscale-safe. */
+.ponte-find .pprov {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.ponte-find .pprov::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border: 1px solid currentColor;
+}
+
+/* Extracted: a hollow square. Declared, not confirmed. */
+.ponte-find .pprov--extracted::before {
+  border-style: dashed;
+}
+
+/* Identified by Ponte and not yet confirmed: an open square, drawn in the
+   review token. Weaker than a member confirmation, stronger than nothing, and
+   a different shape from both so it survives greyscale. */
+.ponte-find .pprov--identified::before {
+  border-style: solid;
+  transform: rotate(45deg);
+}
+
+.ponte-find .pprov--identified {
+  color: var(--review);
+}
+
+/* Confirmed by the member: a filled circle. */
+.ponte-find .pprov--member::before {
+  border-radius: 50%;
+  background: currentColor;
+  color: var(--ink-2);
+}
+
+.ponte-find .pprov--member {
+  color: var(--ink-2);
+}
+
+/* Verified by Ponte: not available on this journey, and shaped as absent. */
+.ponte-find .pprov--ponte::before {
+  border-radius: 50%;
+  border-style: dotted;
+}
+
+/* Missing: a rule, not a box. There is nothing to contain. */
+.ponte-find .pprov--missing::before {
+  height: 0;
+  border-width: 0 0 1px;
+  align-self: center;
+}
+
+.ponte-find .prev__doc {
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.ponte-find .pintake__limits {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: var(--s-4) 0 0;
+  padding-left: var(--s-4);
+}
+
+.ponte-find .pintake__limits li {
+  margin-bottom: var(--s-2);
+}
+
+/* ----------------------------------------------------------------------
+   Mobile. The Bridge redraws itself in elevation below its own 460px
+   container width; nothing here overrides that. This block only stops the
+   review register's fixed key column from squeezing its value.
+   ---------------------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  .ponte-find .pintake__lead {
+    font-size: 22px;
+  }
+  .ponte-find .prow__k {
+    flex: 1 0 100%;
+  }
+  .ponte-find .prow__v {
+    flex: 1 1 auto;
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ponte.trade/schemas/product-resolution.schema.json",
+  "title": "Ponte resolved product",
+  "description": "What Ponte knows about a product once it has understood one, in the seven layers section D of the AI product intake decision requires preserved. The code-level contract is lib/products/model.ts (ResolvedProduct); this file is the machine-readable record of it. Carried on the submit payload as `product_resolution`; `listings` has no column for it yet and adding one is a migration this decision does not authorise.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "originalWording",
+    "normalised",
+    "productKey",
+    "synonyms",
+    "categoryPath",
+    "attributes",
+    "candidateHs",
+    "searchText",
+    "searchTerms",
+    "provenance"
+  ],
+  "properties": {
+    "originalWording": {
+      "type": "string",
+      "description": "The member's own words, verbatim, in whatever language they used. Never replaced by the normalised name: North Star 3.4 puts the user's language above the database's."
+    },
+    "normalised": {
+      "type": "string",
+      "description": "The canonical Ponte product name."
+    },
+    "productKey": {
+      "type": "string",
+      "description": "The stable catalogue key, so a record can be re-read without string matching."
+    },
+    "synonyms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Trade terminology and standard designations that reach this product."
+    },
+    "categoryPath": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Family, sector, group, product. The sector comes from PRODUCT_SECTORS in lib/taxonomy/market.ts and is never restated independently."
+    },
+    "attributes": {
+      "type": "array",
+      "description": "The distinguishing technical attributes of Ponte's product record. NOT claims the member's document made; those are carried separately and marked as extracted.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "label", "value"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    "candidateHs": {
+      "description": "A SUGGESTED customs classification, or null. Downstream and confirmable. It must not block product intake, and it is never rendered as settled while `confirmed` is false.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "description", "confirmed"],
+          "properties": {
+            "code": { "type": "string", "pattern": "^[0-9]{6}$" },
+            "description": { "type": "string" },
+            "confirmed": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "searchText": {
+      "type": "string",
+      "description": "The lexical search representation."
+    },
+    "searchTerms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The token set used for semantic retrieval."
+    },
+    "provenance": {
+      "type": "string",
+      "enum": ["extracted", "ai_identified", "member_confirmed", "ponte_verified", "missing"],
+      "description": "Where this came from. Never collapsed into one generic verified treatment (Design Constitution section 14). `ai_identified` means Ponte worked the product out from the member's own words rather than holding it in the curated catalogue; it is the weakest state Ponte will put on a screen, it always requires member confirmation before a draft is created, and it exists so the curated catalogue is not the boundary of what Ponte can understand. `ponte_verified` is declared for completeness and is never produced by the product intake journey: Ponte does not verify a product claim there, and the review screen renders the row as unavailable rather than as an empty box implying one could be obtained."
+    }
+  }
+}

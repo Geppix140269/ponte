@@ -50,12 +50,35 @@ export type SystemBlock = {
   cache?: boolean;
 };
 
+/**
+ * A user message that is not only words.
+ *
+ * Added for document intake. A member uploads a PDF offer or a photograph of a
+ * specification sheet, and the model reads it natively: Anthropic accepts a PDF
+ * as a `document` block and an image as an `image` block, so there is no parser
+ * dependency and, more importantly, no second model path. Everything still goes
+ * through `callAi`, so an uploaded document is metered and recorded exactly
+ * like every other call, which is the property this file exists to protect.
+ *
+ * The base64 payload is never logged: `callAi` truncates error bodies to 200
+ * characters precisely so a failure cannot echo a member's document into the
+ * server log.
+ */
+export type UserBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "image";
+      source: { type: "base64"; media_type: "image/png" | "image/jpeg" | "image/webp" | "image/gif"; data: string };
+    }
+  | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } };
+
 export type AiCallOptions = {
   /** Short stable name, used for cost reporting. e.g. "verification_reconcile" */
   feature: string;
   /** A plain string, or blocks when part of the prompt should be cached. */
   system: string | SystemBlock[];
-  user: string;
+  /** Plain words, or content blocks when the call carries a document or image. */
+  user: string | UserBlock[];
   model?: string;
   maxTokens?: number;
   /** Low by default: these are analysis tasks, not creative ones. */

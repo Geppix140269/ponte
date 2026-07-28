@@ -3,7 +3,7 @@
 **Reconciled:** 28 July 2026  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0010 (complete-interface scope)  
-**Bridge authority:** `design/authority/bridge/v1/` (merged, production primitives incomplete)  
+**Bridge authority:** `design/authority/bridge/v1/` (merged; production primitives incomplete. `components/ponte/bridge/BridgeRoute.tsx` is the Family and Action Bridge and is the only one built)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Market discoverability authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
@@ -14,6 +14,7 @@
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Product intake decision:** `docs/decisions/ADR-0012-ai-product-intake-and-document-to-deal-flow.md` (accepted; on branch `product/ai-document-product-intake`, not yet merged)  
 **Market discoverability decision:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`  
 **Deal Room decision:** `docs/decisions/ADR-0008-deal-room-product-contract.md`  
 **Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`  
@@ -64,6 +65,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Structured listing quantity (ADR-0013) | Implemented on branch | Not merged; migration not applied | Adds mode (exact/approximate/minimum/maximum/range/negotiable/on request), decimal support and separator-safe parsing. Fixes the composer defect where a displayed `10,000` was a render-time fallback the form state never held, so an unedited quantity submitted as null. |
 | Listing exception console (ADR-0013) | Implemented on branch | Not merged, not deployed | `/admin/listings` leads with reported, flagged, suspended, unverified-submitter and incomplete cases, ordered by reason then severity then oldest. Each prints a machine-readable reason code, a human sentence, the severity and the automated findings verbatim. Filters cover status, reason, severity, listing type, date range and a member/business/reference search, all as shareable URLs. Published listings appear in their own section and are explicitly not described as awaiting approval. Suspend, reinstate and return-to-member actions were added; every operator status change writes a `listing_events` row with an `admin` actor. |
 | Verification/publication eligibility | On `main` | Production defect confirmed | Stored verification vocabulary and numeric code comparison require separate integrity work. |
+| AI product intake and document-to-deal (ADR-0012) | Implemented on branch `claude/ai-product-intake-flow-4bcd56`, PR #71 | Not deployed | Both product intents (`offer_product`, `source_product`) now enter through one shared intake: describe, upload or browse, on the approved Bridge. `lib/products/` holds the curated catalogue, a six-stage resolution cascade (exact, fuzzy, model identification, HS 2022 fallback, sector mapping, clarification), the document scan, the extraction and the intake state machine. The curated catalogue is depth, not a ceiling: a product outside it is identified, marked `ai_identified` and confirmed by the member before any draft is created. HS classification is a suggested downstream field, not the gate. Trade services and Distribution keep their own ADR-0011 category-first journey: since PR #70 merged, `IntentStep` routes on `needsHsCode()` so Products reach the intake and those two families reach `ClassifyStep`, and neither is ever asked for a customs code. One composer, one submit path; the family decides only which question opens it. A resolved product now also carries its ADR-0011 `productSector` key, derived from the customs chapter rather than asked for a second time. **No migration, no feature flag, no deployment.** The uploaded document is held for the session and not stored. Plan: `docs/plans/active/ai-product-intake-and-document-to-deal.md`. Evidence: `docs/codex/audits/ai-product-intake/evidence/`. Durable document storage is deferred by owner decision to issue #72. |
 | Check and verify journey, request surfaces | On `main` via PR #45 | Not yet independently production-verified | `/verify`, `VerifyForm` and the `/verification` explainer mount PonteShell in heritage-light and are bared in ChromeGate, so reaching business verification from the Start a deal blockers no longer drops the member into the obsidian application mid-task. Every line of copy is unchanged. Plan: `docs/plans/active/verification-journey-brand-v5.md`. |
 
 ## Design authority truth
@@ -98,7 +100,7 @@ The approved system now has production plumbing. What exists, and what does not:
 | **Motion** | The Flow motion CSS and the reduced-motion contract are live in production and were already imported (see the correction below). `lib/ponte/motion.ts` reads the approved specification rather than restating it. No component is activated on any journey yet. |
 | **Progress** | `lib/ponte/progress.ts`: pure, deterministic, weights summing to 100, floor 20, never 0, irregular increments, 100 only when the procedure completes. Approved band copy included. |
 | **Lifecycle states** | `components/ponte/state/LifecycleState.tsx`: loading, waiting, blocked, active, under review, completed, error. Distinct in words, marker geometry and colour, in that order. **No route has been retrofitted.** |
-| **Bridge primitives** | Still none. Slice 3, `design/phase-2-bridge-primitives`. |
+| **Bridge primitives** | `components/ponte/bridge/BridgeRoute.tsx` is the Family and Action Bridge as a React primitive, translated from the recovered engine without changing its geometry. It is live on the landing and, from 28 July 2026, on the Products intake. The remaining Bridge System components (Task Completion, Commercial Journey, Counterparty Connection, Deal Room) are still unbuilt. |
 
 **Correction to the Phase 1 audit.** Its finding 0.3, that the Flow tokens and
 motion CSS were "imported nowhere", was wrong. They have been imported since

@@ -48,12 +48,44 @@ export default defineConfig({
     viewport: { width: 1280, height: 900 },
     deviceScaleFactor: 1,
   },
+  /**
+   * Two servers, for two different jobs.
+   *
+   * 3100 is the production build, which is what the landing evidence is
+   * captured against and must stay that way.
+   *
+   * 3101 is a development server, and it exists for one reason: the product
+   * intake state gallery at `/dev/product-intake` 404s in production, exactly
+   * like the Ponte Flow specimen sheet, and several of that journey's states
+   * (a blocked file format, an extraction failure, a resumed session) cannot be
+   * produced on demand in a browser any other way. Constitution section 21 asks
+   * for evidence of the states a change touches, so the evidence run reaches
+   * them through the route that renders them rather than by weakening the
+   * production gate with an environment escape hatch.
+   *
+   * The markup is the same in both modes; only the dev overlay differs, and it
+   * is outside every capture's clip.
+   */
   webServer: process.env.PONTE_EVIDENCE_BASE_URL
     ? undefined
-    : {
-        command: "npx next start --port 3100",
-        url: "http://127.0.0.1:3100",
-        reuseExistingServer: true,
-        timeout: 120_000,
-      },
+    : [
+        {
+          command: "npx next start --port 3100",
+          url: "http://127.0.0.1:3100",
+          reuseExistingServer: true,
+          timeout: 120_000,
+        },
+        {
+          command: "npx next dev --port 3101",
+          url: "http://127.0.0.1:3101/en/dev/product-intake?only=initial",
+          reuseExistingServer: true,
+          timeout: 180_000,
+          // Its own build directory. Both servers write to `distDir`, so
+          // sharing `.next` meant the dev server cleared the production build
+          // out from under `next start` and every capture failed on a missing
+          // build id. `next.config.mjs` reads this and defaults to `.next`
+          // everywhere else.
+          env: { PONTE_DIST_DIR: ".next-evidence" },
+        },
+      ],
 });

@@ -16,6 +16,13 @@ import React from "react";
 
 interface Dispatcher {
   useState<S>(initial: S | (() => S)): [S, (next: S | ((prev: S) => S)) => void];
+  /**
+   * Added for the product intake, whose whole journey is one reducer over a
+   * discriminated union. Without it a component that models its states as
+   * values rather than as loose booleans could not be tested through this
+   * renderer at all, which would be an odd thing to punish.
+   */
+  useReducer<S, A>(reducer: (state: S, action: A) => S, initialArg: unknown, init?: (arg: unknown) => S): [S, (action: A) => void];
   useRef<T>(initial: T): { current: T };
   useMemo<T>(factory: () => T): T;
   useCallback<T>(fn: T): T;
@@ -76,6 +83,17 @@ export function mount<P>(Component: (props: P) => unknown, props: P): Mounted {
         render();
       };
       return [cells[index] as S, set];
+    },
+    useReducer<S, A>(reducer: (state: S, action: A) => S, initialArg: unknown, init?: (arg: unknown) => S) {
+      const index = cell(() => (init ? init(initialArg) : (initialArg as S)));
+      const dispatch = (action: A) => {
+        const previous = cells[index] as S;
+        const next = reducer(previous, action);
+        if (Object.is(next, previous)) return;
+        cells[index] = next;
+        render();
+      };
+      return [cells[index] as S, dispatch];
     },
     useRef<T>(initial: T) {
       const index = cell(() => ({ current: initial }));

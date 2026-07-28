@@ -79,6 +79,30 @@ export type CanonicalPair = {
 };
 
 /**
+ * The structured product Ponte resolved, carried onto the draft.
+ *
+ * Declared structurally rather than imported from `lib/products/model.ts` so
+ * this module keeps its promise of importing nothing: it is unit-tested
+ * standalone under tsx, and reaching into the product catalogue for a type
+ * would drag the whole catalogue into that test for no gain. The shape is the
+ * seven layers ADR requires preserved; `lib/products/model.ts` owns the
+ * canonical definition and this is assignable from it.
+ */
+export type DraftResolution = {
+  originalWording: string;
+  normalised: string;
+  productKey: string;
+  synonyms: readonly string[];
+  categoryPath: readonly string[];
+  /** The ADR-0011 product sector key, derived rather than asked for. */
+  sector: string;
+  attributes: readonly { key: string; label: string; value: string }[];
+  candidateHs: { code: string; description: string; confirmed: boolean } | null;
+  searchText: string;
+  searchTerms: readonly string[];
+};
+
+/**
  * The structured classification a record carries, kept in explicit fields.
  *
  * These exist because `product` was carrying four different things: a physical
@@ -148,6 +172,30 @@ export type StructureDraft = Classification & {
    * a mode is picked, and picking a mode is an explicit act that writes state.
    */
   quantityMode: QuantityMode | null;
+  /**
+   * What Ponte understood about the product, when the member came through the
+   * AI intake. Null for a record built by browsing the HS catalogue, which is
+   * still a supported route and produces a product name and a code and nothing
+   * more.
+   *
+   * Carried rather than persisted to its own column: `listings` has no field
+   * for it, and adding one is a migration outside this change. It rides into
+   * the submit payload and is written into the record's own text, exactly as
+   * the canonical family and intent already are.
+   */
+  resolution: DraftResolution | null;
+  /**
+   * The other products from a multi-product document, when the member chose
+   * separate drafts. Each becomes its own record; the terms are shared.
+   */
+  siblings: readonly DraftResolution[];
+  /**
+   * True when the member deliberately chose one combined multi-product supply
+   * programme instead of separate records. A commercial decision, and theirs.
+   */
+  programme: boolean;
+  /** The document the facts came from, by name. Never its bytes. */
+  documentName: string | null;
   quantity: number | null;
   /** The two ends of a range. Only `range` reads them. */
   quantityMin: number | null;
@@ -173,6 +221,7 @@ export function emptyDraft(): StructureDraft {
     quantityMode: null, quantity: null, quantityMin: null, quantityMax: null,
     unit: null, frequency: null, origin: null, destination: null, incoterm: null,
     payment: null, validity: null, role: null, note: null,
+    resolution: null, siblings: [], programme: false, documentName: null,
   };
 }
 
@@ -612,6 +661,7 @@ export function synthesiseDetails(draft: StructureDraft): string {
   // from the structured quantity rather than being the source of it.
   const quantityText = formatQuantity(draftQuantity(draft));
   if (quantityText) parts.push(`Quantity: ${quantityText}.`);
+
   // One end of the route is often the only end this member decides, so a
   // half-stated route is written as the half it is rather than padded with an
   // "unspecified" the reader could mistake for a fact.
@@ -627,6 +677,42 @@ export function synthesiseDetails(draft: StructureDraft): string {
   if (draft.validity === "standing") parts.push("Open until withdrawn.");
   else if (has(draft.validity)) parts.push(`Valid for ${draft.validity} days.`);
   if (has(draft.role)) parts.push(`Stated role: ${draft.role}.`);
+
+  // What Ponte understood, written onto the record in words.
+  //
+  // The same reason the canonical pair is written here: `listings` has no
+  // column for a resolved product, and a member who typed "gas oil" and
+  // confirmed EN 590 has made a distinction the record must not lose. The
+  // member's own wording leads, because North Star 3.4 puts the user's language
+  // above the database's.
+  if (draft.resolution) {
+    const r = draft.resolution;
+    if (r.originalWording && r.originalWording.toLowerCase() !== r.normalised.toLowerCase()) {
+      parts.push(`Stated as: "${r.originalWording}". Ponte product: ${r.normalised}.`);
+    }
+    if (r.categoryPath.length > 0) parts.push(`Category: ${r.categoryPath.join(" / ")}.`);
+    for (const attribute of r.attributes) parts.push(`${attribute.label}: ${attribute.value}.`);
+    if (r.candidateHs && !r.candidateHs.confirmed) {
+      // Suggested, and said so on the record. An unconfirmed classification
+      // presented as settled is the manufactured fact the authorities forbid.
+      parts.push(`Suggested customs classification HS ${r.candidateHs.code}, not yet confirmed.`);
+    }
+  }
+
+  if (draft.programme && draft.siblings.length > 0) {
+    parts.push(
+      `Multi-product supply programme, chosen deliberately by the member, also covering: ${draft.siblings
+        .map((s) => s.normalised)
+        .join("; ")}.`,
+    );
+  }
+
+  if (draft.documentName) {
+    // Provenance, stated. The document itself is not attached: there is no
+    // storage bucket for member trade documents, and the surface says so.
+    parts.push(`Facts stated in a document the member supplied (${draft.documentName}) and confirmed. Not verified by Ponte.`);
+  }
+
   if (has(draft.additionalDetails)) parts.push(draft.additionalDetails!.trim());
   if (has(draft.note)) parts.push(draft.note!.trim());
 
@@ -736,7 +822,48 @@ export function toSubmitPayload(
     validity_type: standing ? "standing" : validUntil ? "dated" : null,
     valid_until: standing ? null : validUntil,
     key_notes: draft.note,
+    // Sent as well as written into the details, on the same principle as the
+    // canonical pair above: an API that later gains the column already receives
+    // the value, and until then the record still states what Ponte understood.
+    product_resolution: draft.resolution,
+    source_document: draft.documentName,
     details: synthesiseDetails(draft),
     draft: opts.draft,
   };
+}
+
+/**
+ * Every record this draft becomes.
+ *
+ * One payload, except when a member uploaded a multi-product document and chose
+ * separate drafts, in which case each product becomes its own record carrying
+ * the shared commercial terms. That branch is the reason the decision record
+ * refuses to collapse a multi-product document into one generic listing: three
+ * products have three buyer pools, three specifications and three
+ * classifications, and one row cannot express any of that.
+ *
+ * A member who chose the combined programme gets one payload, with the other
+ * products named in its details. That is also correct, and it is theirs to
+ * choose; Ponte recommends separate records and does not impose them.
+ */
+export function submitPayloads(
+  draft: StructureDraft,
+  opts: { draft: boolean; nowIso: string },
+): Record<string, unknown>[] {
+  if (draft.programme || draft.siblings.length === 0) return [toSubmitPayload(draft, opts)];
+
+  return [draft.resolution, ...draft.siblings]
+    .filter((r): r is DraftResolution => r !== null)
+    .map((resolution) =>
+      toSubmitPayload(
+        {
+          ...draft,
+          product: resolution.normalised,
+          hsCode: resolution.candidateHs?.code ?? null,
+          resolution,
+          siblings: [],
+        },
+        opts,
+      ),
+    );
 }

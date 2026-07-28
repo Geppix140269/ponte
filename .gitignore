@@ -62,3 +62,8 @@ build-verify.log
 
 # Rendered email previews (fixtures only, regenerate with `npm run email:preview`)
 .email-preview/
+# Alternate Next build directories. The evidence run uses `.next-evidence`
+# (see playwright.config.ts) and a diagnostic run may create another; none of
+# them belongs in the repository. One accidentally reached a commit before this
+# rule existed.
+/.next-*/
