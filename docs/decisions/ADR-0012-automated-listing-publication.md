@@ -161,6 +161,6 @@ line 91 prohibits.
 
 See `docs/plans/active/automated-listing-publication-and-email-system.md`.
 
-Migration: `supabase/migrations/20260728a_automated_listing_publication.sql`.
+Migration: `supabase/migrations/20260728c_automated_listing_publication.sql`.
 Not applied to production by this change set; production application requires
 owner approval per `AGENTS.md`.
