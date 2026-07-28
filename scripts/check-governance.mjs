@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const requiredFiles = [
   "AGENTS.md",
@@ -124,10 +125,21 @@ const LUCIDE_BASELINE = [
 /**
  * Files that still contain hand-authored <svg>. May shrink, never grow.
  *
- * `components/ponte/brand/PonteLockup.tsx` is the one permanent entry: the owner
- * ruled the brand lockup an identity asset rather than an interface icon, so it
- * stays an authored SVG. It is listed here rather than exempted so that the
- * count of authored drawings in the product is always visible in one place.
+ * Two entries are permanent, and neither is an interface icon:
+ *
+ * - `components/ponte/brand/PonteLockup.tsx` draws the brand lockup. The owner
+ *   ruled it an identity asset rather than an interface icon, so it stays an
+ *   authored SVG.
+ * - `components/ponte/bridge/BridgeRoute.tsx` draws the Bridge deck. It is
+ *   structural interaction geometry from the approved Bridge System, whose own
+ *   stylesheet defines `.br__deck path` and its stroke classes. Constitution
+ *   section 8 makes that package authoritative and section 7's prohibition is
+ *   on ad hoc *icons*; a deck is not one, and there is no registry key that
+ *   could express it.
+ *
+ * Both are listed rather than exempted, so the number of hand-authored drawings
+ * in the product stays visible in one place and each new one has to be argued
+ * for here.
  */
 const RAW_SVG_BASELINE = [
   "app/[locale]/dev/design/page.tsx",
@@ -144,6 +156,7 @@ const RAW_SVG_BASELINE = [
   "components/hs/hsCategories.tsx",
   "components/icons/index.tsx",
   "components/ponte/brand/PonteLockup.tsx",
+  "components/ponte/bridge/BridgeRoute.tsx",
   "components/signals/SignalCard.tsx",
   "components/structure/StructureComposer.tsx",
 ];
@@ -205,6 +218,61 @@ if (lockupCopies.length !== 1 || lockupCopies[0] !== "components/ponte/brand/Pon
     `the Ponte brand lockup must be drawn in exactly one shared component, found in: ` +
       `${lockupCopies.join(", ") || "no file at all"}. Render components/ponte/brand/PonteLockup.tsx instead of copying the mark.`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// The approved Bridge package must match its own manifest.
+//
+// `design/authority/bridge/v1/SOURCE-MANIFEST.md` records a SHA-256 for every
+// file of the owner-approved delivery. For a while the repository did not hold
+// what the manifest described: `ponte-bridge.js` and the nine reference renders
+// were absent, and the vendored CSS had had its section comments stripped, so it
+// failed its own checksum. Nothing caught any of that, and a landing bridge was
+// built against a guess as a result.
+//
+// This is the check that would have caught it on the first commit.
+// ---------------------------------------------------------------------------
+
+const BRIDGE = "design/authority/bridge/v1";
+
+if (existsSync(`${BRIDGE}/SOURCE-MANIFEST.md`)) {
+  const manifest = readFileSync(`${BRIDGE}/SOURCE-MANIFEST.md`, "utf8");
+  // Rows look like: | `ponte-bridge.css` | `90e20b41...` |
+  const rows = [...manifest.matchAll(/\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|/g)];
+  if (rows.length === 0) failures.push("SOURCE-MANIFEST.md records no checksums at all");
+
+  // Where each manifest name lives in the repository. The manifest names files
+  // as the delivered package laid them out; the repository groups them.
+  const locate = (name) => {
+    if (name.endsWith(".md")) return `${BRIDGE}/implementation/${name}`;
+    if (name.startsWith("reference/")) return `${BRIDGE}/${name}`;
+    if (name.startsWith("ponte-flow/")) return `design-system/ponte-flow/tokens/ponte-flow-tokens.css`;
+    return `${BRIDGE}/source/${name}`;
+  };
+
+  // The demo driver and the two review documents are deliberately not vendored:
+  // the implementation notes say "the demo driver is specification-only and must
+  // not ship", and the HTML documents are review artefacts.
+  const notVendored = new Set(["ponte-bridge-demos.js", "Ponte Bridge System.html", "Ponte Landing - Bridge.html"]);
+
+  let verified = 0;
+  for (const [, name, expected] of rows) {
+    if (notVendored.has(name)) continue;
+    const path = locate(name);
+    if (!existsSync(path)) {
+      failures.push(
+        `the approved Bridge package is incomplete: ${name} is in SOURCE-MANIFEST.md but ${path} does not exist`,
+      );
+      continue;
+    }
+    const actual = createHash("sha256").update(readFileSync(path)).digest("hex");
+    if (actual !== expected) {
+      failures.push(`${path} does not match its approved checksum (expected ${expected.slice(0, 12)}, got ${actual.slice(0, 12)})`);
+    } else {
+      verified++;
+    }
+  }
+  if (failures.length === 0) console.log(`ok   approved Bridge package (${verified} files match SOURCE-MANIFEST.md)`);
 }
 
 if (failures.length > 0) {

@@ -14,7 +14,7 @@ implementer deciding the gap did not matter.
 
 ---
 
-## 1. Closed by this PR
+## 1. Closed
 
 | # | Gap | How it closed |
 |---|---|---|
@@ -22,7 +22,19 @@ implementer deciding the gap did not matter.
 | **G3** | Flow token import path; retire the parallel Desk set | 21 aliases; the import already existed (see §4) |
 | **G4** | Motion component layer and reduced-motion wiring | `lib/ponte/motion.ts`, `components/ponte/motion/FlowMotion.tsx`; CSS already imported (see §4) |
 | **G6d** | Brand lockup as inline SVG | Owner ruled it an identity asset. One shared component; four copies consolidated |
+| **DS-8** | A chosen Bridge station shrank when pointed at | Fixed in `bridge-integration.css`: the selected state is restored at a higher specificity than the approved hover rule. Unselected hover untouched |
+| **DS-9** | Two focus treatments on a Bridge station | Fixed in `bridge-integration.css`: the Desk blanket ring is removed inside `.br .brst` only. The approved node ring and title underline remain, at 5.9:1 |
+| **DS-5** | The approved Bridge engine and reference renders were missing | **Recovered.** The owner-approved package was located, and all 13 vendored files now match `SOURCE-MANIFEST.md`. `check-governance.mjs` verifies every checksum on each run |
+| **DS-6** | No icon slot on a Bridge station | **Answered by the reference:** the approved station carries no icon. The icons added while the reference was missing are removed |
+| **DS-7** | No abutment copy for the Family Bridge | **Recovered:** Intent, The market, Structured journey, from the approved reference |
 | **G7** | Route-level state components | `components/ponte/state/LifecycleState.tsx`, seven states, 16 tests |
+
+Rows above are closed by PR #62 (foundation) and PR #63 (landing bridges).
+
+DS-5 is the one worth reading twice. The engine was absent, nothing checked that it
+was absent, and a landing bridge was built against a guess as a result. The
+checksum verification added to `check-governance.mjs` is what would have caught
+it on the first commit.
 
 G7 is closed as a **primitive**. The 25 routes that lack lifecycle states adopt
 it in their own journey slices; this PR deliberately retrofits none of them.
