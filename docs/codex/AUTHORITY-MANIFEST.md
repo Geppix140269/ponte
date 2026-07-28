@@ -17,6 +17,7 @@ required sources for audits and the current development cycle.
 | 1f | `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` | Ponte Trade Deal Room Launch Model v2 | **Proposed for owner approval.** Consolidates Free Market Access, Starter Deal Room, Portfolio subscription and Ponte Credits. |
 | 1g | `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` | Ponte Trade Deal Room Launch Pricing and Entitlement Model v1 | Earlier proposal without Starter Access; retained for traceability. |
 | 1h | `docs/ponte-authority/PT-PRODUCT-2026-07-27-03-DEAL-PASSPORT.md` | Ponte Trade Deal Passport | **Accepted 27 July 2026; effective on merge.** Defines the evidence-backed transaction-history layer derived from Deal Rooms, distinct from the Business Passport and without a generic Trust Score. |
+| 1i | `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md` | Complete Market Discoverability and Category-First Journeys | **Accepted 28 July 2026; effective on merge.** Every eligible Market Signal must be discoverable, and Trade Services and Distribution must begin with structured categories rather than generic free text. |
 | 2 | `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` | Ponte Trade Master Implementation Brief v1 | **Imported and byte-verified on 25 July 2026.** |
 | 3 | `docs/ponte-authority/01-MASTER-PRODUCT-ARCHITECTURE-V3.md` | Master Product, Experience and Agentic Architecture v3 | Optional supporting import |
 | 4 | `docs/ponte-authority/02-FINAL-BRAND-SYSTEM.md` | Final Brand System and Product-Design Handoff / Brand Book v5 authority | Optional supporting import |
@@ -43,7 +44,7 @@ The SOP governs process, not product meaning. GitHub Issues remain proposal and 
 
 ## Governing rule
 
-The Master Implementation Brief governs where later accepted authorities do not restate the decision. Later accepted Deal Room, monetisation, master-room, Starter Access and Deal Passport authorities govern within their scopes. Verified live technical and legal constraints must still be reported before changing direction.
+The Master Implementation Brief governs where later accepted authorities do not restate the decision. Later accepted Market Discoverability, Deal Room, monetisation, master-room, Starter Access and Deal Passport authorities govern within their scopes. Verified live technical and legal constraints must still be reported before changing direction.
 
 The proposed launch-model authority does not become binding until owner approval. Its existence on a branch is not implementation status and does not authorise charging.
 

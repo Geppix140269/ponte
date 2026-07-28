@@ -2,6 +2,20 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 — Complete Market Signal discoverability and category-first non-product journeys (ADR-0011)
+
+**Decision:** Every approved, unexpired and anonymised public Market Signal must be discoverable through search, filtering, hierarchical browsing or pagination. The current 60-record read may remain a page size but must not be presented as the total inventory or remain a terminal access cap. The approximately 160 newly supplied records must be reconciled through the existing identity, provenance, deduplication, privacy, approval and expiry rules; exact totals must be reported from the database rather than calculated as a hard-coded addition.
+
+**Search and classification:** Market Signals listing, Find and taxonomy browsing must use one server-side query contract across the complete eligible inventory. It must support accurate totals, keyword search, product hierarchy, commercial side, geography, date, stable URL state, filters, sorting and pagination. Unclassified records remain discoverable and must not receive fabricated HS classifications.
+
+**Category-first creation and Find:** Products retain their structured product-classification journey. Trade services and Distribution and representation must begin with clickable canonical categories, not a generic blank one-line text field. Free text appears only after Other or as later optional context. Find, Explore, Start a Deal, storage, filtering, analytics and future matching must use the same stable taxonomy keys.
+
+**Distribution correction:** Partner or channel type, product/sector attachment, territory and relationship structure are separate concepts. Distributor, agent and broker are partner types; Exclusive and Non-exclusive are relationship terms. Existing values require explicit compatibility mapping rather than silent reinterpretation.
+
+**Implementation boundary:** Giuseppe issued the combined development brief to Claude Code on 28 July 2026. The product decision and implementation scope are accepted. At this record point no implementation branch, import result, schema migration, deployment or production verification for this scope has been evidenced. Applying a production migration, deploying or merging remains subject to the stop conditions in `AGENTS.md`.
+
+**Affected areas:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`, Market Signals listing and detail, Find, Structure/Start a Deal, `lib/taxonomy/market.ts`, public query projections, database indexes and optional additive schema work, import reconciliation, SEO and URL-state behaviour, `docs/codex/CURRENT-STATE.md`.
+
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 
 **Context:** Slice 2 of the Constitution-led rebuild ExecPlan, branch `design/phase-2-foundation-tokens`. Foundation only. No route was redesigned, no Bridge primitive was built, and no legacy removal was begun.
