@@ -61,18 +61,31 @@ but your assumptions are not.
 There is exactly one migration in this PR:
 
 ```
-supabase/migrations/20260728b_automated_listing_publication.sql
+supabase/migrations/20260728c_automated_listing_publication.sql
 ```
 
 It must land **after** `20260728a_market_classification.sql`, which is already
 in production (applied by hand on 28 July 2026). Nothing else in the chain is a
-prerequisite. The `b` suffix exists because of that ordering: an earlier draft
-of this branch also used `20260728a` and collided.
+prerequisite.
+
+The `c` suffix is the result of two successive collisions, both real:
+
+- this file was originally `20260728a`, colliding with the market
+  classification migration that is already in production;
+- renaming it to `20260728b` then collided with
+  `20260728b_schema_migrations_rls.sql`, which reached `main` first through
+  PR #76.
+
+`main` currently carries **two files named `20260728a`**: the market
+classification migration and an earlier copy of this one, merged before the
+rename. Resolving that is part of landing this branch. Until it is resolved, an
+operator reading the migration directory cannot tell from a filename which of
+the two is in production.
 
 ### 1.2 Apply
 
 ```bash
-node scripts/db-query.mjs --file supabase/migrations/20260728b_automated_listing_publication.sql
+node scripts/db-query.mjs --file supabase/migrations/20260728c_automated_listing_publication.sql
 ```
 
 The file is additive and idempotent. It creates no destructive statement, drops
@@ -176,11 +189,20 @@ netlify env:list
 ### 4.1 Order
 
 1. Migration applied and verified (steps 1.2–1.4).
-2. Merge PR #74 to `main`.
+2. Merge the pull request carrying this branch to `main`.
 3. Netlify builds and deploys `main` automatically.
 4. Confirm the deploy succeeded before running smoke tests.
 
 Do not merge before step 1.4 passes.
+
+**Note on PR #74.** It was merged on 28 July 2026 at 14:40 UTC, carrying the
+application code but **not** the exception console, this runbook, the
+verification audit, or the migration rename. `main` therefore holds the feature
+with two files named `20260728a`, a `lib/listings/safety.ts` that git reads as
+binary, and `/admin/listings` still presenting the old queue. The remaining
+work is on `fix/automated-listings-email-system`, ahead of `main`, and needs
+its own pull request. Deploy from the branch that carries the rename, not from
+the state PR #74 left.
 
 ### 4.2 Supabase Auth email templates
 

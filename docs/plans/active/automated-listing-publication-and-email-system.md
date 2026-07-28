@@ -103,7 +103,7 @@ are rendered from the same list, so they cannot drift and one cannot be omitted.
 
 ## 7. Migration plan
 
-`supabase/migrations/20260728b_automated_listing_publication.sql`. Additive and
+`supabase/migrations/20260728c_automated_listing_publication.sql`. Additive and
 idempotent. Adds four lifecycle states, the quantity mode and bounds, the
 declaration, the extraction-confirmation pair, safety flag columns, the
 completeness score, the `listing_events` table and three indexes; restates the

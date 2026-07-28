@@ -144,7 +144,7 @@ settings and possibly a Supabase project, and both are owner decisions.
 
 ## Written but NOT applied
 
-`20260728b_automated_listing_publication.sql` implements ADR-0013. It has **not**
+`20260728c_automated_listing_publication.sql` implements ADR-0013. It has **not**
 been applied to production and has not been probe-verified. It is additive and
 idempotent throughout.
 
