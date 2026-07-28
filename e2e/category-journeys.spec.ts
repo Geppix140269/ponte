@@ -249,6 +249,31 @@ test("Market Signals carries structured filters over the whole board", async ({ 
   await shot(page, "desktop-18-market-signals-filters");
 });
 
+test("a filter that cannot be answered never claims the board is empty", async ({ page }) => {
+  /*
+   * The live half of the state-ordering fix.
+   *
+   * `partial` and `coverage_unknown` cannot be reached yet, because nothing is
+   * classified. `unclassified` can, and it travels the same path: it is a state
+   * that must explain itself rather than render the board's own "no signal is
+   * currently live" copy. That copy is a claim about the whole public board and
+   * it was, until this fix, what an unanswerable filter printed.
+   */
+  await page.goto("/market-signals?family=services", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("Ponte cannot filter signals by this category yet")).toBeVisible();
+  await expect(page.getByText("No signal is currently live on the public board")).toHaveCount(0);
+  await shot(page, "desktop-21-market-signals-unanswerable-filter");
+});
+
+test("the unfiltered board still reports its records and its reach", async ({ page }) => {
+  // The other side of the same table: a state that CAN see everything is still
+  // allowed to say what it found, and to say what cannot be reached.
+  await page.goto("/market-signals", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(/[\d,]+ signals/).first()).toBeVisible();
+  await expect(page.getByText(/are counted but not yet reachable/)).toBeVisible();
+  await expect(page.getByText("Ponte cannot filter signals by this category yet")).toHaveCount(0);
+});
+
 // ---------------------------------------------------------------------------
 // 390 x 844
 // ---------------------------------------------------------------------------

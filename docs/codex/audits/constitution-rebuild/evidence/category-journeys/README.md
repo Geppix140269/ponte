@@ -63,6 +63,7 @@ been **proved** to contain no text field.
 | `desktop-18-market-signals-filters.png` | Market Signals, structured filters and the true count |
 | `desktop-19-keyboard-focus.png` | The focus ring on a category tile |
 | `desktop-20-reduced-motion.png` | `prefers-reduced-motion: reduce`. Identical composition |
+| `desktop-21-market-signals-unanswerable-filter.png` | A filter Ponte cannot answer, explaining itself instead of claiming the board is empty |
 | `mobile-1-services-categories-390x844.png` | 390 x 844. One column, Other last |
 | `mobile-2-distribution-partner-types-390x844.png` | 390 x 844. Twelve partner types |
 | `mobile-3-find-service-categories-390x844.png` | 390 x 844. Find, service categories |
@@ -163,6 +164,19 @@ on it unstable before it was ever built.
   copy and asserts that an empty partial result reads "No match among the
   records Ponte can filter" and states how many were not searched. The detection
   logic is pinned separately in `lib/board/__tests__/market-signals.test.ts`.
+
+  The **state ordering** is pinned there too, and it is the part that was
+  broken. The board tested `records.length === 0` before it reached the coverage
+  notices, so an empty partial result rendered "No signal is currently live on
+  the public board", a conclusive claim about the whole board, and the notice
+  explaining the blind spot was unreachable exactly when it mattered most. The
+  rule was right; its position in a ternary chain was not. The decision is now a
+  table in `lib/board/presentation.ts`, both surfaces read it, and the matrix is
+  asserted rather than inspected.
+
+  `desktop-21` is the live half of that fix. `unclassified` travels the same
+  path and IS reachable today, so the frame shows a filter Ponte cannot answer
+  explaining itself, with the whole-board copy asserted absent.
 
 - **The frames are not asserted byte-identical across runs.** The landing
   evidence suite makes that claim for its own frames; this one does not, and no

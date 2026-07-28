@@ -10,10 +10,12 @@
 // is a state that will be wrong when it does.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 /* eslint-disable import/first */
 import CoverageNotice, { coverageValues } from "../../../components/find/CoverageNotice";
 import { mount } from "../../landing/__tests__/render";
+import { presentBoard } from "../presentation";
 /* eslint-enable import/first */
 
 const tests: { name: string; fn: () => void }[] = [];
@@ -179,6 +181,98 @@ test("the two non-conclusive states are distinguishable in the markup", () => {
     labels: labelsFor({ classified: 1, eligible: 2 }),
   });
   assert.equal(partial.all()[0].props["data-coverage"], "partial");
+});
+
+// ---------------------------------------------------------------------------
+// Which state may claim an emptiness
+// ---------------------------------------------------------------------------
+//
+// The bug this pins was real and shipped: the Market Signals board tested
+// `records.length === 0` BEFORE it reached the coverage notices, so an empty
+// partial result rendered "No signal is currently live on the public board", a
+// conclusive claim about the whole board, and the notice explaining the
+// filter's blind spot was unreachable exactly when it mattered most.
+//
+// The rule was right; its position in a ternary chain was not. So the decision
+// is a table, and this is the table.
+
+test("an empty partial result never renders the genuine-empty copy", () => {
+  const p = presentBoard("partial", 0);
+  assert.equal(p.genuineEmpty, false, "an empty partial claimed the market is empty");
+  assert.equal(p.coverageNotice, "partial", "the coverage notice was skipped when it mattered most");
+  assert.equal(p.records, false);
+});
+
+test("an empty coverage_unknown result never renders the genuine-empty copy", () => {
+  const p = presentBoard("coverage_unknown", 0);
+  assert.equal(p.genuineEmpty, false, "an empty unknown-coverage result claimed the market is empty");
+  assert.equal(p.coverageNotice, "unknown");
+  assert.equal(p.records, false);
+});
+
+test("an empty ok result DOES render the genuine-empty copy", () => {
+  // The other half. A state that could see everything and found nothing is
+  // entitled to say so, and suppressing that would be its own defect.
+  const p = presentBoard("ok", 0);
+  assert.equal(p.genuineEmpty, true);
+  assert.equal(p.coverageNotice, null);
+  assert.equal(p.records, false);
+});
+
+test("a coverage notice never depends on whether records came back", () => {
+  // Gating the notice on results is the shape of the original bug.
+  for (const count of [0, 1, 60]) {
+    assert.equal(presentBoard("partial", count).coverageNotice, "partial", `count ${count}`);
+    assert.equal(presentBoard("coverage_unknown", count).coverageNotice, "unknown", `count ${count}`);
+  }
+});
+
+test("no state both shows records and claims the market is empty", () => {
+  for (const state of ["ok", "partial", "coverage_unknown", "unclassified", "unavailable"] as const) {
+    for (const count of [0, 1, 60]) {
+      const p = presentBoard(state, count);
+      assert.ok(!(p.records && p.genuineEmpty), `${state}/${count} does both`);
+      // And the two head states are exclusive of everything else, because each
+      // replaces the result entirely rather than annotating it.
+      if (p.unavailable || p.unclassified) {
+        assert.equal(p.records, false, `${state} renders records`);
+        assert.equal(p.genuineEmpty, false, `${state} claims emptiness`);
+        assert.equal(p.coverageNotice, null, `${state} also shows a coverage notice`);
+      }
+    }
+  }
+});
+
+test("only ok can ever claim the market is empty, at any record count", () => {
+  const claiming = (["ok", "partial", "coverage_unknown", "unclassified", "unavailable"] as const)
+    .filter((state) => [0, 1, 60].some((count) => presentBoard(state, count).genuineEmpty));
+  assert.deepEqual(claiming, ["ok"]);
+});
+
+test("records render whenever there are any, except where the state replaces them", () => {
+  assert.equal(presentBoard("ok", 3).records, true);
+  assert.equal(presentBoard("partial", 3).records, true);
+  assert.equal(presentBoard("coverage_unknown", 3).records, true);
+  // These two are explanations, not annotated results: there is nothing to show.
+  assert.equal(presentBoard("unclassified", 3).records, false);
+  assert.equal(presentBoard("unavailable", 3).records, false);
+});
+
+test("both surfaces read the same table", () => {
+  // A rule that held on one page and not the other is how this went wrong the
+  // first time: the Find lanes were correct and the board was not.
+  const board = readFileSync("app/[locale]/market-signals/page.tsx", "utf8");
+  const find = readFileSync("app/[locale]/find/page.tsx", "utf8");
+  for (const [name, src] of [["market-signals", board], ["find", find]] as const) {
+    assert.ok(src.includes("presentBoard("), `${name} does not use the shared table`);
+    assert.ok(src.includes("genuineEmpty"), `${name} decides its empty state some other way`);
+  }
+  // And the board no longer short-circuits on an empty result before the
+  // notices, which is the exact line that caused the bug.
+  assert.ok(
+    !/\) : records\.length === 0 \? \(/.test(board),
+    "the board still tests records.length before reaching the coverage notices",
+  );
 });
 
 // ---------------------------------------------------------------------------

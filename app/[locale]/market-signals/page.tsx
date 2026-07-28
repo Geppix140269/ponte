@@ -12,6 +12,7 @@ import FactRegister from "@/components/desk/FactRegister";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalFilters, { ActiveFilters, signalFilterHref } from "@/components/desk/SignalFilters";
 import { parseFindQuery, toInventoryQuery } from "@/lib/find/query";
+import { presentBoard } from "@/lib/board/presentation";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
 import "@/components/ponte/category/category.css";
@@ -108,6 +109,11 @@ export default async function MarketSignalsPage({
   const records = answered ? board.signals.map(toDeskRecord) : [];
   /** Eligible records matching the active filters, across the whole table. */
   const matched = answered ? board.total : records.length;
+  /**
+   * What this page renders, decided by one table rather than by the nesting of
+   * a ternary chain. Only `ok` may present an emptiness as a finding.
+   */
+  const presentation = presentBoard(board.state, records.length);
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -117,7 +123,7 @@ export default async function MarketSignalsPage({
 
           <SignalFilters q={q} />
 
-          {board.state === "unclassified" ? (
+          {presentation.unclassified && board.state === "unclassified" ? (
             /*
              * Neither a result nor an emptiness.
              *
@@ -151,7 +157,7 @@ export default async function MarketSignalsPage({
                 </div>
               </div>
             </div>
-          ) : board.state === "unavailable" ? (
+          ) : presentation.unavailable ? (
             <div className="err">
               <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
               <div>
@@ -168,24 +174,6 @@ export default async function MarketSignalsPage({
                 </div>
               </div>
             </div>
-          ) : records.length === 0 ? (
-            <div className="empty">
-              <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
-              <div>
-                <b>No signal is currently live on the public board</b>
-                <p>
-                  Ponte publishes a signal only while it is approved and inside its public life.
-                  Nothing found is not the same as nothing happening: sources publish late, a
-                  signal leaves the board ninety days after it was read, and some buying is never
-                  published at all.
-                </p>
-                <div className="empty__a">
-                  <Link className="b" href="/structure">
-                    Bring a requirement or offer to the desk
-                  </Link>
-                </div>
-              </div>
-            </div>
           ) : (
             <>
               <ActiveFilters q={q} />
@@ -196,7 +184,7 @@ export default async function MarketSignalsPage({
                 shown without this reads as a statement about the market when
                 it is a statement about the classified part of it.
               */}
-              {board.state === "coverage_unknown" && (
+              {presentation.coverageNotice === "unknown" && (
                 <div className="empty" style={{ marginBottom: 12 }}>
                   <PonteIcon
                     name="participation.boundary"
@@ -213,7 +201,7 @@ export default async function MarketSignalsPage({
                   </div>
                 </div>
               )}
-              {board.state === "partial" && (
+              {presentation.coverageNotice === "partial" && board.state === "partial" && (
                 <div className="empty" style={{ marginBottom: 12 }}>
                   <PonteIcon
                     name="participation.boundary"
@@ -236,6 +224,39 @@ export default async function MarketSignalsPage({
                   </div>
                 </div>
               )}
+              {/*
+                The genuine emptiness, and the only state allowed to claim it.
+                It sits AFTER the coverage notices and is gated on the table,
+                because it used to sit before them: an empty partial result
+                rendered a whole-board claim and the notice explaining the
+                filter's blind spot was unreachable exactly when it mattered.
+              */}
+              {presentation.genuineEmpty && (
+                <div className="empty">
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={24}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>No signal is currently live on the public board</b>
+                    <p>
+                      Ponte publishes a signal only while it is approved and inside its public life.
+                      Nothing found is not the same as nothing happening: sources publish late, a
+                      signal leaves the board ninety days after it was read, and some buying is
+                      never published at all.
+                    </p>
+                    <div className="empty__a">
+                      <Link className="b" href="/structure">
+                        Bring a requirement or offer to the desk
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {presentation.records && (
+                <>
               {/*
                 The count is the whole matching eligible inventory, and the
                 range is what a member can actually see. Both are printed,
@@ -270,6 +291,8 @@ export default async function MarketSignalsPage({
                     <RecordCard key={record.ref} record={record} />
                   ))}
                 </div>
+              )}
+                </>
               )}
             </>
           )}

@@ -19,6 +19,7 @@ import {
   toInventoryQuery,
   type FindQuery,
 } from "@/lib/find/query";
+import { presentBoard } from "@/lib/board/presentation";
 import { serviceCategory, serviceSubcategory } from "@/lib/taxonomy/services";
 import { partnerType } from "@/lib/taxonomy/distribution";
 import "@/components/find/find.css";
@@ -169,6 +170,12 @@ async function Results({ q }: { q: FindQuery }) {
   const deals = answered(board) && "deals" in board ? board.deals : [];
   const signalRows = answered(signals) && "signals" in signals ? signals.signals : [];
 
+  // The same table the Market Signals board uses. Written once so the rule that
+  // only `ok` may present an emptiness as a finding cannot hold on one surface
+  // and not the other.
+  const qo = presentBoard(board.state, deals.length);
+  const ms = presentBoard(signals.state, signalRows.length);
+
   const qoBase = {
     kind: t("qualified.kind"),
     view: t("qualified.view"),
@@ -237,19 +244,19 @@ async function Results({ q }: { q: FindQuery }) {
               {"total" in board ? t("qualified.count", { count: board.total }) : ""}
             </span>
           </div>
-          {board.state === "partial" && (
+          {qo.coverageNotice === "partial" && board.state === "partial" && (
             <CoverageNotice
               coverage={board.coverage}
               empty={deals.length === 0}
               labels={coverageLabels(board.coverage, t)}
             />
           )}
-          {board.state === "coverage_unknown" && (
+          {qo.coverageNotice === "unknown" && (
             <CoverageNotice empty={deals.length === 0} labels={unknownLabels(t)} />
           )}
-          {board.state === "unclassified" ? (
+          {qo.unclassified && board.state === "unclassified" ? (
             <Unclassified q={q} reason={board.reason} t={t} />
-          ) : deals.length > 0 ? (
+          ) : qo.records ? (
             deals.map((d) => (
               <QoRow
                 key={d.id}
@@ -258,7 +265,7 @@ async function Results({ q }: { q: FindQuery }) {
                 labels={{ ...qoBase, ref: t("qualified.ref", { ref: d.ref ?? "" }) }}
               />
             ))
-          ) : board.state !== "ok" ? null : (
+          ) : !qo.genuineEmpty ? null : (
             <div className="fstate">
               <span className="fstate__badge">{t("qualified.emptyBadge")}</span>
               <h3 className="fstate__h serif">{t("qualified.emptyTitle")}</h3>
@@ -278,21 +285,21 @@ async function Results({ q }: { q: FindQuery }) {
             </span>
           </div>
           <p className="flane__note">{t("signals.note")}</p>
-          {signals.state === "partial" && (
+          {ms.coverageNotice === "partial" && signals.state === "partial" && (
             <CoverageNotice
               coverage={signals.coverage}
               empty={signalRows.length === 0}
               labels={coverageLabels(signals.coverage, t)}
             />
           )}
-          {signals.state === "coverage_unknown" && (
+          {ms.coverageNotice === "unknown" && (
             <CoverageNotice empty={signalRows.length === 0} labels={unknownLabels(t)} />
           )}
-          {signals.state === "unclassified" ? (
+          {ms.unclassified && signals.state === "unclassified" ? (
             <Unclassified q={q} reason={signals.reason} eligible={signals.eligible} t={t} />
-          ) : signalRows.length > 0 ? (
+          ) : ms.records ? (
             signalRows.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
-          ) : signals.state !== "ok" ? null : (
+          ) : !ms.genuineEmpty ? null : (
             <div className="fstate">
               <h3 className="fstate__h serif">{t("signals.emptyTitle")}</h3>
               <p className="fstate__p">{t("signals.emptyBody")}</p>
