@@ -68,7 +68,16 @@ signal crosses the bridge; it does not slide between two stations. It also
 covers most of the distance early, because `br-travel` uses the approved
 `--pf-ease` `cubic-bezier(.2,.6,.2,1)`, which is front-loaded.
 
-**All sixteen frames are byte-identical across three consecutive runs.**
+**Fifteen of the sixteen frames are byte-identical across repeated runs.**
+
+`mobile-1-family-neutral-390x844.png` varies occasionally. It is a viewport
+frame, so it includes the Desk command bar, whose account control sits behind
+`<Suspense fallback={null}>` and appears after hydration. The bridge itself is
+provably not the cause: measured across four runs, the scroll position, the
+block's height and offset, the traced curve and every node position are
+identical to the hundredth of a pixel. The variance is page chrome above the
+bridge resolving asynchronously, not geometry, and it is recorded here rather
+than presented as stability the frame does not have.
 
 ## 3. Product sectors and HS language are gone
 
@@ -109,6 +118,36 @@ that from `requiresHsClassification(family)`, which is true for products alone.
 - **DS-9**: one focus treatment, and no other Desk control lost its ring.
 - **The geometry itself** is pinned to the engine's own numbers: the deck path
   string, the station fractions, the block-width formula and the elevation bow.
+
+## 4a. The mobile overlap, fixed
+
+Spotted by the owner in review: at 390 the last station's description, "Agency,
+distribution and market coverage.", ran **into** the Market Signals section
+below it.
+
+It was a real overlap, not tight spacing. Measured at 390 before the fix:
+
+| | Before | After |
+|---|---|---|
+| Gap from the last description to the section below | **−10px** | 50px |
+| Rows box height vs its own content | 229 against 273 | 289 against 289 |
+
+**Cause.** The horizontal and vertical branches were both a `<div>` in the same
+position, so React kept the element and only swapped its class. The horizontal
+stage's `fit()` sets an inline height on that element, and after a switch to
+elevation the stale `height: 229px` stayed on `.br__rows` and clipped it. The
+stations kept their natural size and simply overflowed the box, onto whatever
+followed.
+
+**Fix.** Distinct `key`s on the two branches so React never reuses one mode's
+node as the other's, plus the elevation drawing clearing any height it finds
+before it measures. Both, because the key prevents the class of bug and the
+clear prevents this particular symptom returning by another route.
+
+**Regression test.** The per-width checks now also assert that the rows box
+carries no inline height, that it contains its own stations, and that the last
+station does not reach the section below. Verified to fail when the fix is
+reverted, at all four widths.
 
 ## 5. Remaining differences from the approved reference
 

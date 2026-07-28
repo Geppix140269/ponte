@@ -298,6 +298,11 @@ export default function BridgeRoute({
     if (!isVertical || !rows) return;
 
     const draw = () => {
+      // Belt and braces alongside the keys above: the rows box must always size
+      // itself from its stations. If anything ever puts a height on it, the last
+      // station overflows onto whatever follows the bridge, which is a failure
+      // the engine's own `fit` comment warns about in the other direction.
+      rows.style.removeProperty("height");
       const H = rows.offsetHeight;
       if (!H) return;
       let svg = rows.querySelector<SVGSVGElement>(".br__vsvg");
@@ -503,12 +508,23 @@ export default function BridgeRoute({
 
   return (
     <div className={rootClasses} role={mode === "select" ? "radiogroup" : "group"} aria-label={ariaLabel} ref={rootRef}>
+      {/*
+        The two modes carry distinct keys so React never reuses one's DOM node
+        as the other's.
+
+        Without them both branches are a `<div>` in the same position, so React
+        keeps the element and swaps its className. The horizontal `fit()` sets an
+        inline height on the stage, and after a switch to elevation that height
+        survived onto `.br__rows` and clipped it: the rows box stopped 44px short
+        of its own content, and the last station's description ran over the
+        section below. Which is exactly what it looked like at 390.
+      */}
       {isVertical ? (
-        <div className="br__rows br__rows--arc" ref={rowsRef}>
+        <div key="rows" className="br__rows br__rows--arc" ref={rowsRef}>
           {stations.map(renderStation)}
         </div>
       ) : (
-        <div className="br__stage" style={{ position: "relative" }} ref={stageRef}>
+        <div key="stage" className="br__stage" style={{ position: "relative" }} ref={stageRef}>
           <svg
             className="br__deck"
             style={{ position: "absolute", left: 0, top: 0 }}
