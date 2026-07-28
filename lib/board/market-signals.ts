@@ -110,6 +110,13 @@ export async function readMarketSignals(limit = 60): Promise<MarketSignalBoard> 
 }
 
 /**
+ * SUPERSEDED by `searchSignalInventory` in `lib/board/inventory.ts`, which
+ * filters on canonical category keys as well as on the product text, and
+ * returns an exact count of the complete inventory rather than only the rows.
+ * Nothing in the application calls this any longer. It is kept, unchanged, as
+ * the narrower product-text search, because deleting a working public function
+ * in the same change that replaces its callers makes both harder to review.
+ *
  * The Market Signals lane for a Find query: approved, unexpired signals whose
  * product matches, newest spotted first. Unlike getMarketSignals (the whole
  * recent board) this filters at the database, because the imported signal set

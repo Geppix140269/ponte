@@ -166,6 +166,18 @@ production verification.
   decisions 4 and 5. 33 unit tests, 17 Playwright checks, 16 byte-deterministic
   evidence frames. `governance:check` and `verify` pass.
 
+- **28 Jul 2026** — Slice 7 (`feature/category-first-market-taxonomy`) implemented,
+  again out of the audit's suggested order: the owner directed the Start a Deal
+  classification work before Explore. Trade services and Distribution no longer
+  open on a blank text field. The canonical taxonomy gains eleven service
+  categories with about 120 subcategories, and separates the four questions the
+  old distribution list had flattened into one. Find opens on the three families
+  and both its lanes filter at the database over the complete record set; Market
+  Signals gains structured filters and an exact inventory count. ADR-0011
+  proposed. 19 Playwright checks, 65 new unit assertions across four files, 23
+  evidence frames. `governance:check` and `verify` pass. **The migration is
+  written and not applied.**
+
 ## 12. Decisions and discoveries
 
 - **Correction to the Phase 1 audit:** `.agent/PLANS.md` **is** tracked on

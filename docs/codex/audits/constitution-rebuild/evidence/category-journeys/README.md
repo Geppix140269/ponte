@@ -1,0 +1,133 @@
+# Category-first journeys — visual evidence
+
+**Branch:** `feature/category-first-market-taxonomy`
+**Captured:** 28 July 2026, against a production build (`next build` + `next start`)
+**Reproduce:** `npx playwright test e2e/category-journeys.spec.ts`
+**Suite:** `e2e/category-journeys.spec.ts` · **Config:** `playwright.config.ts`
+
+To capture against a deploy preview instead of a local build:
+
+```bash
+PONTE_EVIDENCE_BASE_URL=https://deploy-preview-66--ponte-trade.netlify.app npx playwright test e2e/category-journeys.spec.ts
+```
+
+---
+
+## 1. What was replaced
+
+Choosing **Trade services** or **Distribution and representation** on the
+landing used to open a single blank line:
+
+> State it in one line
+
+Products, by contrast, had a progressive category journey. Two of Ponte's three
+equal families were asking the member to do classification work Ponte should do,
+and producing records that could not be filtered, matched, counted or searched.
+
+| Was | Is |
+|---|---|
+| One blank input, for both families | A grid of clickable categories, per family |
+| The member guesses the terminology | Eleven service categories, twelve partner types, each described |
+| One flat distribution list mixing four questions | Partner type, relationship, coverage and sector as four separate questions |
+| `draft.product` holds a product, a service, an arrangement or prose | Stable keys per dimension, in their own fields |
+| Free text always | Free text only after Other, or in an optional details step |
+| Find needs a product, which two families do not have | Find opens on the family, then the category |
+| Find filters the newest sixty in memory | Both lanes filter at the database over the whole table |
+| Market Signals prints the length of its page | Market Signals counts the complete inventory |
+
+## 2. The frames
+
+Twenty-three, at desktop and at 390 x 844. Each is taken beside an assertion
+about what is on screen, so a frame showing a category grid is a frame that has
+been **proved** to contain no text field.
+
+| File | State |
+|---|---|
+| `desktop-1-services-categories.png` | Trade services, seeking. Eleven categories, Other last |
+| `desktop-2-services-offer.png` | Trade services, offering. "Which trade service do you provide?" |
+| `desktop-3-services-category-chosen.png` | Freight chosen. Continue is live on the tap alone |
+| `desktop-4-services-subcategories.png` | The fourteen freight details, with the trail above |
+| `desktop-5-services-details-chosen.png` | Two details chosen. Multiple selection inside one category |
+| `desktop-6-services-other.png` | Other, and the one field it reveals |
+| `desktop-7-services-option-filter.png` | The find-within-the-options control on a long list |
+| `desktop-8-distribution-partner-types.png` | Twelve partner types |
+| `desktop-9-distribution-offer.png` | Offering coverage, same twelve |
+| `desktop-10-distribution-brands-sectors.png` | Seeking brands: opens on product sectors instead |
+| `desktop-11-distribution-coverage.png` | Coverage, with Italy added as a stored ISO-2 code |
+| `desktop-12-distribution-relationship.png` | Relationship structure, and the three-answer trail |
+| `desktop-13-products-hs-unchanged.png` | Products: the HS journey, untouched |
+| `desktop-14-find-families.png` | Find opens on the three families |
+| `desktop-15-find-service-categories.png` | Find, service categories |
+| `desktop-16-find-service-results.png` | Find results, with the narrowing list and both lanes |
+| `desktop-17-find-partner-types.png` | Find, distribution partner types |
+| `desktop-18-market-signals-filters.png` | Market Signals, structured filters and the true count |
+| `desktop-19-keyboard-focus.png` | The focus ring on a category tile |
+| `desktop-20-reduced-motion.png` | `prefers-reduced-motion: reduce`. Identical composition |
+| `mobile-1-services-categories-390x844.png` | 390 x 844. One column, Other last |
+| `mobile-2-distribution-partner-types-390x844.png` | 390 x 844. Twelve partner types |
+| `mobile-3-find-service-categories-390x844.png` | 390 x 844. Find, service categories |
+
+## 3. What the suite verifies beyond the pictures
+
+19 checks, all passing.
+
+- **Neither family opens on a text field.** Asserted as the presence of a grid
+  AND the absence of any `input` or `textarea`, because a grid alone would still
+  pass beside a blank line.
+- **The legacy buy/sell/service picker is gone** from a family entrance. It
+  cannot express distribution at all, and a member who chose a family on the
+  landing already answered it.
+- **Every canonical option renders**, in taxonomy order, with Other last.
+- **A recognised category needs no prose**: Continue is enabled on the tap.
+- **Other needs prose**, and asks for it in the member's own direction
+  ("Describe the trade service you need" against "...you provide").
+- **Four separate questions** for distribution, and every earlier answer stays
+  on the trail with a way back into it.
+- **Products are untouched**: the HS grid renders and no category picker mounts.
+- **390 x 844**: one column, every tile at least 44px tall, no horizontal
+  overflow on the document.
+- **Keyboard**: the grid is a radiogroup, the arrows traverse it, and the first
+  arrow selects the first option when nothing is chosen yet.
+- **Reduced motion** keeps all eleven labels and the whole settled composition.
+
+## 4. What the frames show that is not yet true of the data
+
+`desktop-16-find-service-results.png` shows the honest state, and it is worth
+looking at rather than skipping.
+
+**No published record carries a canonical category.** The columns are added by
+`supabase/migrations/20260728a_market_classification.sql`, which is written and
+**not applied**: a merge applies no migration in this repository. Even once it
+runs, nothing is backfilled, because writing a guess into those columns would
+invent a finding.
+
+So a category filter cannot answer yet, and both lanes say so:
+
+> Ponte cannot filter this market by category yet.
+
+That is deliberate. Printing "no match" would be Ponte reporting a finding it
+never made, and it is the same distinction the board already draws between
+nothing found and nothing read. The state disappears on its own as records are
+created with categories.
+
+`desktop-18-market-signals-filters.png` is the counterpart: an unfiltered read
+against the real database, reporting **3,543 signals, 60 shown**. The board
+previously said "60 signals", because sixty was all it had read.
+
+## 5. Known limits, recorded rather than left to be noticed
+
+- **The frames are not asserted byte-identical across runs.** The landing
+  evidence suite makes that claim for its own frames; this one does not, and no
+  determinism check was run here. Treat them as accurate captures, not as a
+  regression baseline.
+- **The Qualified lane's count is a count of what survived a bounded read**, not
+  a database count. Two visibility rules (a listing's validity clock and its
+  owner's verification) cannot be expressed in the query, so an exact database
+  count would count rows the member may not see. The read ceiling is 500 and
+  `bounded` reports when it was reached.
+- **Home and End are not bound** on the category grid, matching the Bridge
+  primitive, which binds only the four arrows. A radiogroup conventionally
+  supports them; adding them is an enhancement for the owner to approve.
+- **Five partner types and both escape routes have no icon.** The registry has
+  no asset, and drawing one would be an unapproved addition. The column is
+  reserved so the grid still aligns.
