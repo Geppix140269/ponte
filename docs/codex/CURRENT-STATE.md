@@ -1,16 +1,11 @@
 # Current state
 
-**Reconciled:** 27 July 2026  
-<<<<<<< HEAD
-**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
+**Reconciled:** 28 July 2026  
+**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0010 (complete-interface scope)  
-**Bridge authority:** `design/authority/bridge/v1/` (merged, no production primitive yet)  
-=======
-**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)
-**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` and ADR-0002, pending merge of the authority PR
-**Bridge authority:** `design/authority/bridge/v1/`, pending merge of the authority PR
->>>>>>> origin/main
+**Bridge authority:** `design/authority/bridge/v1/` (merged, production primitives incomplete)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
+**Market discoverability authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
 **Deal-to-Room hierarchy:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`  
 **Deal Room monetisation authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`  
@@ -18,11 +13,12 @@
 **Launch model proposal:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
-**Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`
-**Deal Room decision:** `docs/decisions/ADR-0008-deal-room-product-contract.md`
-**Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`
-**Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`
-**Starter Deal Room decision:** `docs/decisions/ADR-0006-starter-deal-room-access.md`
+**Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
+**Market discoverability decision:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`  
+**Deal Room decision:** `docs/decisions/ADR-0008-deal-room-product-contract.md`  
+**Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`  
+**Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`  
+**Starter Deal Room decision:** `docs/decisions/ADR-0006-starter-deal-room-access.md`  
 **Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
@@ -46,6 +42,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Source-of-truth operating procedure | On `main` | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
+| Complete Market Signal discoverability and category-first journeys | Designed and owner-accepted on branch `agent/record-market-discoverability`; development brief issued to Claude Code | Not implemented or production-verified | ADR-0011 makes every eligible signal discoverable and requires Trade Services and Distribution to begin with structured categories. The current 60-record board, generic non-product subject field and approximately 160-row upload remain implementation/reconciliation work. |
 | Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No design, code, schema, migration, deployment or production action. |
 | Deal-to-Room and Sub-Room Model | Designed and owner-accepted on branch | Not started | Structured Deals may be published free. One paid master Deal Room corresponds to one Deal and may contain any number of private related sub-rooms. Five room slots mean five concurrent master Deals, not five conversations. |
 | Deal Room monetisation policy | Designed and owner-accepted on branch | Not started | The upstream market creates liquidity; an active master Deal Room is the primary paid commercial environment. Entitlement is required conceptually. |
@@ -58,10 +55,10 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | English-only interface policy | On `main` | Operating rule | Interface and Ponte-controlled content are English only; multilingual input remains supported. |
 | Unified three-family market contract | On `main` via ADR-0001 | Not fully implemented as a production data contract | Products, Trade services, and Distribution and representation are equal families, each supporting Market Signals and Member Opportunities. |
 | Issue #42 Phase A reconciliation | Complete evidence package | Production-verified for market-record scope | No runtime or database change. |
-| Product Market Signals | On `main` | 3,517 approved and unexpired rows at 26 July probe | Public signals have source category but no HS code. |
+| Product Market Signals | On `main` | 3,517 approved and unexpired rows at 26 July probe; public board currently reads only the newest 60 | Public signals have source category but no HS code. The new approximately 160-row upload has not yet been reconciled in this status record. |
 | Native Member Opportunities | On `main` | 0 exact public records under the current eligibility contract at 26 July probe | Four listing rows existed; two approved/current, zero with passing bound member-business verification. |
-| Trade services inventory | Partially implemented | 0 legacy service rows at 26 July probe | Member creation paths exist after PR #49, but canonical persisted family/intent is not yet first-class. |
-| Distribution and representation inventory | Taxonomy and member creation paths | No canonical external inventory at 26 July probe | Canonical persisted family/intent remains future data-contract work. |
+| Trade services inventory and entry | Partially implemented | 0 legacy service rows at 26 July probe | Member creation paths exist after PR #49, but canonical persisted family/intent is not yet first-class. The live non-product composer still begins with a generic subject field rather than the accepted category-first journey. |
+| Distribution and representation inventory and entry | Taxonomy and member creation paths | No canonical external inventory at 26 July probe | Canonical persisted family/intent remains future data-contract work. Partner type, territory and relationship terms are not yet stored as separate accepted concepts. |
 | Verification/publication eligibility | On `main` | Production defect confirmed | Stored verification vocabulary and numeric code comparison require separate integrity work. |
 | Check and verify journey, request surfaces | On `main` via PR #45 | Not yet independently production-verified | `/verify`, `VerifyForm` and the `/verification` explainer mount PonteShell in heritage-light and are bared in ChromeGate, so reaching business verification from the Start a deal blockers no longer drops the member into the obsidian application mid-task. Every line of copy is unchanged. Plan: `docs/plans/active/verification-journey-brand-v5.md`. |
 
@@ -219,6 +216,8 @@ The 26 July 2026 production probe established:
 
 Twenty-six rows remained stored as `approved_signal` after public expiry. Current readers excluded them correctly, but stored status and public-active lifecycle were not identical.
 
+The approximately 160-row signal batch discussed on 28 July has not yet been reconciled in this production truth. The final stored and public-active totals must be updated only after exact import evidence exists.
+
 ## Current market-model truth
 
 ```text
@@ -238,6 +237,34 @@ desk_radar.side: offer | requirement
 
 These values cannot prove all accepted intents. PR #49 carries canonical family/intent through member journeys but does not authorise or apply a database migration.
 
+## Market discoverability and category-first journey truth
+
+The owner accepted ADR-0011 on 28 July 2026.
+
+The accepted target is:
+
+```text
+Every eligible Market Signal is reachable
+-> full-dataset server-side search and facets
+-> stable URL state and pagination
+-> product hierarchy where classification is supported
+-> truthful Unclassified access where it is not
+```
+
+and for new or searched non-product activity:
+
+```text
+Family and intent
+-> clickable canonical category
+-> relevant subcategory or partner type
+-> family-specific commercial details
+-> optional prose
+```
+
+Trade Services uses structured service categories and subcategories. Distribution separates partner/channel type, product/sector, territory and relationship structure. Other remains the final escape route to targeted manual wording.
+
+This target is **Designed and owner-accepted**, not implemented. The current public Market Signals board still reads only the newest 60 by default; the current non-product Structure path still opens a generic subject field; exact reconciliation of the new batch is not recorded; and no production migration or deployment has been verified.
+
 ## Verification and security findings
 
 Production profile levels were text values while application code performed a numeric conversion before threshold comparison. No passing `member_business` verification existed at the 26 July probe. This requires separate corrective security and integrity work.
@@ -246,12 +273,16 @@ RLS was enabled on inspected core tables. Investigation and connection policies 
 
 ## Immediate next actions
 
-1. Product owner approves or revises the Starter limits and paid launch numbers in `PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`.
-2. Complete issue #51's detailed Deal Room journey, screen register, domain model, permissions, state machine, progress model and delivery plan.
-3. Complete issue #52's legal, billing, tax, refund, Stripe, entitlement and unit-economics requirements after commercial approval.
-4. No production schema, pricing, Stripe or charging action without the required later approvals.
-5. Review and merge the Design Constitution authority PR after checks pass.
-6. Open a separate landing bridge implementation PR using the merged authorities.
-7. Verify that PR at desktop and 390 × 844, including keyboard and reduced motion, before merge.
-8. Continue market-data, verification and schema work only through their existing explicit plans; do not hide them inside design implementation.
-9. Do not start an uncontrolled app-wide repaint. Apply the Constitution through scoped journey-level PRs.
+1. Review and merge the ADR-0011/source-of-truth documentation pull request so Claude Code and future contributors can treat the decision as binding repository authority.
+2. Claude Code implements the accepted complete Market Signals search, pagination, new-batch reconciliation and category-first Trade Services and Distribution journeys through its dedicated branch and PR.
+3. Require exact before-and-after counts, classification coverage, privacy-contract evidence, tests and desktop/390 × 844 screenshots before implementation approval.
+4. Do not apply a production migration, deploy, change a production feature flag or merge the implementation without the later approval required by `AGENTS.md`.
+5. Product owner approves or revises the Starter limits and paid launch numbers in `PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`.
+6. Complete issue #51's detailed Deal Room journey, screen register, domain model, permissions, state machine, progress model and delivery plan.
+7. Complete issue #52's legal, billing, tax, refund, Stripe, entitlement and unit-economics requirements after commercial approval.
+8. No production schema, pricing, Stripe or charging action without the required later approvals.
+9. Review and merge the Design Constitution authority PR after checks pass.
+10. Open a separate landing bridge implementation PR using the merged authorities.
+11. Verify that PR at desktop and 390 × 844, including keyboard and reduced motion, before merge.
+12. Continue market-data, verification and schema work only through their existing explicit plans; do not hide them inside design implementation.
+13. Do not start an uncontrolled app-wide repaint. Apply the Constitution through scoped journey-level PRs.
