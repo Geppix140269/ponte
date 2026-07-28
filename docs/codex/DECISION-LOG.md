@@ -2,6 +2,50 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 — Record the 29 production tables the repository never described
+
+**Decision:** the tables in production that no repository file declares are
+captured as a generated schema-only baseline at
+`supabase/baseline/2026-07-28-undeclared-production-tables.sql`, outside
+`supabase/migrations` so that nothing applies it.
+
+**The size of the gap.** Production holds 52 tables in `public`. The repository
+declares 23. The other 29 were created straight against the database or pre-date
+the chain, and nothing here said they existed. That, not the numbered chain
+aborting, is the deeper reason applying this repository to an empty project does
+not reproduce production, and it is why the Supabase preview could never have
+worked even pointed at the right project.
+
+**Why a baseline and not migrations.** Writing 29 `create table` files into the
+chain would claim a history that did not happen and would put files that must
+never run next to files that must. A baseline states the shape without claiming
+the provenance, and the two questions stay separable: what production is, and
+how it got that way. The second is still open.
+
+**Generated, not written.** It is produced by reading `pg_catalog`: 272 columns,
+101 constraints, 68 indexes, 38 policies, exact constraint and index text from
+`pg_get_constraintdef` and `pg_get_indexdef`. Hand-editing it would make it say
+what somebody believed rather than what production is, which is the failure it
+exists to end. No row of any of these tables was read, and no data is included.
+
+**What it does not settle.** It records what these tables are, not whether they
+should exist. Among them are the shop-era tables `products` (54 live rows),
+`categories` (10) and `bundle_items` (33), which `supabase/schema.sql` still
+describes as dropped by `20260722a_drop_legacy_shop.sql`. That file is in
+`supabase/pending/` and has never run, so the repository has been describing a
+removal that did not happen. Deciding their future is destructive work and needs
+its own plan.
+
+**Grants are deliberately not emitted.** Supabase's default privileges give
+`anon` and `authenticated` all seven privileges on every new table in `public`,
+and 51 of 52 tables carry exactly that. RLS is the control, not the grant, and
+all 51 have RLS enabled. `schema_migrations` was the one table with RLS
+disabled, which is precisely why the same default grants left it publicly
+readable and writable. The durable rule: a default grant is harmless only while
+RLS is on, so check both on any table not created by a reviewed migration.
+
+**Affected areas:** `supabase/baseline/` (new), `docs/codex/DATABASE-STATE.md`.
+
 ## 28 July 2026 — Close the public read and write hole on the migration ledger
 
 **Decision:** `public.schema_migrations` gets row level security with no policy,
