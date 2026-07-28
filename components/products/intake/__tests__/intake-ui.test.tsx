@@ -320,6 +320,50 @@ test("a catalogue attribute is never presented as a claim the document made", ()
   assert.match(rendered, /Ponte&#x27;s product record, not claims from your document|Ponte's product record, not claims from your document/);
 });
 
+test("a catalogue attribute the document repeated verbatim is not printed twice", () => {
+  const review = documentReview();
+  const product = review.products.find((p) => p.id === "gasoil-10ppm-en590")!;
+  const page = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    review,
+    intentLabel: "x",
+    onEditShared: noop,
+    onEditProduct: noop,
+    onToggleProduct: noop,
+    onConfirm: noop,
+  });
+
+  // The fixture's model answer states "Sulfur: 10 ppm maximum", and the
+  // catalogue holds "Sulphur content: 10 ppm maximum". Same fact, and it was
+  // rendered on two consecutive rows on the deploy preview.
+  const values = page
+    .all()
+    .filter((el) => el.props.className === "prow__v")
+    .map((el) => String(el.props.children));
+  const tenPpm = values.filter((v) => v === "10 ppm maximum");
+  assert.equal(tenPpm.length, 1, `"10 ppm maximum" printed ${tenPpm.length} times`);
+
+  // And a disagreement is still shown twice, because it is one the member has
+  // to see rather than one the review screen may resolve.
+  const disagreeing = {
+    ...review,
+    products: [{ ...product, documentAttributes: [{ key: "s", label: "Sulphur content", value: "50 ppm maximum" }] }],
+  };
+  const second = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    review: disagreeing,
+    intentLabel: "x",
+    onEditShared: noop,
+    onEditProduct: noop,
+    onToggleProduct: noop,
+    onConfirm: noop,
+  });
+  const both = second
+    .all()
+    .filter((el) => el.props.className === "prow__v")
+    .map((el) => String(el.props.children));
+  assert.ok(both.includes("50 ppm maximum"), "the document's value was hidden");
+  assert.ok(both.includes("10 ppm maximum"), "Ponte's differing value was hidden");
+});
+
 test("the four provenance words are four different words", () => {
   const words = new Set(Object.values(PROVENANCE_WORD));
   assert.equal(words.size, 4, "two provenance states share one word, which collapses them");

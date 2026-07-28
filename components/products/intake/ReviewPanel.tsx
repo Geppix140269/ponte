@@ -60,6 +60,44 @@ function ProvenanceMark({ provenance }: { provenance: Provenance }) {
   return <span className={PROVENANCE_CLASS[provenance]}>{PROVENANCE_WORD[provenance]}</span>;
 }
 
+/**
+ * Normalise an attribute string for comparison.
+ *
+ * `sulfur` and `sulphur` are the same element written on two sides of an
+ * ocean, and both appear constantly in real trade documents: the acceptance
+ * fixture writes "Ultra Low Sulfur Diesel" while Ponte's catalogue writes
+ * "Sulphur content". `max` and `maximum` are the same qualifier. Neither pair
+ * is worth printing twice.
+ */
+function fold(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/sulfur/g, "sulphur")
+    .replace(/\bmax\b/g, "maximum")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Does the document already state this catalogue attribute?
+ *
+ * True only when the **values agree**. A document saying 50 ppm where Ponte's
+ * record says 10 ppm is a disagreement the member has to see, and hiding
+ * either half would be the review screen resolving a question that is not its
+ * to resolve.
+ *
+ * Labels match loosely, by prefix, so "Sulfur" and "Sulphur content" are one
+ * row rather than two identical ones.
+ */
+function statesSame(
+  stated: { label: string; value: string },
+  attribute: { label: string; value: string },
+): boolean {
+  if (fold(stated.value) !== fold(attribute.value)) return false;
+  const a = fold(stated.label);
+  const b = fold(attribute.label);
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+
 function TermRow({
   label,
   value,
@@ -203,12 +241,26 @@ export default function ReviewPanel({
               <span className="prow__k">Category</span>
               <span className="prow__v">{product.product.categoryPath.join(" / ")}</span>
             </div>
-            {product.product.attributes.map((attribute) => (
-              <div className="prow" key={attribute.key}>
-                <span className="prow__k">{attribute.label}</span>
-                <span className="prow__v">{attribute.value}</span>
-              </div>
-            ))}
+            {/*
+              A catalogue attribute the document already stated, in the same
+              words, is not shown twice.
+
+              Only when they AGREE. A document that says 50 ppm where Ponte's
+              record says 10 ppm is a disagreement the member has to see, and
+              hiding either half of it would be the review screen deciding a
+              question that is not its to decide.
+            */}
+            {product.product.attributes
+              .filter(
+                (attribute) =>
+                  !product.documentAttributes.some((stated) => statesSame(stated, attribute)),
+              )
+              .map((attribute) => (
+                <div className="prow" key={attribute.key}>
+                  <span className="prow__k">{attribute.label}</span>
+                  <span className="prow__v">{attribute.value}</span>
+                </div>
+              ))}
             <div className="prow">
               <span className="prow__k">Customs classification</span>
               <span className={product.product.candidateHs ? "prow__v" : "prow__v ns"}>

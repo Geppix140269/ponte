@@ -3,11 +3,11 @@
 **Status:** Active
 **Opened:** 28 July 2026
 **Owner decision:** Giuseppe Funaro, 28 July 2026
-**Decision record:** `ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` on branch
-`product/ai-document-product-intake` (draft PR #68). **Not merged to `main` at the
-time this plan was written**, so it is an accepted-but-unmerged decision under
-section 4 of the source-of-truth SOP. See "Decisions and discoveries" for the
-numbering collision this creates.
+**Decision record:** `docs/decisions/ADR-0012-ai-product-intake-and-document-to-deal-flow.md`
+on branch `product/ai-document-product-intake` (draft PR #68). **Not merged to
+`main`**, so it is an accepted-but-unmerged decision under section 4 of the
+source-of-truth SOP. Renumbered from ADR-0002 to ADR-0012 by owner decision on
+28 July 2026; see D1.
 **Implementation issue:** #67
 **Branch:** `claude/ai-product-intake-flow-4bcd56`
 
@@ -54,7 +54,7 @@ Read in full, in the order `AGENTS.md` requires:
 4. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`
 5. `docs/codex/00-START-HERE.md`
 6. `docs/codex/SOURCE-OF-TRUTH-SOP.md`
-7. `ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` (branch
+7. `ADR-0012-ai-product-intake-and-document-to-deal-flow.md` (branch
    `product/ai-document-product-intake`, fetched and read at commit `c1cda70`)
 8. GitHub issue #67
 
@@ -478,17 +478,30 @@ is a module). No path returns an empty unexplained result.
 
 ## 12. Decisions and discoveries
 
-### D1. The ADR number collides with an existing accepted ADR
+### D1. The ADR number collided, and has been renumbered to ADR-0012
 
-Draft PR #68 adds `docs/decisions/ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md`.
-`docs/decisions/ADR-0002-ponte-design-constitution.md` already exists on `main`,
-is named in `scripts/check-governance.mjs` as a required governance file, and is
-cited by `docs/codex/00-START-HERE.md`, `docs/codex/CURRENT-STATE.md` and
-section 25 of the Design Constitution. Merging #68 unchanged would put two
-different accepted decisions at ADR-0002.
+Draft PR #68 added `docs/decisions/ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md`
+beside the existing `ADR-0002-ponte-design-constitution.md`, which is on `main`,
+is a required governance file in `scripts/check-governance.mjs`, and is cited by
+`docs/codex/00-START-HERE.md`, `docs/codex/CURRENT-STATE.md` and section 25 of
+the Design Constitution itself. Two different accepted decisions sat under one
+number in one directory.
 
-This implementation therefore cites the new ADR **by filename**, never by number.
-Renumbering is the owner's call and is raised on the PR.
+**Owner decision, 28 July 2026: renumber, and do not retain the collision.**
+
+Done at source, on `product/ai-document-product-intake` (commit `a4ba831`), so
+the number is actually changed rather than merely referred to differently here:
+
+- the file is now `docs/decisions/ADR-0012-ai-product-intake-and-document-to-deal-flow.md`,
+  adopting the lower-case convention every other ADR uses;
+- the heading is `# ADR-0012`;
+- the index in `docs/decisions/README.md`, which did not list this ADR at all,
+  now has a row for it;
+- **not one word of the decision changed.**
+
+ADR-0012 is the next free number: ADR-0011 was taken by the market
+discoverability decision merged the same day. Every reference in this plan, in
+`DECISION-LOG.md` and in `CURRENT-STATE.md` resolves to ADR-0012.
 
 ### D2. Unresolved merge-conflict markers on `main`
 
@@ -504,12 +517,20 @@ folding in the Desk amendment line the other side carried. `00-START-HERE.md` is
 not otherwise in this change's path; its conflict is reported rather than
 resolved silently.
 
-### D3. Voice has no approved icon
+### D3. Voice has no approved icon, and none is to be introduced here
 
-The Flow registry has no microphone key. Constitution section 7 makes that a gap
-to escalate, so the voice control is a text-labelled button rather than a drawn
-icon, and the gap is registered for commission. This is recorded because a later
-contributor will otherwise assume the missing icon was an oversight.
+The Ponte Flow registry has no microphone key. Constitution section 7 makes a
+missing icon a gap to escalate rather than permission to draw one, so the voice
+control is a text-labelled button and is absent entirely where the browser has
+no Web Speech support.
+
+**Owner decision, 28 July 2026: do not commission or introduce an unapproved
+microphone icon in this pull request. Retain the Constitution-compliant
+text-labelled control until an approved Ponte Flow icon exists.**
+
+So this is a closed question for this change and an open commission for the
+design system. It is recorded here so a later contributor reads it as a decision
+rather than as an oversight to "fix" with a drawn icon.
 
 ### D4. "Verified by Ponte" is rendered as unavailable, not as false
 
@@ -521,11 +542,20 @@ is still required so the four states stay visibly separate.
 
 ### D5. The uploaded file is not persisted server-side
 
-See section 7. The ADR says the document "must remain attached to the draft,
-subject to access and privacy controls". Attaching it durably needs a storage
-bucket, a retention rule and an RLS policy, none of which exist and all of which
-are owner decisions. The intake keeps the document for the session and states
-the limit on the review screen rather than implying durable attachment.
+See section 7. The decision record says the document "must remain attached to
+the draft, subject to access and privacy controls". Attaching it durably needs a
+storage bucket, a retention rule, a deletion rule and an RLS policy, none of
+which exist.
+
+**Owner decision, 28 July 2026: do not implement durable document storage in
+this pull request. Session-based document processing is accepted for this
+release. Durable upload retention, bucket architecture, access control,
+deletion and RLS are recorded as a separate future decision and work package.**
+
+Raised as issue #72 through the Product Decision proposal route, which is where
+the source-of-truth SOP says a proposal enters. The intake keeps the document
+for the session and the review screen states the limit in words, so nothing on
+screen implies a durable attachment the product does not provide.
 
 ### D6. Two server-only modules were reaching the browser
 
@@ -590,7 +620,8 @@ own implementation to replace.
 
 Two consequences, both acted on:
 
-- the recommended renumber for the intake ADR is **ADR-0012**. ADR-0011 is taken;
+- the renumber for the intake ADR is **ADR-0012**, since ADR-0011 is taken. The
+  owner accepted this on 28 July 2026 and it is done at source (D1);
 - the scope-boundary check in `e2e/product-intake.spec.ts` no longer asserts
   that the non-product subject field is present. Pinning it would pin behaviour
   an accepted decision has already superseded. It asserts the boundary this

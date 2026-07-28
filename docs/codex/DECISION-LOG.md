@@ -5,7 +5,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 ## 28 July 2026 — AI product intake and document-to-deal, implemented
 
 **Decision implemented:** the owner-approved product decision recorded in
-`ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` (branch
+`ADR-0012-ai-product-intake-and-document-to-deal-flow.md` (branch
 `product/ai-document-product-intake`, draft PR #68) and tracked in issue #67.
 Users describe or upload what they trade; Ponte identifies, structures and
 classifies it. Both product intents enter through one shared resolver. HS
@@ -66,23 +66,39 @@ classification is downstream and confirmable, not the gate on the journey.
     microphone key, and Constitution section 7 makes a missing icon a gap to
     escalate rather than permission to draw one. Registered for commission.
 
-**Escalated, not decided — the ADR number collides.** Draft PR #68 adds
-`docs/decisions/ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md`.
-`docs/decisions/ADR-0002-ponte-design-constitution.md` already exists on `main`,
-is a required governance file in `scripts/check-governance.mjs`, and is cited by
-`00-START-HERE.md`, this file and section 25 of the Constitution. Merging #68
-unchanged would put two different accepted decisions at ADR-0002. This
-implementation cites the new ADR **by filename and never by number**;
-renumbering is the owner's call.
+**Owner decisions taken on review, 28 July 2026.** Giuseppe reviewed the
+implementation report and ruled on the four questions it raised:
 
-**Incidental repair:** `docs/codex/CURRENT-STATE.md` carried committed
-merge-conflict markers on `main` at lines 4 to 12. Both sides were reconciled
-into one header: the ADR-0010 design-authority line from one side, the Ponte
-Desk entry-authority amendment from the other, and the Bridge line updated to
-the truth after PR #58. **The same defect remains at `docs/codex/00-START-HERE.md`
-lines 48 to 67** and is reported rather than repaired here, because that file is
-not otherwise in this change's path and its two sides disagree about the
-authority order a new contributor reads first.
+1. **The ADR is renumbered to ADR-0012, and the ADR-0002 collision is not
+   retained.** Draft PR #68 had added a second `ADR-0002` beside
+   `ADR-0002-ponte-design-constitution.md`, which is on `main`, is a required
+   governance file and is cited by START-HERE, this log and section 25 of the
+   Constitution. The renumber is done at source on
+   `product/ai-document-product-intake` (commit `a4ba831`): the file is now
+   `docs/decisions/ADR-0012-ai-product-intake-and-document-to-deal-flow.md`, the
+   heading matches, and the previously missing row is added to the ADR index.
+   Not one word of the decision changed. Every reference in this log, in
+   `CURRENT-STATE.md` and in the ExecPlan resolves to ADR-0012.
+
+2. **Durable document storage is deferred, and session-based processing is
+   accepted for this release.** Retention, bucket architecture, access control,
+   deletion and RLS become a separate decision and work package, raised as
+   issue #72. The review screen already states the limit in words, so nothing on
+   screen implies an attachment the product does not provide.
+
+3. **No microphone icon is commissioned or introduced.** The
+   Constitution-compliant text-labelled voice control stays until an approved
+   Ponte Flow icon exists. This is now a closed question for this change and an
+   open commission for the design system.
+
+4. **The `import-approved-bridge-package` CI failure is recorded as pre-existing
+   and environmental**, on the condition that the canonical repository
+   verification and the Bridge manifest integrity check both pass. Both do: the
+   `verify` workflow succeeds, and `check-governance.mjs` verifies all 13
+   vendored Bridge files against `SOURCE-MANIFEST.md` byte for byte. The failing
+   workflow fetches the Bridge archive from Google Drive, which now returns an
+   interstitial page instead of the file, and it fails identically on every
+   branch including documentation-only ones.
 
 **Reconciled against ADR-0011, merged to `main` while this was in progress.**
 ADR-0011 section 5 requires **Trade services and Distribution** to begin with
@@ -92,8 +108,25 @@ classification journey". The two decisions therefore agree and do not overlap:
 this change governs the Products family only and leaves the non-product subject
 step exactly as it found it, for ADR-0011's own implementation to replace.
 
-One consequence: the recommended renumber for the intake ADR is **ADR-0012**, not
-ADR-0011, which is now taken.
+One consequence: the renumber for the intake ADR is **ADR-0012**, not ADR-0011,
+which is now taken. Accepted by the owner and done at source the same day.
+
+**Incidental repair: committed merge-conflict markers.**
+`docs/codex/CURRENT-STATE.md` carried literal `<<<<<<< HEAD`, `=======` and
+`>>>>>>> origin/main` markers on `main` at lines 4 to 12. This change had to
+update that file anyway and its two sides were reconcilable without choosing
+between them, so they were folded into one header: the ADR-0010
+design-authority line from one side, the Ponte Desk entry-authority amendment
+from the other, and the Bridge line corrected to the truth after PR #58.
+
+`docs/codex/00-START-HERE.md` carried the same defect at lines 48 to 67, in the
+authority order every new contributor is told to read first. It was reported
+rather than repaired here, because its two sides disagreed in substance and
+choosing was the owner's call. It has since been resolved independently on
+`main` by commit `c0e73ab`, which kept both sides and renumbered the list. **No
+marker now remains in either file, or anywhere in the repository.** The interim
+entry raised in `docs/codex/KNOWN-ISSUES.md` was removed rather than left to go
+stale.
 
 **Affected areas:** `lib/products/` (new), `lib/documents/` (new),
 `app/api/products/` (new), `components/products/intake/` (new),
