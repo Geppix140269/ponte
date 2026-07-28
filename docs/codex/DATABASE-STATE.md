@@ -14,6 +14,43 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 
 - `20260726a_investigation_kind.sql` was applied to production by hand on 26 July 2026 with owner approval, using `scripts/db-query.mjs`, and probe-verified afterwards. It adds `request_kind` (not null, default `'investigate'`), `capability`, `contact_phone` and `contact_language` to `signal_investigations`, adds the `signal_investigations_kind_check` constraint, and replaces the `(signal_id, requester_id)` unique constraint with `(signal_id, requester_id, request_kind)`. Verified: the four columns exist with the stated nullability and default, both constraints are present in `pg_constraint`, the old two-part constraint is gone, and the single pre-existing row backfilled to `request_kind = 'investigate'`. It was applied by hand because the automatic chain aborts at its first file (see below), so a merge does not apply anything.
 
+## Written but NOT applied
+
+`20260728a_automated_listing_publication.sql` implements ADR-0012. It has **not**
+been applied to production and has not been probe-verified. It is additive and
+idempotent throughout.
+
+What it changes on `listings`: widens the status check constraint to add
+`validating`, `needs_information`, `flagged` and `suspended` (every state
+already in use is preserved, and `approved` remains the stored value for a
+public listing, so no index, RLS policy or public read path changes meaning);
+adds `quantity_mode`, `quantity_min`, `quantity_max` with range-ordering and
+positivity constraints; adds `quantity_extracted`, `quantity_confirmed_at`,
+`declaration_accepted_at`, `declaration_version`, `safety_flags`, `flag_reason`,
+`flag_severity` and `completeness_score`; adds three partial indexes.
+
+New table: `listing_events` — the lifecycle audit trail, RLS-enabled, readable
+by the listing owner and by admins, and **written only under the service role**
+so a member cannot forge a publication event.
+
+RLS restated on `listings`: the member insert and update policies are rewritten
+to cover the new states explicitly, and a separate withdraw-own-live-listing
+policy is added. A member still cannot write `approved`, `flagged`,
+`suspended`, `validating` or `needs_information`, and cannot clear
+`safety_flags`.
+
+**It publishes nothing.** There is no bulk UPDATE moving `submitted` rows to
+`approved`. Publication needs the submitter's live verification state, adjacent
+media/document counts and the safety pass, none of which SQL can evaluate, so
+legacy rows stay in `submitted` and re-validate through the application when
+next touched. It does backfill one `listing_published` event per already-public
+listing with `actor_type = 'admin'`, so the audit trail does not begin with a
+gap and does not misattribute historic desk approvals to the validator.
+
+Note the pre-existing duplicate-constraint hazard recorded under
+`20260722c_listings_v4.sql`: a stale `listings_status_check1` once coexisted
+with the visible constraint and silently rejected permitted values. This
+migration drops both names before adding its own.
 ## Applied to production by hand
 
 - `20260728a_market_classification.sql` was applied to production on 28 July
