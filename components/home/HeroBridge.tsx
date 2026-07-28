@@ -1,5 +1,6 @@
 import { Icon } from "@/components/icons";
 import type { LiveDeal } from "@/lib/board/live-deals";
+import { hasEstablishedLevel, levelRank } from "@/lib/verification/level";
 
 /**
  * The hero bridge, ported from the landing design source.
@@ -48,10 +49,9 @@ export default function HeroBridge({
   const offer = deal.type?.toLowerCase() !== "requirement";
   const from = deal.originCode;
   const to = deal.destinationCode;
-  const tier =
-    deal.verificationLevel !== null && deal.verificationLevel > 0
-      ? deal.verificationLevel
-      : null;
+  const tier = hasEstablishedLevel(deal.verificationLevel)
+    ? levelRank(deal.verificationLevel)
+    : null;
   const terms = [deal.incoterm, deal.unit ? null : null].filter(Boolean).join(" · ");
 
   return (

@@ -133,6 +133,17 @@ export function levelForRequestedTier(tier: unknown): VerificationLevel {
   return n >= 2 ? "company_verified" : "identity_verified";
 }
 
+/**
+ * Has anything at all been established about this member?
+ *
+ * The tier badge asks this. It exists so no surface has to write
+ * `level > 0`, which is the same numeric comparison this model removes, just
+ * one step further from the column.
+ */
+export function hasEstablishedLevel(v: unknown): boolean {
+  return levelRank(v) > levelRank("unverified");
+}
+
 /** What a member is told. Never the stored token. */
 export function levelLabel(v: unknown): string {
   switch (v) {
