@@ -269,16 +269,24 @@ test("a filtered result that matches nothing does not claim the board is empty",
   page,
 }) => {
   /*
-   * `products` + a sector is answerable today (the sector column is absent, so
-   * it lands in unclassified) but a territory filter alone reaches the query
-   * and returns nothing, which is the `ok` + zero + filtered case.
+   * A product word rather than a category, deliberately.
    *
-   * The claim being guarded: "No signal is currently live on the public board"
-   * is a statement about the market, and it is false the moment a filter is
-   * set and merely returns no matches. The board may be full.
+   * Every category filter the board offers is a canonical key, and those
+   * columns do not exist yet, so all of them land in `unclassified` and never
+   * reach this branch. A free-text product filter does reach it: the query
+   * runs, matches nothing, and the result is `ok` + zero + filtered, which is
+   * the case being guarded.
+   *
+   * The claim: "No signal is currently live on the public board" is a
+   * statement about the market, and it is false the moment a filter is set and
+   * merely returns no matches. The board here holds 3,491 signals.
    */
-  await page.goto("/market-signals?territory=ZW", { waitUntil: "domcontentloaded" });
+  await page.goto("/market-signals?product=zzzznotarealproduct", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.getByText("No signal matches these filters")).toBeVisible();
   await expect(page.getByText("No signal is currently live on the public board")).toHaveCount(0);
+  await shot(page, "desktop-22-market-signals-filtered-empty");
 });
 
 test("the unfiltered board still reports its records and its reach", async ({ page }) => {

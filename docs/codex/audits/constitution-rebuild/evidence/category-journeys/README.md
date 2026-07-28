@@ -64,6 +64,7 @@ been **proved** to contain no text field.
 | `desktop-19-keyboard-focus.png` | The focus ring on a category tile |
 | `desktop-20-reduced-motion.png` | `prefers-reduced-motion: reduce`. Identical composition |
 | `desktop-21-market-signals-unanswerable-filter.png` | A filter Ponte cannot answer, explaining itself instead of claiming the board is empty |
+| `desktop-22-market-signals-filtered-empty.png` | A filter that matches nothing, saying so without claiming the board is empty |
 | `mobile-1-services-categories-390x844.png` | 390 x 844. One column, Other last |
 | `mobile-2-distribution-partner-types-390x844.png` | 390 x 844. Twelve partner types |
 | `mobile-3-find-service-categories-390x844.png` | 390 x 844. Find, service categories |
@@ -174,9 +175,16 @@ on it unstable before it was ever built.
   table in `lib/board/presentation.ts`, both surfaces read it, and the matrix is
   asserted rather than inspected.
 
-  `desktop-21` is the live half of that fix. `unclassified` travels the same
-  path and IS reachable today, so the frame shows a filter Ponte cannot answer
-  explaining itself, with the whole-board copy asserted absent.
+  `desktop-21` and `desktop-22` are the live half of that fix. Two of the four
+  empty states ARE reachable today: `unclassified`, which every category filter
+  reaches because the columns do not exist yet, and the filtered `ok` emptiness,
+  which a free-text product filter reaches because it needs no category column.
+  Both frames assert the whole-board copy is absent.
+
+  The distinction `desktop-22` proves is the one that matters most:
+  "No signal is currently live on the public board" is a statement about the
+  market, and it is false the moment a filter is set and merely returns no
+  matches. The board behind that frame holds 3,491 signals.
 
 - **The frames are not asserted byte-identical across runs.** The landing
   evidence suite makes that claim for its own frames; this one does not, and no
