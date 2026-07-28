@@ -14,6 +14,38 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 
 - `20260726a_investigation_kind.sql` was applied to production by hand on 26 July 2026 with owner approval, using `scripts/db-query.mjs`, and probe-verified afterwards. It adds `request_kind` (not null, default `'investigate'`), `capability`, `contact_phone` and `contact_language` to `signal_investigations`, adds the `signal_investigations_kind_check` constraint, and replaces the `(signal_id, requester_id)` unique constraint with `(signal_id, requester_id, request_kind)`. Verified: the four columns exist with the stated nullability and default, both constraints are present in `pg_constraint`, the old two-part constraint is gone, and the single pre-existing row backfilled to `request_kind = 'investigate'`. It was applied by hand because the automatic chain aborts at its first file (see below), so a merge does not apply anything.
 
+## Written and NOT applied
+
+- `20260728a_market_classification.sql` (28 July 2026). Adds the market
+  classification columns: 11 nullable columns, 3 CHECK constraints and 6 indexes
+  on `listings`; 6 nullable columns, 2 CHECK constraints and 3 indexes on
+  `desk_radar`. Seventeen columns, five constraints, nine indexes.
+
+  The four family-coherence constraints state the family test explicitly
+  (`market_family is not null and market_family = '...'`) rather than relying on
+  `= `alone. A CHECK accepts TRUE **and NULL**, and `false or null` is null, so
+  the shorter form passed the row it existed to refuse. Additive
+  throughout; nothing is renamed, dropped or rewritten, every existing row stays
+  readable and the legacy `listings.type` mapping is untouched. The rollback is
+  written out in the file itself.
+
+  **It has not been run against production and must not be until the owner
+  approves it.** The pre-migration report below is satisfied by ADR-0012 and by
+  the file's own commentary.
+
+  The application does not depend on it having run. `readClassification`
+  validates every key before a write; `isMissingColumnError` recognises
+  PostgREST's `PGRST204` and Postgres's `42703`, and the submit route retries
+  the write without the classification columns when it sees one. In that window
+  the classification still reaches the record through the synthesised `details`,
+  which is where it travelled before these columns were proposed. Once the
+  migration is applied the retry never fires.
+
+  **Nothing is backfilled.** No existing listing or signal carries a canonical
+  category, and writing a guess into these columns would invent a finding. Every
+  category filter reports "not yet classified" until records genuinely carry
+  keys.
+
 ## Known risk
 
 The historical numbered migration chain is not a reliable proof that a fresh Supabase preview recreates production. A Supabase Preview failure has been treated as pre-existing. Do not repair, squash, rename or replay migrations without a dedicated migration-reconciliation plan and explicit approval.

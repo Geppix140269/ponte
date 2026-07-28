@@ -16,6 +16,99 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Affected areas:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`, Market Signals listing and detail, Find, Structure/Start a Deal, `lib/taxonomy/market.ts`, public query projections, database indexes and optional additive schema work, import reconciliation, SEO and URL-state behaviour, `docs/codex/CURRENT-STATE.md`.
 
+## 28 July 2026 — Category-first classification for Trade services and Distribution
+
+**Context:** Owner requirement of 28 July 2026, implemented on branch
+`feature/category-first-market-taxonomy` and proposed as ADR-0012, which implements the owner-accepted ADR-0011. Trade
+services and Distribution opened on a blank line, "State it in one line", while
+Products had a progressive category journey. A sentence cannot be filtered,
+matched, counted or searched, so two of Ponte's three equal families could
+neither be described properly nor searched at all.
+
+**Decisions recorded because the authorities did not settle them:**
+
+1. **The Trade Services escape route is stored as `unlisted`, not `other`.** The
+   earlier ten-key list already used `other`, and it meant "Other trade-enabling
+   services": a real category with real subcategories. Reusing the key would
+   have made every stored `other` ambiguous, and reading one back would have
+   silently reclassified a member's trade-enabling record. The label a member
+   sees is unchanged. Found by a test written before the collision was noticed.
+
+2. **The legacy `route` value maps to `market_entry`, and is flagged.** The
+   requirement maps it to a "route-to-market partner", which is not one of the
+   twelve canonical types. `LEGACY_DISTRIBUTION_MAP.route` carries
+   `needsOwnerConfirmation: true` so the owner confirms it rather than
+   discovering it later.
+
+3. **A relationship term is never read back as a partner type.** `exclusive` and
+   `nonexclusive` sat in the same flat list as `distributor`. Answering "which
+   partner type is this?" with "exclusive" would keep the original error alive
+   under new names, so `canonicalPartnerType("exclusive")` returns null on
+   purpose.
+
+4. **An icon appears only where the Flow registry already has one.** Five of the
+   twelve partner types and both escape routes have no approved asset, and
+   drawing them would be an unapproved addition to the registry (Constitution
+   section 7). The grid reserves the icon column either way, so a partly drawn
+   list still aligns. The requirement asked for an icon "where available"; this
+   is what available means.
+
+5. **Category icons are rendered on the server and passed down as nodes.**
+   `PonteIcon` is a server component so the registry's markup never reaches the
+   browser bundle, and the pickers are client components. Importing the renderer
+   into a picker would quietly undo that; a second client-safe icon module would
+   give Ponte two icon renderers, which section 20 forbids.
+
+6. **Cross-family classification is refused in three places.** In the draft, in
+   the API, and in a database CHECK. The API is not the only writer a table
+   sees, and a mis-filed key is worse than a missing one because every filter,
+   count and match downstream trusts it.
+
+7. **`/find` opens on the three market families.** It previously opened on the
+   product picker, with products the only family that could be searched.
+   Products is now one tap away and unchanged.
+
+8. **A category filter that cannot be applied reports that, and never an empty
+   result.** No published record carries a canonical category yet. "No signal
+   matches ocean freight" and "Ponte cannot yet tell which signals are about
+   ocean freight" are different sentences with different next actions.
+
+9. **Nothing is backfilled.** No existing record has been classified into this
+   taxonomy, and writing a guess into those columns would invent a finding.
+
+**Corrections under review, 28 July 2026:**
+
+10. **Eligibility runs in the query, before the page is cut and before the count
+    is taken.** Applying the public-expiry rule afterwards to a fetched page
+    counted expired rows and returned short pages, which would have made offset
+    paging unstable before it was built.
+
+11. **Coverage is measured on every category-filtered read.** Reporting
+    "nothing is classified" only when the result was empty held for exactly as
+    long as nothing was classified. From the first classified record onwards,
+    every filter would have returned small confident results over an inventory
+    that was still almost entirely unclassified. There are now three states:
+    `unclassified` (nothing carries a category), `partial` (some do, and the
+    numbers are printed), and `ok` (all do, so an empty result is conclusive).
+
+12. **The family-coherence constraints are implications, not exemptions.** The
+    first draft opened `market_family is null or ...`, which permitted a service
+    category on a record belonging to no family. `desk_radar` carries the same
+    two constraints, and needs them more than `listings` does: a signal is
+    written by an importer, an admin action and any future backfill, none of
+    which passes through the member API's validation.
+
+13. **The legacy `route` value is preserved as `route_to_market`, not
+    consolidated into `market_entry`.** Consolidation cannot be undone: once
+    stored values have been read back through it, which records were `route` is
+    unrecoverable. Owner-approved 28 July 2026.
+
+**Not applied:** `supabase/migrations/20260728a_market_classification.sql` is
+written and reviewed and has **not** been run. A merge applies no migration in
+this repository. The write path tolerates the columns being absent and retries
+without them, and the classification still reaches the record through the
+synthesised `details`.
+
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 
 **Context:** Slice 2 of the Constitution-led rebuild ExecPlan, branch `design/phase-2-foundation-tokens`. Foundation only. No route was redesigned, no Bridge primitive was built, and no legacy removal was begun.

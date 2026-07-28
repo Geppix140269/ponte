@@ -3,9 +3,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import StructureComposer from "@/components/structure/StructureComposer";
+import { categoryIcons } from "@/components/ponte/category/CategoryIcons";
 import { entranceFromParams } from "@/lib/desk/entrances";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
+import "@/components/ponte/category/category.css";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +46,10 @@ export default async function StructurePage({
 
   return (
     <div className={landingFontVars} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
-      <StructureComposer entrance={entrance} />
+      {/* The category icons are rendered here, on the server, and handed to
+          the client composer as nodes. PonteIcon stays the one renderer and
+          the registry's markup never reaches the browser bundle. */}
+      <StructureComposer entrance={entrance} icons={categoryIcons()} />
     </div>
   );
 }

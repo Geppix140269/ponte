@@ -9,8 +9,12 @@ import {
   parseFindQuery,
   buildFindHref,
   matchesFindQuery,
+  findQueryIsAnswerable,
+  toInventoryQuery,
   type FindQuery,
 } from "../query";
+import { TRADE_SERVICE_CATEGORIES } from "../../taxonomy/services";
+import { DISTRIBUTION_PARTNER_TYPES } from "../../taxonomy/distribution";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -72,6 +76,8 @@ function deal(over: Record<string, unknown> = {}) {
   } as Parameters<typeof matchesFindQuery>[0];
 }
 const Q = (over: Partial<FindQuery> = {}): FindQuery => ({
+  family: null, serviceCategory: null, serviceSubcategory: null, partnerType: null,
+  sector: null, territory: null,
   product: null, intent: null, market: null, origin: null, minQty: null, lane: null, ...over,
 });
 
@@ -97,6 +103,112 @@ test("minQty excludes smaller stated quantities but keeps unstated ones", () => 
   assert.equal(matchesFindQuery(deal(), Q({ minQty: 50000 })), false);
   // Quantity absent -> unknown, not zero: not excluded.
   assert.equal(matchesFindQuery(deal({ quantity: null }), Q({ minQty: 50000 })), true);
+});
+
+// ---------------------------------------------------------------------------
+// 11 and 17. Find reads the canonical taxonomy, and searches on its keys
+// ---------------------------------------------------------------------------
+
+test("Find reads the same category authority the composer stores from", () => {
+  // Not a copy that happens to match today. The keys Find accepts in a URL are
+  // exactly the keys lib/taxonomy declares, so a category added there is
+  // searchable without touching Find at all.
+  for (const category of TRADE_SERVICE_CATEGORIES) {
+    const q = parseFindQuery({ family: "services", serviceCategory: category.key });
+    assert.equal(q.serviceCategory, category.key, `${category.key} is not searchable`);
+  }
+  for (const type of DISTRIBUTION_PARTNER_TYPES) {
+    const q = parseFindQuery({ family: "distribution", partnerType: type.key });
+    assert.equal(q.partnerType, type.key, `${type.key} is not searchable`);
+  }
+});
+
+test("a category that does not exist is not read as a filter", () => {
+  // Otherwise Find prints a confident empty result for a category nobody has.
+  const q = parseFindQuery({ family: "services", serviceCategory: "banana" });
+  assert.equal(q.serviceCategory, null);
+});
+
+test("a subcategory is only read inside its own category", () => {
+  const right = parseFindQuery({
+    family: "services",
+    serviceCategory: "freight",
+    serviceSubcategory: "freight.ocean",
+  });
+  assert.equal(right.serviceSubcategory, "freight.ocean");
+
+  // A subcategory from another category is a contradiction, not a narrowing.
+  const wrong = parseFindQuery({
+    family: "services",
+    serviceCategory: "customs",
+    serviceSubcategory: "freight.ocean",
+  });
+  assert.equal(wrong.serviceSubcategory, null);
+
+  const orphan = parseFindQuery({ family: "services", serviceSubcategory: "freight.ocean" });
+  assert.equal(orphan.serviceSubcategory, null);
+});
+
+test("the canonical keys survive the URL round trip", () => {
+  const href = buildFindHref({
+    family: "services",
+    serviceCategory: "freight",
+    serviceSubcategory: "freight.ocean",
+    territory: "ES",
+  });
+  assert.ok(href.indexOf("family=services") > 0, href);
+  assert.ok(href.indexOf("serviceCategory=freight") > 0, href);
+  assert.ok(href.indexOf("serviceSubcategory=freight.ocean") > 0, href);
+  assert.ok(href.indexOf("territory=ES") > 0, href);
+});
+
+test("a territory is stored as an ISO-2 code, upper-cased, or not at all", () => {
+  assert.equal(parseFindQuery({ territory: "es" }).territory, "ES");
+  assert.equal(parseFindQuery({ territory: "Spain" }).territory, null);
+});
+
+test("each family knows what it needs before it can answer", () => {
+  // The whole reason Trade services and Distribution had no working search:
+  // Find demanded a typed product, and neither family has one.
+  const services = parseFindQuery({ family: "services" });
+  assert.equal(findQueryIsAnswerable(services), false);
+  assert.equal(
+    findQueryIsAnswerable(parseFindQuery({ family: "services", serviceCategory: "freight" })),
+    true,
+  );
+
+  const distribution = parseFindQuery({ family: "distribution" });
+  assert.equal(findQueryIsAnswerable(distribution), false);
+  assert.equal(
+    findQueryIsAnswerable(parseFindQuery({ family: "distribution", partnerType: "distributor" })),
+    true,
+  );
+
+  // Products is unchanged: it still needs a product, and a legacy link that
+  // names one without a family still works.
+  assert.equal(findQueryIsAnswerable(parseFindQuery({ family: "products" })), false);
+  assert.equal(findQueryIsAnswerable(parseFindQuery({ product: "sugar" })), true);
+});
+
+test("the search that runs is the one the URL described", () => {
+  // One translation, in one place, so the two lanes and the Market Signals
+  // board cannot interpret the same URL differently.
+  const q = parseFindQuery({
+    family: "services",
+    serviceCategory: "freight",
+    serviceSubcategory: "freight.ocean",
+    territory: "es",
+    intent: "offer",
+  });
+  const inventory = toInventoryQuery(q);
+  assert.equal(inventory.family, "services");
+  assert.equal(inventory.serviceCategory, "freight");
+  assert.equal(inventory.serviceSubcategory, "freight.ocean");
+  assert.equal(inventory.territory, "ES");
+  assert.equal(inventory.side, "offer");
+  // A service filter has no partner type and no sector to narrow by.
+  assert.equal(inventory.partnerType, null);
+  assert.equal(inventory.sector, null);
 });
 
 console.log(`find/query: ${passed} passed`);
