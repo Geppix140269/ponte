@@ -127,7 +127,21 @@
       "validity": "How long does this stay open?",
       "role": "What is your role?",
       "note": "Anything a reviewer should know?",
-      "notePlaceholder": "Optional note for the reviewer"
+      "notePlaceholder": "Optional note for the reviewer",
+      "quantityExample": "e.g. 1,250 or 12.5",
+      "quantityAmount": "Amount",
+      "quantityIndicative": "Indicative amount (optional)",
+      "quantityFrom": "From",
+      "quantityTo": "To",
+      "quantityMode": {
+        "exact": "Exactly",
+        "approximate": "Approximately",
+        "minimum": "At least",
+        "maximum": "At most",
+        "range": "A range",
+        "negotiable": "Negotiable",
+        "on_request": "On request"
+      }
     },
     "preview": {
       "eyebrow": "Before you submit",
@@ -191,7 +205,20 @@
       "underReview": "Under review",
       "no": "No",
       "workspace": "Workspace",
-      "cta": "Go to Workspace"
+      "cta": "Go to Workspace",
+      "publishedEyebrow": "Published",
+      "publishedTitle": "Your offer is live.",
+      "publishedBody": "It passed Ponte's checks and is on the market now. Nobody had to approve it by hand.",
+      "publishedDisclaimer": "Publication means your listing passed Ponte's structural and safety checks. Ponte has not independently verified the commercial claims in it.",
+      "needsInfoEyebrow": "Saved",
+      "needsInfoTitle": "Your offer is saved, but a few required details are missing.",
+      "needsInfoBody": "Ponte publishes automatically once these are complete.",
+      "flaggedEyebrow": "Additional check",
+      "flaggedTitle": "Your offer needs an additional check before publication.",
+      "flaggedBody": "Most listings publish immediately. This one matched a check that Ponte looks at by hand. This is not a finding against you.",
+      "detailLevel": "Detail level",
+      "viewListing": "View your listing",
+      "completeListing": "Complete your listing"
     },
     "error": {
       "badge": "Could not submit",
