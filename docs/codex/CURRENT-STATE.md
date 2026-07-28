@@ -1,15 +1,9 @@
 # Current state
 
-**Reconciled:** 27 July 2026  
-<<<<<<< HEAD
-**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`  
+**Reconciled:** 28 July 2026  
+**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0010 (complete-interface scope)  
-**Bridge authority:** `design/authority/bridge/v1/` (merged, no production primitive yet)  
-=======
-**Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)
-**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` and ADR-0002, pending merge of the authority PR
-**Bridge authority:** `design/authority/bridge/v1/`, pending merge of the authority PR
->>>>>>> origin/main
+**Bridge authority:** `design/authority/bridge/v1/` (merged; first production primitive is `components/ponte/bridge/BridgeRoute.tsx`)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
 **Deal-to-Room hierarchy:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`  
@@ -63,6 +57,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Trade services inventory | Partially implemented | 0 legacy service rows at 26 July probe | Member creation paths exist after PR #49, but canonical persisted family/intent is not yet first-class. |
 | Distribution and representation inventory | Taxonomy and member creation paths | No canonical external inventory at 26 July probe | Canonical persisted family/intent remains future data-contract work. |
 | Verification/publication eligibility | On `main` | Production defect confirmed | Stored verification vocabulary and numeric code comparison require separate integrity work. |
+| AI product intake and document-to-deal | Implemented on branch `claude/ai-product-intake-flow-4bcd56` | Not deployed | Both product intents (`offer_product`, `source_product`) now enter through one shared intake: describe, upload or browse, on the approved Bridge. `lib/products/` holds the catalogue, the deterministic resolver, the semantic stage, the document scan, the extraction and the intake state machine. HS classification is a suggested downstream field, not the gate. Trade services and Distribution are untouched: `requiresHsClassification()` already excluded them and neither it nor `needsHsCode()` changed. **No migration, no feature flag, no deployment.** The uploaded document is held for the session and not stored. Plan: `docs/plans/active/ai-product-intake-and-document-to-deal.md`. Evidence: `docs/codex/audits/ai-product-intake/evidence/`. |
 | Check and verify journey, request surfaces | On `main` via PR #45 | Not yet independently production-verified | `/verify`, `VerifyForm` and the `/verification` explainer mount PonteShell in heritage-light and are bared in ChromeGate, so reaching business verification from the Start a deal blockers no longer drops the member into the obsidian application mid-task. Every line of copy is unchanged. Plan: `docs/plans/active/verification-journey-brand-v5.md`. |
 
 ## Design authority truth
@@ -97,7 +92,7 @@ The approved system now has production plumbing. What exists, and what does not:
 | **Motion** | The Flow motion CSS and the reduced-motion contract are live in production and were already imported (see the correction below). `lib/ponte/motion.ts` reads the approved specification rather than restating it. No component is activated on any journey yet. |
 | **Progress** | `lib/ponte/progress.ts`: pure, deterministic, weights summing to 100, floor 20, never 0, irregular increments, 100 only when the procedure completes. Approved band copy included. |
 | **Lifecycle states** | `components/ponte/state/LifecycleState.tsx`: loading, waiting, blocked, active, under review, completed, error. Distinct in words, marker geometry and colour, in that order. **No route has been retrofitted.** |
-| **Bridge primitives** | Still none. Slice 3, `design/phase-2-bridge-primitives`. |
+| **Bridge primitives** | `components/ponte/bridge/BridgeRoute.tsx` is the Family and Action Bridge as a React primitive, translated from the recovered engine without changing its geometry. It is live on the landing and, from 28 July 2026, on the Products intake. The remaining Bridge System components (Task Completion, Commercial Journey, Counterparty Connection, Deal Room) are still unbuilt. |
 
 **Correction to the Phase 1 audit.** Its finding 0.3, that the Flow tokens and
 motion CSS were "imported nowhere", was wrong. They have been imported since

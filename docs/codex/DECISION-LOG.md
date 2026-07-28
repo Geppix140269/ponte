@@ -2,6 +2,101 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 — AI product intake and document-to-deal, implemented
+
+**Decision implemented:** the owner-approved product decision recorded in
+`ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` (branch
+`product/ai-document-product-intake`, draft PR #68) and tracked in issue #67.
+Users describe or upload what they trade; Ponte identifies, structures and
+classifies it. Both product intents enter through one shared resolver. HS
+classification is downstream and confirmable, not the gate on the journey.
+
+**Decisions taken during implementation, because the authorities did not settle them:**
+
+1. **The commercial product vocabulary is a new layer, not an extension of the
+   HS catalogue.** `lib/products/catalogue.ts` holds normalised names, synonyms,
+   standards, grades and attributes. HS 2022 is a customs nomenclature and will
+   never say that `gas oil`, `EN 590` and `ULSD` are one product with one buyer
+   pool. The catalogue maps onto `PRODUCT_SECTORS` rather than restating it.
+
+2. **Resolution is deterministic first, semantic second.** The lexical stage is
+   pure, free and reproducible, which is what makes the `gas oil` acceptance
+   criterion a unit test rather than a manual check against a live service. The
+   metered semantic stage runs only when the lexical stage cannot answer, and it
+   may return catalogue keys and nothing else.
+
+3. **Product identification in a document is deterministic too.** The
+   three-product acceptance case is proved by `lib/products/scan.ts` running the
+   catalogue's synonym index over the text, with no model call. The model reads
+   the commercial terms, which genuinely need comprehension.
+
+4. **"Do not invent" is enforced by the parser, not requested by the prompt.**
+   Any extracted term arriving without the verbatim words it came from is
+   discarded and becomes `missing`. A fact Ponte cannot show the member is a
+   fact Ponte does not state.
+
+5. **`gas oil` is ambiguous, and stays ambiguous.** Three commercially different
+   grades match. The resolver asks which, naming the attribute they differ on,
+   and pre-selects nothing. Silently taking the top answer is named as a
+   rejected approach in the decision record.
+
+6. **"Verified by Ponte" is rendered as unavailable, not omitted.** Ponte does
+   not verify a product claim on this journey. Removing the row would collapse
+   four provenance states into three; leaving it as an empty box would imply a
+   verification a member could obtain.
+
+7. **Ponte's own product record is shown without a provenance marker.** The
+   normalised product, its category and its catalogue attributes are neither a
+   claim from the document nor a member confirmation. The first evidence run
+   printed "Extracted from document" beside a sulphur content that came out of
+   the catalogue, which is a false provenance claim on the one screen that must
+   not make any.
+
+8. **The uploaded document is not persisted.** Attaching it durably needs a
+   storage bucket, a retention rule and an RLS policy, all owner decisions. The
+   intake keeps it for the session and the review screen says so.
+
+9. **PDFs and images are read by the model as content blocks, not by a new
+   parser.** No new runtime dependency, and no second unmetered model path:
+   everything still goes through `lib/ai.ts`, which is what keeps every call
+   costed. `adm-zip` moves from devDependencies to dependencies for `.docx` and
+   `.xlsx`. Legacy binary `.doc` and `.xls` are blocked by name with a reason.
+
+10. **Voice is a text-labelled control.** The Ponte Flow registry has no
+    microphone key, and Constitution section 7 makes a missing icon a gap to
+    escalate rather than permission to draw one. Registered for commission.
+
+**Escalated, not decided — the ADR number collides.** Draft PR #68 adds
+`docs/decisions/ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md`.
+`docs/decisions/ADR-0002-ponte-design-constitution.md` already exists on `main`,
+is a required governance file in `scripts/check-governance.mjs`, and is cited by
+`00-START-HERE.md`, this file and section 25 of the Constitution. Merging #68
+unchanged would put two different accepted decisions at ADR-0002. This
+implementation cites the new ADR **by filename and never by number**;
+renumbering is the owner's call.
+
+**Incidental repair:** `docs/codex/CURRENT-STATE.md` carried committed
+merge-conflict markers on `main` at lines 4 to 12. Both sides were reconciled
+into one header: the ADR-0010 design-authority line from one side, the Ponte
+Desk entry-authority amendment from the other, and the Bridge line updated to
+the truth after PR #58. **The same defect remains at `docs/codex/00-START-HERE.md`
+lines 48 to 67** and is reported rather than repaired here, because that file is
+not otherwise in this change's path and its two sides disagree about the
+authority order a new contributor reads first.
+
+**Affected areas:** `lib/products/` (new), `lib/documents/` (new),
+`app/api/products/` (new), `components/products/intake/` (new),
+`app/[locale]/dev/product-intake/` (new, development-only),
+`components/structure/StructureComposer.tsx`, `lib/structure/draft.ts`,
+`lib/ai.ts`, `app/[locale]/structure/page.tsx`, `docs/schemas/product-resolution.schema.json` (new),
+`playwright.config.ts`, `next.config.mjs`, `package.json`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md` (new),
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no feature flag, no deployment and no
+merge. Design approval is requested on the pull request with desktop, 390 x 844
+and reduced-motion evidence attached.
+
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 
 **Context:** Slice 2 of the Constitution-led rebuild ExecPlan, branch `design/phase-2-foundation-tokens`. Foundation only. No route was redesigned, no Bridge primitive was built, and no legacy removal was begun.

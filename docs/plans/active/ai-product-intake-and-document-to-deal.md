@@ -1,0 +1,606 @@
+# ExecPlan: AI product intake and document-to-deal flow
+
+**Status:** Active
+**Opened:** 28 July 2026
+**Owner decision:** Giuseppe Funaro, 28 July 2026
+**Decision record:** `ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` on branch
+`product/ai-document-product-intake` (draft PR #68). **Not merged to `main` at the
+time this plan was written**, so it is an accepted-but-unmerged decision under
+section 4 of the source-of-truth SOP. See "Decisions and discoveries" for the
+numbering collision this creates.
+**Implementation issue:** #67
+**Branch:** `claude/ai-product-intake-flow-4bcd56`
+
+---
+
+## 1. Purpose and user outcome
+
+Today a member who wants to offer or source a product must find their product in
+the WCO HS 2022 catalogue before Ponte will let them continue. The composer's
+Continue button stays disabled until `draft.product` and `draft.hsCode` are both
+set, and the only ways to set them are a chapter/heading/six-digit drill-down or
+a catalogue text search that matches HS descriptions.
+
+A petroleum trader who types `gas oil` into that search gets whatever the HS
+description index happens to return for those two tokens. Nothing in the product
+knows that `gas oil`, `gasoil`, `EN 590`, `EN590`, `ULSD`, `10 ppm diesel` and
+`automotive gasoil` are the same commercial product, so the member is left to
+guess Ponte's vocabulary before Ponte will accept theirs.
+
+After this change:
+
+- the member describes the product in their own words, in any language, typed or
+  spoken; or uploads the offer document they already have; or browses categories
+  if they prefer to;
+- Ponte identifies, structures and classifies it, and returns ranked candidates
+  with a reason;
+- HS classification becomes a suggested downstream field the member can confirm,
+  not the gate on the front of the journey;
+- a multi-product document produces multiple identified products, not one
+  generic listing;
+- every extracted claim is labelled as extracted, never as verified, and the
+  member confirms before any draft is created.
+
+The user outcome, in one line: **users describe or upload what they trade; Ponte
+identifies, structures and classifies it.**
+
+## 2. Authority consulted
+
+Read in full, in the order `AGENTS.md` requires:
+
+1. `AGENTS.md`
+2. `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`
+3. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
+4. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`
+5. `docs/codex/00-START-HERE.md`
+6. `docs/codex/SOURCE-OF-TRUTH-SOP.md`
+7. `ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md` (branch
+   `product/ai-document-product-intake`, fetched and read at commit `c1cda70`)
+8. GitHub issue #67
+
+Also consulted for the parts they govern:
+
+- `design/authority/bridge/v1/README.md` and
+  `design/authority/bridge/v1/implementation/01_IMPLEMENTATION_NOTES.md`
+- `docs/decisions/ADR-0001-unified-trade-market.md`
+- `docs/decisions/ADR-0002-ponte-design-constitution.md` and
+  `docs/decisions/ADR-0010-constitution-led-interface-rebuild.md`
+- `docs/codex/CURRENT-STATE.md`, `FEATURE-FLAGS.md`, `KNOWN-ISSUES.md`
+- `.agent/PLANS.md`
+
+The clauses that constrain this work most directly:
+
+| Authority | Clause | Effect here |
+|---|---|---|
+| North Star 5.3 | Voice is not a primary feature; voice *inside a journey* is unaffected | Voice is an assist on the Describe step, never the entry control |
+| North Star 3.4 | User language overrides database language | The member's own wording is preserved and shown back, never replaced by the HS description |
+| North Star 5.2 | Nothing on the entrance may be manufactured | No confidence number is printed that the resolver did not compute; no HS code is asserted as confirmed |
+| Constitution 8 | Bridge System law | The three intake methods are a Bridge, not cards, tabs or a stepper |
+| Constitution 7 | Icon law | Approved registry keys only; no new SVG. A missing icon is escalated |
+| Constitution 14 | Records, evidence and status | Extracted / confirmed / verified / missing are four distinct states, never collapsed |
+| Constitution 19 | State completeness | Every state in issue #67 is implemented and evidenced |
+| AGENTS.md | AI may structure, compare, explain, recommend and draft; it must not silently publish, verify or commit | The resolver never auto-selects through material ambiguity |
+
+## 3. Current implementation discovered
+
+Inspected before any change was made.
+
+### The journey as it exists
+
+```text
+/[locale]/structure?family=products&intent=offer_product
+  -> app/[locale]/structure/page.tsx        server shell, validates the entrance
+  -> lib/desk/entrances.ts                  entranceFromParams, requiresHsClassification
+  -> components/structure/StructureComposer.tsx
+       S01 IntentStep      -> HsDrill (products) | SubjectStep (services, distribution)
+       Structuring         -> a 1.9s reassurance animation, no work behind it
+       S02 FactsStep       -> bucketize(draft)
+       S03 CompleteStep    -> one question per open gap
+       S04 PreviewStep     -> public / private / reviewer
+       S05 SubmitStep      -> blockers, AccountGate, POST /api/marketplace/submit
+       S06 ReceivedStep
+```
+
+`HsDrill` is the whole of product identification today: a category grid, a
+chapter list, a heading list, a six-digit list, and a `?q=` search that hits
+`/api/hs/search`. `pick()` writes `product` (the HS row's name) and `hsCode`, and
+`IntentStep`'s `ready` is `!!draft.intent && !!draft.product`.
+
+`entrances.ts` already isolates the rule that only the Products family is
+classified: `requiresHsClassification(family)` returns true only for `products`,
+and `lib/structure/draft.ts` `needsHsCode()` mirrors it. **This is the seam the
+change uses**, and it is why Trade services and Distribution are untouched: they
+never reach the product intake at all.
+
+### What is reusable, unchanged
+
+| Asset | Use here |
+|---|---|
+| `components/ponte/bridge/BridgeRoute.tsx` | The approved Family/Action Bridge primitive: arch geometry, station placement from measured path length, elevation mode below 460px, radiogroup with roving tabindex, gold runner on `offset-path`, `.br--still` for capture |
+| `design-system/ponte-flow/components/PonteIcon.tsx` | The only icon renderer. Unknown key throws |
+| `components/ponte/state/LifecycleState.tsx` | loading / waiting / blocked / active / under review / completed / error, distinct in words and marker geometry before colour |
+| `lib/ponte/progress.ts` | Deterministic weighted progress, floor 20, never 0, 100 only on completion |
+| `lib/ai.ts` | The single metered model boundary. Every call is costed and recorded in `ai_calls` |
+| `lib/landing/interpret.ts` | The existing pattern for "AI reads any language, returns an English trade name, degrades to null" |
+| `lib/hs/index.ts`, `/api/hs/search` | The HS catalogue, which stays: it becomes the downstream confirmation, not the gate |
+| `components/hs/hsCategories.tsx` | The approved sector grid, reused verbatim for Browse |
+| `components/AccountGate.tsx` | Modal, never redirects, completes the pending action itself |
+| `components/find/HsProductPicker.tsx` | The existing Web Speech voice pattern, including silent absence where unsupported |
+| `lib/taxonomy/market.ts` | `PRODUCT_SECTORS` is the canonical category hierarchy the catalogue maps onto |
+
+### What does not exist and must be built
+
+- **No semantic product resolution anywhere.** `lib/landing/intent.ts` is a
+  route classifier with a small English keyword list; `lib/landing/interpret.ts`
+  translates an objective into an English trade name but knows nothing about
+  products, synonyms, standards or grades.
+- **No product catalogue.** The HS catalogue is a customs nomenclature, not a
+  commercial product vocabulary. Nothing in the repository knows that EN 590 and
+  ULSD are the same thing.
+- **No document upload or extraction of any kind.** `supabase.storage` is used
+  in exactly two places, both for verification and listing evidence
+  (`components/ListingForm.tsx`, the admin pages). There is no document parsing,
+  no multipart intake, no extraction service.
+- **No draft resume across authentication.** `AccountGate` preserves the draft
+  *in React state* because it is a modal that never redirects. That is enough
+  for a submit, and not enough for an intake session a member may leave.
+
+### Constraints discovered that shape the design
+
+1. **`scripts/check-governance.mjs` runs a ratchet on hand-authored `<svg>`**
+   over `app/` and `components/`. The list may shrink and may never grow, and
+   `components/structure/StructureComposer.tsx` is on it. Every new component
+   must therefore contain no `<svg>` literal at all. This is a hard build gate,
+   not a style preference.
+2. **The Flow registry has no microphone, upload, search, arrow or check icon.**
+   Constitution section 7 makes a missing icon a gap to escalate rather than
+   permission to draw one. Two consequences: the intake methods are rendered as
+   Bridge stations, which by approved design carry *no* icon; and the voice
+   control is a text-labelled button. `profile.document`, `deal.category`,
+   `field.notes`, `deal.spec`, `deal.product`, `deal.preview` and
+   `evidence.evreview` do exist and cover the rest.
+3. **`npm run verify` ends in `next build`**, which needs the Supabase and
+   Anthropic environment. Failures there are recorded as environmental.
+4. **`scripts/check-encoding.mjs` bans em dashes in `app/` and `components/`**
+   and rejects BOM and mojibake repository-wide.
+5. **`messages/en.json` is generated** from `messages/_fragments/*.json` by
+   `npm run messages:build`; the fragment is the file to edit.
+
+## 4. Scope
+
+### Included
+
+- The Products family only, and within it the two product intents:
+  `offer_product` (supply) and `source_product` (sourcing).
+- Routes: `/[locale]/structure` when `family=products`.
+- New services under `lib/products/` and `lib/documents/`.
+- New API routes `POST /api/products/resolve` and `POST /api/products/extract`.
+- New UI under `components/products/intake/`.
+- One targeted change inside `components/structure/StructureComposer.tsx`:
+  `HsDrill` stops being the product entry and becomes the Browse method reached
+  through the intake.
+
+### Explicitly excluded
+
+- Trade services and Distribution and representation. `needsHsCode()` and
+  `requiresHsClassification()` already exclude them, and neither function's
+  behaviour changes.
+- Any production database migration. The extraction and the resolved product
+  ride on the existing submit payload; no column is added.
+- Any production feature-flag change, deployment or merge.
+- Changing `/api/marketplace/submit`, the AccountGate, the verification gate or
+  the publication eligibility rules.
+- Retrofitting the rest of the composer (S02 to S06) to the Bridge. That is
+  `docs/plans/active/constitution-led-interface-rebuild.md`'s programme, and
+  widening into it here would be the uncontrolled repaint AGENTS.md forbids.
+- The Deal Room, monetisation, credits and entitlement.
+
+## 5. Product rules
+
+1. **Three intake methods, in this order:** Describe, Upload, Browse. Browse
+   remains available and is not the default.
+2. **No HS code is required before Ponte understands the product.** The HS code
+   is a candidate classification, printed as a suggestion the member confirms.
+3. **One resolver, one taxonomy, both intents.** The supply and sourcing
+   journeys differ in the language around the product and in which end of the
+   route is asked for. They do not differ in how the product is identified.
+4. **Ambiguity produces a clarification state, never an empty result and never a
+   silent pick.** When the top candidate does not clear the confirmation margin
+   over the runner-up, the state is `ambiguous` and the member chooses.
+5. **Nothing is invented.** A commercial term absent from the document is
+   `missing`, not guessed. The resolver's rationale states what it matched on.
+6. **Four provenance states, never collapsed:** extracted from document,
+   confirmed by member, verified by Ponte, missing or unresolved. "Verified by
+   Ponte" is rendered as *not yet available* on this journey, because Ponte does
+   not verify a product claim today and saying otherwise would be the
+   manufactured trust the North Star forbids.
+7. **A multi-product document is never collapsed.** Each product is identified
+   independently; the member chooses separate drafts or one intentional
+   multi-product programme.
+8. **The original document stays attached to the intake session** and is offered
+   to the draft as supporting evidence, under the existing access controls.
+9. **Confirmation precedes draft creation.** No draft is created and nothing is
+   published until the member confirms the review state.
+10. **Failure is explained, never silent.** Upload failure, extraction failure,
+    an unconfigured model and a blocked file type each have their own state and
+    their own recovery route.
+
+## 6. Technical design
+
+### Layers
+
+```text
+components/products/intake/          the journey (client)
+        |
+app/api/products/resolve             text  -> ranked candidates
+app/api/products/extract             file  -> structured extraction
+        |
+lib/products/resolve.ts              deterministic lexical + synonym ranking
+lib/products/ai-resolve.ts           semantic widening, metered, degrades to null
+lib/products/extract-document.ts     multi-product extraction + provenance
+lib/products/scan.ts                 deterministic multi-product text scan
+lib/products/catalogue.ts            the canonical Ponte product vocabulary
+lib/products/model.ts                ResolvedProduct, the seven preserved layers
+lib/products/intake.ts               the pure state machine
+        |
+lib/documents/read.ts                bytes -> text or a model content block
+lib/documents/ooxml.ts               docx / xlsx text without a new runtime dep
+        |
+lib/ai.ts                            the single metered model boundary
+lib/taxonomy/market.ts               PRODUCT_SECTORS, the category hierarchy
+lib/hs/index.ts                      the candidate HS classification, downstream
+```
+
+### The resolver
+
+Two stages, in this order, because the first is free and deterministic and the
+second costs tokens:
+
+1. **Lexical and synonym stage** (`resolve.ts`, pure). Normalises the input
+   (case, punctuation, whitespace, `EN590` to `en 590`, `10ppm` to `10 ppm`),
+   then scores every catalogue entry over its name, synonyms, standards,
+   abbreviations and attribute terms. Scoring is transparent: exact synonym,
+   standard designation, all-token, partial-token, each with a fixed weight, and
+   each recorded as the candidate's `matchedOn` so the rationale is the truth
+   rather than prose.
+2. **Semantic stage** (`ai-resolve.ts`). Runs when the lexical stage returns no
+   confident candidate, or when the input is not recognisably English. Asks the
+   model to name the catalogue entries the description corresponds to, from the
+   catalogue's own keys, and to say why. **The model may only return keys that
+   exist**; anything else is discarded, so the model cannot invent a product.
+   Returns null on failure, and the lexical result stands.
+
+`gas oil` resolves at stage 1: it normalises to `gas oil`, which is a recorded
+synonym of `gasoil-10ppm-en590`, and also a partial-token match on
+`gasoil-500ppm`, `gasoil-50ppm` and `automotive-gasoil`. Four ranked candidates,
+top one not clear of the runner-up by the confirmation margin, so the state is
+`ambiguous` and the member is asked which grade. That is the required behaviour
+in both directions: never a no-op, and never a silent pick.
+
+### Confidence
+
+`confidence` is a computed score in [0,1] derived from the match weights, not a
+number the model asserts. It is rendered as one of three named bands (`Close
+match`, `Likely match`, `Possible match`) with the matched terms printed beside
+it, so the member sees what it matched on rather than a bare percentage. This
+keeps North Star 5.2 (nothing manufactured) and Constitution 9 (a percentage is
+a position along a defined procedure, not a credibility claim).
+
+### Document extraction
+
+`lib/documents/read.ts` turns an upload into something the model can read:
+
+| Type | Path | Notes |
+|---|---|---|
+| `application/pdf` | Anthropic document content block, base64 | Native, no parser dependency |
+| `image/png`, `image/jpeg`, `image/webp`, `image/gif` | Anthropic image block | Native |
+| `text/plain`, `text/csv`, `message/rfc822`, `text/markdown` | UTF-8 text | Includes `.eml` email exports |
+| `.docx`, `.xlsx` | `lib/documents/ooxml.ts` | OOXML is a zip; the text is in `word/document.xml` and `xl/sharedStrings.xml`. Uses `adm-zip`, already in the repository as a devDependency and promoted to a dependency |
+| `.doc`, `.xls` (legacy binary) | Blocked with a named reason | Binary formats need a parser this repository does not have. The `blocked` state names the format and offers Describe or Browse |
+
+`lib/ai.ts` gains content-block support so a PDF or an image can be sent without
+a second, unmetered model path. This is an additive change to `AiCallOptions`;
+the existing string `user` form is untouched.
+
+`extract-document.ts` asks for one JSON object: commercial intent, an array of
+products, and the commercial terms, each term carrying `value`, `source`
+(`document` or `absent`) and `quote` (the verbatim words it came from, when
+present). A term the document does not state comes back `absent` with a null
+value, and the review screen renders it as missing. **The prompt forbids
+inference**, and the parser drops any term that carries no quote, which is the
+enforcement rather than the request.
+
+`lib/products/scan.ts` is a deterministic pass over the extracted text using the
+catalogue's own synonym index. It is what makes the three-product acceptance
+test real without a network call: the fixture text contains `Gasoil 10ppm`,
+`ULSD`, `EN590`, `D6`, `Fuel Oil` and `Jet A-1`, and the scan groups those six
+mentions into three distinct catalogue products. The model stage enriches the
+result; it is not what proves it.
+
+### The intake state machine
+
+`lib/products/intake.ts` is a pure reducer over a discriminated union, so every
+state in issue #67 exists as a value that can be constructed in a test and
+rendered in a story:
+
+```text
+initial -> typing -> analysing -> resolved | candidates | ambiguous | incomplete
+initial -> voice  -> typing
+initial -> upload -> analysing -> extracted | multiProduct
+                              -> extractionFailed | uploadFailed | blocked
+initial -> browse -> resolved
+any     -> authInterrupted -> resumed -> (the state it left)
+resolved | extracted | multiProduct -> review -> edited -> confirmed
+confirmed -> draftCreated -> completed
+```
+
+`reduced-motion` is not a machine state: it is a rendering mode, honoured by the
+approved Bridge and Flow motion CSS and asserted in the evidence suite.
+
+### Resume across authentication
+
+The intake session is serialised to `sessionStorage` under one key on every
+transition, and rehydrated on mount. The uploaded file is **not** serialised;
+the extracted text and the extraction are, and the session records that a
+document was attached with its filename, so a resumed member sees what they
+uploaded and is asked to re-attach only if they want the file on the draft. The
+`authInterrupted` and `resumed` states exist so this is visible rather than
+implicit.
+
+### What is preserved on the product
+
+The seven layers ADR requires, on `ResolvedProduct`:
+
+```text
+originalWording      the member's own words, verbatim, in their own language
+normalised           the canonical Ponte product name
+synonyms             trade terms and standards that reach this product
+categoryPath         Ponte sector -> group -> product, from PRODUCT_SECTORS
+attributes           the distinguishing technical attributes
+candidateHs          suggested HS code and its confirmation state
+searchText           the lexical representation
+searchTerms          the token set for semantic retrieval
+```
+
+These travel on the draft and are written into the submitted record's own text
+by the existing `synthesiseDetails`, exactly as the canonical family and intent
+already are, because `listings` has no column for them and adding one is a
+migration this plan does not authorise.
+
+### Design implementation
+
+| Element | Approved asset |
+|---|---|
+| Describe / Upload / Browse | `BridgeRoute mode="select"`, three stations, abutments `Your product` to `A structured draft` |
+| Multi-product choice | `BridgeRoute mode="select"`, two stations |
+| Analysing, blocked, failed, under review | `LifecycleState` |
+| Progress across the intake | `lib/ponte/progress.ts`, weighted, never 0 |
+| Icons | `profile.document`, `deal.category`, `field.notes`, `deal.product`, `deal.spec`, `deal.preview`, `evidence.evreview`, `evidence.infocomplete`, `market.family.products` |
+| Editorial emphasis | The approved serif italic gold on the intake's principal sentence |
+| Mobile | The Bridge's own elevation mode below 460px. No page-specific breakpoint |
+| Reduced motion | The approved Flow contract; removal, never substitution |
+
+No new colour, radius, shadow, font or animation is introduced. The intake
+stylesheet sets layout only, from existing `--pf-*` tokens.
+
+## 7. Migration plan
+
+None. This change adds no column, no table, no RLS policy and no bucket.
+
+The document is held in the intake session for the length of the session and is
+offered to the draft as an attachment only through the existing evidence path.
+Persisting an uploaded trade document server-side would need a bucket, a
+retention rule and an RLS policy, and it is recorded here as the next decision
+rather than taken quietly: **the file is not written to storage in this change**,
+and the review screen says so.
+
+Forward path when the owner authorises it: an additive `product_resolution`
+JSONB column on `listings` and a `deal_documents` table, both documented in
+`docs/codex/DATABASE-STATE.md` before anything is applied.
+
+## 8. Experience states
+
+Every state below is implemented, reachable and captured in the evidence suite
+at 390 x 844 and at desktop.
+
+| State | Behaviour |
+|---|---|
+| initial | Three Bridge stations, no method chosen, no percentage shown |
+| typing | The member's words, echoed as given; Resolve is enabled from two characters |
+| voice input | Web Speech assist beside the field; absent silently where unsupported; the transcript lands in the field as editable text |
+| upload | File chosen, name and size shown, type validated before any call |
+| analysing | `LifecycleState` active, with what Ponte is doing in words |
+| resolved | One clear candidate, its matched terms, its category path, its candidate HS, and Confirm / Refine / Choose another |
+| multiple candidates | Ranked list, each with its own rationale |
+| ambiguous | The clarification question, named. No pre-selection |
+| incomplete | The product resolved, decisive commercial terms still open, listed as gaps |
+| extraction failure | The model could not read it. The text it did read, if any, and both other methods offered |
+| upload failure | Network or size failure, with retry |
+| blocked | An unsupported format, named, with the two working alternatives |
+| authentication interruption | The gate over a preserved session |
+| resumed | The session restored, with what was restored stated |
+| edited | A member-changed field, marked confirmed by member |
+| confirmed | The review accepted; nothing published |
+| draft created | The draft exists; its reference shown |
+| completed | The journey's end, routed to Workspace |
+| reduced-motion | No travelling runner, no staged reveal; every component in its authored end state |
+
+## 9. Validation
+
+- Unit tests, all registered in `npm test`:
+  - `lib/products/__tests__/resolve.test.ts` including the `gas oil` case
+  - `lib/products/__tests__/catalogue.test.ts` (every entry maps to a real sector, no duplicate synonym across products)
+  - `lib/products/__tests__/scan.test.ts` (the sanitised fixture yields exactly three products)
+  - `lib/products/__tests__/extract-document.test.ts` (parser drops unquoted terms; multi-product shape)
+  - `lib/products/__tests__/intake.test.ts` (every state reachable; resume round-trips)
+  - `lib/documents/__tests__/read.test.ts` (type routing, blocked formats)
+  - `components/products/intake/__tests__/intake-ui.test.tsx` (Bridge used, no raw SVG, provenance labels distinct)
+- `npm run verify`, with any environment failure recorded separately.
+- Playwright evidence at 390 x 844, desktop, and reduced motion.
+
+No production check, deployment or migration is claimed.
+
+## 10. Rollout and safe-disable
+
+No feature flag is added. The change is reachable only from
+`/structure?family=products&intent=offer_product|source_product`, and the Browse
+method is the pre-existing `HsDrill` unchanged, so the safe-disable is a one-line
+revert of the composer's product branch back to `HsDrill`. That is recorded here
+so the rollback does not have to be designed under pressure.
+
+The resolver degrades in three steps: model configured and reachable, model
+absent (lexical only, and the surface says so), catalogue absent (impossible, it
+is a module). No path returns an empty unexplained result.
+
+## 11. Progress log
+
+- **28 July 2026** - Authorities read; ADR fetched from
+  `product/ai-document-product-intake`; current journey, taxonomy, AI services,
+  upload surface, Bridge assets and icon registry inspected; two repository
+  defects found and recorded below; this plan opened.
+- **28 July 2026** - Implementation complete on
+  `claude/ai-product-intake-flow-4bcd56`. Built in the order the plan sets:
+  catalogue and resolver, document pipeline, intake state machine, API routes,
+  UI on the approved Bridge, wiring into the real composer, tests, evidence.
+  Four defects were found by the work itself and fixed, each recorded in
+  section 12 as D6 to D9. All 66 evidence and verification checks pass; the
+  repository test suite passes; `npm run verify` result is in section 13.
+
+**Remaining, and deliberately not done here:**
+
+- durable storage of the uploaded document (D5, owner decision);
+- an additive `product_resolution` column and a `deal_documents` table (owner
+  decision; the payload already carries the value);
+- the microphone icon commission (D3);
+- retrofitting S02 to S06 of the composer to the Bridge, which belongs to
+  `constitution-led-interface-rebuild.md`;
+- widening the product catalogue beyond its current working coverage.
+
+## 12. Decisions and discoveries
+
+### D1. The ADR number collides with an existing accepted ADR
+
+Draft PR #68 adds `docs/decisions/ADR-0002-AI-PRODUCT-INTAKE-AND-DOCUMENT-TO-DEAL-FLOW.md`.
+`docs/decisions/ADR-0002-ponte-design-constitution.md` already exists on `main`,
+is named in `scripts/check-governance.mjs` as a required governance file, and is
+cited by `docs/codex/00-START-HERE.md`, `docs/codex/CURRENT-STATE.md` and
+section 25 of the Design Constitution. Merging #68 unchanged would put two
+different accepted decisions at ADR-0002.
+
+This implementation therefore cites the new ADR **by filename**, never by number.
+Renumbering is the owner's call and is raised on the PR.
+
+### D2. Unresolved merge-conflict markers on `main`
+
+`docs/codex/00-START-HERE.md` lines 48 to 67 and `docs/codex/CURRENT-STATE.md`
+lines 4 to 12 contain literal `<<<<<<< HEAD`, `=======` and `>>>>>>> origin/main`
+markers on `origin/main`. Both are binding governance records, and the authority
+order a new contributor reads is currently printed twice with a conflict marker
+between the two versions.
+
+`CURRENT-STATE.md` must be updated by this pull request, so its conflict is
+resolved here, keeping the ADR-0010 text (the later accepted decision) and
+folding in the Desk amendment line the other side carried. `00-START-HERE.md` is
+not otherwise in this change's path; its conflict is reported rather than
+resolved silently.
+
+### D3. Voice has no approved icon
+
+The Flow registry has no microphone key. Constitution section 7 makes that a gap
+to escalate, so the voice control is a text-labelled button rather than a drawn
+icon, and the gap is registered for commission. This is recorded because a later
+contributor will otherwise assume the missing icon was an oversight.
+
+### D4. "Verified by Ponte" is rendered as unavailable, not as false
+
+The ADR requires the review state to distinguish verified by Ponte from the
+other three. Ponte does not verify product claims today. Rendering the row as
+"Not available on this journey" is truthful; rendering it as an empty checkbox
+would imply a verification that could be obtained here, and rendering it at all
+is still required so the four states stay visibly separate.
+
+### D5. The uploaded file is not persisted server-side
+
+See section 7. The ADR says the document "must remain attached to the draft,
+subject to access and privacy controls". Attaching it durably needs a storage
+bucket, a retention rule and an RLS policy, none of which exist and all of which
+are owner decisions. The intake keeps the document for the session and states
+the limit on the review screen rather than implying durable attachment.
+
+### D6. Two server-only modules were reaching the browser
+
+The production build failed with `Can't resolve 'fs'`, because
+`lib/documents/read.ts` unzips OOXML through `adm-zip` and a client component
+imported it for three constants. The same shape existed a second time:
+`ReviewPanel` and `lib/products/intake.ts` imported the term contract from
+`lib/products/extract-document.ts`, which reaches the model through `lib/ai.ts`,
+which reaches Supabase's admin client.
+
+Both are now split: `lib/documents/accept.ts` and `lib/products/terms.ts` hold
+the client-safe halves, and the server-side modules re-export them so a
+server-side caller still has one import. The comment in each says which side is
+which, because the next person will otherwise reintroduce it.
+
+### D7. A standard designation was standing in for a product name
+
+The acceptance fixture's longest term matching Jet A-1 is `DEF STAN 91-091`, so
+the scan's first term put a defence standard where the product name belongs. The
+scan now records the **document's own words** for the match, taken from the
+text and preferring a synonym over a standard, which is both more readable and
+more faithful to North Star 3.4. `ProductMention.label` is that value.
+
+### D8. The review screen made a false provenance claim
+
+Catalogue attributes (sulphur content, application, density) were rendered with
+"Extracted from document" beside them, because the resolved product's attributes
+and the document's attributes were one list. On the one screen whose entire job
+is provenance, that is the failure Constitution section 14 exists to prevent.
+
+They are now two lists. The document's attributes carry the extracted marker;
+Ponte's product record renders **without a marker at all** and says so in a line
+beneath it, because it is neither a claim the document made nor a confirmation
+the member has given yet. A regression test pins it.
+
+### D9. Two capture faults produced misleading evidence
+
+Recorded because both looked like design defects and neither was:
+
+- the first mobile run captured the horizontal deck squeezed into 390px. The
+  Bridge picks its elevation drawing from `matchMedia` at hydration, and
+  resizing a page after it exists but before navigating still hydrated against
+  the wide state. The viewport is now set on the context, and every mobile
+  capture asserts `br--v`;
+- the first desktop run captured the intake at full page width because the
+  gallery did not wrap it in `.sstep`, the composer's own step container.
+
+Both are written up in the evidence README so the next evidence run does not
+rediscover them.
+
+## 13. Final evidence
+
+**Branch:** `claude/ai-product-intake-flow-4bcd56`
+
+**Repository checks**
+
+| Check | Result |
+|---|---|
+| `node scripts/check-messages.mjs` | pass |
+| `node scripts/check-encoding.mjs` | pass, 549+ files: no BOM, no mojibake, no em dashes in `app/` or `components/` |
+| `node scripts/check-governance.mjs` | pass; icon-law ratchet unchanged at 11 lucide and 17 authored SVG, so this change introduced neither |
+| `npm test` | pass, including 20 resolver, 24 document, 26 intake-session and 24 intake-UI tests added here |
+| `tsc --noEmit` | pass |
+| `next build` | pass |
+
+**Visual evidence:** `docs/codex/audits/ai-product-intake/evidence/`, 26 states
+at desktop, the same 26 at 390 x 844, and five under reduced motion, plus a
+README recording how they are produced and the two capture faults that had to be
+fixed first.
+
+**Behavioural verification:** `npx playwright test e2e/product-intake.spec.ts`,
+66 checks, all passing against a production build. Includes the `gas oil` case
+end to end on a server with **no `ANTHROPIC_API_KEY` set**, and a check that
+Trade services and Distribution still render their one-line subject step with no
+product intake and no HS code asked for.
+
+**Production actions claimed:** none. No migration, no feature flag, no
+deployment, no merge.

@@ -1,5 +1,28 @@
 # Known issues and unresolved evidence
 
+## `docs/codex/00-START-HERE.md` carries committed merge-conflict markers
+
+Lines 48 to 67 of `docs/codex/00-START-HERE.md` on `main` contain literal
+`<<<<<<< HEAD`, `=======` and `>>>>>>> origin/main` markers. The file is a
+binding governance record, and the section they interrupt is the **authority
+order** every new contributor and agent is told to read first, so it currently
+prints two different versions of that order with a conflict marker between them.
+
+The two sides differ in substance, not only in wording:
+
+- one names `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` with ADR-0002 and
+  ADR-0010 as the binding design authority;
+- the other names it with ADR-0002 alone, and adds five Deal Room authority
+  entries (1c to 1g) the first side omits.
+
+Choosing between them is an owner decision about what the authority order is,
+not a formatting repair, which is why the 28 July 2026 product-intake change
+reported it rather than resolving it in passing. The same defect in
+`docs/codex/CURRENT-STATE.md` was resolved by that change, because that file had
+to be updated anyway and its two sides were reconcilable without choosing.
+
+Do not treat either side as settled until the owner has reconciled the file.
+
 ## Production deployment state is not yet reconciled
 
 The repository's canonical source is `main`, but Stage One has not yet recorded the exact host project, deployed commit, production branch or public journey-flag values currently serving `ponte.trade`.
