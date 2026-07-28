@@ -1475,7 +1475,12 @@
       "flaggedBody": "Most listings publish immediately. This one matched a check that Ponte looks at by hand. This is not a finding against you.",
       "detailLevel": "Detail level",
       "viewListing": "View your listing",
-      "completeListing": "Complete your listing"
+      "completeListing": "Complete your listing",
+      "verifyOnlyEyebrow": "One step left",
+      "verifyOnlyTitle": "Your offer is ready. Your business is not verified yet.",
+      "verifyOnlyBody": "Ponte publishes member opportunities from verified businesses only. Nothing is wrong with your listing: it publishes automatically as soon as your verification passes.",
+      "verifyOnlyNote": "Verifying confirms the legal entity you represent. It is not an assessment of the opportunity you posted.",
+      "verifyBusiness": "Verify your business"
     },
     "error": {
       "badge": "Could not submit",

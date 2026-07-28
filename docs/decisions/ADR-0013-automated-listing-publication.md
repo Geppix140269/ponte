@@ -1,4 +1,4 @@
-# ADR-0012 — Automated listing publication and one transactional email system
+# ADR-0013 — Automated listing publication and one transactional email system
 
 **Status:** Accepted
 **Date:** 28 July 2026

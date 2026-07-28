@@ -81,6 +81,14 @@ export type TemplateData = {
     listing: ListingSummary;
     /** The exact blocking issues. Never a generic "validation failed". */
     blockingIssues: string[];
+    /**
+     * Where the member actually resolves these.
+     *
+     * Verification is not fixable on the listing form, so an email whose only
+     * button is "Complete your listing" sends a member whose sole blocker is
+     * verification to a page that cannot help them.
+     */
+    route?: "verification" | "listing" | "both";
   };
   listing_flagged_internal: {
     identity: MemberIdentity;
@@ -199,35 +207,63 @@ const listing_published: Builder<"listing_published"> = (d) => ({
   ],
 });
 
-const listing_needs_information: Builder<"listing_needs_information"> = (d) => ({
-  subject: "Complete your Ponte offer to publish it",
-  preheader: `${d.listing.title} is saved. A few required details are still missing.`,
-  reason: "listing_owner",
-  blocks: [
-    { kind: "title", text: "Your offer is saved, but not yet live." },
-    { kind: "status", tone: "action", label: "Action needed" },
-    { kind: "paragraph", text: salutation(d.identity) },
-    {
-      kind: "lead",
-      text: "Ponte publishes automatically once a listing is complete. These are the details still needed.",
-    },
-    {
-      kind: "metadata",
-      rows: [
-        { label: "Listing", value: d.listing.title },
-        { label: "Reference", value: d.listing.ref },
-      ],
-    },
-    // The exact fields. A member who is told "validation failed" has been told
-    // nothing they can act on.
-    { kind: "list", items: d.blockingIssues },
-    { kind: "button", label: "Complete your listing", href: editLink(d.listing.id) },
-    {
-      kind: "disclaimer",
-      text: "Nothing is lost. Your listing stays exactly as you left it until you finish it.",
-    },
-  ],
-});
+const listing_needs_information: Builder<"listing_needs_information"> = (d) => {
+  const resolveVia = d.route ?? "listing";
+  const verificationOnly = resolveVia === "verification";
+
+  return {
+    // When verification is the only thing standing in the way, the subject says
+    // so. "Complete your offer" is untrue in that case: the offer IS complete.
+    subject: verificationOnly
+      ? "Verify your business to publish your Ponte offer"
+      : "Complete your Ponte offer to publish it",
+    preheader: verificationOnly
+      ? `${d.listing.title} is ready. Your business verification is the last step.`
+      : `${d.listing.title} is saved. A few required details are still missing.`,
+    reason: "listing_owner",
+    blocks: [
+      {
+        kind: "title",
+        text: verificationOnly
+          ? "Your offer is ready. Your business is not verified yet."
+          : "Your offer is saved, but not yet live.",
+      },
+      { kind: "status", tone: "action", label: "Action needed" },
+      { kind: "paragraph", text: salutation(d.identity) },
+      {
+        kind: "lead",
+        text: verificationOnly
+          ? "Ponte publishes member opportunities from verified businesses only. Nothing is wrong with your listing; it publishes automatically as soon as your verification passes."
+          : "Ponte publishes automatically once a listing is complete. These are the details still needed.",
+      },
+      {
+        kind: "metadata",
+        rows: [
+          { label: "Listing", value: d.listing.title },
+          { label: "Reference", value: d.listing.ref },
+        ],
+      },
+      // The exact fields. A member told "validation failed" has been told
+      // nothing they can act on.
+      { kind: "list", items: d.blockingIssues },
+      // The button goes where the work actually is. Sending a member whose only
+      // blocker is verification to the listing composer is a dead end: there is
+      // nothing on that form that resolves it.
+      verificationOnly
+        ? { kind: "button", label: "Verify your business", href: route("/verify?for=business") }
+        : { kind: "button", label: "Complete your listing", href: editLink(d.listing.id) },
+      ...(resolveVia === "both"
+        ? ([{ kind: "link", label: "Verify your business", href: route("/verify?for=business") }] as EmailBlock[])
+        : []),
+      {
+        kind: "disclaimer",
+        text: verificationOnly
+          ? "Verifying confirms the legal entity you represent. It is not an assessment of the opportunity you posted."
+          : "Nothing is lost. Your listing stays exactly as you left it until you finish it.",
+      },
+    ],
+  };
+};
 
 const listing_flagged_internal: Builder<"listing_flagged_internal"> = (d) => ({
   subject: `Ponte listing ${d.listing.ref} requires review`,

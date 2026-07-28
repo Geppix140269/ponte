@@ -15,6 +15,7 @@ import {
 } from "../eligibility";
 import { runSafetyChecks, flagsBlockPublication } from "../safety";
 import { canTransition, isMemberWritableStatus, memberStatusLabel } from "../status";
+import { meetsMemberLevel } from "../publication-gate";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -309,6 +310,36 @@ test("a member is never shown the raw stored status", () => {
   // publication nobody did.
   assert.equal(memberStatusLabel("approved"), "Published");
   assert.equal(memberStatusLabel("needs_information"), "Needs information");
+});
+
+
+// ---- the level floor must fail closed ---------------------------------------
+
+test("a non-numeric verification level does not satisfy the member floor", () => {
+  // `Number("company_verified")` is NaN, and `NaN < 2` is false, so the old
+  // comparison FAILED OPEN: a profile carrying a text level passed a check that
+  // exists to stop exactly that. CURRENT-STATE records the stored-vocabulary
+  // drift that produces those values, so this is not hypothetical.
+  assert.equal(meetsMemberLevel("company_verified"), false);
+  assert.equal(meetsMemberLevel("verified"), false);
+  assert.equal(meetsMemberLevel(null), false);
+  assert.equal(meetsMemberLevel(undefined), false);
+  assert.equal(meetsMemberLevel(1), false);
+  // Only a real number at or above the floor passes.
+  assert.equal(meetsMemberLevel(2), true);
+  assert.equal(meetsMemberLevel("2"), true);
+});
+
+test("a text verification level blocks publication rather than allowing it", () => {
+  const r = evaluateListing(productListing(), {
+    ...VERIFIED,
+    submitter: {
+      ...VERIFIED.submitter,
+      verificationLevel: "company_verified" as never,
+    },
+  });
+  assert.equal(r.publishable, false, "a gate condition that cannot fail is not a gate condition");
+  assert.ok(r.blockingIssues.some((i) => i.code === "business_verification_not_current"));
 });
 
 console.log(`listings/eligibility: ${passed} passed`);

@@ -253,6 +253,43 @@ real failure gets missed.
 Nothing here has been changed. Repairing the integration touches repository
 settings and possibly a Supabase project, and both are owner decisions.
 
+## Written but NOT applied
+
+`20260728c_automated_listing_publication.sql` implements ADR-0013. It has **not**
+been applied to production and has not been probe-verified. It is additive and
+idempotent throughout.
+
+What it changes on `listings`: widens the status check constraint to add
+`validating`, `needs_information`, `flagged` and `suspended` (every state
+already in use is preserved, and `approved` remains the stored value for a
+public listing, so no index, RLS policy or public read path changes meaning);
+adds `quantity_mode`, `quantity_min`, `quantity_max` with range-ordering and
+positivity constraints; adds `quantity_extracted`, `quantity_confirmed_at`,
+`declaration_accepted_at`, `declaration_version`, `safety_flags`, `flag_reason`,
+`flag_severity` and `completeness_score`; adds three partial indexes.
+
+New table: `listing_events` — the lifecycle audit trail, RLS-enabled, readable
+by the listing owner and by admins, and **written only under the service role**
+so a member cannot forge a publication event.
+
+RLS restated on `listings`: the member insert and update policies are rewritten
+to cover the new states explicitly, and a separate withdraw-own-live-listing
+policy is added. A member still cannot write `approved`, `flagged`,
+`suspended`, `validating` or `needs_information`, and cannot clear
+`safety_flags`.
+
+**It publishes nothing.** There is no bulk UPDATE moving `submitted` rows to
+`approved`. Publication needs the submitter's live verification state, adjacent
+media/document counts and the safety pass, none of which SQL can evaluate, so
+legacy rows stay in `submitted` and re-validate through the application when
+next touched. It does backfill one `listing_published` event per already-public
+listing with `actor_type = 'admin'`, so the audit trail does not begin with a
+gap and does not misattribute historic desk approvals to the validator.
+
+Note the pre-existing duplicate-constraint hazard recorded under
+`20260722c_listings_v4.sql`: a stale `listings_status_check1` once coexisted
+with the visible constraint and silently rejected permitted values. This
+migration drops both names before adding its own.
 ## Known risk
 
 The historical numbered migration chain is not a reliable proof that a fresh Supabase preview recreates production. A Supabase Preview failure has been treated as pre-existing. Do not repair, squash, rename or replay migrations without a dedicated migration-reconciliation plan and explicit approval.

@@ -53,7 +53,12 @@ export async function decideListingAction(formData: FormData): Promise<void> {
   const qualification = String(formData.get("qualification") || "").trim().slice(0, 900);
   const limitations = String(formData.get("limitations") || "").trim().slice(0, 900);
   if (!id) finish("no_id");
-  if (!["approved", "rejected", "closed"].includes(decision)) finish("no_decision", decision);
+  // `suspended` and `needs_information` join the vocabulary with the exception
+  // console: an operator has to be able to take a live listing off the market
+  // and to hand one back to its member, and neither was previously expressible.
+  if (!["approved", "rejected", "closed", "suspended", "needs_information"].includes(decision)) {
+    finish("no_decision", decision);
+  }
 
   const adminSb = createAdminClient();
   const { data: listing } = await adminSb
@@ -118,6 +123,21 @@ export async function decideListingAction(formData: FormData): Promise<void> {
 
     update.desk_version = deskVersion;
     update.reconfirmed_at = nowIso;
+    // Releasing a listing from a flag CLEARS the flag. Leaving it set would
+    // publish a listing that every console filter still reports as flagged,
+    // and the next operator would have no way to tell a live exception from a
+    // resolved one.
+    update.safety_flags = null;
+    update.flag_reason = null;
+    update.flag_severity = null;
+  }
+
+  // Suspension takes a live listing off the market. It is not a rejection: the
+  // listing is intact and reinstatable, and the member is told so in those
+  // terms. The reason is required, because a member who is told only that
+  // publication stopped has been told nothing they can act on.
+  if (decision === "suspended" && !decisionNote) {
+    finish("no_reason", "A suspension needs a reason. It is sent to the member.");
   }
 
   const { error } = await adminSb.from("listings").update(update).eq("id", id);
@@ -135,17 +155,27 @@ export async function decideListingAction(formData: FormData): Promise<void> {
     event:
       decision === "approved" ? "listing_published"
       : decision === "rejected" ? "listing_rejected"
+      : decision === "suspended" ? "listing_suspended"
+      : decision === "needs_information" ? "listing_needs_information"
       : "listing_closed",
     fromStatus: listing.status,
     toStatus: decision,
     actorType: "admin",
     actorId: (await getUser())?.id ?? null,
-    reasonCode: "operator_decision",
+    // Releasing a flagged listing is a materially different act from publishing
+    // an ordinary one, and the audit trail has to be able to tell them apart
+    // six months later.
+    reasonCode:
+      decision === "approved" && listing.status === "flagged"
+        ? "operator_cleared_flag"
+        : "operator_decision",
   });
 
-  // Email the member on approve/reject. Closing is bookkeeping, not news.
+  // Email the member on approve, reject and suspend. Closing is bookkeeping,
+  // not news, and needs_information is a hand-back the member sees on their own
+  // listing rather than a decision worth its own message.
   let mail: "sent" | "no_address" | "send_failed" | null = null;
-  if (decision === "approved" || decision === "rejected") {
+  if (decision === "approved" || decision === "rejected" || decision === "suspended") {
     const [{ data: owner }, { data: profile }] = await Promise.all([
       adminSb.auth.admin.getUserById(listing.user_id),
       adminSb.from("profiles").select("full_name, company").eq("id", listing.user_id).maybeSingle(),
