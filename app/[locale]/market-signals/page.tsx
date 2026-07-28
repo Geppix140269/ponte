@@ -101,9 +101,10 @@ export default async function MarketSignalsPage({
     searchSignalInventory(toInventoryQuery(q), { limit: 60 }),
     countSignalInventory(),
   ]);
-  const records = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
+  const answered = board.state === "ok" || board.state === "partial";
+  const records = answered ? board.signals.map(toDeskRecord) : [];
   /** Eligible records matching the active filters, across the whole table. */
-  const matched = board.state === "ok" ? board.total : records.length;
+  const matched = answered ? board.total : records.length;
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -185,6 +186,35 @@ export default async function MarketSignalsPage({
           ) : (
             <>
               <ActiveFilters q={q} />
+              {/*
+                The size of the blind spot, printed above the results rather
+                than below them. A category filter reads only the records that
+                carry a category; while most of the board does not, a result
+                shown without this reads as a statement about the market when
+                it is a statement about the classified part of it.
+              */}
+              {board.state === "partial" && (
+                <div className="empty" style={{ marginBottom: 12 }}>
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={20}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>
+                      This filter can see {board.coverage.classified.toLocaleString()} of{" "}
+                      {board.coverage.eligible.toLocaleString()} signals
+                    </b>
+                    <p>
+                      {(board.coverage.eligible - board.coverage.classified).toLocaleString()}{" "}
+                      signals on the board carry no category, so they were not searched.
+                      {records.length === 0
+                        ? " Nothing matched among the ones that do, which is not the same as nothing matching."
+                        : " What is below is real; it is not everything."}
+                    </p>
+                  </div>
+                </div>
+              )}
               {/*
                 The count is the whole matching eligible inventory, and the
                 range is what a member can actually see. Both are printed,

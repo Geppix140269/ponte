@@ -312,6 +312,52 @@ test("an empty category result is checked before it is reported as a result", ()
   );
 });
 
+test("coverage is measured on every category read, not only on an empty one", () => {
+  // Asking only when the result is empty holds for exactly as long as nothing
+  // is classified. The moment one record is classified, every other filter
+  // starts returning small confident results over a mostly unclassified
+  // inventory, and nothing says so.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const body = src.slice(src.indexOf("export async function searchSignalInventory"));
+  assert.ok(
+    !/if \(total === 0 && column\)/.test(body),
+    "coverage is still only measured when the result is empty",
+  );
+  assert.ok(/if \(column\) \{/.test(body), "coverage is not measured on a filtered read at all");
+  assert.ok(body.includes('state: "partial"'), "there is no partial-coverage state");
+  assert.ok(body.includes("classified < eligible"), "partial coverage is not detected by comparison");
+});
+
+test("partial coverage carries the numbers, not just a flag", () => {
+  // A member cannot judge "some records were not searched" without knowing how
+  // many, and a flag would let the surface imply a small gap over a large one.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  assert.ok(src.includes("coverage: { classified, eligible }"), src.slice(0, 0) || "no coverage numbers");
+  assert.ok(src.includes("export type Coverage"), "coverage has no declared shape");
+});
+
+test("both lanes report partial coverage, not only the signals one", () => {
+  // A member reading one lane as complete and the other as partial would draw
+  // the wrong conclusion from the pair.
+  const src = readFileSync("lib/board/live-deals.ts", "utf8");
+  assert.ok(src.includes('state: "partial"'), "the Qualified lane has no partial state");
+  assert.ok(src.includes("classified < eligible"), "the Qualified lane does not compare coverage");
+});
+
+test("an unknown coverage count is not treated as full coverage", () => {
+  // Otherwise a failed probe silently upgrades a partial answer to a
+  // conclusive one, which is the opposite of the safe direction.
+  for (const file of ["lib/board/inventory.ts", "lib/board/live-deals.ts"]) {
+    const src = readFileSync(file, "utf8");
+    assert.ok(
+      /classified !== null && eligible !== null|typeof classified === "number" && typeof eligible === "number"/.test(
+        src,
+      ),
+      `${file} does not guard against an unknown count`,
+    );
+  }
+});
+
 test("a failed classification probe is not read as nothing classified", () => {
   // Unknown is not zero. Reporting an explanation because a probe failed would
   // hide a real result behind it.

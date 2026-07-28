@@ -119,25 +119,48 @@ alter table listings add column if not exists additional_details text
 -- record filed under the wrong family would be trusted by every filter and
 -- count downstream.
 --
--- Rows written before this migration have market_family null and are exempt by
--- the first clause of each check, so nothing existing is invalidated.
+-- Rows written before this migration have every classification column null, so
+-- the first clause of each check is satisfied and nothing existing is
+-- invalidated.
+--
+-- Read each one as an implication: IF a family-specific field is set THEN that
+-- family must be the record's family. An earlier draft was written the other
+-- way round, starting `market_family is null or ...`, which let a service
+-- category be stored on a record with no family at all. That is not a weaker
+-- version of the rule, it is a hole in it: an import or a backfill could write
+-- a freight category onto a record that claims to be in no family, and every
+-- filter downstream would still trust the key.
 alter table listings drop constraint if exists listings_service_family_coherent;
 alter table listings add constraint listings_service_family_coherent check (
-  market_family is null
+  (service_category_key is null and service_subcategory_keys is null)
   or market_family = 'services'
-  or (service_category_key is null and service_subcategory_keys is null)
 );
 
 alter table listings drop constraint if exists listings_distribution_family_coherent;
 alter table listings add constraint listings_distribution_family_coherent check (
-  market_family is null
-  or market_family = 'distribution'
-  or (
+  (
     distribution_partner_type_key is null
     and distribution_relationship_terms is null
     and coverage_scope_key is null
   )
+  or market_family = 'distribution'
 );
+
+-- An intent without a family is the same hole one level up: the seven intents
+-- each belong to exactly one family, so an intent with no family names a
+-- record that cannot be placed. The full intent-to-family pairing is enforced
+-- in the application (`isIntentForFamily`); expressing all seven here would be
+-- a CASE that has to be edited every time the taxonomy grows, and this catches
+-- the case a bad writer actually produces.
+alter table listings drop constraint if exists listings_intent_needs_family;
+alter table listings add constraint listings_intent_needs_family check (
+  market_intent is null or market_family is not null
+);
+
+-- `product_sector_key` and `territory_codes` are deliberately NOT constrained
+-- to a family. A sector belongs to a products record and to a distribution
+-- record that names what is being distributed; a territory belongs to any
+-- record that has one. Constraining them would refuse legitimate rows.
 
 -- ===========================================================================
 -- 7. Indexes for the filters these columns exist to serve
@@ -184,6 +207,30 @@ alter table desk_radar add column if not exists distribution_partner_type_key te
 alter table desk_radar add column if not exists product_sector_key text;
 alter table desk_radar add column if not exists territory_codes text[];
 
+-- The same family-coherence rule as `listings`, and it matters MORE here.
+--
+-- A member listing is written by one route, `/api/marketplace/submit`, which
+-- validates every key against the taxonomy before it writes. A Market Signal is
+-- not: it arrives through `scripts/import-desk-radar.mjs`, through an admin
+-- action, and through whatever backfill classifies the existing inventory
+-- later. None of those goes through the member API, so none of them inherits
+-- its cross-family check.
+--
+-- The database is the only place that sees every writer. Without these, a
+-- backfill could file a freight category on a distribution signal and nothing
+-- would object until a member filtered on it and got the wrong answer.
+alter table desk_radar drop constraint if exists desk_radar_service_family_coherent;
+alter table desk_radar add constraint desk_radar_service_family_coherent check (
+  (service_category_key is null and service_subcategory_keys is null)
+  or market_family = 'services'
+);
+
+alter table desk_radar drop constraint if exists desk_radar_distribution_family_coherent;
+alter table desk_radar add constraint desk_radar_distribution_family_coherent check (
+  distribution_partner_type_key is null
+  or market_family = 'distribution'
+);
+
 create index if not exists desk_radar_market_family_idx
   on desk_radar (market_family) where market_family is not null;
 create index if not exists desk_radar_service_category_idx
@@ -202,6 +249,7 @@ create index if not exists desk_radar_product_sector_idx
 --
 --   alter table listings drop constraint if exists listings_service_family_coherent;
 --   alter table listings drop constraint if exists listings_distribution_family_coherent;
+--   alter table listings drop constraint if exists listings_intent_needs_family;
 --   drop index if exists listings_market_family_idx;
 --   drop index if exists listings_service_category_idx;
 --   drop index if exists listings_partner_type_idx;
@@ -220,6 +268,8 @@ create index if not exists desk_radar_product_sector_idx
 --     drop column if exists product_sector_key,
 --     drop column if exists custom_category_label,
 --     drop column if exists additional_details;
+--   alter table desk_radar drop constraint if exists desk_radar_service_family_coherent;
+--   alter table desk_radar drop constraint if exists desk_radar_distribution_family_coherent;
 --   drop index if exists desk_radar_market_family_idx;
 --   drop index if exists desk_radar_service_category_idx;
 --   drop index if exists desk_radar_product_sector_idx;

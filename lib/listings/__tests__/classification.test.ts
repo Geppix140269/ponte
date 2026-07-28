@@ -10,6 +10,7 @@
 // match downstream trusts it.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { readClassification, isMissingColumnError } from "../classification";
@@ -272,6 +273,102 @@ test("a missing column is recognised however the driver reports it", () => {
   assert.equal(isMissingColumnError({ code: "23505", message: "duplicate key" }), false);
   assert.equal(isMissingColumnError(null), false);
   assert.equal(isMissingColumnError("boom"), false);
+});
+
+// ---------------------------------------------------------------------------
+// The database says the same thing, to every writer
+// ---------------------------------------------------------------------------
+
+const MIGRATION = readFileSync("supabase/migrations/20260728a_market_classification.sql", "utf8");
+
+/** The body of one named CHECK constraint, whitespace collapsed. */
+function constraintBody(name: string): string {
+  const at = MIGRATION.indexOf(`add constraint ${name} check (`);
+  assert.ok(at >= 0, `constraint ${name} is not in the migration`);
+  const open = MIGRATION.indexOf("(", at + `add constraint ${name} check`.length);
+  let depth = 0;
+  for (let i = open; i < MIGRATION.length; i++) {
+    if (MIGRATION[i] === "(") depth++;
+    else if (MIGRATION[i] === ")") {
+      depth--;
+      if (depth === 0) return MIGRATION.slice(open + 1, i).replace(/\s+/g, " ").trim();
+    }
+  }
+  throw new Error(`constraint ${name} is unterminated`);
+}
+
+test("a classification field cannot be stored without its family", () => {
+  // The hole this closes: a constraint opening `market_family is null or ...`
+  // permits a freight category on a record belonging to no family at all, and
+  // every filter downstream would still trust the key. Each constraint must
+  // read as an implication instead: IF the field is set THEN the family is its
+  // family.
+  for (const name of [
+    "listings_service_family_coherent",
+    "listings_distribution_family_coherent",
+    "desk_radar_service_family_coherent",
+    "desk_radar_distribution_family_coherent",
+  ]) {
+    const body = constraintBody(name);
+    assert.ok(
+      !body.startsWith("market_family is null"),
+      `${name} still exempts a record with no family: ${body}`,
+    );
+    assert.ok(
+      /or market_family = '(services|distribution)'$/.test(body),
+      `${name} does not require the family: ${body}`,
+    );
+  }
+});
+
+test("an intent cannot be stored without a family either", () => {
+  const body = constraintBody("listings_intent_needs_family");
+  assert.equal(body, "market_intent is null or market_family is not null");
+});
+
+test("Market Signals carry the same family-coherence rule as listings", () => {
+  // desk_radar is written by an importer, an admin action and any future
+  // backfill, none of which passes through the member API's validation. The
+  // database is the only place that sees every writer.
+  assert.ok(MIGRATION.includes("alter table desk_radar add constraint desk_radar_service_family_coherent"));
+  assert.ok(
+    MIGRATION.includes("alter table desk_radar add constraint desk_radar_distribution_family_coherent"),
+  );
+});
+
+test("every constraint and index added is also written into the rollback", () => {
+  // "Additive so it is safe" is only true if undoing it has actually been
+  // worked out. A constraint added and not listed in the rollback is one that
+  // would survive a revert and refuse rows the reverted code still writes.
+  const rollback = MIGRATION.slice(MIGRATION.indexOf("-- Rollback"));
+  const added = Array.from(MIGRATION.matchAll(/add constraint (\w+) check/g)).map((m) => m[1]);
+  const indexes = Array.from(MIGRATION.matchAll(/create index if not exists (\w+)/g)).map((m) => m[1]);
+  assert.ok(added.length > 0 && indexes.length > 0);
+  for (const name of added) {
+    assert.ok(rollback.includes(`drop constraint if exists ${name}`), `${name} has no rollback`);
+  }
+  for (const name of indexes) {
+    assert.ok(rollback.includes(`drop index if exists ${name}`), `${name} has no rollback`);
+  }
+});
+
+test("nothing existing is renamed, dropped or rewritten", () => {
+  // Additive means additive. The one `drop constraint` allowed is the
+  // idempotent guard immediately before each `add constraint`.
+  const statements = MIGRATION.split("\n").filter((l) => !l.trim().startsWith("--"));
+  const body = statements.join("\n");
+  assert.ok(!/alter table \w+ drop column/i.test(body), "the migration drops a column");
+  assert.ok(!/alter table \w+ rename/i.test(body), "the migration renames something");
+  assert.ok(!/^\s*(update|delete|truncate)\s/im.test(body), "the migration writes to existing rows");
+  for (const column of Array.from(MIGRATION.matchAll(/add column (if not exists )?(\w+)/g))) {
+    assert.ok(column[1], `${column[2]} is added without "if not exists"`);
+  }
+});
+
+test("the migration documents the escape-route keys it actually stores", () => {
+  // The comments contradicted the code once: they said the services escape
+  // route is stored as `other`, and it is `unlisted`.
+  assert.ok(MIGRATION.includes("`unlisted` for a trade service"), "the comment is stale again");
 });
 
 test("the classification reaches the record in words as well as in keys", () => {

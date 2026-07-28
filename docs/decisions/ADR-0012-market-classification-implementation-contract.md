@@ -146,13 +146,38 @@ lands **and in which dimension**, so a stored `exclusive` is never read back as
 a partner type. That mapping is the point: reading it as a partner would keep
 the original error alive under new names.
 
-### 4. A category cannot cross a family boundary
+### 4. A category cannot cross a family boundary, or exist without one
 
 A Trade Service category cannot be stored on a Distribution record, or the
-reverse. Enforced three times, on purpose: in the draft before it is sent, in
-the API before it is written, and in a database CHECK. The API and the database
-are not the only writers a table sees, and a mis-filed key is worse than a
-missing one because every filter, count and match downstream trusts it.
+reverse, and neither can be stored on a record that names no family at all.
+Enforced three times, on purpose: in the draft before it is sent, in the API
+before it is written, and in a database CHECK on both tables. A mis-filed key is
+worse than a missing one because every filter, count and match downstream trusts
+it.
+
+### 4a. A category result declares how much of the market it could see
+
+A category filter reads the records that carry a category. While some do and
+some do not, a result is a statement about the classified part of the inventory
+and not about the market, and the difference has to be on the page.
+
+Three states, not two:
+
+| Coverage | State | What an empty result means |
+|---|---|---|
+| Nothing classified | `unclassified` | Ponte cannot answer this question yet |
+| Some classified | `partial` | No match **among the records Ponte can see** |
+| All classified | `ok` | No match. Conclusive |
+
+Coverage is measured on every category-filtered read, not only on an empty one.
+Asking only on zero holds for exactly as long as nothing is classified: the
+moment one record is classified, every other filter starts returning small,
+confident results over an inventory that is still almost entirely unclassified,
+and nothing says so. Three matches out of four thousand unclassified records
+reads as "the market has three of these" and means "Ponte can see three".
+
+An unknown count is not full coverage. A failed probe leaves the result alone
+rather than asserting completeness nobody measured.
 
 ### 5. Filtering and counting run over the complete eligible inventory
 
@@ -210,17 +235,35 @@ Demanding a typed product was the reason two of three families had no search.
 **`/market-signals` reports the true eligible inventory size, and says what a
 member cannot reach.** It read the newest sixty and printed that number. It now
 filters and counts over the whole table, applying approval and expiry in the
-query, and prints the shortfall in plain words: "the remaining 3,457 are counted
-but not yet reachable from this page." Reporting a number a member cannot act on
-without saying so would be a worse claim than the one it replaced.
+query, and prints the shortfall in plain words, computed from the read rather
+than written into the page. Reporting a number a member cannot act on, without
+saying so, would be a worse claim than the one it replaced.
+
+No figure is quoted here. Every count on that board is time-dependent, because
+the public window is a rolling ninety days, so a number written into a document
+is stale the week after it is written. The evidence README dates the ones it
+records.
 
 ## Consequences
 
 **Migration.** `supabase/migrations/20260728a_market_classification.sql` adds
-eleven nullable columns to `listings`, six to `desk_radar`, two CHECK
-constraints and six indexes. Additive throughout; every existing row stays
-exactly as it is and stays readable; the legacy `listings.type` mapping is
-untouched and remains supported.
+**11** nullable columns, **3** CHECK constraints and **6** indexes to
+`listings`, and **6** nullable columns, **2** CHECK constraints and **3**
+indexes to `desk_radar`. Seventeen columns, five constraints and nine indexes in
+total. Additive throughout; every existing row stays exactly as it is and stays
+readable; the legacy `listings.type` mapping is untouched and remains supported.
+
+The constraints read as implications: IF a family-specific field is set THEN
+that family must be the record's family. An earlier draft was written the other
+way round, opening `market_family is null or ...`, which permitted a service
+category on a record belonging to no family at all. That is not a looser rule,
+it is a hole in it.
+
+`desk_radar` carries the same two, and needs them more than `listings` does. A
+member listing is written by one route that validates every key first. A Market
+Signal is written by an importer, by an admin action, and by whatever backfill
+classifies the inventory later, none of which passes through that route. The
+database is the only place that sees every writer.
 
 **It is written and NOT applied.** A merge to `main` applies no migration in
 this repository (`docs/codex/DATABASE-STATE.md`: the chain aborts on its first

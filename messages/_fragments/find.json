@@ -43,6 +43,13 @@
       "eligible": "{count, plural, =0 {No records} one {# record} other {# records}} in this market, none of them classified.",
       "action": "See everything in this market"
     },
+    "partial": {
+      "badge": "Partial coverage",
+      "heading": "This filter can see {classified} of {eligible} records",
+      "body": "A category filter reads the records that carry a category. {unclassified} in this market do not, so they were not searched. What is below is real; it is not everything.",
+      "emptyHeading": "No match among the records Ponte can filter",
+      "emptyBody": "{classified} of {eligible} records in this market carry a category, and none of those matches. The other {unclassified} were not searched, so this is not yet an answer about the whole market."
+    },
     "entry": {
       "eyebrow": "Find",
       "title": "What are you looking for?",

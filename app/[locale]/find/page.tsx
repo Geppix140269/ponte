@@ -5,6 +5,7 @@ import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import FindChrome from "@/components/find/FindChrome";
 import FindCategoryEntry from "@/components/find/FindCategoryEntry";
+import CoverageNotice, { coverageValues } from "@/components/find/CoverageNotice";
 import QoRow from "@/components/find/QoRow";
 import SignalRow from "@/components/find/SignalRow";
 import HsProductPicker from "@/components/find/HsProductPicker";
@@ -158,7 +159,10 @@ async function Results({ q }: { q: FindQuery }) {
     searchSignalInventory(inventory, { limit: 40 }),
   ]);
 
-  const deals = board.state === "ok" ? board.deals : [];
+  // Results exist in two states: complete coverage, and coverage over the part
+  // of the inventory that carries a category. Both return real records.
+  const deals = board.state === "ok" || board.state === "partial" ? board.deals : [];
+  const signalRows = signals.state === "ok" || signals.state === "partial" ? signals.signals : [];
 
   const qoBase = {
     kind: t("qualified.kind"),
@@ -225,9 +229,18 @@ async function Results({ q }: { q: FindQuery }) {
               {t("qualified.laneTitle")}
             </h2>
             <span className="flane__n">
-              {board.state === "ok" ? t("qualified.count", { count: board.total }) : ""}
+              {board.state === "ok" || board.state === "partial"
+                ? t("qualified.count", { count: board.total })
+                : ""}
             </span>
           </div>
+          {board.state === "partial" && (
+            <CoverageNotice
+              coverage={board.coverage}
+              empty={deals.length === 0}
+              labels={coverageLabels(board.coverage, t)}
+            />
+          )}
           {board.state === "unclassified" ? (
             <Unclassified q={q} reason={board.reason} t={t} />
           ) : deals.length > 0 ? (
@@ -239,7 +252,7 @@ async function Results({ q }: { q: FindQuery }) {
                 labels={{ ...qoBase, ref: t("qualified.ref", { ref: d.ref ?? "" }) }}
               />
             ))
-          ) : (
+          ) : board.state === "partial" ? null : (
             <div className="fstate">
               <span className="fstate__badge">{t("qualified.emptyBadge")}</span>
               <h3 className="fstate__h serif">{t("qualified.emptyTitle")}</h3>
@@ -255,15 +268,24 @@ async function Results({ q }: { q: FindQuery }) {
           <div className="flane__head">
             <h2 className="flane__t">{t("signals.laneTitle")}</h2>
             <span className="flane__n">
-              {signals.state === "ok" ? t("signals.count", { count: signals.total }) : ""}
+              {signals.state === "ok" || signals.state === "partial"
+                ? t("signals.count", { count: signals.total })
+                : ""}
             </span>
           </div>
           <p className="flane__note">{t("signals.note")}</p>
+          {signals.state === "partial" && (
+            <CoverageNotice
+              coverage={signals.coverage}
+              empty={signalRows.length === 0}
+              labels={coverageLabels(signals.coverage, t)}
+            />
+          )}
           {signals.state === "unclassified" ? (
             <Unclassified q={q} reason={signals.reason} eligible={signals.eligible} t={t} />
-          ) : signals.state === "ok" && signals.signals.length > 0 ? (
-            signals.signals.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
-          ) : (
+          ) : signalRows.length > 0 ? (
+            signalRows.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
+          ) : signals.state === "partial" ? null : (
             <div className="fstate">
               <h3 className="fstate__h serif">{t("signals.emptyTitle")}</h3>
               <p className="fstate__p">{t("signals.emptyBody")}</p>
@@ -315,6 +337,21 @@ function Unclassified({
       </Link>
     </div>
   );
+}
+
+/** The coverage copy, with the three numbers derived from one source. */
+function coverageLabels(
+  coverage: { classified: number; eligible: number },
+  t: Awaited<ReturnType<typeof getTranslations<"find">>>,
+) {
+  const values = coverageValues(coverage);
+  return {
+    badge: t("partial.badge"),
+    heading: t("partial.heading", values),
+    body: t("partial.body", values),
+    emptyHeading: t("partial.emptyHeading"),
+    emptyBody: t("partial.emptyBody", values),
+  };
 }
 
 function crumbLabel(q: FindQuery, t: (key: string) => string): string {

@@ -57,15 +57,50 @@ export {
  * Recorded here rather than implied to be finished.
  */
 
+/**
+ * How much of the eligible inventory this filter could actually see.
+ *
+ * The number that decides whether a result means anything. A category filter
+ * runs over the records that carry a category; it is blind to the rest, and
+ * how blind is not a detail a member can be left to guess.
+ */
+export type Coverage = {
+  /** Eligible records carrying any value on the axis being filtered. */
+  classified: number;
+  /** Eligible records in this market, classified or not. */
+  eligible: number;
+};
+
 export type SignalInventory =
   /**
-   * The read succeeded. `total` counts every eligible record matching the
-   * filters, not the page. `shown` is what came back.
+   * The read succeeded AND the filter could see everything it needed to. A
+   * result of zero here is conclusive: there really is no match.
    */
   | { state: "ok"; signals: MarketSignal[]; total: number; offset: number }
   /**
-   * The read could not be answered as asked, because Market Signals do not
-   * carry this classification. Never printed as an empty result.
+   * The read succeeded over PART of the inventory.
+   *
+   * Some records carry this classification and some do not, so the filter ran
+   * over a subset. The records found are real and are returned; what cannot be
+   * claimed is that they are all of them. An empty result in this state is not
+   * "no match", it is "no match among the ones Ponte can see", and the two are
+   * different answers to the member's question.
+   *
+   * This state is the whole inventory's condition for as long as classification
+   * is incomplete, which is from the moment the first record is classified
+   * until the moment the last one is. It is not an edge case; it is where the
+   * product will live for a while.
+   */
+  | {
+      state: "partial";
+      signals: MarketSignal[];
+      total: number;
+      offset: number;
+      coverage: Coverage;
+    }
+  /**
+   * The read could not be answered as asked, because NO Market Signal carries
+   * this classification. Never printed as an empty result.
    *
    * `columns_absent`      the migration has not been applied.
    * `nothing_classified`  the columns exist and every eligible row is null on
@@ -128,18 +163,35 @@ export async function searchSignalInventory(
     const signals = (data ?? []).map((r) => mapSignalRow(r as SignalRow));
     const total = count ?? signals.length;
 
-    // A category search that found nothing has two possible meanings, and they
-    // are not interchangeable. Asked only when it matters, and it costs one
-    // head count.
+    /**
+     * How much of the inventory this filter could see.
+     *
+     * Measured on EVERY category-filtered read, not only when the result is
+     * empty. An earlier version asked only on zero, which held for exactly as
+     * long as nothing was classified: the moment one record was classified,
+     * every other category filter would have started returning small, confident
+     * results over an inventory that was still almost entirely unclassified,
+     * and nothing would have said so. A result of three out of four thousand
+     * unclassified records is not three matches; it is three matches and a
+     * blind spot.
+     *
+     * Two head counts against indexed columns, and only on a filtered read.
+     */
     const column = canonicalColumnFor(query);
-    if (total === 0 && column) {
-      const classified = await countClassified(sb, column, nowIso);
+    if (column) {
+      const [classified, eligible] = await Promise.all([
+        countClassified(sb, column, nowIso),
+        countSignalInventory(nowIso),
+      ]);
+
       if (classified === 0) {
-        return {
-          state: "unclassified",
-          reason: "nothing_classified",
-          eligible: await countSignalInventory(nowIso),
-        };
+        return { state: "unclassified", reason: "nothing_classified", eligible };
+      }
+
+      // Unknown is not full coverage. A failed probe leaves the result as it
+      // is rather than asserting completeness nobody measured.
+      if (classified !== null && eligible !== null && classified < eligible) {
+        return { state: "partial", signals, total, offset, coverage: { classified, eligible } };
       }
     }
 

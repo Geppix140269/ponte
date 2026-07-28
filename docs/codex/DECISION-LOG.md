@@ -76,6 +76,33 @@ neither be described properly nor searched at all.
 9. **Nothing is backfilled.** No existing record has been classified into this
    taxonomy, and writing a guess into those columns would invent a finding.
 
+**Corrections under review, 28 July 2026:**
+
+10. **Eligibility runs in the query, before the page is cut and before the count
+    is taken.** Applying the public-expiry rule afterwards to a fetched page
+    counted expired rows and returned short pages, which would have made offset
+    paging unstable before it was built.
+
+11. **Coverage is measured on every category-filtered read.** Reporting
+    "nothing is classified" only when the result was empty held for exactly as
+    long as nothing was classified. From the first classified record onwards,
+    every filter would have returned small confident results over an inventory
+    that was still almost entirely unclassified. There are now three states:
+    `unclassified` (nothing carries a category), `partial` (some do, and the
+    numbers are printed), and `ok` (all do, so an empty result is conclusive).
+
+12. **The family-coherence constraints are implications, not exemptions.** The
+    first draft opened `market_family is null or ...`, which permitted a service
+    category on a record belonging to no family. `desk_radar` carries the same
+    two constraints, and needs them more than `listings` does: a signal is
+    written by an importer, an admin action and any future backfill, none of
+    which passes through the member API's validation.
+
+13. **The legacy `route` value is preserved as `route_to_market`, not
+    consolidated into `market_entry`.** Consolidation cannot be undone: once
+    stored values have been read back through it, which records were `route` is
+    unrecoverable. Owner-approved 28 July 2026.
+
 **Not applied:** `supabase/migrations/20260728a_market_classification.sql` is
 written and reviewed and has **not** been run. A merge applies no migration in
 this repository. The write path tolerates the columns being absent and retries

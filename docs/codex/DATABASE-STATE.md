@@ -17,8 +17,9 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 ## Written and NOT applied
 
 - `20260728a_market_classification.sql` (28 July 2026). Adds the market
-  classification columns: eleven nullable columns and two CHECK constraints on
-  `listings`, six nullable columns on `desk_radar`, and nine indexes. Additive
+  classification columns: 11 nullable columns, 3 CHECK constraints and 6 indexes
+  on `listings`; 6 nullable columns, 2 CHECK constraints and 3 indexes on
+  `desk_radar`. Seventeen columns, five constraints, nine indexes. Additive
   throughout; nothing is renamed, dropped or rewritten, every existing row stays
   readable and the legacy `listings.type` mapping is untouched. The rollback is
   written out in the file itself.

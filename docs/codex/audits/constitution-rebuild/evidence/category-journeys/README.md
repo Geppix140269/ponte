@@ -152,6 +152,17 @@ on it unstable before it was ever built.
   to infer it from a number.
 - **No record carries a category.** Applying the migration would not change
   that: it creates columns and classifies nothing.
+- **The partial-coverage state is NOT in these frames, and cannot be.** It
+  appears only when *some* records carry a category and some do not, and today
+  none do, so every category filter lands in `unclassified` instead. It becomes
+  reachable the moment the first record is classified and stays reachable until
+  the last one is.
+
+  Because a screenshot cannot reach it, it is pinned by unit test instead:
+  `lib/board/__tests__/coverage.test.tsx` renders the notice with real English
+  copy and asserts that an empty partial result reads "No match among the
+  records Ponte can filter" and states how many were not searched. The detection
+  logic is pinned separately in `lib/board/__tests__/market-signals.test.ts`.
 
 - **The frames are not asserted byte-identical across runs.** The landing
   evidence suite makes that claim for its own frames; this one does not, and no

@@ -216,6 +216,18 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
 export type DealSearch =
   | { state: "ok"; deals: LiveDeal[]; total: number; bounded: boolean }
   /**
+   * The filter ran over the records that carry this classification, and some
+   * do not. The deals found are real; that they are all of them is not a claim
+   * this state makes. See the same reasoning in `lib/board/inventory.ts`.
+   */
+  | {
+      state: "partial";
+      deals: LiveDeal[];
+      total: number;
+      bounded: boolean;
+      coverage: { classified: number; eligible: number };
+    }
+  /**
    * Two reasons, and they outlast each other.
    *
    * `columns_absent` ends when the migration is applied by hand. Applying it
@@ -292,24 +304,42 @@ export async function searchLiveDeals(
 
     await decorateChapters(sb, deals);
 
-    // Nothing found on a category axis has two meanings. Asked only when it
-    // matters, and it costs one head count against the approved set.
+    const shown = deals.slice(0, limit);
+    const bounded = (rows ?? []).length >= SEARCH_CEILING;
+
+    // How much of the approved set carries this classification, measured on
+    // every category-filtered read rather than only on an empty one. A small,
+    // confident result over a mostly unclassified board is the failure this
+    // prevents: the records found are real, but they are not all of them and
+    // the page must not imply they are.
     const column = canonicalColumnFor(query);
-    if (deals.length === 0 && column) {
-      const { count } = await sb
-        .from("listings")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "approved")
-        .not(column, "is", null);
-      if (count === 0) return { state: "unclassified", reason: "nothing_classified" };
+    if (column) {
+      const [classifiedRead, eligibleRead] = await Promise.all([
+        sb
+          .from("listings")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "approved")
+          .not(column, "is", null),
+        sb.from("listings").select("id", { count: "exact", head: true }).eq("status", "approved"),
+      ]);
+      const classified = classifiedRead.count;
+      const eligible = eligibleRead.count;
+
+      if (classified === 0) return { state: "unclassified", reason: "nothing_classified" };
+      // Unknown is not full coverage: a failed count leaves the result alone
+      // rather than asserting completeness nobody measured.
+      if (typeof classified === "number" && typeof eligible === "number" && classified < eligible) {
+        return {
+          state: "partial",
+          deals: shown,
+          total: deals.length,
+          bounded,
+          coverage: { classified, eligible },
+        };
+      }
     }
 
-    return {
-      state: "ok",
-      deals: deals.slice(0, limit),
-      total: deals.length,
-      bounded: (rows ?? []).length >= SEARCH_CEILING,
-    };
+    return { state: "ok", deals: shown, total: deals.length, bounded };
   } catch (error) {
     if (isMissingColumnError(error) && usesCanonicalKeys(query)) {
       return { state: "unclassified", reason: "columns_absent" };
