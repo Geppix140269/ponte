@@ -27,10 +27,14 @@ import {
   DISTRIBUTION_PARTNER_TYPES,
   DISTRIBUTION_RELATIONSHIP_TERMS,
   DISTRIBUTION_COVERAGE_SCOPES,
+  COMPATIBILITY_PARTNER_TYPES,
+  PROPOSED_CONSOLIDATION,
   LEGACY_DISTRIBUTION_MAP,
   canonicalPartnerType,
   canonicalRelationshipTerm,
   coverageScopeTakesCountries,
+  isSelectablePartnerType,
+  partnerType,
 } from "../distribution";
 import { CLASSIFICATION_JOURNEYS, firstStepFor, journeyFor } from "../journey";
 import { MARKET_INTENTS, TRADE_SERVICES, DISTRIBUTION_MODES } from "../market";
@@ -236,7 +240,10 @@ test("every legacy distribution value maps, and to the right dimension", () => {
     const mapping = LEGACY_DISTRIBUTION_MAP[legacy.key];
     assert.ok(mapping, `${legacy.key} has no recorded mapping`);
     if (mapping.field === "partner_type") {
-      assert.ok(DISTRIBUTION_PARTNER_TYPES.some((p) => p.key === mapping.key));
+      const known =
+        DISTRIBUTION_PARTNER_TYPES.some((p) => p.key === mapping.key) ||
+        COMPATIBILITY_PARTNER_TYPES.some((p) => p.key === mapping.key);
+      assert.ok(known, `${legacy.key} maps to ${mapping.key}, which names nothing`);
       assert.equal(canonicalPartnerType(legacy.key), mapping.key);
     } else {
       assert.ok(DISTRIBUTION_RELATIONSHIP_TERMS.some((r) => r.key === mapping.key));
@@ -254,14 +261,46 @@ test("a stored relationship term is never read back as a partner type", () => {
   assert.equal(canonicalRelationshipTerm("distributor"), null);
 });
 
-test("the one underspecified legacy mapping is flagged, not hidden", () => {
+test("the underspecified legacy value keeps its meaning rather than being folded", () => {
   // The requirement maps `route` to a route-to-market partner, which is not one
-  // of the twelve canonical types. It is mapped to the closest exact
-  // definition and marked for the owner to confirm.
+  // of the twelve canonical types. Folding it into market-entry would be a
+  // decision nobody has taken, and it could not be undone: once stored values
+  // had been read back through it, which records were which is unrecoverable.
   const route = LEGACY_DISTRIBUTION_MAP.route;
-  assert.equal(route.key, "market_entry");
+  assert.equal(route.key, "route_to_market");
+  assert.notEqual(route.key, "market_entry");
   assert.equal(route.needsOwnerConfirmation, true);
   assert.ok(route.note && route.note.length > 20);
+
+  // It reads back as itself, and displays as itself.
+  assert.equal(canonicalPartnerType("route"), "route_to_market");
+  assert.equal(partnerType("route_to_market")?.label, "Route-to-market partner");
+});
+
+test("a compatibility value is readable but never offered as a choice", () => {
+  // The owner defined twelve options. A preserved historical value is not a
+  // thirteenth, and must not appear in a picker as though it were.
+  assert.equal(DISTRIBUTION_PARTNER_TYPES.length, 12);
+  for (const compat of COMPATIBILITY_PARTNER_TYPES) {
+    assert.equal(
+      DISTRIBUTION_PARTNER_TYPES.some((p) => p.key === compat.key),
+      false,
+      `${compat.key} is offered in the picker`,
+    );
+    assert.equal(isSelectablePartnerType(compat.key), false);
+    assert.ok(partnerType(compat.key), `${compat.key} cannot be displayed`);
+  }
+  for (const canonical of DISTRIBUTION_PARTNER_TYPES) {
+    assert.equal(isSelectablePartnerType(canonical.key), true);
+  }
+});
+
+test("the proposed consolidation is recorded and acted on by nothing", () => {
+  // If any resolver consulted this, the consolidation would already have
+  // happened and the owner's decision would have been pre-empted.
+  assert.equal(PROPOSED_CONSOLIDATION.route_to_market, "market_entry");
+  assert.equal(canonicalPartnerType("route_to_market"), "route_to_market");
+  assert.equal(canonicalPartnerType("route"), "route_to_market");
 });
 
 // ---------------------------------------------------------------------------

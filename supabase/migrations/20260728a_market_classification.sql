@@ -90,9 +90,17 @@ alter table listings add column if not exists product_sector_key text;
 -- ===========================================================================
 -- 5. Custom wording, kept apart from the keys
 -- ===========================================================================
--- A member who chose Other still carries the canonical `other` key and remains
--- countable alongside every other record. Their wording lives here, separately,
--- so it can be searched without ever standing in for a classification.
+-- A member who chose Other still carries a canonical key and remains countable
+-- alongside every other record. Their wording lives here, separately, so it can
+-- be searched without ever standing in for a classification.
+--
+-- The keys are `unlisted` for a trade service and `other` for a distribution
+-- arrangement. They differ deliberately. The earlier ten-key service list
+-- already used `other`, and it meant "Other trade-enabling services": a real
+-- category with real subcategories, now stored as `enabling`. Reusing `other`
+-- for the escape route would have made every stored service value ambiguous.
+-- The label a member sees is "Other" in both cases; only the stored key differs,
+-- which is what stable keys are for. See docs/schemas/market-category-taxonomy.md.
 alter table listings add column if not exists custom_category_label text
   check (custom_category_label is null or length(custom_category_label) <= 200);
 

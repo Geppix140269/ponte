@@ -102,6 +102,8 @@ export default async function MarketSignalsPage({
     countSignalInventory(),
   ]);
   const records = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
+  /** Eligible records matching the active filters, across the whole table. */
+  const matched = board.state === "ok" ? board.total : records.length;
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -125,11 +127,19 @@ export default async function MarketSignalsPage({
               <div>
                 <b>Ponte cannot filter signals by this category yet</b>
                 <p>
-                  No signal on the board carries a category in this taxonomy, so this filter would
-                  return an empty list rather than an answer. That is a gap in what Ponte has
-                  classified, not a statement about the market. Signals read from here on are
-                  classified as they are approved.
+                  {board.reason === "columns_absent"
+                    ? "The category fields are not yet live on the database, so this filter cannot be applied at all."
+                    : "No signal on the board carries a category in this taxonomy, so this filter would return an empty list rather than an answer."}{" "}
+                  That is a gap in what Ponte has classified, not a statement about the market.
+                  Signals read from here on are classified as they are approved; the signals already
+                  here have not been.
                 </p>
+                {typeof board.eligible === "number" && (
+                  <p>
+                    {board.eligible.toLocaleString()} signals are live on the board, and none of them
+                    carries a category.
+                  </p>
+                )}
                 <div className="empty__a">
                   <Link className="b" href={signalFilterHref({})}>
                     See every signal on the board
@@ -175,20 +185,31 @@ export default async function MarketSignalsPage({
           ) : (
             <>
               <ActiveFilters q={q} />
-              <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 10 }}>
-                {/* The count is the whole matching inventory. Where fewer are
-                    shown than matched, both numbers are printed, because a
-                    page length presented as a market size is a false claim
-                    about how much is out there. */}
-                {board.state === "ok" && board.total === 1 ? "1 signal" : `${board.state === "ok" ? board.total : records.length} signals`}
-                {board.state === "ok" && board.total > records.length
-                  ? `, ${records.length} shown`
-                  : ""}
-                {everything !== null && board.state === "ok" && board.total < everything
-                  ? ` of ${everything} on the board`
+              {/*
+                The count is the whole matching eligible inventory, and the
+                range is what a member can actually see. Both are printed,
+                because a page length presented as a market size is a false
+                claim about how much is out there.
+
+                And where the two differ, the page says so plainly. Ponte can
+                now COUNT every eligible signal but a member cannot yet REACH
+                them: there is no pagination. Printing "3,517 signals, 60 shown"
+                and stopping would imply the rest are a scroll away.
+              */}
+              <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 4 }}>
+                {matched === 1 ? "1 signal" : `${matched.toLocaleString()} signals`}
+                {matched > records.length ? `, showing 1-${records.length}` : ""}
+                {everything !== null && matched < everything
+                  ? ` of ${everything.toLocaleString()} live on the board`
                   : ""}
                 {records.length > REGISTER_THRESHOLD ? ", fact register" : ", record cards"}
               </p>
+              {matched > records.length && (
+                <p style={{ fontSize: 12, color: "var(--ink-3)", paddingBottom: 10 }}>
+                  The remaining {(matched - records.length).toLocaleString()} are counted but not yet
+                  reachable from this page. Paging through the whole inventory is not built.
+                </p>
+              )}
 
               {records.length > REGISTER_THRESHOLD ? (
                 <FactRegister records={records} label="Market Signals" />

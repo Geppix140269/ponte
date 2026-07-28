@@ -131,6 +131,46 @@ export const DISTRIBUTION_PARTNER_TYPES: readonly CategoryOption[] = [
 ];
 
 /**
+ * Values a record may legitimately hold that are NOT offered as a choice.
+ *
+ * `route_to_market` exists because the owner's twelve canonical types have no
+ * entry for it, and the earlier list did: `route`, "Route-to-market". The
+ * requirement's migration table points that value at "a route-to-market
+ * partner", which is not one of the twelve.
+ *
+ * Consolidating it into `market_entry` would be a decision nobody has taken,
+ * and it would be irreversible in the only way that matters: once a stored
+ * `route` has been read back as market-entry, the distinction is gone and no
+ * later decision can recover which records were which.
+ *
+ * So the meaning is preserved. A stored `route` reads back as "Route-to-market
+ * partner", displays as itself, and stays countable as itself. It is not
+ * offered in the picker, because the owner defined twelve options and this is
+ * not a thirteenth. `PROPOSED_CONSOLIDATION` records where it would go IF the
+ * owner approves that, and nothing acts on it.
+ */
+export const COMPATIBILITY_PARTNER_TYPES: readonly CategoryOption[] = [
+  {
+    key: "route_to_market",
+    label: "Route-to-market partner",
+    description:
+      "Historical value, preserved. Establishes the commercial route by which products reach a market.",
+    icon: "distribution.route",
+    sort: 101,
+  },
+];
+
+/**
+ * Where a compatibility value WOULD go if the owner approves consolidating it.
+ *
+ * A proposal, held in one place so it can be acted on in one edit. Nothing
+ * reads this to resolve a stored value, and a test asserts that.
+ */
+export const PROPOSED_CONSOLIDATION: Readonly<Record<string, string>> = {
+  route_to_market: "market_entry",
+};
+
+/**
  * How the arrangement is structured. Deliberately NOT partner types, and never
  * shown in the same list as them: mixing the two is the defect being corrected.
  * A member may hold more than one of these at once, so this is a multiple
@@ -276,9 +316,9 @@ export function coverageScopeTakesCountries(scope: string | null): boolean {
  *
  * `route` is the one value the requirement left underspecified. Its stated
  * target, "route-to-market partner", is not one of the twelve canonical partner
- * types. It is mapped to `market_entry`, whose definition ("builds the market,
- * identifies channels and establishes commercial access") covers it exactly,
- * and it is flagged here so the owner confirms rather than discovers it.
+ * types, so it is preserved as the compatibility value `route_to_market` rather
+ * than folded into anything. Consolidating it would be a decision nobody has
+ * taken and could not be undone afterwards.
  */
 export interface LegacyDistributionMapping {
   /** Which canonical dimension the old value actually belonged to. */
@@ -297,9 +337,9 @@ export const LEGACY_DISTRIBUTION_MAP: Readonly<Record<string, LegacyDistribution
   broker: { field: "partner_type", key: "broker" },
   route: {
     field: "partner_type",
-    key: "market_entry",
+    key: "route_to_market",
     needsOwnerConfirmation: true,
-    note: "The requirement maps this to a route-to-market partner, which is not one of the twelve canonical types. Market-entry is the closest exact definition.",
+    note: "The requirement maps this to a route-to-market partner, which is not one of the twelve canonical types. The meaning is preserved as a compatibility value rather than folded into market-entry, because that consolidation is not a decision anyone has taken and could not be reversed once stored values had been read back through it. PROPOSED_CONSOLIDATION records where it would go if the owner approves.",
   },
   local: { field: "partner_type", key: "local" },
   regional: { field: "partner_type", key: "regional" },
@@ -318,8 +358,20 @@ export function canonicalPartnerType(stored: string | null | undefined): string 
   const value = stored.trim();
   if (!value) return null;
   if (DISTRIBUTION_PARTNER_TYPES.some((p) => p.key === value)) return value;
+  if (COMPATIBILITY_PARTNER_TYPES.some((p) => p.key === value)) return value;
   const mapped = LEGACY_DISTRIBUTION_MAP[value];
   return mapped && mapped.field === "partner_type" ? mapped.key : null;
+}
+
+/**
+ * May a member CHOOSE this partner type?
+ *
+ * The twelve canonical types only. A compatibility value is readable, storable
+ * and displayable, because a record already holds it; it is not on the menu,
+ * because the owner defined twelve options.
+ */
+export function isSelectablePartnerType(key: string | null | undefined): boolean {
+  return !!key && DISTRIBUTION_PARTNER_TYPES.some((p) => p.key === key);
 }
 
 /** The canonical relationship term a stored value means, or null. */
@@ -332,9 +384,20 @@ export function canonicalRelationshipTerm(stored: string | null | undefined): st
   return mapped && mapped.field === "relationship_term" ? mapped.key : null;
 }
 
+/**
+ * Look up a partner type for display or validation.
+ *
+ * Resolves compatibility values too, so a record holding `route_to_market`
+ * prints "Route-to-market partner" rather than falling back to a raw key or,
+ * worse, to some other partner's label.
+ */
 export function partnerType(key: string | null | undefined): CategoryOption | null {
   if (!key) return null;
-  return DISTRIBUTION_PARTNER_TYPES.find((p) => p.key === key) ?? null;
+  return (
+    DISTRIBUTION_PARTNER_TYPES.find((p) => p.key === key) ??
+    COMPATIBILITY_PARTNER_TYPES.find((p) => p.key === key) ??
+    null
+  );
 }
 
 export function relationshipTerm(key: string | null | undefined): CategoryOption | null {

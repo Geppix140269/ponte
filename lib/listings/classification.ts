@@ -150,6 +150,12 @@ export function readClassification(body: Record<string, unknown>): Classificatio
       };
     }
   }
+  // `partnerType` resolves compatibility values as well as the twelve
+  // selectable ones, and that is deliberate. A member editing a record that
+  // already holds `route_to_market` sends it back, and refusing it would make
+  // their own historical record unsaveable. The picker only ever offers the
+  // twelve; `isSelectablePartnerType` is the check for anything that needs to
+  // enforce that, and storage is not the place for it.
   if (partnerKey && !partnerType(partnerKey)) {
     return {
       ok: false,

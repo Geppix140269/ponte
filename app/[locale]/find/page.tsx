@@ -229,7 +229,7 @@ async function Results({ q }: { q: FindQuery }) {
             </span>
           </div>
           {board.state === "unclassified" ? (
-            <Unclassified q={q} t={t} />
+            <Unclassified q={q} reason={board.reason} t={t} />
           ) : deals.length > 0 ? (
             deals.map((d) => (
               <QoRow
@@ -260,7 +260,7 @@ async function Results({ q }: { q: FindQuery }) {
           </div>
           <p className="flane__note">{t("signals.note")}</p>
           {signals.state === "unclassified" ? (
-            <Unclassified q={q} t={t} />
+            <Unclassified q={q} reason={signals.reason} eligible={signals.eligible} t={t} />
           ) : signals.state === "ok" && signals.signals.length > 0 ? (
             signals.signals.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
           ) : (
@@ -285,16 +285,31 @@ async function Results({ q }: { q: FindQuery }) {
  */
 function Unclassified({
   q,
+  reason,
+  eligible,
   t,
 }: {
   q: FindQuery;
+  reason: "columns_absent" | "nothing_classified";
+  /** Records that exist in this market and carry no category. */
+  eligible?: number | null;
   t: Awaited<ReturnType<typeof getTranslations<"find">>>;
 }) {
   return (
     <div className="fstate">
       <span className="fstate__badge">{t("unclassified.badge")}</span>
       <h3 className="fstate__h serif">{t("unclassified.title")}</h3>
-      <p className="fstate__p">{t("unclassified.body")}</p>
+      <p className="fstate__p">
+        {reason === "columns_absent"
+          ? t("unclassified.bodyColumnsAbsent")
+          : t("unclassified.bodyNothingClassified")}
+      </p>
+      {/* The size of what could not be filtered. Printed only when Ponte
+          actually counted it: an unknown count is not zero, and rendering it
+          as one would understate the inventory a member cannot reach. */}
+      {typeof eligible === "number" && (
+        <p className="fstate__p">{t("unclassified.eligible", { count: eligible })}</p>
+      )}
       <Link className="fbtn fbtn--secondary" href={buildFindHref({ family: q.family ?? undefined })}>
         {t("unclassified.action")}
       </Link>

@@ -374,7 +374,9 @@
     "unclassified": {
       "badge": "Not yet classified",
       "title": "Ponte cannot filter this market by category yet",
-      "body": "The category fields exist in this journey but no published record carries one, so filtering here would return an empty list rather than an answer. Records created from now on are classified as they are made. Nothing is missing from the market; Ponte simply cannot yet tell you which part of it this is.",
+      "bodyColumnsAbsent": "The category fields are not yet live on the database, so this filter cannot be applied at all. Nothing is missing from the market; Ponte simply cannot yet tell you which part of it this is.",
+      "bodyNothingClassified": "No published record carries a category in this taxonomy, so filtering here would return an empty list rather than an answer. That is a gap in what Ponte has classified, not a statement about the market. Records created from now on are classified as they are made; the records already here have not been.",
+      "eligible": "{count, plural, =0 {No records} one {# record} other {# records}} in this market, none of them classified.",
       "action": "See everything in this market"
     },
     "entry": {

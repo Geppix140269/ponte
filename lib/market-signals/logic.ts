@@ -124,6 +124,32 @@ export function isPubliclyVisible(
   return Date.parse(row.public_expires_at) > nowMs;
 }
 
+/**
+ * The same rule, expressed for the database instead of for a row in memory.
+ *
+ * `isPubliclyVisible` above is correct and stays: it is what a single-record
+ * read checks, and it is the unit-tested definition. It is the wrong tool for a
+ * board, and using it as one was a real defect.
+ *
+ * A list read that fetches sixty approved rows and then drops the expired ones
+ * gets two things wrong at once. The page comes back short, so a member paging
+ * through the inventory sees fifty-five records where sixty were promised and
+ * the offsets no longer line up. And a count taken from that query counts the
+ * expired rows too, so the board states an inventory size that is larger than
+ * the inventory: 3,543 stored approved rows where 3,517 are actually public.
+ *
+ * So the expiry belongs in the query, before the page is cut and before the
+ * count is taken. This builds the predicate once so the board read, the search
+ * and the count cannot express it three slightly different ways.
+ *
+ * A signal with no expiry is still public while approved, for the same reason
+ * as above: approval always sets one, and hiding a signal because a date is
+ * missing would be the wrong failure.
+ */
+export function publicWindowPredicate(nowIso: string): string {
+  return `public_expires_at.is.null,public_expires_at.gt.${nowIso}`;
+}
+
 /** Map a public row to the client-facing shape. Pure. */
 export function mapSignalRow(r: SignalRow): MarketSignal {
   return {

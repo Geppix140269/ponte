@@ -5,7 +5,7 @@ import { isoCode, parseVolume } from "@/lib/listing-terms";
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import { isMissingColumnError } from "@/lib/listings/classification";
-import { usesCanonicalKeys, type InventoryQuery } from "@/lib/board/inventory";
+import { usesCanonicalKeys, canonicalColumnFor, type InventoryQuery } from "@/lib/board/inventory";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -215,7 +215,17 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
  */
 export type DealSearch =
   | { state: "ok"; deals: LiveDeal[]; total: number; bounded: boolean }
-  | { state: "unclassified" }
+  /**
+   * Two reasons, and they outlast each other.
+   *
+   * `columns_absent` ends when the migration is applied by hand. Applying it
+   * does not end `nothing_classified`, because the SQL creates columns and
+   * classifies no historical record. Collapsing the two would mean that on the
+   * day the migration ran, every category filter would start reporting a
+   * confident "no match" over an inventory that had simply never been
+   * classified.
+   */
+  | { state: "unclassified"; reason: "columns_absent" | "nothing_classified" }
   | { state: "unavailable" };
 
 /** The ceiling on a filtered read. Far above any current filtered result set. */
@@ -282,6 +292,18 @@ export async function searchLiveDeals(
 
     await decorateChapters(sb, deals);
 
+    // Nothing found on a category axis has two meanings. Asked only when it
+    // matters, and it costs one head count against the approved set.
+    const column = canonicalColumnFor(query);
+    if (deals.length === 0 && column) {
+      const { count } = await sb
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "approved")
+        .not(column, "is", null);
+      if (count === 0) return { state: "unclassified", reason: "nothing_classified" };
+    }
+
     return {
       state: "ok",
       deals: deals.slice(0, limit),
@@ -289,7 +311,9 @@ export async function searchLiveDeals(
       bounded: (rows ?? []).length >= SEARCH_CEILING,
     };
   } catch (error) {
-    if (isMissingColumnError(error) && usesCanonicalKeys(query)) return { state: "unclassified" };
+    if (isMissingColumnError(error) && usesCanonicalKeys(query)) {
+      return { state: "unclassified", reason: "columns_absent" };
+    }
     return { state: "unavailable" };
   }
 }
