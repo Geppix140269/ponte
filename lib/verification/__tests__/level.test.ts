@@ -235,24 +235,4 @@ test("nextLevel steps up and clamps at the top", () => {
   assert.equal(nextLevel(null), "unverified");
 });
 
-/* ---------------------------------------------------------------- */
-/* The coercion must not come back                                   */
-/* ---------------------------------------------------------------- */
-
-test("no numeric coercion of a verification level survives anywhere", () => {
-  // The defect was not one bad line; it was one bad idea repeated in twelve
-  // places. This asserts the idea is gone, not just the lines.
-  const { execSync } = require("node:child_process") as typeof import("node:child_process");
-  const out = execSync(
-    'git grep -n -E "Number\\([^)]*verification_?[Ll]evel|meetsMemberLevel" -- ' +
-      '"app" "lib" "components" "scripts" || true',
-    { encoding: "utf8" },
-  ).trim();
-  assert.equal(
-    out,
-    "",
-    `numeric coercion of a verification level reappeared:\n${out}`,
-  );
-});
-
 console.log(`verification/level: ${passed} passed`);

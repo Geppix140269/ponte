@@ -15,7 +15,7 @@
     "sanctions:refresh": "tsx scripts/sanctions-refresh.ts",
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
-    "verify": "node scripts/check-deps.mjs && node scripts/check-messages.mjs && node scripts/check-encoding.mjs && node scripts/check-migrations.mjs && node scripts/check-governance.mjs && npm test && tsc --noEmit --incremental false && next build",
+    "verify": "node scripts/check-deps.mjs && node scripts/check-messages.mjs && node scripts/check-encoding.mjs && node scripts/check-migrations.mjs && node scripts/check-governance.mjs && node lib/verification/__tests__/guard.mjs && npm test && tsc --noEmit --incremental false && next build",
     "prepare": "node scripts/install-hooks.mjs",
     "encoding:check": "node scripts/check-encoding.mjs",
     "hs:import": "tsx scripts/import-hs-codes.ts",
@@ -25,7 +25,8 @@
     "email:preview": "tsx scripts/email-preview.ts",
     "migrations:check": "node scripts/check-migrations.mjs",
     "dev:check": "node scripts/check-dev-env.mjs",
-    "deps:check": "node scripts/check-deps.mjs"
+    "deps:check": "node scripts/check-deps.mjs",
+    "level:guard": "node lib/verification/__tests__/guard.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
