@@ -19,7 +19,12 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 - `20260728a_market_classification.sql` (28 July 2026). Adds the market
   classification columns: 11 nullable columns, 3 CHECK constraints and 6 indexes
   on `listings`; 6 nullable columns, 2 CHECK constraints and 3 indexes on
-  `desk_radar`. Seventeen columns, five constraints, nine indexes. Additive
+  `desk_radar`. Seventeen columns, five constraints, nine indexes.
+
+  The four family-coherence constraints state the family test explicitly
+  (`market_family is not null and market_family = '...'`) rather than relying on
+  `= `alone. A CHECK accepts TRUE **and NULL**, and `false or null` is null, so
+  the shorter form passed the row it existed to refuse. Additive
   throughout; nothing is renamed, dropped or rewritten, every existing row stays
   readable and the legacy `listings.type` mapping is untouched. The rollback is
   written out in the file itself.

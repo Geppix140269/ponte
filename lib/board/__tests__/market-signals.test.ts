@@ -307,7 +307,7 @@ test("an empty category result is checked before it is reported as a result", ()
   assert.ok(src.includes('reason: "nothing_classified"'), "only the columns-absent case exists");
   assert.ok(src.includes('reason: "columns_absent"'), "the columns-absent case is gone");
   assert.ok(
-    src.includes("countClassified"),
+    src.includes("signalCoverage"),
     "nothing asks whether the inventory carries this classification at all",
   );
 });
@@ -325,15 +325,23 @@ test("coverage is measured on every category read, not only on an empty one", ()
   );
   assert.ok(/if \(column\) \{/.test(body), "coverage is not measured on a filtered read at all");
   assert.ok(body.includes('state: "partial"'), "there is no partial-coverage state");
-  assert.ok(body.includes("classified < eligible"), "partial coverage is not detected by comparison");
+  assert.ok(
+    body.includes("coverage.classified < coverage.eligible"),
+    "partial coverage is not detected by comparison",
+  );
 });
 
 test("partial coverage carries the numbers, not just a flag", () => {
   // A member cannot judge "some records were not searched" without knowing how
   // many, and a flag would let the surface imply a small gap over a large one.
   const src = readFileSync("lib/board/inventory.ts", "utf8");
-  assert.ok(src.includes("coverage: { classified, eligible }"), src.slice(0, 0) || "no coverage numbers");
   assert.ok(src.includes("export type Coverage"), "coverage has no declared shape");
+  assert.ok(/state: "partial";[\s\S]{0,200}coverage: Coverage/.test(src), "partial carries no numbers");
+  const deals = readFileSync("lib/board/live-deals.ts", "utf8");
+  assert.ok(
+    /state: "partial";[\s\S]{0,260}coverage: \{ classified: number; eligible: number \}/.test(deals),
+    "the Qualified partial state carries no numbers",
+  );
 });
 
 test("both lanes report partial coverage, not only the signals one", () => {
@@ -341,29 +349,91 @@ test("both lanes report partial coverage, not only the signals one", () => {
   // the wrong conclusion from the pair.
   const src = readFileSync("lib/board/live-deals.ts", "utf8");
   assert.ok(src.includes('state: "partial"'), "the Qualified lane has no partial state");
-  assert.ok(src.includes("classified < eligible"), "the Qualified lane does not compare coverage");
+  assert.ok(
+    src.includes("coverage.classified < coverage.eligible"),
+    "the Qualified lane does not compare coverage",
+  );
 });
 
-test("an unknown coverage count is not treated as full coverage", () => {
-  // Otherwise a failed probe silently upgrades a partial answer to a
-  // conclusive one, which is the opposite of the safe direction.
+test("an unknown coverage is its own state, not a fall-through to ok", () => {
+  // The failure this pins: an unmeasurable coverage that reached `return
+  // { state: "ok" }` would silently upgrade a partial answer into a conclusive
+  // "no match", which is the one direction that must never happen by accident.
   for (const file of ["lib/board/inventory.ts", "lib/board/live-deals.ts"]) {
     const src = readFileSync(file, "utf8");
+    assert.ok(src.includes('state: "coverage_unknown"'), `${file} has no coverage_unknown state`);
     assert.ok(
-      /classified !== null && eligible !== null|typeof classified === "number" && typeof eligible === "number"/.test(
-        src,
+      /coverage === null\) return \{ state: "coverage_unknown"|coverage === null\) \{\s*return \{\s*state: "coverage_unknown"/.test(
+        src.replace(/\s+/g, " ").replace(/coverage === null\) \{ return/g, "coverage === null) return"),
       ),
-      `${file} does not guard against an unknown count`,
+      `${file} does not return coverage_unknown when the measurement fails`,
     );
   }
 });
 
+test("a coverage read reports its own errors instead of swallowing them", () => {
+  // A count that errors must not be read as a number, and a missing column must
+  // reach the caller's catch so it becomes `columns_absent` rather than an
+  // unknown coverage.
+  for (const file of ["lib/board/inventory.ts", "lib/board/live-deals.ts"]) {
+    const src = readFileSync(file, "utf8");
+    const probe = src.slice(src.indexOf(file.includes("inventory") ? "async function signalCoverage" : "async function dealCoverage"));
+    assert.ok(/isMissingColumnError\(/.test(probe), `${file}: the probe ignores a missing column`);
+    assert.ok(/error\) return null|error/.test(probe), `${file}: the probe ignores its error`);
+    assert.ok(probe.includes("return null"), `${file}: the probe cannot report failure`);
+  }
+});
+
+test("coverage is measured over the same slice as the search", () => {
+  // The defect: the first probe counted the whole public board, so a search
+  // inside one family compared a handful of classified rows against thousands
+  // of unrelated ones and printed the result as "records in this market".
+  for (const file of ["lib/board/inventory.ts", "lib/board/live-deals.ts"]) {
+    const src = readFileSync(file, "utf8");
+    const applier = file.includes("inventory") ? "applySignalFilters" : "applyDealFilters";
+    assert.ok(src.includes(`function ${applier}`), `${file} has no shared filter application`);
+    // Called by the search AND by the coverage read. One of them applying a
+    // filter the other does not is precisely the bug.
+    const uses = src.split(`${applier}(`).length - 1;
+    assert.ok(uses >= 2, `${file} calls ${applier} in only ${uses} place(s)`);
+    // Only the tested axis is dropped.
+    assert.ok(src.includes('omit !== "market_family"'), `${file} does not honour the omitted axis`);
+    // Direction and free text are not classification axes and are never omitted.
+    assert.ok(
+      /if \(query\.side\) q = q\.eq/.test(src),
+      `${file} drops the direction filter from the coverage slice`,
+    );
+  }
+});
+
+test("the Qualified coverage cannot be a database count, and says so", () => {
+  // Validity and owner eligibility are applied in memory, so an exact count
+  // would count rows the member may not see. The read is bounded and returns
+  // null rather than reporting a sample as the whole.
+  const src = readFileSync("lib/board/live-deals.ts", "utf8");
+  const probe = src.slice(src.indexOf("async function dealCoverage"));
+  assert.ok(probe.includes("isPubliclyCurrent"), "the probe ignores the validity clock");
+  assert.ok(probe.includes("eligibleOwnerIds"), "the probe ignores owner eligibility");
+  assert.ok(
+    probe.includes("rows.length > SEARCH_CEILING") && probe.includes("return null"),
+    "a truncated read is reported as an exact coverage",
+  );
+});
+
 test("a failed classification probe is not read as nothing classified", () => {
-  // Unknown is not zero. Reporting an explanation because a probe failed would
-  // hide a real result behind it.
+  // Unknown is not zero and it is not complete. Reporting "nothing is
+  // classified" because a probe failed would hide a real result behind an
+  // explanation; reporting completeness would hide a blind spot behind a
+  // conclusion.
   const src = readFileSync("lib/board/inventory.ts", "utf8");
-  const probe = src.slice(src.indexOf("async function countClassified"));
+  const probe = src.slice(src.indexOf("async function signalCoverage"));
   assert.ok(probe.includes("return null"), "the probe collapses a failure to a number");
+  const caller = src.slice(src.indexOf("const coverage = await signalCoverage"));
+  const decision = caller.slice(0, caller.indexOf('return { state: "ok"'));
+  assert.ok(
+    decision.indexOf("coverage === null") < decision.indexOf("coverage.classified === 0"),
+    "an unmeasurable coverage is tested after being treated as a number",
+  );
 });
 
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);

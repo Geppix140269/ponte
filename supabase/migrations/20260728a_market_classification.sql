@@ -124,16 +124,30 @@ alter table listings add column if not exists additional_details text
 -- invalidated.
 --
 -- Read each one as an implication: IF a family-specific field is set THEN that
--- family must be the record's family. An earlier draft was written the other
--- way round, starting `market_family is null or ...`, which let a service
--- category be stored on a record with no family at all. That is not a weaker
--- version of the rule, it is a hole in it: an import or a backfill could write
--- a freight category onto a record that claims to be in no family, and every
--- filter downstream would still trust the key.
+-- family must be the record's family.
+--
+-- Two drafts of this were wrong, in the same place, for two different reasons.
+--
+-- The first opened `market_family is null or ...`, which exempted a record with
+-- no family outright.
+--
+-- The second removed that clause and still let the same row through, because
+-- SQL is three-valued and a CHECK accepts both TRUE and NULL. With a service
+-- category set and no family, `(false) or market_family = 'services'` is
+-- `false or null`, which is NULL, which passes. The hole was invisible in the
+-- constraint text: it read as a correct implication and behaved as an
+-- exemption.
+--
+-- So the family test is stated explicitly: `market_family is not null and
+-- market_family = 'services'`. `is not null` is always boolean, so the whole
+-- expression is FALSE rather than NULL for the row that must be refused. The
+-- test in lib/listings/__tests__/classification.test.ts evaluates these
+-- expressions under three-valued logic rather than reading them, because
+-- reading them is exactly what missed this.
 alter table listings drop constraint if exists listings_service_family_coherent;
 alter table listings add constraint listings_service_family_coherent check (
   (service_category_key is null and service_subcategory_keys is null)
-  or market_family = 'services'
+  or (market_family is not null and market_family = 'services')
 );
 
 alter table listings drop constraint if exists listings_distribution_family_coherent;
@@ -143,7 +157,7 @@ alter table listings add constraint listings_distribution_family_coherent check 
     and distribution_relationship_terms is null
     and coverage_scope_key is null
   )
-  or market_family = 'distribution'
+  or (market_family is not null and market_family = 'distribution')
 );
 
 -- An intent without a family is the same hole one level up: the seven intents
@@ -222,13 +236,13 @@ alter table desk_radar add column if not exists territory_codes text[];
 alter table desk_radar drop constraint if exists desk_radar_service_family_coherent;
 alter table desk_radar add constraint desk_radar_service_family_coherent check (
   (service_category_key is null and service_subcategory_keys is null)
-  or market_family = 'services'
+  or (market_family is not null and market_family = 'services')
 );
 
 alter table desk_radar drop constraint if exists desk_radar_distribution_family_coherent;
 alter table desk_radar add constraint desk_radar_distribution_family_coherent check (
   distribution_partner_type_key is null
-  or market_family = 'distribution'
+  or (market_family is not null and market_family = 'distribution')
 );
 
 create index if not exists desk_radar_market_family_idx

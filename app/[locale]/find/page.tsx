@@ -161,8 +161,13 @@ async function Results({ q }: { q: FindQuery }) {
 
   // Results exist in two states: complete coverage, and coverage over the part
   // of the inventory that carries a category. Both return real records.
-  const deals = board.state === "ok" || board.state === "partial" ? board.deals : [];
-  const signalRows = signals.state === "ok" || signals.state === "partial" ? signals.signals : [];
+  // Records come back in three states, not one. `ok` is the only one whose
+  // emptiness is conclusive; `partial` and `coverage_unknown` both carry real
+  // records and both refuse to call an empty result "no match".
+  const answered = (s: { state: string }) =>
+    s.state === "ok" || s.state === "partial" || s.state === "coverage_unknown";
+  const deals = answered(board) && "deals" in board ? board.deals : [];
+  const signalRows = answered(signals) && "signals" in signals ? signals.signals : [];
 
   const qoBase = {
     kind: t("qualified.kind"),
@@ -229,9 +234,7 @@ async function Results({ q }: { q: FindQuery }) {
               {t("qualified.laneTitle")}
             </h2>
             <span className="flane__n">
-              {board.state === "ok" || board.state === "partial"
-                ? t("qualified.count", { count: board.total })
-                : ""}
+              {"total" in board ? t("qualified.count", { count: board.total }) : ""}
             </span>
           </div>
           {board.state === "partial" && (
@@ -240,6 +243,9 @@ async function Results({ q }: { q: FindQuery }) {
               empty={deals.length === 0}
               labels={coverageLabels(board.coverage, t)}
             />
+          )}
+          {board.state === "coverage_unknown" && (
+            <CoverageNotice empty={deals.length === 0} labels={unknownLabels(t)} />
           )}
           {board.state === "unclassified" ? (
             <Unclassified q={q} reason={board.reason} t={t} />
@@ -252,7 +258,7 @@ async function Results({ q }: { q: FindQuery }) {
                 labels={{ ...qoBase, ref: t("qualified.ref", { ref: d.ref ?? "" }) }}
               />
             ))
-          ) : board.state === "partial" ? null : (
+          ) : board.state !== "ok" ? null : (
             <div className="fstate">
               <span className="fstate__badge">{t("qualified.emptyBadge")}</span>
               <h3 className="fstate__h serif">{t("qualified.emptyTitle")}</h3>
@@ -268,9 +274,7 @@ async function Results({ q }: { q: FindQuery }) {
           <div className="flane__head">
             <h2 className="flane__t">{t("signals.laneTitle")}</h2>
             <span className="flane__n">
-              {signals.state === "ok" || signals.state === "partial"
-                ? t("signals.count", { count: signals.total })
-                : ""}
+              {"total" in signals ? t("signals.count", { count: signals.total }) : ""}
             </span>
           </div>
           <p className="flane__note">{t("signals.note")}</p>
@@ -281,11 +285,14 @@ async function Results({ q }: { q: FindQuery }) {
               labels={coverageLabels(signals.coverage, t)}
             />
           )}
+          {signals.state === "coverage_unknown" && (
+            <CoverageNotice empty={signalRows.length === 0} labels={unknownLabels(t)} />
+          )}
           {signals.state === "unclassified" ? (
             <Unclassified q={q} reason={signals.reason} eligible={signals.eligible} t={t} />
           ) : signalRows.length > 0 ? (
             signalRows.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
-          ) : signals.state === "partial" ? null : (
+          ) : signals.state !== "ok" ? null : (
             <div className="fstate">
               <h3 className="fstate__h serif">{t("signals.emptyTitle")}</h3>
               <p className="fstate__p">{t("signals.emptyBody")}</p>
@@ -337,6 +344,17 @@ function Unclassified({
       </Link>
     </div>
   );
+}
+
+/** The copy for a coverage that could not be established at all. */
+function unknownLabels(t: Awaited<ReturnType<typeof getTranslations<"find">>>) {
+  return {
+    badge: t("coverageUnknown.badge"),
+    heading: t("coverageUnknown.heading"),
+    body: t("coverageUnknown.body"),
+    emptyHeading: t("coverageUnknown.emptyHeading"),
+    emptyBody: t("coverageUnknown.emptyBody"),
+  };
 }
 
 /** The coverage copy, with the three numbers derived from one source. */

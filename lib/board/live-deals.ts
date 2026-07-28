@@ -238,6 +238,13 @@ export type DealSearch =
    * classified.
    */
   | { state: "unclassified"; reason: "columns_absent" | "nothing_classified" }
+  /**
+   * The read succeeded; the coverage measurement did not. The deals returned
+   * are real, but how much of the slice the filter could see is unknown, so an
+   * empty result here is not "no match" either. Falling through to `ok` would
+   * let a failed count upgrade a partial answer into a conclusive one.
+   */
+  | { state: "coverage_unknown"; deals: LiveDeal[]; total: number; bounded: boolean }
   | { state: "unavailable" };
 
 /** The ceiling on a filtered read. Far above any current filtered result set. */
@@ -254,18 +261,11 @@ export async function searchLiveDeals(
 
   try {
     const sb = createAdminClient();
-    let q = sb.from("listings").select(LISTING_COLUMNS).eq("status", "approved");
-
-    if (query.family) q = q.eq("market_family", query.family);
-    if (query.serviceCategory) q = q.eq("service_category_key", query.serviceCategory);
-    if (query.serviceSubcategory) {
-      q = q.contains("service_subcategory_keys", [query.serviceSubcategory]);
-    }
-    if (query.partnerType) q = q.eq("distribution_partner_type_key", query.partnerType);
-    if (query.sector) q = q.eq("product_sector_key", query.sector);
-    if (query.territory) q = q.contains("territory_codes", [query.territory]);
-    if (query.side) q = q.eq("type", query.side);
-    if (query.product) q = q.ilike("product", `%${query.product}%`);
+    const q = applyDealFilters(
+      sb.from("listings").select(LISTING_COLUMNS).eq("status", "approved"),
+      query,
+      null,
+    );
 
     const { data: rows, error } = await q
       .order("created_at", { ascending: false })
@@ -307,35 +307,23 @@ export async function searchLiveDeals(
     const shown = deals.slice(0, limit);
     const bounded = (rows ?? []).length >= SEARCH_CEILING;
 
-    // How much of the approved set carries this classification, measured on
-    // every category-filtered read rather than only on an empty one. A small,
-    // confident result over a mostly unclassified board is the failure this
-    // prevents: the records found are real, but they are not all of them and
-    // the page must not imply they are.
+    // How much of the member's own slice carries this classification.
+    //
+    // Measured over the same filters the search used, minus only the axis being
+    // tested, and through the same visibility rules. Counting every approved
+    // row instead compared against records the member may not even see, and
+    // printed a denominator that was not their market.
     const column = canonicalColumnFor(query);
     if (column) {
-      const [classifiedRead, eligibleRead] = await Promise.all([
-        sb
-          .from("listings")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "approved")
-          .not(column, "is", null),
-        sb.from("listings").select("id", { count: "exact", head: true }).eq("status", "approved"),
-      ]);
-      const classified = classifiedRead.count;
-      const eligible = eligibleRead.count;
-
-      if (classified === 0) return { state: "unclassified", reason: "nothing_classified" };
-      // Unknown is not full coverage: a failed count leaves the result alone
-      // rather than asserting completeness nobody measured.
-      if (typeof classified === "number" && typeof eligible === "number" && classified < eligible) {
-        return {
-          state: "partial",
-          deals: shown,
-          total: deals.length,
-          bounded,
-          coverage: { classified, eligible },
-        };
+      const coverage = await dealCoverage(sb, query, column);
+      // Unknown is neither zero nor complete. Falling through to `ok` would let
+      // a failed count upgrade a partial answer into a conclusive "no match".
+      if (coverage === null) {
+        return { state: "coverage_unknown", deals: shown, total: deals.length, bounded };
+      }
+      if (coverage.classified === 0) return { state: "unclassified", reason: "nothing_classified" };
+      if (coverage.classified < coverage.eligible) {
+        return { state: "partial", deals: shown, total: deals.length, bounded, coverage };
       }
     }
 
@@ -402,4 +390,110 @@ export function routesIn(
     routes.push({ from: d.originCode, to: d.destinationCode, id: key });
   }
   return routes;
+}
+
+/**
+ * Apply the query's filters, optionally leaving one axis out.
+ *
+ * Shared by the search and the coverage read so the two cannot drift into
+ * filtering slightly differently, which is what made the first coverage figure
+ * meaningless.
+ */
+type Filterable = {
+  eq(column: string, value: unknown): Filterable;
+  contains(column: string, value: unknown): Filterable;
+  ilike(column: string, value: string): Filterable;
+};
+
+function applyDealFilters<T>(builder: T, query: InventoryQuery, omit: string | null): T {
+  let q = builder as unknown as Filterable;
+  if (query.family && omit !== "market_family") q = q.eq("market_family", query.family);
+  if (query.serviceCategory && omit !== "service_category_key") {
+    q = q.eq("service_category_key", query.serviceCategory);
+  }
+  if (query.serviceSubcategory && omit !== "service_subcategory_keys") {
+    q = q.contains("service_subcategory_keys", [query.serviceSubcategory]);
+  }
+  if (query.partnerType && omit !== "distribution_partner_type_key") {
+    q = q.eq("distribution_partner_type_key", query.partnerType);
+  }
+  if (query.sector && omit !== "product_sector_key") {
+    q = q.eq("product_sector_key", query.sector);
+  }
+  if (query.territory && omit !== "territory_codes") {
+    q = q.contains("territory_codes", [query.territory]);
+  }
+  if (query.side) q = q.eq("type", query.side);
+  if (query.product) q = q.ilike("product", `%${query.product}%`);
+  return q as unknown as T;
+}
+
+/**
+ * Coverage for the Qualified lane, and why it cannot be a database count.
+ *
+ * Two of the three things that decide whether a listing is public cannot be
+ * expressed in the query: its validity and reconfirmation clock, and whether
+ * its owner's business verification is still passing. Both are applied in
+ * memory, exactly as the search applies them.
+ *
+ * So `count: exact` would count rows the member may not see, and comparing a
+ * classified count against it would be comparing two different populations.
+ * Instead the same slice is READ, the same visibility rules are applied, and
+ * the coverage is counted over what survives. That is exact.
+ *
+ * It is exact only while the read is not truncated. If the slice is larger than
+ * the ceiling, the counts would describe a sample and be reported as if they
+ * described the whole, so this returns null and the caller says the coverage is
+ * unknown rather than guessing at it.
+ */
+async function dealCoverage(
+  sb: ReturnType<typeof createAdminClient>,
+  query: InventoryQuery,
+  column: string,
+): Promise<{ classified: number; eligible: number } | null> {
+  // The classification column is selected only here. Adding it to
+  // LISTING_COLUMNS would break every board read until the migration is
+  // applied, including the homepage, which asks for no classification at all.
+  const { data, error } = await applyDealFilters(
+    sb.from("listings").select(`${LISTING_COLUMNS}, ${column}`).eq("status", "approved"),
+    query,
+    column,
+  ).limit(SEARCH_CEILING + 1);
+
+  // A missing column belongs in the caller's catch, where it becomes
+  // `columns_absent`, not swallowed into an unknown coverage.
+  if (error && isMissingColumnError(error)) throw error;
+  if (error) return null;
+
+  /**
+   * The row shape this read needs, stated rather than inferred.
+   *
+   * supabase-js derives the row type from a select STRING LITERAL. This select
+   * is composed at runtime, because the classification column varies, so the
+   * inference has nothing to work from. The columns are known, so the type is
+   * written out; the alternative is adding every classification column to
+   * LISTING_COLUMNS, which would break every board read, including the
+   * homepage, until the migration is applied.
+   */
+  type CoverageRow = {
+    user_id: string;
+    validity_type?: string | null;
+    valid_until?: string | null;
+    reconfirmed_at?: string | null;
+  } & Record<string, unknown>;
+
+  const rows = (data ?? []) as unknown as CoverageRow[];
+  if (rows.length > SEARCH_CEILING) return null; // a sample, not the slice
+
+  const now = Date.now();
+  const current = rows.filter((l) => isPubliclyCurrent(l, now));
+  const owners = await eligibleOwnerIds(sb, current.map((l) => l.user_id));
+  const live = current.filter((l) => owners.has(l.user_id));
+
+  const classified = live.filter((l) => {
+    const value = l[column];
+    return value !== null && value !== undefined;
+  }).length;
+
+  return { classified, eligible: live.length };
 }

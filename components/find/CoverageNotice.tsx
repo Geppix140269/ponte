@@ -33,13 +33,19 @@ export default function CoverageNotice({
   empty,
   labels,
 }: {
-  coverage: CoverageNumbers;
+  /**
+   * The numbers, when they could be established. Omitted when the coverage
+   * measurement itself failed, which is a different state and says so: a
+   * notice with no numbers must not read as a notice claiming zero.
+   */
+  coverage?: CoverageNumbers;
   /** True when the filter returned no records at all. */
   empty: boolean;
   labels: CoverageLabels;
 }) {
+  const state = coverage ? "partial" : "unknown";
   return (
-    <div className="fstate" data-coverage={empty ? "partial-empty" : "partial"}>
+    <div className="fstate" data-coverage={empty ? `${state}-empty` : state}>
       <span className="fstate__badge">{labels.badge}</span>
       <h3 className="fstate__h serif">{empty ? labels.emptyHeading : labels.heading}</h3>
       <p className="fstate__p">{empty ? labels.emptyBody : labels.body}</p>

@@ -45,10 +45,17 @@
     },
     "partial": {
       "badge": "Partial coverage",
-      "heading": "This filter can see {classified} of {eligible} records",
-      "body": "A category filter reads the records that carry a category. {unclassified} in this market do not, so they were not searched. What is below is real; it is not everything.",
+      "heading": "This filter can see {classified} of {eligible} matching records",
+      "body": "A category filter reads the records that carry a category. Of the records matching the rest of this search, {unclassified} do not, so they were not searched. What is below is real; it is not everything.",
       "emptyHeading": "No match among the records Ponte can filter",
-      "emptyBody": "{classified} of {eligible} records in this market carry a category, and none of those matches. The other {unclassified} were not searched, so this is not yet an answer about the whole market."
+      "emptyBody": "{classified} of {eligible} records matching the rest of this search carry a category, and none of those matches. The other {unclassified} were not searched, so this is not yet an answer about the whole market."
+    },
+    "coverageUnknown": {
+      "badge": "Coverage not established",
+      "heading": "Ponte cannot confirm how much of this market was searched",
+      "body": "The records below are real. How many matching records carry no category, and were therefore not searched, could not be counted, so this result cannot be treated as complete.",
+      "emptyHeading": "No match, and Ponte cannot confirm what was searched",
+      "emptyBody": "Nothing matched among the records this filter could read, and how much of the market that was could not be established. This is not a finding that the market is empty."
     },
     "entry": {
       "eyebrow": "Find",

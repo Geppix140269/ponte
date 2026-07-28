@@ -297,27 +297,217 @@ function constraintBody(name: string): string {
   throw new Error(`constraint ${name} is unterminated`);
 }
 
+/**
+ * A three-valued evaluator for the constraint expressions in this migration.
+ *
+ * Reading the SQL is what missed the bug twice. The first draft opened
+ * `market_family is null or ...`, which exempted the row outright. The second
+ * removed that and let the same row through anyway, because SQL is three-valued
+ * and a CHECK accepts TRUE **and NULL**: with a service category set and no
+ * family, `(false) or market_family = 'services'` is `false or null`, which is
+ * NULL, which passes. The text read as a correct implication and behaved as an
+ * exemption.
+ *
+ * So these tests evaluate the expressions rather than pattern-match them, under
+ * the same logic Postgres uses. The grammar covers what the migration writes:
+ * identifiers, `is null`, `is not null`, `= 'literal'`, `and`, `or`, and
+ * parentheses. Anything outside it throws rather than guessing.
+ */
+type Sql = true | false | null;
+
+function sqlAnd(a: Sql, b: Sql): Sql {
+  if (a === false || b === false) return false;
+  if (a === null || b === null) return null;
+  return true;
+}
+
+function sqlOr(a: Sql, b: Sql): Sql {
+  if (a === true || b === true) return true;
+  if (a === null || b === null) return null;
+  return false;
+}
+
+/** Evaluate one constraint body against a row. Absent column means NULL. */
+function evaluate(expression: string, row: Record<string, string | null>): Sql {
+  const tokens = expression.match(/\(|\)|'[^']*'|[A-Za-z_][A-Za-z_0-9]*/g) ?? [];
+  let at = 0;
+  const peek = (): string | undefined => tokens[at];
+  const take = (): string => {
+    const token = tokens[at];
+    if (token === undefined) throw new Error(`unexpected end of ${expression}`);
+    at++;
+    return token;
+  };
+
+  function primary(): Sql {
+    if (peek() === "(") {
+      take();
+      const value = orExpr();
+      if (take() !== ")") throw new Error(`unbalanced parentheses in ${expression}`);
+      return value;
+    }
+    const column = take();
+    const value = Object.prototype.hasOwnProperty.call(row, column) ? row[column] : null;
+    const next = take();
+    if (next.toLowerCase() === "is") {
+      if (peek()?.toLowerCase() === "not") {
+        take();
+        if (take().toLowerCase() !== "null") throw new Error(`expected NULL in ${expression}`);
+        return value !== null;
+      }
+      if (take().toLowerCase() !== "null") throw new Error(`expected NULL in ${expression}`);
+      return value === null;
+    }
+    throw new Error(`unsupported operator "${next}" in ${expression}`);
+  }
+
+  function comparison(): Sql {
+    // `ident = 'literal'` is tokenised without the operator, so it is handled
+    // by look-ahead on the raw text rather than by the token stream.
+    const start = at;
+    const column = peek();
+    if (column && /^[A-Za-z_]/.test(column)) {
+      const after = expression.slice(indexOfToken(expression, tokens, at) + column.length).trimStart();
+      if (after.startsWith("=")) {
+        take();
+        const literal = take();
+        const value = Object.prototype.hasOwnProperty.call(row, column) ? row[column] : null;
+        if (value === null) return null; // NULL = anything is NULL
+        return value === literal.slice(1, -1);
+      }
+    }
+    at = start;
+    return primary();
+  }
+
+  function andExpr(): Sql {
+    let value = comparison();
+    while (peek()?.toLowerCase() === "and") {
+      take();
+      value = sqlAnd(value, comparison());
+    }
+    return value;
+  }
+
+  function orExpr(): Sql {
+    let value = andExpr();
+    while (peek()?.toLowerCase() === "or") {
+      take();
+      value = sqlOr(value, andExpr());
+    }
+    return value;
+  }
+
+  const result = orExpr();
+  if (at !== tokens.length) throw new Error(`trailing tokens in ${expression}`);
+  return result;
+}
+
+/** Character offset of token `index`, so `=` can be seen after an identifier. */
+function indexOfToken(expression: string, tokens: string[], index: number): number {
+  let offset = 0;
+  for (let i = 0; i <= index; i++) {
+    offset = expression.indexOf(tokens[i], offset);
+    if (i < index) offset += tokens[i].length;
+  }
+  return offset;
+}
+
+test("the evaluator reproduces SQL three-valued logic", () => {
+  // The evaluator is the instrument, so it is calibrated before it is trusted.
+  assert.equal(evaluate("a is null", { a: null }), true);
+  assert.equal(evaluate("a is not null", { a: null }), false);
+  assert.equal(evaluate("a = 'x'", { a: null }), null, "NULL = 'x' must be NULL");
+  assert.equal(evaluate("a = 'x'", { a: "x" }), true);
+  assert.equal(evaluate("a = 'x'", { a: "y" }), false);
+  // The exact shape that passed a CHECK it should have failed.
+  assert.equal(evaluate("(b is null) or a = 'x'", { a: null, b: "set" }), null);
+  // And the corrected shape.
+  assert.equal(
+    evaluate("(b is null) or (a is not null and a = 'x')", { a: null, b: "set" }),
+    false,
+  );
+});
+
 test("a classification field cannot be stored without its family", () => {
-  // The hole this closes: a constraint opening `market_family is null or ...`
-  // permits a freight category on a record belonging to no family at all, and
-  // every filter downstream would still trust the key. Each constraint must
-  // read as an implication instead: IF the field is set THEN the family is its
-  // family.
-  for (const name of [
+  // Evaluated, not read. A CHECK accepts TRUE and NULL, so the row that must be
+  // refused has to evaluate to exactly FALSE.
+  const cases: { constraint: string; field: string; family: string }[] = [
+    { constraint: "listings_service_family_coherent", field: "service_category_key", family: "services" },
+    {
+      constraint: "listings_distribution_family_coherent",
+      field: "distribution_partner_type_key",
+      family: "distribution",
+    },
+    { constraint: "desk_radar_service_family_coherent", field: "service_category_key", family: "services" },
+    {
+      constraint: "desk_radar_distribution_family_coherent",
+      field: "distribution_partner_type_key",
+      family: "distribution",
+    },
+  ];
+
+  for (const { constraint, field, family } of cases) {
+    const body = constraintBody(constraint);
+    const columns = Array.from(body.matchAll(/[a-z_]+_(key|keys|terms|family)\b/g)).map((m) => m[0]);
+    const blank: Record<string, string | null> = {};
+    for (const column of columns) blank[column] = null;
+
+    // The row this exists to refuse: a classification with no family at all.
+    assert.equal(
+      evaluate(body, { ...blank, [field]: "some_key", market_family: null }),
+      false,
+      `${constraint} does not refuse a classification with no family`,
+    );
+
+    // The row it exists to refuse for the other reason: the wrong family.
+    assert.equal(
+      evaluate(body, { ...blank, [field]: "some_key", market_family: "products" }),
+      false,
+      `${constraint} does not refuse a classification under the wrong family`,
+    );
+
+    // And the two it must accept.
+    assert.equal(
+      evaluate(body, { ...blank, [field]: "some_key", market_family: family }),
+      true,
+      `${constraint} refuses a correctly filed record`,
+    );
+    assert.equal(
+      evaluate(body, { ...blank, market_family: null }),
+      true,
+      `${constraint} invalidates an existing unclassified row`,
+    );
+  }
+});
+
+test("no family-coherence constraint can evaluate to NULL for any row", () => {
+  // NULL passes a CHECK, so a constraint that can return NULL has a hole in it
+  // wherever it does. Exhaustive over the shapes these constraints see.
+  const families = [null, "products", "services", "distribution"];
+  const values = [null, "some_key"];
+  for (const constraint of [
     "listings_service_family_coherent",
     "listings_distribution_family_coherent",
     "desk_radar_service_family_coherent",
     "desk_radar_distribution_family_coherent",
   ]) {
-    const body = constraintBody(name);
-    assert.ok(
-      !body.startsWith("market_family is null"),
-      `${name} still exempts a record with no family: ${body}`,
-    );
-    assert.ok(
-      /or market_family = '(services|distribution)'$/.test(body),
-      `${name} does not require the family: ${body}`,
-    );
+    const body = constraintBody(constraint);
+    const columns = Array.from(body.matchAll(/[a-z_]+_(key|keys|terms)\b/g)).map((m) => m[0]);
+    for (const family of families) {
+      // Every combination of the classification columns being set or not.
+      for (let mask = 0; mask < 1 << columns.length; mask++) {
+        const row: Record<string, string | null> = { market_family: family };
+        columns.forEach((column, i) => {
+          row[column] = values[(mask >> i) & 1];
+        });
+        assert.notEqual(
+          evaluate(body, row),
+          null,
+          `${constraint} evaluates to NULL, and therefore passes, for ${JSON.stringify(row)}`,
+        );
+      }
+    }
   }
 });
 

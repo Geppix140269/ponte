@@ -119,6 +119,69 @@ test("the state is marked in the markup, so a page test can see it", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Coverage that could not be established at all
+// ---------------------------------------------------------------------------
+
+const UNKNOWN = JSON.parse(
+  require("node:fs").readFileSync("messages/en.json", "utf8"),
+).find.coverageUnknown as Record<string, string>;
+
+function renderUnknown(empty: boolean): { text: string; marker: unknown } {
+  const page = mount(CoverageNotice as unknown as (p: unknown) => unknown, {
+    empty,
+    labels: {
+      badge: UNKNOWN.badge,
+      heading: UNKNOWN.heading,
+      body: UNKNOWN.body,
+      emptyHeading: UNKNOWN.emptyHeading,
+      emptyBody: UNKNOWN.emptyBody,
+    },
+  });
+  return {
+    text: page
+      .all()
+      .map((el) => el.props.children)
+      .filter((c): c is string => typeof c === "string")
+      .join(" | "),
+    marker: page.all()[0].props["data-coverage"],
+  };
+}
+
+test("an unmeasurable coverage renders without inventing numbers", () => {
+  // A notice with no figures must not read as a notice claiming zero, so the
+  // copy for this state carries no placeholders at all.
+  const { text } = renderUnknown(false);
+  assert.ok(!/\{\w+\}/.test(text), `an uninterpolated placeholder reached the page: ${text}`);
+  assert.ok(!/\b\d+\b/.test(text), `a number appeared where none was measured: ${text}`);
+  assert.ok(text.includes("Coverage not established"), text);
+});
+
+test("an empty unmeasurable result is not presented as no match either", () => {
+  // The same rule as partial coverage, for the same reason: an empty result is
+  // the one a member is most likely to act on, and this one is not a finding.
+  const { text } = renderUnknown(true);
+  assert.ok(text.includes("cannot confirm what was searched"), text);
+  assert.ok(
+    text.includes("not a finding that the market is empty"),
+    `the empty unknown state reads as a finding: ${text}`,
+  );
+});
+
+test("the two non-conclusive states are distinguishable in the markup", () => {
+  // A page test, and a reader, must be able to tell "some of it" from "amount
+  // unknown". Collapsing them would hide which one is being shown.
+  assert.equal(renderUnknown(false).marker, "unknown");
+  assert.equal(renderUnknown(true).marker, "unknown-empty");
+
+  const partial = mount(CoverageNotice as unknown as (p: unknown) => unknown, {
+    coverage: { classified: 1, eligible: 2 },
+    empty: false,
+    labels: labelsFor({ classified: 1, eligible: 2 }),
+  });
+  assert.equal(partial.all()[0].props["data-coverage"], "partial");
+});
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 

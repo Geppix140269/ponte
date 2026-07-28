@@ -101,7 +101,10 @@ export default async function MarketSignalsPage({
     searchSignalInventory(toInventoryQuery(q), { limit: 60 }),
     countSignalInventory(),
   ]);
-  const answered = board.state === "ok" || board.state === "partial";
+  // Three states carry records. Only `ok` may present an empty result as a
+  // finding about the market.
+  const answered =
+    board.state === "ok" || board.state === "partial" || board.state === "coverage_unknown";
   const records = answered ? board.signals.map(toDeskRecord) : [];
   /** Eligible records matching the active filters, across the whole table. */
   const matched = answered ? board.total : records.length;
@@ -193,6 +196,23 @@ export default async function MarketSignalsPage({
                 shown without this reads as a statement about the market when
                 it is a statement about the classified part of it.
               */}
+              {board.state === "coverage_unknown" && (
+                <div className="empty" style={{ marginBottom: 12 }}>
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={20}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>Ponte cannot confirm how much of the board this filter searched</b>
+                    <p>
+                      The signals below are real. How many matching signals carry no category, and
+                      were therefore not searched, could not be counted, so this result cannot be
+                      treated as complete.
+                    </p>
+                  </div>
+                </div>
+              )}
               {board.state === "partial" && (
                 <div className="empty" style={{ marginBottom: 12 }}>
                   <PonteIcon
@@ -203,11 +223,12 @@ export default async function MarketSignalsPage({
                   <div>
                     <b>
                       This filter can see {board.coverage.classified.toLocaleString()} of{" "}
-                      {board.coverage.eligible.toLocaleString()} signals
+                      {board.coverage.eligible.toLocaleString()} matching signals
                     </b>
                     <p>
                       {(board.coverage.eligible - board.coverage.classified).toLocaleString()}{" "}
-                      signals on the board carry no category, so they were not searched.
+                      signals matching the rest of this search carry no category, so they were not
+                      searched.
                       {records.length === 0
                         ? " Nothing matched among the ones that do, which is not the same as nothing matching."
                         : " What is below is real; it is not everything."}

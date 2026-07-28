@@ -45,8 +45,10 @@ reader has to infer from what is missing.
 
 ## Corrections made under review, 28 July 2026
 
-Four, all of them errors of the same kind: a number or a state that looked
-right and was not.
+Seven, over three rounds, and almost all of the same kind: a number or a state
+that looked right and was not. Three of them were caught only by the owner
+reading the implementation rather than the description of it, which is worth
+recording as its own finding.
 
 **The public count counted the wrong rows.** The query filtered on approval and
 applied the public-expiry rule afterwards, in memory, to the page it had already
@@ -74,6 +76,18 @@ which records were `route` is unrecoverable. It is now the compatibility value
 `route_to_market`: readable, storable and displayable, and not offered as a
 thirteenth choice. `PROPOSED_CONSOLIDATION` records where it would go if the
 owner approves, and a test asserts that nothing consults it.
+
+**The family constraints passed the row they existed to refuse.** Covered above:
+a CHECK accepts NULL, and `false or null` is null. Fixed by stating the family
+test explicitly, and the test now evaluates the SQL rather than reading it.
+
+**An unmeasurable coverage fell through to `ok`.** A failed count silently
+upgraded a partial answer into a conclusive "no match". It is now its own state.
+
+**Coverage was measured against the wrong population.** The probe counted the
+whole board, so a search inside one family compared a handful of classified rows
+against thousands of unrelated ones and printed the result as "records in this
+market". Both counts now apply the member's own filters.
 
 ## Context
 
@@ -161,12 +175,13 @@ A category filter reads the records that carry a category. While some do and
 some do not, a result is a statement about the classified part of the inventory
 and not about the market, and the difference has to be on the page.
 
-Three states, not two:
+Four states, and only one of them makes an empty result a finding:
 
 | Coverage | State | What an empty result means |
 |---|---|---|
 | Nothing classified | `unclassified` | Ponte cannot answer this question yet |
 | Some classified | `partial` | No match **among the records Ponte can see** |
+| Not measurable | `coverage_unknown` | No match, and Ponte cannot say over how much |
 | All classified | `ok` | No match. Conclusive |
 
 Coverage is measured on every category-filtered read, not only on an empty one.
@@ -176,8 +191,25 @@ confident results over an inventory that is still almost entirely unclassified,
 and nothing says so. Three matches out of four thousand unclassified records
 reads as "the market has three of these" and means "Ponte can see three".
 
-An unknown count is not full coverage. A failed probe leaves the result alone
-rather than asserting completeness nobody measured.
+**An unmeasurable coverage is its own state.** An earlier version let a failed
+count fall through to `ok`, which is worse than any wrong number: it silently
+upgrades a partial answer into a conclusive "no match", and "no match" is the
+answer a member is most likely to act on. Both lanes inspect their count errors
+explicitly rather than reading a missing count as a number.
+
+**Coverage is measured over the member's own slice.** Both counts apply every
+filter the search applied, dropping only the axis being tested, so the pair
+answers "of the records matching the rest of this search, how many carry a value
+here?". The first version counted the whole board and printed a denominator that
+was not the member's market at all. One shared filter function serves the search
+and both counts, so they cannot drift apart.
+
+For Qualified Opportunities an exact database count is impossible: validity and
+owner eligibility are applied in memory, so `count: exact` would count rows the
+member may not see. The same slice is read instead, the same visibility rules
+are applied, and coverage is counted over what survives. That is exact while the
+read is not truncated; past the ceiling it would describe a sample, so it
+returns `coverage_unknown` rather than reporting a sample as the whole.
 
 ### 5. Filtering and counting run over the complete eligible inventory
 
@@ -254,10 +286,22 @@ total. Additive throughout; every existing row stays exactly as it is and stays
 readable; the legacy `listings.type` mapping is untouched and remains supported.
 
 The constraints read as implications: IF a family-specific field is set THEN
-that family must be the record's family. An earlier draft was written the other
-way round, opening `market_family is null or ...`, which permitted a service
-category on a record belonging to no family at all. That is not a looser rule,
-it is a hole in it.
+that family must be the record's family.
+
+Two drafts of that were wrong, in the same place, for different reasons. The
+first opened `market_family is null or ...`, which exempted the row outright.
+The second removed that clause and still let the row through, because SQL is
+three-valued and a CHECK accepts TRUE **and NULL**: with a service category set
+and no family, `(false) or market_family = 'services'` is `false or null`, which
+is NULL, which passes. The text read as a correct implication and behaved as an
+exemption.
+
+The family test is therefore stated explicitly, `market_family is not null and
+market_family = 'services'`, so the expression is FALSE rather than NULL for the
+row that must be refused. The test evaluates these expressions under
+three-valued logic rather than reading them, because reading them is exactly
+what missed it, and it checks exhaustively that no constraint can return NULL
+for any combination of family and classification values.
 
 `desk_radar` carries the same two, and needs them more than `listings` does. A
 member listing is written by one route that validates every key first. A Market
