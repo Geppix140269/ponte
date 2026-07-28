@@ -16,7 +16,7 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 
 ## Written but NOT applied
 
-`20260728a_automated_listing_publication.sql` implements ADR-0012. It has **not**
+`20260728c_automated_listing_publication.sql` implements ADR-0012. It has **not**
 been applied to production and has not been probe-verified. It is additive and
 idempotent throughout.
 
