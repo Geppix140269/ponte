@@ -1,6 +1,6 @@
 # Database state
 
-**Reconciled:** 26 July 2026
+**Reconciled:** 28 July 2026
 
 This file is a guardrail, not a complete schema dump. Codex must inspect the live production record and repository migrations before proposing database work.
 
@@ -14,37 +14,50 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 
 - `20260726a_investigation_kind.sql` was applied to production by hand on 26 July 2026 with owner approval, using `scripts/db-query.mjs`, and probe-verified afterwards. It adds `request_kind` (not null, default `'investigate'`), `capability`, `contact_phone` and `contact_language` to `signal_investigations`, adds the `signal_investigations_kind_check` constraint, and replaces the `(signal_id, requester_id)` unique constraint with `(signal_id, requester_id, request_kind)`. Verified: the four columns exist with the stated nullability and default, both constraints are present in `pg_constraint`, the old two-part constraint is gone, and the single pre-existing row backfilled to `request_kind = 'investigate'`. It was applied by hand because the automatic chain aborts at its first file (see below), so a merge does not apply anything.
 
-## Written and NOT applied
+## Applied to production by hand
 
-- `20260728a_market_classification.sql` (28 July 2026). Adds the market
-  classification columns: 11 nullable columns, 3 CHECK constraints and 6 indexes
-  on `listings`; 6 nullable columns, 2 CHECK constraints and 3 indexes on
-  `desk_radar`. Seventeen columns, five constraints, nine indexes.
+- `20260728a_market_classification.sql` was applied to production on 28 July
+  2026 at 13:25:11 UTC with explicit owner authorisation, using
+  `node scripts/db-query.mjs --file ...` against project
+  `cptglsmjmzcfpjndqfmc` ("Ponte Trade", eu-west-1, ACTIVE_HEALTHY), and
+  verified directly against production afterwards. Recorded in
+  `schema_migrations` with SHA-256 `8e9d0e72...c661aa5f`, which matches the
+  file byte for byte.
 
-  The four family-coherence constraints state the family test explicitly
-  (`market_family is not null and market_family = '...'`) rather than relying on
-  `= `alone. A CHECK accepts TRUE **and NULL**, and `false or null` is null, so
-  the shorter form passed the row it existed to refuse. Additive
-  throughout; nothing is renamed, dropped or rewritten, every existing row stays
-  readable and the legacy `listings.type` mapping is untouched. The rollback is
-  written out in the file itself.
+  It adds **17 nullable columns, 5 CHECK constraints and 9 indexes**: 11 columns,
+  3 constraints and 6 indexes on `listings`; 6 columns, 2 constraints and 3
+  indexes on `desk_radar`. Additive throughout; nothing was renamed, dropped or
+  rewritten, every existing row stays readable and the legacy `listings.type`
+  mapping is untouched. The rollback is written out in the file itself.
 
-  **It has not been run against production and must not be until the owner
-  approves it.** The pre-migration report below is satisfied by ADR-0012 and by
-  the file's own commentary.
+  **Verified in production:** all 17 columns present and nullable with the
+  stated types; all 5 family-coherence constraints present, plus the 5
+  column-level CHECKs, so no statement applied partially; all 9 indexes present;
+  the board still reads (3,491 eligible signals at
+  `https://ponte.trade/market-signals`); the three write paths accept their
+  structured fields, proved inside a transaction that was rolled back so no test
+  row reached production; and a category filter now returns `nothing_classified`
+  rather than `columns_absent`, printing "3,491 signals are live on the board,
+  and none of them carries a category".
 
-  The application does not depend on it having run. `readClassification`
-  validates every key before a write; `isMissingColumnError` recognises
-  PostgREST's `PGRST204` and Postgres's `42703`, and the submit route retries
-  the write without the classification columns when it sees one. In that window
-  the classification still reaches the record through the synthesised `details`,
-  which is where it travelled before these columns were proposed. Once the
-  migration is applied the retry never fires.
+  **The three-valued-logic fix is confirmed live.** An insert carrying
+  `service_category_key` with a null `market_family` is refused by
+  `listings_service_family_coherent` with SQLSTATE 23514. Evaluated in
+  production Postgres, the predicate returns `false` rather than `null` for
+  every row that must be refused, which is the whole point of the explicit
+  `market_family is not null and market_family = '...'` form: a CHECK accepts
+  TRUE **and NULL**, so the shorter `false or null` version passed the row it
+  existed to refuse.
 
-  **Nothing is backfilled.** No existing listing or signal carries a canonical
-  category, and writing a guess into these columns would invent a finding. Every
-  category filter reports "not yet classified" until records genuinely carry
-  keys.
+  **Nothing is backfilled, deliberately.** No existing listing or signal carries
+  a canonical category. `listings` holds 5 rows, 0 classified; `desk_radar`
+  holds 6,735 rows, 0 classified. Applying the SQL created columns and
+  classified nothing, so every category filter reports `nothing_classified`
+  until something classifies the inventory. Writing a guess into these columns
+  would invent a finding.
+
+  It was applied by hand because the automatic chain aborts at its first file
+  (see below), so a merge does not apply anything.
 
 ## Known risk
 
