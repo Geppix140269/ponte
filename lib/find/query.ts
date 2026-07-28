@@ -72,6 +72,34 @@ export type FindQuery = {
 };
 
 /**
+ * Has the member narrowed the search at all?
+ *
+ * The difference between "nothing is live" and "nothing matches what you
+ * asked", which are different facts needing different words. The first is a
+ * statement about the market and is the more damaging one to get wrong: a
+ * member reads it as "this market is dead" when it means "not this corner".
+ *
+ * Every dimension counts, not only the canonical keys. A member who narrowed by
+ * direction or by a product word and got nothing back has still narrowed, and
+ * telling them the board is empty would be just as untrue.
+ */
+export function hasActiveFilters(q: FindQuery): boolean {
+  return Boolean(
+    q.family ||
+      q.serviceCategory ||
+      q.serviceSubcategory ||
+      q.partnerType ||
+      q.sector ||
+      q.territory ||
+      q.product ||
+      q.intent ||
+      q.market ||
+      q.origin ||
+      q.minQty,
+  );
+}
+
+/**
  * Has the member said enough for Find to show results?
  *
  * Per family, because the decisive fact differs. Products still needs a

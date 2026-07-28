@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 import CoverageNotice, { coverageValues } from "../../../components/find/CoverageNotice";
 import { mount } from "../../landing/__tests__/render";
 import { presentBoard } from "../presentation";
+import { hasActiveFilters, parseFindQuery } from "../../find/query";
 /* eslint-enable import/first */
 
 const tests: { name: string; fn: () => void }[] = [];
@@ -196,69 +197,164 @@ test("the two non-conclusive states are distinguishable in the markup", () => {
 // The rule was right; its position in a ternary chain was not. So the decision
 // is a table, and this is the table.
 
+/** A narrowed search, which is what every filtered surface passes. */
+const FILTERED = { filtered: true };
+/** An unnarrowed board: nothing was asked of it. */
+const WHOLE = { filtered: false };
+
 test("an empty partial result never renders the genuine-empty copy", () => {
-  const p = presentBoard("partial", 0);
-  assert.equal(p.genuineEmpty, false, "an empty partial claimed the market is empty");
+  const p = presentBoard("partial", 0, FILTERED);
+  assert.equal(p.genuineEmpty, null, "an empty partial claimed the market is empty");
   assert.equal(p.coverageNotice, "partial", "the coverage notice was skipped when it mattered most");
   assert.equal(p.records, false);
 });
 
 test("an empty coverage_unknown result never renders the genuine-empty copy", () => {
-  const p = presentBoard("coverage_unknown", 0);
-  assert.equal(p.genuineEmpty, false, "an empty unknown-coverage result claimed the market is empty");
+  const p = presentBoard("coverage_unknown", 0, FILTERED);
+  assert.equal(p.genuineEmpty, null, "an empty unknown-coverage result claimed the market is empty");
   assert.equal(p.coverageNotice, "unknown");
   assert.equal(p.records, false);
 });
 
-test("an empty ok result DOES render the genuine-empty copy", () => {
+test("an empty ok result DOES render a genuine-empty copy", () => {
   // The other half. A state that could see everything and found nothing is
   // entitled to say so, and suppressing that would be its own defect.
-  const p = presentBoard("ok", 0);
-  assert.equal(p.genuineEmpty, true);
+  const p = presentBoard("ok", 0, WHOLE);
+  assert.equal(p.genuineEmpty, "board");
   assert.equal(p.coverageNotice, null);
   assert.equal(p.records, false);
 });
 
+// ---------------------------------------------------------------------------
+// WHICH emptiness. An empty market and an empty answer are different facts.
+// ---------------------------------------------------------------------------
+
+test("an unfiltered empty board may say the board is empty", () => {
+  // Nothing was asked of it, so "nothing is live" is the whole truth.
+  assert.equal(presentBoard("ok", 0, WHOLE).genuineEmpty, "board");
+});
+
+test("a filtered empty result must NOT say the board is empty", () => {
+  // The board may be full. Printing the whole-board claim here tells a member
+  // the market is dead when they asked about one corner of it, and that is the
+  // more damaging of the two to get wrong.
+  assert.notEqual(
+    presentBoard("ok", 0, FILTERED).genuineEmpty,
+    "board",
+    "a filtered empty result claimed the whole board is empty",
+  );
+});
+
+test("a filtered empty result says the FILTERS matched nothing", () => {
+  assert.equal(presentBoard("ok", 0, FILTERED).genuineEmpty, "filters");
+});
+
+test("the scope only decides which emptiness, never whether there is one", () => {
+  // A search that found records says nothing about emptiness either way, and a
+  // non-conclusive state stays non-conclusive however the search was narrowed.
+  for (const scope of [WHOLE, FILTERED]) {
+    assert.equal(presentBoard("ok", 3, scope).genuineEmpty, null);
+    assert.equal(presentBoard("partial", 0, scope).genuineEmpty, null);
+    assert.equal(presentBoard("coverage_unknown", 0, scope).genuineEmpty, null);
+    assert.equal(presentBoard("unclassified", 0, scope).genuineEmpty, null);
+    assert.equal(presentBoard("unavailable", 0, scope).genuineEmpty, null);
+  }
+});
+
+test("partial and coverage_unknown are unchanged by the scope", () => {
+  // The behaviour accepted in the previous round must not have moved.
+  for (const scope of [WHOLE, FILTERED]) {
+    for (const count of [0, 1, 60]) {
+      const partial = presentBoard("partial", count, scope);
+      assert.equal(partial.coverageNotice, "partial");
+      assert.equal(partial.genuineEmpty, null);
+      assert.equal(partial.records, count > 0);
+
+      const unknown = presentBoard("coverage_unknown", count, scope);
+      assert.equal(unknown.coverageNotice, "unknown");
+      assert.equal(unknown.genuineEmpty, null);
+      assert.equal(unknown.records, count > 0);
+    }
+  }
+});
+
 test("a coverage notice never depends on whether records came back", () => {
-  // Gating the notice on results is the shape of the original bug.
+  // Gating the notice on results is the shape of the original ordering bug.
   for (const count of [0, 1, 60]) {
-    assert.equal(presentBoard("partial", count).coverageNotice, "partial", `count ${count}`);
-    assert.equal(presentBoard("coverage_unknown", count).coverageNotice, "unknown", `count ${count}`);
+    assert.equal(presentBoard("partial", count, FILTERED).coverageNotice, "partial", `count ${count}`);
+    assert.equal(
+      presentBoard("coverage_unknown", count, FILTERED).coverageNotice,
+      "unknown",
+      `count ${count}`,
+    );
   }
 });
 
 test("no state both shows records and claims the market is empty", () => {
   for (const state of ["ok", "partial", "coverage_unknown", "unclassified", "unavailable"] as const) {
     for (const count of [0, 1, 60]) {
-      const p = presentBoard(state, count);
-      assert.ok(!(p.records && p.genuineEmpty), `${state}/${count} does both`);
-      // And the two head states are exclusive of everything else, because each
-      // replaces the result entirely rather than annotating it.
-      if (p.unavailable || p.unclassified) {
-        assert.equal(p.records, false, `${state} renders records`);
-        assert.equal(p.genuineEmpty, false, `${state} claims emptiness`);
-        assert.equal(p.coverageNotice, null, `${state} also shows a coverage notice`);
+      for (const scope of [WHOLE, FILTERED]) {
+        const p = presentBoard(state, count, scope);
+        assert.ok(!(p.records && p.genuineEmpty), `${state}/${count} does both`);
+        // The two head states are exclusive of everything else, because each
+        // replaces the result entirely rather than annotating it.
+        if (p.unavailable || p.unclassified) {
+          assert.equal(p.records, false, `${state} renders records`);
+          assert.equal(p.genuineEmpty, null, `${state} claims emptiness`);
+          assert.equal(p.coverageNotice, null, `${state} also shows a coverage notice`);
+        }
       }
     }
   }
 });
 
-test("only ok can ever claim the market is empty, at any record count", () => {
+test("only ok can ever claim any emptiness, at any record count", () => {
   const claiming = (["ok", "partial", "coverage_unknown", "unclassified", "unavailable"] as const)
-    .filter((state) => [0, 1, 60].some((count) => presentBoard(state, count).genuineEmpty));
+    .filter((state) =>
+      [0, 1, 60].some((count) =>
+        [WHOLE, FILTERED].some((scope) => presentBoard(state, count, scope).genuineEmpty !== null),
+      ),
+    );
   assert.deepEqual(claiming, ["ok"]);
 });
 
 test("records render whenever there are any, except where the state replaces them", () => {
-  assert.equal(presentBoard("ok", 3).records, true);
-  assert.equal(presentBoard("partial", 3).records, true);
-  assert.equal(presentBoard("coverage_unknown", 3).records, true);
+  assert.equal(presentBoard("ok", 3, FILTERED).records, true);
+  assert.equal(presentBoard("partial", 3, FILTERED).records, true);
+  assert.equal(presentBoard("coverage_unknown", 3, FILTERED).records, true);
   // These two are explanations, not annotated results: there is nothing to show.
-  assert.equal(presentBoard("unclassified", 3).records, false);
-  assert.equal(presentBoard("unavailable", 3).records, false);
+  assert.equal(presentBoard("unclassified", 3, FILTERED).records, false);
+  assert.equal(presentBoard("unavailable", 3, FILTERED).records, false);
 });
 
-test("both surfaces read the same table", () => {
+test("a search is narrowed by any dimension, not only a canonical key", () => {
+  // A member who narrowed by direction or by a product word and got nothing
+  // back has still narrowed, and "the board is empty" would be just as untrue.
+  assert.equal(hasActiveFilters(parseFindQuery({})), false);
+  for (const params of [
+    { family: "services" },
+    { family: "services", serviceCategory: "freight" },
+    { partnerType: "distributor" },
+    { sector: "food" },
+    { territory: "IT" },
+    { product: "sugar" },
+    { intent: "offer" },
+    { market: "Italy" },
+    { origin: "Brazil" },
+    { minQty: "500" },
+  ]) {
+    assert.equal(
+      hasActiveFilters(parseFindQuery(params)),
+      true,
+      `${JSON.stringify(params)} was not read as a narrowed search`,
+    );
+  }
+  // Junk is not a filter: it narrows nothing, so it must not turn a whole-board
+  // emptiness into a filtered one.
+  assert.equal(hasActiveFilters(parseFindQuery({ serviceCategory: "banana" })), false);
+});
+
+test("both surfaces read the same table, and the board passes its scope", () => {
   // A rule that held on one page and not the other is how this went wrong the
   // first time: the Find lanes were correct and the board was not.
   const board = readFileSync("app/[locale]/market-signals/page.tsx", "utf8");
@@ -267,8 +363,12 @@ test("both surfaces read the same table", () => {
     assert.ok(src.includes("presentBoard("), `${name} does not use the shared table`);
     assert.ok(src.includes("genuineEmpty"), `${name} decides its empty state some other way`);
   }
-  // And the board no longer short-circuits on an empty result before the
-  // notices, which is the exact line that caused the bug.
+  // The board renders both copies, chosen by the table rather than by itself.
+  assert.ok(board.includes('genuineEmpty === "board"'), "the board has no whole-board copy");
+  assert.ok(board.includes('genuineEmpty === "filters"'), "the board has no filtered-empty copy");
+  assert.ok(board.includes("hasActiveFilters(q)"), "the board does not tell the table its scope");
+  // And it no longer short-circuits on an empty result before the notices,
+  // which is the exact line that caused the ordering bug.
   assert.ok(
     !/\) : records\.length === 0 \? \(/.test(board),
     "the board still tests records.length before reaching the coverage notices",

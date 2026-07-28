@@ -11,7 +11,7 @@ import DeskShell from "@/components/desk/DeskShell";
 import FactRegister from "@/components/desk/FactRegister";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalFilters, { ActiveFilters, signalFilterHref } from "@/components/desk/SignalFilters";
-import { parseFindQuery, toInventoryQuery } from "@/lib/find/query";
+import { parseFindQuery, toInventoryQuery, hasActiveFilters } from "@/lib/find/query";
 import { presentBoard } from "@/lib/board/presentation";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
@@ -113,7 +113,9 @@ export default async function MarketSignalsPage({
    * What this page renders, decided by one table rather than by the nesting of
    * a ternary chain. Only `ok` may present an emptiness as a finding.
    */
-  const presentation = presentBoard(board.state, records.length);
+  const presentation = presentBoard(board.state, records.length, {
+    filtered: hasActiveFilters(q),
+  });
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -231,7 +233,11 @@ export default async function MarketSignalsPage({
                 rendered a whole-board claim and the notice explaining the
                 filter's blind spot was unreachable exactly when it mattered.
               */}
-              {presentation.genuineEmpty && (
+              {/*
+                The board is empty. A statement about the market, and only
+                printed when nothing was asked of it.
+              */}
+              {presentation.genuineEmpty === "board" && (
                 <div className="empty">
                   <PonteIcon
                     name="participation.boundary"
@@ -249,6 +255,34 @@ export default async function MarketSignalsPage({
                     <div className="empty__a">
                       <Link className="b" href="/structure">
                         Bring a requirement or offer to the desk
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/*
+                The ANSWER is empty. A statement about the question, and a
+                different fact: the board may be full. Saying "no signal is
+                currently live" here would tell a member the market is dead
+                when they had simply asked about one corner of it.
+              */}
+              {presentation.genuineEmpty === "filters" && (
+                <div className="empty">
+                  <PonteIcon
+                    name="participation.boundary"
+                    size={24}
+                    label="Boundary of what is known"
+                  />
+                  <div>
+                    <b>No signal matches these filters</b>
+                    <p>
+                      The board is not empty; this corner of it is. Widen the category, choose
+                      every market, or clear the filters to see what is live.
+                    </p>
+                    <div className="empty__a">
+                      <Link className="b" href={signalFilterHref({})}>
+                        Clear the filters
                       </Link>
                     </div>
                   </div>

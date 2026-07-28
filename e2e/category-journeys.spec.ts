@@ -265,6 +265,22 @@ test("a filter that cannot be answered never claims the board is empty", async (
   await shot(page, "desktop-21-market-signals-unanswerable-filter");
 });
 
+test("a filtered result that matches nothing does not claim the board is empty", async ({
+  page,
+}) => {
+  /*
+   * `products` + a sector is answerable today (the sector column is absent, so
+   * it lands in unclassified) but a territory filter alone reaches the query
+   * and returns nothing, which is the `ok` + zero + filtered case.
+   *
+   * The claim being guarded: "No signal is currently live on the public board"
+   * is a statement about the market, and it is false the moment a filter is
+   * set and merely returns no matches. The board may be full.
+   */
+  await page.goto("/market-signals?territory=ZW", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("No signal is currently live on the public board")).toHaveCount(0);
+});
+
 test("the unfiltered board still reports its records and its reach", async ({ page }) => {
   // The other side of the same table: a state that CAN see everything is still
   // allowed to say what it found, and to say what cannot be reached.

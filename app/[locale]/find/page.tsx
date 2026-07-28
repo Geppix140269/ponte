@@ -173,8 +173,11 @@ async function Results({ q }: { q: FindQuery }) {
   // The same table the Market Signals board uses. Written once so the rule that
   // only `ok` may present an emptiness as a finding cannot hold on one surface
   // and not the other.
-  const qo = presentBoard(board.state, deals.length);
-  const ms = presentBoard(signals.state, signalRows.length);
+  // Find only reaches results once a query is answerable, so every result here
+  // is a narrowed search. Its empty copy is already about the match rather than
+  // about the market, which is why both lanes read `genuineEmpty` as a flag.
+  const qo = presentBoard(board.state, deals.length, { filtered: true });
+  const ms = presentBoard(signals.state, signalRows.length, { filtered: true });
 
   const qoBase = {
     kind: t("qualified.kind"),

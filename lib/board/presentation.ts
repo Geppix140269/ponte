@@ -25,6 +25,21 @@
 
 export type SearchState = "ok" | "partial" | "coverage_unknown" | "unclassified" | "unavailable";
 
+/**
+ * Which emptiness a complete search found.
+ *
+ * `board`   nothing is live at all. A statement about the market.
+ * `filters` nothing matches what was asked. A statement about the question.
+ *
+ * They are different facts and they need different words. "No signal is
+ * currently live on the public board" is false the moment a filter is set and
+ * simply returns nothing, and it is the more damaging of the two to get wrong:
+ * a member reads it as "this market is dead" when it means "not this corner of
+ * it". Returning which one it is, rather than a boolean, means a caller cannot
+ * render the wrong copy without noticing.
+ */
+export type EmptyKind = "board" | "filters";
+
 export interface BoardPresentation {
   /** The read failed. A technical failure, never a finding. */
   unavailable: boolean;
@@ -40,24 +55,40 @@ export interface BoardPresentation {
   /** Render the records and their count line. */
   records: boolean;
   /**
-   * Render the surface's own "there is nothing here" copy.
+   * Which "there is nothing here" copy to render, if any.
    *
-   * True only when the search could see everything and still found nothing.
+   * Set only when the search could see everything and still found nothing, and
+   * then it says WHICH nothing: an empty market, or an empty answer to a
+   * narrower question.
    */
-  genuineEmpty: boolean;
+  genuineEmpty: EmptyKind | null;
 }
 
-export function presentBoard(state: SearchState, recordCount: number): BoardPresentation {
+export function presentBoard(
+  state: SearchState,
+  recordCount: number,
+  scope: {
+    /**
+     * Did the member narrow the search at all?
+     *
+     * Without this the table cannot tell an empty market from an empty answer,
+     * and a surface reading a boolean would print the stronger claim for both.
+     */
+    filtered: boolean;
+  },
+): BoardPresentation {
   const base: BoardPresentation = {
     unavailable: false,
     unclassified: false,
     coverageNotice: null,
     records: false,
-    genuineEmpty: false,
+    genuineEmpty: null,
   };
 
   if (state === "unavailable") return { ...base, unavailable: true };
   if (state === "unclassified") return { ...base, unclassified: true };
+
+  const empty = recordCount === 0;
 
   return {
     ...base,
@@ -66,6 +97,6 @@ export function presentBoard(state: SearchState, recordCount: number): BoardPres
     // The whole point of the table. `state === "ok"` is not an optimisation
     // here, it is the condition: an empty result under any other state has an
     // explanation above it and must not also carry a conclusion.
-    genuineEmpty: state === "ok" && recordCount === 0,
+    genuineEmpty: state === "ok" && empty ? (scope.filtered ? "filters" : "board") : null,
   };
 }
