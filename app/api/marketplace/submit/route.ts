@@ -19,6 +19,11 @@ import {
 } from "@/lib/listings/quantity";
 import { publishOrHold } from "@/lib/listings/publish";
 import { DECLARATION_VERSION, resolutionRoute } from "@/lib/listings/eligibility";
+import {
+  readClassification,
+  isMissingColumnError,
+  CLASSIFICATION_COLUMNS,
+} from "@/lib/listings/classification";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -186,6 +191,18 @@ export async function POST(req: NextRequest) {
     if (!validUntil) validityType = null;
   }
 
+  // The structured classification. Refused rather than repaired: a service
+  // category arriving on a distribution record is a mis-filed record, and a
+  // mis-filed record is worse than a missing one, because every filter, count
+  // and match downstream trusts it.
+  const classification = readClassification(body);
+  if (!classification.ok) {
+    return NextResponse.json(
+      { error: classification.error, field: classification.field },
+      { status: 422 },
+    );
+  }
+
   const valueRaw = clean(body.indicative_value_usd, 20);
   const value = valueRaw ? Number(valueRaw) : null;
   const indicative = value && Number.isFinite(value) && value > 0 ? value : null;
@@ -234,9 +251,32 @@ export async function POST(req: NextRequest) {
     validity_type: validityType,
     valid_until: validUntil,
     details,
+    ...classification.columns,
   };
 
   const supabase = createClient();
+
+  /**
+   * Write, and survive the window where the classification columns do not
+   * exist yet.
+   *
+   * A merge to `main` applies no migration in this repository: the chain is
+   * broken and every schema change is run by hand with owner approval. So
+   * between this route shipping and that SQL being applied, `listings` has no
+   * `service_category_key`. A member who classified their record correctly
+   * must not lose the submission to that gap, so the write is retried without
+   * the classification columns and the classification still reaches the record
+   * in the synthesised `details`, which is where it travelled before any of
+   * these columns were proposed.
+   *
+   * This is a bridge, not a design. Once the migration is applied the retry
+   * never fires, and `docs/codex/DATABASE-STATE.md` records what is required.
+   */
+  const withoutClassification = (row: Record<string, unknown>): Record<string, unknown> => {
+    const copy = { ...row };
+    for (const column of CLASSIFICATION_COLUMNS) delete copy[column];
+    return copy;
+  };
 
   // -------- Owner edit: update in place, and return an approved listing to
   //          review if a material term changed (brief Block C). --------------
@@ -311,7 +351,14 @@ export async function POST(req: NextRequest) {
     }
     // else: an approved listing edited with no reviewable change stays approved.
 
-    const { error: updErr } = await supabase.from("listings").update(update).eq("id", editId);
+    let { error: updErr } = await supabase.from("listings").update(update).eq("id", editId);
+    if (updErr && isMissingColumnError(updErr)) {
+      console.warn("[ponte] classification columns absent; storing the edit without them");
+      ({ error: updErr } = await supabase
+        .from("listings")
+        .update(withoutClassification(update))
+        .eq("id", editId));
+    }
     if (updErr) {
       console.error("[ponte] listing edit failed:", updErr);
       return NextResponse.json(
@@ -347,15 +394,26 @@ export async function POST(req: NextRequest) {
   }
 
   // -------- New listing --------------------------------------------------
-  const { data: listing, error: insertErr } = await supabase
+  const newRow: Record<string, unknown> = {
+    user_id: user.id,
+    ...fields,
+    status: isDraft ? "draft" : "submitted",
+  };
+
+  let { data: listing, error: insertErr } = await supabase
     .from("listings")
-    .insert({
-      user_id: user.id,
-      ...fields,
-      status: isDraft ? "draft" : "submitted",
-    })
+    .insert(newRow)
     .select("id, ref")
     .single();
+
+  if (insertErr && isMissingColumnError(insertErr)) {
+    console.warn("[ponte] classification columns absent; storing the listing without them");
+    ({ data: listing, error: insertErr } = await supabase
+      .from("listings")
+      .insert(withoutClassification(newRow))
+      .select("id, ref")
+      .single());
+  }
 
   if (insertErr || !listing) {
     console.error("[ponte] listing insert failed:", insertErr);

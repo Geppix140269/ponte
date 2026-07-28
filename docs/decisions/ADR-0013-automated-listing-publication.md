@@ -1,4 +1,4 @@
-# ADR-0012 — Automated listing publication and one transactional email system
+# ADR-0013 — Automated listing publication and one transactional email system
 
 **Status:** Accepted
 **Date:** 28 July 2026
@@ -161,6 +161,6 @@ line 91 prohibits.
 
 See `docs/plans/active/automated-listing-publication-and-email-system.md`.
 
-Migration: `supabase/migrations/20260728a_automated_listing_publication.sql`.
+Migration: `supabase/migrations/20260728b_automated_listing_publication.sql`.
 Not applied to production by this change set; production application requires
 owner approval per `AGENTS.md`.

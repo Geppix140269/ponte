@@ -1,6 +1,6 @@
 # Ponte outbound email inventory
 
-**Compiled:** 28 July 2026, for ADR-0012.
+**Compiled:** 28 July 2026, for ADR-0013.
 **Method:** repository-wide search for `sendEmail`, `sendMail`, `Resend`,
 `nodemailer`, `emailHtml`, `html:`, `subject:`, `supabase.auth`, `magic link`,
 `invite`, `welcome`, `notification`, plus every call site of `lib/email.ts` and
@@ -82,4 +82,4 @@ Listed so a future search does not mistake them for missed templates:
 
 - `scripts/sanctions-refresh.ts` — calls `sendAdminNotice`, already covered.
 - Telegram operations alerts (`docs/TELEGRAM-OPS-SETUP.md`) — a separate
-  channel, out of scope for ADR-0012.
+  channel, out of scope for ADR-0013.

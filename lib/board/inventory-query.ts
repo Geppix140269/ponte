@@ -1,0 +1,65 @@
+import type { MarketFamily } from "@/lib/taxonomy/market";
+
+/**
+ * The shape of an inventory search, and the pure rules over it.
+ *
+ * Separate from `inventory.ts` because that module opens a Supabase client and
+ * imports `next/cache`. These three functions touch nothing but their argument,
+ * and they are exactly the ones a unit test wants: which classification axis a
+ * query is really asking about is a decision worth pinning, and pinning it
+ * should not require a database.
+ */
+
+export type InventoryQuery = {
+  family: MarketFamily | null;
+  serviceCategory: string | null;
+  serviceSubcategory: string | null;
+  partnerType: string | null;
+  sector: string | null;
+  /** ISO-2. */
+  territory: string | null;
+  /** Free-text product match, still supported alongside the keys. */
+  product: string | null;
+  side: "offer" | "requirement" | null;
+};
+
+export function emptyInventoryQuery(): InventoryQuery {
+  return {
+    family: null,
+    serviceCategory: null,
+    serviceSubcategory: null,
+    partnerType: null,
+    sector: null,
+    territory: null,
+    product: null,
+    side: null,
+  };
+}
+
+/**
+ * The most specific classification column this query filters on.
+ *
+ * Used to ask a precise question when a category search finds nothing: is this
+ * a real absence, or has nothing in the inventory been classified on this axis
+ * at all? Answering "no match" to the second is Ponte stating a finding it
+ * never made.
+ *
+ * Most specific first. A search for ocean freight inside freight is not
+ * answered by asking whether anything at all carries a category: it has to ask
+ * whether anything carries a subcategory, or a record classified only to
+ * `freight` would make the narrower search look answerable when it is not.
+ */
+export function canonicalColumnFor(query: InventoryQuery): string | null {
+  if (query.serviceSubcategory) return "service_subcategory_keys";
+  if (query.serviceCategory) return "service_category_key";
+  if (query.partnerType) return "distribution_partner_type_key";
+  if (query.sector) return "product_sector_key";
+  if (query.territory) return "territory_codes";
+  if (query.family) return "market_family";
+  return null;
+}
+
+/** Does this query ask for anything the classification columns must answer? */
+export function usesCanonicalKeys(query: InventoryQuery): boolean {
+  return canonicalColumnFor(query) !== null;
+}

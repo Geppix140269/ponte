@@ -1,7 +1,7 @@
 # ExecPlan — Automated listing publication and unified transactional email
 
 **Status:** Implementation complete on branch; not merged, not deployed.
-**Authority:** ADR-0012 (Accepted, 28 July 2026).
+**Authority:** ADR-0013 (Accepted, 28 July 2026).
 **Owner decisions taken:** verification stays blocking; AI drafts the public
 text and the member confirms it.
 
@@ -72,7 +72,7 @@ completion screen; lifecycle telemetry; the migration.
 
 ## 5. Product rules
 
-- A listing publishes only on all four conditions in ADR-0012.
+- A listing publishes only on all four conditions in ADR-0013.
 - Human review is exception-based. `submitted`, `needs_information`, `flagged`
   and `suspended` are the exception states.
 - A safety flag is a HOLD, not a finding. Member-facing copy never accuses.
@@ -105,7 +105,7 @@ are rendered from the same list, so they cannot drift and one cannot be omitted.
 
 ## 7. Migration plan
 
-`supabase/migrations/20260728a_automated_listing_publication.sql`. Additive and
+`supabase/migrations/20260728b_automated_listing_publication.sql`. Additive and
 idempotent. Adds four lifecycle states, the quantity mode and bounds, the
 declaration, the extraction-confirmation pair, safety flag columns, the
 completeness score, the `listing_events` table and three indexes; restates the

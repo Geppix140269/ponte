@@ -12,9 +12,10 @@ Before changing code, read these files in order:
 3. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` before any visual, UI,
    icon, motion, component or interaction work.
 4. `docs/codex/00-START-HERE.md`.
-5. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
-6. Relevant accepted ADRs under `docs/decisions/`.
-7. Every status, decision and roadmap file linked from the start page.
+5. `docs/operations/OPERATIONS_LOG.md` and `docs/operations/OPEN_DECISIONS.md`.
+6. `docs/codex/SOURCE-OF-TRUTH-SOP.md`.
+7. Relevant accepted ADRs under `docs/decisions/`.
+8. Every status, decision and roadmap file linked from the start page.
 
 ## Source of truth
 
@@ -39,6 +40,23 @@ Before changing code, read these files in order:
 - The complete authority order is defined in `docs/codex/00-START-HERE.md`.
 - `CLAUDE.md` is a tool entry point only; it delegates to these common rules and
   must never evolve into a second product authority.
+
+## Operational memory
+
+- `docs/operations/OPERATIONS_LOG.md` is the compact chronological record of
+  verified production changes, implementation outcomes, operational decisions,
+  risks, discrepancies and immediate next actions.
+- `docs/operations/OPEN_DECISIONS.md` contains only unresolved owner decisions
+  that materially affect product, engineering, data, security, operations or
+  go-to-market work. It is not a general backlog.
+- Read both files before starting work or preparing a cross-agent handoff.
+- Any completed production change, deployment, database operation, material
+  architecture outcome or security remediation must update the operations log
+  in the same pull request before the work is considered complete.
+- When an owner decision is resolved, update the open-decisions register and
+  link the canonical ADR, state document, PR or other evidence.
+- Keep both files concise and evidence-based. Do not paste chat transcripts,
+  speculative plans or duplicated product specifications into them.
 
 ## Design Constitution — non-negotiable
 
@@ -128,6 +146,9 @@ For a behavioural change, update in the same pull request:
   `lib/taxonomy/`
 - `docs/codex/FEATURE-FLAGS.md` when a flag changes
 - the relevant active or completed plan
+- `docs/operations/OPERATIONS_LOG.md` when production, deployment, database,
+  security or material operating state changes
+- `docs/operations/OPEN_DECISIONS.md` when an owner decision opens, changes or closes
 
 ## Substantial work
 

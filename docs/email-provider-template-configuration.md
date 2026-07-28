@@ -2,7 +2,7 @@
 
 **Status:** Manual deployment step. Not applied by any pull request.
 **Owner action required:** yes.
-**Related:** ADR-0012, `docs/platform/AUTH-EMAIL-SETUP.md`.
+**Related:** ADR-0013, `docs/platform/AUTH-EMAIL-SETUP.md`.
 
 Ponte's application-generated email is committed code (`lib/email/`). Supabase
 Auth's email is not: Supabase renders its own templates from the dashboard, and

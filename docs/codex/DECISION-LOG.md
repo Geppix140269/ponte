@@ -2,7 +2,7 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
-## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)
+## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0013)
 
 **Decision:** Ponte is a self-publishing trade platform with automated eligibility controls, not a manually moderated noticeboard. A Member Opportunity publishes automatically when the member holds a current passing member-business verification with no unresolved sanctions candidate, every mandatory field for its market family is present and valid, the member has accepted the listing responsibility declaration, and no automated safety check has raised a high- or medium-severity flag. Human review becomes exception-based only, and `/admin/listings` becomes an exception console rather than the publication queue.
 
@@ -14,7 +14,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Implementation boundary:** implemented on branch `fix/automated-listings-email-system` on 28 July 2026. At this record point the migration has NOT been applied to production, nothing has been deployed, the Supabase Auth templates have not been configured, and the admin exception console has not been rebuilt. Applying a production migration, deploying and merging remain subject to the stop conditions in `AGENTS.md`.
 
-**Affected areas:** `docs/decisions/ADR-0012-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728a_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
+**Affected areas:** `docs/decisions/ADR-0013-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728b_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
 
 ## 28 July 2026 — Complete Market Signal discoverability and category-first non-product journeys (ADR-0011)
 
@@ -29,6 +29,118 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** Giuseppe issued the combined development brief to Claude Code on 28 July 2026. The product decision and implementation scope are accepted. At this record point no implementation branch, import result, schema migration, deployment or production verification for this scope has been evidenced. Applying a production migration, deploying or merging remains subject to the stop conditions in `AGENTS.md`.
 
 **Affected areas:** `docs/decisions/ADR-0011-complete-market-discoverability-and-category-first-journeys.md`, `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`, Market Signals listing and detail, Find, Structure/Start a Deal, `lib/taxonomy/market.ts`, public query projections, database indexes and optional additive schema work, import reconciliation, SEO and URL-state behaviour, `docs/codex/CURRENT-STATE.md`.
+
+## 28 July 2026 — Category-first classification for Trade services and Distribution
+
+**Context:** Owner requirement of 28 July 2026, implemented on branch
+`feature/category-first-market-taxonomy` and proposed as ADR-0013, which implements the owner-accepted ADR-0011. Trade
+services and Distribution opened on a blank line, "State it in one line", while
+Products had a progressive category journey. A sentence cannot be filtered,
+matched, counted or searched, so two of Ponte's three equal families could
+neither be described properly nor searched at all.
+
+**Decisions recorded because the authorities did not settle them:**
+
+1. **The Trade Services escape route is stored as `unlisted`, not `other`.** The
+   earlier ten-key list already used `other`, and it meant "Other trade-enabling
+   services": a real category with real subcategories. Reusing the key would
+   have made every stored `other` ambiguous, and reading one back would have
+   silently reclassified a member's trade-enabling record. The label a member
+   sees is unchanged. Found by a test written before the collision was noticed.
+
+2. **The legacy `route` value maps to `market_entry`, and is flagged.** The
+   requirement maps it to a "route-to-market partner", which is not one of the
+   twelve canonical types. `LEGACY_DISTRIBUTION_MAP.route` carries
+   `needsOwnerConfirmation: true` so the owner confirms it rather than
+   discovering it later.
+
+3. **A relationship term is never read back as a partner type.** `exclusive` and
+   `nonexclusive` sat in the same flat list as `distributor`. Answering "which
+   partner type is this?" with "exclusive" would keep the original error alive
+   under new names, so `canonicalPartnerType("exclusive")` returns null on
+   purpose.
+
+4. **An icon appears only where the Flow registry already has one.** Five of the
+   twelve partner types and both escape routes have no approved asset, and
+   drawing them would be an unapproved addition to the registry (Constitution
+   section 7). The grid reserves the icon column either way, so a partly drawn
+   list still aligns. The requirement asked for an icon "where available"; this
+   is what available means.
+
+5. **Category icons are rendered on the server and passed down as nodes.**
+   `PonteIcon` is a server component so the registry's markup never reaches the
+   browser bundle, and the pickers are client components. Importing the renderer
+   into a picker would quietly undo that; a second client-safe icon module would
+   give Ponte two icon renderers, which section 20 forbids.
+
+6. **Cross-family classification is refused in three places.** In the draft, in
+   the API, and in a database CHECK. The API is not the only writer a table
+   sees, and a mis-filed key is worse than a missing one because every filter,
+   count and match downstream trusts it.
+
+7. **`/find` opens on the three market families.** It previously opened on the
+   product picker, with products the only family that could be searched.
+   Products is now one tap away and unchanged.
+
+8. **A category filter that cannot be applied reports that, and never an empty
+   result.** No published record carries a canonical category yet. "No signal
+   matches ocean freight" and "Ponte cannot yet tell which signals are about
+   ocean freight" are different sentences with different next actions.
+
+9. **Nothing is backfilled.** No existing record has been classified into this
+   taxonomy, and writing a guess into those columns would invent a finding.
+
+**Corrections under review, 28 July 2026:**
+
+10. **Eligibility runs in the query, before the page is cut and before the count
+    is taken.** Applying the public-expiry rule afterwards to a fetched page
+    counted expired rows and returned short pages, which would have made offset
+    paging unstable before it was built.
+
+11. **Coverage is measured on every category-filtered read.** Reporting
+    "nothing is classified" only when the result was empty held for exactly as
+    long as nothing was classified. From the first classified record onwards,
+    every filter would have returned small confident results over an inventory
+    that was still almost entirely unclassified. There are now three states:
+    `unclassified` (nothing carries a category), `partial` (some do, and the
+    numbers are printed), and `ok` (all do, so an empty result is conclusive).
+
+12. **The family-coherence constraints are implications, not exemptions.** The
+    first draft opened `market_family is null or ...`, which permitted a service
+    category on a record belonging to no family. `desk_radar` carries the same
+    two constraints, and needs them more than `listings` does: a signal is
+    written by an importer, an admin action and any future backfill, none of
+    which passes through the member API's validation.
+
+13. **The legacy `route` value is preserved as `route_to_market`, not
+    consolidated into `market_entry`.** Consolidation cannot be undone: once
+    stored values have been read back through it, which records were `route` is
+    unrecoverable. Owner-approved 28 July 2026.
+
+**Not applied:** `supabase/migrations/20260728a_market_classification.sql` is
+written and reviewed and has **not** been run. A merge applies no migration in
+this repository. The write path tolerates the columns being absent and retries
+without them, and the classification still reaches the record through the
+synthesised `details`.
+## 28 July 2026 — Retire the Bridge package import workflow
+
+**Decision:** `.github/workflows/import-approved-bridge-package.yml` is removed. The approved Bridge package is vendored in the repository and verified on every run by `scripts/check-governance.mjs` against `design/authority/bridge/v1/SOURCE-MANIFEST.md`.
+
+**Why it was failing.** The workflow downloaded a zip from a Google Drive link and checked the **container** against a pinned SHA-256. That check had failed on every run the workflow ever had, including on the branch behind merged PR #58. The download now returns roughly 891 KB where the approved archive is 789,853 bytes, so the link no longer serves the file it was pinned to.
+
+**The pin itself was correct.** The owner-approved archive still hashes to exactly `d45d809d2917a6265e368ade5f52c319bbd83937a29070b7b4a338445975d616`. Nothing was wrong with the recorded value; the source behind the link changed.
+
+**But pinning a zip container was the wrong thing to pin, and that is the durable lesson.** Two copies of the approved package were found locally with **byte-identical contents** and **different container hashes**: a zip's bytes depend on timestamps, entry order and compression settings, none of which are the design authority. `SOURCE-MANIFEST.md` already records a SHA-256 for every **file**, which is the thing that actually has to be right, and those hashes are stable across any repackaging.
+
+**What replaces it.** Nothing needs to fetch anything. The package is in the repository, and the governance check hashes all 13 vendored files against the manifest on every run: no network, no external dependency, no expiring link, and it fails on a mismatch **or an absence**. That is strictly stronger than a one-time import, and it is what would have caught the outage described below on the first commit rather than weeks later.
+
+**What the failure cost.** While the workflow was failing, `source/ponte-bridge.js` and the nine reference renders were absent from the repository and nothing reported it. A landing bridge was built against an inferred straight-line geometry as a result, and was rejected by the owner. The vendored `ponte-bridge.css` had also drifted from its own recorded checksum, with its section comments stripped, and nothing reported that either. Both are corrected in PR #63.
+
+**Also removed by this decision:** nothing else. The workflow had no callers, and the `.import-trigger` and `.temporary-import-note` markers it used are removed in PR #63. `.temporary-import-note` itself recorded the requirement being satisfied here: "Temporary import workflow and marker files must be removed before final review."
+
+**Sequencing.** This should merge after PR #63, which is what puts the package and the manifest check on `main`. Merging it first would not regress anything, since a workflow that has never once succeeded protects nothing today, but it would leave `main` briefly with neither the fetch nor the vendored package.
+
+**Affected areas:** `.github/workflows/import-approved-bridge-package.yml` (deleted), `scripts/check-governance.mjs` (the replacement check, added in PR #63), `design/authority/bridge/v1/SOURCE-MANIFEST.md` (unchanged; it is the authority the check reads).
 
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 
