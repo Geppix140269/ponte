@@ -5,7 +5,6 @@ import { alternatesFor } from "@/lib/seo";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
 import { toDeskRecord } from "@/lib/desk/adapter";
-import { PRODUCT_SECTORS } from "@/lib/taxonomy/market";
 import DeskShell from "@/components/desk/DeskShell";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalStrip from "@/components/desk/SignalStrip";
@@ -36,14 +35,6 @@ import "@/components/ponte/bridge/bridge-integration.css";
  *   the strip is omitted rather than filled with the prototype's numbers. A
  *   figure on the entrance is a claim about the market, and Ponte does not make
  *   one it cannot answer for.
- *
- *   No measured sector counts. Every public signal in production currently
- *   carries a null HS code, so an HS-derived sector count would read zero on
- *   every sector while the market is demonstrably busy. The sector grid is
- *   therefore NAVIGATION and says so: "Browse by sector", captioned with the
- *   HS range each sector covers. It is deliberately not headed "Active
- *   sectors" or "Busiest sectors", and it prints no count. Issue #42 is the
- *   data defect; misrepresenting it here would not fix it.
  *
  *   No large empty reviewed-record state. Zero listings currently pass the
  *   publication contract, so the Qualified Opportunities section is omitted
@@ -164,43 +155,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
           ) : (
             records.map((record) => <RecordCard key={record.ref} record={record} />)
           )}
-        </section>
-
-        {/* The taxonomy, not a filter and not a measurement.
-            No count is printed, because every public signal in production
-            currently carries a null HS code and a count derived from that would
-            be a zero the market contradicts (Issue #42).
-            No link either, for the same reason: the board cannot yet be
-            narrowed by sector, so fifteen tiles that all opened the same
-            unfiltered board would be a filter that does not filter. The one
-            link is the one that does what it says. */}
-        <section className="sec">
-          <div className="sech">
-            <div>
-              <h2>
-                <PonteIcon name="market.family.products" size={18} />
-                The product sectors
-              </h2>
-              <p className="d">
-                The HS taxonomy Ponte classifies products against. These are the sectors the
-                market is organised into, not a measure of what is active in them, and the board
-                cannot yet be narrowed to one: no public signal currently carries an HS code.
-                Chapters 71 and 91 to 92 belong to no sector and are reported rather than hidden.
-              </p>
-            </div>
-            <Link href="/market-signals">
-              Read all Market Signals<span aria-hidden="true"> &rarr;</span>
-            </Link>
-          </div>
-          <div className="sectors">
-            {PRODUCT_SECTORS.map((sector) => (
-              <div key={sector.key}>
-                <PonteIcon name={sector.icon} size={22} />
-                <b>{sector.label}</b>
-                <span>{sector.range}</span>
-              </div>
-            ))}
-          </div>
         </section>
 
         <section className="sec">

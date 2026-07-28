@@ -158,6 +158,14 @@ production verification.
   **the approved engine source is missing from the repository** (see section 12).
   26 new tests. `governance:check` and `verify` pass.
 
+- **28 Jul 2026** — Slice 4 corrected after owner rejection. The straight-line
+  deck was rejected: it was a fallback built while the approved engine was
+  missing, not a design. The owner-approved Bridge package was recovered, all 13
+  vendored files now match `SOURCE-MANIFEST.md`, and the geometry is the engine's
+  own arch. Product sectors and all HS copy removed from the landing per owner
+  decisions 4 and 5. 33 unit tests, 17 Playwright checks, 16 byte-deterministic
+  evidence frames. `governance:check` and `verify` pass.
+
 ## 12. Decisions and discoveries
 
 - **Correction to the Phase 1 audit:** `.agent/PLANS.md` **is** tracked on
@@ -202,7 +210,22 @@ production verification.
   Start a Deal posts to `/api/marketplace/submit` and Find posts to
   `/api/marketplace/interest`. Retiring the pages and retiring the API are
   separate questions, and only the first is arguable.
-- **BLOCKING FOR THE BRIDGE PROGRAMME: the approved engine source is not in the
+- **RESOLVED (28 Jul 2026): the approved Bridge package has been recovered.**
+  It was located outside the repository, and all 13 vendored files now match
+  `SOURCE-MANIFEST.md` byte for byte, including `source/ponte-bridge.js` and the
+  nine reference renders. Two further defects surfaced during the recovery: the
+  vendored `ponte-bridge.css` had had its section comments stripped and so failed
+  its own checksum, and nothing in the repository verified the manifest at all.
+  `check-governance.mjs` now checks every recorded checksum on each run.
+
+  **The straight-line deck built during the outage was rejected by the owner and
+  is gone.** `E1` to `E8` are withdrawn: the deck is the engine's cubic Bezier
+  arch, stations sit at its own non-uniform path fractions, block widths are
+  measured, abutments are present, the gold signal rides the curve, and mobile is
+  the engine's bowed elevation rather than a stacked list. The arithmetic lives in
+  `components/ponte/bridge/geometry.ts` with each formula quoted from the engine,
+  and is unit-tested against its own numbers.
+- **Superseded, kept for the record: the approved engine source was not in the
   repository.** `design/authority/bridge/v1/source/ponte-bridge.js` is named by
   `SOURCE-MANIFEST.md` and by the implementation notes, but the only artefact
   present is `source/archive/ponte-bridge.js.gz.b64.part01`: a single 3 KB chunk
@@ -220,10 +243,16 @@ production verification.
   wrapper's height, and the placement of the deck line. **These need checking
   against the reference renders before the Bridge programme goes further**, since
   slices 5 to 11 all build on this primitive.
-- The approved stylesheet has **no icon slot on a station** and the PR scope
-  requires Ponte Flow icons on the Family Bridge. `brst__ic` is added in
-  `components/ponte/bridge/bridge-integration.css` as an addition, not an
-  override. Recorded as a Bridge authority gap.
+- **The approved station carries no icon.** Icons were added to the Family
+  Bridge while the reference renders were missing, on the reading that the slice
+  scope required them. The recovered references show none, so they are removed:
+  a station is an index, a title, a description and a marker.
+- **Product sectors and HS language are removed from the landing** by owner
+  decision. The sector grid was non-clickable, because no public signal carries
+  an HS code, and a filter that cannot filter is noise; sectors belong in the
+  Explore journey, which this slice does not build. No landing copy mentions HS
+  classification, and no services or distribution destination carries an HS
+  parameter or meets an HS gate.
 
 ## 13. Final evidence
 

@@ -27,6 +27,7 @@ import { MARKET_FAMILIES, intentsForFamily } from "@/lib/taxonomy/market";
 import LandingBridges from "@/components/ponte/bridge/LandingBridges";
 import BridgeRoute from "@/components/ponte/bridge/BridgeRoute";
 import { fire, mount, type Mounted, type TestElement } from "./render";
+import { blockWidth, deckPath, elevationX, stationFractions, subPath } from "@/components/ponte/bridge/geometry";
 /* eslint-enable import/first */
 
 let passed = 0;
@@ -61,8 +62,7 @@ function mountFamilyBridge(selected: string | null = null, onSelect: (key: strin
       title: f.label,
       description: f.scope,
       index: String(i + 1).padStart(2, "0"),
-      mark: "Selected",
-      icon: f.icon,
+      mark: "Selected route",
     })),
     selected,
     visited: [],
@@ -190,10 +190,39 @@ test("the temporary three-column family/action grid is gone", () => {
 
 test("the rest of the landing is still there", () => {
   // The notes authorise replacing the family/action section and nothing else.
-  for (const kept of ["SignalStrip", "Market Signals", "PonteFooter", "DeskShell", "PRODUCT_SECTORS"]) {
+  for (const kept of ["SignalStrip", "Market Signals", "PonteFooter", "DeskShell"]) {
     assert.ok(landingPage.includes(kept), `${kept} was removed from the landing`);
   }
   assert.ok(!/hero__input|<input/.test(landingPage), "a hero input was introduced, which section 5 forbids");
+});
+
+test("the product sectors are gone from the landing", () => {
+  // Owner decision: non-clickable sectors have no purpose on the landing and
+  // create visual noise. They belong in the Explore journey, where they will be
+  // clickable and lead somewhere. That journey is NOT built here.
+  assert.ok(!/PRODUCT_SECTORS/.test(landingPage), "the sector grid is still rendered");
+  assert.ok(!/className="sectors"/.test(landingPage), "the sector grid markup is still present");
+  assert.ok(!/The product sectors/.test(landingPage), "the sector section heading is still present");
+});
+
+test("no HS language reaches the landing", () => {
+  // Owner decision: HS classification applies only to physical-product paths and
+  // must never be shown as a requirement on the landing. Checked against the
+  // page and against the copy the bridge renders.
+  // Comments are stripped first: this file explains at length WHY no HS copy is
+  // rendered, and testing the prose would make the explanation fail the rule it
+  // is explaining. Only what reaches a member is checked.
+  const copy = readFileSync("lib/landing/families.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  const rendered = copy.slice(copy.indexOf("const SCOPE"));
+  for (const [what, text] of [
+    ["the landing page", landingPage],
+    ["the bridge copy", rendered],
+  ] as const) {
+    assert.ok(!/\bHS\b/.test(text), `${what} still mentions HS`);
+    assert.ok(!/harmonised|harmonized/i.test(text), `${what} still mentions the Harmonised System`);
+  }
 });
 
 test("all three action bridges are rendered, so no destination depends on JavaScript", () => {
@@ -272,7 +301,7 @@ test("arrow keys traverse the group and select as they go", () => {
   assert.deepEqual(prevented, ["ArrowRight", "ArrowLeft"], "arrow keys must not also scroll the page");
 });
 
-test("traversal wraps, and Home and End reach the ends", () => {
+test("traversal wraps at both ends, and Home and End are not bound", () => {
   const chosen: string[] = [];
   const bridge = mountFamilyBridge(null, (key: string) => { chosen.push(key); });
   const event = (key: string) => ({ key, preventDefault: () => {} });
@@ -283,10 +312,14 @@ test("traversal wraps, and Home and End reach the ends", () => {
   fire(stationsOf(bridge)[2], "onKeyDown", event("ArrowRight"));
   assert.equal(chosen.at(-1), "products", "ArrowRight from the last station should wrap to the first");
 
+  // The approved engine binds ArrowRight, ArrowDown, ArrowLeft and ArrowUp and
+  // nothing else. Home and End are absent from it, so they are absent here: this
+  // is a translation of the engine, not an improvement on it. Asserted so their
+  // absence is a recorded decision rather than an oversight.
+  const before = chosen.length;
   fire(stationsOf(bridge)[1], "onKeyDown", event("End"));
-  assert.equal(chosen.at(-1), "distribution");
   fire(stationsOf(bridge)[1], "onKeyDown", event("Home"));
-  assert.equal(chosen.at(-1), "products");
+  assert.equal(chosen.length, before, "Home or End changed the selection; the approved engine binds neither");
 });
 
 test("a key the bridge does not own is left alone", () => {
@@ -362,8 +395,9 @@ test("the bridge uses the approved class vocabulary and introduces no substitute
   for (const name of Array.from(new Set(classNames.filter((c) => /^(br|brst)/.test(c))))) {
     const escaped = name.replace(/[-]/g, "\\-");
     assert.ok(
-      new RegExp(`\\.${escaped}\\b`).test(bridgeCss) || /^brst__ic$/.test(name),
-      `'${name}' is not a class the approved Bridge stylesheet defines`,
+      new RegExp(`\\.${escaped}\\b`).test(bridgeCss) || /^(br__stage|br__vsvg|brst__w)$/.test(name),
+      `'${name}' is neither defined by the approved Bridge stylesheet nor one of the two ` +
+        `hooks the approved engine creates and styles inline (br__stage, br__vsvg, brst__w)`,
     );
   }
 });
@@ -385,7 +419,7 @@ test("the moving signal is removed when the state settles", () => {
   assert.match(bridgeCss, /\.br__runner\{[^}]*opacity:0\}/);
   assert.match(bridgeCss, /\.br__runner--go\{animation:br-travel 620ms/);
   const source = readFileSync("components/ponte/bridge/BridgeRoute.tsx", "utf8");
-  assert.match(source, /setMove\(null\)/, "the travelling state is never cleared");
+  assert.match(source, /setTravel\(0\)/, "the travelling state is never cleared");
 });
 
 test("reduced motion is honoured through both approved hooks, and removes only movement", () => {
@@ -411,9 +445,64 @@ test("reduced motion is honoured through both approved hooks, and removes only m
 
 test("the vertical treatment exists for narrow containers and is the approved one", () => {
   assert.match(bridgeCss, /\.br--v \.brst/, "the approved vertical station treatment is missing");
+  const geometry = readFileSync("components/ponte/bridge/geometry.ts", "utf8");
+  assert.match(geometry, /VERTICAL_BELOW = 460/, "the engine's own 460px threshold is not used");
   const source = readFileSync("components/ponte/bridge/BridgeRoute.tsx", "utf8");
-  assert.match(source, /VERTICAL_BELOW = 460/, "the 460px container threshold from the notes is not used");
   assert.match(source, /br--v/, "the component never applies the approved vertical class");
+});
+
+// ---------------------------------------------------------------------------
+// The geometry, pinned to the recovered engine's own numbers
+// ---------------------------------------------------------------------------
+
+test("the deck is the approved cubic Bezier arch, not a line", () => {
+  // Straight from `deckPath` in ponte-bridge.js. A straight rule was the
+  // owner-rejected interpretation, so this pins the curve itself: a cubic with
+  // both control points well above the baseline.
+  const d = deckPath(1000);
+  assert.equal(d, "M1.5,90.5 C260.0,-28.2 740.0,-28.2 998.5,90.5");
+  assert.ok(d.includes("C"), "the deck has no curve command at all");
+});
+
+test("stations sit at the engine's own fractions, which are not evenly spaced", () => {
+  assert.deepEqual(stationFractions(1), [0.5]);
+  assert.deepEqual(stationFractions(2), [0.3, 0.7]);
+  assert.deepEqual(stationFractions(3), [0.26, 0.5, 0.74]);
+  assert.deepEqual(stationFractions(4), [0.16, 0.39, 0.62, 0.85]);
+
+  // The outer stations are pulled inwards so their blocks clear the abutments.
+  // Even spacing would put the first at 0 and the last at 1, with half of each
+  // block hanging off the end of the deck.
+  const three = stationFractions(3);
+  assert.notEqual(three[0], 0, "the first station sits at the very end of the deck");
+  assert.notEqual(three[2], 1, "the last station sits at the very end of the deck");
+});
+
+test("station blocks are sized from the measured gap, never from a constant", () => {
+  assert.equal(blockWidth([{ x: 0 }, { x: 300 }]), 176, "a wide gap is capped at the maximum");
+  assert.equal(blockWidth([{ x: 0 }, { x: 150 }]), 138, "a 150px gap should give 138");
+  assert.equal(blockWidth([{ x: 0 }, { x: 50 }]), 88, "a narrow gap is floored at 88");
+  assert.equal(blockWidth([{ x: 0 }]), 176, "a single station has no gap and takes the maximum");
+});
+
+test("the elevation curve bows, and returns to its edge at both ends", () => {
+  // The mobile route must be one continuous bowed path, not a straight rule
+  // with detached items beside it.
+  assert.equal(elevationX(0, 800), 6, "the curve should start at X0");
+  assert.equal(elevationX(800, 800), 6, "the curve should return to X0");
+  assert.equal(elevationX(400, 800), 17, "the curve should bow to X0 + BOW at mid-height");
+  assert.ok(elevationX(400, 800) > elevationX(100, 800), "the curve does not bow outwards");
+});
+
+test("the runner's path is the deck's own curve, sampled", () => {
+  // Not a straight line between two endpoints: `subPath` walks the real path,
+  // so the gold signal follows the arch rather than an overlay across it.
+  const at = (t: number) => ({ x: t * 100, y: 50 - 40 * Math.sin(Math.PI * t) });
+  const d = subPath(at, 0, 1);
+  const points = d.split(/[ML]/).filter(Boolean);
+  assert.ok(points.length > 50, `expected a sampled path, got ${points.length} points`);
+  const ys = points.map((p) => Number(p.split(",")[1]));
+  assert.ok(new Set(ys).size > 5, "every sampled point has the same y: the path is straight");
 });
 
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);

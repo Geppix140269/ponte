@@ -79,6 +79,66 @@ async function shot(target: Locator | Page, name: string): Promise<void> {
 }
 
 /**
+ * Wait until the bridge has stopped resizing itself.
+ *
+ * The engine sizes the stage from its lowest child, then does it again on the
+ * next frame, then again once `document.fonts.ready` resolves, because a label
+ * that reflows after a webfont loads would otherwise overlap the section
+ * beneath the bridge. `BridgeRoute` keeps all three passes.
+ *
+ * A capture that lands between passes gets a different height, and since these
+ * frames are clipped to the block's box, a different image. Waiting for fonts
+ * and then for two consecutive identical heights makes the frame the settled
+ * one every time.
+ */
+async function settled(page: Page): Promise<void> {
+  await page.evaluate(() => document.fonts?.ready);
+  let previous = -1;
+  for (let i = 0; i < 20; i++) {
+    const box = await block(page).boundingBox();
+    const height = Math.round(box?.height ?? -1);
+    if (height > 0 && height === previous) return;
+    previous = height;
+    await page.waitForTimeout(60);
+  }
+}
+
+/**
+ * Frame the bridge with breathing room around it.
+ *
+ * A tight element crop cuts the composition exactly at its own bounds, and the
+ * abutments sit flush against those bounds by design: the crossing starts where
+ * the block starts. "INTENT" then loses its first letter to the crop edge and
+ * the frame reads as a layout fault that the measurements say is not there.
+ *
+ * The approved reference renders are page-level for the same reason, so these
+ * clip the page to the bridge plus a margin instead.
+ */
+async function shotFramed(page: Page, name: string, pad = 28): Promise<void> {
+  await settled(page);
+  const box = await block(page).boundingBox();
+  if (!box) throw new Error("the bridge block has no box to frame");
+  const viewport = page.viewportSize();
+  // Less room above than around: the bridge's own heading already separates it
+  // from the hero, and a full pad at the top catches the tail of the paragraph
+  // above, which reads as a stray fragment in the frame.
+  const top = 10;
+  await page.screenshot({
+    path: `${EVIDENCE}/${name}.png`,
+    animations: "disabled",
+    // `clip` alone is bound by the viewport, and the two bridges together are
+    // taller than 900px, so the action bridge was being cut off at the fold.
+    fullPage: true,
+    clip: {
+      x: Math.max(0, box.x - pad),
+      y: Math.max(0, box.y - top),
+      width: Math.min(box.width + pad * 2, (viewport?.width ?? box.width + pad * 2) - Math.max(0, box.x - pad)),
+      height: box.height + top + pad,
+    },
+  });
+}
+
+/**
  * Move the pointer off the bridge, so each frame records the settled state
  * rather than a hover state.
  *
@@ -116,8 +176,13 @@ async function measured(page: Page): Promise<void> {
     .poll(
       () =>
         page.evaluate(() => {
-          const wrap = document.querySelector(".pbridge .brx:not([hidden]) .br__deckwrap");
-          return wrap?.getAttribute("style")?.includes("--br-h") ?? false;
+          const stage = document.querySelector<HTMLElement>(".pbridge .brx:not([hidden]) .br__stage");
+          if (!stage) return false;
+          // The engine sizes the stage from its lowest child and places every
+          // station from the measured curve. Both are done when the stage has a
+          // height and the first station has been given a left.
+          const station = stage.querySelector<HTMLElement>(".brst");
+          return stage.offsetHeight > 0 && !!station && station.style.left !== "";
         }),
       { message: "the revealed action bridge never measured its stations" },
     )
@@ -138,6 +203,7 @@ async function measured(page: Page): Promise<void> {
  * included, rather than a component lifted out of it.
  */
 async function reveal(page: Page): Promise<void> {
+  await settled(page);
   await page.evaluate(() => {
     const bridge = document.querySelector(".pbridge");
     if (!bridge) return;
@@ -159,7 +225,7 @@ test("desktop evidence: default and each family selected", async ({ page }) => {
   // so the opening state is evidence in its own right rather than a step on the
   // way to something.
   await expect(page.locator(".pbridge .brx:not([hidden])")).toHaveCount(0);
-  await shot(block(page), "desktop-1-family-neutral");
+  await shotFramed(page, "desktop-1-family-neutral");
 
   const families = ["products", "services", "distribution"] as const;
   const fileFor = {
@@ -184,7 +250,7 @@ test("desktop evidence: default and each family selected", async ({ page }) => {
     await expect(open).toHaveAttribute("aria-label", new RegExp(`^${FAMILY_LABELS[family]}:`));
     await measured(page);
 
-    await shot(block(page), fileFor[family]);
+    await shotFramed(page, fileFor[family]);
   }
 });
 
@@ -230,7 +296,7 @@ test("DS-8: hovering the chosen station does not demote it", async ({ page }) =>
 
   // Captured while the pointer is still on the chosen station: this frame is
   // the proof for DS-8, so it has to be a hover frame.
-  await shot(block(page), "desktop-9-selected-hover");
+  await shotFramed(page, "desktop-9-selected-hover");
 
   // The approved hover treatment for an UNSELECTED station is untouched: it
   // still grows from 11px to 13px and takes the sunken fill.
@@ -334,7 +400,7 @@ test("keyboard evidence: focus is visible and the group is one tab stop", async 
 
   const focused = page.locator(".pbridge > .br .brst:focus");
   await expect(focused).toHaveCount(1);
-  await shot(block(page), "desktop-5-keyboard-focus");
+  await shotFramed(page, "desktop-5-keyboard-focus");
 
   // One more Tab must leave the bridge entirely: a radiogroup is one stop, and
   // arrow keys move within it.
@@ -360,9 +426,10 @@ test("keyboard selection: arrows traverse and select, and focus follows", async 
   await stations(page).nth(2).press("ArrowRight");
   await expect(stations(page).nth(0)).toBeFocused();
 
+  // Home and End are deliberately absent: the approved engine binds only the
+  // four arrows, and this is a translation of it rather than an improvement on
+  // it. Asserted so their absence is a recorded decision, not a gap.
   await stations(page).nth(0).press("End");
-  await expect(stations(page).nth(2)).toBeFocused();
-  await stations(page).nth(2).press("Home");
   await expect(stations(page).nth(0)).toBeFocused();
 
   // Space and Enter activate a button; the selection must survive them.
@@ -416,12 +483,12 @@ test("reduced motion evidence: movement removed, settled state complete", async 
   expect(settled.nodeWidth).toBe("15px");
   expect(settled.nodeBackground).toBe("rgb(138, 101, 32)"); // --pf-gold-ink
   expect(settled.markOpacity).toBe("1");
-  expect(settled.markText).toBe("Selected");
+  expect(settled.markText).toBe("Selected route");
   expect(settled.liveDeckDrawn).toBe(true);
   expect(settled.actionsVisible).toBe(3);
   expect(settled.anyRunningAnimation).toBe(false);
 
-  await block(page).screenshot({ path: `${EVIDENCE}/desktop-6-reduced-motion.png` });
+  await shotFramed(page, "desktop-6-reduced-motion");
   await context.close();
 });
 
@@ -500,15 +567,18 @@ test("motion evidence: the gold runner crosses, then stops", async ({ page }) =>
     // No `animations: "disabled"` here, deliberately: that option finishes every
     // animation at its end state, which would overwrite the frame just posed and
     // produce five identical images.
-    await block(page).screenshot({ path: `${EVIDENCE}/desktop-7-runner-step-${index + 1}-of-5.png` });
+    await shotFramed(page, `desktop-7-runner-step-${index + 1}-of-5`);
   }
 
-  // The frames are only evidence of movement if the runner actually moved, and
-  // it must travel right to left here: the choice moved from Distribution back
-  // to Products.
+  // The frames are only evidence of movement if the runner actually moved.
+  //
+  // It travels LEFT TO RIGHT regardless of which station was chosen before,
+  // because the engine builds the runner's offset-path as the live deck itself:
+  // `seg(m, 0, ts[selIx])`, always from the near abutment to the chosen station.
+  // The signal crosses the bridge; it does not slide between two stations.
   expect(new Set(positions).size, `the runner did not move: ${positions.join(", ")}`).toBe(steps.length);
   for (let i = 1; i < positions.length; i++) {
-    expect(positions[i], `frame ${i + 1} did not advance`).toBeLessThan(positions[i - 1]);
+    expect(positions[i], `frame ${i + 1} did not advance`).toBeGreaterThan(positions[i - 1]);
   }
 
   // And the point of the sequence: once the state settles the gold signal is
@@ -523,7 +593,7 @@ test("motion evidence: the gold runner crosses, then stops", async ({ page }) =>
   await stations(page).nth(1).click();
   await unhover(page);
   await expect(page.locator(".pbridge .br__runner")).toHaveCount(0, { timeout: 5000 });
-  await shot(block(page), "desktop-8-runner-settled");
+  await shotFramed(page, "desktop-8-runner-settled");
 });
 
 // ---------------------------------------------------------------------------

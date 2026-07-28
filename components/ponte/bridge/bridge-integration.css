@@ -2,105 +2,72 @@
    Ponte Bridge, integration additions.
 
    The approved stylesheet is `design/authority/bridge/v1/source/ponte-bridge.css`
-   and it is imported unmodified. This file is NOT a copy of it and NOT an
-   override of it: every rule below adds something the approved source does not
-   express, and nothing here changes a value the approved source sets.
+   and it is imported unmodified. This file is NOT a copy of it. Every rule below
+   either adds something the approved source does not express, or corrects a
+   specificity collision between the approved source and `desk.css`. No approved
+   value is changed.
 
-   Three additions, each with the reason it could not be avoided.
-
-   ----------------------------------------------------------------------
-   1. The deck wrapper has no height of its own
-   ----------------------------------------------------------------------
-   `.brst` is absolutely positioned, so `.br__deckwrap` collapses to nothing and
-   the stations overlap whatever follows. The engine sized the wrapper from the
-   measured station height; the React primitive measures the same thing and sets
-   `--br-h`, and this rule is what consumes it. The fallback keeps the layout
-   sane for the single frame before the first measurement, and in any
-   environment without ResizeObserver.
-
-   ----------------------------------------------------------------------
-   2. There is no icon slot on a station
-   ----------------------------------------------------------------------
-   The PR scope requires Ponte Flow icons rendered through the shared renderer,
-   and the approved stylesheet has no rule for an icon inside `.brst`. Rather
-   than restyle `.brst__t`, the icon sits above the title in its own element and
-   inherits its colour, so the icon law holds: ink by default, `currentColor`,
-   no colour of its own, and gold never touches it.
-
-   Recorded as a Bridge authority gap: the approved package should say where an
-   icon belongs on a station, or say that one does not.
-
-   ----------------------------------------------------------------------
-   3. The vertical variant needs its rows to be a column
-   ----------------------------------------------------------------------
-   `.br--v .br__rows` is declared `display:flex; flex-direction:column` by the
-   approved source, so nothing is needed there. What IS needed is that the
-   horizontal variant's `.br__rows` wrapper does not interfere, since the same
-   element carries both. It is a passthrough when horizontal.
+   It was much longer before the Bridge engine was recovered. Everything that
+   propped up the old straight-line drawing (a stage height, a deck position, a
+   station `top`) is gone: the engine positions all of that from the measured
+   curve, and `BridgeRoute` now does the same.
    ====================================================================== */
 
-/* 1. Measured wrapper height. --br-h is set by the React primitive. */
-.br .br__deckwrap {
-  min-height: var(--br-h, 148px);
+/* ----------------------------------------------------------------------
+   0. The bridge module's own heading row
+
+   Transcribed from the approved landing reference,
+   `Ponte Landing - Bridge.html` in the recovered package, which styles this
+   block at page level rather than in the component stylesheet. Scoped to
+   `.pbridge` here so it cannot reach any other heading on the landing.
+
+   Only the bridge module is taken from that reference. The implementation notes
+   are explicit that "the landing reference composition is not a whole page to
+   port": the hero, its paragraph and the rest of the landing are untouched.
+   ---------------------------------------------------------------------- */
+
+.pbridge .bhead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 44px;
+  flex-wrap: wrap;
 }
 
-/* The deck is the line the stations stand ON, so it has to be at the node's
-   centre rather than in normal flow above it. The approved source styles the
-   deck's paths but never places the element, because the engine placed it.
-
-   A station's node is its first child and is 11px tall (`--br-node`), so the
-   node's centre sits 5.5px below the top of the deck wrapper. The deck's own
-   box is 4px tall with its path drawn down the middle, so the deck's top is
-   5.5 - 2 = 3.5px. Both numbers come from the approved source; neither is
-   chosen here. */
-.br:not(.br--v) .br__deck {
-  position: absolute;
-  top: calc(var(--br-node) / 2 - 2px);
-  left: 0;
-  right: 0;
-  width: 100%;
+.pbridge .bhead h2 {
+  font-family: var(--f-serif);
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.014em;
+  margin: 0;
 }
 
-/* With the deck taken out of flow, the stations' static position is the top of
-   the wrapper, which is where they belong. Stated rather than relied upon. */
-.br:not(.br--v) .brst {
-  top: 0;
+.pbridge .bhead span {
+  margin-left: auto;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
 }
 
-.br--v .br__deckwrap {
-  min-height: 0;
+/* The reference's own narrow-width adjustment. */
+@media (max-width: 700px) {
+  .pbridge .bhead {
+    margin-bottom: 26px;
+  }
+  .pbridge .bhead h2 {
+    font-size: 20px;
+  }
 }
 
-/* The horizontal variant positions stations against the deck wrapper directly,
-   so the rows element must not become a containing block or a layout box. */
-.br:not(.br--v) .br__rows {
-  display: contents;
+/* The reference sets this inline on the action bridge. */
+.pbridge .brx .br {
+  margin-top: 30px;
 }
 
-/* 2. The station icon: above the title, inheriting the station's ink. */
-.br .brst__ic {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--pf-ink-2);
-}
-
-.br .brst--on .brst__ic {
-  color: var(--pf-ink);
-}
-
-.br--v .brst__ic {
-  margin-bottom: 6px;
-}
-
-/* The approved source centres a horizontal station's contents and left-aligns a
-   vertical one; the icon follows whatever the station already does rather than
-   setting an alignment of its own. */
-.br:not(.br--v) .brst__ic {
-  margin-inline: auto;
-}
-
-/* ======================================================================
-   4. DS-8 - a chosen station must not shrink when it is pointed at
+/* ----------------------------------------------------------------------
+   1. DS-8 - a chosen station must not shrink when it is pointed at
 
    In the approved source the hover rules are more specific than the selected
    ones:
@@ -110,26 +77,19 @@
      .brst:hover:not([disabled]) .brst__p   (0,4,0)  opacity .8
      .brst--on            .brst__p          (0,2,0)  2px, opacity 1
 
-   So moving the pointer onto the family the member has already chosen took its
+   So moving the pointer onto the family the member had already chosen took its
    node from 15px down to 13px, swapped the gold fill for the sunken grey and
-   faded the pier. The selection appeared to weaken under the cursor, which is
-   the opposite of what hover means: pointing at something should never demote
-   it.
+   faded the pier: the selection appeared to weaken under the cursor.
 
-   The hover treatment for UNSELECTED stations is untouched and still behaves
-   exactly as approved. What is restored below is only the selected state, and
-   only while hovered.
-
-   Nothing here changes a value: every declaration is copied from
-   `.brst--on` in the approved source. The approved stylesheet is not edited,
-   because it is the authority and CODEOWNERS protects it; this is the scoped
-   correction that lets its own selected state survive its own hover state.
+   Hover on an UNSELECTED station is untouched and still behaves exactly as
+   approved. Every declaration below is copied from `.brst--on` in the approved
+   source; none is invented.
 
    `box-shadow` is deliberately NOT restated. `.brst:focus-visible .brst__n`
    uses it to draw the focus ring, and repeating the selected ring here at a
    higher specificity would erase focus on a station that is both chosen and
    focused.
-   ====================================================================== */
+   ---------------------------------------------------------------------- */
 
 .br .brst--on:hover:not([disabled]) .brst__n {
   width: 15px;
@@ -144,15 +104,15 @@
 }
 
 /* The pier is a vertical rule when the bridge is horizontal and a short
-   horizontal connector when it is vertical, so only the horizontal variant
-   takes back its width. In `.br--v` the width is 13px and the weight is
-   carried by height, which the approved hover rule never touches. */
+   horizontal connector when it is in elevation, and in elevation its width is
+   computed from the measured curve. Only the horizontal variant takes its
+   width back. */
 .br:not(.br--v) .brst--on:hover:not([disabled]) .brst__p {
   width: 2px;
 }
 
-/* ======================================================================
-   5. DS-9 - one deliberate focus treatment, not two
+/* ----------------------------------------------------------------------
+   2. DS-9 - one deliberate focus treatment, not two
 
    `desk.css` puts a blanket ring on every focusable control in the Desk:
 
@@ -163,23 +123,16 @@
    for ordinary Desk controls, which have no focus treatment of their own.
 
    A Bridge station does. The approved source draws focus twice over already:
-
-     .brst:focus-visible .brst__n   the approved focus ring on the node
-     .brst:focus-visible .brst__t   a 1.5px underline on the title
-
-   Both applying meant a focused station carried a rectangle around the whole
-   block AS WELL AS the ring and the underline. Three indicators for one focus.
+   a ring on the node and an underline on the title. Both applying meant a
+   focused station carried a rectangle around the whole block AS WELL AS the
+   ring and the underline.
 
    Only the blanket ring is removed, and only inside a bridge. Focus stays
-   strongly visible and stays compliant: the node ring is
-   `--pf-focus-ring`, which is 2px of `--pf-focus` (#1E5FA8) against
-   `--pf-surface` (#FCFBF7) at about 5.9:1, comfortably past the 3:1 that
-   WCAG 1.4.11 asks of a focus indicator, and the underline is a second,
-   differently-shaped carrier of the same information.
-
-   Scoped to `.br .brst` so no other Desk control loses anything. The ink-panel
-   variant and the login override in `desk.css` are untouched.
-   ====================================================================== */
+   strongly visible and compliant: the node ring is `--pf-focus-ring`, 2px of
+   `--pf-focus` (#1E5FA8) against `--pf-surface` (#FCFBF7) at about 5.9:1,
+   comfortably past the 3:1 WCAG 1.4.11 asks of a focus indicator, and the
+   underline is a second, differently-shaped carrier of the same information.
+   ---------------------------------------------------------------------- */
 
 .ponte-desk .br .brst:focus-visible {
   box-shadow: none;
