@@ -19,7 +19,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 ## 28 July 2026 — Category-first classification for Trade services and Distribution
 
 **Context:** Owner requirement of 28 July 2026, implemented on branch
-`feature/category-first-market-taxonomy` and proposed as ADR-0011. Trade
+`feature/category-first-market-taxonomy` and proposed as ADR-0012, which implements the owner-accepted ADR-0011. Trade
 services and Distribution opened on a blank line, "State it in one line", while
 Products had a progressive category journey. A sentence cannot be filtered,
 matched, counted or searched, so two of Ponte's three equal families could

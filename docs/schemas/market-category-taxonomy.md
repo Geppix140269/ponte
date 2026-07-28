@@ -1,6 +1,6 @@
 # Market category taxonomy, and the migration from the flat lists
 
-**Authority:** ADR-0011, ADR-0001
+**Authority:** ADR-0011 (the decision), ADR-0012 (this contract), ADR-0001
 **Code:** `lib/taxonomy/services.ts`, `lib/taxonomy/distribution.ts`, `lib/taxonomy/journey.ts`
 **Tests:** `lib/taxonomy/__tests__/categories.test.ts`
 **Status:** Implemented on branch `feature/category-first-market-taxonomy`. Not merged.

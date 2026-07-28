@@ -24,7 +24,7 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
   written out in the file itself.
 
   **It has not been run against production and must not be until the owner
-  approves it.** The pre-migration report below is satisfied by ADR-0011 and by
+  approves it.** The pre-migration report below is satisfied by ADR-0012 and by
   the file's own commentary.
 
   The application does not depend on it having run. `readClassification`

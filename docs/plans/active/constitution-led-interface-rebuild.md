@@ -173,8 +173,8 @@ production verification.
   categories with about 120 subcategories, and separates the four questions the
   old distribution list had flattened into one. Find opens on the three families
   and both its lanes filter at the database over the complete record set; Market
-  Signals gains structured filters and an exact inventory count. ADR-0011
-  proposed. 19 Playwright checks, 65 new unit assertions across four files, 23
+  Signals gains structured filters and an exact inventory count. ADR-0012
+  proposed, implementing ADR-0011. 19 Playwright checks, 65 new unit assertions across four files, 23
   evidence frames. `governance:check` and `verify` pass. **The migration is
   written and not applied.**
 

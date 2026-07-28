@@ -1,12 +1,40 @@
-# ADR-0011 — Category-first classification for Trade services and Distribution
+# ADR-0012 — The market classification contract, as implemented
 
 - **Status:** Proposed. Awaiting the product owner's review of the implementing
   pull request. Not binding until accepted and merged.
 - **Decision date:** 28 July 2026
 - **Owner:** Giuseppe Funaro
+- **Implements:** ADR-0011 (complete market discoverability and category-first
+  non-product journeys), which is the owner-accepted decision. This ADR records
+  only the contract that decision required somebody to settle, and the choices
+  ADR-0011 left open.
 - **Extends:** ADR-0001 (unified trade market), whose family, origin and intent
   contract this fills in one level further down
-- **Does not supersede:** ADR-0001, the Ponte Design Constitution, or ADR-0010
+- **Does not supersede:** ADR-0001, ADR-0011, the Ponte Design Constitution, or
+  ADR-0010
+
+## Relationship to ADR-0011, and what is NOT done here
+
+ADR-0011 is the decision: every eligible Market Signal must be discoverable,
+search must run server-side over the complete inventory, and no non-product
+journey may begin with a blank text field where a canonical category exists.
+
+This ADR and its pull request deliver the classification contract and the
+category-first journeys, and move Find and the Market Signals board to
+server-side filtering and exact counts over the whole table.
+
+**Three parts of ADR-0011 are not delivered here and remain open:**
+
+1. **The batch of roughly 160 new signals is not imported or reconciled.** No
+   import was run, and no counts are claimed.
+2. **Pagination is not implemented.** The board filters and counts the complete
+   inventory and reports both numbers honestly ("3,543 signals, 60 shown"), but
+   there is no way to page past the first 60.
+3. **Keyword search over the complete inventory** is supported at the query
+   layer as a product-text filter; no general keyword surface is built.
+
+They are named here so the gap is a recorded fact rather than something a
+reader has to infer from what is missing.
 
 ## Context
 
