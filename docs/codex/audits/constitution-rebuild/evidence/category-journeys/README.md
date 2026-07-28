@@ -90,7 +90,13 @@ been **proved** to contain no text field.
   arrow selects the first option when nothing is chosen yet.
 - **Reduced motion** keeps all eleven labels and the whole settled composition.
 
-## 4. What the frames show that is not yet true of the data
+## 4. What the frames show that is NOT true of the data
+
+**Do not read this evidence as showing a searchable inventory.** It shows a
+countable one. A member can see how large the market is and can filter it by
+category; they cannot page past the first sixty records, and there is no
+keyword search over the whole set. Both are ADR-0011 requirements and neither
+is built here.
 
 `desktop-16-find-service-results.png` shows the honest state, and it is worth
 looking at rather than skipping.
@@ -111,10 +117,41 @@ nothing found and nothing read. The state disappears on its own as records are
 created with categories.
 
 `desktop-18-market-signals-filters.png` is the counterpart: an unfiltered read
-against the real database, reporting **3,543 signals, 60 shown**. The board
-previously said "60 signals", because sixty was all it had read.
+against the real database, reporting **3,491 signals, showing 1-60**, followed
+by the sentence that matters more than the number:
+
+> The remaining 3,431 are counted but not yet reachable from this page. Paging
+> through the whole inventory is not built.
+
+Three different numbers have been attached to this board, and the difference
+between them is the whole point of the correction:
+
+| Number | What it is |
+|---|---|
+| 60 | What the board used to print. The length of the page it had read. |
+| 3,543 | Stored rows with status `approved_signal`. What the first version of this PR counted, because expiry was applied in memory to the page after it was fetched. |
+| 3,517 | Eligible signals at the 26 July probe. |
+| **3,491** | Eligible signals at capture on 28 July. |
+
+3,491 is not a correction of 3,517: both are right on their own date. The public
+window is a rolling ninety days from the date a signal was spotted, so the
+eligible total falls on its own as signals age out. What changed is that the
+count is now **correct by construction** rather than by coincidence: approval
+and expiry are both predicates in the query, so the number is whatever is
+genuinely public at the moment it is read.
+
+The same fix removed a second symptom. Dropping expired rows after fetching a
+page returned short pages, which would have made any offset-based paging built
+on it unstable before it was ever built.
 
 ## 5. Known limits, recorded rather than left to be noticed
+
+- **Most of the inventory is unreachable.** 3,491 eligible signals are counted;
+  60 can be opened. Pagination is not built, and neither is keyword search over
+  the complete set. The board says so on the page rather than leaving a reader
+  to infer it from a number.
+- **No record carries a category.** Applying the migration would not change
+  that: it creates columns and classifies nothing.
 
 - **The frames are not asserted byte-identical across runs.** The landing
   evidence suite makes that claim for its own frames; this one does not, and no

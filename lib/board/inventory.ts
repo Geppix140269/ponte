@@ -9,7 +9,20 @@ import {
   type MarketSignal,
   type SignalRow,
 } from "@/lib/market-signals/logic";
-import type { MarketFamily } from "@/lib/taxonomy/market";
+import {
+  canonicalColumnFor,
+  usesCanonicalKeys,
+  type InventoryQuery,
+} from "@/lib/board/inventory-query";
+
+// The query shape and the rules over it are pure and live next door, so a unit
+// test can reach them without this module's database client coming with them.
+export {
+  canonicalColumnFor,
+  usesCanonicalKeys,
+  emptyInventoryQuery,
+  type InventoryQuery,
+} from "@/lib/board/inventory-query";
 
 /**
  * The Market Signals inventory, searched by canonical category across the
@@ -43,55 +56,6 @@ import type { MarketFamily } from "@/lib/taxonomy/market";
  * it is not met: a member sees the first page and has no way to the rest.
  * Recorded here rather than implied to be finished.
  */
-
-export type InventoryQuery = {
-  family: MarketFamily | null;
-  serviceCategory: string | null;
-  serviceSubcategory: string | null;
-  partnerType: string | null;
-  sector: string | null;
-  /** ISO-2. */
-  territory: string | null;
-  /** Free-text product match, still supported alongside the keys. */
-  product: string | null;
-  side: "offer" | "requirement" | null;
-};
-
-export function emptyInventoryQuery(): InventoryQuery {
-  return {
-    family: null,
-    serviceCategory: null,
-    serviceSubcategory: null,
-    partnerType: null,
-    sector: null,
-    territory: null,
-    product: null,
-    side: null,
-  };
-}
-
-/** Does this query ask for anything the classification columns must answer? */
-export function usesCanonicalKeys(query: InventoryQuery): boolean {
-  return canonicalColumnFor(query) !== null;
-}
-
-/**
- * The most specific classification column this query filters on.
- *
- * Used to ask a precise question when a category search finds nothing: is this
- * a real absence, or has nothing in the inventory been classified on this axis
- * at all? Answering "no match" to the second is Ponte stating a finding it
- * never made.
- */
-export function canonicalColumnFor(query: InventoryQuery): string | null {
-  if (query.serviceSubcategory) return "service_subcategory_keys";
-  if (query.serviceCategory) return "service_category_key";
-  if (query.partnerType) return "distribution_partner_type_key";
-  if (query.sector) return "product_sector_key";
-  if (query.territory) return "territory_codes";
-  if (query.family) return "market_family";
-  return null;
-}
 
 export type SignalInventory =
   /**

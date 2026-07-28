@@ -104,17 +104,31 @@ type would keep the original error alive under new names, so
 | `representation` | partner type | `representative` |
 | `entry` | partner type | `market_entry` |
 | `broker` | partner type | `broker` |
-| `route` | partner type | `market_entry` **(needs owner confirmation)** |
+| `route` | partner type | `route_to_market` **(preserved, not consolidated)** |
 | `local` | partner type | `local` |
 | `regional` | partner type | `regional` |
 | `exclusive` | relationship term | `exclusive` |
 | `nonexclusive` | relationship term | `non_exclusive` |
 
 **The one open question.** The requirement maps `route` to a "route-to-market
-partner", which is not among the twelve canonical types. It is mapped to
-`market_entry`, whose definition ("builds the market, identifies channels and
-establishes commercial access") covers it exactly, and the mapping carries
-`needsOwnerConfirmation: true` so this is confirmed rather than discovered.
+partner", which is not among the twelve canonical types.
+
+It is **preserved**, as the compatibility value `route_to_market`, rather than
+folded into `market_entry`. Consolidating it is a decision nobody has taken, and
+it is the kind that cannot be undone: once stored values have been read back
+through the consolidation, which records were `route` is unrecoverable.
+
+A compatibility value is readable, storable and displayable, and is **not**
+offered in any picker: the owner defined twelve options and this is not a
+thirteenth. `isSelectablePartnerType` is the check for anything that needs to
+enforce that. Storage deliberately accepts it, so that a member editing a record
+which already holds it can still save.
+
+`PROPOSED_CONSOLIDATION` in `lib/taxonomy/distribution.ts` records that
+`route_to_market` **would** become `market_entry` if the owner approves. Nothing
+reads it to resolve a stored value, and a test asserts that. Approving the
+consolidation is a one-line change plus a backfill; reversing one that has
+already happened is not possible.
 
 **Production impact of this migration: none observed.** The 26 July probe found
 zero legacy service rows and no canonical distribution inventory, so the map
@@ -125,13 +139,13 @@ governs future reads of any historical value rather than a live backfill.
 ## 4. Icons
 
 An icon is attached only where the Ponte Flow registry already has one. Seven of
-the twelve partner types and ten of the eleven service categories are covered.
+the twelve selectable partner types and ten of the eleven service categories are covered.
 The rest carry `icon: null`, which is a recorded absence: drawing them would be
 an unapproved addition to the registry. The grid reserves the icon column
 either way.
 
-`distribution.route` is no longer referenced, because route-to-market is folded
-into market-entry. The asset remains in the registry.
+`distribution.route` is still referenced: it is the icon for the preserved
+`route_to_market` compatibility value.
 
 ---
 

@@ -17,9 +17,7 @@ import {
 } from "../taxonomy/services";
 import { partnerType as lookupPartnerType } from "../taxonomy/distribution";
 import { PRODUCT_SECTORS, type MarketFamily } from "../taxonomy/market";
-// Type only, so this module still carries no database or Next import at
-// runtime and the unit test can keep running it standalone under tsx.
-import type { InventoryQuery } from "../board/inventory";
+import type { InventoryQuery } from "../board/inventory-query";
 
 /** Buy/sell/service, in the listings vocabulary. Null means "any direction". */
 export type FindIntent = "offer" | "requirement" | "service";

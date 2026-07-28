@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   isPubliclyVisible,
+  publicWindowPredicate,
   mapSignalRow,
   chapterOf,
   PUBLIC_SIGNAL_COLUMNS,
@@ -18,6 +19,7 @@ import {
   type SignalRow,
   type MarketSignal,
 } from "../../market-signals/logic";
+import { canonicalColumnFor, usesCanonicalKeys, emptyInventoryQuery } from "../inventory-query";
 
 // Active interface locales only. Ponte is English-only; deferred languages
 // live in messages/_deferred/ and are not gated for copy truth here.
@@ -208,6 +210,114 @@ test("imports still default a signal to private, not public", () => {
   const src = readFileSync("scripts/import-desk-radar.mjs", "utf8");
   assert.ok(src.includes('status: "private"'), "the importer must land rows private");
   assert.ok(!src.includes('status: "live"'), "the importer must not land rows live");
+});
+
+// ---------------------------------------------------------------------------
+// Eligibility belongs in the query, not in a pass over the page
+// ---------------------------------------------------------------------------
+
+test("the public window is expressed as a query predicate", () => {
+  // Both halves of the rule: a signal with no expiry is public while approved,
+  // and one whose expiry has passed is not.
+  const p = publicWindowPredicate("2026-07-28T09:00:00.000Z");
+  assert.ok(p.includes("public_expires_at.is.null"), p);
+  assert.ok(p.includes("public_expires_at.gt.2026-07-28T09:00:00.000Z"), p);
+});
+
+test("the predicate and the in-memory rule agree", () => {
+  // They must, because one is used for lists and the other for a single
+  // record. If they ever disagreed, a signal would be reachable by one route
+  // and not the other.
+  const now = Date.parse("2026-07-28T09:00:00.000Z");
+  const cases: { expires: string | null; visible: boolean }[] = [
+    { expires: null, visible: true },
+    { expires: "2026-08-28T09:00:00.000Z", visible: true },
+    { expires: "2026-07-27T09:00:00.000Z", visible: false },
+  ];
+  for (const c of cases) {
+    assert.equal(
+      isPubliclyVisible({ status: "approved_signal", public_expires_at: c.expires }, now),
+      c.visible,
+      `expiry ${c.expires}`,
+    );
+  }
+});
+
+test("no board read filters expiry after fetching the page", () => {
+  // The defect this pins: fetching sixty approved rows and then dropping the
+  // expired ones returns a short page, which makes offset paging unstable, and
+  // any count taken from that query counts rows nobody may see. It is how the
+  // board came to state 3,543 when 3,517 signals were public.
+  for (const file of ["lib/board/market-signals.ts", "lib/board/inventory.ts"]) {
+    const src = readFileSync(file, "utf8");
+    assert.ok(
+      src.includes("publicWindowPredicate"),
+      `${file} does not apply the public window in the query`,
+    );
+    assert.ok(
+      !/\.filter\(\(r\) => isPubliclyVisible\(/.test(src),
+      `${file} still filters expiry over a fetched page`,
+    );
+  }
+});
+
+test("the inventory count applies the same window as the rows", () => {
+  // A count that used a different rule from the list would state an inventory
+  // size that no amount of paging could ever reach.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const count = src.slice(src.indexOf("export async function countSignalInventory"));
+  assert.ok(count.includes('eq("status", "approved_signal")'), "the count ignores approval");
+  assert.ok(count.includes("publicWindowPredicate"), "the count ignores expiry");
+});
+
+// ---------------------------------------------------------------------------
+// Unclassified is a state the migration does not end
+// ---------------------------------------------------------------------------
+
+test("the classification probe targets the axis actually being filtered", () => {
+  assert.equal(
+    canonicalColumnFor({ ...emptyInventoryQuery(), serviceCategory: "freight" }),
+    "service_category_key",
+  );
+  // The most specific wins: a subcategory search is not answered by asking
+  // whether anything has a category.
+  assert.equal(
+    canonicalColumnFor({
+      ...emptyInventoryQuery(),
+      serviceCategory: "freight",
+      serviceSubcategory: "freight.ocean",
+    }),
+    "service_subcategory_keys",
+  );
+  assert.equal(
+    canonicalColumnFor({ ...emptyInventoryQuery(), partnerType: "distributor" }),
+    "distribution_partner_type_key",
+  );
+  assert.equal(canonicalColumnFor({ ...emptyInventoryQuery(), family: "services" }), "market_family");
+  // A free-text product search asks nothing of the classification columns.
+  assert.equal(canonicalColumnFor({ ...emptyInventoryQuery(), product: "sugar" }), null);
+  assert.equal(usesCanonicalKeys(emptyInventoryQuery()), false);
+});
+
+test("an empty category result is checked before it is reported as a result", () => {
+  // Returning unclassified only on a missing column would mean that on the day
+  // the migration ran, every category filter began answering a confident "no
+  // match" over an inventory that had never been classified.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  assert.ok(src.includes('reason: "nothing_classified"'), "only the columns-absent case exists");
+  assert.ok(src.includes('reason: "columns_absent"'), "the columns-absent case is gone");
+  assert.ok(
+    src.includes("countClassified"),
+    "nothing asks whether the inventory carries this classification at all",
+  );
+});
+
+test("a failed classification probe is not read as nothing classified", () => {
+  // Unknown is not zero. Reporting an explanation because a probe failed would
+  // hide a real result behind it.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const probe = src.slice(src.indexOf("async function countClassified"));
+  assert.ok(probe.includes("return null"), "the probe collapses a failure to a number");
 });
 
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);

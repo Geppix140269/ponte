@@ -23,18 +23,57 @@ This ADR and its pull request deliver the classification contract and the
 category-first journeys, and move Find and the Market Signals board to
 server-side filtering and exact counts over the whole table.
 
-**Three parts of ADR-0011 are not delivered here and remain open:**
+**Four parts of ADR-0011 are not delivered here and remain open. Until they
+are, do not describe the Market Signals inventory as searchable or accessible:
+a member can see how large it is and cannot reach most of it.**
 
-1. **The batch of roughly 160 new signals is not imported or reconciled.** No
-   import was run, and no counts are claimed.
-2. **Pagination is not implemented.** The board filters and counts the complete
-   inventory and reports both numbers honestly ("3,543 signals, 60 shown"), but
-   there is no way to page past the first 60.
-3. **Keyword search over the complete inventory** is supported at the query
-   layer as a product-text filter; no general keyword surface is built.
+1. **Pagination is not implemented.** The board filters and counts the complete
+   eligible inventory and prints both numbers plus the shortfall in words, but
+   there is no control that reaches page two. ADR-0011's requirement that every
+   eligible signal be reachable is **not met**.
+2. **General keyword search is not built.** Keyword matching exists at the query
+   layer as a product-text filter only. There is no search surface over the
+   complete public inventory.
+3. **No existing record is classified.** Applying the migration creates columns
+   and classifies nothing. Every historical signal and listing stays
+   unclassified until something classifies it, and this PR does not.
+4. **The batch of roughly 160 new signals is not imported or reconciled.** No
+   import was run and no counts are claimed.
 
 They are named here so the gap is a recorded fact rather than something a
 reader has to infer from what is missing.
+
+## Corrections made under review, 28 July 2026
+
+Four, all of them errors of the same kind: a number or a state that looked
+right and was not.
+
+**The public count counted the wrong rows.** The query filtered on approval and
+applied the public-expiry rule afterwards, in memory, to the page it had already
+fetched. So the count included 26 expired records and the board stated 3,543
+where 3,517 signals were actually public. Approval and expiry are now both
+predicates in the query.
+
+**Filtering after the fetch also broke paging.** A read asking for sixty came
+back with fifty-five once the expired rows were dropped, which makes any
+offset-based paging built on it unstable. The same defect existed in the two
+sibling board reads and is fixed with it.
+
+**The unclassified state depended on the wrong signal.** It was returned only
+when the classification columns were absent. Applying the migration creates the
+columns, so on the day the SQL ran, every category filter would have started
+answering a confident "no match" over an inventory that had simply never been
+classified. A category search that finds nothing now asks a second question:
+does any eligible row carry a value on this axis at all? If none does, the
+surface says so and reports how many records it could not filter.
+
+**The legacy `route` value is preserved, not consolidated.** It was mapped to
+`market_entry`. That is a decision nobody has taken, and it is irreversible in
+the only way that matters: once stored values have been read back through it,
+which records were `route` is unrecoverable. It is now the compatibility value
+`route_to_market`: readable, storable and displayable, and not offered as a
+thirteenth choice. `PROPOSED_CONSOLIDATION` records where it would go if the
+owner approves, and a test asserts that nothing consults it.
 
 ## Context
 
@@ -115,12 +154,19 @@ the API before it is written, and in a database CHECK. The API and the database
 are not the only writers a table sees, and a mis-filed key is worse than a
 missing one because every filter, count and match downstream trusts it.
 
-### 5. Search reaches the complete inventory, on keys
+### 5. Filtering and counting run over the complete eligible inventory
 
 Find and Market Signals filter at the database using canonical keys, over the
 whole table rather than over the newest page. A signal tagged
 `freight / freight.ocean` matches a search for ocean freight whether its
 description says "sea shipping" or nothing at all.
+
+Eligibility, meaning approval **and** the public-expiry window, is applied in
+the query, before the page is cut and before the count is taken. Applying it
+afterwards produces two wrong answers at once: a short page, which makes offset
+paging unstable, and a count of rows nobody may see.
+
+This is filtering and counting. It is **not** reaching: see the list above.
 
 ### 6. An unclassifiable filter says so
 
@@ -137,11 +183,12 @@ ten-key list already used `other`, and it meant "Other trade-enabling
 services": a real category with real subcategories. Reusing the key would have
 made every stored `other` ambiguous. The label a member sees is still "Other".
 
-**Route-to-market is folded into market-entry, and flagged.** The requirement
+**Route-to-market keeps its meaning and is not consolidated.** The requirement
 maps the legacy `route` value to a "route-to-market partner", which is not one
-of the twelve canonical types. It is mapped to `market_entry`, whose definition
-covers it exactly, and marked `needsOwnerConfirmation` so the owner confirms
-rather than discovers it.
+of the twelve canonical types. It is preserved as the compatibility value
+`route_to_market` rather than folded into anything, because folding it is a
+decision nobody has taken and could not be undone afterwards. See the
+corrections section below.
 
 **An icon appears only where the registry has one.** Five of the twelve partner
 types and the two escape routes have no Flow asset. Drawing them would be an
@@ -160,9 +207,12 @@ two icon renderers, which Constitution section 20 forbids.
 picker. It now opens on the three market families, with products one tap away.
 Demanding a typed product was the reason two of three families had no search.
 
-**`/market-signals` reports the true inventory size.** It read the newest sixty
-and printed that number. It now filters at the database and counts the whole
-table.
+**`/market-signals` reports the true eligible inventory size, and says what a
+member cannot reach.** It read the newest sixty and printed that number. It now
+filters and counts over the whole table, applying approval and expiry in the
+query, and prints the shortfall in plain words: "the remaining 3,457 are counted
+but not yet reachable from this page." Reporting a number a member cannot act on
+without saying so would be a worse claim than the one it replaced.
 
 ## Consequences
 
