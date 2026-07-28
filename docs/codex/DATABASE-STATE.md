@@ -147,6 +147,31 @@ migration drops both names before adding its own.
 
 ## The migration ledger was publicly readable and writable, and is now closed
 
+> **CLOSED — RESOLVED, 28 July 2026.** Repaired by
+> [PR #76](https://github.com/Geppix140269/ponte/pull/76)
+> (`20260728b_schema_migrations_rls.sql`), applied to production at
+> **14:07:35 UTC** and recorded in the ledger it protects.
+>
+> Independently re-verified on 28 July 2026 for the migration reconciliation
+> ([PR #82](https://github.com/Geppix140269/ponte/pull/82), §6.4):
+>
+> | Check | Before | After |
+> |---|---|---|
+> | anon `GET /rest/v1/schema_migrations` | `200` with real rows | **`401`, SQLSTATE `42501`** |
+> | `pg_class.relrowsecurity` | `false` | **`true`** |
+> | `anon` / `authenticated` privileges | all seven each | **none** |
+> | `postgres` / `service_role` privileges | all seven | **all seven, unchanged** |
+> | Ledger readable by `scripts/db-query.mjs` | yes | **yes, 40 rows** |
+>
+> Both write paths are unaffected, which was the condition for closing this:
+> `postgres` owns the table and an owner bypasses RLS unless FORCE is set, which
+> the migration deliberately does not set, and `service_role` has
+> `rolbypassrls`. No application code reads or writes this table.
+>
+> **No further action.** The narrative below is retained as the record of what
+> was wrong and why. There was no GitHub issue for this item; it was tracked in
+> this file and in the audit report, and is closed here.
+
 `public.schema_migrations` had row level security **disabled**, and `anon` and
 `authenticated` each held all seven table privileges: SELECT, INSERT, UPDATE,
 DELETE, TRUNCATE, REFERENCES and TRIGGER. The anon key is shipped to every
