@@ -290,21 +290,22 @@ test.describe("the live product journey", () => {
     }
   });
 
-  test("trade services and distribution never reach the product intake", async ({ page }) => {
+  test("trade services and distribution reach categories, and never the product intake", async ({ page }) => {
     /*
-     * The boundary, not the current control.
+     * The family boundary, asserted from both sides.
      *
-     * ADR-0011 section 5, merged to `main` on 28 July 2026, requires Trade
-     * services and Distribution to begin with clickable canonical categories
-     * instead of the generic one-line subject field they use today. Asserting
-     * that field is still there would pin behaviour an accepted decision has
-     * already superseded, and the next contributor would have to delete this
-     * test to do the work they were told to do.
+     * When this test was first written, ADR-0011 was accepted and unbuilt, so
+     * it could only assert the negative: neither family reaches the product
+     * intake. ADR-0011 has since merged, and the positive half is now real and
+     * checkable. Both halves matter, and for different reasons.
      *
-     * What must hold whatever replaces it is the scope boundary this change
-     * claims: neither family reaches the product intake, and neither is asked
-     * for a customs code. `requiresHsClassification()` is the single answer to
-     * that question and this is its behavioural check.
+     * The negative is this change's scope boundary: ADR-0012 was authorised for
+     * Products only, and a services record acquiring an AI-identified product
+     * would be a classification nobody chose.
+     *
+     * The positive is the reconciliation itself: the two decisions are
+     * complementary journeys, and a services member must land on the canonical
+     * category taxonomy rather than on nothing at all.
      */
     for (const [family, intent] of [
       ["services", "offer_trade_service"],
@@ -312,9 +313,71 @@ test.describe("the live product journey", () => {
     ] as const) {
       await page.goto(`/en/structure?family=${family}&intent=${intent}`, { waitUntil: "domcontentloaded" });
       await expect(page.locator(".sstep").first()).toBeVisible();
+      // ADR-0011: the category-first classification, on the canonical taxonomy.
+      await expect(page.locator(".pcat__grid").first()).toBeVisible({ timeout: 20_000 });
+      // ADR-0012: not here, and not asked for.
       await expect(page.locator(".pintake")).toHaveCount(0);
       await expect(page.locator(".hs__grid")).toHaveCount(0);
       await expect(page.getByText("Identify this product")).toHaveCount(0);
     }
   });
+
+  test("products reach the intake, and never either category picker", async ({ page }) => {
+    // The mirror of the test above. Between them they are the whole routing
+    // rule: three families, two journeys, and no family in both.
+    await openIntake(page, "offer_product");
+    await expect(page.locator(".pcat__grid")).toHaveCount(0);
+    await expect(page.locator(".hs__grid")).toHaveCount(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Evidence: the family boundary, one frame per family, at both viewports
+// ---------------------------------------------------------------------------
+
+/*
+ * Three families side by side, captured from the SAME screen of the SAME
+ * composer. What a reviewer is checking here is not that each screen is well
+ * made — the two suites either side of this already do that — but that a member
+ * arriving at each entrance is asked the question their family's accepted
+ * decision says they should be asked, and only that one.
+ */
+const FAMILY_FRAMES = [
+  { id: "products-offer", href: "/en/structure?family=products&intent=offer_product", wait: ".pintake" },
+  { id: "products-source", href: "/en/structure?family=products&intent=source_product", wait: ".pintake" },
+  { id: "services-offer", href: "/en/structure?family=services&intent=offer_trade_service", wait: ".pcat__grid" },
+  { id: "services-seek", href: "/en/structure?family=services&intent=seek_trade_service", wait: ".pcat__grid" },
+  {
+    id: "distribution-offer",
+    href: "/en/structure?family=distribution&intent=offer_distribution_or_representation",
+    wait: ".pcat__grid",
+  },
+  {
+    id: "distribution-brands",
+    href: "/en/structure?family=distribution&intent=seek_brands_or_products_to_represent",
+    wait: ".pcat__grid",
+  },
+] as const;
+
+test.describe("family routing evidence", () => {
+  for (const frame of FAMILY_FRAMES) {
+    for (const [label, viewport] of [
+        ["desktop", DESKTOP],
+        ["mobile-390x844", MOBILE],
+      ] as const) {
+      test(`${label}: ${frame.id}`, async ({ browser }) => {
+        const context = await browser.newContext({ viewport });
+        const page = await context.newPage();
+        await page.goto(frame.href, { waitUntil: "domcontentloaded" });
+        await expect(page.locator(frame.wait).first()).toBeVisible({ timeout: 20_000 });
+        await settled(page);
+        await page.screenshot({
+          path: `${EVIDENCE}/${label}/family-${frame.id}.png`,
+          fullPage: true,
+          animations: "disabled",
+        });
+        await context.close();
+      });
+    }
+  }
 });

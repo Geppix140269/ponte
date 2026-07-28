@@ -2,6 +2,60 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 - The market family decides which classification journey opens
+
+**Two accepted decisions met on one screen.** ADR-0011 (category-first journeys)
+merged to `main` as `877448b` while ADR-0012 (AI product intake) was being built
+on PR #71. Both rewrote the composer's first step and `lib/structure/draft.ts`,
+and the merge conflicted in four files.
+
+**Owner decision: route by market family, and change neither ADR's meaning.**
+They are complementary journeys, not competing implementations.
+
+| Family | Decision | What opens the composer |
+|---|---|---|
+| Products | ADR-0012 | Describe naturally, upload a trade document, or browse categories |
+| Trade services | ADR-0011 | Category-first, on the canonical service taxonomy |
+| Distribution & Representation | ADR-0011 | Category-first, on the canonical distribution taxonomy |
+
+**Where the branch lives, and why there is only one.** `IntentStep`, on
+`needsHsCode(draft)`, which is already the single answer to "is this a product
+record". The composer is NOT duplicated: S02 to S06, the account gate, the resume,
+the preview and the submit are one stack for all three families.
+
+**Both data models are kept whole.** `Classification` keeps every ADR-0011 key;
+`DraftResolution` keeps every ADR-0012 layer; no field carries the other's
+meaning. The one place they meet is `productSector`: ADR-0011 wants a sector key
+on every record and the ADR-0012 cascade already derives one from the customs
+chapter, so `ResolvedProduct` now carries the sector KEY as well as its label and
+`applyResolution` writes it onto the draft. An underivable sector stays empty,
+because a gap is honest and a guessed classification is not.
+
+**No migration and none needed.** Old drafts predate both decisions; `emptyDraft`
+supplies every added field and a draft carrying none of them reads as the legacy
+product-shaped path exactly as it did. Two tests pin it.
+
+**Superseded, and removed rather than kept beside its replacement:** the local
+`SUBJECT_HEADING` map and the blank one-line `SubjectStep`. `lib/taxonomy/journey.ts`
+now holds every heading beside the questions it introduces.
+
+**Corrected because it had become false:** `e2e/category-journeys.spec.ts`
+asserted that products still open on the HS drill-down, which ADR-0012 removed on
+the owner's instruction that an HS code must not be required before Ponte
+understands a product. The assertion now pins what is still true, that a product
+record reaches neither category picker, and the stale frame was replaced.
+
+**Affected areas:** `components/structure/StructureComposer.tsx`,
+`lib/structure/draft.ts`, `lib/products/model.ts`, `lib/products/intake.ts`,
+`app/[locale]/structure/page.tsx`, `package.json`,
+`lib/structure/__tests__/family-routing.test.tsx` (new),
+`e2e/category-journeys.spec.ts`, `e2e/product-intake.spec.ts`,
+`docs/plans/active/ai-product-intake-and-document-to-deal.md`,
+`docs/codex/CURRENT-STATE.md`.
+
+**Not owner-approved:** no migration, no storage, no feature flag, no production
+configuration, no deployment and no merge. PR #71 remains open.
+
 ## 28 July 2026 - The product resolver is a cascade, not a catalogue lookup
 
 **Blocking defect found at owner review.** Giuseppe typed `avocado` into Offer a

@@ -68,6 +68,26 @@ is a property of this repository, not of a service's availability.
    gallery did not wrap it in `.sstep`. Evidence of a composition the member
    cannot reach is not evidence.
 
+## The family boundary: `family-*.png`
+
+Six frames, one per canonical entrance, at desktop and at 390 x 844:
+
+| Frame | Entrance | What it must show |
+|---|---|---|
+| `family-products-offer` | `products` / `offer_product` | The ADR-0012 intake: three stations, no customs code asked for |
+| `family-products-source` | `products` / `source_product` | The same intake, in the buying direction |
+| `family-services-offer` | `services` / `offer_trade_service` | The ADR-0011 category grid, eleven service categories |
+| `family-services-seek` | `services` / `seek_trade_service` | The same grid, asking the seeking question |
+| `family-distribution-offer` | `distribution` / `offer_distribution_or_representation` | Twelve partner types |
+| `family-distribution-brands` | `distribution` / `seek_brands_or_products_to_represent` | Fifteen product sectors, because that is what this member is choosing between |
+
+These exist because ADR-0011 and ADR-0012 met on one screen. What a reviewer is
+checking is not that each frame is well made, which the two suites either side of
+this already cover, but that a member arriving at each entrance is asked the
+question their family's accepted decision says they should be asked, and only
+that one. Each frame is captured beside an assertion that the other family's
+journey is absent, so a screenshot here cannot be right by luck.
+
 ## Not captured here
 
 Motion itself. The Bridge is authored in its end state, so a paused tab, a

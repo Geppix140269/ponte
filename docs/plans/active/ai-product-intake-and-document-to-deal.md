@@ -745,10 +745,91 @@ README recording how they are produced and the two capture faults that had to be
 fixed first.
 
 **Behavioural verification:** `npx playwright test e2e/product-intake.spec.ts`,
-66 checks, all passing against a production build. Includes the `gas oil` case
-end to end on a server with **no `ANTHROPIC_API_KEY` set**, and a check that
-Trade services and Distribution still render their one-line subject step with no
-product intake and no HS code asked for.
+all passing against a production build. Includes the `gas oil` case end to end
+on a server with **no `ANTHROPIC_API_KEY` set**, and both halves of the family
+boundary: Trade services and Distribution reach the ADR-0011 category grid and
+never the product intake, and Products reach the intake and never either
+category picker.
 
 **Production actions claimed:** none. No migration, no feature flag, no
 deployment, no merge.
+
+## 14. Reconciliation with ADR-0011, 28 July 2026
+
+While this branch was building, `main` merged PR #70, which implements ADR-0011:
+category-first classification for Trade services and Distribution &
+Representation, on a canonical service and distribution taxonomy. Both changes
+rewrote the composer's first screen and `lib/structure/draft.ts`, so they
+conflicted.
+
+**Owner decision.** Reconcile against `main`, routing explicitly by market
+family. The two decisions are complementary journeys, not competing
+implementations, and neither ADR's meaning changes.
+
+| Family | Governing decision | What opens the composer |
+|---|---|---|
+| Products | ADR-0012 | The AI intake: describe naturally, upload a trade document, or browse categories |
+| Trade services | ADR-0011 | `ClassifyStep`, on the canonical service taxonomy |
+| Distribution & Representation | ADR-0011 | `ClassifyStep`, on the canonical distribution taxonomy |
+
+**How the two flows were separated.** One branch, in `IntentStep`, on
+`needsHsCode(draft)` — which is `familyOf(draft) === "products"` and already the
+single answer to "is this a product record". The composer is not duplicated: S02
+to S06, the account gate, the resume, the preview and the submit are one stack
+for all three families, and the family decides only which question opens it.
+
+**How the two data models coexist.** Both are kept whole and neither field
+carries the other's meaning:
+
+- `Classification` (ADR-0011) keeps every service, distribution, coverage and
+  territory key. `StructureDraft` is still `Classification & { ... }`.
+- `DraftResolution` (ADR-0012) keeps every layer of what Ponte understood about
+  a product, plus the siblings, programme flag and source document name.
+- `crossFamilyClassification()` already dropped a key belonging to another
+  family at the submit boundary. Products gained nothing there and needed
+  nothing: a product record has never been able to carry a service category.
+
+The one place they now meet is `productSector`. ADR-0011 asks every record for a
+sector key so a market can be filtered and counted; the ADR-0012 cascade already
+derives that key, from the customs chapter an identification survived. So
+`ResolvedProduct` carries the sector KEY as well as the label it already had in
+`categoryPath`, and `applyResolution` writes it onto the draft. ADR-0011's
+question is answered from ADR-0012's work rather than by asking the member
+twice. An underivable sector stays empty, which is a gap and not a guess.
+
+**Removed as superseded, not as disagreement.** The local `SUBJECT_HEADING` map
+and the blank "State it in one line" `SubjectStep`. `lib/taxonomy/journey.ts` now
+holds every heading beside the ordered questions it introduces, which is
+strictly better and is ADR-0011's own reasoning.
+
+**Corrected because it had become false.** `e2e/category-journeys.spec.ts`
+asserted "products still open on the HS category journey" and captured
+`desktop-13-products-hs-unchanged.png`. That was true of products when PR #70
+was written and is not true of them now: ADR-0012 removed the customs
+drill-down as the way in. The assertion was rewritten to the thing that is still
+true and still worth pinning — a product record reaches neither the service nor
+the distribution category picker — and the stale frame was replaced with
+`desktop-13-products-open-on-intake.png`.
+
+**New test.** `lib/structure/__tests__/family-routing.test.tsx` mounts the real
+composer at all seven canonical entrances and reads what a member would see: both
+product intents reach the intake and never the category grid, all five service
+and distribution intents reach the category grid and never the intake, neither of
+those families is asked for a customs code, every entrance reaches exactly one
+classification journey, and a draft saved before either decision still opens.
+
+**Old drafts.** No migration, and none needed. `emptyDraft()` supplies every
+field either decision added, a resumed draft with none of them reads as the
+legacy product-shaped path exactly as it did before, and `subjectFor()` and
+`needsHsCode()` are both total over a partial draft. Two tests pin this.
+
+**Visual evidence of the boundary:** six frames, one per family entrance, at
+desktop and at 390 x 844, under
+`docs/codex/audits/ai-product-intake/evidence/{desktop,mobile-390x844}/family-*.png`.
+
+**Known environmental failure.** Two checks in `e2e/category-journeys.spec.ts`
+(`a filter that cannot be answered never claims the board is empty` and `the
+unfiltered board still reports its records and its reach`) read the live public
+board and require a Supabase connection this local worktree does not have. They
+arrived with `main` in PR #70, this branch changes no board, signal or filter
+file, and they are recorded here as environmental rather than silently omitted.
