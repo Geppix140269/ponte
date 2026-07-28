@@ -59,6 +59,35 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
   It was applied by hand because the automatic chain aborts at its first file
   (see below), so a merge does not apply anything.
 
+## The CI Supabase Preview integration points at a project this account cannot see
+
+Found on 28 July 2026 while establishing which project to apply
+`20260728a_market_classification.sql` to, and worth recording because it has
+been silently wrong for a long time.
+
+- The **production** project is `cptglsmjmzcfpjndqfmc` ("Ponte Trade",
+  eu-west-1, ACTIVE_HEALTHY). It is what `.env.local` configures, what the
+  deployed site reads, and what the 26 July probe measured.
+- The GitHub **"Supabase Preview"** check on every pull request links to
+  `https://supabase.com/dashboard/project/kltuzbxnldtmdfhakphv`.
+- `kltuzbxnldtmdfhakphv` **is not in this Supabase account at all.** Listing the
+  projects the owner's access token can reach returns four, and that reference
+  is not among them.
+
+So the check is not a broken preview of production; it is a link to a project
+that either belongs to a different account or no longer exists. That is the
+better explanation for why it has failed on every run, and it means the failure
+was never evidence about the migration chain.
+
+**Two red checks on every PR, with different causes.** `Supabase Preview` is
+this misconfiguration. `import-package` is the retired Bridge fetch workflow.
+Neither has ever passed, and neither says anything about the change under
+review. A check that always fails teaches people to ignore red, which is how a
+real failure gets missed.
+
+Nothing here has been changed. Repairing the integration touches repository
+settings and possibly a Supabase project, and both are owner decisions.
+
 ## Known risk
 
 The historical numbered migration chain is not a reliable proof that a fresh Supabase preview recreates production. A Supabase Preview failure has been treated as pre-existing. Do not repair, squash, rename or replay migrations without a dedicated migration-reconciliation plan and explicit approval.
