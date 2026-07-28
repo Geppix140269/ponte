@@ -233,7 +233,21 @@ export function emptyDraft(): StructureDraft {
  * stated and what it says.
  */
 export function draftQuantity(draft: StructureDraft): ListingQuantity | null {
-  if (!draft.quantityMode) return null;
+  // A bare number with no mode reads as `exact`, which is the same rule
+  // `quantityFromRow` already applies to a stored listing that predates the
+  // mode column. It matters on the AI intake route: extraction writes
+  // `quantity`, `unit` and `frequency` from the document and never sets a
+  // mode, so without this fallback a document-extracted draft has no quantity
+  // here at all.
+  if (!draft.quantityMode) {
+    if (draft.quantity === null || draft.quantity === undefined) return null;
+    return {
+      mode: "exact",
+      value: draft.quantity,
+      unit: draft.unit,
+      frequency: normaliseFrequency(draft.frequency),
+    };
+  }
   return {
     mode: draft.quantityMode,
     value: draft.quantity,
@@ -659,11 +673,14 @@ export function synthesiseDetails(draft: StructureDraft): string {
   const classification = classificationClauses(draft);
   parts.push(...classification);
 
-  if (has(draft.quantity)) {
-    const q = `Quantity: ${draft.quantity}${draft.unit ? ` ${draft.unit}` : ""}` +
-      (draft.frequency ? ` (${draft.frequency})` : "") + ".";
-    parts.push(q);
-  }
+  // The raw `quantity`/`unit`/`frequency` concatenation that stood here is
+  // gone. It duplicated the mode-aware clause above: a listing built through
+  // the composer carried BOTH, so its stored `details` said "Quantity:" twice,
+  // once formatted and once not. The mode-aware clause is the survivor because
+  // it is the only one that can express approximate, minimum, maximum, a range
+  // or "on request", and `draftQuantity` now reads a mode-less number as
+  // `exact` so the AI intake route keeps its quantity.
+
   // One end of the route is often the only end this member decides, so a
   // half-stated route is written as the half it is rather than padded with an
   // "unspecified" the reader could mistake for a fact.
