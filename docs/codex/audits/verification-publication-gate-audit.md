@@ -12,22 +12,26 @@ requirement. The goal is to make it visible, actionable and testable.
 
 ## Summary
 
-The requirement is **correctly enforced and correctly bound**. The data model
-distinguishes a member-business verification from a private counterparty check
-rigorously, and the binding between a passing check and the publication gate is
-real, live-read and tested.
+The requirement is **enforced and correctly bound**. The data model distinguishes
+a member-business verification from a private counterparty check rigorously, and
+the binding between a passing check and the publication gate is real, live-read
+and tested.
 
-Two problems were found. One was a dead end in the member journey and is fixed
-in this PR. The other is an environmental dependency that cannot be confirmed
-from the repository and needs an owner check before the release is called
-successful.
+Three problems were found. One was a dead end in the member journey and is fixed
+in this PR. One is an environmental dependency that cannot be confirmed from the
+repository and needs an owner check before the release is called successful. The
+third is a pre-existing type mismatch that makes one of the gate's five checks
+inert in production (§4.1); the other four hold, so nothing publishes that
+should not, but the release should not be described as having five working
+checks when it has four.
 
 | # | Finding | Severity | Status |
 |---|---|---|---|
 | 1 | A member whose only blocker was verification was told to "complete your listing" and sent to a form that could not fix it | High | **Fixed in this PR** |
 | 2 | End-to-end completion depends on registry API keys whose production state cannot be read from here | High | **Documented; owner check required** |
-| 3 | Verification costs 2 credits; signup grants 3 | Low | No action. Confirmed workable |
-| 4 | The business/counterparty distinction is strong in data and in UI | — | No action |
+| 3 | The `verification_level >= 2` floor is inert in production: the column is `text`, and every value it holds yields `NaN` | Medium | **Documented; owner decision required** |
+| 4 | Verification costs 2 credits; signup grants 3 | Low | No action. Confirmed workable |
+| 5 | The business/counterparty distinction is strong in data and in UI | — | No action |
 
 ---
 
@@ -171,6 +175,72 @@ Covered by `lib/verification/__tests__/purpose.test.ts`,
 `lib/listings/__tests__/eligibility.test.ts` ("an unverified member does not
 publish", "a suspended verification does not publish").
 
+### 4.1 One of those five checks does not currently run in production
+
+**The `verification_level >= 2` floor is inert against live data.** The other
+four checks hold; this one does not, and it should be understood before ADR-0013
+makes verification the only gate.
+
+`20260721g_verification.sql` declares:
+
+```sql
+alter table profiles add column if not exists verification_level int not null default 0;
+```
+
+The column already existed as `text`, so `if not exists` silently did nothing.
+Verified live on 28 July 2026 against `cptglsmjmzcfpjndqfmc`: `data_type` is
+`text`, nullable, holding `unverified` (7), `company_verified` (1), `null` (1).
+
+The gate compares it numerically (`publication-gate.ts:163`):
+
+```ts
+if (Number(s.verificationLevel ?? 0) < MEMBER_BUSINESS_MIN_LEVEL) return false;  // MIN = 2
+```
+
+`Number("company_verified")` is `NaN`, and `NaN < 2` is `false`, so the guard
+does not fire. Every value of the documented text enum behaves the same way:
+
+| Stored value | `Number(v)` | Floor blocks? |
+|---|---|---|
+| `"2"` (written by the pipeline) | 2 | no, correctly |
+| `"1"` (written by a re-screen) | 1 | **yes, correctly** |
+| `null` | 0 | **yes, correctly** |
+| `unverified` | `NaN` | no |
+| `company_verified` | `NaN` | no |
+| `fully_verified` | `NaN` | no |
+
+So the floor works for exactly the values the new code writes, and fails open
+for every value the old text enum wrote, `unverified` included.
+
+**What this does and does not mean.** It does **not** mean an unverified member
+can publish: checks 1, 2 and 3 (a bound `business_verification_id`, a
+`member_business` purpose and a passing status) still refuse them, and today
+both approved listings are held back by check 3 alone. It means the level floor
+is defence-in-depth that is not defending, and a member whose profile carries a
+legacy text level would skip it if their bound verification ever reached a
+passing status.
+
+This is the same defect recorded as **R-01** in
+`docs/codex/audits/issue-42-phase-a/REPOSITORY-RISK-FINDINGS.md` (26 July 2026)
+and re-confirmed by the 28 July migration reconciliation. It is not introduced
+by this PR. It is listed here because ADR-0013 removes the administrator from
+the path, so this gate stops being the second line of defence and becomes the
+only one.
+
+**Not fixed here, deliberately.** The repair is a schema-and-code change with
+two defensible directions, and choosing between them is an owner decision:
+
+- **Convert the column to `int`**, mapping the text enum onto integers. Whether
+  `company_verified` becomes 1 or 2 decides whether the existing desk account
+  passes the floor, which is a business judgement, not a mechanical one.
+- **Accept `text` as canonical** and replace the numeric comparison with an
+  ordered enum. Commit `9fa0aa6` and `scripts/seed-ponte-managed-qos.ts:117`
+  both treat the text enum as correct and production as authoritative, which
+  makes this the better-evidenced direction.
+
+Either way it is a separate corrective change, as R-01 already concluded. What
+this PR must not do is quietly relax the check to make the mismatch invisible.
+
 ---
 
 ## 5. What the member sees when verification is the only blocker
@@ -247,8 +317,11 @@ up as step 5.1/§7 of the deployment runbook rather than faked in CI.
    complete for anybody.
 2. **Before deploying:** confirm at least one production account can reach
    `auto_verified`, or record that smoke test 5.1 is unrunnable.
-3. **Follow-up, owner decision:** the credit interaction in §6. Either raise the
+3. **Follow-up, owner decision:** resolve the `verification_level` type mismatch
+   in §4.1, in its own corrective change. Text-canonical is the better-evidenced
+   direction. Until then, treat the gate as four working checks, not five.
+4. **Follow-up, owner decision:** the credit interaction in §6. Either raise the
    signup grant, make the member-business check free, or say plainly on the
    choice screen that a counterparty check spends credits needed to publish.
-4. **Follow-up:** surface verification status on the member's own listing list,
+5. **Follow-up:** surface verification status on the member's own listing list,
    so a blocked member sees the reason without submitting again.

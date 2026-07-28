@@ -63,10 +63,8 @@ completion screen; lifecycle telemetry; the migration.
   condition).
 - Supabase Auth templates — provider-side, documented in
   `docs/email-provider-template-configuration.md`.
-- The `/admin/listings` console rebuild as an exception-first surface with
-  filtering by flag reason, severity and report count. The data and indexes
-  land here; the screen does not. See §11.
-- Digest scheduling. The template and send path exist; no cron drives them.
+- Digest and expiry SCHEDULING. Templates and send paths exist; no cron drives
+  them.
 - Abuse reporting as a member-facing feature. `abuseReportCount` is read by the
   validator; nothing writes it yet.
 
@@ -143,9 +141,15 @@ re-narrowing only if rows had reached a new state.
 - `npm run email:preview` — 18 fixtures rendered, HTML and text.
 - Browser measurement of two rendered emails at 390 × 844.
 
-**Not run:** `next build` and the Playwright evidence suite. `@playwright/test`
-is not installed in this worktree, which is a pre-existing environment gap, not
-a repository failure. Recorded separately per `AGENTS.md`.
+`next build` passes from a clean `.next`. The Playwright dependency problem is
+RESOLVED: `@playwright/test` was declared in package.json and present in
+package-lock.json all along, and this worktree simply had a node_modules
+snapshot predating it. `npm ci` fixes it in a clean checkout. `npm run
+deps:check` now runs first in `verify` so a stale install fails with one clear
+line instead of 23 unrelated TypeScript errors.
+
+**Not run:** the Playwright evidence suite itself (`npm run evidence:landing`),
+which needs a running server and is a separate evidence step.
 
 **Not done:** no production migration, no deployment, no production test.
 
@@ -162,9 +166,7 @@ application code. The columns and events remain and are simply unread.
 **28 July 2026 — complete on branch**
 
 - Parts A, B, C, D, E, F implemented.
-- Part G: member completion screen done. Admin exception console NOT done —
-  the data, statuses and indexes exist, the screen still presents the old
-  queue.
+- Part G COMPLETE: member completion screen and the admin exception console.
 - Part I: `listing_events` and the send observer exist and are written by the
   publication path. No analytics sink is wired.
 - Part J: unit and integration coverage added; the preview utility exists. No
@@ -194,3 +196,61 @@ application code. The columns and events remain and are simply unread.
 Branch: `fix/automated-listings-email-system`. Not merged.
 Migration written, not applied.
 Provider templates documented, not applied.
+
+---
+
+## 14. Second pass, 28 July 2026
+
+Work completed after the first review of PR #74.
+
+### Merged `main`
+
+`main` landed the ADR-0011 category-first taxonomy (PR #70), touching the same
+composer and submit route. Both sides kept in full; the classification fields
+and the quantity model are additive to each other. Two collisions renumbered,
+because main's are merged and one is already in production:
+
+- ADR-0012 → **ADR-0013** (main claimed 0012 for the classification contract).
+- `20260728a` → **`20260728b`** (main's `20260728a_market_classification.sql`
+  was applied to production by hand on 28 July 2026).
+
+### Priority 1 — the exception console
+
+`/admin/listings` rebuilt around `lib/listings/exceptions.ts`. Reason
+categories, ordering, filtering and severity are pure functions with 29 tests,
+so the screen paints and this module decides.
+
+Ordering is reason, then severity, then **oldest first** within a bucket. A
+queue sorted newest-first starves its own tail, and the listing waiting longest
+belongs to the member most likely to have given up.
+
+`unverified_submitter` is deliberately its own reason, separate from
+`incomplete`: an operator can act on neither, but they are different
+conversations, and merging them makes the console read as a to-do list of
+things nobody there can do.
+
+### Priority 2 — the deployment runbook
+
+`docs/runbooks/PR-74-automated-listing-publication-deployment.md`.
+
+### Priority 3 — the verification audit
+
+`docs/codex/audits/verification-publication-gate-audit.md`. The binding is
+sound. One dead end found and fixed: a member whose only blocker was
+verification was told to "complete your listing" and sent to a form that could
+not fix it. Two risks documented and not fixable from here:
+
+- End-to-end verification depends on registry API keys whose production state
+  cannot be read from the repository.
+- The gate has four working checks, not five. `profiles.verification_level` is
+  `text` in production rather than the `int` its migration declares, so
+  `Number("company_verified") < 2` is `NaN < 2`, which is `false`, and the
+  level floor never fires for any legacy value. The bound-verification, purpose
+  and passing-status checks still refuse an unverified member, so nothing
+  publishes that should not, but this release makes that gate the only one. It
+  is the pre-existing R-01 defect, and repairing it is an owner decision
+  (`int` versus `text` canonical) rather than an implementation detail.
+
+### Playwright
+
+Resolved, and it was never a repository fault. See §9.

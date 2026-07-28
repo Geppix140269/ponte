@@ -370,6 +370,25 @@ run. If no account in production holds a passing member-business verification,
 5.1 is untestable and the primary path of this release is unproven in
 production. Say so in the deployment record rather than marking it passed.
 
+**The publication gate has four working checks, not five.**
+
+`profiles.verification_level` is `text` in production, not the `int` its
+migration declares, so the `verification_level >= 2` floor evaluates
+`Number("company_verified") < 2`, which is `NaN < 2`, which is `false`. The
+floor never fires for any value the legacy text enum wrote, `unverified`
+included. The live column state and the full analysis are in
+`docs/codex/audits/verification-publication-gate-audit.md` §4.1.
+
+This does **not** let an unverified member publish: the bound-verification,
+`member_business` purpose and passing-status checks all still refuse them, and
+both currently approved listings are held back by the status check alone. It
+does mean this release ships with one layer of its only gate inert, and that
+layer is not repaired here because the fix is a schema-and-code change with an
+owner decision inside it (`int` versus `text` canonical).
+
+Nothing else in this runbook depends on repairing it first. Deploying is
+defensible; describing the gate as five working checks is not.
+
 ---
 
 ## 8. Record afterwards
