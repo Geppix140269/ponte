@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/check-dev-env.mjs && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -23,7 +23,8 @@
     "flow:icons": "node scripts/build-flow-icons.mjs",
     "evidence:landing": "playwright test",
     "email:preview": "tsx scripts/email-preview.ts",
-    "migrations:check": "node scripts/check-migrations.mjs"
+    "migrations:check": "node scripts/check-migrations.mjs",
+    "dev:check": "node scripts/check-dev-env.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
