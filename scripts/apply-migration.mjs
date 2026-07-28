@@ -97,6 +97,18 @@ async function ensureLedger(client) {
       applied_at  timestamptz not null default now()
     )
   `);
+  // Supabase's default privileges hand every new table in `public` to `anon`
+  // and `authenticated`, so the create above on its own leaves the ledger
+  // readable and writable by anyone holding the publishable key. It stood that
+  // way in production from its first row until 28 July 2026, when an
+  // unauthenticated call was shown to return real rows. A ledger anybody can
+  // forge is not evidence, and this is the only record of what production has
+  // run, so the protection is re-asserted on every apply rather than trusted to
+  // have been done once. `postgres` owns the table and `service_role` has
+  // rolbypassrls, so neither write path is affected.
+  await client.query("alter table schema_migrations enable row level security");
+  await client.query("revoke all privileges on table schema_migrations from anon");
+  await client.query("revoke all privileges on table schema_migrations from authenticated");
 }
 
 async function main() {

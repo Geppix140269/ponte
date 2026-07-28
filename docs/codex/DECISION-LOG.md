@@ -2,6 +2,62 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 28 July 2026 — Close the public read and write hole on the migration ledger
+
+**Decision:** `public.schema_migrations` gets row level security with no policy,
+and `anon` and `authenticated` lose every privilege on it. `service_role` keeps
+its grants, stated explicitly. Applied to production as
+`20260728b_schema_migrations_rls.sql` with owner authorisation.
+
+**What was wrong.** The table had RLS disabled and both public roles held all
+seven privileges: SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES and
+TRIGGER. The anon key is in every browser. Proven live over the public internet
+before the repair: an unauthenticated `GET /rest/v1/schema_migrations` returned
+`HTTP 200` with real rows.
+
+**Why it is more than a privacy leak.** Reading the migration history is the
+smaller half. Anyone could also insert a row claiming a migration had been
+applied, or delete one saying it had. This table is the only record of what
+production has run, and two audits on 28 July read it as evidence. A ledger that
+unauthenticated callers can edit is not evidence, and the audits could not have
+known the difference.
+
+**The cause was tooling, not any migration.** `scripts/db-query.mjs` and
+`scripts/apply-migration.mjs` create the ledger with a bare
+`create table if not exists`, and Supabase's default privileges hand every new
+table in `public` to `anon` and `authenticated`. Every table this project
+declares deliberately carries RLS; this one was created as a side effect of
+recording something else, and so never got it. It stood open from its first row.
+
+**Both a revoke and RLS, not one.** The revoke is what closes it: PostgREST
+cannot reach a table the role has no privilege on. RLS with no policy is the
+lock that survives Supabase's default privileges being re-applied, because a
+restored grant does not restore a policy that was never written. Deny-all with
+zero policies is how eleven other tables here are already held.
+
+**Both scripts now re-assert it on every run** rather than trusting a one-off,
+so a ledger created fresh in another project is protected from its first row
+rather than from its first audit.
+
+**Nothing that writes loses access.** `postgres` owns the table and an owner
+bypasses RLS unless FORCE is set, which this deliberately does not set;
+`service_role` has `rolbypassrls`; both scripts connect as `postgres`; and no
+application code touches the table.
+
+**Verified from outside, after the fact.** With the anon key, SELECT, INSERT,
+UPDATE and DELETE all return `HTTP 401` with SQLSTATE `42501`, while the control
+in the same run, `desk_radar`, still returns `HTTP 200` with `[]` — so the
+denial is this table and not a bad key. Server side: RLS on, zero policies,
+grantees `postgres` and `service_role` only. The file is idempotent; running it
+twice changes nothing.
+
+**Not done:** no row in the ledger was edited, no other table was touched, no
+credential was rotated, and nothing was backfilled.
+
+**Affected areas:** `supabase/migrations/20260728b_schema_migrations_rls.sql`
+(new), `scripts/db-query.mjs`, `scripts/apply-migration.mjs`,
+`docs/codex/DATABASE-STATE.md`.
+
 ## 28 July 2026 — Complete Market Signal discoverability and category-first non-product journeys (ADR-0011)
 
 **Decision:** Every approved, unexpired and anonymised public Market Signal must be discoverable through search, filtering, hierarchical browsing or pagination. The current 60-record read may remain a page size but must not be presented as the total inventory or remain a terminal access cap. The approximately 160 newly supplied records must be reconciled through the existing identity, provenance, deduplication, privacy, approval and expiry rules; exact totals must be reported from the database rather than calculated as a hard-coded addition.
@@ -108,6 +164,15 @@ written and reviewed and has **not** been run. A merge applies no migration in
 this repository. The write path tolerates the columns being absent and retries
 without them, and the classification still reaches the record through the
 synthesised `details`.
+
+> **Superseded the same day.** That paragraph was true when the decision was
+> recorded and is not true now: `20260728a` was applied to production by hand on
+> 28 July 2026 at 13:25:11 UTC with owner authorisation, and verified. See
+> `docs/codex/DATABASE-STATE.md`. Left in place rather than rewritten, because
+> this log records what was decided when, but a reader must not be able to reach
+> the false statement without the correction attached. Nothing is backfilled:
+> the columns exist and no record carries a category.
+
 ## 28 July 2026 — Retire the Bridge package import workflow
 
 **Decision:** `.github/workflows/import-approved-bridge-package.yml` is removed. The approved Bridge package is vendored in the repository and verified on every run by `scripts/check-governance.mjs` against `design/authority/bridge/v1/SOURCE-MANIFEST.md`.

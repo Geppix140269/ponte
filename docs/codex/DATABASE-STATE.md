@@ -59,6 +59,60 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
   It was applied by hand because the automatic chain aborts at its first file
   (see below), so a merge does not apply anything.
 
+## The migration ledger was publicly readable and writable, and is now closed
+
+`public.schema_migrations` had row level security **disabled**, and `anon` and
+`authenticated` each held all seven table privileges: SELECT, INSERT, UPDATE,
+DELETE, TRUNCATE, REFERENCES and TRIGGER. The anon key is shipped to every
+browser, so anyone at all could read the migration history, forge a row into it,
+rewrite one, or empty the table.
+
+Confirmed live over the public internet on 28 July 2026, using nothing but the
+publishable key: `GET /rest/v1/schema_migrations` returned `HTTP 200` with real
+rows. That is the part that matters most. This table is the only record of what
+has been applied to production, so a table anybody can write is not evidence,
+and every audit that read it was reading something unauthenticated callers could
+have edited.
+
+**The cause was not a mistake in any migration.** The table is created by
+`scripts/db-query.mjs` and `scripts/apply-migration.mjs` with a plain
+`create table if not exists`, and Supabase's default privileges grant every new
+table in `public` to `anon` and `authenticated`. Every table this project
+declares deliberately is protected; this one was created by tooling, in passing,
+and so never was. It stood that way from its first row until the repair.
+
+**Repaired by `20260728b_schema_migrations_rls.sql`**, applied to production on
+28 July 2026 with owner authorisation via `scripts/db-query.mjs`. It enables RLS
+with no policy, revokes all privileges from `anon` and `authenticated`, and
+states the `service_role` grant explicitly. Both scripts now re-assert the same
+three statements on every run, so a ledger created fresh in another project is
+protected from its first row.
+
+**Verified afterwards, from outside:** with the anon key, SELECT, INSERT, UPDATE
+and DELETE all return `HTTP 401` with SQLSTATE `42501`. The control in the same
+run, `desk_radar`, still returns `HTTP 200` with `[]`, so the denial is specific
+to this table and not a bad key or a bad URL. Server side: `relrowsecurity` is
+true, zero policies (deny-all, matching the eleven other tables held that way),
+and the only grantees left are `postgres` and `service_role`. Both write paths
+are unaffected: `postgres` owns the table and an owner bypasses RLS unless FORCE
+is set, which this migration does not set, and `service_role` has `rolbypassrls`.
+No application code reads or writes this table. Running the file a second time
+changes nothing.
+
+**Nothing else was touched.** No row was edited, no other table's grants were
+changed, and no credential was rotated.
+
+## `scripts/apply-migration.mjs` cannot connect
+
+The `DATABASE_URL` in `.env.local` fails authentication against
+`aws-0-eu-west-1.pooler.supabase.com` as `postgres.cptglsmjmzcfpjndqfmc`:
+`FATAL 28P01, password authentication failed`. It fails at `client.connect()`,
+before any SQL runs, so `--list` and every apply through that script are dead.
+
+This is why migrations are applied with `scripts/db-query.mjs`, which goes
+through the Management API and works. Recorded rather than fixed, because the
+repair is a credential and credentials are an owner action.
+
 ## The CI Supabase Preview integration points at a project this account cannot see
 
 Found on 28 July 2026 while establishing which project to apply

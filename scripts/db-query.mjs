@@ -136,6 +136,15 @@ async function main() {
         applied_at timestamptz not null default now()
       )
     `);
+    // Supabase's default privileges hand every new table in `public` to `anon`
+    // and `authenticated`, so the plain create above left the ledger readable
+    // and writable through the public API by anyone holding the anon key. That
+    // is how it stood from its first row until 28 July 2026. Re-asserted on
+    // every run rather than done once, because a ledger nobody can trust is
+    // worse than no ledger: this is the record that says what production is.
+    await query("alter table schema_migrations enable row level security");
+    await query("revoke all privileges on table schema_migrations from anon");
+    await query("revoke all privileges on table schema_migrations from authenticated");
     await query(`
       insert into schema_migrations (filename, sha256)
       values ('${label.replace(/'/g, "''")}', '${sha}')
