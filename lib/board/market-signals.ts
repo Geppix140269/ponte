@@ -4,6 +4,7 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import {
   PUBLIC_SIGNAL_COLUMNS,
   isPubliclyVisible,
+  publicWindowPredicate,
   mapSignalRow,
   type MarketSignal,
   type SignalRow,
@@ -86,18 +87,20 @@ export async function readMarketSignals(limit = 60): Promise<MarketSignalBoard> 
 
   try {
     const sb = createAdminClient();
+    // Approval AND the public window, both in the query. Filtering the expiry
+    // afterwards returned short pages: a read asking for sixty came back with
+    // fifty-five, which is the wrong answer to "the sixty newest live signals"
+    // and makes any paging built on it unstable.
     const { data, error } = await sb
       .from("desk_radar")
       .select(PUBLIC_SIGNAL_COLUMNS)
       .eq("status", "approved_signal")
+      .or(publicWindowPredicate(new Date().toISOString()))
       .order("spotted_at", { ascending: false })
       .limit(limit);
     if (error) throw error;
 
-    const now = Date.now();
-    const signals = (data ?? [])
-      .filter((r) => isPubliclyVisible(r as SignalRow, now))
-      .map((r) => mapSignalRow(r as SignalRow));
+    const signals = (data ?? []).map((r) => mapSignalRow(r as SignalRow));
 
     await decorateChapters(sb, signals);
     return { state: "ok", signals };
@@ -110,6 +113,13 @@ export async function readMarketSignals(limit = 60): Promise<MarketSignalBoard> 
 }
 
 /**
+ * SUPERSEDED by `searchSignalInventory` in `lib/board/inventory.ts`, which
+ * filters on canonical category keys as well as on the product text, and
+ * returns an exact count of the complete inventory rather than only the rows.
+ * Nothing in the application calls this any longer. It is kept, unchanged, as
+ * the narrower product-text search, because deleting a working public function
+ * in the same change that replaces its callers makes both harder to review.
+ *
  * The Market Signals lane for a Find query: approved, unexpired signals whose
  * product matches, newest spotted first. Unlike getMarketSignals (the whole
  * recent board) this filters at the database, because the imported signal set
@@ -137,6 +147,7 @@ export async function searchMarketSignals(opts: {
       .from("desk_radar")
       .select(PUBLIC_SIGNAL_COLUMNS)
       .eq("status", "approved_signal")
+      .or(publicWindowPredicate(new Date().toISOString()))
       .ilike("product", `%${product}%`);
     if (opts.side) q = q.eq("side", opts.side);
     const { data, error } = await q
@@ -144,10 +155,7 @@ export async function searchMarketSignals(opts: {
       .limit(opts.limit ?? 40);
     if (error) throw error;
 
-    const now = Date.now();
-    const signals = (data ?? [])
-      .filter((r) => isPubliclyVisible(r as SignalRow, now))
-      .map((r) => mapSignalRow(r as SignalRow));
+    const signals = (data ?? []).map((r) => mapSignalRow(r as SignalRow));
 
     await decorateChapters(sb, signals);
     return signals;

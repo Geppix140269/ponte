@@ -13,6 +13,50 @@
       "join": "Join the network",
       "home": "Ponte Trade home"
     },
+    "family": {
+      "eyebrow": "Find",
+      "title": "What are you looking for?",
+      "lead": "Choose a market. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "legend": "Choose a market",
+      "products": "Requirements and offers for physical goods.",
+      "services": "Freight, customs, inspection, finance and the rest of the trade stack.",
+      "distribution": "Distributors, agents, representatives and market coverage.",
+      "servicesTitle": "Which trade service?",
+      "servicesLead": "Choose the category. You can narrow it further on the next screen.",
+      "distributionTitle": "What kind of distribution partner?",
+      "distributionLead": "Choose the partner or channel type you are looking for.",
+      "subcategoryLegend": "Narrow it down, or see everything in {category}",
+      "allIn": "Everything in {category}",
+      "changeMarket": "Change market",
+      "changeCategory": "Change category",
+      "resultsFor": "{category}",
+      "crumbFamily": "Market",
+      "crumbCategory": "Category",
+      "crumbDetail": "Detail",
+      "crumbPartner": "Partner type"
+    },
+    "unclassified": {
+      "badge": "Not yet classified",
+      "title": "Ponte cannot filter this market by category yet",
+      "bodyColumnsAbsent": "The category fields are not yet live on the database, so this filter cannot be applied at all. Nothing is missing from the market; Ponte simply cannot yet tell you which part of it this is.",
+      "bodyNothingClassified": "No published record carries a category in this taxonomy, so filtering here would return an empty list rather than an answer. That is a gap in what Ponte has classified, not a statement about the market. Records created from now on are classified as they are made; the records already here have not been.",
+      "eligible": "{count, plural, =0 {No records} one {# record} other {# records}} in this market, none of them classified.",
+      "action": "See everything in this market"
+    },
+    "partial": {
+      "badge": "Partial coverage",
+      "heading": "This filter can see {classified} of {eligible} matching records",
+      "body": "A category filter reads the records that carry a category. Of the records matching the rest of this search, {unclassified} do not, so they were not searched. What is below is real; it is not everything.",
+      "emptyHeading": "No match among the records Ponte can filter",
+      "emptyBody": "{classified} of {eligible} records matching the rest of this search carry a category, and none of those matches. The other {unclassified} were not searched, so this is not yet an answer about the whole market."
+    },
+    "coverageUnknown": {
+      "badge": "Coverage not established",
+      "heading": "Ponte cannot confirm how much of this market was searched",
+      "body": "The records below are real. How many matching records carry no category, and were therefore not searched, could not be counted, so this result cannot be treated as complete.",
+      "emptyHeading": "No match, and Ponte cannot confirm what was searched",
+      "emptyBody": "Nothing matched among the records this filter could read, and how much of the market that was could not be established. This is not a finding that the market is empty."
+    },
     "entry": {
       "eyebrow": "Find",
       "title": "What are you looking for?",

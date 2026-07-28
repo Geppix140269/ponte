@@ -270,6 +270,18 @@ export interface ResolvedProduct {
   synonyms: readonly string[];
   /** Ponte category hierarchy: family, sector, group, product. */
   categoryPath: readonly string[];
+  /**
+   * The Ponte product sector, as a STABLE KEY rather than the label in
+   * `categoryPath`.
+   *
+   * ADR-0011 gave every record an explicit `productSector` so a market can be
+   * filtered and counted; ADR-0012 already knows the sector, because the
+   * cascade derives it from the surviving customs chapter. Carrying the key
+   * here is what lets the intake answer ADR-0011's classification question
+   * without asking the member a second time. Empty when the sector could not
+   * be derived, which is a gap and not a guess.
+   */
+  sector: string;
   /** Technical attributes. */
   attributes: readonly ProductAttribute[];
   /** Candidate customs classification, downstream and confirmable. */
@@ -330,6 +342,7 @@ export function resolveFrom(
     productKey: p.key,
     synonyms: [...p.synonyms, ...p.standards],
     categoryPath: ["Products", sectorLabel, p.group, p.name].filter(Boolean),
+    sector: p.sector,
     attributes: p.attributes,
     candidateHs: p.hs ? { code: p.hs.code, description: p.hs.description, confirmed: false } : null,
     searchText: [originalWording, p.name, ...p.synonyms, ...p.standards].join(" "),

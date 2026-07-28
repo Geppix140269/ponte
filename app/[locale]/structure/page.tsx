@@ -3,12 +3,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import StructureComposer from "@/components/structure/StructureComposer";
+import { categoryIcons } from "@/components/ponte/category/CategoryIcons";
 import { entranceFromParams } from "@/lib/desk/entrances";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
+// Category-first classification (ADR-0011) for services and distribution.
+import "@/components/ponte/category/category.css";
 // The approved Bridge stylesheet, imported unmodified, then the integration
 // additions. Same order and same two files as the landing, because the product
-// intake uses the same approved primitive rather than a local variant.
+// intake (ADR-0012) uses the same approved primitive rather than a local variant.
 import "@/design/authority/bridge/v1/source/ponte-bridge.css";
 import "@/components/ponte/bridge/bridge-integration.css";
 import "@/components/ponte/state/state.css";
@@ -51,7 +54,10 @@ export default async function StructurePage({
 
   return (
     <div className={landingFontVars} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
-      <StructureComposer entrance={entrance} />
+      {/* The category icons are rendered here, on the server, and handed to
+          the client composer as nodes. PonteIcon stays the one renderer and
+          the registry's markup never reaches the browser bundle. */}
+      <StructureComposer entrance={entrance} icons={categoryIcons()} />
     </div>
   );
 }

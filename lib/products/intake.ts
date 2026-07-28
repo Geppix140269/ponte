@@ -235,6 +235,9 @@ export function reviewForExtraction(extraction: DocumentExtraction, plan: MultiP
           productKey: id,
           synonyms: [],
           categoryPath: ["Products"],
+          // No sector, because none was derived. A blank key is honest here;
+          // guessing one would put a classification nobody chose on a record.
+          sector: "",
           attributes: entry.attributes,
           candidateHs: null,
           searchText: entry.wording,
