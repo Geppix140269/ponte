@@ -108,6 +108,25 @@ written and reviewed and has **not** been run. A merge applies no migration in
 this repository. The write path tolerates the columns being absent and retries
 without them, and the classification still reaches the record through the
 synthesised `details`.
+## 28 July 2026 — Retire the Bridge package import workflow
+
+**Decision:** `.github/workflows/import-approved-bridge-package.yml` is removed. The approved Bridge package is vendored in the repository and verified on every run by `scripts/check-governance.mjs` against `design/authority/bridge/v1/SOURCE-MANIFEST.md`.
+
+**Why it was failing.** The workflow downloaded a zip from a Google Drive link and checked the **container** against a pinned SHA-256. That check had failed on every run the workflow ever had, including on the branch behind merged PR #58. The download now returns roughly 891 KB where the approved archive is 789,853 bytes, so the link no longer serves the file it was pinned to.
+
+**The pin itself was correct.** The owner-approved archive still hashes to exactly `d45d809d2917a6265e368ade5f52c319bbd83937a29070b7b4a338445975d616`. Nothing was wrong with the recorded value; the source behind the link changed.
+
+**But pinning a zip container was the wrong thing to pin, and that is the durable lesson.** Two copies of the approved package were found locally with **byte-identical contents** and **different container hashes**: a zip's bytes depend on timestamps, entry order and compression settings, none of which are the design authority. `SOURCE-MANIFEST.md` already records a SHA-256 for every **file**, which is the thing that actually has to be right, and those hashes are stable across any repackaging.
+
+**What replaces it.** Nothing needs to fetch anything. The package is in the repository, and the governance check hashes all 13 vendored files against the manifest on every run: no network, no external dependency, no expiring link, and it fails on a mismatch **or an absence**. That is strictly stronger than a one-time import, and it is what would have caught the outage described below on the first commit rather than weeks later.
+
+**What the failure cost.** While the workflow was failing, `source/ponte-bridge.js` and the nine reference renders were absent from the repository and nothing reported it. A landing bridge was built against an inferred straight-line geometry as a result, and was rejected by the owner. The vendored `ponte-bridge.css` had also drifted from its own recorded checksum, with its section comments stripped, and nothing reported that either. Both are corrected in PR #63.
+
+**Also removed by this decision:** nothing else. The workflow had no callers, and the `.import-trigger` and `.temporary-import-note` markers it used are removed in PR #63. `.temporary-import-note` itself recorded the requirement being satisfied here: "Temporary import workflow and marker files must be removed before final review."
+
+**Sequencing.** This should merge after PR #63, which is what puts the package and the manifest check on `main`. Merging it first would not regress anything, since a workflow that has never once succeeded protects nothing today, but it would leave `main` briefly with neither the fetch nor the vendored package.
+
+**Affected areas:** `.github/workflows/import-approved-bridge-package.yml` (deleted), `scripts/check-governance.mjs` (the replacement check, added in PR #63), `design/authority/bridge/v1/SOURCE-MANIFEST.md` (unchanged; it is the authority the check reads).
 
 ## 27 July 2026 — Phase 2 shared foundation: implementation decisions
 
