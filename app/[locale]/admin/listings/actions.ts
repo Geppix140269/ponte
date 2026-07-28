@@ -112,7 +112,7 @@ export async function decideListingAction(formData: FormData): Promise<void> {
     const gate = checkPublicationGate(
       { ...listing, desk_version: deskVersion } as never,
       {
-        verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+        verificationLevel: profile ? (profile.verification_level ?? null) : null,
         business_verification_id: profile?.business_verification_id ?? null,
         verification: verification as never,
       },

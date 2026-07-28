@@ -1,6 +1,7 @@
 import { Icon } from "@/components/icons";
 import { formatPosted } from "@/lib/listing-terms";
 import type { LiveDeal } from "@/lib/board/live-deals";
+import { hasEstablishedLevel, levelRank } from "@/lib/verification/level";
 
 /**
  * One deal, as a teaser.
@@ -64,8 +65,8 @@ export default function LiveDealCard({
   // A tier badge is a claim about a verified member. Radar items never carry
   // one, and an unread level is unknown rather than zero, so it shows nothing.
   const tier =
-    !radar && deal.verificationLevel !== null && deal.verificationLevel > 0
-      ? deal.verificationLevel
+    !radar && hasEstablishedLevel(deal.verificationLevel)
+      ? levelRank(deal.verificationLevel)
       : null;
 
   return (

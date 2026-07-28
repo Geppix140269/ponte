@@ -8,6 +8,7 @@ import { sendVerificationDecision } from "@/lib/email";
 import { VERIFICATION_DISCLAIMER } from "@/lib/verification/pipeline";
 import { companyAgePoints, setComponent } from "@/lib/verification/trust-score";
 import { grantsMemberStatus } from "@/lib/verification/purpose";
+import { higherLevel, levelForRequestedTier } from "@/lib/verification/level";
 
 /**
  * Admin decisions on a verification case.
@@ -165,8 +166,13 @@ async function grantLevel(row: CaseRow): Promise<void> {
     .select("verification_level")
     .eq("id", row.user_id)
     .maybeSingle();
-  const current = Number(profile?.verification_level ?? 0);
-  const next = Math.max(current, row.level_requested);
+  // level_requested is a DEPTH tier on the verification (1 to 3), not a
+  // profile level. Writing it straight into the profile column is one of the
+  // ways three vocabularies ended up in one field.
+  const next = higherLevel(
+    profile?.verification_level,
+    levelForRequestedTier(row.level_requested),
+  );
   await adminSb
     .from("profiles")
     .update({

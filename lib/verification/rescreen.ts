@@ -17,6 +17,7 @@ import { screenSubject } from "@/lib/sanctions/screen";
 import { clearComponent } from "@/lib/verification/trust-score";
 import { grantsMemberStatus } from "@/lib/verification/purpose";
 import { sendAdminNotice } from "@/lib/email";
+import { LEVEL_ON_SUSPENSION } from "./level";
 
 export type RescreenSummary = {
   screened: number;
@@ -104,7 +105,7 @@ export async function rescreenVerified(since: Date): Promise<RescreenSummary> {
         await clearComponent(row.user_id, "sanctions_clean");
         await sb
           .from("profiles")
-          .update({ verification_level: 1, verified_at: null })
+          .update({ verification_level: LEVEL_ON_SUSPENSION, verified_at: null })
           .eq("id", row.user_id);
       }
     }

@@ -102,6 +102,33 @@ with the visible constraint and silently rejected permitted values. This
 migration drops both names before adding its own.
 ## Applied to production by hand
 
+- `20260728d_verification_level_canonical.sql` was applied to production on 28
+  July 2026 at **17:04:50 UTC** with explicit owner authorisation, via
+  `node scripts/db-query.mjs --file`, and verified immediately afterwards.
+  Recorded in `schema_migrations` with SHA-256
+  `262e96b7...714a9930`, matching the file byte for byte. Ledger 40 to 41.
+
+  **It resolved a Launch Blocker.** Production carried a five-value CHECK
+  constraint on `profiles.verification_level`. The verification pipeline wrote
+  the integer `2`, which coerced to `'2'` and was refused by that constraint
+  with SQLSTATE 23514, and the update result was never checked, so the write
+  failed **silently every time**. No member could reach `company_verified`
+  through the intended pipeline; the only profile holding it was seed-written.
+
+  Changes: one row backfilled from `NULL` to `'unverified'`; the five-value
+  constraint replaced with `unverified | identity_verified | company_verified`
+  (safe as a narrowing, zero rows held a retired value); the `'unverified'`
+  default restated; the column set `NOT NULL`. `set lock_timeout = '5s'` inside
+  the transaction so contention fails fast rather than blocking every write to
+  `profiles`.
+
+  **Verified in production:** `unverified` 8, `company_verified` 1, zero nulls,
+  zero invalid values, `is_nullable = NO`, the three-value constraint present,
+  and `verifications` unchanged at review 4, rejected 2, pending 2, verified 1.
+  The migration never references `verifications`.
+
+
+
 - `20260728a_market_classification.sql` was applied to production on 28 July
   2026 at 13:25:11 UTC with explicit owner authorisation, using
   `node scripts/db-query.mjs --file ...` against project

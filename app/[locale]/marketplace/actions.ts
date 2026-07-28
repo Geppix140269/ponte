@@ -96,7 +96,7 @@ export async function reconfirmListingAction(formData: FormData): Promise<void> 
   }
 
   const gate = checkPublicationGate(listing as never, {
-    verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+    verificationLevel: profile ? (profile.verification_level ?? null) : null,
     business_verification_id: profile?.business_verification_id ?? null,
     verification: verification as never,
   });

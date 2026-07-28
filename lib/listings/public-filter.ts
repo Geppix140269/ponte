@@ -49,7 +49,7 @@ export async function eligibleOwnerIds(
       ? verById.get(p.business_verification_id) ?? null
       : null;
     const eligible = isPubliclyEligibleVerification({
-      verificationLevel: Number(p.verification_level ?? 0),
+      verificationLevel: p.verification_level ?? null,
       business_verification_id: p.business_verification_id ?? null,
       verification: ver,
     });
