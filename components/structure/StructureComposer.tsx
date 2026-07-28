@@ -14,10 +14,17 @@ import {
   bucketize,
   blockers as computeBlockers,
   toSubmitPayload,
+  draftQuantity,
   type StructureDraft,
   type Intent,
   type CompletionField,
 } from "@/lib/structure/draft";
+import {
+  parseQuantityInput,
+  formatQuantity,
+  QUANTITY_MODES,
+  type QuantityMode,
+} from "@/lib/listings/quantity";
 import {
   INCOTERM_GROUPS,
   INCOTERM_MEANING,
@@ -143,6 +150,8 @@ export default function StructureComposer({
   const [submitting, setSubmitting] = useState(false);
   const [resultRef, setResultRef] = useState("");
   const [savedDraft, setSavedDraft] = useState(false);
+  /** What the validator decided, when the submission was not a draft. */
+  const [outcome, setOutcome] = useState<SubmitOutcome | null>(null);
   const pending = useRef<boolean | null>(null);
   const ran = useRef(false);
 
@@ -166,6 +175,20 @@ export default function StructureComposer({
       }
       setResultRef(j.ref ?? "");
       setSavedDraft(asDraft);
+      // The outcome is already decided by the time this resolves: automated
+      // publication runs inside the request. So the member is told what
+      // actually happened rather than "submitted for review", which under this
+      // model would be untrue for the ordinary case.
+      setOutcome(
+        asDraft
+          ? null
+          : {
+              status: typeof j.status === "string" ? j.status : "submitted",
+              blockingIssues: Array.isArray(j.blockingIssues) ? j.blockingIssues : [],
+              completenessScore:
+                typeof j.completenessScore === "number" ? j.completenessScore : null,
+            },
+      );
       replace("received");
     } finally {
       setSubmitting(false);
@@ -224,7 +247,17 @@ export default function StructureComposer({
             t={t}
           />
         )}
-        {step === "received" && <ReceivedStep savedDraft={savedDraft} resultRef={resultRef} onWorkspace={() => router.push("/workspace")} t={t} />}
+        {step === "received" && (
+          <ReceivedStep
+            savedDraft={savedDraft}
+            resultRef={resultRef}
+            outcome={outcome}
+            onWorkspace={() => router.push("/workspace")}
+            onListing={() => router.push(`/marketplace/l/${resultRef}`)}
+            onEdit={() => router.push("/marketplace")}
+            t={t}
+          />
+        )}
         {step === "error" && <ErrorStep onRetry={() => replace("submit")} t={t} />}
       </div>
 
@@ -628,20 +661,106 @@ function ChipGroups({ groups, value, onPick, meaning }: { groups: readonly TapGr
   );
 }
 
+/**
+ * The quantity control.
+ *
+ * The control this replaces rendered `(draft.quantity ?? 10000)`. A member who
+ * opened the step saw "10,000", read it as the value they had been given, left
+ * it alone and submitted a listing with NO quantity: the fallback lived in the
+ * render, and only pressing + or − ever wrote anything to the draft. Changing
+ * the number "fixed" it, which is why the bug reproduced as "it only saves if I
+ * edit it".
+ *
+ * Two things prevent it recurring. There is no displayed default: the field is
+ * empty until the member acts, and an empty field reads as empty. And the first
+ * thing asked for is the BASIS, not a figure, so "on request" and "negotiable"
+ * are answers a member can give instead of accepting a number that was never
+ * theirs. A pre-filled commercial quantity on a trade platform is not a
+ * convenience; it is an accidental offer.
+ */
+function QuantityControl({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
+  const mode = draft.quantityMode;
+  // Free text while typing, so a half-entered "1." or "1,2" is not destroyed by
+  // a parse on every keystroke. It is committed as a number on change.
+  const [raw, setRaw] = useState<Record<string, string>>({});
+
+  const field = (key: "quantity" | "quantityMin" | "quantityMax", label: string) => {
+    const stored = draft[key];
+    const shown = raw[key] ?? (stored === null ? "" : String(stored));
+    return (
+      <label className="qfield" key={key}>
+        <span className="qfield__l">{label}</span>
+        <input
+          className="qfield__i"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          // A decimal quantity is ordinary in trade (1.25 MT, 12.5 tonnes), so
+          // the field accepts one. `type="number"` with a step of 1 silently
+          // refuses them in several browsers.
+          placeholder={t("ask.quantityExample")}
+          value={shown}
+          onChange={(e) => {
+            const v = e.target.value;
+            setRaw((r) => ({ ...r, [key]: v }));
+            set({ [key]: parseQuantityInput(v) } as Partial<StructureDraft>);
+          }}
+        />
+      </label>
+    );
+  };
+
+  return (
+    <div className="qty">
+      <div className="chiprow">
+        {QUANTITY_MODES.map((m) => (
+          <button
+            key={m}
+            className="fchip"
+            aria-pressed={mode === m}
+            onClick={() => {
+              // Switching mode clears the figures the new mode does not own, so
+              // a leftover number from "range" cannot linger behind "on
+              // request" and reappear on the record.
+              set({
+                quantityMode: m,
+                ...(m === "range" ? { quantity: null } : { quantityMin: null, quantityMax: null }),
+                ...(m === "on_request" ? { quantity: null, quantityMin: null, quantityMax: null } : {}),
+              });
+              setRaw({});
+            }}
+          >
+            {t(`ask.quantityMode.${m}`)}
+          </button>
+        ))}
+      </div>
+
+      {mode === "range" && (
+        <div className="qrow">
+          {field("quantityMin", t("ask.quantityFrom"))}
+          {field("quantityMax", t("ask.quantityTo"))}
+        </div>
+      )}
+      {mode && mode !== "range" && mode !== "on_request" && (
+        <div className="qrow">
+          {field("quantity", mode === "negotiable" ? t("ask.quantityIndicative") : t("ask.quantityAmount"))}
+        </div>
+      )}
+
+      {mode && mode !== "on_request" && (
+        <Chips options={UNITS} value={draft.unit} onPick={(v) => set({ unit: v })} />
+      )}
+      {mode && mode !== "on_request" && (
+        <Chips options={FREQUENCIES} value={draft.frequency} onPick={(v) => set({ frequency: v })} />
+      )}
+    </div>
+  );
+}
+
 function QControl({ field, draft, set, t }: { field: CompletionField; draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
   switch (field) {
     case "quantity":
-      return (
-        <div>
-          <div className="stepper">
-            <button className="step" onClick={() => set({ quantity: Math.max(0, (draft.quantity ?? 10000) - 5000) })} aria-label="-">−</button>
-            <span className="stepval">{(draft.quantity ?? 10000).toLocaleString()}</span>
-            <button className="step" onClick={() => set({ quantity: (draft.quantity ?? 10000) + 5000 })} aria-label="+">+</button>
-          </div>
-          <Chips options={UNITS} value={draft.unit} onPick={(v) => set({ unit: v })} />
-          <Chips options={FREQUENCIES} value={draft.frequency} onPick={(v) => set({ frequency: v })} />
-        </div>
-      );
+      return <QuantityControl draft={draft} set={set} t={t} />;
     case "origin":
       return <CountryPicker value={codeForName(draft.origin)} onChange={(code) => set({ origin: nameForCode(code) })} />;
     case "destination":
@@ -724,7 +843,7 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
             {row(t("field.kind"), kind)}
             {row(t("field.product"), draft.product)}
             {row(t("field.hsCode"), draft.hsCode ? `HS ${draft.hsCode}` : null)}
-            {row(t("field.quantity"), draft.quantity ? `${draft.quantity.toLocaleString()}${draft.unit ? ` ${draft.unit}` : ""}` : null, "quantity")}
+            {row(t("field.quantity"), formatQuantity(draftQuantity(draft)), "quantity")}
             {row(t("field.frequency"), draft.frequency, "quantity")}
             {row(t("field.route"), routeValue(), routeField)}
             {row(t("field.incoterm"), draft.incoterm, "incoterm")}
@@ -794,21 +913,98 @@ function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVer
 }
 
 // ---- S06 received ----------------------------------------------------------
-function ReceivedStep({ savedDraft, resultRef, onWorkspace, t }: { savedDraft: boolean; resultRef: string; onWorkspace: () => void; t: T }) {
+
+/** What the submit route reported back. Null for a saved draft. */
+export type SubmitOutcome = {
+  status: string;
+  blockingIssues: string[];
+  completenessScore: number | null;
+};
+
+/**
+ * What the member is told after submitting.
+ *
+ * This screen used to say "Opportunity submitted for review" and "Under
+ * review" for every submission, because that is what always happened. Under
+ * automated publication it is untrue for the ordinary case: by the time this
+ * renders, a complete listing from a verified member is already live.
+ *
+ * So the screen reports the OUTCOME. Three of them, each with its own action:
+ * published (here is the link), needs information (here are the exact gaps),
+ * and held for a check (neutral wording, because an automated flag is not a finding
+ * against the member, and saying so on this screen would accuse them of
+ * something no check established).
+ */
+function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, onEdit, t }: {
+  savedDraft: boolean;
+  resultRef: string;
+  outcome: SubmitOutcome | null;
+  onWorkspace: () => void;
+  onListing: () => void;
+  onEdit: () => void;
+  t: T;
+}) {
+  const status = savedDraft ? "draft" : outcome?.status ?? "submitted";
+  const published = status === "approved";
+  const needsInfo = status === "needs_information";
+  const flagged = status === "flagged";
+
+  const title = savedDraft ? t("received.draftTitle")
+    : published ? t("received.publishedTitle")
+    : needsInfo ? t("received.needsInfoTitle")
+    : flagged ? t("received.flaggedTitle")
+    : t("received.title");
+
+  const body = savedDraft ? t("received.draftBody")
+    : published ? t("received.publishedBody")
+    : needsInfo ? t("received.needsInfoBody")
+    : flagged ? t("received.flaggedBody")
+    : t("received.body");
+
+  const eyebrow = savedDraft ? t("received.savedEyebrow")
+    : published ? t("received.publishedEyebrow")
+    : needsInfo ? t("received.needsInfoEyebrow")
+    : flagged ? t("received.flaggedEyebrow")
+    : t("received.eyebrow");
+
   return (
     <section className="rec">
-      <span className="eyebrow">{savedDraft ? t("received.savedEyebrow") : t("received.eyebrow")}</span>
+      <span className="eyebrow">{eyebrow}</span>
       <div className="rec-ack">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+          {needsInfo || flagged
+            ? <path d="M12 7v6m0 4h.01" strokeLinecap="round" />
+            : <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />}
+        </svg>
       </div>
-      <h1 className="rec-title serif">{savedDraft ? t("received.draftTitle") : t("received.title")}</h1>
-      <p className="rec-body">{savedDraft ? t("received.draftBody") : t("received.body")}{resultRef ? ` (${resultRef})` : ""}</p>
-      <div className="rec-next">
-        <div className="rec-step"><span>{t("received.next1")}</span><b>{t("received.underReview")}</b></div>
-        <div className="rec-step"><span>{t("received.next2")}</span><b>{t("received.no")}</b></div>
-        <div className="rec-step"><span>{t("received.next3")}</span><b>{t("received.workspace")}</b></div>
+      <h1 className="rec-title serif">{title}</h1>
+      <p className="rec-body">{body}{resultRef ? ` (${resultRef})` : ""}</p>
+
+      {/* The exact gaps, with a route back to the form. A member told only
+          that something is missing has been told nothing they can act on. */}
+      {needsInfo && outcome?.blockingIssues.length ? (
+        <ul className="rec-issues">
+          {outcome.blockingIssues.map((issue) => <li key={issue}>{issue}</li>)}
+        </ul>
+      ) : null}
+
+      {published && outcome?.completenessScore !== null && outcome?.completenessScore !== undefined ? (
+        <div className="rec-next">
+          <div className="rec-step">
+            <span>{t("received.detailLevel")}</span><b>{outcome.completenessScore}%</b>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="rec-actions">
+        {published && <button className="fbtn fbtn--lg" onClick={onListing}>{t("received.viewListing")}</button>}
+        {(needsInfo || flagged) && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
+        <button className={published || needsInfo || flagged ? "fbtn fbtn--ghost" : "fbtn fbtn--lg"} onClick={onWorkspace}>
+          {t("received.cta")}
+        </button>
       </div>
-      <button className="fbtn fbtn--lg" onClick={onWorkspace}>{t("received.cta")}</button>
+
+      {published && <p className="rec-note">{t("received.publishedDisclaimer")}</p>}
     </section>
   );
 }

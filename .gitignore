@@ -59,3 +59,6 @@ build-verify.log
 /e2e/.playwright/
 /playwright-report/
 /test-results/
+
+# Rendered email previews (fixtures only, regenerate with `npm run email:preview`)
+.email-preview/

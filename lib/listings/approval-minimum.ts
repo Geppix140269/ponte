@@ -18,12 +18,18 @@
 //           shown, but a genuine "not stated yet" is a legitimate commercial
 //           state, so they do not block approval on their own.
 //
-// Pure and import-free, for the same reason as validity.ts.
+// Pure except for the quantity model, which is itself pure, for the same reason
+// as validity.ts.
+
+import { quantityFromRow, validateQuantity } from "./quantity";
 
 export type ApprovalFacts = {
   type?: string | null;
   product?: string | null;
   quantity?: number | string | null;
+  quantity_mode?: string | null;
+  quantity_min?: number | string | null;
+  quantity_max?: number | string | null;
   unit?: string | null;
   frequency?: string | null;
   payment_terms?: string | null;
@@ -75,8 +81,18 @@ export function meetsApprovalMinimum(listing: ApprovalFacts): ApprovalMinimum {
   if (!has(listing.product)) missing.push("product");
 
   if (isGoods(listing.type)) {
-    if (!(has(listing.quantity) && Number(listing.quantity) > 0)) missing.push("quantity");
-    if (!has(listing.unit)) missing.push("unit");
+    // A quantity BASIS, not a number. "Available on request" and "negotiable"
+    // are commercial positions a counterparty can act on; a member who has not
+    // fixed a figure must be able to say so rather than invent one to get past
+    // this check. The unit requirement moves with the mode: it is required
+    // wherever a number is stated and meaningless where none is.
+    const quantity = quantityFromRow(listing);
+    if (!quantity) missing.push("quantity");
+    else {
+      const issues = validateQuantity(quantity);
+      if (issues.some((i) => i !== "unit_required")) missing.push("quantity");
+      if (issues.includes("unit_required")) missing.push("unit");
+    }
     if (!has(listing.frequency)) missing.push("frequency");
   }
 

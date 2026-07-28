@@ -15,6 +15,13 @@
  *     submit payload only at the gate, and the gate resumes it once.
  */
 
+import {
+  formatQuantity, normaliseFrequency, validateQuantity, quantityToColumns,
+  type ListingQuantity, type QuantityMode,
+} from "../listings/quantity";
+
+export type { QuantityMode };
+
 export type Intent = "offer" | "requirement" | "service";
 
 export const INTENTS: readonly Intent[] = ["offer", "requirement", "service"];
@@ -62,7 +69,22 @@ export type StructureDraft = {
   intent: Intent | null;
   product: string | null;
   hsCode: string | null;
+  /**
+   * The member's commercial stance on quantity. Null until they choose one.
+   *
+   * This is the field whose absence caused the reported defect. The composer
+   * rendered `draft.quantity ?? 10000` and the member read "10,000" as a value
+   * they had been given; the draft still held null, so the submitted listing
+   * carried no quantity at all. Only touching the stepper committed anything.
+   *
+   * A displayed default is now impossible: there is nothing to default TO until
+   * a mode is picked, and picking a mode is an explicit act that writes state.
+   */
+  quantityMode: QuantityMode | null;
   quantity: number | null;
+  /** The two ends of a range. Only `range` reads them. */
+  quantityMin: number | null;
+  quantityMax: number | null;
   unit: string | null;
   frequency: string | null;
   origin: string | null;
@@ -79,9 +101,29 @@ export type StructureDraft = {
 export function emptyDraft(): StructureDraft {
   return {
     canonical: null,
-    intent: null, product: null, hsCode: null, quantity: null, unit: null,
-    frequency: null, origin: null, destination: null, incoterm: null,
+    intent: null, product: null, hsCode: null,
+    quantityMode: null, quantity: null, quantityMin: null, quantityMax: null,
+    unit: null, frequency: null, origin: null, destination: null, incoterm: null,
     payment: null, validity: null, role: null, note: null,
+  };
+}
+
+/**
+ * The quantity on a draft, in the shared model.
+ *
+ * One conversion, used by the gap check, the preview, the synthesised details
+ * and the submit payload, so all four agree about whether a quantity has been
+ * stated and what it says.
+ */
+export function draftQuantity(draft: StructureDraft): ListingQuantity | null {
+  if (!draft.quantityMode) return null;
+  return {
+    mode: draft.quantityMode,
+    value: draft.quantity,
+    minValue: draft.quantityMin,
+    maxValue: draft.quantityMax,
+    unit: draft.unit,
+    frequency: normaliseFrequency(draft.frequency),
   };
 }
 
@@ -169,7 +211,13 @@ export function queueFor(intent: Intent | null): CompletionField[] {
 
 function isFilled(draft: StructureDraft, field: CompletionField): boolean {
   switch (field) {
-    case "quantity": return has(draft.quantity);
+    // A quantity is stated when its MODE is chosen and coherent. "On request"
+    // and "negotiable" are complete answers that carry no number, so testing
+    // for a number here would keep asking a member who has already answered.
+    case "quantity": {
+      const q = draftQuantity(draft);
+      return q !== null && validateQuantity(q).length === 0;
+    }
     case "origin": return has(draft.origin);
     case "destination": return has(draft.destination);
     case "incoterm": return has(draft.incoterm);
@@ -202,7 +250,8 @@ export function bucketize(draft: StructureDraft): FactBuckets {
   if (has(draft.intent)) commercial.push("intent");
   if (has(draft.product)) commercial.push("product");
   if (has(draft.hsCode)) commercial.push("hsCode");
-  for (const f of ["quantity", "frequency", "origin", "destination", "incoterm"] as const) {
+  if (isFilled(draft, "quantity")) commercial.push("quantity");
+  for (const f of ["frequency", "origin", "destination", "incoterm"] as const) {
     if (has(draft[f])) commercial.push(f);
   }
 
@@ -238,7 +287,7 @@ export type Blocker = {
  */
 export function blockers(draft: StructureDraft): Blocker[] {
   const out: Blocker[] = [];
-  if (!has(draft.quantity)) out.push({ key: "quantity", resolve: "complete" });
+  if (!isFilled(draft, "quantity")) out.push({ key: "quantity", resolve: "complete" });
   if (!has(draft.incoterm)) out.push({ key: "incoterm", resolve: "complete" });
   if (!has(draft.validity)) out.push({ key: "validity", resolve: "complete" });
   if (!has(draft.role)) out.push({ key: "role", resolve: "complete" });
@@ -291,11 +340,11 @@ export function synthesiseDetails(draft: StructureDraft): string {
       : intentClause(draft.intent, product || "the stated product"),
   ];
 
-  if (has(draft.quantity)) {
-    const q = `Quantity: ${draft.quantity}${draft.unit ? ` ${draft.unit}` : ""}` +
-      (draft.frequency ? ` (${draft.frequency})` : "") + ".";
-    parts.push(q);
-  }
+  // The quantity is written with its MODE. "Approximately 2,500 MT" and
+  // "2,500 MT" are different commercial claims, and dropping the qualifier
+  // states a firmness the member did not offer.
+  const quantityText = formatQuantity(draftQuantity(draft));
+  if (quantityText) parts.push(`Quantity: ${quantityText}.`);
   // One end of the route is often the only end this member decides, so a
   // half-stated route is written as the half it is rather than padded with an
   // "unspecified" the reader could mistake for a fact.
@@ -353,8 +402,10 @@ export function toSubmitPayload(
     market_intent: draft.canonical?.intent ?? null,
     product: draft.product,
     hs_code: draft.hsCode,
-    quantity: draft.quantity,
-    unit: draft.unit,
+    // The whole quantity, mode included. The route reads these keys directly,
+    // so what the member tapped is what is stored — the defect was precisely
+    // that the composer showed a figure the payload never carried.
+    ...quantityToColumns(draftQuantity(draft)),
     frequency: draft.frequency,
     origin: draft.origin,
     destination: draft.destination,

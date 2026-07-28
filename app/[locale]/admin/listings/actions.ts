@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { sendListingDecision } from "@/lib/email";
+import { sendListingPublished, sendListingRejected } from "@/lib/email";
+import { memberIdentity } from "@/lib/email/identity";
+import { recordListingEvent } from "@/lib/listings/publish";
+import { completenessBand, completenessBandLabel } from "@/lib/listings/eligibility";
 import { vetListing, isAiConfigured } from "@/lib/ai-vet";
 import { checkPublicationGate, gateFailureLabel } from "@/lib/listings/publication-gate";
 import { generateWriteup, WriteupBelowMinimum } from "@/lib/writeup";
@@ -123,22 +126,65 @@ export async function decideListingAction(formData: FormData): Promise<void> {
     finish("db_error", error.message);
   }
 
+  // The exception console's decisions are HUMAN decisions on cases automated
+  // publication could not resolve, so they keep their own audit entry with an
+  // `admin` actor. Without this, a listing that a person released from a flag
+  // would be indistinguishable in the record from one the validator published.
+  await recordListingEvent(adminSb as never, {
+    listingId: id,
+    event:
+      decision === "approved" ? "listing_published"
+      : decision === "rejected" ? "listing_rejected"
+      : "listing_closed",
+    fromStatus: listing.status,
+    toStatus: decision,
+    actorType: "admin",
+    actorId: (await getUser())?.id ?? null,
+    reasonCode: "operator_decision",
+  });
+
   // Email the member on approve/reject. Closing is bookkeeping, not news.
   let mail: "sent" | "no_address" | "send_failed" | null = null;
   if (decision === "approved" || decision === "rejected") {
-    const { data: owner } = await adminSb.auth.admin.getUserById(listing.user_id);
+    const [{ data: owner }, { data: profile }] = await Promise.all([
+      adminSb.auth.admin.getUserById(listing.user_id),
+      adminSb.from("profiles").select("full_name, company").eq("id", listing.user_id).maybeSingle(),
+    ]);
     const email = owner?.user?.email;
     if (!email) {
       console.error(`[ponte] listing ${listing.ref} decided but the owner has no address`);
       mail = "no_address";
     } else {
+      // The identity is built from the profile, not from whatever string is
+      // nearest. This is the mapping defect: the retired path passed the email
+      // address as the name and "Marketplace listing PT-0102" as the company.
+      const identity = memberIdentity({
+        full_name: profile?.full_name ?? null,
+        company: profile?.company ?? null,
+        email,
+      });
+      const summary = { ref: listing.ref, id: listing.id, title: listing.product };
       try {
-        await sendListingDecision(email, {
-          ref: listing.ref,
-          product: listing.product,
-          approved: decision === "approved",
-          note: decisionNote || undefined,
-        });
+        if (decision === "approved") {
+          const score = Number(
+            (listing as { completeness_score?: number | null }).completeness_score ?? 0,
+          );
+          await sendListingPublished(email, {
+            identity,
+            listing: summary,
+            completenessScore: score,
+            completenessBand: completenessBandLabel(completenessBand(score)),
+            recommendationCount: 0,
+            recipientUserId: listing.user_id,
+          });
+        } else {
+          await sendListingRejected(email, {
+            identity,
+            listing: summary,
+            note: decisionNote || null,
+            recipientUserId: listing.user_id,
+          });
+        }
         mail = "sent";
       } catch (e) {
         console.error("[ponte] decision email failed:", e);

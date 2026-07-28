@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { sendListingReceived, sendBrokerageSubmission } from "@/lib/email";
 import { getHsCode, isHsCatalogReady } from "@/lib/hs";
 import { isoCode } from "@/lib/listing-terms";
 import {
@@ -10,6 +9,16 @@ import {
   ownsListing,
   type MaterialFacts,
 } from "@/lib/listings/material-change";
+import {
+  parseQuantityInput,
+  isQuantityMode,
+  isQuantityFrequency,
+  quantityToColumns,
+  type ListingQuantity,
+  type QuantityMode,
+} from "@/lib/listings/quantity";
+import { publishOrHold } from "@/lib/listings/publish";
+import { DECLARATION_VERSION } from "@/lib/listings/eligibility";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,10 +37,42 @@ function clean(v: unknown, max: number): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
 }
 
-function positiveNumber(v: unknown): number | null {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(String(v).replace(/[, ]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : null;
+/**
+ * Read the quantity the member actually stated.
+ *
+ * The old reader was `Number(String(v).replace(/[, ]/g, ""))`, which turns
+ * "1.25" into 1.25 and "1,25" into 125. The same figure typed by a European
+ * member became a hundredfold error, silently. It also could not express a
+ * range, a minimum or "on request", so any of those arrived as a bare number
+ * that reads on the board as a firm quantity.
+ *
+ * Parsing now goes through the shared quantity model, which is separator-safe
+ * and mode-aware. An absent mode with a number present is `exact`, which is
+ * what a plain figure has always meant.
+ */
+function readQuantity(body: Record<string, unknown>): ListingQuantity | null {
+  const rawMode = clean(body.quantity_mode, 20);
+  const value = parseQuantityInput(body.quantity);
+  const minValue = parseQuantityInput(body.quantity_min);
+  const maxValue = parseQuantityInput(body.quantity_max);
+  const unit = clean(body.unit, 30) || null;
+  const frequency = clean(body.frequency, 30);
+
+  let mode: QuantityMode | null = isQuantityMode(rawMode) ? rawMode : null;
+  if (!mode) {
+    if (minValue !== null && maxValue !== null) mode = "range";
+    else if (value !== null) mode = "exact";
+  }
+  if (!mode) return null;
+
+  return {
+    mode,
+    value,
+    minValue,
+    maxValue,
+    unit,
+    frequency: isQuantityFrequency(frequency) ? frequency : null,
+  };
 }
 
 function flexibilityOf(v: unknown): Record<string, string> {
@@ -152,6 +193,15 @@ export async function POST(req: NextRequest) {
   // The structured facts, written alongside the legacy compatibility columns
   // (volume/origin/destination/details) that the board and detail parsers
   // still read, so nothing on those surfaces regresses.
+  const quantity = readQuantity(body);
+
+  // The member's responsibility declaration. Ponte publishes automatically, so
+  // the member, not a reviewer, is the person who has said the record is
+  // accurate and that they are entitled to have it published. The accepted
+  // VERSION is stored with the timestamp: knowing somebody accepted terms is
+  // worthless without knowing which terms they accepted.
+  const declarationAccepted = body.declaration_accepted === true;
+
   const fields: Record<string, unknown> = {
     type,
     product,
@@ -161,9 +211,19 @@ export async function POST(req: NextRequest) {
     origin_country: originCountry,
     destination_country: destinationCountry,
     volume: clean(body.volume, 120) || null,
-    quantity: positiveNumber(body.quantity),
-    unit: clean(body.unit, 30) || null,
+    ...quantityToColumns(quantity),
+    // Kept as the member wrote it. It is a member-visible string on live
+    // listings, so it is normalised on read rather than rewritten on write.
     frequency: clean(body.frequency, 30) || null,
+    quantity_extracted: body.quantity_extracted === true,
+    quantity_confirmed_at:
+      body.quantity_confirmed === true ? new Date().toISOString() : null,
+    ...(declarationAccepted
+      ? {
+          declaration_accepted_at: new Date().toISOString(),
+          declaration_version: DECLARATION_VERSION,
+        }
+      : {}),
     incoterm: clean(body.incoterm, 20) || null,
     payment_terms: clean(body.payment_terms, 200) || null,
     indicative_value_usd: indicative,
@@ -260,6 +320,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // An edit that returned the listing to review re-enters the automated path
+    // rather than the desk queue. `editReturnsToReview` still decides WHETHER a
+    // change is material enough to revalidate; what changed is where a
+    // revalidation goes, which is back through the same validator that
+    // published it the first time.
+    if (!isDraft && update.status === "submitted") {
+      const outcome = await revalidate(editId);
+      if (outcome) {
+        return NextResponse.json({
+          ok: true,
+          ref: existing.ref,
+          id: existing.id,
+          returnedToReview,
+          ...outcome,
+        });
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       ref: existing.ref,
@@ -287,27 +365,53 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Drafts are private: no desk alert, no confirmation email.
+  // Drafts are private: nothing is validated, nothing is emailed.
   if (isDraft) {
     return NextResponse.json({ ok: true, ref: listing.ref, id: listing.id });
   }
 
-  const memberEmail = user.email ?? "";
-  await Promise.allSettled([
-    memberEmail
-      ? sendListingReceived(memberEmail, { ref: listing.ref, product })
-      : Promise.resolve(),
-    sendBrokerageSubmission({
-      type: type as "offer" | "requirement",
-      name: memberEmail || user.id,
-      company: `Marketplace listing ${listing.ref}`,
-      email: memberEmail || "unknown@ponte.trade",
-      country: originText || "-",
-      product,
-      volume: clean(body.volume, 120) || undefined,
-      details: `${details}\n\n[media and documents upload directly from the member's browser · review in /admin/listings]`,
-    }),
-  ]);
+  const outcome = await revalidate(listing.id);
+  return NextResponse.json({ ok: true, ref: listing.ref, id: listing.id, ...(outcome ?? {}) });
+}
 
-  return NextResponse.json({ ok: true, ref: listing.ref, id: listing.id });
+/**
+ * Run the central validator over a listing and take it wherever it says.
+ *
+ * This replaces the pair of emails that used to fire here: a "your listing is
+ * with the desk" note to the member and a `sendBrokerageSubmission` to the
+ * operator whose body ended "review in /admin/listings". Together those WERE
+ * the approval workflow: a queue implemented in email, with no listing URL, no
+ * review reason and no way to act.
+ *
+ * The publication decision needs the submitter's live verification state and
+ * has to write a status a member is not permitted to write, so it runs under
+ * the service role. It is awaited: a publication whose confirmation email was
+ * dropped because the function returned is a member who is live and does not
+ * know it.
+ *
+ * A failure here does not fail the request. The listing is saved either way,
+ * and a listing stuck in `submitted` is visible in the exception console.
+ */
+async function revalidate(
+  listingId: string,
+): Promise<{ status: string; blockingIssues: string[]; completenessScore: number } | null> {
+  try {
+    const admin = createAdminClient();
+    const { data: row } = await admin
+      .from("listings")
+      .select("*")
+      .eq("id", listingId)
+      .maybeSingle();
+    if (!row) return null;
+
+    const outcome = await publishOrHold(admin as never, row as never);
+    return {
+      status: outcome.status,
+      blockingIssues: outcome.result.blockingIssues.map((i) => i.message),
+      completenessScore: outcome.result.completenessScore,
+    };
+  } catch (err) {
+    console.error("[ponte] automated publication failed:", err);
+    return null;
+  }
 }

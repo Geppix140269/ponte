@@ -1,0 +1,485 @@
+// The publication eligibility validator.
+//
+// ONE place decides whether a listing may go public. Not the composer, not the
+// submit route, not the admin screen, not a copy string — here. The composer
+// asks it what is still open, the submit route asks it whether to publish, the
+// emails render its issues, and the admin console shows what it could not
+// resolve. Anything that disagrees with this module is wrong by definition.
+//
+// It COMPOSES the existing publication gate rather than replacing it. The gate
+// (publication-gate.ts) remains the authority on who the submitter is and
+// whether the record carries its required facts and public text; this module
+// adds the conditional-by-family field rules, the member declaration, the
+// automated safety pass, the recommendations and the completeness score, and
+// turns all of it into one answer.
+//
+// Two rules govern the wording of everything it returns:
+//
+//   - A blocking issue names the exact field and says what to do. "Failed
+//     validation" tells a member nothing and is banned here.
+//   - A recommendation is never dressed as a requirement, and a complete
+//     listing is never described as a verified one. Completeness is a measure
+//     of how much the member stated. It is not evidence that any of it is true.
+
+import { checkPublicationGate, type GateListing, type GateSubmitter } from "./publication-gate";
+import { roleNeedsChain } from "./approval-minimum";
+import { isListingCurrent } from "./validity";
+import { runSafetyChecks, flagsBlockPublication, type SafetyFlag, type SafetyInput } from "./safety";
+import {
+  quantityFromRow, validateQuantity, type ListingQuantity,
+} from "./quantity";
+
+/** A single thing wrong, or a single thing that would help. */
+export type ValidationIssue = {
+  /** The field or rule. Stable, machine-readable, safe for analytics. */
+  code: string;
+  /** The form field this resolves at, when there is one. */
+  field?: string;
+  /** One sentence, addressed to the member, saying exactly what is needed. */
+  message: string;
+};
+
+export type ListingValidationResult = {
+  publishable: boolean;
+  blockingIssues: ValidationIssue[];
+  recommendations: ValidationIssue[];
+  flags: SafetyFlag[];
+  /** 0-100. How much of the useful record the member stated. Not a trust score. */
+  completenessScore: number;
+};
+
+/**
+ * The market family a listing belongs to, which decides which rules apply.
+ *
+ * This is the canonical taxonomy family carried on the record. A listing that
+ * predates it is read from the legacy `type`: `service` is a trade service and
+ * anything else is a product, which is what those rows have always meant.
+ *
+ * Getting this wrong is the failure the brief calls out by name: forcing an HS
+ * classification or a shipped quantity onto a trade service or a distribution
+ * agreement invents a fact the listing does not have and blocks a legitimate
+ * member from publishing.
+ */
+export type ListingFamily = "products" | "trade_services" | "distribution";
+
+export function familyOf(listing: {
+  market_family?: string | null;
+  type?: string | null;
+}): ListingFamily {
+  switch (listing.market_family) {
+    case "products": return "products";
+    case "trade_services": return "trade_services";
+    case "distribution": return "distribution";
+  }
+  return listing.type === "service" ? "trade_services" : "products";
+}
+
+/** The stored listing this validator reads. */
+export type EligibilityListing = GateListing & {
+  market_family?: string | null;
+  details?: string | null;
+  key_notes?: string | null;
+  origin?: string | null;
+  destination?: string | null;
+  hs_code?: string | null;
+  incoterm?: string | null;
+  indicative_value_usd?: number | string | null;
+  quantity_mode?: string | null;
+  quantity_min?: number | string | null;
+  quantity_max?: number | string | null;
+  /** When the member accepted the responsibility declaration. */
+  declaration_accepted_at?: string | null;
+  /** The declaration version they accepted. */
+  declaration_version?: string | null;
+  /**
+   * A quantity read out of an uploaded document must be CONFIRMED by the member
+   * before it publishes. Extraction is not a statement by anybody until the
+   * person responsible for the listing says it is.
+   */
+  quantity_extracted?: boolean | null;
+  quantity_confirmed_at?: string | null;
+};
+
+/** Everything outside the listing row the validator needs. */
+export type EligibilityContext = {
+  submitter: GateSubmitter;
+  /** Counts the caller reads from adjacent tables. */
+  mediaCount?: number;
+  documentCount?: number;
+  certificationCount?: number;
+  duplicateOfRef?: string | null;
+  abuseReportCount?: number;
+  attachmentNames?: readonly string[];
+  now?: number;
+};
+
+const has = (v: unknown): boolean =>
+  v !== null && v !== undefined && String(v).trim() !== "";
+
+/** The declaration a member must accept before Ponte will publish for them. */
+export const DECLARATION_VERSION = "2026-07-28.1";
+
+export const DECLARATION_TERMS: readonly string[] = [
+  "The information in this listing is accurate to the best of my knowledge.",
+  "I am authorised to submit this opportunity.",
+  "I am permitted to use the materials I have uploaded.",
+  "I understand Ponte may suspend a listing that is misleading, unlawful or abusive.",
+  "I understand that publication is not verification or endorsement by Ponte.",
+];
+
+/* ------------------------------------------------------------------ */
+/* Blocking rules, conditional by family                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The gate's own failures, translated into member-readable issues.
+ *
+ * The verification failures deliberately keep their force: the owner decision
+ * of 28 July 2026 is that automated publication does not lower the member-
+ * business bar, so an unverified member gets a blocking issue that routes them
+ * to /verify rather than a listing that publishes unverified.
+ */
+function gateIssue(failure: string): ValidationIssue {
+  if (failure.startsWith("missing:")) {
+    const key = failure.slice("missing:".length);
+    return { code: `missing_${key}`, field: key, message: `Add the ${key.replace(/_/g, " ")}.` };
+  }
+  switch (failure) {
+    case "no_verified_business":
+    case "verification_not_member_business":
+      return {
+        code: "business_verification_required",
+        field: "verification",
+        message: "Complete your business verification. Ponte publishes member opportunities from verified businesses only.",
+      };
+    case "verification_not_passing":
+    case "verification_not_current":
+      return {
+        code: "business_verification_not_current",
+        field: "verification",
+        message: "Your business verification is not currently active. Open verification to see what is outstanding.",
+      };
+    case "unresolved_sanctions":
+      return {
+        code: "sanctions_unresolved",
+        field: "verification",
+        message: "There is an unresolved sanctions screening result on your business. Ponte cannot publish until it is cleared.",
+      };
+    case "no_role":
+      return { code: "missing_submitter_role", field: "submitter_role", message: "State your role in this trade." };
+    case "no_public_qualification":
+      return {
+        code: "public_summary_unconfirmed",
+        field: "desk_version",
+        message: "Review and confirm the public summary of your listing.",
+      };
+    case "no_public_limitations":
+      return {
+        code: "public_limitations_unconfirmed",
+        field: "desk_version",
+        message: "Review and confirm what your listing does not claim.",
+      };
+    case "not_current":
+      return { code: "missing_validity", field: "validity", message: "State how long this listing stays open." };
+    default:
+      return { code: failure, message: failure };
+  }
+}
+
+/** Blocking rules this family adds beyond the gate. */
+function familyBlockingIssues(
+  listing: EligibilityListing,
+  family: ListingFamily,
+  quantity: ListingQuantity | null,
+): ValidationIssue[] {
+  const out: ValidationIssue[] = [];
+
+  if (family === "products") {
+    // A product listing needs a quantity BASIS. That is not the same as a
+    // number: "on request" is a complete, publishable answer, and demanding a
+    // figure from a member who has not fixed one produces an invented quantity.
+    if (!quantity) {
+      out.push({
+        code: "missing_quantity_basis",
+        field: "quantity",
+        message: "State the quantity, or that it is negotiable or available on request.",
+      });
+    } else {
+      for (const issue of validateQuantity(quantity)) {
+        switch (issue) {
+          case "unit_required":
+            out.push({ code: "missing_unit", field: "unit", message: "Add the unit for the quantity you stated." });
+            break;
+          case "range_min_not_below_max":
+            out.push({ code: "quantity_range_invalid", field: "quantity", message: "The lower quantity must be below the upper quantity." });
+            break;
+          case "range_bounds_required":
+            out.push({ code: "quantity_range_incomplete", field: "quantity", message: "A quantity range needs both a lower and an upper figure." });
+            break;
+          case "value_not_positive":
+            out.push({ code: "quantity_not_positive", field: "quantity", message: "The quantity must be greater than zero." });
+            break;
+          case "value_required":
+            out.push({ code: "missing_quantity_value", field: "quantity", message: "Add the quantity figure." });
+            break;
+          default:
+            out.push({ code: "quantity_invalid", field: "quantity", message: "Check the quantity you entered." });
+        }
+      }
+    }
+
+    // Where the goods come from. A product that ships from nowhere cannot be
+    // assessed for duty, corridor or feasibility by anybody reading it.
+    if (!has(listing.origin) && !has(listing.destination)) {
+      out.push({
+        code: "missing_corridor",
+        field: "origin",
+        message: "State at least one end of the route: where the goods ship from, or where they are needed.",
+      });
+    }
+  }
+
+  // A trade service and a distribution arrangement have NO shipped quantity and
+  // NO HS classification. Neither is asked for, and neither is missing.
+  if (family === "trade_services" || family === "distribution") {
+    if (!has(listing.details)) {
+      out.push({
+        code: "missing_scope",
+        field: "details",
+        message: family === "trade_services"
+          ? "Describe the service you offer or need."
+          : "Describe the distribution or representation arrangement.",
+      });
+    }
+    if (!has(listing.origin) && !has(listing.destination)) {
+      out.push({
+        code: "missing_coverage",
+        field: "origin",
+        message: "State the market or territory this covers.",
+      });
+    }
+  }
+
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Recommendations                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * What would make this listing land better. None of it blocks publication, and
+ * the copy never implies otherwise.
+ */
+function recommendationsFor(
+  listing: EligibilityListing,
+  family: ListingFamily,
+  ctx: EligibilityContext,
+): ValidationIssue[] {
+  const out: ValidationIssue[] = [];
+  const rec = (code: string, field: string, message: string) => out.push({ code, field, message });
+
+  if (family === "products") {
+    if (!has(listing.hs_code)) rec("hs_code", "hs_code", "Add the HS classification so buyers filtering by code can find this.");
+    if (!has(listing.incoterm)) rec("incoterm", "incoterm", "Add an Incoterm so the delivery basis is unambiguous.");
+    if (!(ctx.mediaCount ?? 0)) rec("images", "media", "Add product images.");
+    if (!has(listing.destination) || !has(listing.origin)) {
+      rec("full_corridor", "destination", "State both ends of the route where you know them.");
+    }
+  }
+
+  if (!has(listing.payment_terms)) rec("payment_terms", "payment_terms", "State your payment terms, or that they are to be agreed.");
+  if (!has(listing.key_notes)) rec("specifications", "key_notes", "Add technical specifications or key notes.");
+  if (!(ctx.documentCount ?? 0)) rec("documents", "documents", "Attach supporting documents.");
+  if (!(ctx.certificationCount ?? 0)) rec("certifications", "certifications", "List any certifications that apply.");
+  if (!has(listing.indicative_value_usd)) rec("indicative_value", "indicative_value_usd", "Add an indicative value.");
+
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Completeness                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * How much of the useful record the member stated, 0-100.
+ *
+ * It is a COUNT, weighted, and nothing more. It moves ranking and search
+ * visibility and it drives the prompts to improve a listing. It must never be
+ * rendered as a trust, quality or verification signal, and the band labels
+ * below are chosen so that no reading of them suggests Ponte checked anything.
+ */
+export function completenessScore(
+  listing: EligibilityListing,
+  family: ListingFamily,
+  ctx: EligibilityContext = { submitter: {} as GateSubmitter },
+): number {
+  const quantity = quantityFromRow(listing);
+  // Weight, and whether it is present. The required core carries most of the
+  // score so that a publishable listing always reads as at least "Complete".
+  const items: [number, boolean][] = [
+    [12, has(listing.product)],
+    [10, has(listing.details)],
+    [8, has(listing.submitter_role)],
+    [8, has(listing.payment_terms)],
+    [8, has(listing.validity_type)],
+    [8, has(listing.origin) || has(listing.destination)],
+    [6, has(listing.key_notes)],
+    [6, (ctx.documentCount ?? 0) > 0],
+    [5, has(listing.indicative_value_usd)],
+    [5, (ctx.certificationCount ?? 0) > 0],
+  ];
+
+  if (family === "products") {
+    items.push(
+      [10, quantity !== null && validateQuantity(quantity).length === 0],
+      [7, has(listing.hs_code)],
+      [7, has(listing.incoterm)],
+      [6, (ctx.mediaCount ?? 0) > 0],
+      [4, has(listing.origin) && has(listing.destination)],
+    );
+  } else {
+    // A service or distribution listing is not penalised for the product-only
+    // fields it has no business carrying. Its own depth is scored instead.
+    items.push(
+      [12, has(listing.origin) && has(listing.destination)],
+      [10, (ctx.mediaCount ?? 0) > 0],
+      [8, String(listing.details ?? "").trim().length > 400],
+      [4, has(listing.chain_depth)],
+    );
+  }
+
+  const total = items.reduce((s, [w]) => s + w, 0);
+  const got = items.reduce((s, [w, ok]) => s + (ok ? w : 0), 0);
+  return Math.round((got / total) * 100);
+}
+
+/** The band a completeness score falls in. Presentation only. */
+export type CompletenessBand = "basic" | "complete" | "highly_detailed";
+
+export function completenessBand(score: number): CompletenessBand {
+  if (score >= 85) return "highly_detailed";
+  if (score >= 60) return "complete";
+  return "basic";
+}
+
+export function completenessBandLabel(band: CompletenessBand): string {
+  switch (band) {
+    case "highly_detailed": return "Highly detailed";
+    case "complete": return "Complete";
+    case "basic": return "Basic";
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* The validator                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Decide whether this listing may publish, and say exactly why not when it may
+ * not.
+ *
+ * `publishable` is true only when there is nothing blocking AND no safety flag
+ * holds. The two are reported separately because they mean different things to
+ * the member: a blocking issue is theirs to fix, a flag is Ponte's to look at.
+ */
+export function evaluateListing(
+  listing: EligibilityListing,
+  ctx: EligibilityContext,
+): ListingValidationResult {
+  const now = ctx.now ?? Date.now();
+  const family = familyOf(listing);
+  const quantity = quantityFromRow(listing);
+
+  const blockingIssues: ValidationIssue[] = [];
+  const seen = new Set<string>();
+  const push = (issue: ValidationIssue) => {
+    if (seen.has(issue.code)) return;
+    seen.add(issue.code);
+    blockingIssues.push(issue);
+  };
+
+  // 1. The gate: submitter identity, verification, required facts, public text,
+  //    validity. Its `missing:quantity/unit/frequency` failures are suppressed
+  //    for the non-product families, which do not have those facts to give.
+  const gate = checkPublicationGate(listing, ctx.submitter, now);
+  if (!gate.ok) {
+    // The gate reports a quantity gap as one flat `missing:quantity`. This
+    // module says which part of the quantity is wrong and in what way, so the
+    // gate's verdict on those two keys is deferred to `familyBlockingIssues`
+    // rather than reported twice in two different vocabularies.
+    const ownedHere = new Set(["missing:quantity", "missing:unit"]);
+    // Frequency is a product fact. A trade service and a distribution
+    // arrangement have no shipped quantity, so they are never short of one.
+    const productOnly = new Set(["missing:quantity", "missing:unit", "missing:frequency"]);
+    for (const failure of gate.failures) {
+      if (ownedHere.has(failure)) continue;
+      if (family !== "products" && productOnly.has(failure)) continue;
+      push(gateIssue(failure));
+    }
+  }
+
+  // 2. The family's own rules.
+  for (const issue of familyBlockingIssues(listing, family, quantity)) push(issue);
+
+  // 3. The member's responsibility declaration. Ponte does not publish on
+  //    somebody's behalf without them saying they are entitled to have it
+  //    published.
+  if (!has(listing.declaration_accepted_at)) {
+    push({
+      code: "declaration_required",
+      field: "declaration",
+      message: "Accept the listing declaration confirming the information is accurate and that you are authorised to submit it.",
+    });
+  }
+
+  // 4. An extracted quantity is not a stated quantity until the member says so.
+  if (listing.quantity_extracted === true && !has(listing.quantity_confirmed_at)) {
+    push({
+      code: "extracted_quantity_unconfirmed",
+      field: "quantity",
+      message: "Confirm the quantity read from your uploaded document before it is published.",
+    });
+  }
+
+  // 5. The validity, re-checked here so an expired listing is never publishable
+  //    even if the gate was satisfied at an earlier moment.
+  if (!isListingCurrent(listing.validity_type, listing.valid_until, now)) {
+    push({ code: "missing_validity", field: "validity", message: "State how long this listing stays open." });
+  }
+
+  const safetyInput: SafetyInput = {
+    product: listing.product,
+    details: listing.details,
+    key_notes: listing.key_notes,
+    origin: listing.origin,
+    destination: listing.destination,
+    attachmentNames: ctx.attachmentNames,
+    duplicateOfRef: ctx.duplicateOfRef ?? null,
+    abuseReportCount: ctx.abuseReportCount ?? 0,
+  };
+  const flags = runSafetyChecks(safetyInput);
+
+  return {
+    publishable: blockingIssues.length === 0 && !flagsBlockPublication(flags),
+    blockingIssues,
+    recommendations: recommendationsFor(listing, family, ctx),
+    flags,
+    completenessScore: completenessScore(listing, family, ctx),
+  };
+}
+
+/**
+ * The status an evaluated listing lands in.
+ *
+ * The whole automated lifecycle in one expression, so no caller can invent a
+ * fourth outcome. A safety flag outranks an incomplete record: a listing that
+ * is both flagged and short of a field is a case for a person, not a form.
+ */
+export function outcomeStatus(
+  result: ListingValidationResult,
+): "approved" | "flagged" | "needs_information" {
+  if (flagsBlockPublication(result.flags)) return "flagged";
+  if (result.blockingIssues.length) return "needs_information";
+  return "approved";
+}

@@ -24,6 +24,30 @@ export async function sendBrokerageSubmission(data: any): Promise<void> {
   sent.push({ fn: "sendBrokerageSubmission", data });
 }
 
-export async function sendListingReceived(to: string, data: any): Promise<void> {
-  sent.push({ fn: "sendListingReceived", to, data });
+// The listing lifecycle senders. `sendListingReceived` and
+// `sendListingDecision` are gone with the manual-approval workflow: the first
+// told the member a person would read their listing, and the second announced
+// a decision nobody takes any more for the ordinary case (ADR-0012).
+export async function sendListingPublished(to: string, data: any): Promise<void> {
+  sent.push({ fn: "sendListingPublished", to, data });
+}
+
+export async function sendListingNeedsInformation(to: string, data: any): Promise<void> {
+  sent.push({ fn: "sendListingNeedsInformation", to, data });
+}
+
+export async function sendListingFlaggedAlert(data: any): Promise<void> {
+  sent.push({ fn: "sendListingFlaggedAlert", data });
+}
+
+export async function sendListingFlaggedNotice(to: string, data: any): Promise<void> {
+  sent.push({ fn: "sendListingFlaggedNotice", to, data });
+}
+
+export async function sendListingSuspended(to: string, data: any): Promise<void> {
+  sent.push({ fn: "sendListingSuspended", to, data });
+}
+
+export async function sendListingRejected(to: string, data: any): Promise<void> {
+  sent.push({ fn: "sendListingRejected", to, data });
 }
