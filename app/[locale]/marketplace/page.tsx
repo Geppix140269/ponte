@@ -24,6 +24,7 @@ import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
 import type { Locale } from "@/i18n/routing";
+import { levelRank } from "@/lib/verification/level";
 
 export const dynamic = "force-dynamic";
 
@@ -312,7 +313,7 @@ export default async function MarketplacePage({
       // A level that cannot be read is unknown, not zero. Rows without an
       // answer show no badge rather than claiming "not verified".
       for (const p of levels ?? []) {
-        trustByUser.set(p.id, Number(p.verification_level ?? 0));
+        trustByUser.set(p.id, levelRank(p.verification_level));
       }
     }
   }

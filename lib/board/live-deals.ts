@@ -6,6 +6,7 @@ import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { usesCanonicalKeys, canonicalColumnFor, type InventoryQuery } from "@/lib/board/inventory";
+import { levelRank } from "../verification/level";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -167,8 +168,10 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         .in("id", memberIds);
       const byUser = new Map<string, number>();
       for (const p of levels ?? []) {
-        const n = Number(p.verification_level);
-        if (Number.isFinite(n)) byUser.set(p.id, n);
+        // Rank, not coercion. An unrecognised value ranks -1 and is skipped,
+        // so it can never read as a level the member has not reached.
+        const rank = levelRank(p.verification_level);
+        if (rank >= 0) byUser.set(p.id, rank);
       }
       for (let i = 0; i < deals.length; i++) {
         const level = byUser.get(liveRows[i].user_id);

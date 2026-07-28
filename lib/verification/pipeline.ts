@@ -55,6 +55,7 @@ import {
   MEMBER_BUSINESS_ATTESTATION,
   type VerificationPurpose,
 } from "@/lib/verification/purpose";
+import { LEVEL_ON_COMPANY_VERIFIED } from "./level";
 
 /** Must appear on every result, every certificate, and in the terms. */
 export const VERIFICATION_DISCLAIMER =
@@ -442,7 +443,7 @@ export async function runLevel2Checks(
       await sb
         .from("profiles")
         .update({
-          verification_level: 2,
+          verification_level: LEVEL_ON_COMPANY_VERIFIED,
           verified_at: new Date().toISOString(),
           business_verification_id: id,
         })

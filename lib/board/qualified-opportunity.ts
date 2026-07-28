@@ -5,6 +5,7 @@ import { isoCode } from "@/lib/listing-terms";
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
 import { truthfulLabels, type PublicLabel } from "@/lib/listings/public-labels";
+import { levelRank } from "../verification/level";
 
 /**
  * One Qualified Opportunity, for the Find journey's detail screen (F02).
@@ -138,7 +139,7 @@ export async function getQualifiedOpportunity(
       verification = v ?? null;
     }
     const ownerEligible = isPubliclyEligibleVerification({
-      verificationLevel: profile ? Number(profile.verification_level ?? 0) : null,
+      verificationLevel: profile ? (profile.verification_level ?? null) : null,
       business_verification_id: profile?.business_verification_id ?? null,
       verification,
     });
@@ -175,7 +176,7 @@ export async function getQualifiedOpportunity(
       details: data.details ?? "",
       createdAt: data.created_at,
       deskManaged: Boolean(data.desk_managed),
-      trustLevel: profile ? Number(profile.verification_level ?? 0) : null,
+      trustLevel: profile ? levelRank(profile.verification_level) : null,
       // The receipts a public page may show. "Opportunity reviewed" is true
       // because this reader only ever returns an approved listing.
       evidence: truthfulLabels({

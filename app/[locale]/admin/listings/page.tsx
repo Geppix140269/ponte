@@ -22,6 +22,7 @@ import {
   type ExceptionRow,
 } from "@/lib/listings/exceptions";
 import type { SafetyFlag } from "@/lib/listings/safety";
+import { meetsMemberBusinessFloor } from "@/lib/verification/level";
 
 export const dynamic = "force-dynamic";
 
@@ -267,7 +268,7 @@ export default async function AdminListingsPage({
   // evidence panel. Batched to avoid a query per card: user -> bound record id,
   // then id -> the verification snapshot.
   const bvidByUser = new Map<string, string | null>();
-  const levelByUser = new Map<string, number>();
+  const levelByUser = new Map<string, string | null>();
   {
     const userIds = Array.from(new Set(all.map((l) => l.user_id)));
     if (userIds.length > 0) {
@@ -277,7 +278,7 @@ export default async function AdminListingsPage({
         .in("id", userIds);
       for (const p of profs ?? []) {
         bvidByUser.set(p.id, p.business_verification_id ?? null);
-        levelByUser.set(p.id, Number(p.verification_level ?? 0));
+        levelByUser.set(p.id, p.verification_level ?? null);
       }
     }
   }
@@ -299,7 +300,7 @@ export default async function AdminListingsPage({
     const bvid = bvidByUser.get(l.user_id) ?? null;
     const ver = bvid ? verById.get(bvid) ?? null : null;
     return {
-      verificationLevel: levelByUser.get(l.user_id) ?? 0,
+      verificationLevel: levelByUser.get(l.user_id) ?? null,
       business_verification_id: bvid,
       verification: ver
         ? { purpose: ver.purpose, status: ver.status, sanctions_hits: ver.sanctions_hits }
@@ -335,7 +336,7 @@ export default async function AdminListingsPage({
         s.business_verification_id &&
           s.verification &&
           ["auto_verified", "verified"].includes(s.verification.status ?? "") &&
-          s.verificationLevel >= 2,
+          meetsMemberBusinessFloor(s.verificationLevel),
       );
     })(),
   });

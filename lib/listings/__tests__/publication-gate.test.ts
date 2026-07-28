@@ -64,7 +64,7 @@ function goodListing(): GateListing {
 
 function goodSubmitter(): GateSubmitter {
   return {
-    verificationLevel: 2,
+    verificationLevel: "company_verified",
     business_verification_id: "ver-1",
     verification: {
       purpose: "member_business",
@@ -145,7 +145,7 @@ test("a failed or rejected business verification fails the gate", () => {
 
 test("a dropped profile level (suspension) fails the gate even if bound", () => {
   const s = goodSubmitter();
-  s.verificationLevel = 1; // re-screen dropped it from 2
+  s.verificationLevel = "identity_verified"; // re-screen dropped it from company_verified
   const r = checkPublicationGate(goodListing(), s, NOW);
   assert.equal(r.ok, false);
   assert.ok(!r.ok && r.failures.includes("verification_not_current"));
@@ -308,7 +308,7 @@ test("the earlier of validity and reconfirmation controls a finite listing", () 
 test("a currently passing member-business verification is publicly eligible", () => {
   assert.equal(
     isPubliclyEligibleVerification({
-      verificationLevel: 2,
+      verificationLevel: "company_verified",
       business_verification_id: "ver-1",
       verification: { purpose: "member_business", status: "verified" },
     }),
@@ -318,12 +318,12 @@ test("a currently passing member-business verification is publicly eligible", ()
 
 test("a dropped level, non-passing status, wrong purpose or no binding is ineligible", () => {
   const base = {
-    verificationLevel: 2,
+    verificationLevel: "company_verified",
     business_verification_id: "ver-1",
     verification: { purpose: "member_business", status: "verified" as string | null },
   };
   // level dropped by a re-screen suspension
-  assert.equal(isPubliclyEligibleVerification({ ...base, verificationLevel: 1 }), false);
+  assert.equal(isPubliclyEligibleVerification({ ...base, verificationLevel: "identity_verified" }), false);
   // status no longer passing
   for (const status of ["review", "failed", "rejected", "pending", "needs_selection"]) {
     assert.equal(
