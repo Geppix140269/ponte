@@ -576,6 +576,27 @@ Recorded because both looked like design defects and neither was:
 Both are written up in the evidence README so the next evidence run does not
 rediscover them.
 
+### D10. ADR-0011 landed on `main` during implementation, and does not conflict
+
+`ADR-0011-complete-market-discoverability-and-category-first-journeys.md` was
+merged while this branch was open. Its section 5 requires **Trade services and
+Distribution** to begin with clickable canonical categories rather than a
+generic one-line subject field, and its Context records that "Products already
+begin with a structured classification journey".
+
+So the two decisions agree and do not overlap. This change governs Products only
+and leaves the non-product subject step exactly as it found it, for ADR-0011's
+own implementation to replace.
+
+Two consequences, both acted on:
+
+- the recommended renumber for the intake ADR is **ADR-0012**. ADR-0011 is taken;
+- the scope-boundary check in `e2e/product-intake.spec.ts` no longer asserts
+  that the non-product subject field is present. Pinning it would pin behaviour
+  an accepted decision has already superseded. It asserts the boundary this
+  change actually claims: neither family reaches the product intake, and neither
+  is asked for a customs code.
+
 ## 13. Final evidence
 
 **Branch:** `claude/ai-product-intake-flow-4bcd56`

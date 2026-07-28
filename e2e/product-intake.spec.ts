@@ -257,16 +257,31 @@ test.describe("the live product journey", () => {
     }
   });
 
-  test("trade services and distribution are untouched by this change", async ({ page }) => {
+  test("trade services and distribution never reach the product intake", async ({ page }) => {
+    /*
+     * The boundary, not the current control.
+     *
+     * ADR-0011 section 5, merged to `main` on 28 July 2026, requires Trade
+     * services and Distribution to begin with clickable canonical categories
+     * instead of the generic one-line subject field they use today. Asserting
+     * that field is still there would pin behaviour an accepted decision has
+     * already superseded, and the next contributor would have to delete this
+     * test to do the work they were told to do.
+     *
+     * What must hold whatever replaces it is the scope boundary this change
+     * claims: neither family reaches the product intake, and neither is asked
+     * for a customs code. `requiresHsClassification()` is the single answer to
+     * that question and this is its behavioural check.
+     */
     for (const [family, intent] of [
       ["services", "offer_trade_service"],
       ["distribution", "offer_distribution_or_representation"],
     ] as const) {
       await page.goto(`/en/structure?family=${family}&intent=${intent}`, { waitUntil: "domcontentloaded" });
-      // The one-line subject step, exactly as before. No product intake here.
-      await expect(page.locator("#subject")).toBeVisible();
+      await expect(page.locator(".sstep").first()).toBeVisible();
       await expect(page.locator(".pintake")).toHaveCount(0);
-      await expect(page.getByText("No HS code is asked for")).toBeVisible();
+      await expect(page.locator(".hs__grid")).toHaveCount(0);
+      await expect(page.getByText("Identify this product")).toHaveCount(0);
     }
   });
 });
