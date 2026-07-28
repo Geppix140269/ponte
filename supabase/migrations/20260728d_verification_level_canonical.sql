@@ -44,6 +44,14 @@
 
 begin;
 
+-- Fail fast rather than queueing. Steps 2 to 4 each take ACCESS EXCLUSIVE on
+-- profiles, and at nine rows the work itself is instantaneous, so any delay
+-- would be contention with an unexpected reader rather than this migration
+-- doing anything slow. Waiting behind that lock would block every write to
+-- profiles for as long as the other query runs; failing after five seconds
+-- leaves production exactly as it was and can simply be retried.
+set lock_timeout = '5s';
+
 -- 1. The single null. `unverified` is the truthful reading of a profile that
 --    has never been through a check, and it is already the column default, so
 --    this row simply catches up with every row written since that default.
