@@ -14,12 +14,14 @@
 //    instance found on 2026-07-22 was a double-encoded em dash, so the
 //    encoding fault and the style rule are the same fault twice.
 //
-// 4. NUL bytes. On 2026-07-28 lib/listings/safety.ts reached a pull request
-//    carrying one raw NUL, written where the escape sequence \x00 was meant.
-//    Git classifies any file containing a NUL as binary, so the file showed as
-//    "0 additions, 0 deletions" and its 12 KB of new safety logic could not be
-//    read in the diff at all. The code compiled and its tests passed, which is
-//    exactly why nothing else caught it. A source file is text.
+// 4. NUL bytes, anywhere. On 2026-07-28 lib/listings/safety.ts reached main
+//    carrying one raw NUL, written where the escape sequence was meant. Git
+//    classifies any file containing a NUL as binary, so that file showed in
+//    the pull request as "Bin 12173 bytes" and its twelve kilobytes of new
+//    safety logic could not be read in the diff at all. It compiled, and its
+//    tests passed, which is precisely why nothing else caught it. A reviewer
+//    cannot review what the diff will not print, so this is checked
+//    everywhere rather than only where copy lives.
 //
 // messages/ is already covered for em dashes by check-messages.mjs, and is
 // checked here for BOM and mojibake only, so the two scripts do not disagree.
@@ -32,9 +34,6 @@ import { join } from "node:path";
 
 const EM_DASH = "—";
 const BOM = "﻿";
-// Written as an escape on purpose: a literal NUL here would be the very
-// fault this check exists to catch.
-const NUL = "\u0000";
 
 // Only where copy lives. Widening this to the whole repo would fail on SQL
 // comments and brief documents that no reader ever sees.
@@ -74,16 +73,18 @@ for (const file of files) {
     continue;
   }
 
-  if (text.startsWith(BOM)) {
-    problems.push(`${file}:1  starts with a UTF-8 BOM`);
-  }
-
-  const nul = text.indexOf(NUL);
-  if (nul !== -1) {
-    const line = text.slice(0, nul).split("\n").length;
+  // The byte, found by code point rather than by matching a literal. A NUL
+  // written into this file would make this check unreadable in its own diff.
+  const nulAt = [...text].findIndex((c) => c.charCodeAt(0) === 0);
+  if (nulAt !== -1) {
+    const line = text.slice(0, nulAt).split("\n").length;
     problems.push(
       `${file}:${line}  raw NUL byte; git will treat this file as binary`,
     );
+  }
+
+  if (text.startsWith(BOM)) {
+    problems.push(`${file}:1  starts with a UTF-8 BOM`);
   }
 
   const lines = text.split("\n");
@@ -109,8 +110,8 @@ if (problems.length) {
     "\nBOM: re-save the file as UTF-8 without a signature." +
       "\nMojibake: the file was saved through a cp1252 round trip; repair the characters." +
       "\nEm dash: rewrite the sentence. Use a comma, a colon, or two sentences." +
-      "\nNUL byte: you almost certainly meant the escape sequence, not the byte." +
-      "\n  Write \\x00 or \\u0000 inside the string literal.",
+      "\nNUL byte: you meant the escape sequence, not the byte. Write it as a" +
+      "\n  backslash escape inside the string literal.",
   );
   process.exit(1);
 }

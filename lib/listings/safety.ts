@@ -166,7 +166,7 @@ const FALSE_POSITIVE_PHRASES: readonly RegExp[] = [
 const findTerm = (haystack: string, terms: readonly string[]): string | null => {
   let text = haystack;
   for (const phrase of FALSE_POSITIVE_PHRASES) {
-    text = text.replace(phrase, (m) => "\x00".repeat(m.length));
+    text = text.replace(phrase, (m) => " ".repeat(m.length));
   }
   for (const term of terms) {
     // Word-boundary match, so "arms" never fires inside "harms" and "ivory"

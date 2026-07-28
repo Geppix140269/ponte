@@ -233,7 +233,21 @@ export function emptyDraft(): StructureDraft {
  * stated and what it says.
  */
 export function draftQuantity(draft: StructureDraft): ListingQuantity | null {
-  if (!draft.quantityMode) return null;
+  // A bare number with no mode reads as `exact`, which is the same rule
+  // `quantityFromRow` already applies to a stored listing that predates the
+  // mode column. It matters on the AI intake route: extraction writes
+  // `quantity`, `unit` and `frequency` from the document and never sets a
+  // mode, so without this fallback a document-extracted draft has no quantity
+  // here at all.
+  if (!draft.quantityMode) {
+    if (draft.quantity === null || draft.quantity === undefined) return null;
+    return {
+      mode: "exact",
+      value: draft.quantity,
+      unit: draft.unit,
+      frequency: normaliseFrequency(draft.frequency),
+    };
+  }
   return {
     mode: draft.quantityMode,
     value: draft.quantity,
@@ -647,6 +661,11 @@ export function synthesiseDetails(draft: StructureDraft): string {
       : intentClause(draft.intent, product || "the stated product"),
   ];
 
+  // The quantity is written with its MODE. "Approximately 2,500 MT" and
+  // "2,500 MT" are different commercial claims, and dropping the qualifier
+  // states a firmness the member did not offer.
+  const quantityText = formatQuantity(draftQuantity(draft));
+  if (quantityText) parts.push(`Quantity: ${quantityText}.`);
   // The structured classification, written into the record in words as well as
   // stored as keys. The keys are what filters; this is what a reader sees, and
   // it is what keeps the member's actual choice legible on a record even where
@@ -654,13 +673,13 @@ export function synthesiseDetails(draft: StructureDraft): string {
   const classification = classificationClauses(draft);
   parts.push(...classification);
 
-  // The quantity is written with its MODE. "Approximately 2,500 MT" and
-  // "2,500 MT" are different commercial claims, and dropping the qualifier
-  // states a firmness the member did not offer. This supersedes the raw
-  // quantity/unit/frequency concatenation: those three columns are now derived
-  // from the structured quantity rather than being the source of it.
-  const quantityText = formatQuantity(draftQuantity(draft));
-  if (quantityText) parts.push(`Quantity: ${quantityText}.`);
+  // The raw `quantity`/`unit`/`frequency` concatenation that stood here is
+  // gone. It duplicated the mode-aware clause above: a listing built through
+  // the composer carried BOTH, so its stored `details` said "Quantity:" twice,
+  // once formatted and once not. The mode-aware clause is the survivor because
+  // it is the only one that can express approximate, minimum, maximum, a range
+  // or "on request", and `draftQuantity` now reads a mode-less number as
+  // `exact` so the AI intake route keeps its quantity.
 
   // One end of the route is often the only end this member decides, so a
   // half-stated route is written as the half it is rather than padded with an
