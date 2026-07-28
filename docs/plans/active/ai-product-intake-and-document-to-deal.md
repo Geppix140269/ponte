@@ -597,6 +597,26 @@ Two consequences, both acted on:
   change actually claims: neither family reaches the product intake, and neither
   is asked for a customs code.
 
+### D11. The semantic stage was overwriting stronger lexical evidence
+
+Found on the Netlify deploy preview, which has a model configured where the
+local run does not. A member typing `gas oil`, which **is** a recorded synonym
+of the EN 590 grade, saw the top candidate's band fall from "Close match" to
+"Likely match", because the model also named that product and the merge replaced
+the 0.95 exact-synonym score with the 0.62 semantic one.
+
+Two rules were wrong and both are fixed:
+
+- when both stages find the same product, the stronger evidence is kept and the
+  model's reason is **added** to it. Agreement between two stages is not weaker
+  evidence than one stage alone;
+- the merged set is ranked by score as one list. Ranking the semantic half above
+  the lexical half meant a 0.62 model guess outranked a 0.95 exact-synonym match
+  the model had simply not mentioned.
+
+The merge is now `mergeSemantic`, a pure exported function, so both rules and the
+"a model cannot invent a product" rule are unit-tested without a network call.
+
 ## 13. Final evidence
 
 **Branch:** `claude/ai-product-intake-flow-4bcd56`
@@ -608,7 +628,7 @@ Two consequences, both acted on:
 | `node scripts/check-messages.mjs` | pass |
 | `node scripts/check-encoding.mjs` | pass, 549+ files: no BOM, no mojibake, no em dashes in `app/` or `components/` |
 | `node scripts/check-governance.mjs` | pass; icon-law ratchet unchanged at 11 lucide and 17 authored SVG, so this change introduced neither |
-| `npm test` | pass, including 20 resolver, 24 document, 26 intake-session and 24 intake-UI tests added here |
+| `npm test` | pass, including 25 resolver, 24 document, 26 intake-session and 24 intake-UI tests added here |
 | `tsc --noEmit` | pass |
 | `next build` | pass |
 

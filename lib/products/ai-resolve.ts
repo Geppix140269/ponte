@@ -52,7 +52,7 @@ const SEMANTIC_DECAY = 0.08;
  * or `ambiguous`, never as `resolved`.
  */
 
-type ModelAnswer = {
+export type ModelAnswer = {
   matches?: { key?: unknown; because?: unknown }[];
   clarify?: unknown;
   language?: unknown;
@@ -125,6 +125,22 @@ export async function resolveProductSemantically(
     return lexical;
   }
 
+  return mergeSemantic(lexical, answer, raw.trim());
+}
+
+/**
+ * Fold a model answer into the lexical outcome. Pure, so the two rules that
+ * matter are unit-testable without a network call: an unknown key cannot invent
+ * a product, and agreement between the two stages is not weaker evidence than
+ * one stage alone.
+ */
+export function mergeSemantic(lexical: ResolutionOutcome, answer: ModelAnswer, wording: string): ResolutionOutcome {
+  // The lexical candidates this run already produced, by key, so a product the
+  // model also names keeps its stronger evidence.
+  const lexicalByKey = new Map(
+    (lexical.kind === "ambiguous" ? lexical.candidates : []).map((c) => [c.product.key, c]),
+  );
+
   const seen = new Set<string>();
   const semantic: ProductCandidate[] = [];
   for (const match of Array.isArray(answer.matches) ? answer.matches : []) {
@@ -133,38 +149,59 @@ export async function resolveProductSemantically(
     const product = productByKey(key);
     if (!product || seen.has(product.key)) continue;
     seen.add(product.key);
+
+    const reason = { kind: "semantic" as const, term: cleanClause(match?.because) || "matched by description" };
+    const already = lexicalByKey.get(product.key);
+
+    if (already) {
+      /*
+       * Both stages found it, so keep the stronger evidence and add the
+       * model's reason to it.
+       *
+       * Overwriting the lexical score with the semantic one was a real
+       * regression, visible on a deploy preview: a member typing `gas oil`,
+       * which IS a recorded synonym of the EN 590 grade, saw its band fall
+       * from "Close match" to "Likely match" because the model had also
+       * mentioned it. Agreement between two stages is not weaker evidence
+       * than one stage alone.
+       */
+      semantic.push({ ...already, matchedOn: [...already.matchedOn, reason] });
+      continue;
+    }
+
     const score = Math.max(0.3, SEMANTIC_SCORE - SEMANTIC_DECAY * semantic.length);
-    semantic.push({
-      product,
-      score,
-      band: bandFor(score),
-      matchedOn: [{ kind: "semantic", term: cleanClause(match?.because) || "matched by description" }],
-    });
+    semantic.push({ product, score, band: bandFor(score), matchedOn: [reason] });
     if (semantic.length === 4) break;
   }
+
 
   if (semantic.length === 0) {
     // The lexical stage found nothing and the model recognised nothing. That is
     // still an explained outcome, never a blank screen.
-    return lexical.kind === "ambiguous" ? lexical : { kind: "none", wording: raw.trim(), tried: [text] };
+    return lexical.kind === "ambiguous" ? lexical : { kind: "none", wording, tried: [wording] };
   }
 
-  // Keep any weak lexical candidates below the semantic ones rather than
+  // Keep the lexical candidates the model did not mention rather than
   // discarding them: they were real matches that merely failed to settle.
   const carried = lexical.kind === "ambiguous" ? lexical.candidates.filter((c) => !seen.has(c.product.key)) : [];
-  const candidates = [...semantic, ...carried];
+
+  // Rank the whole merged set by score, not the two halves separately. Putting
+  // every semantic result above every lexical one meant a 0.62 model guess
+  // outranked a 0.95 exact-synonym match that the model simply had not
+  // mentioned, which inverts the evidence.
+  const candidates = [...semantic, ...carried].sort(
+    (a, b) => b.score - a.score || a.product.name.localeCompare(b.product.name),
+  );
 
   const clarify = cleanClause(answer.clarify);
   if (candidates.length > 1) {
     return {
       kind: "ambiguous",
       candidates,
-      wording: raw.trim(),
-      question:
-        clarify ||
-        `More than one product could match "${raw.trim()}". Which do you trade?`,
+      wording,
+      question: clarify || `More than one product could match "${wording}". Which do you trade?`,
     };
   }
 
-  return { kind: "candidates", candidates, wording: raw.trim() };
+  return { kind: "candidates", candidates, wording };
 }
