@@ -101,8 +101,12 @@ async function settled(page: Page): Promise<void> {
     // both, so a frame is only taken once the drawing has stopped moving too.
     const signature = await page.evaluate(() => {
       const el = document.querySelector(".pbridge");
-      const track = document.querySelector(".pbridge .br__vsvg .d-track");
-      const live = document.querySelector(".pbridge .br__vsvg .d-live");
+      // Both modes: `.br__vsvg` is the elevation svg and `.br__deck` the
+      // horizontal one. Reading only the elevation missed the desktop live deck
+      // changing as the selection moved, which is what left the settled-runner
+      // frame varying between runs.
+      const track = document.querySelector(".pbridge .br .d-track");
+      const live = document.querySelector(".pbridge .br .d-live");
       return [
         Math.round(el?.getBoundingClientRect().height ?? -1),
         // The document offset too: `reveal` scrolls to the bridge, so anything
@@ -111,6 +115,12 @@ async function settled(page: Page): Promise<void> {
         track?.getAttribute("d")?.length ?? 0,
         live?.getAttribute("d")?.length ?? 0,
         document.querySelectorAll(".pbridge .brst").length,
+        // The Desk command bar is in every viewport frame and its account
+        // control sits behind `<Suspense fallback={null}>`, so "Sign in" pops
+        // in after hydration. A frame taken before that shows a bar with a gap
+        // in it, which is what left the neutral mobile frame varying while the
+        // bridge below it was provably identical.
+        document.querySelector(".cmd")?.textContent?.length ?? 0,
       ].join("|");
     });
     if (!signature.startsWith("-1") && signature === previous) return;
@@ -224,8 +234,13 @@ async function reveal(page: Page): Promise<void> {
     const bridge = document.querySelector(".pbridge");
     if (!bridge) return;
     const bar = document.querySelector(".cmd");
-    const clearance = (bar ? bar.getBoundingClientRect().height : 0) + 14;
-    window.scrollTo({ top: window.scrollY + bridge.getBoundingClientRect().top - clearance, behavior: "instant" as ScrollBehavior });
+    const clearance = Math.round(bar ? bar.getBoundingClientRect().height : 0) + 14;
+    // Rounded. The landing's boxes have sub-pixel heights, so an unrounded
+    // target lands on a fractional scroll offset and the browser resolves the
+    // sub-pixel rendering differently between runs. That was enough to make the
+    // neutral mobile frame differ while nothing about the page had changed.
+    const target = Math.round(window.scrollY + bridge.getBoundingClientRect().top - clearance);
+    window.scrollTo({ top: target, behavior: "instant" as ScrollBehavior });
   });
 }
 
@@ -609,6 +624,27 @@ test("motion evidence: the gold runner crosses, then stops", async ({ page }) =>
   await stations(page).nth(1).click();
   await unhover(page);
   await expect(page.locator(".pbridge .br__runner")).toHaveCount(0, { timeout: 5000 });
+});
+
+/*
+  The settled frame is captured on its own page, not at the end of the stepped
+  sequence above.
+
+  That test pauses every animation and rewinds their `currentTime` by hand. Even
+  after playing them again the animations are resumed from arbitrary offsets, and
+  the frame taken afterwards was not byte-stable between runs, while the DOM,
+  the live deck and every measured position provably were. Rather than chase an
+  animation-frame difference, the frame is taken from a clean load where the
+  selection is made normally. That is also what the frame claims to show.
+*/
+test("motion evidence: the settled bridge, from a clean load", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+
+  await stations(page).nth(0).click();
+  await unhover(page);
+  await expect(page.locator(".pbridge .br__runner")).toHaveCount(0, { timeout: 5000 });
+  await measured(page);
   await shotFramed(page, "desktop-8-runner-settled");
 });
 

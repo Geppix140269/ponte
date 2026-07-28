@@ -68,7 +68,16 @@ signal crosses the bridge; it does not slide between two stations. It also
 covers most of the distance early, because `br-travel` uses the approved
 `--pf-ease` `cubic-bezier(.2,.6,.2,1)`, which is front-loaded.
 
-**All sixteen frames are byte-identical across three consecutive runs.**
+**Fifteen of the sixteen frames are byte-identical across repeated runs.**
+
+`mobile-1-family-neutral-390x844.png` varies occasionally. It is a viewport
+frame, so it includes the Desk command bar, whose account control sits behind
+`<Suspense fallback={null}>` and appears after hydration. The bridge itself is
+provably not the cause: measured across four runs, the scroll position, the
+block's height and offset, the traced curve and every node position are
+identical to the hundredth of a pixel. The variance is page chrome above the
+bridge resolving asynchronously, not geometry, and it is recorded here rather
+than presented as stability the frame does not have.
 
 ## 3. Product sectors and HS language are gone
 
