@@ -186,6 +186,9 @@ export default function StructureComposer({
       // rather than half-submitting it.
       const payloads = submitPayloads(draft, { draft: asDraft, nowIso: new Date().toISOString() });
       const refs: string[] = [];
+      // The outcome reported below is the last response's. Declared out here
+      // because it is read after the loop; inside it, it died with the iteration.
+      let body: Record<string, unknown> = {};
       for (const payload of payloads) {
         const res = await fetch("/api/marketplace/submit", {
           method: "POST",
@@ -197,12 +200,12 @@ export default function StructureComposer({
           setGateOpen(true);
           return;
         }
-        const j = await res.json().catch(() => ({}));
+        body = await res.json().catch(() => ({}));
         if (!res.ok) {
           replace("error");
           return;
         }
-        if (j.ref) refs.push(j.ref);
+        if (typeof body.ref === "string") refs.push(body.ref);
       }
       setResultRef(refs.join(", "));
       setSavedDraft(asDraft);
@@ -214,10 +217,10 @@ export default function StructureComposer({
         asDraft
           ? null
           : {
-              status: typeof j.status === "string" ? j.status : "submitted",
-              blockingIssues: Array.isArray(j.blockingIssues) ? j.blockingIssues : [],
+              status: typeof body.status === "string" ? body.status : "submitted",
+              blockingIssues: Array.isArray(body.blockingIssues) ? body.blockingIssues : [],
               completenessScore:
-                typeof j.completenessScore === "number" ? j.completenessScore : null,
+                typeof body.completenessScore === "number" ? body.completenessScore : null,
             },
       );
       replace("received");

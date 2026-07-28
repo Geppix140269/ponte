@@ -21,6 +21,8 @@ import {
 } from "../listings/quantity";
 
 export type { QuantityMode };
+
+import {
   serviceCategory,
   serviceSubcategory,
   subcategoryBelongsTo,
@@ -170,6 +172,7 @@ export type StructureDraft = Classification & {
    * a mode is picked, and picking a mode is an explicit act that writes state.
    */
   quantityMode: QuantityMode | null;
+  /**
    * What Ponte understood about the product, when the member came through the
    * AI intake. Null for a record built by browsing the HS catalogue, which is
    * still a supported route and produces a product name and a code and nothing
