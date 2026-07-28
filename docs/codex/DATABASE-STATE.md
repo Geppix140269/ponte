@@ -4,6 +4,55 @@
 
 This file is a guardrail, not a complete schema dump. Codex must inspect the live production record and repository migrations before proposing database work.
 
+## Full reconciliation, 28 July 2026
+
+Every file in `supabase/migrations/` was verified object by object against
+production (`cptglsmjmzcfpjndqfmc`): 260 assertions across columns, constraints,
+indexes, functions, triggers, policies, RLS state, storage buckets and data
+backfills. Full evidence:
+`docs/codex/audits/2026-07-28-production-migration-reconciliation.md`. Read it
+before proposing database work; the summary here is not a substitute.
+
+**No repository migration was missing from production.** The concern that
+prompted the audit was inverted: 26 of the 40 files audited had been applied by
+hand and never recorded, so the ledger, not the schema, was the broken thing.
+
+| Status at audit time | Count |
+|---|---|
+| `applied_recorded` | 13 |
+| `applied_unrecorded` | 25 |
+| `partially_applied` | 1 |
+| `missing` | **0** |
+| `superseded` | 0 |
+| `unsafe_or_ambiguous` | 1 |
+
+- **The ledger was repaired**, from 12 rows to 39, recording every
+  verified-applied migration. INSERT-only; no schema and no application data was
+  touched. Evidence and rollback:
+  `docs/codex/audits/2026-07-28-ledger-repair.sql`. One `UPDATE` aligned
+  `20260724a`'s stale hash, whose file was corrected in `9fa0aa6` after it was
+  applied; production was verified to match the corrected file.
+- **There are two ledgers.** `supabase_migrations.schema_migrations` holds one
+  row (`01`) and has not advanced. `public.schema_migrations` is the
+  hand-maintained record and is the one to keep current.
+- **`20260725a_verification_needs_selection.sql` must never be applied.** It
+  drops `verified` and `rejected` from the `verifications` status constraint;
+  production holds rows in both, so it fails outright, and removing `verified`
+  would make the publication gate unpassable. It is redundant: `20260721i`
+  already put `needs_selection` in force. Owner direction of 28 July 2026 is to
+  exclude it permanently and keep it out of any automated chain; that change
+  ships separately from this record.
+- **`20260721g` is partially applied.** `profiles.verification_level` is live as
+  `text`, not the `int` the migration declares, because the column pre-existed
+  and `if not exists` no-opped. This is the recorded R-01 defect. **No mapping
+  has been guessed.** A separate remediation proposal is required before any
+  change, covering every live value, every application reference, the proposed
+  canonical type, the exact mapping and rollback, and whether the column should
+  exist at all.
+- **The repository cannot rebuild production.** 21 tables and 8 functions exist
+  in production that no repository file creates. Treated as a separate
+  workstream; no schema dump is to be generated or applied without review.
+
 ## Known production-aligned changes
 
 - Blocks A-F migrations dated `20260723a` through `20260723f` were reported applied to production and verified during the founding-launch work.
@@ -16,7 +65,7 @@ This file is a guardrail, not a complete schema dump. Codex must inspect the liv
 
 ## Written but NOT applied
 
-`20260728a_automated_listing_publication.sql` implements ADR-0012. It has **not**
+`20260728c_automated_listing_publication.sql` implements ADR-0012. It has **not**
 been applied to production and has not been probe-verified. It is additive and
 idempotent throughout.
 
@@ -97,6 +146,31 @@ migration drops both names before adding its own.
   (see below), so a merge does not apply anything.
 
 ## The migration ledger was publicly readable and writable, and is now closed
+
+> **CLOSED — RESOLVED, 28 July 2026.** Repaired by
+> [PR #76](https://github.com/Geppix140269/ponte/pull/76)
+> (`20260728b_schema_migrations_rls.sql`), applied to production at
+> **14:07:35 UTC** and recorded in the ledger it protects.
+>
+> Independently re-verified on 28 July 2026 for the migration reconciliation
+> ([PR #82](https://github.com/Geppix140269/ponte/pull/82), §6.4):
+>
+> | Check | Before | After |
+> |---|---|---|
+> | anon `GET /rest/v1/schema_migrations` | `200` with real rows | **`401`, SQLSTATE `42501`** |
+> | `pg_class.relrowsecurity` | `false` | **`true`** |
+> | `anon` / `authenticated` privileges | all seven each | **none** |
+> | `postgres` / `service_role` privileges | all seven | **all seven, unchanged** |
+> | Ledger readable by `scripts/db-query.mjs` | yes | **yes, 40 rows** |
+>
+> Both write paths are unaffected, which was the condition for closing this:
+> `postgres` owns the table and an owner bypasses RLS unless FORCE is set, which
+> the migration deliberately does not set, and `service_role` has
+> `rolbypassrls`. No application code reads or writes this table.
+>
+> **No further action.** The narrative below is retained as the record of what
+> was wrong and why. There was no GitHub issue for this item; it was tracked in
+> this file and in the audit report, and is closed here.
 
 `public.schema_migrations` had row level security **disabled**, and `anon` and
 `authenticated` each held all seven table privileges: SELECT, INSERT, UPDATE,
