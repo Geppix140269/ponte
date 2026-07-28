@@ -36,6 +36,7 @@
  * and no database.
  */
 
+import { sectorForChapter } from "@/lib/taxonomy/market";
 import { sectorLabel } from "./catalogue";
 import { fuzzyMatches } from "./fuzzy";
 import {
@@ -48,6 +49,7 @@ import {
 import {
   bandFor,
   isIdentified,
+  type IdentifiedProduct,
   type ProductCandidate,
   type ResolutionOutcome,
 } from "./model";
@@ -198,6 +200,38 @@ export async function resolveThroughCascade(
   const lexicalCandidates = lexical.kind === "none" ? [] : [...lexical.candidates];
   const identified = identification ? candidatesFrom(identification) : [];
 
+  /*
+   * Fill a missing customs suggestion from the catalogue itself.
+   *
+   * The model recalls a code for most products and not for all: on the deploy
+   * preview `avocados from Peru` came back with 0804.40 and a bare `avocado`
+   * came back with none, which reads as Ponte knowing less about the simpler
+   * question. The HS index answers `avocado` perfectly well, so it is asked.
+   *
+   * Still only ever a suggestion, still confirmable, and still never a gate.
+   */
+  if (options.hsSearch) {
+    for (const candidate of identified) {
+      const product = candidate.product;
+      if (!isIdentified(product) || product.hs) continue;
+      try {
+        const hits = (await options.hsSearch(product.generic ?? product.name)).slice(0, 2);
+        if (hits.length === 0) continue;
+        const chapter = sectorForChapter(Number(hits[0].code.slice(0, 2)));
+        const filled: IdentifiedProduct = {
+          ...product,
+          hs: hits[0],
+          hsCandidates: hits,
+          sector: product.sector || chapter?.key || "",
+        };
+        candidate.product = filled;
+      } catch {
+        // A catalogue outage leaves the product without a suggestion, which is
+        // the honest outcome and not a reason to fail the resolution.
+      }
+    }
+  }
+
   // A curated product the model recognised as the same thing keeps its curated
   // identity and its stronger score: Ponte knows more about those than it can
   // infer, and the member should get that knowledge rather than a re-derivation
@@ -219,11 +253,33 @@ export async function resolveThroughCascade(
     }
   }
 
+  /*
+   * Drop an identified product that is a curated one under another name.
+   *
+   * Keying on the product key alone was not enough, and the deploy preview
+   * showed why: for `gas oil` the model returned its own reading of all three
+   * gasoil grades, which arrived as `identified:gasoil-10-ppm-...` beside the
+   * curated `gasoil-10ppm-en590`. Different keys, same product, six rows where
+   * there should be three.
+   *
+   * So an identified product is put back through the curated resolver by name.
+   * If that lands decisively on a curated product already in the list, the
+   * identified copy is the weaker duplicate and goes.
+   */
+  const duplicatesCurated = (candidate: ProductCandidate): boolean => {
+    const byName = resolveProduct(candidate.product.name);
+    if (byName.kind === "none") return false;
+    const top = byName.candidates[0];
+    const decisive = top.matchedOn.some(
+      (m) => m.kind === "standard" || m.kind === "exact_name" || m.kind === "exact_synonym",
+    );
+    return decisive && curatedKeys.has(top.product.key);
+  };
+
   const merged = [
     ...lexicalCandidates,
     ...promoted,
-    // Drop an identified product that duplicates a curated one we already have.
-    ...identified.filter((c) => !curatedKeys.has(c.product.key)),
+    ...identified.filter((c) => !curatedKeys.has(c.product.key) && !duplicatesCurated(c)),
     // Keep fuzzy corrections below everything real, and only when nothing else
     // answered: suggesting `gasoil` to somebody who typed `avocado` is worse
     // than saying nothing.

@@ -477,6 +477,53 @@ async function run(): Promise<void> {
     for (let i = 1; i < scores.length; i++) assert.ok(scores[i - 1] >= scores[i], "candidates were not ranked");
   });
 
+  await test("a curated product the model re-derived under another name is not shown twice", async () => {
+    /*
+     * Found on the deploy preview. For `gas oil` the model returned its own
+     * reading of all three gasoil grades. They arrived with keys like
+     * `identified:gasoil-10-ppm-ulsd-en-590`, which are not the curated keys,
+     * so the key-based dedupe missed them and the member saw six rows: each
+     * grade once as a curated product and once as an identification of itself.
+     */
+    const echo: RawIdentification = {
+      isProduct: true,
+      products: [
+        { name: "Gasoil 10 ppm (ULSD, EN 590)", sector: "min", group: "Refined petroleum products", hsCandidates: ["271019"], confidence: 0.9 },
+        { name: "Gasoil 50 ppm", sector: "min", group: "Refined petroleum products", hsCandidates: ["271019"], confidence: 0.8 },
+        { name: "Gasoil 500 ppm", sector: "min", group: "Refined petroleum products", hsCandidates: ["271019"], confidence: 0.7 },
+      ],
+    };
+    const outcome = await resolveThroughCascade("gas oil", { identify: identifyWith(echo), hsLookup });
+    if (outcome.kind === "none") throw new Error("unreachable");
+
+    assert.equal(outcome.candidates.length, 3, `expected three grades, got ${outcome.candidates.length}`);
+    assert.equal(new Set(names(outcome)).size, 3, "the same product was offered twice under two provenances");
+    // And the surviving copies are the curated ones, which know more.
+    for (const candidate of outcome.candidates) {
+      assert.equal(isIdentified(candidate.product), false, "a curated product was displaced by a re-derivation");
+    }
+  });
+
+  await test("an identified product with no recalled code is given one from the catalogue", async () => {
+    // `avocados from Peru` came back with 0804.40 on the preview and a bare
+    // `avocado` came back with none, which reads as Ponte knowing less about
+    // the simpler question. The customs index answers it perfectly well.
+    const noCode: RawIdentification = {
+      isProduct: true,
+      products: [{ name: "avocado", generic: "avocado", sector: "agri", group: "Fresh fruit", confidence: 0.9 }],
+    };
+    const outcome = await resolveThroughCascade("avocado", {
+      identify: identifyWith(noCode),
+      hsLookup,
+      hsSearch,
+    });
+    if (outcome.kind === "none") throw new Error("unreachable");
+    const top = outcome.candidates[0].product;
+    assert.equal(top.hs?.code, "080440", "no customs suggestion was offered for a product the catalogue holds");
+    // And the sector is still derived from the code, not from the model.
+    assert.equal(top.sector, "agri");
+  });
+
   console.log(`ok   ${passed} resolution cascade tests passed`);
 }
 
