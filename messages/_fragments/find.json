@@ -13,6 +13,34 @@
       "join": "Join the network",
       "home": "Ponte Trade home"
     },
+    "family": {
+      "eyebrow": "Find",
+      "title": "What are you looking for?",
+      "lead": "Choose a market. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "legend": "Choose a market",
+      "products": "Requirements and offers for physical goods.",
+      "services": "Freight, customs, inspection, finance and the rest of the trade stack.",
+      "distribution": "Distributors, agents, representatives and market coverage.",
+      "servicesTitle": "Which trade service?",
+      "servicesLead": "Choose the category. You can narrow it further on the next screen.",
+      "distributionTitle": "What kind of distribution partner?",
+      "distributionLead": "Choose the partner or channel type you are looking for.",
+      "subcategoryLegend": "Narrow it down, or see everything in {category}",
+      "allIn": "Everything in {category}",
+      "changeMarket": "Change market",
+      "changeCategory": "Change category",
+      "resultsFor": "{category}",
+      "crumbFamily": "Market",
+      "crumbCategory": "Category",
+      "crumbDetail": "Detail",
+      "crumbPartner": "Partner type"
+    },
+    "unclassified": {
+      "badge": "Not yet classified",
+      "title": "Ponte cannot filter this market by category yet",
+      "body": "The category fields exist in this journey but no published record carries one, so filtering here would return an empty list rather than an answer. Records created from now on are classified as they are made. Nothing is missing from the market; Ponte simply cannot yet tell you which part of it this is.",
+      "action": "See everything in this market"
+    },
     "entry": {
       "eyebrow": "Find",
       "title": "What are you looking for?",

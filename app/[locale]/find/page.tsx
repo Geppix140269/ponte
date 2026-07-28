@@ -4,14 +4,24 @@ import { Link } from "@/i18n/navigation";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import FindChrome from "@/components/find/FindChrome";
+import FindCategoryEntry from "@/components/find/FindCategoryEntry";
 import QoRow from "@/components/find/QoRow";
 import SignalRow from "@/components/find/SignalRow";
 import HsProductPicker from "@/components/find/HsProductPicker";
 import PonteFooter from "@/components/PonteFooter";
-import { getLiveDeals } from "@/lib/board/live-deals";
-import { searchMarketSignals } from "@/lib/board/market-signals";
-import { parseFindQuery, buildFindHref, matchesFindQuery, type FindQuery } from "@/lib/find/query";
+import { searchLiveDeals } from "@/lib/board/live-deals";
+import { searchSignalInventory } from "@/lib/board/inventory";
+import {
+  parseFindQuery,
+  buildFindHref,
+  findQueryIsAnswerable,
+  toInventoryQuery,
+  type FindQuery,
+} from "@/lib/find/query";
+import { serviceCategory, serviceSubcategory } from "@/lib/taxonomy/services";
+import { partnerType } from "@/lib/taxonomy/distribution";
 import "@/components/find/find.css";
+import "@/components/ponte/category/category.css";
 
 export const dynamic = "force-dynamic";
 
@@ -36,18 +46,37 @@ export default async function FindPage({
   setRequestLocale(params.locale);
   const q = parseFindQuery(searchParams);
 
+  /**
+   * What has to be true before Find can answer, per family.
+   *
+   * Products still needs a product. Trade services needs a category and
+   * Distribution needs a partner type, and both of those are a tap. Requiring a
+   * typed product for all three is what left two of Ponte's three equal market
+   * families with no working search at all.
+   */
+  const answerable = findQueryIsAnswerable(q);
+  const isProducts = q.family === "products" || (!q.family && q.product !== null);
+
   return (
     <div className={`ponte-find ${landingFontVars}`} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
       <FindChrome current="opportunities">
-        {!q.product ? <Entry /> : <Results q={q} />}
+        {!answerable ? (
+          isProducts ? (
+            <ProductEntry />
+          ) : (
+            <FindCategoryEntry q={q} />
+          )
+        ) : (
+          <Results q={q} />
+        )}
       </FindChrome>
       <PonteFooter />
     </div>
   );
 }
 
-/** The Find entry: no product yet, so choose one (tap, voice, or type). */
-async function Entry() {
+/** The Find entry for products: no product yet, so choose one. */
+async function ProductEntry() {
   const t = await getTranslations("find");
   return (
     <section className="fphead" aria-label={t("entry.title")} style={{ borderBottom: "none" }}>
@@ -57,6 +86,11 @@ async function Entry() {
       </div>
       <h1 className="fphead__h serif">{t("entry.title")}</h1>
       <p className="fphead__def">{t("entry.lead")}</p>
+      <div className="fctx">
+        <Link className="fctx__edit" href={buildFindHref({})}>
+          {t("family.changeMarket")}
+        </Link>
+      </div>
       <div style={{ marginTop: 24 }}>
         <HsProductPicker
           labels={{
@@ -99,18 +133,32 @@ function IntentSeg({
   );
 }
 
+/** What the member searched for, in words, for the heading and the crumbs. */
+function subjectOf(q: FindQuery): string {
+  if (q.family === "services") {
+    const sub = serviceSubcategory(q.serviceSubcategory)?.label;
+    return sub ?? serviceCategory(q.serviceCategory)?.label ?? "";
+  }
+  if (q.family === "distribution") {
+    return partnerType(q.partnerType)?.label ?? "";
+  }
+  return q.product ?? "";
+}
+
 async function Results({ q }: { q: FindQuery }) {
   const t = await getTranslations("find");
-  const product = q.product as string;
-  // The Market Signal lane has no "service" equivalent, so a service filter
-  // simply yields no signals; buy/sell narrows the side.
-  const side = q.intent === "offer" ? "offer" : q.intent === "requirement" ? "requirement" : null;
+  const subject = subjectOf(q);
+  const inventory = toInventoryQuery(q);
 
+  // Both lanes filter at the database over the complete record set. The
+  // Qualified lane used to read the newest sixty and filter them in memory,
+  // which answered a question about the market with a fact about a page.
   const [board, signals] = await Promise.all([
-    getLiveDeals(60),
-    searchMarketSignals({ product, side, limit: 40 }),
+    searchLiveDeals(inventory, { limit: 40 }),
+    searchSignalInventory(inventory, { limit: 40 }),
   ]);
-  const deals = board.filter((d) => matchesFindQuery(d, q));
+
+  const deals = board.state === "ok" ? board.deals : [];
 
   const qoBase = {
     kind: t("qualified.kind"),
@@ -133,14 +181,14 @@ async function Results({ q }: { q: FindQuery }) {
           <span className="fphead__rule" aria-hidden="true" />
           <span className="eyebrow">{t("results.eyebrow")}</span>
         </div>
-        <h1 className="fphead__h serif">{t("results.titleFor", { product })}</h1>
+        <h1 className="fphead__h serif">{t("results.titleFor", { product: subject })}</h1>
         <p className="fphead__def">{t("results.definition")}</p>
       </section>
 
       <div className="fctx">
         <div className="fctx__crumbs">
           <span>
-            {t("results.crumbProduct")}: <b>{product}</b>
+            {crumbLabel(q, t)}: <b>{subject}</b>
           </span>
           {q.market && (
             <span>
@@ -148,7 +196,7 @@ async function Results({ q }: { q: FindQuery }) {
             </span>
           )}
         </div>
-        <Link className="fctx__edit" href="/find">
+        <Link className="fctx__edit" href={changeHref(q)}>
           {t("results.editSearch")}
         </Link>
         <span className="fctx__spacer" />
@@ -164,6 +212,11 @@ async function Results({ q }: { q: FindQuery }) {
         />
       </div>
 
+      {/* A chosen service category still offers its detail list, so a member
+          can narrow without going back to the start. */}
+      {q.family === "services" && <FindCategoryEntry q={q} />}
+      {q.family === "distribution" && <FindCategoryEntry q={q} />}
+
       <div className="flanes">
         <section className="flane flane--qo" aria-label={t("qualified.laneTitle")}>
           <div className="flane__head">
@@ -171,9 +224,13 @@ async function Results({ q }: { q: FindQuery }) {
               <span className="g-dot" aria-hidden="true" />
               {t("qualified.laneTitle")}
             </h2>
-            <span className="flane__n">{t("qualified.count", { count: deals.length })}</span>
+            <span className="flane__n">
+              {board.state === "ok" ? t("qualified.count", { count: board.total }) : ""}
+            </span>
           </div>
-          {deals.length > 0 ? (
+          {board.state === "unclassified" ? (
+            <Unclassified q={q} t={t} />
+          ) : deals.length > 0 ? (
             deals.map((d) => (
               <QoRow
                 key={d.id}
@@ -197,11 +254,15 @@ async function Results({ q }: { q: FindQuery }) {
         <section className="flane flane--ms" aria-label={t("signals.laneTitle")}>
           <div className="flane__head">
             <h2 className="flane__t">{t("signals.laneTitle")}</h2>
-            <span className="flane__n">{t("signals.count", { count: signals.length })}</span>
+            <span className="flane__n">
+              {signals.state === "ok" ? t("signals.count", { count: signals.total }) : ""}
+            </span>
           </div>
           <p className="flane__note">{t("signals.note")}</p>
-          {signals.length > 0 ? (
-            signals.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
+          {signals.state === "unclassified" ? (
+            <Unclassified q={q} t={t} />
+          ) : signals.state === "ok" && signals.signals.length > 0 ? (
+            signals.signals.map((s) => <SignalRow key={s.id} signal={s} labels={sigLabels} />)
           ) : (
             <div className="fstate">
               <h3 className="fstate__h serif">{t("signals.emptyTitle")}</h3>
@@ -212,4 +273,44 @@ async function Results({ q }: { q: FindQuery }) {
       </div>
     </>
   );
+}
+
+/**
+ * The state that is neither a result nor an emptiness.
+ *
+ * Ponte cannot yet say which published records belong to this category,
+ * because none of them carries one. Printing "no match" here would be Ponte
+ * reporting a finding it never made, and it is the same distinction the board
+ * already draws between "nothing was found" and "nothing could be read".
+ */
+function Unclassified({
+  q,
+  t,
+}: {
+  q: FindQuery;
+  t: Awaited<ReturnType<typeof getTranslations<"find">>>;
+}) {
+  return (
+    <div className="fstate">
+      <span className="fstate__badge">{t("unclassified.badge")}</span>
+      <h3 className="fstate__h serif">{t("unclassified.title")}</h3>
+      <p className="fstate__p">{t("unclassified.body")}</p>
+      <Link className="fbtn fbtn--secondary" href={buildFindHref({ family: q.family ?? undefined })}>
+        {t("unclassified.action")}
+      </Link>
+    </div>
+  );
+}
+
+function crumbLabel(q: FindQuery, t: (key: string) => string): string {
+  if (q.family === "services") return t("family.crumbCategory");
+  if (q.family === "distribution") return t("family.crumbPartner");
+  return t("results.crumbProduct");
+}
+
+/** Back to the question that produced this result, not to the very start. */
+function changeHref(q: FindQuery): string {
+  if (q.family === "services") return buildFindHref({ family: "services" });
+  if (q.family === "distribution") return buildFindHref({ family: "distribution" });
+  return buildFindHref({ family: "products" });
 }

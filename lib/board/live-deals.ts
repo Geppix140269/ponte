@@ -4,6 +4,8 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode, parseVolume } from "@/lib/listing-terms";
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
+import { isMissingColumnError } from "@/lib/listings/classification";
+import { usesCanonicalKeys, type InventoryQuery } from "@/lib/board/inventory";
 
 /**
  * The Qualified Opportunities board: approved, current member listings, and
@@ -184,6 +186,111 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
     // itself on an empty list, which is the correct thing to show when we
     // cannot prove there is anything live.
     return [];
+  }
+}
+
+/**
+ * The Qualified lane for a category search, filtered at the database.
+ *
+ * The lane used to be `getLiveDeals(60)` followed by an in-memory matcher, so
+ * a member searching for ocean freight was searching the sixty most recent
+ * approved listings and being shown the answer as if it were the market. The
+ * requirement is explicit that a Find query must reach the complete inventory,
+ * so every canonical filter is applied in the query here.
+ *
+ * ---------------------------------------------------------------------------
+ * Why the count is what survived, and not a database count
+ * ---------------------------------------------------------------------------
+ * Two visibility rules cannot be expressed in this query: a listing's validity
+ * and reconfirmation clock, and whether its owner's business verification is
+ * still passing. Both are applied in memory afterwards, exactly as the board
+ * applies them, because a listing that fails either is not public.
+ *
+ * An exact database count would therefore be a count of rows the member is not
+ * allowed to see, printed as if it were the size of the market. So the read is
+ * bounded generously rather than by a page, the visibility rules run over the
+ * whole matching set, and the number reported is the number of records that
+ * actually survived. It is a true count of a bounded read rather than a false
+ * count of everything.
+ */
+export type DealSearch =
+  | { state: "ok"; deals: LiveDeal[]; total: number; bounded: boolean }
+  | { state: "unclassified" }
+  | { state: "unavailable" };
+
+/** The ceiling on a filtered read. Far above any current filtered result set. */
+const SEARCH_CEILING = 500;
+
+export async function searchLiveDeals(
+  query: InventoryQuery,
+  opts: { limit?: number } = {},
+): Promise<DealSearch> {
+  noStore();
+  if (!isSupabaseConfigured()) return { state: "ok", deals: [], total: 0, bounded: false };
+
+  const limit = opts.limit ?? 40;
+
+  try {
+    const sb = createAdminClient();
+    let q = sb.from("listings").select(LISTING_COLUMNS).eq("status", "approved");
+
+    if (query.family) q = q.eq("market_family", query.family);
+    if (query.serviceCategory) q = q.eq("service_category_key", query.serviceCategory);
+    if (query.serviceSubcategory) {
+      q = q.contains("service_subcategory_keys", [query.serviceSubcategory]);
+    }
+    if (query.partnerType) q = q.eq("distribution_partner_type_key", query.partnerType);
+    if (query.sector) q = q.eq("product_sector_key", query.sector);
+    if (query.territory) q = q.contains("territory_codes", [query.territory]);
+    if (query.side) q = q.eq("type", query.side);
+    if (query.product) q = q.ilike("product", `%${query.product}%`);
+
+    const { data: rows, error } = await q
+      .order("created_at", { ascending: false })
+      .limit(SEARCH_CEILING);
+    if (error) throw error;
+
+    const now = Date.now();
+    const currentRows = (rows ?? []).filter((l) => isPubliclyCurrent(l, now));
+    const eligible = await eligibleOwnerIds(sb, currentRows.map((l) => l.user_id));
+    const liveRows = currentRows.filter((l) => eligible.has(l.user_id));
+
+    const deals: LiveDeal[] = liveRows.map((l) => {
+      const vol = parseVolume(l.volume);
+      return {
+        id: l.id,
+        ref: l.ref,
+        source: "member" as const,
+        type: l.type,
+        product: l.product,
+        hsCode: l.hs_code,
+        chapter: chapterOf(l.hs_code),
+        chapterTitle: null,
+        quantity: vol.quantity,
+        unit: vol.unit,
+        incoterm: l.incoterm,
+        payment: l.payment_terms ?? null,
+        originText: l.origin,
+        destinationText: l.destination,
+        originCode: isoCode(l.origin),
+        destinationCode: isoCode(l.destination),
+        postedAt: l.created_at,
+        verificationLevel: null,
+        href: `/marketplace/l/${l.ref}`,
+      };
+    });
+
+    await decorateChapters(sb, deals);
+
+    return {
+      state: "ok",
+      deals: deals.slice(0, limit),
+      total: deals.length,
+      bounded: (rows ?? []).length >= SEARCH_CEILING,
+    };
+  } catch (error) {
+    if (isMissingColumnError(error) && usesCanonicalKeys(query)) return { state: "unclassified" };
+    return { state: "unavailable" };
   }
 }
 

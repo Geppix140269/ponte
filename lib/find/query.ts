@@ -11,6 +11,16 @@
  *     preserves the selected class so a shared link reopens the same view.
  */
 
+import {
+  serviceCategory as lookupServiceCategory,
+  subcategoryBelongsTo,
+} from "../taxonomy/services";
+import { partnerType as lookupPartnerType } from "../taxonomy/distribution";
+import { PRODUCT_SECTORS, type MarketFamily } from "../taxonomy/market";
+// Type only, so this module still carries no database or Next import at
+// runtime and the unit test can keep running it standalone under tsx.
+import type { InventoryQuery } from "../board/inventory";
+
 /** Buy/sell/service, in the listings vocabulary. Null means "any direction". */
 export type FindIntent = "offer" | "requirement" | "service";
 
@@ -28,7 +38,28 @@ export function isFindLane(v: unknown): v is FindLane {
 }
 
 export type FindQuery = {
-  /** The product to find. The decisive fact; everything else refines it. */
+  /**
+   * Which market family is being searched.
+   *
+   * Products was once the only answer, which is why `product` below was "the
+   * one decisive fact". It is decisive for products and meaningless for the
+   * other two: there is no product to name when a member is looking for a
+   * customs broker or a distributor, and asking for one before showing them
+   * anything was the reason Trade services and Distribution had no usable
+   * search at all.
+   */
+  family: MarketFamily | null;
+  /** Trade services: the canonical category key. */
+  serviceCategory: string | null;
+  /** Trade services: one canonical subcategory key inside that category. */
+  serviceSubcategory: string | null;
+  /** Distribution: the canonical partner or channel type key. */
+  partnerType: string | null;
+  /** Products, and distribution attached to a sector: the sector key. */
+  sector: string | null;
+  /** ISO-2 country code, matched against stored territory codes. */
+  territory: string | null;
+  /** The product to find. Decisive for the products family. */
   product: string | null;
   /** Direction filter, or null for any. */
   intent: FindIntent | null;
@@ -42,6 +73,20 @@ export type FindQuery = {
   lane: FindLane | null;
 };
 
+/**
+ * Has the member said enough for Find to show results?
+ *
+ * Per family, because the decisive fact differs. Products still needs a
+ * product. Trade services needs a category, which is a tap. Distribution needs
+ * a partner type, which is also a tap. Neither of the last two needs a
+ * sentence, and requiring one is what kept both of them unsearchable.
+ */
+export function findQueryIsAnswerable(q: FindQuery): boolean {
+  if (q.family === "services") return q.serviceCategory !== null;
+  if (q.family === "distribution") return q.partnerType !== null;
+  return q.product !== null;
+}
+
 const first = (v: string | string[] | undefined): string | undefined =>
   Array.isArray(v) ? v[0] : v;
 
@@ -52,6 +97,24 @@ const clean = (v: string | string[] | undefined, max = 120): string | null => {
   return t.length > 0 ? t : null;
 };
 
+const FAMILIES: readonly string[] = ["products", "services", "distribution"];
+
+/**
+ * A canonical key, or null.
+ *
+ * Validated against the taxonomy rather than pattern-matched, in the same
+ * spirit as everything else here being tolerant of junk: a URL carrying
+ * `?serviceCategory=banana` is a query for nothing, and reading it as a filter
+ * would print a confident empty result for a category that does not exist.
+ */
+function canonicalKey(
+  value: string | string[] | undefined,
+  exists: (key: string) => boolean,
+): string | null {
+  const key = clean(value, 64);
+  return key && exists(key) ? key : null;
+}
+
 /** Read a Find query out of a Next searchParams object. Tolerant of junk. */
 export function parseFindQuery(
   sp: Record<string, string | string[] | undefined>,
@@ -59,8 +122,25 @@ export function parseFindQuery(
   const rawIntent = first(sp.intent);
   const rawLane = first(sp.lane);
   const rawQty = first(sp.minQty);
+  const rawFamily = clean(sp.family, 20);
   const qtyNum = rawQty != null ? Number(rawQty) : NaN;
+
+  const family = rawFamily && FAMILIES.indexOf(rawFamily) >= 0 ? (rawFamily as MarketFamily) : null;
+  const serviceCategory = canonicalKey(sp.serviceCategory, (k) => !!lookupServiceCategory(k));
+
   return {
+    family,
+    serviceCategory,
+    // A subcategory only means anything inside its category, so it is read
+    // against the chosen one rather than validated on its own. A subcategory
+    // from a different category is not a narrower search, it is a contradiction.
+    serviceSubcategory: canonicalKey(
+      sp.serviceSubcategory,
+      (k) => serviceCategory !== null && subcategoryBelongsTo(k, serviceCategory),
+    ),
+    partnerType: canonicalKey(sp.partnerType, (k) => !!lookupPartnerType(k)),
+    sector: canonicalKey(sp.sector, (k) => PRODUCT_SECTORS.some((s) => s.key === k)),
+    territory: territoryCode(sp.territory),
     product: clean(sp.product, 120),
     intent: isFindIntent(rawIntent) ? rawIntent : null,
     market: clean(sp.market, 120),
@@ -70,9 +150,23 @@ export function parseFindQuery(
   };
 }
 
+/** An ISO-2 code, upper-cased, or null. */
+function territoryCode(value: string | string[] | undefined): string | null {
+  const raw = clean(value, 4);
+  if (!raw) return null;
+  const code = raw.toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
 /** Build the /find href (locale-relative) for a query. Omits empty params. */
 export function buildFindHref(q: Partial<FindQuery>): string {
   const params = new URLSearchParams();
+  if (q.family) params.set("family", q.family);
+  if (q.serviceCategory) params.set("serviceCategory", q.serviceCategory);
+  if (q.serviceSubcategory) params.set("serviceSubcategory", q.serviceSubcategory);
+  if (q.partnerType) params.set("partnerType", q.partnerType);
+  if (q.sector) params.set("sector", q.sector);
+  if (q.territory) params.set("territory", q.territory);
   if (q.product) params.set("product", q.product);
   if (q.intent) params.set("intent", q.intent);
   if (q.market) params.set("market", q.market);
@@ -81,6 +175,27 @@ export function buildFindHref(q: Partial<FindQuery>): string {
   if (q.lane) params.set("lane", q.lane);
   const qs = params.toString();
   return qs ? `/find?${qs}` : "/find";
+}
+
+/**
+ * The inventory query this Find query means.
+ *
+ * One translation, in one place, so the two lanes and the Market Signals board
+ * cannot each interpret the same URL differently. `intent` narrows the side:
+ * a buyer requirement and a seller offer are the two sides a signal can have,
+ * and a service filter has no side of its own.
+ */
+export function toInventoryQuery(q: FindQuery): InventoryQuery {
+  return {
+    family: q.family,
+    serviceCategory: q.serviceCategory,
+    serviceSubcategory: q.serviceSubcategory,
+    partnerType: q.partnerType,
+    sector: q.sector,
+    territory: q.territory,
+    product: q.product,
+    side: q.intent === "offer" ? "offer" : q.intent === "requirement" ? "requirement" : null,
+  };
 }
 
 /** Case- and space-insensitive substring test used by the board matcher. */

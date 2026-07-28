@@ -3,15 +3,18 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
-import { readMarketSignals } from "@/lib/board/market-signals";
+import { searchSignalInventory, countSignalInventory } from "@/lib/board/inventory";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import { railForScreen } from "@/lib/desk/journey";
 import { alternatesFor } from "@/lib/seo";
 import DeskShell from "@/components/desk/DeskShell";
 import FactRegister from "@/components/desk/FactRegister";
 import RecordCard from "@/components/desk/RecordCard";
+import SignalFilters, { ActiveFilters, signalFilterHref } from "@/components/desk/SignalFilters";
+import { parseFindQuery, toInventoryQuery } from "@/lib/find/query";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import "@/components/desk/desk.css";
+import "@/components/ponte/category/category.css";
 
 /**
  * R-FIND station 2, Discover: the Market Signals listing, in The Desk.
@@ -81,13 +84,23 @@ export default async function MarketSignalsPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams?: { objective?: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
   setRequestLocale(params.locale);
 
-  const objective = searchParams?.objective?.trim() || null;
+  const objectiveRaw = searchParams?.objective;
+  const objective =
+    (typeof objectiveRaw === "string" ? objectiveRaw.trim() : "") || null;
   const rail = railForScreen("listing", { objectiveStated: Boolean(objective) });
-  const board = await readMarketSignals();
+
+  // The board is now a search. The filters are canonical keys, they are applied
+  // in the query, and the count is a count of the complete inventory rather
+  // than of the page that came back.
+  const q = parseFindQuery(searchParams ?? {});
+  const [board, everything] = await Promise.all([
+    searchSignalInventory(toInventoryQuery(q), { limit: 60 }),
+    countSignalInventory(),
+  ]);
   const records = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
 
   return (
@@ -96,7 +109,35 @@ export default async function MarketSignalsPage({
         <section className="sec">
           <Intro />
 
-          {board.state === "unavailable" ? (
+          <SignalFilters q={q} />
+
+          {board.state === "unclassified" ? (
+            /*
+             * Neither a result nor an emptiness.
+             *
+             * No published signal carries this classification, so filtering on
+             * it cannot answer. Printing "no signal matches" would be Ponte
+             * reporting a finding it never made, which is the same distinction
+             * this board already draws between nothing found and nothing read.
+             */
+            <div className="empty">
+              <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
+              <div>
+                <b>Ponte cannot filter signals by this category yet</b>
+                <p>
+                  No signal on the board carries a category in this taxonomy, so this filter would
+                  return an empty list rather than an answer. That is a gap in what Ponte has
+                  classified, not a statement about the market. Signals read from here on are
+                  classified as they are approved.
+                </p>
+                <div className="empty__a">
+                  <Link className="b" href={signalFilterHref({})}>
+                    See every signal on the board
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : board.state === "unavailable" ? (
             <div className="err">
               <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
               <div>
@@ -133,8 +174,19 @@ export default async function MarketSignalsPage({
             </div>
           ) : (
             <>
+              <ActiveFilters q={q} />
               <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 10 }}>
-                {records.length === 1 ? "1 signal" : `${records.length} signals`}
+                {/* The count is the whole matching inventory. Where fewer are
+                    shown than matched, both numbers are printed, because a
+                    page length presented as a market size is a false claim
+                    about how much is out there. */}
+                {board.state === "ok" && board.total === 1 ? "1 signal" : `${board.state === "ok" ? board.total : records.length} signals`}
+                {board.state === "ok" && board.total > records.length
+                  ? `, ${records.length} shown`
+                  : ""}
+                {everything !== null && board.state === "ok" && board.total < everything
+                  ? ` of ${everything} on the board`
+                  : ""}
                 {records.length > REGISTER_THRESHOLD ? ", fact register" : ", record cards"}
               </p>
 
