@@ -9,6 +9,19 @@ import { vetListing, isAiConfigured, type AiReview } from "@/lib/ai-vet";
 import { draftListingNotes } from "@/lib/listings/decision-notes";
 import { checkPublicationGate, gateFailureLabel } from "@/lib/listings/publication-gate";
 import { isPubliclyCurrent, reconfirmationLapsed } from "@/lib/listings/validity";
+import {
+  exceptionReason,
+  rowSeverity,
+  compareExceptions,
+  applyFilters,
+  summarise,
+  reasonCode,
+  statusLabel,
+  REASON_LABEL,
+  REASON_ACTION,
+  type ExceptionRow,
+} from "@/lib/listings/exceptions";
+import type { SafetyFlag } from "@/lib/listings/safety";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +37,10 @@ const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
   writeup_done: { tone: "good", text: "Fact-only write-up generated from the stored facts." },
   writeup_thin: { tone: "bad", text: "Not enough facts to write up. The listing is untouched." },
   writeup_failed: { tone: "bad", text: "The write-up did not generate. The listing is untouched." },
+  suspended: { tone: "good", text: "Suspended. It is off the market and the member has been emailed the reason." },
+  needs_information: { tone: "good", text: "Returned to the member. They can complete it and it republishes automatically." },
   gate_blocked: { tone: "bad", text: "Not approved: the publication gate is not satisfied." },
+  no_reason: { tone: "bad", text: "Nothing was written: a suspension needs a reason, because the member is told it." },
   not_admin: { tone: "bad", text: "Nothing was written: your session is not signed in as an admin." },
   no_id: { tone: "bad", text: "Nothing was written: the form arrived without a listing id." },
   no_decision: { tone: "bad", text: "Nothing was written: the form arrived without a valid decision." },
@@ -124,10 +140,84 @@ type Media = { id: string; listing_id: string; path: string; kind: string };
 const FIELD =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
 
+/** The filter bar. A GET form, so every view is a shareable URL. */
+function FilterBar({ sp, types }: { sp: Record<string, string | undefined>; types: string[] }) {
+  const S =
+    "rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-cream focus:border-gold focus:outline-none";
+  const opt = (v: string, label: string) => <option key={v} value={v}>{label}</option>;
+  return (
+    <form
+      method="GET"
+      className="mb-8 grid gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-2 lg:grid-cols-4"
+    >
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Status</span>
+        <select name="status" defaultValue={sp.status ?? ""} className={S}>
+          {opt("", "Any status")}
+          {["flagged", "suspended", "needs_information", "submitted", "approved", "rejected", "expired", "withdrawn"].map((s) =>
+            opt(s, statusLabel(s)),
+          )}
+        </select>
+      </label>
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Reason</span>
+        <select name="reason" defaultValue={sp.reason ?? ""} className={S}>
+          {opt("", "Any reason")}
+          {(Object.keys(REASON_LABEL) as (keyof typeof REASON_LABEL)[]).map((r) => opt(r, r))}
+        </select>
+      </label>
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Severity</span>
+        <select name="severity" defaultValue={sp.severity ?? ""} className={S}>
+          {opt("", "Any severity")}
+          {["high", "medium", "low"].map((s) => opt(s, s))}
+        </select>
+      </label>
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Listing type</span>
+        <select name="type" defaultValue={sp.type ?? ""} className={S}>
+          {opt("", "Any type")}
+          {types.map((t) => opt(t, t))}
+        </select>
+      </label>
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Created from</span>
+        <input type="date" name="from" defaultValue={sp.from ?? ""} className={S} />
+      </label>
+      <label className="grid gap-1">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Created to</span>
+        <input type="date" name="to" defaultValue={sp.to ?? ""} className={S} />
+      </label>
+      <label className="grid gap-1 sm:col-span-2">
+        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
+          Member, business or reference
+        </span>
+        <input
+          type="search"
+          name="q"
+          defaultValue={sp.q ?? ""}
+          placeholder="email, company name, or PT-0102"
+          className={S}
+        />
+      </label>
+      <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-4">
+        <button className="btn-gold">Apply filters</button>
+        <a href="/admin/listings" className="text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.14em" }}>
+          Clear
+        </a>
+      </div>
+    </form>
+  );
+}
+
 export default async function AdminListingsPage({
   searchParams,
 }: {
-  searchParams: { r?: string; m?: string };
+  searchParams: {
+    r?: string; m?: string;
+    status?: string; reason?: string; severity?: string; type?: string;
+    from?: string; to?: string; q?: string; ref?: string;
+  };
 }) {
   const adminSb = createAdminClient();
 
@@ -218,13 +308,81 @@ export default async function AdminListingsPage({
     };
   }
 
-  const pending = all.filter((l) => l.status === "submitted");
-  const rest = all.filter((l) => l.status !== "submitted");
+  // ---- The exception model -------------------------------------------------
+  //
+  // This screen is no longer a publication queue. It shows the cases automated
+  // publication could not resolve, and it does NOT present a published listing
+  // as waiting for anything, because it is not waiting for anything.
+  const rowFor = (l: Listing): ExceptionRow => ({
+    id: l.id,
+    ref: l.ref,
+    status: l.status,
+    type: l.type,
+    product: l.product,
+    created_at: l.created_at,
+    flag_reason: (l as { flag_reason?: string | null }).flag_reason ?? null,
+    flag_severity: (l as { flag_severity?: string | null }).flag_severity ?? null,
+    safety_flags: ((l as { safety_flags?: SafetyFlag[] | null }).safety_flags ?? null),
+    completeness_score: (l as { completeness_score?: number | null }).completeness_score ?? null,
+    user_id: l.user_id,
+    reportCount: 0,
+    // Whether the member could publish if the listing itself were complete.
+    // This is what separates "finish your listing" from "verify your business",
+    // and an operator can act on neither, so the console must not conflate them.
+    submitterVerified: (() => {
+      const s = submitterFor(l);
+      return Boolean(
+        s.business_verification_id &&
+          s.verification &&
+          ["auto_verified", "verified"].includes(s.verification.status ?? "") &&
+          s.verificationLevel >= 2,
+      );
+    })(),
+  });
 
-  // AI co-pilot: vet up to 2 unreviewed pending listings per page load so
-  // the queue self-prepares without blocking too long.
+  const rowsById = new Map<string, ExceptionRow>();
+  for (const l of all) rowsById.set(l.id, rowFor(l));
+
+  const identityFor = (row: ExceptionRow) => ({
+    email: emailById.get(row.user_id) ?? null,
+    company: verById.get(bvidByUser.get(row.user_id) ?? "")?.subject_name ?? null,
+  });
+
+  // A direct link from a flagged-listing alert carries ?ref=PT-XXXX. It is
+  // treated as the search term so the operator lands on that listing with the
+  // rest of the console intact, rather than on a bare detail page with no
+  // context.
+  const filters = {
+    status: searchParams.status || undefined,
+    reason: searchParams.reason || undefined,
+    severity: searchParams.severity || undefined,
+    type: searchParams.type || undefined,
+    from: searchParams.from || undefined,
+    to: searchParams.to || undefined,
+    q: searchParams.q || searchParams.ref || undefined,
+  };
+
+  const filteredRows = applyFilters(Array.from(rowsById.values()), filters, identityFor);
+  const filteredIds = new Set(filteredRows.map((r) => r.id));
+  const visible = all.filter((l) => filteredIds.has(l.id));
+
+  const exceptions = visible
+    .filter((l) => exceptionReason(rowsById.get(l.id)!) !== null)
+    .sort((a, b) => compareExceptions(rowsById.get(a.id)!, rowsById.get(b.id)!));
+  const published = visible.filter((l) => l.status === "approved");
+  const settled = visible.filter(
+    (l) => exceptionReason(rowsById.get(l.id)!) === null && l.status !== "approved",
+  );
+
+  const counts = summarise(Array.from(rowsById.values()));
+  const listingTypes = Array.from(new Set(all.map((l) => l.type).filter(Boolean))) as string[];
+
+  // AI co-pilot: vet up to 2 unreviewed exception listings per page load so
+  // a case that needs a person arrives with its analysis already done. It is
+  // scoped to exceptions rather than to everything, because under automated
+  // publication the ordinary listing is never read here at all.
   if (isAiConfigured()) {
-    const unvetted = pending.filter((l) => !l.ai_review).slice(0, 2);
+    const unvetted = exceptions.filter((l) => !l.ai_review).slice(0, 2);
     for (const l of unvetted) {
       const review = await vetListing({
         ref: l.ref, type: l.type, product: l.product, details: l.details,
@@ -287,6 +445,53 @@ export default async function AdminListingsPage({
             {l.status} · {new Date(l.created_at).toLocaleDateString("en-GB")}
           </span>
         </div>
+
+        {/* WHY this listing is on the console. A machine-readable code an
+            operator can paste into a query, the sentence that says what it
+            means, the severity, what to do about it, and the automated
+            findings verbatim. The retired screen said only "submitted". */}
+        {(() => {
+          const row = rowsById.get(l.id);
+          const reason = row ? exceptionReason(row) : null;
+          if (!row || !reason) return null;
+          const sev = rowSeverity(row);
+          const flags = row.safety_flags ?? [];
+          const tone =
+            sev === "high" ? "border-negative/50 bg-negative/10"
+            : sev === "medium" ? "border-gold/40 bg-gold/10"
+            : "border-white/15 bg-white/[0.03]";
+          return (
+            <div className={`mt-3 rounded-xl border p-4 ${tone}`}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="mono text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+                  {reasonCode(row)}
+                </span>
+                {sev && (
+                  <span className="mono text-[11px] uppercase text-cream" style={{ letterSpacing: "0.14em" }}>
+                    severity: {sev}
+                  </span>
+                )}
+                {row.completeness_score !== null && (
+                  <span className="mono text-[11px] text-gray-2">
+                    completeness {row.completeness_score}%
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-cream">{REASON_LABEL[reason]}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-gray-2">{REASON_ACTION[reason]}</p>
+              {flags.length > 0 && (
+                <ul className="mt-3 space-y-1">
+                  {flags.map((f, i) => (
+                    <li key={`${f.code}-${i}`} className="text-[12px] leading-relaxed text-gray-2">
+                      <span className="mono text-gold">{f.code}</span>
+                      <span className="mono"> [{f.severity}]</span>: {f.detail}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })()}
 
         {awaitingReconfirmation && (
           <p className="mt-2 text-[12px] text-gold">
@@ -590,42 +795,144 @@ export default async function AdminListingsPage({
           </div>
         </form>
 
+        {/* Taking a live listing off the market. This is not a rejection: the
+            listing is intact and reinstatable, and the member is told so in
+            those words. The reason is required because a member who is told
+            only that publication stopped has been told nothing actionable. */}
+        {l.status === "approved" && (
+          <form action={decideListingAction} className="mt-4 grid gap-2">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="suspended" />
+            <textarea
+              name="decisionNote"
+              rows={2}
+              maxLength={1500}
+              placeholder="Why publication is being paused. Sent to the member, so write it for them."
+              className={FIELD}
+              required
+            />
+            <div className="flex flex-wrap gap-3">
+              <button className="btn-ghost-light">Suspend, take off the market</button>
+            </div>
+          </form>
+        )}
+
+        {l.status === "suspended" && (
+          <form action={decideListingAction} className="mt-4">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="approved" />
+            <input type="hidden" name="qualification" value={l.desk_version?.qualification ?? ""} />
+            <input type="hidden" name="limitations" value={l.desk_version?.limitations ?? ""} />
+            <button className="btn-gold">Reinstate, put back on the market</button>
+          </form>
+        )}
+
+        {/* Handing a listing back to its member. Not a rejection either: it
+            says the record needs work, and the member does that work. */}
+        {["flagged", "submitted", "suspended"].includes(l.status) && (
+          <form action={decideListingAction} className="mt-3">
+            <input type="hidden" name="id" value={l.id} />
+            <input type="hidden" name="decision" value="needs_information" />
+            <button
+              className="text-[11px] uppercase text-gray-2 hover:text-gold"
+              style={{ letterSpacing: "0.14em" }}
+            >
+              Return to the member for more information
+            </button>
+          </form>
+        )}
+
         {l.status === "approved" && (
           <form action={decideListingAction} className="mt-3">
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="closed" />
-            <button className="btn-ghost-light">Close this listing</button>
+            <button
+              className="text-[11px] uppercase text-gray-2 hover:text-gold"
+              style={{ letterSpacing: "0.14em" }}
+            >
+              Close this listing
+            </button>
           </form>
         )}
       </div>
     );
   }
 
+  const filtered = Object.values(filters).some(Boolean);
+
   return (
     <div>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
-        Listings
+        Listing exceptions
       </h1>
-      <p className="mt-2 text-[14px] text-gray-2">
-        {pending.length} awaiting vetting · {all.length} total
+      {/* The subtitle says what this screen IS. It is not the publication
+          queue: a valid listing from a verified member publishes without
+          appearing here at all. */}
+      <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-gray-2">
+        Listings publish automatically. This console holds only the cases the
+        validator could not resolve. {counts.total} open
+        {counts.highSeverity > 0 && (
+          <span className="text-cream"> · {counts.highSeverity} high severity</span>
+        )}
+        {" · "}{all.length} listings in total.
       </p>
 
-      <h2 className="serif text-white mt-8 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-        Awaiting vetting
-      </h2>
-      {pending.length === 0 ? (
-        <div className="glass p-6 text-[14px] text-gray-2">Queue is clear.</div>
-      ) : (
-        <div className="space-y-4">{pending.map((l) => <Card key={l.id} l={l} />)}</div>
+      {counts.total > 0 && (
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+          {(Object.entries(counts.byReason) as [keyof typeof REASON_LABEL, number][])
+            .filter(([, n]) => n > 0)
+            .map(([reason, n]) => (
+              <a
+                key={reason}
+                href={`/admin/listings?reason=${reason}`}
+                className="mono text-[11px] uppercase text-gray-2 hover:text-gold"
+                style={{ letterSpacing: "0.14em" }}
+              >
+                {reason} · {n}
+              </a>
+            ))}
+        </div>
       )}
 
-      {rest.length > 0 && (
+      <div className="mt-6">
+        <FilterBar sp={searchParams as Record<string, string | undefined>} types={listingTypes} />
+      </div>
+
+      <h2 className="serif text-white mt-8 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
+        Needs a person ({exceptions.length})
+      </h2>
+      {exceptions.length === 0 ? (
+        <div className="glass p-6 text-[14px] text-gray-2">
+          {filtered
+            ? "No exception matches these filters."
+            : "Nothing needs a decision. Automated publication resolved everything."}
+        </div>
+      ) : (
+        <div className="space-y-4">{exceptions.map((l) => <Card key={l.id} l={l} />)}</div>
+      )}
+
+      {published.length > 0 && (
+        <>
+          <h2 className="serif text-white mt-10 mb-2" style={{ fontSize: 20, fontWeight: 500 }}>
+            Published ({published.length})
+          </h2>
+          {/* Stated explicitly, because the screen this replaces listed these
+              under a heading that implied they were waiting for something. */}
+          <p className="mb-4 text-[13px] text-gray-2">
+            Live on the market. Not awaiting approval, and no action is required
+            here. Suspend one only if there is a reason to take it off.
+          </p>
+          <div className="space-y-4">{published.map((l) => <Card key={l.id} l={l} />)}</div>
+        </>
+      )}
+
+      {settled.length > 0 && (
         <>
           <h2 className="serif text-white mt-10 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-            Decided
+            Closed, rejected, expired and withdrawn ({settled.length})
           </h2>
-          <div className="space-y-4">{rest.map((l) => <Card key={l.id} l={l} />)}</div>
+          <div className="space-y-4">{settled.map((l) => <Card key={l.id} l={l} />)}</div>
         </>
       )}
     </div>
