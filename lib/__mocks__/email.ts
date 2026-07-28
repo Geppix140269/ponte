@@ -27,7 +27,7 @@ export async function sendBrokerageSubmission(data: any): Promise<void> {
 // The listing lifecycle senders. `sendListingReceived` and
 // `sendListingDecision` are gone with the manual-approval workflow: the first
 // told the member a person would read their listing, and the second announced
-// a decision nobody takes any more for the ordinary case (ADR-0012).
+// a decision nobody takes any more for the ordinary case (ADR-0013).
 export async function sendListingPublished(to: string, data: any): Promise<void> {
   sent.push({ fn: "sendListingPublished", to, data });
 }

@@ -40,6 +40,13 @@ import {
  * invented.
  */
 
+/**
+ * The classification columns, applied to production on 28 July 2026.
+ *
+ * These are LIVE. `20260728a_market_classification.sql` was run by hand with
+ * owner authorisation, so a write containing them succeeds and the retry below
+ * never has to drop them.
+ */
 export const CLASSIFICATION_COLUMNS = [
   "market_family",
   "market_intent",
@@ -52,8 +59,35 @@ export const CLASSIFICATION_COLUMNS = [
   "product_sector_key",
   "custom_category_label",
   "additional_details",
-  "service_terms",
-  "distribution_terms",
+] as const;
+
+/**
+ * The family commercial-terms columns, NOT yet applied to production.
+ *
+ * Kept as a separate list because the two groups are at different stages of
+ * their life, and a retry that cannot tell them apart does real damage.
+ *
+ * The first version of this change appended these two to CLASSIFICATION_COLUMNS
+ * and reused the one existing retry. That retry drops every column in the list.
+ * So the moment `service_terms` was missing - which is its state in production
+ * right now - a trade service submission was retried WITHOUT its market family,
+ * its canonical intent, its service category, its subcategories, its coverage
+ * scope, its territory codes and its product sector. All of those columns are
+ * live and would have stored perfectly. The member would have been told their
+ * record was filed, and it would have been filed as an unclassified row: the
+ * exact defect ADR-0011 exists to prevent, reintroduced by a fallback meant to
+ * be a safety net.
+ *
+ * The retry is now staged. Drop the unavailable group first, keep everything
+ * that works, and only fall back to dropping the classification too if the
+ * database says that group is missing as well.
+ */
+export const FAMILY_TERMS_COLUMNS = ["service_terms", "distribution_terms"] as const;
+
+/** Every column either migration adds. For callers that need the whole set. */
+export const ALL_CLASSIFICATION_COLUMNS = [
+  ...CLASSIFICATION_COLUMNS,
+  ...FAMILY_TERMS_COLUMNS,
 ] as const;
 
 /** The commercial terms only a Trade Service has, as stored. */

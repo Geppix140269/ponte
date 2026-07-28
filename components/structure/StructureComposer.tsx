@@ -17,6 +17,7 @@ import {
   blockers as computeBlockers,
   procedureFor,
   askKeyFor,
+  statesOwnCapability,
   submitPayloads,
   type StructureDraft,
   type DraftResolution,
@@ -42,6 +43,7 @@ import {
   type TapGroup,
 } from "@/lib/structure/vocabulary";
 import { legacyTypeForIntent, needsHsCode } from "@/lib/structure/draft";
+import { DECLARATION_TERMS } from "@/lib/listings/declaration";
 import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
 import { MARKET_INTENTS } from "@/lib/taxonomy/market";
 import type { CategoryOption } from "@/lib/taxonomy/services";
@@ -219,9 +221,7 @@ export default function StructureComposer({
       // rather than half-submitting it.
       const payloads = submitPayloads(draft, { draft: asDraft, nowIso: new Date().toISOString() });
       const refs: string[] = [];
-      // The outcome reported below is the last response's. Declared out here
-      // because it is read after the loop; inside it, it died with the iteration.
-      let body: Record<string, unknown> = {};
+      const outcomes: SubmitOutcome[] = [];
       for (const payload of payloads) {
         const res = await fetch("/api/marketplace/submit", {
           method: "POST",
@@ -233,12 +233,23 @@ export default function StructureComposer({
           setGateOpen(true);
           return;
         }
-        body = await res.json().catch(() => ({}));
+        // Scoped to the iteration, and only read inside it. The hotfix for
+        // PR #74 had to hoist this because the outcome block below read it
+        // after the loop; collecting outcomes per response removes that need.
+        const body: Record<string, unknown> = await res.json().catch(() => ({}));
         if (!res.ok) {
           replace("error");
           return;
         }
         if (typeof body.ref === "string") refs.push(body.ref);
+        outcomes.push({
+          status: typeof body.status === "string" ? body.status : "submitted",
+          blockingIssues: Array.isArray(body.blockingIssues) ? body.blockingIssues : [],
+          completenessScore:
+            typeof body.completenessScore === "number" ? body.completenessScore : null,
+          route:
+            body.route === "verification" || body.route === "both" ? body.route : "listing",
+        });
       }
       setResultRef(refs.join(", "));
       setSavedDraft(asDraft);
@@ -246,16 +257,7 @@ export default function StructureComposer({
       // publication runs inside the request. So the member is told what
       // actually happened rather than "submitted for review", which under this
       // model would be untrue for the ordinary case.
-      setOutcome(
-        asDraft
-          ? null
-          : {
-              status: typeof body.status === "string" ? body.status : "submitted",
-              blockingIssues: Array.isArray(body.blockingIssues) ? body.blockingIssues : [],
-              completenessScore:
-                typeof body.completenessScore === "number" ? body.completenessScore : null,
-            },
-      );
+      setOutcome(asDraft ? null : summariseOutcomes(outcomes));
       replace("received");
     } finally {
       setSubmitting(false);
@@ -306,6 +308,7 @@ export default function StructureComposer({
         {step === "submit" && (
           <SubmitStep
             draft={draft}
+            set={set}
             submitting={submitting}
             onSubmit={() => doSend(false)}
             onSaveDraft={() => doSend(true)}
@@ -322,6 +325,7 @@ export default function StructureComposer({
             onWorkspace={() => router.push("/workspace")}
             onListing={() => router.push(`/marketplace/l/${resultRef}`)}
             onEdit={() => router.push("/marketplace")}
+            onVerify={() => router.push("/verify?for=business")}
             t={t}
           />
         )}
@@ -1108,7 +1112,11 @@ function CompletionControl({ field, draft, set, t }: { field: CompletionField; d
         <LongText
           id="service-capability"
           label={null}
-          placeholder={t("ask.serviceCapabilityPlaceholder")}
+          placeholder={t(
+            draft.canonical?.intent === "seek_trade_service"
+              ? "ask.serviceCapabilityNeededPlaceholder"
+              : "ask.serviceCapabilityPlaceholder",
+          )}
           value={draft.serviceTerms.capability}
           onChange={(v) => service({ capability: v })}
         />
@@ -1124,7 +1132,11 @@ function CompletionControl({ field, draft, set, t }: { field: CompletionField; d
         <LongText
           id="distribution-objective"
           label={null}
-          placeholder={t("ask.distributionObjectivePlaceholder")}
+          placeholder={t(
+            draft.canonical?.intent === "seek_brands_or_products_to_represent"
+              ? "ask.distributionObjectiveRepresentPlaceholder"
+              : "ask.distributionObjectivePlaceholder",
+          )}
           value={draft.distributionTerms.objective}
           onChange={(v) => distribution({ objective: v })}
         />
@@ -1150,7 +1162,11 @@ function CompletionControl({ field, draft, set, t }: { field: CompletionField; d
         <LongText
           id="distribution-expectations"
           label={null}
-          placeholder={t("ask.distributionExpectationsPlaceholder")}
+          placeholder={t(
+            statesOwnCapability(draft)
+              ? "ask.distributionExpectationsOfferedPlaceholder"
+              : "ask.distributionExpectationsPlaceholder",
+          )}
           value={draft.distributionTerms.commercialExpectations}
           onChange={(v) => distribution({ commercialExpectations: v })}
         />
@@ -1215,11 +1231,17 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
     </div>
   );
 
+  // A row whose meaning lives in the copy resolves it here: "Ships from
+  // Argentina" is what the member said, and a bare "Argentina" under Route
+  // would read as a corridor with a missing half.
+  const valueOf = (r: ReviewSection["rows"][number]): string | null =>
+    r.message ? t(r.message.key, r.message.params) : r.value;
+
   const section = (s: ReviewSection) => (
     <div key={s.key}>
       {s.headingKey && <div className="bucket__l">{t(`review.${s.headingKey}`)}</div>}
       <div className="ledger2">
-        {s.rows.map((r) => row(t(`field.${r.labelKey}`), r.value, r.editField))}
+        {s.rows.map((r) => row(t(`field.${r.labelKey}`), valueOf(r), r.editField))}
       </div>
     </div>
   );
@@ -1275,7 +1297,7 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
 }
 
 // ---- S05 save / submit -----------------------------------------------------
-function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVerify, t }: { draft: StructureDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: (f: CompletionField) => void; onVerify: () => void; t: T }) {
+function SubmitStep({ draft, set, submitting, onSubmit, onSaveDraft, onResolve, onVerify, t }: { draft: StructureDraft; set: SetDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: (f: CompletionField) => void; onVerify: () => void; t: T }) {
   const blocks = computeBlockers(draft);
   return (
     <section className="sstep">
@@ -1301,14 +1323,51 @@ function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVer
             {b.resolve === "verify" && (
               <button className="block__r" onClick={onVerify}>{t("submit.verifyNow")} →</button>
             )}
+            {/* The declaration resolves in place: the terms are right here and
+                accepting them is the whole action. Sending the member somewhere
+                else to agree to five sentences would be theatre. */}
+            {b.resolve === "declare" && (
+              <Declaration draft={draft} set={set} t={t} />
+            )}
           </div>
         ))}
+        {/* Once accepted the blocker is gone, so the acceptance would vanish
+            with it. It stays visible and reversible: a member must be able to
+            see what they agreed to, and to withdraw it before submitting. */}
+        {draft.declarationAccepted && <Declaration draft={draft} set={set} t={t} />}
       </div>
       <div className="submit-cta">
         <button className="fbtn fbtn--lg fbtn--block" disabled={submitting} onClick={onSubmit}>{t("submit.submit")}</button>
         <button className="fbtn fbtn--ghost fbtn--block" disabled={submitting} onClick={onSaveDraft}>{t("submit.saveDraft")}</button>
       </div>
     </section>
+  );
+}
+
+/**
+ * The publication declaration, in the exact words the validator requires.
+ *
+ * The terms come from `lib/listings/declaration.ts`, which is also what
+ * `evaluateListing` reads, so the screen cannot show one set of terms while the
+ * rule enforces another. Accepting stamps a boolean on the draft; the submit
+ * route converts it to a timestamp AND the accepted version, because knowing
+ * somebody agreed is worthless without knowing to what.
+ */
+function Declaration({ draft, set, t }: { draft: StructureDraft; set: SetDraft; t: T }) {
+  return (
+    <div className="declare">
+      <ul className="declare__l">
+        {DECLARATION_TERMS.map((term) => <li key={term}>{term}</li>)}
+      </ul>
+      <label className="declare__c">
+        <input
+          type="checkbox"
+          checked={draft.declarationAccepted}
+          onChange={(e) => set({ declarationAccepted: e.target.checked })}
+        />
+        <span>{t("submit.declarationAccept")}</span>
+      </label>
+    </div>
   );
 }
 
@@ -1319,7 +1378,67 @@ export type SubmitOutcome = {
   status: string;
   blockingIssues: string[];
   completenessScore: number | null;
+  /**
+   * Where the member resolves the blocking issues.
+   *
+   * "verification" means every blocker is at /verify and NONE of them is on the
+   * listing form. Sending that member to the composer is a dead end: there is
+   * nothing there they can change to publish.
+   */
+  route: "verification" | "listing" | "both";
 };
+
+/**
+ * One outcome from several, for a multi-product document split into separate
+ * records.
+ *
+ * The member made one submission and must be told one truthful thing about it.
+ * Every rule here is "the weakest record decides", because the alternatives all
+ * overstate:
+ *
+ *   status            the worst wins. Telling somebody their offer is live when
+ *                     one of three records was held is false for that record,
+ *                     and they would never go looking for it.
+ *   blockingIssues    the union, deduplicated. A gap on any record is a gap the
+ *                     member has to close.
+ *   completenessScore the lowest. An average lets a full record hide a thin one.
+ *   route             where the outstanding work actually is. A mix of
+ *                     verification and listing issues is "both", because
+ *                     sending the member to either alone strands the other.
+ */
+function summariseOutcomes(outcomes: readonly SubmitOutcome[]): SubmitOutcome | null {
+  if (outcomes.length === 0) return null;
+
+  const RANK: Record<string, number> = {
+    approved: 0, submitted: 1, needs_information: 2, flagged: 3,
+  };
+  const status = outcomes.reduce(
+    (worst, o) => ((RANK[o.status] ?? 1) > (RANK[worst] ?? 1) ? o.status : worst),
+    outcomes[0].status,
+  );
+
+  const blockingIssues: string[] = [];
+  for (const o of outcomes) {
+    for (const issue of o.blockingIssues) {
+      if (blockingIssues.indexOf(issue) < 0) blockingIssues.push(issue);
+    }
+  }
+
+  const scores = outcomes
+    .map((o) => o.completenessScore)
+    .filter((n): n is number => typeof n === "number");
+  const completenessScore = scores.length > 0 ? Math.min(...scores) : null;
+
+  const routes = new Set(outcomes.filter((o) => o.blockingIssues.length > 0).map((o) => o.route));
+  const route: SubmitOutcome["route"] =
+    routes.has("both") || routes.size > 1
+      ? "both"
+      : routes.has("verification")
+        ? "verification"
+        : "listing";
+
+  return { status, blockingIssues, completenessScore, route };
+}
 
 /**
  * What the member is told after submitting.
@@ -1335,13 +1454,14 @@ export type SubmitOutcome = {
  * against the member, and saying so on this screen would accuse them of
  * something no check established).
  */
-function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, onEdit, t }: {
+function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, onEdit, onVerify, t }: {
   savedDraft: boolean;
   resultRef: string;
   outcome: SubmitOutcome | null;
   onWorkspace: () => void;
   onListing: () => void;
   onEdit: () => void;
+  onVerify: () => void;
   t: T;
 }) {
   const status = savedDraft ? "draft" : outcome?.status ?? "submitted";
@@ -1349,20 +1469,30 @@ function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, 
   const needsInfo = status === "needs_information";
   const flagged = status === "flagged";
 
+  // Verification is the one blocker a member cannot resolve on the listing
+  // form, and in practice the most likely one: the 26 July probe recorded zero
+  // members with a passing bound member-business verification. When it is the
+  // ONLY blocker the screen says so, because "a few required details are
+  // missing" is false when the listing itself is complete.
+  const verifyOnly = needsInfo && outcome?.route === "verification";
+
   const title = savedDraft ? t("received.draftTitle")
     : published ? t("received.publishedTitle")
+    : verifyOnly ? t("received.verifyOnlyTitle")
     : needsInfo ? t("received.needsInfoTitle")
     : flagged ? t("received.flaggedTitle")
     : t("received.title");
 
   const body = savedDraft ? t("received.draftBody")
     : published ? t("received.publishedBody")
+    : verifyOnly ? t("received.verifyOnlyBody")
     : needsInfo ? t("received.needsInfoBody")
     : flagged ? t("received.flaggedBody")
     : t("received.body");
 
   const eyebrow = savedDraft ? t("received.savedEyebrow")
     : published ? t("received.publishedEyebrow")
+    : verifyOnly ? t("received.verifyOnlyEyebrow")
     : needsInfo ? t("received.needsInfoEyebrow")
     : flagged ? t("received.flaggedEyebrow")
     : t("received.eyebrow");
@@ -1398,13 +1528,20 @@ function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, 
 
       <div className="rec-actions">
         {published && <button className="fbtn fbtn--lg" onClick={onListing}>{t("received.viewListing")}</button>}
-        {(needsInfo || flagged) && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
+        {/* The primary action goes where the work is. */}
+        {verifyOnly && <button className="fbtn fbtn--lg" onClick={onVerify}>{t("received.verifyBusiness")}</button>}
+        {needsInfo && !verifyOnly && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
+        {needsInfo && outcome?.route === "both" && (
+          <button className="fbtn fbtn--ghost" onClick={onVerify}>{t("received.verifyBusiness")}</button>
+        )}
+        {flagged && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
         <button className={published || needsInfo || flagged ? "fbtn fbtn--ghost" : "fbtn fbtn--lg"} onClick={onWorkspace}>
           {t("received.cta")}
         </button>
       </div>
 
       {published && <p className="rec-note">{t("received.publishedDisclaimer")}</p>}
+      {verifyOnly && <p className="rec-note">{t("received.verifyOnlyNote")}</p>}
     </section>
   );
 }

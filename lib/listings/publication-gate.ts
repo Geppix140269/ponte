@@ -41,6 +41,28 @@ export const PASSING_VERIFICATION_STATUSES = new Set(["auto_verified", "verified
 /** A member business is granted at level 2; a re-screen suspension drops it. */
 export const MEMBER_BUSINESS_MIN_LEVEL = 2;
 
+/**
+ * Does this stored level meet the member floor?
+ *
+ * The comparison used to be `Number(level ?? 0) < MIN`, which FAILS OPEN on any
+ * non-numeric value: `Number("company_verified")` is `NaN`, and `NaN < 2` is
+ * `false`, so the check quietly did not block. `CURRENT-STATE.md` records a
+ * confirmed production defect about exactly this ("stored verification
+ * vocabulary and numeric code comparison"), so the values that trigger it are
+ * not hypothetical.
+ *
+ * A gate condition that cannot fail is not a gate condition. Anything that does
+ * not parse to a finite number is treated as NOT meeting the floor, so the
+ * failure mode is refusing to publish rather than publishing unverified.
+ *
+ * This does not repair the underlying column; that is separate integrity work
+ * recorded in the audit. It makes this gate honest in the meantime.
+ */
+export function meetsMemberLevel(level: unknown): boolean {
+  const n = typeof level === "number" ? level : Number(level);
+  return Number.isFinite(n) && n >= MEMBER_BUSINESS_MIN_LEVEL;
+}
+
 /** What the gate needs to know about the submitter's own business check. */
 export type GateSubmitter = {
   /** The profile's LIVE verification level. A suspension drops this below 2. */
@@ -101,7 +123,7 @@ export function checkPublicationGate(
     if (!PASSING_VERIFICATION_STATUSES.has(submitter.verification.status ?? "")) {
       failures.push("verification_not_passing");
     }
-    if (Number(submitter.verificationLevel ?? 0) < MEMBER_BUSINESS_MIN_LEVEL) {
+    if (!meetsMemberLevel(submitter.verificationLevel)) {
       failures.push("verification_not_current");
     }
   }
@@ -160,7 +182,7 @@ export function isPubliclyEligibleVerification(s: {
   if (!s.verification) return false;
   if (!grantsMemberStatus(s.verification.purpose)) return false;
   if (!PASSING_VERIFICATION_STATUSES.has(s.verification.status ?? "")) return false;
-  if (Number(s.verificationLevel ?? 0) < MEMBER_BUSINESS_MIN_LEVEL) return false;
+  if (!meetsMemberLevel(s.verificationLevel)) return false;
   return true;
 }
 

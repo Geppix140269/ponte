@@ -57,7 +57,7 @@ import { draftQuantity as computeDraftQuantity, has } from "./procedures/shared"
 
 export type { Blocker, CompletionField, FactBuckets, ServiceTerms, DistributionTerms };
 export { asksFor } from "./procedures/products";
-export { procedureFor, procedureForFamily, askKeyFor } from "./procedures/registry";
+export { procedureFor, procedureForFamily, askKeyFor, statesOwnCapability } from "./procedures/registry";
 export { FIELD_FAMILY, fieldBelongsTo } from "./procedures/types";
 export type {
   FamilyProcedure,
@@ -252,6 +252,16 @@ export type StructureDraft = Classification & {
   serviceTerms: ServiceTerms;
   /** The commercial terms a Distribution or representation opportunity has. */
   distributionTerms: DistributionTerms;
+  /**
+   * Whether the member has accepted the publication declaration.
+   *
+   * Ponte publishes automatically, so the member, not a reviewer, is the person
+   * who states the record is accurate and that they are entitled to have it
+   * published. `evaluateListing` has always blocked on this; until now nothing
+   * in the composer asked for it or sent it, so every Start a Deal submission
+   * was held for a reason the member never saw.
+   */
+  declarationAccepted: boolean;
 };
 
 export function emptyDraft(): StructureDraft {
@@ -265,6 +275,7 @@ export function emptyDraft(): StructureDraft {
     resolution: null, siblings: [], programme: false, documentName: null,
     serviceTerms: emptyServiceTerms(),
     distributionTerms: emptyDistributionTerms(),
+    declarationAccepted: false,
   };
 }
 
@@ -796,6 +807,10 @@ export function toSubmitPayload(
      */
     ...procedureFor(draft).submitTerms(draft),
     submitter_role: draft.role,
+    // The member's own statement, sent so the validator can see it. The route
+    // stamps the timestamp and the accepted VERSION; a boolean alone would
+    // record that somebody agreed to something without recording to what.
+    declaration_accepted: draft.declarationAccepted,
     validity_type: standing ? "standing" : validUntil ? "dated" : null,
     valid_until: standing ? null : validUntil,
     key_notes: draft.note,

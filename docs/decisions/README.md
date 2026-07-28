@@ -39,3 +39,27 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0012](ADR-0012-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 | [ADR-0012](ADR-0012-market-classification-implementation-contract.md) | The market classification contract, as implemented (implements ADR-0011) | Proposed; awaiting owner review |
 | [ADR-0013](ADR-0013-family-specific-downstream-commercial-procedures.md) | Family-specific downstream commercial procedures for the shared composer (completes ADR-0011) | Proposed; awaiting owner review |
+| [ADR-0013](ADR-0013-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
+
+## Unresolved numbering collision on ADR-0012
+
+Recorded 28 July 2026. Not resolved here: renumbering an accepted decision
+record is an owner action, and one of the two remaining claimants belongs to
+another open pull request.
+
+`main` holds **three** files numbered ADR-0012:
+
+- `ADR-0012-market-classification-implementation-contract.md`, registered above
+- `ADR-0012-ai-product-intake-and-document-to-deal-flow.md`, PR #71, **absent
+  from the table above**
+- `ADR-0012-automated-listing-publication.md`
+
+The third is resolved by PR #74, which renumbers it to ADR-0013 and corrects
+the register. The first two still collide, and the AI product intake decision
+is not registered at all, so this table does not currently describe the
+repository.
+
+An ADR number is the handle a decision is cited by, so two records sharing one
+makes every citation of it ambiguous. It is the same defect class as the
+duplicate `20260728a` migration identifier found the same day. Whoever owns the
+AI product intake decision should take the next free number and add the row.

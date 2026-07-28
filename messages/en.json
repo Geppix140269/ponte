@@ -1368,7 +1368,15 @@
       "validity": "Validity",
       "kind": "Kind",
       "route": "Route",
-      "notStated": "Not stated"
+      "notStated": "Not stated",
+      "serviceScopeNeeded": "Scope required",
+      "serviceCoverageNeeded": "Coverage required",
+      "serviceSpecialisationNeeded": "Specialisation required",
+      "serviceCapabilityNeeded": "Capacity required",
+      "servicePricingBasisNeeded": "Quotation basis expected",
+      "serviceAvailabilityNeeded": "Required from",
+      "distributionChannelsOffered": "Channels reached",
+      "distributionCapabilitiesOffered": "Capabilities offered"
     },
     "review": {
       "titleProducts": "Review your product opportunity.",
@@ -1378,7 +1386,8 @@
       "commercialTerms": "Commercial terms",
       "service": "Service",
       "opportunity": "Opportunity",
-      "arrangement": "Arrangement"
+      "arrangement": "Arrangement",
+      "titleServicesNeeded": "Review your trade-service requirement."
     },
     "evidence": {
       "tradeAuthority": "Authority to buy or sell",
@@ -1447,7 +1456,17 @@
         "range": "A range",
         "negotiable": "Negotiable",
         "on_request": "On request"
-      }
+      },
+      "serviceCoverageNeeded": "Where do you need it?",
+      "serviceSpecialisationNeeded": "What does the work involve?",
+      "serviceCapabilityNeeded": "What capacity does the work require?",
+      "serviceCapabilityNeededPlaceholder": "e.g. about 40 containers per month, 12,000 pallet positions, response within 24 hours",
+      "servicePricingBasisNeeded": "How do you expect to be quoted?",
+      "serviceAvailabilityNeeded": "When do you need it from?",
+      "distributionObjectiveRepresent": "What are you looking to take on?",
+      "distributionObjectiveRepresentPlaceholder": "e.g. represent a premium food brand entering the Spanish market",
+      "distributionExpectationsOffered": "What do you expect from the brand or supplier?",
+      "distributionExpectationsOfferedPlaceholder": "Exclusivity, margin, marketing support, training, stock terms or contract length"
     },
     "preview": {
       "eyebrow": "Before you submit",
@@ -1538,7 +1557,12 @@
       "flaggedBody": "Most listings publish immediately. This one matched a check that Ponte looks at by hand. This is not a finding against you.",
       "detailLevel": "Detail level",
       "viewListing": "View your listing",
-      "completeListing": "Complete your listing"
+      "completeListing": "Complete your listing",
+      "verifyOnlyEyebrow": "One step left",
+      "verifyOnlyTitle": "Your offer is ready. Your business is not verified yet.",
+      "verifyOnlyBody": "Ponte publishes member opportunities from verified businesses only. Nothing is wrong with your listing: it publishes automatically as soon as your verification passes.",
+      "verifyOnlyNote": "Verifying confirms the legal entity you represent. It is not an assessment of the opportunity you posted.",
+      "verifyBusiness": "Verify your business"
     },
     "error": {
       "badge": "Could not submit",

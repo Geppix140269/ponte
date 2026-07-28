@@ -12,7 +12,7 @@ import {
 } from "../../taxonomy/distribution-terms";
 import { PRODUCT_SECTORS } from "../../taxonomy/market";
 import type { StructureDraft } from "../draft";
-import { has, countryNames, labelsOf, trimmed } from "./shared";
+import { has, countryNames, labelsOf, trimmed, validityValue, statesOwnCapability, closingBlockers } from "./shared";
 import type {
   Blocker,
   CompletionField,
@@ -102,12 +102,6 @@ function productScopeValue(draft: StructureDraft): string | null {
   return stated ?? sector;
 }
 
-function validityValue(draft: StructureDraft): string | null {
-  if (draft.validity === "standing") return "Open until withdrawn";
-  if (typeof draft.validity === "number") return `${draft.validity} days`;
-  return null;
-}
-
 /** Territory is stated when a scope was chosen, and named where it takes names. */
 function territoryOpen(draft: StructureDraft): boolean {
   if (!has(draft.coverageScope)) return true;
@@ -168,7 +162,7 @@ export const distributionProcedure: FamilyProcedure = {
     if (territoryOpen(draft)) out.push({ key: "distributionTerritory" });
     if (!has(draft.validity)) out.push({ key: "validity", resolve: "complete", field: "validity" });
     if (!has(draft.role)) out.push({ key: "role", resolve: "complete", field: "role" });
-    out.push({ key: "businessVerification", resolve: "verify" });
+    out.push(...closingBlockers(draft));
     return out;
   },
 
@@ -191,11 +185,24 @@ export const distributionProcedure: FamilyProcedure = {
       key: "arrangement",
       headingKey: "arrangement",
       rows: [
-        { key: "distributionChannels", labelKey: "distributionChannels", value: labelsOf(terms.channelKeys, distributionChannel), editField: "distributionChannels" },
-        { key: "distributionCapabilities", labelKey: "distributionCapabilities", value: labelsOf(terms.capabilityKeys, distributionCapability), editField: "distributionCapabilities" },
+        {
+          key: "distributionChannels",
+          // The review reads back in the same direction the question asked in.
+          labelKey: statesOwnCapability(draft) ? "distributionChannelsOffered" : "distributionChannels",
+          value: labelsOf(terms.channelKeys, distributionChannel),
+          editField: "distributionChannels",
+        },
+        {
+          key: "distributionCapabilities",
+          labelKey: statesOwnCapability(draft)
+            ? "distributionCapabilitiesOffered"
+            : "distributionCapabilities",
+          value: labelsOf(terms.capabilityKeys, distributionCapability),
+          editField: "distributionCapabilities",
+        },
         { key: "distributionExpectations", labelKey: "distributionExpectations", value: trimmed(terms.commercialExpectations), editField: "distributionExpectations" },
         { key: "distributionTiming", labelKey: "distributionTiming", value: distributionTiming(terms.timing)?.label ?? null, editField: "distributionTiming" },
-        { key: "validity", labelKey: "validity", value: validityValue(draft), editField: "validity" },
+        { key: "validity", labelKey: "validity", ...validityValue(draft), editField: "validity" },
       ],
     };
 
@@ -244,16 +251,27 @@ export const distributionProcedure: FamilyProcedure = {
     if (has(terms.objective)) out.push(`Objective: ${terms.objective!.trim()}.`);
     if (has(terms.productScope)) out.push(`Products or brands in scope: ${terms.productScope!.trim()}.`);
     const channels = labelsOf(terms.channelKeys, distributionChannel);
-    if (channels) out.push(`Channels: ${channels}.`);
+    if (channels) {
+      out.push(
+        statesOwnCapability(draft)
+          ? `Channels reached: ${channels}.`
+          : `Channels the partner should reach: ${channels}.`,
+      );
+    }
     const capabilities = labelsOf(terms.capabilityKeys, distributionCapability);
     if (capabilities) {
       // Whose capability it is depends on which side the member is on, and the
       // record says which rather than leaving a reader to assume.
-      const seeking = draft.canonical?.intent !== "offer_distribution_or_representation";
+      //
+      // A member seeking brands to represent is presenting THEIR OWN capability
+      // to a brand that might appoint them. Reading their intent as "seeking",
+      // which the first version did because the intent key begins with `seek_`,
+      // wrote the exact opposite of the fact onto the record: a distributor
+      // offering a national sales team was recorded as requiring one.
       out.push(
-        seeking
-          ? `Capabilities expected of the partner: ${capabilities}.`
-          : `Capabilities offered: ${capabilities}.`,
+        statesOwnCapability(draft)
+          ? `Capabilities offered: ${capabilities}.`
+          : `Capabilities expected of the partner: ${capabilities}.`,
       );
     }
     // Named as an expectation of a relationship. An opening order stated here is

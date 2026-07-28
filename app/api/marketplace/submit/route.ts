@@ -18,12 +18,15 @@ import {
   type QuantityMode,
 } from "@/lib/listings/quantity";
 import { publishOrHold } from "@/lib/listings/publish";
-import { DECLARATION_VERSION } from "@/lib/listings/eligibility";
+import { DECLARATION_VERSION, resolutionRoute } from "@/lib/listings/eligibility";
 import {
   readClassification,
   isMissingColumnError,
-  CLASSIFICATION_COLUMNS,
+  FAMILY_TERMS_COLUMNS,
+  ALL_CLASSIFICATION_COLUMNS,
 } from "@/lib/listings/classification";
+
+type SavedListing = { id: string; ref: string };
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -272,10 +275,46 @@ export async function POST(req: NextRequest) {
    * This is a bridge, not a design. Once the migration is applied the retry
    * never fires, and `docs/codex/DATABASE-STATE.md` records what is required.
    */
-  const withoutClassification = (row: Record<string, unknown>): Record<string, unknown> => {
+  const without = (
+    row: Record<string, unknown>,
+    columns: readonly string[],
+  ): Record<string, unknown> => {
     const copy = { ...row };
-    for (const column of CLASSIFICATION_COLUMNS) delete copy[column];
+    for (const column of columns) delete copy[column];
     return copy;
+  };
+
+  /**
+   * Write, and drop only what the database actually cannot take.
+   *
+   * Two groups, at two different stages of their life. The classification
+   * columns are LIVE: applied by hand on 28 July 2026. The family commercial
+   * terms are NOT: their migration is written and unapplied.
+   *
+   * So the retry is staged. Drop the family terms first and keep everything
+   * else, because everything else stores perfectly. Only if the database
+   * reports a missing column AGAIN does the older, wider fallback run.
+   *
+   * Dropping both groups together, which is what a single retry over one
+   * combined list did, meant that an absent `service_terms` silently cost a
+   * trade service its market family, its canonical intent, its service
+   * category, its subcategories, its coverage and its territory codes. Every
+   * one of those columns exists in production. The member would have been told
+   * the record was filed, and it would have been filed unclassified.
+   */
+  const writeWithFallback = async <T>(
+    attempt: (row: Record<string, unknown>) => Promise<{ data: T | null; error: unknown }>,
+    row: Record<string, unknown>,
+  ): Promise<{ data: T | null; error: unknown }> => {
+    const first = await attempt(row);
+    if (!first.error || !isMissingColumnError(first.error)) return first;
+
+    console.warn("[ponte] family terms columns absent; storing without them");
+    const second = await attempt(without(row, FAMILY_TERMS_COLUMNS));
+    if (!second.error || !isMissingColumnError(second.error)) return second;
+
+    console.warn("[ponte] classification columns absent too; storing without those as well");
+    return await attempt(without(row, ALL_CLASSIFICATION_COLUMNS));
   };
 
   // -------- Owner edit: update in place, and return an approved listing to
@@ -351,14 +390,13 @@ export async function POST(req: NextRequest) {
     }
     // else: an approved listing edited with no reviewable change stays approved.
 
-    let { error: updErr } = await supabase.from("listings").update(update).eq("id", editId);
-    if (updErr && isMissingColumnError(updErr)) {
-      console.warn("[ponte] classification columns absent; storing the edit without them");
-      ({ error: updErr } = await supabase
-        .from("listings")
-        .update(withoutClassification(update))
-        .eq("id", editId));
-    }
+    const { error: updErr } = await writeWithFallback(
+      async (row) => {
+        const { error } = await supabase.from("listings").update(row).eq("id", editId);
+        return { data: null, error };
+      },
+      update,
+    );
     if (updErr) {
       console.error("[ponte] listing edit failed:", updErr);
       return NextResponse.json(
@@ -400,20 +438,10 @@ export async function POST(req: NextRequest) {
     status: isDraft ? "draft" : "submitted",
   };
 
-  let { data: listing, error: insertErr } = await supabase
-    .from("listings")
-    .insert(newRow)
-    .select("id, ref")
-    .single();
-
-  if (insertErr && isMissingColumnError(insertErr)) {
-    console.warn("[ponte] classification columns absent; storing the listing without them");
-    ({ data: listing, error: insertErr } = await supabase
-      .from("listings")
-      .insert(withoutClassification(newRow))
-      .select("id, ref")
-      .single());
-  }
+  const { data: listing, error: insertErr } = await writeWithFallback<SavedListing>(
+    async (row) => await supabase.from("listings").insert(row).select("id, ref").single(),
+    newRow,
+  );
 
   if (insertErr || !listing) {
     console.error("[ponte] listing insert failed:", insertErr);
@@ -452,7 +480,7 @@ export async function POST(req: NextRequest) {
  */
 async function revalidate(
   listingId: string,
-): Promise<{ status: string; blockingIssues: string[]; completenessScore: number } | null> {
+): Promise<{ status: string; blockingIssues: string[]; completenessScore: number; route: string } | null> {
   try {
     const admin = createAdminClient();
     const { data: row } = await admin
@@ -467,6 +495,9 @@ async function revalidate(
       status: outcome.status,
       blockingIssues: outcome.result.blockingIssues.map((i) => i.message),
       completenessScore: outcome.result.completenessScore,
+      // Where the member actually resolves this. Verification is not fixable on
+      // the listing form, so the screen must not send them there for it.
+      route: resolutionRoute(outcome.result.blockingIssues),
     };
   } catch (err) {
     console.error("[ponte] automated publication failed:", err);

@@ -1,7 +1,7 @@
 import { formatQuantity, validateQuantity, quantityToColumns } from "../../listings/quantity";
 import { PRODUCT_SECTORS } from "../../taxonomy/market";
 import type { StructureDraft, Intent } from "../draft";
-import { has, draftQuantity, trimmed } from "./shared";
+import { has, draftQuantity, trimmed, validityValue, closingBlockers } from "./shared";
 import type {
   Blocker,
   CompletionField,
@@ -82,17 +82,24 @@ function isFilled(draft: StructureDraft, field: CompletionField): boolean {
   }
 }
 
-function routeValue(draft: StructureDraft): string | null {
+/**
+ * The route, as the end or ends this member actually decides.
+ *
+ * A half-stated route is the normal case, not a defect: a seller states where
+ * the goods ship FROM and the destination is the buyer's decision. So one end
+ * is printed as the half it is, "Ships from Argentina", and never as a bare
+ * place under a heading of "Route", which reads as a complete corridor with a
+ * missing half.
+ */
+function routeValue(
+  draft: StructureDraft,
+): { value: string | null; message?: { key: string; params?: Record<string, string | number> } } {
   const from = trimmed(draft.origin);
   const to = trimmed(draft.destination);
-  if (from && to) return `${from} → ${to}`;
-  return from ?? to ?? null;
-}
-
-function validityValue(draft: StructureDraft): string | null {
-  if (draft.validity === "standing") return "Open until withdrawn";
-  if (typeof draft.validity === "number") return `${draft.validity} days`;
-  return null;
+  if (from && to) return { value: `${from} → ${to}` };
+  if (from) return { value: `Ships from ${from}`, message: { key: "preview.shipsFrom", params: { place: from } } };
+  if (to) return { value: `Delivered to ${to}`, message: { key: "preview.deliveredTo", params: { place: to } } };
+  return { value: null };
 }
 
 export const productsProcedure: FamilyProcedure = {
@@ -143,7 +150,7 @@ export const productsProcedure: FamilyProcedure = {
     if (!has(draft.validity)) out.push({ key: "validity", resolve: "complete", field: "validity" });
     if (!has(draft.role)) out.push({ key: "role", resolve: "complete", field: "role" });
     // Publication always needs a current member-business verification.
-    out.push({ key: "businessVerification", resolve: "verify" });
+    out.push(...closingBlockers(draft));
     return out;
   },
 
@@ -169,9 +176,9 @@ export const productsProcedure: FamilyProcedure = {
       rows: [
         { key: "quantity", labelKey: "quantity", value: formatQuantity(draftQuantity(draft)), editField: "quantity" },
         { key: "frequency", labelKey: "frequency", value: trimmed(draft.frequency), editField: "quantity" },
-        { key: "route", labelKey: "route", value: routeValue(draft), editField: routeField },
+        { key: "route", labelKey: "route", ...routeValue(draft), editField: routeField },
         { key: "incoterm", labelKey: "incoterm", value: trimmed(draft.incoterm), editField: "incoterm" },
-        { key: "validity", labelKey: "validity", value: validityValue(draft), editField: "validity" },
+        { key: "validity", labelKey: "validity", ...validityValue(draft), editField: "validity" },
       ],
     };
 

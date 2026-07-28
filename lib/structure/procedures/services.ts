@@ -11,7 +11,7 @@ import {
   specialisationGroupsFor,
 } from "../../taxonomy/service-terms";
 import type { StructureDraft } from "../draft";
-import { has, countryNames, labelsOf, trimmed } from "./shared";
+import { has, countryNames, labelsOf, trimmed, validityValue, closingBlockers } from "./shared";
 import type {
   Blocker,
   CompletionField,
@@ -106,12 +106,6 @@ function coverageValue(draft: StructureDraft): string | null {
   return countries ?? lanes;
 }
 
-function validityValue(draft: StructureDraft): string | null {
-  if (draft.validity === "standing") return "Open until withdrawn";
-  if (typeof draft.validity === "number") return `${draft.validity} days`;
-  return null;
-}
-
 /** Is the classification the member owes Ponte complete? */
 function classificationOpen(draft: StructureDraft): boolean {
   if (serviceCategoryNeedsCustomLabel(draft.serviceCategory)) {
@@ -178,33 +172,61 @@ export const servicesProcedure: FamilyProcedure = {
     // composer reports it for every family. Telling a member they are ready and
     // then refusing to publish would be worse than asking.
     if (!has(draft.role)) out.push({ key: "role", resolve: "complete", field: "role" });
-    out.push({ key: "businessVerification", resolve: "verify" });
+    out.push(...closingBlockers(draft));
     return out;
   },
 
   reviewModel(draft): ReviewModel {
     const terms = draft.serviceTerms;
+    const seeking = draft.canonical?.intent === "seek_trade_service";
     const rows: ReviewRow[] = [
       { key: "service", labelKey: "service", value: serviceSubject(draft) },
-      { key: "serviceScope", labelKey: "serviceScope", value: trimmed(terms.scope), editField: "serviceScope" },
-      { key: "serviceCoverage", labelKey: "serviceCoverage", value: coverageValue(draft), editField: "serviceCoverage" },
+      {
+        key: "serviceScope",
+        // A requester's rows read as requirements. "Scope" and "Coverage" on a
+        // record asking FOR a service imply the member already provides it.
+        labelKey: seeking ? "serviceScopeNeeded" : "serviceScope",
+        value: trimmed(terms.scope),
+        editField: "serviceScope",
+      },
+      {
+        key: "serviceCoverage",
+        labelKey: seeking ? "serviceCoverageNeeded" : "serviceCoverage",
+        value: coverageValue(draft),
+        editField: "serviceCoverage",
+      },
     ];
 
     // Conditioned rows exist only where the category has the dimension at all.
     if (specialisationGroupsFor(draft.serviceCategory).length > 0) {
       rows.push({
         key: "serviceSpecialisation",
-        labelKey: "serviceSpecialisation",
+        labelKey: seeking ? "serviceSpecialisationNeeded" : "serviceSpecialisation",
         value: labelsOf(terms.specialisationKeys, serviceSpecialisation),
         editField: "serviceSpecialisation",
       });
     }
 
     rows.push(
-      { key: "serviceCapability", labelKey: "serviceCapability", value: trimmed(terms.capability), editField: "serviceCapability" },
-      { key: "servicePricingBasis", labelKey: "servicePricingBasis", value: servicePricingBasis(terms.pricingBasis)?.label ?? null, editField: "servicePricingBasis" },
-      { key: "serviceAvailability", labelKey: "serviceAvailability", value: serviceAvailability(terms.availability)?.label ?? null, editField: "serviceAvailability" },
-      { key: "validity", labelKey: "validity", value: validityValue(draft), editField: "validity" },
+      {
+        key: "serviceCapability",
+        labelKey: seeking ? "serviceCapabilityNeeded" : "serviceCapability",
+        value: trimmed(terms.capability),
+        editField: "serviceCapability",
+      },
+      {
+        key: "servicePricingBasis",
+        labelKey: seeking ? "servicePricingBasisNeeded" : "servicePricingBasis",
+        value: servicePricingBasis(terms.pricingBasis)?.label ?? null,
+        editField: "servicePricingBasis",
+      },
+      {
+        key: "serviceAvailability",
+        labelKey: seeking ? "serviceAvailabilityNeeded" : "serviceAvailability",
+        value: serviceAvailability(terms.availability)?.label ?? null,
+        editField: "serviceAvailability",
+      },
+      { key: "validity", labelKey: "validity", ...validityValue(draft), editField: "validity" },
     );
 
     if (terms.engagement) {
@@ -217,7 +239,7 @@ export const servicesProcedure: FamilyProcedure = {
 
     return {
       family: "services",
-      titleKey: "titleServices",
+      titleKey: seeking ? "titleServicesNeeded" : "titleServices",
       publicSections: [{ key: "service", headingKey: "service", rows }],
       privateSections: [
         {
@@ -258,23 +280,55 @@ export const servicesProcedure: FamilyProcedure = {
 
   detailClauses(draft) {
     const terms = draft.serviceTerms;
+    // Which side of the market this record is on. A provider is describing what
+    // they supply; a requester is describing what they need. The same eight
+    // fields say opposite things depending on which, so the record's own text
+    // says which rather than leaving a reader to infer it from the intent key.
+    const seeking = draft.canonical?.intent === "seek_trade_service";
     const out: string[] = [];
-    if (has(terms.scope)) out.push(`Service scope: ${terms.scope!.trim()}.`);
+
+    if (has(terms.scope)) {
+      out.push(
+        seeking
+          ? `Service required: ${terms.scope!.trim()}.`
+          : `Service scope: ${terms.scope!.trim()}.`,
+      );
+    }
     const engagement = serviceEngagementType(terms.engagement)?.label;
     if (engagement) out.push(`Engagement: ${engagement}.`);
     const countries = countryNames(terms.coverageCountries);
-    if (countries) out.push(`Coverage: ${countries}.`);
+    if (countries) {
+      out.push(seeking ? `Coverage required: ${countries}.` : `Coverage: ${countries}.`);
+    }
     if (has(terms.tradeLanes)) out.push(`Trade lanes: ${terms.tradeLanes!.trim()}.`);
     const specialisations = labelsOf(terms.specialisationKeys, serviceSpecialisation);
-    if (specialisations) out.push(`Specialisation: ${specialisations}.`);
+    if (specialisations) {
+      out.push(
+        seeking
+          ? `Specialisation required: ${specialisations}.`
+          : `Specialisation: ${specialisations}.`,
+      );
+    }
     // Written as a capability, never as a quantity. A record that said
     // "Quantity: 40 containers" about a forwarder's monthly throughput would be
     // read on the board as 40 containers of goods for sale.
-    if (has(terms.capability)) out.push(`Service capability: ${terms.capability!.trim()}.`);
+    if (has(terms.capability)) {
+      out.push(
+        seeking
+          ? `Capacity required: ${terms.capability!.trim()}.`
+          : `Service capability: ${terms.capability!.trim()}.`,
+      );
+    }
     const pricing = servicePricingBasis(terms.pricingBasis)?.label;
-    if (pricing) out.push(`Engagement basis: ${pricing}.`);
+    if (pricing) {
+      out.push(
+        seeking ? `Quotation basis expected: ${pricing}.` : `Engagement basis: ${pricing}.`,
+      );
+    }
     const availability = serviceAvailability(terms.availability)?.label;
-    if (availability) out.push(`Availability: ${availability}.`);
+    if (availability) {
+      out.push(seeking ? `Required from: ${availability}.` : `Availability: ${availability}.`);
+    }
     return out;
   },
 };

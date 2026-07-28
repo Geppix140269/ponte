@@ -1,7 +1,7 @@
 -- Automated listing publication, the structured quantity, and the lifecycle
 -- audit trail.
 --
--- Authority: ADR-0012 (Automated listing publication and unified transactional
+-- Authority: ADR-0013 (Automated listing publication and unified transactional
 -- email), accepted 28 July 2026.
 --
 -- Written against the recorded production state in docs/codex/DATABASE-STATE.md

@@ -235,10 +235,34 @@ export type FactBuckets = {
 /** A thing that must resolve before Ponte can publish (S05). */
 export type Blocker = {
   key: string;
-  /** Where the member resolves it, when it is a member action. */
-  resolve?: "complete" | "verify";
+  /**
+   * Where the member resolves it, when it is a member action.
+   *
+   * `declare` is resolved in place, on the submit screen itself: the member
+   * reads the terms and accepts them there. It carries no field because there
+   * is no question to reopen.
+   */
+  resolve?: "complete" | "verify" | "declare";
   /** The exact fact to open when `resolve` is "complete". */
   field?: CompletionField;
+};
+
+/**
+ * A value that only the copy layer can write.
+ *
+ * A one-ended product route is the reason this exists. "Argentina" under a
+ * heading of "Route" is not the fact the member gave: they said the goods ship
+ * FROM Argentina, and the other end is the counterparty's decision. The
+ * previous preview said so, through `preview.shipsFrom`, and a procedure that
+ * returned a bare place name silently dropped that meaning.
+ *
+ * A procedure is a pure module with no message catalogue, so it names the
+ * message and its parameters and the component resolves them.
+ */
+export type ReviewValueMessage = {
+  /** A message key, relative to the composer's own namespace. */
+  key: string;
+  params?: Record<string, string | number>;
 };
 
 /** One line of the reviewed record. */
@@ -246,8 +270,15 @@ export type ReviewRow = {
   key: string;
   /** A message key suffix under the composer's `field.` namespace. */
   labelKey: string;
-  /** The stated value, or null. A null row is only rendered where it is askable. */
+  /**
+   * The stated value, or null. A null row is only rendered where it is askable.
+   *
+   * When `message` is set this is the plain-text equivalent, so a non-rendering
+   * caller (a test, a presenter) still reads a truthful value.
+   */
   value: string | null;
+  /** Set where the value's meaning depends on copy rather than on data. */
+  message?: ReviewValueMessage;
   /** The fact this row opens, when the member may still change it. */
   editField?: CompletionField;
 };

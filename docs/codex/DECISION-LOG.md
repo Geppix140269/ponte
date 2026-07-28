@@ -14,6 +14,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 
 ## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)
+## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0013)
 
 **Decision:** Ponte is a self-publishing trade platform with automated eligibility controls, not a manually moderated noticeboard. A Member Opportunity publishes automatically when the member holds a current passing member-business verification with no unresolved sanctions candidate, every mandatory field for its market family is present and valid, the member has accepted the listing responsibility declaration, and no automated safety check has raised a high- or medium-severity flag. Human review becomes exception-based only, and `/admin/listings` becomes an exception console rather than the publication queue.
 
@@ -25,7 +26,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Implementation boundary:** implemented on branch `fix/automated-listings-email-system` on 28 July 2026. At this record point the migration has NOT been applied to production, nothing has been deployed, the Supabase Auth templates have not been configured, and the admin exception console has not been rebuilt. Applying a production migration, deploying and merging remain subject to the stop conditions in `AGENTS.md`.
 
-**Affected areas:** `docs/decisions/ADR-0012-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728c_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
+**Affected areas:** `docs/decisions/ADR-0013-automated-listing-publication.md`, `docs/plans/active/automated-listing-publication-and-email-system.md`, `docs/email-provider-template-configuration.md`, `lib/listings/`, `lib/email/`, `lib/structure/draft.ts`, `components/structure/StructureComposer.tsx`, `app/api/marketplace/submit/route.ts`, `app/[locale]/marketplace/actions.ts`, `app/[locale]/admin/listings/actions.ts`, `supabase/migrations/20260728c_automated_listing_publication.sql`, `docs/codex/CURRENT-STATE.md`, `docs/codex/DATABASE-STATE.md`.
 
 ## 28 July 2026 — Close the public read and write hole on the migration ledger
 
@@ -348,7 +349,7 @@ and reduced-motion evidence attached.
 ## 28 July 2026 — Category-first classification for Trade services and Distribution
 
 **Context:** Owner requirement of 28 July 2026, implemented on branch
-`feature/category-first-market-taxonomy` and proposed as ADR-0012, which implements the owner-accepted ADR-0011. Trade
+`feature/category-first-market-taxonomy` and proposed as ADR-0013, which implements the owner-accepted ADR-0011. Trade
 services and Distribution opened on a blank line, "State it in one line", while
 Products had a progressive category journey. A sentence cannot be filtered,
 matched, counted or searched, so two of Ponte's three equal families could

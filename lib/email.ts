@@ -96,6 +96,7 @@ export async function sendListingNeedsInformation(
     identity: MemberIdentity;
     listing: ListingSummary;
     blockingIssues: string[];
+    route?: "verification" | "listing" | "both";
     recipientUserId?: string | null;
   },
 ): Promise<void> {
@@ -107,6 +108,7 @@ export async function sendListingNeedsInformation(
       identity: data.identity,
       listing: data.listing,
       blockingIssues: data.blockingIssues,
+      route: data.route,
     },
   });
 }

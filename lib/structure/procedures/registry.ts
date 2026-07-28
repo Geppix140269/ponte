@@ -1,6 +1,7 @@
 import type { MarketFamily } from "../../taxonomy/market";
 import type { StructureDraft } from "../draft";
 import type { CompletionField } from "./types";
+import { statesOwnCapability } from "./shared";
 import { productsProcedure } from "./products";
 import { servicesProcedure } from "./services";
 import { distributionProcedure } from "./distribution";
@@ -58,19 +59,60 @@ export function procedureFor(draft: StructureDraft): FamilyProcedure {
  */
 export function askKeyFor(field: CompletionField, draft: StructureDraft): string {
   const intent = draft.canonical?.intent;
+
+  // ---- Trade services: providing versus requesting ------------------------
+  //
+  // Every downstream service question has two sides. A provider states the
+  // coverage they HAVE, the capacity they can commit, how they charge and when
+  // they are free. A requester states the coverage they NEED, the capacity the
+  // work requires, how they expect to be quoted and when they need it by.
+  //
+  // Asking a requester "How is the service charged for?" asks them to price
+  // somebody else's service, and asking "When is it available?" asks them about
+  // capacity they do not own. Both invite an answer that is not theirs to give.
+  if (intent === "seek_trade_service") {
+    switch (field) {
+      case "serviceScope": return "ask.serviceScopeNeeded";
+      case "serviceCoverage": return "ask.serviceCoverageNeeded";
+      case "serviceSpecialisation": return "ask.serviceSpecialisationNeeded";
+      case "serviceCapability": return "ask.serviceCapabilityNeeded";
+      case "servicePricingBasis": return "ask.servicePricingBasisNeeded";
+      case "serviceAvailability": return "ask.serviceAvailabilityNeeded";
+      default: break;
+    }
+  }
+
+  // ---- Distribution: which side of the arrangement the member is on -------
+  //
+  // Two of the three intents describe what the MEMBER brings. A member offering
+  // representation, and a member seeking brands to represent, are both
+  // presenting their own channels and their own capability: the first to a
+  // brand that might appoint them, the second to a brand they want to carry.
+  // Only a member seeking a partner is stating requirements OF somebody else.
+  //
+  // Getting this wrong is not a wording nicety. "What must the partner bring?"
+  // asked of somebody offering to be the partner produces a record describing
+  // capabilities they expect to receive, which is the opposite of the fact.
+  const offersOwnCapability = statesOwnCapability(draft);
+
   if (field === "distributionCapabilities") {
-    return intent === "offer_distribution_or_representation"
+    return offersOwnCapability
       ? "ask.distributionCapabilitiesOffered"
       : "ask.distributionCapabilitiesSought";
   }
   if (field === "distributionChannels") {
-    return intent === "offer_distribution_or_representation"
+    return offersOwnCapability
       ? "ask.distributionChannelsOffered"
       : "ask.distributionChannelsSought";
   }
-  if (field === "serviceScope") {
-    return intent === "seek_trade_service" ? "ask.serviceScopeNeeded" : "ask.serviceScope";
+  if (field === "distributionObjective" && intent === "seek_brands_or_products_to_represent") {
+    return "ask.distributionObjectiveRepresent";
   }
+  if (field === "distributionExpectations" && offersOwnCapability) {
+    return "ask.distributionExpectationsOffered";
+  }
+
+  if (field === "serviceScope") return "ask.serviceScope";
   return `ask.${field}`;
 }
 
@@ -78,4 +120,4 @@ export * from "./types";
 export { asksFor } from "./products";
 export { serviceSubject } from "./services";
 export { distributionSubject } from "./distribution";
-export { draftQuantity, has } from "./shared";
+export { draftQuantity, has, statesOwnCapability } from "./shared";
