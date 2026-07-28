@@ -52,11 +52,20 @@ test.beforeAll(() => {
   mkdirSync(EVIDENCE, { recursive: true });
 });
 
-/** The landing, loaded and settled. */
+/**
+ * The landing, loaded and ready to interact with.
+ *
+ * `domcontentloaded` rather than `networkidle`: against a deploy preview the
+ * network never goes idle, so the stricter wait times out on a page that is
+ * perfectly ready. Waiting for the bridge itself to be visible is both the
+ * stronger condition and the one that actually matters here.
+ */
 async function landing(page: Page): Promise<Locator> {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const bridge = page.locator(".pbridge > .br");
   await expect(bridge).toBeVisible();
+  // The stations are interactive only once the client component has hydrated.
+  await expect(page.locator(".pbridge > .br .brst").first()).toHaveAttribute("tabindex", "0");
   return bridge;
 }
 
@@ -341,13 +350,28 @@ test("motion evidence: the gold runner crosses, then stops", async ({ page }) =>
   for (let index = 0; index < steps.length; index++) {
     const fraction = steps[index];
     const x = await page.evaluate((time) => {
-      document.querySelectorAll(".pbridge .br *").forEach((el) => {
-        (el as HTMLElement).getAnimations?.().forEach((a) => {
-          a.pause();
-          a.currentTime = time;
-        });
-      });
       const runner = document.querySelector(".pbridge .br__runner");
+
+      /*
+        Step the runner, and settle everything else.
+
+        The first version stepped every animation in the bridge to the same
+        `currentTime`, which put the revealed action section's `br-reveal`
+        translate at a fractional pixel offset. Its text then anti-aliased
+        differently from run to run, so two of the five frames were never
+        byte-identical twice. The sequence is about the runner; every other
+        animation is finished so it contributes a stable, settled frame.
+      */
+      document.querySelectorAll(".pbridge *").forEach((el) => {
+        if (el === runner) return;
+        (el as HTMLElement).getAnimations?.().forEach((a) => a.finish());
+      });
+
+      (runner as HTMLElement | null)?.getAnimations?.().forEach((a) => {
+        a.pause();
+        a.currentTime = time;
+      });
+
       return runner ? Math.round(runner.getBoundingClientRect().x) : -1;
     }, RUNNER_MS * fraction);
     positions.push(x);

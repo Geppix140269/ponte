@@ -36,10 +36,22 @@ PONTE_EVIDENCE_BASE_URL=https://deploy-preview-63--ponte-trade.netlify.app npx p
 
 The runner frames are the one sequence not captured with `animations:
 "disabled"`, because that option finishes every animation at its end state and
-would have produced five identical images. The animation is paused and its
-`currentTime` set by hand instead, and the suite asserts the runner's x position
-strictly decreases across the five frames, so a sequence that stopped moving
-would fail rather than quietly ship.
+would have produced five identical images. The runner's animation is paused and
+its `currentTime` set by hand instead, while **every other animation in the
+bridge is finished** so the rest of the frame is settled. The suite asserts the
+runner's x position strictly decreases across the five frames, so a sequence that
+stopped moving would fail rather than quietly ship.
+
+The runner travels right to left here, from Distribution back to Products, and
+it covers most of the distance early: `br-travel` uses the approved
+`--pf-ease` (`cubic-bezier(.2,.6,.2,1)`), which is front-loaded, so the frame at
+50% of the duration is already well past halfway.
+
+**All sixteen frames are byte-identical across consecutive runs.** That was not
+true of the first version: stepping *every* animation to the same `currentTime`
+left the revealed section's `br-reveal` translate on a fractional pixel, and its
+text anti-aliased differently each time. Byte-stability matters because these
+files are the baseline a future visual-regression check would diff against.
 
 ## 2. What the suite verifies beyond the pictures
 
