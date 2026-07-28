@@ -53,7 +53,12 @@ export async function decideListingAction(formData: FormData): Promise<void> {
   const qualification = String(formData.get("qualification") || "").trim().slice(0, 900);
   const limitations = String(formData.get("limitations") || "").trim().slice(0, 900);
   if (!id) finish("no_id");
-  if (!["approved", "rejected", "closed"].includes(decision)) finish("no_decision", decision);
+  // `suspended` and `needs_information` join the vocabulary with the exception
+  // console: an operator has to be able to take a live listing off the market
+  // and to hand one back to its member, and neither was previously expressible.
+  if (!["approved", "rejected", "closed", "suspended", "needs_information"].includes(decision)) {
+    finish("no_decision", decision);
+  }
 
   const adminSb = createAdminClient();
   const { data: listing } = await adminSb

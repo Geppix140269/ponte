@@ -187,6 +187,8 @@ export default function StructureComposer({
               blockingIssues: Array.isArray(j.blockingIssues) ? j.blockingIssues : [],
               completenessScore:
                 typeof j.completenessScore === "number" ? j.completenessScore : null,
+              route:
+                j.route === "verification" || j.route === "both" ? j.route : "listing",
             },
       );
       replace("received");
@@ -255,6 +257,7 @@ export default function StructureComposer({
             onWorkspace={() => router.push("/workspace")}
             onListing={() => router.push(`/marketplace/l/${resultRef}`)}
             onEdit={() => router.push("/marketplace")}
+            onVerify={() => router.push("/verify?for=business")}
             t={t}
           />
         )}
@@ -919,6 +922,14 @@ export type SubmitOutcome = {
   status: string;
   blockingIssues: string[];
   completenessScore: number | null;
+  /**
+   * Where the member resolves the blocking issues.
+   *
+   * "verification" means every blocker is at /verify and NONE of them is on the
+   * listing form. Sending that member to the composer is a dead end: there is
+   * nothing there they can change to publish.
+   */
+  route: "verification" | "listing" | "both";
 };
 
 /**
@@ -935,13 +946,14 @@ export type SubmitOutcome = {
  * against the member, and saying so on this screen would accuse them of
  * something no check established).
  */
-function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, onEdit, t }: {
+function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, onEdit, onVerify, t }: {
   savedDraft: boolean;
   resultRef: string;
   outcome: SubmitOutcome | null;
   onWorkspace: () => void;
   onListing: () => void;
   onEdit: () => void;
+  onVerify: () => void;
   t: T;
 }) {
   const status = savedDraft ? "draft" : outcome?.status ?? "submitted";
@@ -949,20 +961,30 @@ function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, 
   const needsInfo = status === "needs_information";
   const flagged = status === "flagged";
 
+  // Verification is the one blocker a member cannot resolve on the listing
+  // form, and in practice the most likely one: the 26 July probe recorded zero
+  // members with a passing bound member-business verification. When it is the
+  // ONLY blocker the screen says so, because "a few required details are
+  // missing" is false when the listing itself is complete.
+  const verifyOnly = needsInfo && outcome?.route === "verification";
+
   const title = savedDraft ? t("received.draftTitle")
     : published ? t("received.publishedTitle")
+    : verifyOnly ? t("received.verifyOnlyTitle")
     : needsInfo ? t("received.needsInfoTitle")
     : flagged ? t("received.flaggedTitle")
     : t("received.title");
 
   const body = savedDraft ? t("received.draftBody")
     : published ? t("received.publishedBody")
+    : verifyOnly ? t("received.verifyOnlyBody")
     : needsInfo ? t("received.needsInfoBody")
     : flagged ? t("received.flaggedBody")
     : t("received.body");
 
   const eyebrow = savedDraft ? t("received.savedEyebrow")
     : published ? t("received.publishedEyebrow")
+    : verifyOnly ? t("received.verifyOnlyEyebrow")
     : needsInfo ? t("received.needsInfoEyebrow")
     : flagged ? t("received.flaggedEyebrow")
     : t("received.eyebrow");
@@ -998,13 +1020,20 @@ function ReceivedStep({ savedDraft, resultRef, outcome, onWorkspace, onListing, 
 
       <div className="rec-actions">
         {published && <button className="fbtn fbtn--lg" onClick={onListing}>{t("received.viewListing")}</button>}
-        {(needsInfo || flagged) && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
+        {/* The primary action goes where the work is. */}
+        {verifyOnly && <button className="fbtn fbtn--lg" onClick={onVerify}>{t("received.verifyBusiness")}</button>}
+        {needsInfo && !verifyOnly && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
+        {needsInfo && outcome?.route === "both" && (
+          <button className="fbtn fbtn--ghost" onClick={onVerify}>{t("received.verifyBusiness")}</button>
+        )}
+        {flagged && <button className="fbtn fbtn--lg" onClick={onEdit}>{t("received.completeListing")}</button>}
         <button className={published || needsInfo || flagged ? "fbtn fbtn--ghost" : "fbtn fbtn--lg"} onClick={onWorkspace}>
           {t("received.cta")}
         </button>
       </div>
 
       {published && <p className="rec-note">{t("received.publishedDisclaimer")}</p>}
+      {verifyOnly && <p className="rec-note">{t("received.verifyOnlyNote")}</p>}
     </section>
   );
 }

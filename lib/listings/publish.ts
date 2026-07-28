@@ -21,7 +21,7 @@
 // an email's clothes. A routine publication now notifies nobody internally; it
 // lands in the digest instead.
 
-import { evaluateListing, completenessBand, completenessBandLabel, DECLARATION_VERSION, type EligibilityContext, type EligibilityListing, type ListingValidationResult } from "./eligibility";
+import { evaluateListing, completenessBand, completenessBandLabel, resolutionRoute, DECLARATION_VERSION, type EligibilityContext, type EligibilityListing, type ListingValidationResult } from "./eligibility";
 import { outcomeStatus } from "./eligibility";
 import { topSeverity, memberFacingFlagReason } from "./safety";
 import { quantityFromRow, formatQuantity } from "./quantity";
@@ -252,6 +252,9 @@ export async function publishOrHold(
       identity: ctx.identity,
       listing: summary,
       blockingIssues: result.blockingIssues.map((i) => i.message),
+      // Verification is not fixable on the listing form. Sending a member whose
+      // only gap is verification to the composer is a dead end.
+      route: resolutionRoute(result.blockingIssues),
       recipientUserId: listing.user_id,
     });
   } else {

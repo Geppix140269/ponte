@@ -18,7 +18,7 @@ import {
   type QuantityMode,
 } from "@/lib/listings/quantity";
 import { publishOrHold } from "@/lib/listings/publish";
-import { DECLARATION_VERSION } from "@/lib/listings/eligibility";
+import { DECLARATION_VERSION, resolutionRoute } from "@/lib/listings/eligibility";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -394,7 +394,7 @@ export async function POST(req: NextRequest) {
  */
 async function revalidate(
   listingId: string,
-): Promise<{ status: string; blockingIssues: string[]; completenessScore: number } | null> {
+): Promise<{ status: string; blockingIssues: string[]; completenessScore: number; route: string } | null> {
   try {
     const admin = createAdminClient();
     const { data: row } = await admin
@@ -409,6 +409,9 @@ async function revalidate(
       status: outcome.status,
       blockingIssues: outcome.result.blockingIssues.map((i) => i.message),
       completenessScore: outcome.result.completenessScore,
+      // Where the member actually resolves this. Verification is not fixable on
+      // the listing form, so the screen must not send them there for it.
+      route: resolutionRoute(outcome.result.blockingIssues),
     };
   } catch (err) {
     console.error("[ponte] automated publication failed:", err);

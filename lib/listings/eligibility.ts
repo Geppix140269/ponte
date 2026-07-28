@@ -470,6 +470,48 @@ export function evaluateListing(
 }
 
 /**
+ * The issue codes that are resolved at /verify, not on the listing form.
+ *
+ * This distinction is load-bearing. Verification is the ONE blocking issue a
+ * member cannot fix by editing their listing, and before this existed the
+ * needs-information screen and email both said "Complete your listing" and sent
+ * them to the composer. A member whose only gap was verification was therefore
+ * routed to a form containing nothing that could resolve it, with no mention of
+ * verification anywhere on the path. That is a dead end, and it is the most
+ * likely single blocker in practice: the 26 July probe recorded zero members
+ * with a passing bound member-business verification.
+ */
+export const VERIFICATION_ISSUE_CODES: readonly string[] = [
+  "business_verification_required",
+  "business_verification_not_current",
+  "sanctions_unresolved",
+];
+
+export function isVerificationIssue(issue: ValidationIssue): boolean {
+  return VERIFICATION_ISSUE_CODES.includes(issue.code);
+}
+
+/**
+ * Where a member with these blocking issues should be sent.
+ *
+ *   verification — every blocker is resolved at /verify. The listing itself is
+ *                  complete, and saying otherwise would be false.
+ *   listing      — no verification blocker; the composer resolves all of them.
+ *   both         — a mix. The listing route leads, because the member can act
+ *                  on it immediately, and the verification step is named
+ *                  explicitly so it does not arrive as a surprise later.
+ */
+export type ResolutionRoute = "verification" | "listing" | "both";
+
+export function resolutionRoute(issues: readonly ValidationIssue[]): ResolutionRoute {
+  if (issues.length === 0) return "listing";
+  const verification = issues.filter(isVerificationIssue).length;
+  if (verification === issues.length) return "verification";
+  if (verification === 0) return "listing";
+  return "both";
+}
+
+/**
  * The status an evaluated listing lands in.
  *
  * The whole automated lifecycle in one expression, so no caller can invent a
