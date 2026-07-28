@@ -59,3 +59,9 @@ build-verify.log
 /e2e/.playwright/
 /playwright-report/
 /test-results/
+
+# Alternate Next build directories. The evidence run uses `.next-evidence`
+# (see playwright.config.ts) and a diagnostic run may create another; none of
+# them belongs in the repository. One accidentally reached a commit before this
+# rule existed.
+/.next-*/

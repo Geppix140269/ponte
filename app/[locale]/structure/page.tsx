@@ -7,7 +7,15 @@ import { categoryIcons } from "@/components/ponte/category/CategoryIcons";
 import { entranceFromParams } from "@/lib/desk/entrances";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
+// Category-first classification (ADR-0011) for services and distribution.
 import "@/components/ponte/category/category.css";
+// The approved Bridge stylesheet, imported unmodified, then the integration
+// additions. Same order and same two files as the landing, because the product
+// intake (ADR-0012) uses the same approved primitive rather than a local variant.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
+import "@/components/ponte/state/state.css";
+import "@/components/products/intake/intake.css";
 
 export const dynamic = "force-dynamic";
 

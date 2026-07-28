@@ -7,14 +7,18 @@ import AccountGate from "@/components/AccountGate";
 import CountryPicker from "@/components/CountryPicker";
 import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
 import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
+import ProductIntake from "@/components/products/intake/ProductIntake";
+import type { CommercialTerms } from "@/lib/products/terms";
+import type { ResolvedProduct } from "@/lib/products/model";
 import {
   emptyDraft,
   openGaps,
   asksFor,
   bucketize,
   blockers as computeBlockers,
-  toSubmitPayload,
+  submitPayloads,
   type StructureDraft,
+  type DraftResolution,
   type Intent,
   type CompletionField,
 } from "@/lib/structure/draft";
@@ -166,22 +170,31 @@ export default function StructureComposer({
   const doSend = useCallback(async (asDraft: boolean) => {
     setSubmitting(true);
     try {
-      const res = await fetch("/api/marketplace/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toSubmitPayload(draft, { draft: asDraft, nowIso: new Date().toISOString() })),
-      });
-      if (res.status === 401) {
-        pending.current = asDraft;
-        setGateOpen(true);
-        return;
+      // One payload, except for a multi-product document where the member chose
+      // separate drafts. The first response decides the gate and the error
+      // branch, so a 401 on the first record still preserves the whole intake
+      // rather than half-submitting it.
+      const payloads = submitPayloads(draft, { draft: asDraft, nowIso: new Date().toISOString() });
+      const refs: string[] = [];
+      for (const payload of payloads) {
+        const res = await fetch("/api/marketplace/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401) {
+          pending.current = asDraft;
+          setGateOpen(true);
+          return;
+        }
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          replace("error");
+          return;
+        }
+        if (j.ref) refs.push(j.ref);
       }
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        replace("error");
-        return;
-      }
-      setResultRef(j.ref ?? "");
+      setResultRef(refs.join(", "));
       setSavedDraft(asDraft);
       replace("received");
     } finally {
@@ -284,10 +297,19 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
   // drill-down would put a false classification on a real record.
   const classify = needsHsCode(draft);
 
+  // The product intake carries its own principal heading, and it is the one the
+  // Constitution's editorial emphasis belongs to. Printing the composer's
+  // heading above it would put two h1s and two propositions on one screen.
+  const intakeOwnsHeading = classify && !draft.product;
+
   return (
     <section className="sstep reveal">
-      <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("intent.eyebrow")}</span></div>
-      <h1 className="fphead__h serif">{journey?.heading ?? t("intent.title")}</h1>
+      {intakeOwnsHeading ? null : (
+        <>
+          <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("intent.eyebrow")}</span></div>
+          <h1 className="fphead__h serif">{journey?.heading ?? t("intent.title")}</h1>
+        </>
+      )}
 
       {/* The legacy three-option picker is for a member who arrived with no
           canonical entrance at all. A member who chose a family already
@@ -311,21 +333,39 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
       )}
 
       <div className={`prodblock${draft.intent ? " on" : ""}`}>
+        {/* The family boundary, in one branch.
+            Ponte asks a product member what they trade and works the
+            classification out (ADR-0012); it asks a services or distribution
+            member which category their work sits in (ADR-0011). These are the
+            two accepted journeys, and neither is a fallback for the other. */}
         {classify ? (
-          <>
-            <HsDrill draft={draft} set={set} t={t} />
-            {draft.product && (
+          draft.product ? (
+            <>
               <p className="orpick__t" style={{ marginTop: 16 }}>
                 {t("intent.chosen")}: <b style={{ color: "var(--ink)" }}>{draft.product}</b>
                 {draft.hsCode ? ` · HS ${draft.hsCode}` : ""}
               </p>
-            )}
-            <div style={{ marginTop: 24 }}>
-              <button className="fbtn fbtn--lg" disabled={!ready} onClick={onNext}>{t("intent.cta")} →</button>
-            </div>
-          </>
+              <div style={{ marginTop: 24 }}>
+                <button className="fbtn fbtn--lg" disabled={!ready} onClick={onNext}>{t("intent.cta")} →</button>
+              </div>
+            </>
+          ) : (
+            // The AI product intake: describe, upload or browse. Browse is the
+            // same HS drill-down it always was, passed in rather than forked,
+            // so a member who prefers the catalogue loses nothing. There is no
+            // Continue underneath it: the intake has its own confirmation, and
+            // a second one would be a weaker confirmation of the same thing.
+            <ProductIntake
+              intent={draft.canonical?.intent === "source_product" ? "source_product" : "offer_product"}
+              renderBrowse={() => <HsDrill draft={draft} set={set} t={t} />}
+              onResolved={(result) => {
+                set(applyResolution(draft, result));
+                onNext();
+              }}
+            />
+          )
         ) : (
-          // Trade services and Distribution now open on their own structured
+          // Trade services and Distribution open on their own structured
           // categories rather than a blank line, and the step owns its own
           // Continue because it walks several questions before it is done.
           <ClassifyStep draft={draft} set={set} icons={icons} onNext={onNext} t={t} />
@@ -335,6 +375,88 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
   );
 }
 
+/**
+ * The confirmed intake, folded onto the draft.
+ *
+ * Every value here was confirmed by the member on the review screen, which is
+ * why it may be written onto the record at all. Nothing arrives from the model
+ * unseen: a term the document did not state reached the review as `missing`,
+ * and a term the member did not fill is still missing here.
+ *
+ * The terms with no field on the draft (pricing basis, contract term,
+ * availability, validity dates, counterparties, signatories) are appended to
+ * the note as labelled lines rather than dropped. `listings` cannot store them
+ * and losing them would be worse than carrying them as words.
+ */
+function applyResolution(
+  draft: StructureDraft,
+  result: {
+    products: ResolvedProduct[];
+    terms: CommercialTerms;
+    plan: string | null;
+    documentName: string | null;
+  },
+): Partial<StructureDraft> {
+  const [first, ...rest] = result.products;
+  if (!first) return {};
+
+  const value = (key: keyof CommercialTerms): string | null => result.terms[key].value;
+  const quantityText = value("quantity");
+  const quantityNumber = quantityText ? Number(quantityText.replace(/[^\d]/g, "")) : NaN;
+
+  const carried: [keyof CommercialTerms, string][] = [
+    ["pricingBasis", "Pricing basis"],
+    ["contractTerm", "Contract term"],
+    ["availability", "Availability"],
+    ["validity", "Validity"],
+    ["counterparties", "Named counterparties"],
+    ["signatories", "Signatories"],
+  ];
+  const extra = carried
+    .map(([key, label]) => (value(key) ? `${label}: ${value(key)}.` : null))
+    .filter((line): line is string => line !== null);
+
+  const toDraftResolution = (product: ResolvedProduct): DraftResolution => ({
+    originalWording: product.originalWording,
+    normalised: product.normalised,
+    productKey: product.productKey,
+    synonyms: product.synonyms,
+    categoryPath: product.categoryPath,
+    sector: product.sector,
+    attributes: product.attributes,
+    candidateHs: product.candidateHs,
+    searchText: product.searchText,
+    searchTerms: product.searchTerms,
+  });
+
+  return {
+    product: first.normalised,
+    // The one place the two accepted decisions meet on the data.
+    //
+    // ADR-0011 asks every record for a `productSector` key so a market can be
+    // filtered and counted; ADR-0012 already derived that sector, from the
+    // customs chapter the identification survived. Writing it here answers
+    // ADR-0011's question from ADR-0012's work rather than asking the member a
+    // second time. Empty stays empty: an underivable sector is a gap, and the
+    // ClassifyStep sector picker is still there for a member who wants to say.
+    productSector: first.sector || draft.productSector,
+    // Suggested, unconfirmed, and carried as such. It is not a gate and never
+    // was one on this route.
+    hsCode: first.candidateHs?.code ?? null,
+    resolution: toDraftResolution(first),
+    siblings: rest.map(toDraftResolution),
+    programme: result.plan === "programme",
+    documentName: result.documentName,
+    quantity: Number.isFinite(quantityNumber) && quantityNumber > 0 ? quantityNumber : draft.quantity,
+    unit: value("unit") ?? draft.unit,
+    frequency: value("recurrence") ?? draft.frequency,
+    origin: value("origin") ?? draft.origin,
+    destination: value("destination") ?? draft.destination,
+    incoterm: value("incoterm") ?? draft.incoterm,
+    payment: value("paymentStructure") ?? draft.payment,
+    note: [draft.note, ...extra].filter(Boolean).join(" ") || null,
+  };
+}
 /**
  * The heading each canonical entrance opens with now lives in
  * `lib/taxonomy/journey.ts`, alongside the ordered questions it introduces, so
