@@ -15,10 +15,7 @@
  *     submit payload only at the gate, and the gate resumes it once.
  */
 
-import {
-  formatQuantity, normaliseFrequency, validateQuantity, quantityToColumns,
-  type ListingQuantity, type QuantityMode,
-} from "../listings/quantity";
+import { type QuantityMode } from "../listings/quantity";
 
 export type { QuantityMode };
 
@@ -35,8 +32,40 @@ import {
   coverageScopeTakesCountries,
   partnerTypeNeedsCustomLabel,
 } from "../taxonomy/distribution";
+import { sanitiseSpecialisations } from "../taxonomy/service-terms";
 import { journeyFor, type ClassificationStep } from "../taxonomy/journey";
 import { PRODUCT_SECTORS, type MarketFamily } from "../taxonomy/market";
+import {
+  procedureFor,
+  procedureForFamily,
+  familyOf as familyOfDraft,
+  serviceSubject,
+  distributionSubject,
+} from "./procedures/registry";
+import {
+  emptyServiceTerms,
+  emptyDistributionTerms,
+  serviceTermsStated,
+  distributionTermsStated,
+  type Blocker,
+  type CompletionField,
+  type DistributionTerms,
+  type FactBuckets,
+  type ServiceTerms,
+} from "./procedures/types";
+import { draftQuantity as computeDraftQuantity, has } from "./procedures/shared";
+
+export type { Blocker, CompletionField, FactBuckets, ServiceTerms, DistributionTerms };
+export { asksFor } from "./procedures/products";
+export { procedureFor, procedureForFamily, askKeyFor, statesOwnCapability } from "./procedures/registry";
+export { FIELD_FAMILY, fieldBelongsTo } from "./procedures/types";
+export type {
+  FamilyProcedure,
+  ReviewModel,
+  ReviewRow,
+  ReviewSection,
+  SubmissionReadiness,
+} from "./procedures/types";
 
 export type Intent = "offer" | "requirement" | "service";
 
@@ -211,6 +240,28 @@ export type StructureDraft = Classification & {
   role: string | null;
   /** The one optional free-text note. */
   note: string | null;
+  /**
+   * The commercial terms a Trade Service actually has.
+   *
+   * Always present, always empty until stated, and NEVER read by another
+   * family: `crossFamilyClassification` reports it as foreign on a products or
+   * distribution draft and the sanitiser empties it at the storage boundary.
+   * A service listing's throughput lives in `serviceTerms.capability`, never in
+   * `quantity`, which is the distinction the whole family split turns on.
+   */
+  serviceTerms: ServiceTerms;
+  /** The commercial terms a Distribution or representation opportunity has. */
+  distributionTerms: DistributionTerms;
+  /**
+   * Whether the member has accepted the publication declaration.
+   *
+   * Ponte publishes automatically, so the member, not a reviewer, is the person
+   * who states the record is accurate and that they are entitled to have it
+   * published. `evaluateListing` has always blocked on this; until now nothing
+   * in the composer asked for it or sent it, so every Start a Deal submission
+   * was held for a reason the member never saw.
+   */
+  declarationAccepted: boolean;
 };
 
 export function emptyDraft(): StructureDraft {
@@ -222,41 +273,20 @@ export function emptyDraft(): StructureDraft {
     unit: null, frequency: null, origin: null, destination: null, incoterm: null,
     payment: null, validity: null, role: null, note: null,
     resolution: null, siblings: [], programme: false, documentName: null,
+    serviceTerms: emptyServiceTerms(),
+    distributionTerms: emptyDistributionTerms(),
+    declarationAccepted: false,
   };
 }
 
 /**
  * The quantity on a draft, in the shared model.
  *
- * One conversion, used by the gap check, the preview, the synthesised details
- * and the submit payload, so all four agree about whether a quantity has been
- * stated and what it says.
+ * Defined in `procedures/shared.ts` and re-exported here so the draft's public
+ * API is unchanged while the dependency runs one way: the procedures never
+ * import back into this module at runtime.
  */
-export function draftQuantity(draft: StructureDraft): ListingQuantity | null {
-  // A bare number with no mode reads as `exact`, which is the same rule
-  // `quantityFromRow` already applies to a stored listing that predates the
-  // mode column. It matters on the AI intake route: extraction writes
-  // `quantity`, `unit` and `frequency` from the document and never sets a
-  // mode, so without this fallback a document-extracted draft has no quantity
-  // here at all.
-  if (!draft.quantityMode) {
-    if (draft.quantity === null || draft.quantity === undefined) return null;
-    return {
-      mode: "exact",
-      value: draft.quantity,
-      unit: draft.unit,
-      frequency: normaliseFrequency(draft.frequency),
-    };
-  }
-  return {
-    mode: draft.quantityMode,
-    value: draft.quantity,
-    minValue: draft.quantityMin,
-    maxValue: draft.quantityMax,
-    unit: draft.unit,
-    frequency: normaliseFrequency(draft.frequency),
-  };
-}
+export const draftQuantity = computeDraftQuantity;
 
 /**
  * The legacy `listings.type` a canonical intent maps onto.
@@ -302,53 +332,95 @@ export function needsHsCode(draft: StructureDraft): boolean {
   return draft.canonical.family === "products";
 }
 
-const has = (v: unknown): boolean => v !== null && v !== undefined && String(v).trim() !== "";
-
 // ---------------------------------------------------------------------------
 // Classification: what the record IS, chosen before anything is described
 // ---------------------------------------------------------------------------
 
 /** The family a draft belongs to, canonical when known and products otherwise. */
-export function familyOf(draft: StructureDraft): MarketFamily {
-  const family = draft.canonical?.family;
-  if (family === "services" || family === "distribution" || family === "products") return family;
-  return "products";
-}
+export const familyOf = familyOfDraft;
 
 /**
- * A classification field that belongs to another family.
+ * A field that belongs to another family.
  *
  * The requirement is explicit that a Trade Service category must not be stored
  * under Distribution, and the reverse. This is enforced rather than trusted,
- * because the two journeys share one draft object and one submit route, and a
+ * because the journeys share one draft object and one submit route, and a
  * back-navigation between families would otherwise leave the previous family's
  * answer attached to the new record. A stale key is worse than no key: it is a
  * classification nobody chose, and it would be filtered on.
+ *
+ * This now covers the COMMERCIAL fields as well as the classification ones. It
+ * has to: the defect being fixed is that every family was carrying the product
+ * commercial fields, so a draft that started as a product and became a service
+ * would otherwise arrive at the submit route still holding a quantity, a unit
+ * and an Incoterm: the exact values the service journey exists to stop
+ * appearing on a service record.
  */
 export function crossFamilyClassification(draft: StructureDraft): string[] {
   const family = familyOf(draft);
   const wrong: string[] = [];
+
   if (family !== "services") {
     if (has(draft.serviceCategory)) wrong.push("serviceCategory");
     if (draft.serviceSubcategories.length > 0) wrong.push("serviceSubcategories");
+    if (serviceTermsStated(draft.serviceTerms)) wrong.push("serviceTerms");
   }
   if (family !== "distribution") {
     if (has(draft.distributionPartnerType)) wrong.push("distributionPartnerType");
     if (draft.distributionRelationshipTerms.length > 0) wrong.push("distributionRelationshipTerms");
     if (has(draft.coverageScope)) wrong.push("coverageScope");
+    if (draft.territoryCodes.length > 0) wrong.push("territoryCodes");
+    if (distributionTermsStated(draft.distributionTerms)) wrong.push("distributionTerms");
   }
-  if (family === "services" && has(draft.hsCode)) wrong.push("hsCode");
+  if (family !== "products") {
+    // The product-only commercial fields, named one by one so the sanitiser and
+    // the API refusal agree about exactly which values may not travel.
+    if (has(draft.hsCode)) wrong.push("hsCode");
+    if (has(draft.quantityMode) || has(draft.quantity) || has(draft.quantityMin) || has(draft.quantityMax)) {
+      wrong.push("quantity");
+    }
+    if (has(draft.unit)) wrong.push("unit");
+    if (has(draft.frequency)) wrong.push("frequency");
+    if (has(draft.origin)) wrong.push("origin");
+    if (has(draft.destination)) wrong.push("destination");
+    if (has(draft.incoterm)) wrong.push("incoterm");
+    if (has(draft.payment)) wrong.push("payment");
+  }
+
   return wrong;
 }
 
-/** Drop every classification field that does not belong to this draft's family. */
+/**
+ * A service specialisation that its own category does not offer.
+ *
+ * A member who chose freight, ticked "Sea" and "Road", then changed the
+ * category to customs is holding two transport modes that customs has no
+ * question for. They are dropped rather than displayed: a mode nobody chose for
+ * this category is the same kind of stale value as a foreign family's key.
+ */
+function staleSpecialisations(draft: StructureDraft): boolean {
+  if (familyOf(draft) !== "services") return false;
+  const kept = sanitiseSpecialisations(draft.serviceCategory, draft.serviceTerms.specialisationKeys);
+  return kept.length !== draft.serviceTerms.specialisationKeys.length;
+}
+
+/** Drop every field that does not belong to this draft's family. */
 export function clearForeignClassification(draft: StructureDraft): StructureDraft {
   const wrong = new Set(crossFamilyClassification(draft));
-  if (wrong.size === 0) return draft;
+  if (wrong.size === 0 && !staleSpecialisations(draft)) return draft;
   return {
     ...draft,
     serviceCategory: wrong.has("serviceCategory") ? null : draft.serviceCategory,
     serviceSubcategories: wrong.has("serviceSubcategories") ? [] : draft.serviceSubcategories,
+    serviceTerms: wrong.has("serviceTerms")
+      ? emptyServiceTerms()
+      : {
+          ...draft.serviceTerms,
+          specialisationKeys: sanitiseSpecialisations(
+            draft.serviceCategory,
+            draft.serviceTerms.specialisationKeys,
+          ),
+        },
     distributionPartnerType: wrong.has("distributionPartnerType")
       ? null
       : draft.distributionPartnerType,
@@ -356,7 +428,21 @@ export function clearForeignClassification(draft: StructureDraft): StructureDraf
       ? []
       : draft.distributionRelationshipTerms,
     coverageScope: wrong.has("coverageScope") ? null : draft.coverageScope,
+    territoryCodes: wrong.has("territoryCodes") ? [] : draft.territoryCodes,
+    distributionTerms: wrong.has("distributionTerms")
+      ? emptyDistributionTerms()
+      : draft.distributionTerms,
     hsCode: wrong.has("hsCode") ? null : draft.hsCode,
+    quantityMode: wrong.has("quantity") ? null : draft.quantityMode,
+    quantity: wrong.has("quantity") ? null : draft.quantity,
+    quantityMin: wrong.has("quantity") ? null : draft.quantityMin,
+    quantityMax: wrong.has("quantity") ? null : draft.quantityMax,
+    unit: wrong.has("unit") ? null : draft.unit,
+    frequency: wrong.has("frequency") ? null : draft.frequency,
+    origin: wrong.has("origin") ? null : draft.origin,
+    destination: wrong.has("destination") ? null : draft.destination,
+    incoterm: wrong.has("incoterm") ? null : draft.incoterm,
+    payment: wrong.has("payment") ? null : draft.payment,
   };
 }
 
@@ -458,163 +544,55 @@ export function needsCustomLabel(draft: StructureDraft): boolean {
  */
 export function subjectFor(draft: StructureDraft): string | null {
   const family = familyOf(draft);
-  const custom = draft.customCategoryLabel?.trim() || null;
-
-  if (family === "services") {
-    if (serviceCategoryNeedsCustomLabel(draft.serviceCategory)) return custom;
-    const subs = draft.serviceSubcategories
-      .map((k) => serviceSubcategory(k)?.label)
-      .filter((l): l is string => !!l);
-    if (subs.length > 0) {
-      const named = subs.join(", ");
-      // A category's own "Other ..." subcategory names the gap, not the
-      // service, so the member's wording is what a reader actually needs.
-      return custom ? `${named}: ${custom}` : named;
-    }
-    return serviceCategory(draft.serviceCategory)?.label ?? custom;
-  }
-
-  if (family === "distribution") {
-    if (partnerTypeNeedsCustomLabel(draft.distributionPartnerType)) return custom;
-    const type = partnerType(draft.distributionPartnerType)?.label ?? null;
-    const sector = PRODUCT_SECTORS.find((s) => s.key === draft.productSector)?.label ?? null;
-    if (type && sector) return `${type}, ${sector}`;
-    return type ?? sector ?? custom;
-  }
-
+  if (family === "services") return serviceSubject(draft);
+  if (family === "distribution") return distributionSubject(draft);
   return draft.product?.trim() || null;
 }
 
 /**
- * The order Ponte asks for the still-open facts, one at a time (S03). Only the
- * unfilled ones are asked; each is skippable. `note` is always last and always
- * optional.
- */
-export const COMPLETION_QUEUE = [
-  "quantity", "origin", "destination", "incoterm", "payment", "validity", "role", "note",
-] as const;
-export type CompletionField = (typeof COMPLETION_QUEUE)[number];
-
-/**
- * Which end of the route this member actually decides.
+ * The completion steps a LEGACY product-shaped entrance asks for.
  *
- * A seller knows where the goods ship FROM; where they end up is the buyer's
- * decision, and asking a seller for a destination invites an invented answer or
- * an unnecessary constraint on their own listing. A buyer is the mirror image:
- * they know where it has to land, and the origin is whoever can supply it. A
- * trade service covers a corridor, so it declares both ends.
- *
- * The field that is not asked is not a gap, is not a blocker and is not printed
- * as "not stated": it was never this member's fact to give. It stays on the
- * draft so a member who does want to state it loses nothing.
+ * Kept for the composer entrance that carries no canonical family, and for the
+ * surfaces and tests that reason about the product queue by intent alone. Every
+ * canonical record goes through its own family procedure instead; this is the
+ * shadow the legacy `listings.type` vocabulary casts, not the contract.
  */
-export function asksFor(intent: Intent | null, field: "origin" | "destination"): boolean {
-  if (intent === "offer") return field === "origin";
-  if (intent === "requirement") return field === "destination";
-  return true; // service, or intent not yet chosen
-}
-
-/** The completion steps that apply to this draft's intent, in order. */
 export function queueFor(intent: Intent | null): CompletionField[] {
-  return COMPLETION_QUEUE.filter((f) =>
-    f === "origin" || f === "destination" ? asksFor(intent, f) : true,
-  );
+  return [...procedureForFamily("products").completionFields({ ...emptyDraft(), intent })];
 }
-
-function isFilled(draft: StructureDraft, field: CompletionField): boolean {
-  switch (field) {
-    // A quantity is stated when its MODE is chosen and coherent. "On request"
-    // and "negotiable" are complete answers that carry no number, so testing
-    // for a number here would keep asking a member who has already answered.
-    case "quantity": {
-      const q = draftQuantity(draft);
-      return q !== null && validateQuantity(q).length === 0;
-    }
-    case "origin": return has(draft.origin);
-    case "destination": return has(draft.destination);
-    case "incoterm": return has(draft.incoterm);
-    case "payment": return has(draft.payment);
-    case "validity": return has(draft.validity);
-    case "role": return has(draft.role);
-    case "note": return has(draft.note);
-  }
-}
-
-/** The still-open completion steps, in order. `note` appears only if unfilled. */
-export function openGaps(draft: StructureDraft): CompletionField[] {
-  return queueFor(draft.intent).filter((f) => !isFilled(draft, f));
-}
-
-/** The four honest buckets for S02. Values are field keys; the UI supplies copy. */
-export type FactBuckets = {
-  /** Facts Ponte can already state. */
-  commercial: string[];
-  /** Decisive facts still open (the dashed "Add" chips). */
-  missing: string[];
-  /** Evidence or authority a reviewer will need. */
-  evidence: string[];
-  /** What is kept private (never public). */
-  keptPrivate: string[];
-};
-
-export function bucketize(draft: StructureDraft): FactBuckets {
-  const commercial: string[] = [];
-  if (has(draft.intent)) commercial.push("intent");
-  // The subject is composed from the classification for a service or a
-  // distribution record, so a member who tapped their way through without
-  // typing still has a stated subject here rather than an apparent gap.
-  if (has(subjectFor(draft))) commercial.push("product");
-  if (has(draft.serviceCategory)) commercial.push("serviceCategory");
-  if (draft.serviceSubcategories.length > 0) commercial.push("serviceSubcategory");
-  if (has(draft.distributionPartnerType)) commercial.push("partnerType");
-  if (draft.distributionRelationshipTerms.length > 0) commercial.push("relationship");
-  if (has(draft.coverageScope)) commercial.push("coverage");
-  if (has(draft.productSector)) commercial.push("sector");
-  if (has(draft.hsCode)) commercial.push("hsCode");
-  if (isFilled(draft, "quantity")) commercial.push("quantity");
-  for (const f of ["frequency", "origin", "destination", "incoterm"] as const) {
-    if (has(draft[f])) commercial.push(f);
-  }
-
-  // The decisive fields that, when open, are worth asking for. Not every open
-  // field is a gap worth surfacing (a note never is, and the end of the route
-  // this member does not decide never is); these are the ones a reviewer needs
-  // to see resolved.
-  const missing = (["quantity", "origin", "destination", "incoterm", "payment", "validity", "role"] as const)
-    .filter((f) => (f === "origin" || f === "destination" ? asksFor(draft.intent, f) : true))
-    .filter((f) => !isFilled(draft, f));
-
-  // Evidence is authority to act, deferred to review (never uploaded pre-account).
-  const evidence = draft.intent === "service" ? ["serviceAuthority"] : ["tradeAuthority"];
-
-  // Always private: who you are, and your exact company, until an introduction.
-  const keptPrivate = ["identity", "exactCompany"];
-
-  return { commercial, missing, evidence, keptPrivate };
-}
-
-/** A thing that must resolve before Ponte can publish (S05). */
-export type Blocker = {
-  key: string;
-  /** Where the member resolves it, when it is a member action. */
-  resolve?: "complete" | "verify";
-};
 
 /**
- * What still stands between this draft and publication. Fact gaps the member
- * can close in the composer, plus business verification, which is resolved at
- * /verify and always applies until it is done. Submitting for review is always
- * allowed regardless: these inform, they do not block the submit button.
+ * The still-open facts for this draft, in its own family's order.
+ *
+ * This used to be one fixed list of eight product fields for every family. It
+ * is now the family's list, which is the whole correction: a trade service is
+ * never asked for a quantity, because a quantity is not one of the facts its
+ * procedure emits.
+ */
+export function openGaps(draft: StructureDraft): CompletionField[] {
+  return procedureFor(draft).openGaps(draft);
+}
+
+/** Has this fact been stated, by this draft's own family's definition? */
+export function isFilled(draft: StructureDraft, field: CompletionField): boolean {
+  return procedureFor(draft).isFilled(draft, field);
+}
+
+/** The four honest buckets for S02, in this draft's family's vocabulary. */
+export function bucketize(draft: StructureDraft): FactBuckets {
+  return procedureFor(draft).factBuckets(draft);
+}
+
+/**
+ * What still stands between this draft and publication.
+ *
+ * Family-specific, which is the point: a trade service can no longer be told an
+ * Incoterm is blocking it, and a distribution opportunity can no longer be told
+ * it is short of a shipped quantity. Submitting for review is always allowed
+ * regardless: these inform, they do not block the submit button.
  */
 export function blockers(draft: StructureDraft): Blocker[] {
-  const out: Blocker[] = [];
-  if (!isFilled(draft, "quantity")) out.push({ key: "quantity", resolve: "complete" });
-  if (!has(draft.incoterm)) out.push({ key: "incoterm", resolve: "complete" });
-  if (!has(draft.validity)) out.push({ key: "validity", resolve: "complete" });
-  if (!has(draft.role)) out.push({ key: "role", resolve: "complete" });
-  // Publication always needs a current member-business verification.
-  out.push({ key: "businessVerification", resolve: "verify" });
-  return out;
+  return procedureFor(draft).blockers(draft);
 }
 
 /**
@@ -653,7 +631,13 @@ function intentClause(intent: Intent | null, product: string): string {
  * guarantees before this is ever called). The optional note is appended as the
  * member's own words when given.
  */
-export function synthesiseDetails(draft: StructureDraft): string {
+export function synthesiseDetails(original: StructureDraft): string {
+  // Sanitised first, so a value belonging to another family cannot reach the
+  // record's own text even though the columns for it would have been dropped.
+  // The details are the one place every fact travels regardless of schema, and
+  // an Incoterm written into a service record's prose is exactly as wrong as an
+  // Incoterm stored in its column.
+  const draft = clearForeignClassification(original);
   const product = (subjectFor(draft) ?? "").trim();
   const parts: string[] = [
     draft.canonical
@@ -661,38 +645,18 @@ export function synthesiseDetails(draft: StructureDraft): string {
       : intentClause(draft.intent, product || "the stated product"),
   ];
 
-  // The quantity is written with its MODE. "Approximately 2,500 MT" and
-  // "2,500 MT" are different commercial claims, and dropping the qualifier
-  // states a firmness the member did not offer.
-  const quantityText = formatQuantity(draftQuantity(draft));
-  if (quantityText) parts.push(`Quantity: ${quantityText}.`);
   // The structured classification, written into the record in words as well as
   // stored as keys. The keys are what filters; this is what a reader sees, and
   // it is what keeps the member's actual choice legible on a record even where
   // the columns for it have not yet been applied to the database.
-  const classification = classificationClauses(draft);
-  parts.push(...classification);
+  parts.push(...classificationClauses(draft));
 
-  // The raw `quantity`/`unit`/`frequency` concatenation that stood here is
-  // gone. It duplicated the mode-aware clause above: a listing built through
-  // the composer carried BOTH, so its stored `details` said "Quantity:" twice,
-  // once formatted and once not. The mode-aware clause is the survivor because
-  // it is the only one that can express approximate, minimum, maximum, a range
-  // or "on request", and `draftQuantity` now reads a mode-less number as
-  // `exact` so the AI intake route keeps its quantity.
+  // The family's own commercial terms. A products draft writes quantity, route,
+  // Incoterm and payment; a services draft writes scope, coverage, capability
+  // and engagement basis; a distribution draft writes objective, channels and
+  // expectations. None of them writes another family's.
+  parts.push(...procedureFor(draft).detailClauses(draft));
 
-  // One end of the route is often the only end this member decides, so a
-  // half-stated route is written as the half it is rather than padded with an
-  // "unspecified" the reader could mistake for a fact.
-  if (has(draft.origin) && has(draft.destination)) {
-    parts.push(`Route: ${draft.origin} to ${draft.destination}.`);
-  } else if (has(draft.origin)) {
-    parts.push(`Ships from: ${draft.origin}.`);
-  } else if (has(draft.destination)) {
-    parts.push(`Delivered to: ${draft.destination}.`);
-  }
-  if (has(draft.incoterm)) parts.push(`Incoterm: ${draft.incoterm}.`);
-  if (has(draft.payment)) parts.push(`Payment terms: ${draft.payment}.`);
   if (draft.validity === "standing") parts.push("Open until withdrawn.");
   else if (has(draft.validity)) parts.push(`Valid for ${draft.validity} days.`);
   if (has(draft.role)) parts.push(`Stated role: ${draft.role}.`);
@@ -827,17 +791,26 @@ export function toSubmitPayload(
     // Derived from the tiles the member tapped, never typed for the sake of
     // filling a required column.
     product: subjectFor(draft),
-    hs_code: draft.hsCode,
-    // The whole quantity, mode included. The route reads these keys directly,
-    // so what the member tapped is what is stored — the defect was precisely
-    // that the composer showed a figure the payload never carried.
-    ...quantityToColumns(draftQuantity(draft)),
-    frequency: draft.frequency,
-    origin: draft.origin,
-    destination: draft.destination,
-    incoterm: draft.incoterm,
-    payment_terms: draft.payment,
+    /**
+     * The family's OWN commercial terms, and only those.
+     *
+     * A products payload carries hs_code, the whole quantity (mode included),
+     * frequency, route, Incoterm and payment terms. A services payload carries
+     * service_terms. A distribution payload carries distribution_terms. None of
+     * them carries another family's, so the API's refusal of cross-family data
+     * is a check on a real boundary rather than a hope about the client.
+     *
+     * The quantity keys are spread from here rather than written inline because
+     * that was the defect the quantity fix closed: the composer showed a figure
+     * the payload never carried, and only a payload built from the same model
+     * the control writes to can stay honest about it.
+     */
+    ...procedureFor(draft).submitTerms(draft),
     submitter_role: draft.role,
+    // The member's own statement, sent so the validator can see it. The route
+    // stamps the timestamp and the accepted VERSION; a boolean alone would
+    // record that somebody agreed to something without recording to what.
+    declaration_accepted: draft.declarationAccepted,
     validity_type: standing ? "standing" : validUntil ? "dated" : null,
     valid_until: standing ? null : validUntil,
     key_notes: draft.note,

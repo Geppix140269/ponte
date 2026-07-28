@@ -103,8 +103,21 @@ test("blockers lists open decisive facts plus business verification", () => {
   assert.ok(keys.includes("businessVerification"));
 });
 
-test("a fully tapped draft still blocks on business verification only", () => {
+test("a fully tapped draft blocks on the declaration and business verification", () => {
+  // These two are the universal publication-gate conditions, and neither is a
+  // fact about the trade. The declaration is not a family commercial field: it
+  // appears in no completion queue, no fact bucket and no public review row,
+  // and it is accepted in place on the submit screen. It applies to Products,
+  // Trade services and Distribution alike (owner decision, 28 July 2026).
   const full = draft({ quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF", validity: 30, role: "buyer" });
+  assert.deepEqual(blockers(full).map((b) => b.key), ["declaration", "businessVerification"]);
+});
+
+test("accepting the declaration leaves verification as the only blocker", () => {
+  const full = draft({
+    quantityMode: "exact", quantity: 25000, unit: "MT", incoterm: "CIF",
+    validity: 30, role: "buyer", declarationAccepted: true,
+  });
   assert.deepEqual(blockers(full).map((b) => b.key), ["businessVerification"]);
 });
 

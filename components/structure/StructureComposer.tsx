@@ -13,22 +13,24 @@ import type { ResolvedProduct } from "@/lib/products/model";
 import {
   emptyDraft,
   openGaps,
-  asksFor,
   bucketize,
   blockers as computeBlockers,
-  toSubmitPayload,
-  draftQuantity,
+  procedureFor,
+  askKeyFor,
+  statesOwnCapability,
   submitPayloads,
   type StructureDraft,
   type DraftResolution,
   type Intent,
   type CompletionField,
+  type ReviewModel,
+  type ReviewSection,
+  type ServiceTerms,
+  type DistributionTerms,
 } from "@/lib/structure/draft";
 import {
   parseQuantityInput,
-  formatQuantity,
   QUANTITY_MODES,
-  type QuantityMode,
 } from "@/lib/listings/quantity";
 import {
   INCOTERM_GROUPS,
@@ -40,11 +42,22 @@ import {
   FREQUENCIES,
   type TapGroup,
 } from "@/lib/structure/vocabulary";
-import { legacyTypeForIntent, needsHsCode, subjectFor } from "@/lib/structure/draft";
+import { legacyTypeForIntent, needsHsCode } from "@/lib/structure/draft";
+import { DECLARATION_TERMS } from "@/lib/listings/declaration";
 import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
-import { MARKET_INTENTS, PRODUCT_SECTORS } from "@/lib/taxonomy/market";
-import { serviceCategory, serviceSubcategory } from "@/lib/taxonomy/services";
-import { partnerType, relationshipTerm, coverageScope } from "@/lib/taxonomy/distribution";
+import { MARKET_INTENTS } from "@/lib/taxonomy/market";
+import type { CategoryOption } from "@/lib/taxonomy/services";
+import {
+  SERVICE_ENGAGEMENT_TYPES,
+  SERVICE_PRICING_BASES,
+  SERVICE_AVAILABILITY,
+  specialisationGroupsFor,
+} from "@/lib/taxonomy/service-terms";
+import {
+  DISTRIBUTION_CHANNELS,
+  DISTRIBUTION_CAPABILITIES,
+  DISTRIBUTION_TIMING,
+} from "@/lib/taxonomy/distribution-terms";
 import { journeyFor } from "@/lib/taxonomy/journey";
 import ClassifyStep from "./ClassifyStep";
 // The stylesheet is imported by the route, not here, matching find.css and
@@ -61,6 +74,16 @@ const codeForName = (name: string | null): string =>
   ISO_COUNTRIES.find((c) => c.name === name)?.code ?? "";
 
 type Step = "intent" | "structuring" | "facts" | "complete" | "preview" | "submit" | "received" | "error";
+
+/**
+ * A write to the draft: a patch, or a function of the current draft.
+ *
+ * Assignable wherever a plain patch setter is expected, so `ClassifyStep` and
+ * the product intake keep their narrower signature untouched.
+ */
+type SetDraft = (
+  patch: Partial<StructureDraft> | ((draft: StructureDraft) => Partial<StructureDraft>),
+) => void;
 type Chapter = { chapter: string; chapter_title: string };
 type Heading = { heading: string; heading_title: string };
 /**
@@ -110,6 +133,7 @@ const STEP_MARK: Partial<Record<Step, string>> = {
 
 export default function StructureComposer({
   entrance = null,
+  initial = null,
   icons = {},
 }: {
   /**
@@ -119,6 +143,13 @@ export default function StructureComposer({
    * again in a smaller vocabulary would lose the answer.
    */
   entrance?: { family: MarketFamily; intent: MarketIntent } | null;
+  /**
+   * A saved draft, read from the member's own listing row on the server.
+   *
+   * It supersedes `entrance`: a resumed record already knows its family, and
+   * the entrance is only a way of stating one that has not been chosen yet.
+   */
+  initial?: StructureDraft | null;
   /**
    * Category icons, rendered on the server and handed down as nodes.
    *
@@ -131,6 +162,10 @@ export default function StructureComposer({
   const t = useTranslations("structure");
   const router = useRouter();
   const [draft, setDraft] = useState<StructureDraft>(() => {
+    // A resumed draft wins. It already carries its family, its classification
+    // and the terms belonging to that family; applying an entrance over it
+    // would restate a choice the record has already made.
+    if (initial) return initial;
     const base = emptyDraft();
     if (!entrance) return base;
     return {
@@ -143,7 +178,19 @@ export default function StructureComposer({
   });
   const [stack, setStack] = useState<Step[]>(["intent"]);
   const step = stack[stack.length - 1];
-  const set = (patch: Partial<StructureDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  /**
+   * Write to the draft, from a patch or from the draft itself.
+   *
+   * The functional form exists because the family terms are NESTED objects. A
+   * patch built from the closed-over draft reads the value as it was at render
+   * time, so two writes to `serviceTerms` in one tick both start from the same
+   * stale copy and the second silently discards the first: tapping four cargo
+   * types quickly left one, and typing a scope then tapping an engagement type
+   * left the engagement and lost the scope. Every nested write below goes
+   * through the updater, which always sees the current draft.
+   */
+  const set: SetDraft = (patch) =>
+    setDraft((d) => ({ ...d, ...(typeof patch === "function" ? patch(d) : patch) }));
   const go = (s: Step) => setStack((st) => [...st, s]);
   const replace = (s: Step) => setStack((st) => [...st.slice(0, -1), s]);
   const back = () => setStack((st) => (st.length > 1 ? st.slice(0, -1) : st));
@@ -273,6 +320,7 @@ export default function StructureComposer({
         {step === "submit" && (
           <SubmitStep
             draft={draft}
+            set={set}
             submitting={submitting}
             onSubmit={() => doSend(false)}
             onSaveDraft={() => doSend(true)}
@@ -693,7 +741,7 @@ function Bucket({ label, children }: { label: string; children: React.ReactNode 
  * Editing shows no progress bar and no Skip, because there is nothing to skip
  * past: the member came here to answer one question.
  */
-function CompleteStep({ draft, set, fields, onDone, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; fields: CompletionField[] | null; onDone: () => void; t: T }) {
+function CompleteStep({ draft, set, fields, onDone, t }: { draft: StructureDraft; set: SetDraft; fields: CompletionField[] | null; onDone: () => void; t: T }) {
   const editing = fields !== null;
   const [queue] = useState<CompletionField[]>(() => fields ?? openGaps(draft));
   const [i, setI] = useState(0);
@@ -718,8 +766,8 @@ function CompleteStep({ draft, set, fields, onDone, t }: { draft: StructureDraft
         </div>
       )}
       <div className="qwrap">
-        <h2 className="q serif">{t(`ask.${field}`)}</h2>
-        <QControl field={field} draft={draft} set={set} t={t} />
+        <h2 className="q serif">{t(askKeyFor(field, draft))}</h2>
+        <CompletionControl field={field} draft={draft} set={set} t={t} />
       </div>
       <div className="qnav">
         {!editing && <button className="fbtn fbtn--ghost" onClick={next}>{t("complete.skip")}</button>}
@@ -869,8 +917,127 @@ function QuantityControl({ draft, set, t }: { draft: StructureDraft; set: (p: Pa
   );
 }
 
-function QControl({ field, draft, set, t }: { field: CompletionField; draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; t: T }) {
+/** Single choice from a taxonomy, stored as its stable key. */
+function KeyChips({ options, value, onPick }: { options: readonly CategoryOption[]; value: string | null; onPick: (key: string | null) => void }) {
+  return (
+    <div className="chiprow">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          className="fchip fchip--two"
+          aria-pressed={value === o.key}
+          // Tapping the chosen option again withdraws it. Without this a member
+          // who picked the wrong basis had no way back to having stated none,
+          // and Ponte would carry an answer they had disowned.
+          onClick={() => onPick(value === o.key ? null : o.key)}
+        >
+          <span className="fchip__t">{o.label}</span>
+          {o.description && <span className="fchip__d">{o.description}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Multiple choice from a taxonomy, stored as stable keys.
+ *
+ * Reports the key that was tapped rather than the resulting array. Computing
+ * the array here would compute it from `values` as rendered, so two taps before
+ * the next render would both start from the same list and the second would
+ * discard the first. `toggleKey` in the caller applies each tap to the draft as
+ * it actually is.
+ */
+function KeyChipsMulti({ options, values, onToggle }: { options: readonly CategoryOption[]; values: readonly string[]; onToggle: (key: string) => void }) {
+  return (
+    <div className="chiprow">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          className="fchip fchip--two"
+          aria-pressed={values.indexOf(o.key) >= 0}
+          onClick={() => onToggle(o.key)}
+        >
+          <span className="fchip__t">{o.label}</span>
+          {o.description && <span className="fchip__d">{o.description}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** A list of countries, added one at a time and removable. */
+function CountryList({ codes, onAdd, onRemove, t }: { codes: readonly string[]; onAdd: (code: string) => void; onRemove: (code: string) => void; t: T }) {
+  return (
+    <div>
+      <CountryPicker value="" onChange={(code) => { if (code) onAdd(code); }} />
+      {codes.length > 0 && (
+        <div className="pcat-terr">
+          {codes.map((code) => (
+            <span className="pcat-terr__i" key={code}>
+              {nameForCode(code)}
+              <button
+                className="pcat-terr__x"
+                type="button"
+                aria-label={`${t("classify.remove")} ${code}`}
+                onClick={() => onRemove(code)}
+              >
+                {t("classify.remove")}
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A labelled free-text answer, for the facts no closed list can hold. */
+function LongText({ id, label, placeholder, value, onChange }: { id: string; label: string | null; placeholder: string; value: string | null; onChange: (v: string) => void }) {
+  return (
+    <div>
+      {label && <label className="pcat__writel" htmlFor={id}>{label}</label>}
+      <textarea
+        id={id}
+        className="snote"
+        placeholder={placeholder}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+/**
+ * One control per fact, selected by the field the family's procedure asked for.
+ *
+ * The control this replaces handled exactly eight fields, all of them product
+ * fields, which is why a trade service reaching the completion step could only
+ * ever be asked a product question. The switch is still a switch: a field has
+ * one right control and a lookup table would only hide that: but which fields
+ * ever reach it is decided by the procedure, not here.
+ */
+function CompletionControl({ field, draft, set, t }: { field: CompletionField; draft: StructureDraft; set: SetDraft; t: T }) {
+  // Every nested write goes through the updater form, so a second tap in the
+  // same tick starts from the draft the first tap produced.
+  const service = (patch: Partial<ServiceTerms> | ((terms: ServiceTerms) => Partial<ServiceTerms>)) =>
+    set((d) => ({
+      serviceTerms: { ...d.serviceTerms, ...(typeof patch === "function" ? patch(d.serviceTerms) : patch) },
+    }));
+  const distribution = (
+    patch: Partial<DistributionTerms> | ((terms: DistributionTerms) => Partial<DistributionTerms>),
+  ) =>
+    set((d) => ({
+      distributionTerms: {
+        ...d.distributionTerms,
+        ...(typeof patch === "function" ? patch(d.distributionTerms) : patch),
+      },
+    }));
+  const toggleKey = (list: readonly string[], key: string): string[] =>
+    list.indexOf(key) >= 0 ? list.filter((k) => k !== key) : list.concat([key]);
+
   switch (field) {
+    // ---- Products ---------------------------------------------------------
     case "quantity":
       return <QuantityControl draft={draft} set={set} t={t} />;
     case "origin":
@@ -881,6 +1048,145 @@ function QControl({ field, draft, set, t }: { field: CompletionField; draft: Str
       return <ChipGroups groups={INCOTERM_GROUPS} value={draft.incoterm} onPick={(v) => set({ incoterm: v })} meaning={INCOTERM_MEANING} />;
     case "payment":
       return <ChipGroups groups={PAYMENT_GROUPS} value={draft.payment} onPick={(v) => set({ payment: v })} />;
+
+    // ---- Trade services ---------------------------------------------------
+    case "serviceScope":
+      return (
+        <div className="qty">
+          <LongText
+            id="service-scope"
+            label={null}
+            placeholder={t("ask.serviceScopePlaceholder")}
+            value={draft.serviceTerms.scope}
+            onChange={(v) => service({ scope: v })}
+          />
+          <p className="pcat__writeh">{t("ask.serviceEngagement")}</p>
+          <KeyChips
+            options={SERVICE_ENGAGEMENT_TYPES}
+            value={draft.serviceTerms.engagement}
+            onPick={(key) => service({ engagement: key })}
+          />
+        </div>
+      );
+    case "serviceCoverage":
+      // Countries, a corridor, or both. A remote advisory service covering no
+      // fixed territory answers with the lanes field rather than being made to
+      // invent a country list.
+      return (
+        <div className="qty">
+          <CountryList
+            codes={draft.serviceTerms.coverageCountries}
+            onAdd={(code) => service((terms) => ({
+              coverageCountries: terms.coverageCountries.indexOf(code) >= 0
+                ? terms.coverageCountries
+                : terms.coverageCountries.concat([code]),
+            }))}
+            onRemove={(code) => service((terms) => ({
+              coverageCountries: terms.coverageCountries.filter((c) => c !== code),
+            }))}
+            t={t}
+          />
+          <LongText
+            id="service-lanes"
+            label={t("ask.serviceTradeLanes")}
+            placeholder={t("ask.serviceTradeLanesPlaceholder")}
+            value={draft.serviceTerms.tradeLanes}
+            onChange={(v) => service({ tradeLanes: v })}
+          />
+        </div>
+      );
+    case "serviceSpecialisation":
+      // Conditioned by category: a forwarder is asked about modes and cargo, a
+      // customs broker about regimes, a certifier about schemes. A category
+      // with no dimension never reaches this control at all.
+      return (
+        <div className="tapgroups">
+          {specialisationGroupsFor(draft.serviceCategory).map((group) => (
+            <div className="tapgroup" key={group.key}>
+              <div className="tapgroup__l">{group.label}</div>
+              <KeyChipsMulti
+                options={group.options}
+                values={draft.serviceTerms.specialisationKeys}
+                onToggle={(key) => service((terms) => ({
+                  specialisationKeys: toggleKey(terms.specialisationKeys, key),
+                }))}
+              />
+            </div>
+          ))}
+        </div>
+      );
+    case "serviceCapability":
+      // Capacity, in the member's own words, and never in the quantity field.
+      // "Up to 40 containers per month" describes a service's throughput; the
+      // same figure stored as a quantity would read on the board as 40
+      // containers of goods for sale.
+      return (
+        <LongText
+          id="service-capability"
+          label={null}
+          placeholder={t(
+            draft.canonical?.intent === "seek_trade_service"
+              ? "ask.serviceCapabilityNeededPlaceholder"
+              : "ask.serviceCapabilityPlaceholder",
+          )}
+          value={draft.serviceTerms.capability}
+          onChange={(v) => service({ capability: v })}
+        />
+      );
+    case "servicePricingBasis":
+      return <KeyChips options={SERVICE_PRICING_BASES} value={draft.serviceTerms.pricingBasis} onPick={(key) => service({ pricingBasis: key })} />;
+    case "serviceAvailability":
+      return <KeyChips options={SERVICE_AVAILABILITY} value={draft.serviceTerms.availability} onPick={(key) => service({ availability: key })} />;
+
+    // ---- Distribution and representation -----------------------------------
+    case "distributionObjective":
+      return (
+        <LongText
+          id="distribution-objective"
+          label={null}
+          placeholder={t(
+            draft.canonical?.intent === "seek_brands_or_products_to_represent"
+              ? "ask.distributionObjectiveRepresentPlaceholder"
+              : "ask.distributionObjectivePlaceholder",
+          )}
+          value={draft.distributionTerms.objective}
+          onChange={(v) => distribution({ objective: v })}
+        />
+      );
+    case "distributionProductScope":
+      return (
+        <LongText
+          id="distribution-scope"
+          label={null}
+          placeholder={t("ask.distributionProductScopePlaceholder")}
+          value={draft.distributionTerms.productScope}
+          onChange={(v) => distribution({ productScope: v })}
+        />
+      );
+    case "distributionChannels":
+      return <KeyChipsMulti options={DISTRIBUTION_CHANNELS} values={draft.distributionTerms.channelKeys} onToggle={(key) => distribution((terms) => ({ channelKeys: toggleKey(terms.channelKeys, key) }))} />;
+    case "distributionCapabilities":
+      return <KeyChipsMulti options={DISTRIBUTION_CAPABILITIES} values={draft.distributionTerms.capabilityKeys} onToggle={(key) => distribution((terms) => ({ capabilityKeys: toggleKey(terms.capabilityKeys, key) }))} />;
+    case "distributionExpectations":
+      // Labelled as an expectation of a relationship. An opening order stated
+      // here is a term of the arrangement, never a shipped quantity.
+      return (
+        <LongText
+          id="distribution-expectations"
+          label={null}
+          placeholder={t(
+            statesOwnCapability(draft)
+              ? "ask.distributionExpectationsOfferedPlaceholder"
+              : "ask.distributionExpectationsPlaceholder",
+          )}
+          value={draft.distributionTerms.commercialExpectations}
+          onChange={(v) => distribution({ commercialExpectations: v })}
+        />
+      );
+    case "distributionTiming":
+      return <KeyChips options={DISTRIBUTION_TIMING} value={draft.distributionTerms.timing} onPick={(key) => distribution({ timing: key })} />;
+
+    // ---- Shared by every family --------------------------------------------
     case "validity":
       // A horizon, plus the honest answer that there is no end date. Both are
       // declarations; only silence is undeclared.
@@ -900,8 +1206,23 @@ function QControl({ field, draft, set, t }: { field: CompletionField; draft: Str
 }
 
 // ---- S04 public / private / reviewer --------------------------------------
+
+/**
+ * The record as it reads back, rendered from the family's own review model.
+ *
+ * The step this replaces printed HS code, quantity, frequency, route, Incoterm
+ * and validity unconditionally, for every family, after the family-specific
+ * classification rows. A freight forwarder reviewing their own listing was
+ * shown five product facts, all of them "Not stated", and had no way to read
+ * that as anything but a record they had failed to finish.
+ *
+ * The rows are now generated, not filtered. There is no Incoterm row on a trade
+ * service review because the services procedure never emits one: the guarantee
+ * holds at model level, where a CSS rule or a truthy check could not put it.
+ */
 function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNext: () => void; onEdit: (f: CompletionField) => void; t: T }) {
   const [tab, setTab] = useState<"public" | "private" | "reviewer">("public");
+  const model: ReviewModel = procedureFor(draft).reviewModel(draft);
   const ns = t("field.notStated");
 
   /**
@@ -921,27 +1242,32 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
       )}
     </div>
   );
-  const kind = draft.intent === "offer" ? t("intent.sell") : draft.intent === "service" ? t("intent.service") : t("intent.buy");
-  // The route reads as the end(s) this member actually decides.
-  const routeValue = (): string | null => {
-    const from = draft.origin;
-    const to = draft.destination;
-    if (from && to) return `${from} → ${to}`;
-    if (from) return t("preview.shipsFrom", { place: from });
-    if (to) return t("preview.deliveredTo", { place: to });
-    return null;
-  };
-  const routeField: CompletionField = asksFor(draft.intent, "origin") ? "origin" : "destination";
-  const validityValue =
-    draft.validity === "standing"
-      ? t("complete.standing")
-      : typeof draft.validity === "number"
-        ? t("complete.days", { n: draft.validity })
-        : null;
+
+  // A row whose meaning lives in the copy resolves it here: "Ships from
+  // Argentina" is what the member said, and a bare "Argentina" under Route
+  // would read as a corridor with a missing half.
+  const valueOf = (r: ReviewSection["rows"][number]): string | null =>
+    r.message ? t(r.message.key, r.message.params) : r.value;
+
+  const section = (s: ReviewSection) => (
+    <div key={s.key}>
+      {s.headingKey && <div className="bucket__l">{t(`review.${s.headingKey}`)}</div>}
+      <div className="ledger2">
+        {s.rows.map((r) => row(t(`field.${r.labelKey}`), valueOf(r), r.editField))}
+      </div>
+    </div>
+  );
+
+  const kind = draft.canonical
+    ? MARKET_INTENTS.find((i) => i.key === draft.canonical!.intent)?.label ?? null
+    : draft.intent === "offer" ? t("intent.sell")
+    : draft.intent === "service" ? t("intent.service")
+    : t("intent.buy");
+
   return (
     <section className="sstep reveal">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("preview.eyebrow")}</span></div>
-      <h1 className="fphead__h serif">{t("preview.title")}</h1>
+      <h1 className="fphead__h serif">{t(`review.${model.titleKey}`)}</h1>
       <div className="tabs2" role="tablist">
         {(["public", "private", "reviewer"] as const).map((x) => (
           <button key={x} className="tab2" role="tab" aria-selected={tab === x} onClick={() => setTab(x)}>{t(`preview.${x}`)}</button>
@@ -951,21 +1277,8 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
       {tab === "public" && (
         <div>
           <p className="pv__note">{t("preview.publicNote")}</p>
-          <div className="ledger2">
-            {row(t("field.kind"), kind)}
-            {/* The subject is composed from the categories the member chose,
-                so a record built entirely by tapping still names itself. */}
-            {row(t("field.product"), subjectFor(draft))}
-            {/* The chosen classification is part of the public record, not
-                hidden metadata: it is what a counterparty filters on. */}
-            {classificationRows(draft).map((c) => row(t(`field.${c.field}`), c.value))}
-            {row(t("field.hsCode"), draft.hsCode ? `HS ${draft.hsCode}` : null)}
-            {row(t("field.quantity"), formatQuantity(draftQuantity(draft)), "quantity")}
-            {row(t("field.frequency"), draft.frequency, "quantity")}
-            {row(t("field.route"), routeValue(), routeField)}
-            {row(t("field.incoterm"), draft.incoterm, "incoterm")}
-            {row(t("field.validity"), validityValue, "validity")}
-          </div>
+          <div className="ledger2">{row(t("field.kind"), kind)}</div>
+          {model.publicSections.map(section)}
         </div>
       )}
       {tab === "private" && (
@@ -974,10 +1287,8 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
           <div className="ledger2">
             {row(t("private.identity"), t("preview.reviewerOnly"))}
             {row(t("private.contact"), t("preview.withheld"))}
-            {row(t("field.payment"), draft.payment, "payment")}
-            {row(t("field.role"), draft.role, "role")}
-            {row(t("field.note"), draft.note, "note")}
           </div>
+          {model.privateSections.map(section)}
         </div>
       )}
       {tab === "reviewer" && (
@@ -997,53 +1308,8 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
   );
 }
 
-/**
- * The classification rows the preview prints, in journey order.
- *
- * Only what this record actually carries. A products record shows no partner
- * type, a services record shows no coverage, and neither shows an empty row
- * for the other family's questions: a fact that was never this member's to
- * give is not a gap.
- */
-function classificationRows(draft: StructureDraft): { field: string; value: string | null }[] {
-  const rows: { field: string; value: string | null }[] = [];
-  const family = draft.canonical?.family;
-
-  if (family === "services") {
-    rows.push({ field: "serviceCategory", value: serviceCategory(draft.serviceCategory)?.label ?? null });
-    const subs = draft.serviceSubcategories
-      .map((k) => serviceSubcategory(k)?.label)
-      .filter((l): l is string => !!l);
-    rows.push({ field: "serviceSubcategory", value: subs.length > 0 ? subs.join(", ") : null });
-  }
-
-  if (family === "distribution") {
-    rows.push({ field: "partnerType", value: partnerType(draft.distributionPartnerType)?.label ?? null });
-    const terms = draft.distributionRelationshipTerms
-      .map((k) => relationshipTerm(k)?.label)
-      .filter((l): l is string => !!l);
-    rows.push({ field: "relationship", value: terms.length > 0 ? terms.join(", ") : null });
-    const scope = coverageScope(draft.coverageScope)?.label ?? null;
-    rows.push({
-      field: "coverage",
-      value: scope && draft.territoryCodes.length > 0
-        ? `${scope} (${draft.territoryCodes.join(", ")})`
-        : scope,
-    });
-  }
-
-  if (family !== "products") {
-    rows.push({
-      field: "sector",
-      value: PRODUCT_SECTORS.find((s) => s.key === draft.productSector)?.label ?? null,
-    });
-  }
-
-  return rows;
-}
-
 // ---- S05 save / submit -----------------------------------------------------
-function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVerify, t }: { draft: StructureDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: (f: CompletionField) => void; onVerify: () => void; t: T }) {
+function SubmitStep({ draft, set, submitting, onSubmit, onSaveDraft, onResolve, onVerify, t }: { draft: StructureDraft; set: SetDraft; submitting: boolean; onSubmit: () => void; onSaveDraft: () => void; onResolve: (f: CompletionField) => void; onVerify: () => void; t: T }) {
   const blocks = computeBlockers(draft);
   return (
     <section className="sstep">
@@ -1056,15 +1322,31 @@ function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVer
             <div className="block__t">{t(`blocker.${b.key}`)}</div>
             <div className="block__d">{t(`blocker.${b.key}Desc`)}</div>
             {/* Resolve opens the fact itself. It used to step back one screen,
-                which landed on the same summary and changed nothing. */}
-            {b.resolve === "complete" && (
-              <button className="block__r" onClick={() => onResolve(b.key as CompletionField)}>{t("submit.resolve")} →</button>
+                which landed on the same summary and changed nothing.
+
+                The field is carried on the blocker rather than inferred from
+                its key, because the two are no longer the same thing: a
+                distribution record's territory blocker is resolved in the
+                category step, not the completion step, and it says so by
+                carrying no field at all. */}
+            {b.resolve === "complete" && b.field && (
+              <button className="block__r" onClick={() => onResolve(b.field as CompletionField)}>{t("submit.resolve")} →</button>
             )}
             {b.resolve === "verify" && (
               <button className="block__r" onClick={onVerify}>{t("submit.verifyNow")} →</button>
             )}
+            {/* The declaration resolves in place: the terms are right here and
+                accepting them is the whole action. Sending the member somewhere
+                else to agree to five sentences would be theatre. */}
+            {b.resolve === "declare" && (
+              <Declaration draft={draft} set={set} t={t} />
+            )}
           </div>
         ))}
+        {/* Once accepted the blocker is gone, so the acceptance would vanish
+            with it. It stays visible and reversible: a member must be able to
+            see what they agreed to, and to withdraw it before submitting. */}
+        {draft.declarationAccepted && <Declaration draft={draft} set={set} t={t} />}
       </div>
       <div className="submit-cta">
         <button className="fbtn fbtn--lg fbtn--block" disabled={submitting} onClick={onSubmit}>{t("submit.submit")}</button>
@@ -1075,40 +1357,30 @@ function SubmitStep({ draft, submitting, onSubmit, onSaveDraft, onResolve, onVer
 }
 
 /**
- * One outcome for a submission that may have created several listings.
+ * The publication declaration, in the exact words the validator requires.
  *
- * The screen shows the MOST RESTRICTIVE result, not the last one. If any
- * listing was held or is incomplete, telling the member "your offer is live"
- * because the final request happened to succeed would be false for the rest,
- * and they would have no reason to look again.
- *
- * Blocking issues are the de-duplicated union, and the completeness score is
- * the lowest, for the same reason.
+ * The terms come from `lib/listings/declaration.ts`, which is also what
+ * `evaluateListing` reads, so the screen cannot show one set of terms while the
+ * rule enforces another. Accepting stamps a boolean on the draft; the submit
+ * route converts it to a timestamp AND the accepted version, because knowing
+ * somebody agreed is worthless without knowing to what.
  */
-function summariseOutcomes(outcomes: SubmitOutcome[]): SubmitOutcome | null {
-  if (outcomes.length === 0) return null;
-  if (outcomes.length === 1) return outcomes[0];
-
-  const rank = (s: string) =>
-    s === "flagged" ? 0 : s === "needs_information" ? 1 : s === "submitted" ? 2 : 3;
-  const worst = outcomes.reduce((a, b) => (rank(a.status) <= rank(b.status) ? a : b));
-
-  const issues = Array.from(new Set(outcomes.flatMap((o) => o.blockingIssues)));
-  const scores = outcomes
-    .map((o) => o.completenessScore)
-    .filter((n): n is number => typeof n === "number");
-  // If every unresolved listing is blocked only on verification, that is still
-  // the whole story and the member should be sent to /verify.
-  const routes = new Set(outcomes.filter((o) => o.status !== "approved").map((o) => o.route));
-  const route: SubmitOutcome["route"] =
-    routes.size === 1 ? Array.from(routes)[0] : routes.size === 0 ? "listing" : "both";
-
-  return {
-    status: worst.status,
-    blockingIssues: issues,
-    completenessScore: scores.length ? Math.min(...scores) : null,
-    route,
-  };
+function Declaration({ draft, set, t }: { draft: StructureDraft; set: SetDraft; t: T }) {
+  return (
+    <div className="declare">
+      <ul className="declare__l">
+        {DECLARATION_TERMS.map((term) => <li key={term}>{term}</li>)}
+      </ul>
+      <label className="declare__c">
+        <input
+          type="checkbox"
+          checked={draft.declarationAccepted}
+          onChange={(e) => set({ declarationAccepted: e.target.checked })}
+        />
+        <span>{t("submit.declarationAccept")}</span>
+      </label>
+    </div>
+  );
 }
 
 // ---- S06 received ----------------------------------------------------------
@@ -1127,6 +1399,58 @@ export type SubmitOutcome = {
    */
   route: "verification" | "listing" | "both";
 };
+
+/**
+ * One outcome from several, for a multi-product document split into separate
+ * records.
+ *
+ * The member made one submission and must be told one truthful thing about it.
+ * Every rule here is "the weakest record decides", because the alternatives all
+ * overstate:
+ *
+ *   status            the worst wins. Telling somebody their offer is live when
+ *                     one of three records was held is false for that record,
+ *                     and they would never go looking for it.
+ *   blockingIssues    the union, deduplicated. A gap on any record is a gap the
+ *                     member has to close.
+ *   completenessScore the lowest. An average lets a full record hide a thin one.
+ *   route             where the outstanding work actually is. A mix of
+ *                     verification and listing issues is "both", because
+ *                     sending the member to either alone strands the other.
+ */
+function summariseOutcomes(outcomes: readonly SubmitOutcome[]): SubmitOutcome | null {
+  if (outcomes.length === 0) return null;
+
+  const RANK: Record<string, number> = {
+    approved: 0, submitted: 1, needs_information: 2, flagged: 3,
+  };
+  const status = outcomes.reduce(
+    (worst, o) => ((RANK[o.status] ?? 1) > (RANK[worst] ?? 1) ? o.status : worst),
+    outcomes[0].status,
+  );
+
+  const blockingIssues: string[] = [];
+  for (const o of outcomes) {
+    for (const issue of o.blockingIssues) {
+      if (blockingIssues.indexOf(issue) < 0) blockingIssues.push(issue);
+    }
+  }
+
+  const scores = outcomes
+    .map((o) => o.completenessScore)
+    .filter((n): n is number => typeof n === "number");
+  const completenessScore = scores.length > 0 ? Math.min(...scores) : null;
+
+  const routes = new Set(outcomes.filter((o) => o.blockingIssues.length > 0).map((o) => o.route));
+  const route: SubmitOutcome["route"] =
+    routes.has("both") || routes.size > 1
+      ? "both"
+      : routes.has("verification")
+        ? "verification"
+        : "listing";
+
+  return { status, blockingIssues, completenessScore, route };
+}
 
 /**
  * What the member is told after submitting.

@@ -1,7 +1,7 @@
 // The publication eligibility validator.
 //
 // ONE place decides whether a listing may go public. Not the composer, not the
-// submit route, not the admin screen, not a copy string — here. The composer
+// submit route, not the admin screen, not a copy string: here. The composer
 // asks it what is still open, the submit route asks it whether to publish, the
 // emails render its issues, and the admin console shows what it could not
 // resolve. Anything that disagrees with this module is wrong by definition.
@@ -21,6 +21,7 @@
 //     listing is never described as a verified one. Completeness is a measure
 //     of how much the member stated. It is not evidence that any of it is true.
 
+import { normaliseMarketFamily } from "../taxonomy/market";
 import { checkPublicationGate, type GateListing, type GateSubmitter } from "./publication-gate";
 import { roleNeedsChain } from "./approval-minimum";
 import { isListingCurrent } from "./validity";
@@ -66,11 +67,16 @@ export function familyOf(listing: {
   market_family?: string | null;
   type?: string | null;
 }): ListingFamily {
-  switch (listing.market_family) {
-    case "products": return "products";
-    case "trade_services": return "trade_services";
-    case "distribution": return "distribution";
-  }
+  // One boundary reconciles the two spellings and rejects anything else. This
+  // module keeps `trade_services` as its OWN vocabulary, because its rule names
+  // and issue codes are written in it; what it no longer does is decide for
+  // itself which stored strings are legitimate.
+  const family = normaliseMarketFamily(listing.market_family);
+  if (family === "products") return "products";
+  if (family === "services") return "trade_services";
+  if (family === "distribution") return "distribution";
+  // No family stored at all: a row predating the family columns. Its legacy
+  // `type` is the only signal, and `service` has always meant a trade service.
   return listing.type === "service" ? "trade_services" : "products";
 }
 
@@ -98,6 +104,23 @@ export type EligibilityListing = GateListing & {
    */
   quantity_extracted?: boolean | null;
   quantity_confirmed_at?: string | null;
+  /** Structured coverage, for the families that have no shipment route. */
+  territory_codes?: string[] | null;
+  coverage_scope_key?: string | null;
+  service_terms?: {
+    coverage_countries?: string[] | null;
+    trade_lanes?: string | null;
+    capability?: string | null;
+    pricing_basis?: string | null;
+    availability?: string | null;
+  } | null;
+  distribution_terms?: {
+    objective?: string | null;
+    product_scope?: string | null;
+    channel_keys?: string[] | null;
+    capability_keys?: string[] | null;
+    timing?: string | null;
+  } | null;
 };
 
 /** Everything outside the listing row the validator needs. */
@@ -116,16 +139,9 @@ export type EligibilityContext = {
 const has = (v: unknown): boolean =>
   v !== null && v !== undefined && String(v).trim() !== "";
 
-/** The declaration a member must accept before Ponte will publish for them. */
-export const DECLARATION_VERSION = "2026-07-28.1";
-
-export const DECLARATION_TERMS: readonly string[] = [
-  "The information in this listing is accurate to the best of my knowledge.",
-  "I am authorised to submit this opportunity.",
-  "I am permitted to use the materials I have uploaded.",
-  "I understand Ponte may suspend a listing that is misleading, unlawful or abusive.",
-  "I understand that publication is not verification or endorsement by Ponte.",
-];
+// The declaration lives in its own module so the composer can render the exact
+// terms this validator requires without importing the whole validator.
+export { DECLARATION_VERSION, DECLARATION_TERMS } from "./declaration";
 
 /* ------------------------------------------------------------------ */
 /* Blocking rules, conditional by family                               */
@@ -251,16 +267,38 @@ function familyBlockingIssues(
           : "Describe the distribution or representation arrangement.",
       });
     }
-    if (!has(listing.origin) && !has(listing.destination)) {
+    if (!hasCoverage(listing)) {
       out.push({
         code: "missing_coverage",
-        field: "origin",
+        field: family === "trade_services" ? "service_coverage" : "territory",
         message: "State the market or territory this covers.",
       });
     }
   }
 
   return out;
+}
+
+/**
+ * Where a non-product record applies.
+ *
+ * Coverage used to be readable only from `origin`/`destination`, which are the
+ * two ends of a shipment. A trade service has no shipment, so the only way it
+ * could satisfy this rule was by borrowing the product route fields: which is
+ * precisely the borrowing the family procedures removed. Now that coverage has
+ * its own structured fields, they are read first, and the route columns remain
+ * accepted so no record created before this change becomes unpublishable.
+ */
+function hasCoverage(listing: EligibilityListing): boolean {
+  if (has(listing.origin) || has(listing.destination)) return true;
+  if ((listing.territory_codes ?? []).length > 0) return true;
+  if (has(listing.coverage_scope_key)) return true;
+  const service = listing.service_terms;
+  if (service) {
+    if ((service.coverage_countries ?? []).length > 0) return true;
+    if (has(service.trade_lanes)) return true;
+  }
+  return false;
 }
 
 /* ------------------------------------------------------------------ */
@@ -338,14 +376,28 @@ export function completenessScore(
       [6, (ctx.mediaCount ?? 0) > 0],
       [4, has(listing.origin) && has(listing.destination)],
     );
-  } else {
-    // A service or distribution listing is not penalised for the product-only
-    // fields it has no business carrying. Its own depth is scored instead.
+  } else if (family === "trade_services") {
+    // A service listing is not penalised for the product-only fields it has no
+    // business carrying. Its own depth is scored instead: what it covers, what
+    // it can commit to, how it is charged for and when it is available.
+    const service = listing.service_terms;
     items.push(
-      [12, has(listing.origin) && has(listing.destination)],
-      [10, (ctx.mediaCount ?? 0) > 0],
-      [8, String(listing.details ?? "").trim().length > 400],
-      [4, has(listing.chain_depth)],
+      [12, hasCoverage(listing)],
+      [8, has(service?.capability)],
+      [6, has(service?.pricing_basis)],
+      [4, has(service?.availability)],
+      [8, (ctx.mediaCount ?? 0) > 0],
+      [6, String(listing.details ?? "").trim().length > 400],
+    );
+  } else {
+    const distribution = listing.distribution_terms;
+    items.push(
+      [12, hasCoverage(listing)],
+      [8, has(distribution?.objective)],
+      [6, (distribution?.channel_keys ?? []).length > 0],
+      [6, (distribution?.capability_keys ?? []).length > 0],
+      [4, has(distribution?.timing)],
+      [8, (ctx.mediaCount ?? 0) > 0],
     );
   }
 

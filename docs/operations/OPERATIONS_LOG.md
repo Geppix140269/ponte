@@ -18,63 +18,40 @@ Use this structure:
 
 ---
 
-## 2026-07-28 — LAUNCH BLOCKER RESOLVED: canonical verification level applied to production
+## 2026-07-28 - Family-specific downstream composer (ADR-0014)
 
 ### Completed
 
-- Applied `supabase/migrations/20260728d_verification_level_canonical.sql` to production (`cptglsmjmzcfpjndqfmc`) at **17:04:50 UTC**, with explicit owner authorisation, using `node scripts/db-query.mjs --file`.
-- SHA-256 `262e96b7dc4cdef1a91d493994cfd4fc9f6e705af149147b0bfa1261714a9930`, matching the file on `main` byte for byte.
-
-**Why this was a Launch Blocker.** Production already carried a five-value CHECK constraint on `profiles.verification_level` (`unverified, email_verified, phone_verified, company_verified, fully_verified`). The verification pipeline wrote the integer `2`, which Postgres coerced to the text `'2'` and the constraint rejected with SQLSTATE 23514. The update result was never checked, so **the write failed silently every time**: no member could reach `company_verified` through the intended pipeline. The only profile holding that value was written by the seed script. The same defect is recorded for the seed in commit `9fa0aa6`.
-
-**What the migration changed, exactly:**
-
-- One row backfilled: the single `NULL` `verification_level` became `'unverified'`.
-- The five-value constraint replaced with the three canonical values: `unverified`, `identity_verified`, `company_verified`. Safe as a narrowing because zero rows held any of the three retired values.
-- Default `'unverified'` restated (it was already the default).
-- Column set `NOT NULL`, possible only once the null was gone.
-- `set lock_timeout = '5s'` inside the transaction, so contention fails fast rather than blocking every write to `profiles`.
-
-Nothing else. `verifications` is not referenced by the file; no verification record was re-evaluated, promoted, demoted, approved or rejected.
-
-### Verified in production, after applying
-
-| Check | Result |
-|---|---|
-| `unverified` | **8** |
-| `company_verified` | **1** |
-| Null values | **0** |
-| Invalid values | **0** |
-| Column nullability | **`NO`**, default `'unverified'::text` |
-| Constraint | `CHECK (verification_level = ANY (ARRAY['unverified','identity_verified','company_verified']))` |
-| `verifications` | review 4, rejected 2, pending 2, verified 1 — **unchanged** |
-| Migration ledger | **40 → 41**, exactly this migration, sha matching |
-| publication-gate tests | 45 passed |
-| verification/level tests | 13 passed |
-| eligibility tests | 25 passed |
-| Production build | `✓ Compiled successfully` |
-| Smoke tests | `/`, `/market-signals`, `/find`, `/marketplace`, `/structure`, `/verify`, `/login` all 200 |
-| RLS on `profiles` | anon read still returns `[]` |
+- Replaced the shared product-shaped S02-S06 commercial procedure with one procedure per market family, behind a central registry at `lib/structure/procedures/`. The composer shell, account gate, submission orchestration, lifecycle screen and design system are unchanged.
+- Trade services and Distribution now have their own completion queues, fact buckets, blockers, question controls, review models and submit payloads. Neither is asked for, blocked on, or reviewed against a quantity, unit, Incoterm, packaging or HS code.
+- Extended cross-family sanitisation from the classification fields to the commercial fields, and added server-side refusal of product-only fields and of one family's terms on another family's record.
+- Repaired two defects found on `main` while reading it, both of which blocked this work's own verification:
+  - `package.json` carried a duplicate `"test"` key. JSON takes the last, and the winning copy silently dropped `lib/listings/__tests__/eligibility.test.ts`, `lib/listings/__tests__/quantity.test.ts` and `lib/email/__tests__/email-system.test.ts`. `npm test` had not been running them since the PR #74 merge. Deduplicated to one script containing the union.
+  - `familyOf()` in `lib/listings/eligibility.ts` did not recognise `services`, the value the canonical taxonomy defines and the composer sends. It resolved correctly only by accident, via the legacy `type === "service"` fallback.
+- Full verification run on the branch: `npm run verify` passes (messages, encoding, governance, 40 test suites, `tsc --noEmit`, `next build`).
+- Journeys walked in the running dev server at desktop and 390 x 844: services/offer_trade_service through freight forwarding to review and submit, and distribution/seek_distribution_partner through to review. No horizontal overflow at 390.
 
 ### Decisions
 
-- Owner authorised the application, including the `NOT NULL` step, which was outside the originally enumerated change list and raised before applying.
-- Owner authorised the `lock_timeout` addition, merged as PR #92 so the applied file and the recorded file are identical.
+- None taken. ADR-0014 is **proposed**, not accepted.
 
 ### Risks / discrepancies
 
-- None arising from this migration.
+- `20260728d_family_commercial_terms.sql` adds `service_terms` and `distribution_terms` as additive nullable jsonb, with cross-family CHECK constraints and a rollback path. It is **written and not applied**. The submit route already retries the write without them and the terms also travel in the synthesised `details`, so the branch is safe to deploy before the migration is run.
+- The `listings_product_fields_family` constraint is added `not valid` so applying it cannot fail on a historical row. Validating it is a separate, deliberate step.
+- Not every trade-service category is modelled to the same conditioned depth. The architecture supports category-conditioned questions; a complete model of eleven professions was not attempted here.
 
 ### Next
 
-- None. This workstream is closed.
+1. Owner review of ADR-0014 and of PR for `fix/family-specific-downstream-composer`.
+2. On acceptance: merge, then apply `20260728d_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
+3. Validate `listings_product_fields_family` after inspecting any rows it reports.
 
 ### Evidence
 
-- PR #91 (application model, merged `f4bfde6`), PR #92 (`lock_timeout`, merged `3b09e4a`).
-- Issue #86 — the agreed value set, ranking and legacy-writer mapping.
-- `supabase/migrations/20260728d_verification_level_canonical.sql`, which carries its own probe, verify and rollback blocks.
-- `docs/proposals/verification-level-remediation.md`.
+- Branch `fix/family-specific-downstream-composer`, based on `main` at `457eaf6`.
+- `docs/decisions/ADR-0014-family-specific-downstream-commercial-procedures.md`.
+- `lib/structure/__tests__/procedures.test.ts` (27 assertions, all seven canonical intents and the mandatory negative assertions) and `lib/structure/__tests__/downstream-journeys.test.ts` (16 assertions, the two worked journeys plus a sweep proving every message key each procedure emits exists in the catalogue).
 
 ---
 

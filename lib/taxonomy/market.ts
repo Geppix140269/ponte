@@ -43,6 +43,66 @@ export type TaxonomyIcon = Exclude<FlowIconKey, FlowLabelledKey>;
 
 export type MarketFamily = "products" | "services" | "distribution";
 
+export const MARKET_FAMILY_KEYS: readonly MarketFamily[] = [
+  "products",
+  "services",
+  "distribution",
+];
+
+/**
+ * Legacy and external spellings that mean a canonical family.
+ *
+ * `trade_services` is the only one, and it exists because two modules were
+ * written against different spellings of the same idea: the taxonomy and the
+ * composer say `services`, the eligibility validator and some stored rows say
+ * `trade_services`. Reading only one of them worked by accident for a while,
+ * because a service's legacy `type` is also `service` and a fallback caught it.
+ *
+ * This map is the ONE boundary where that is reconciled.
+ */
+const FAMILY_ALIASES: Readonly<Record<string, MarketFamily>> = {
+  trade_services: "services",
+};
+
+export function isMarketFamily(value: unknown): value is MarketFamily {
+  return typeof value === "string" && (MARKET_FAMILY_KEYS as readonly string[]).includes(value);
+}
+
+/** Thrown by `normaliseMarketFamily` for a value that is present but unknown. */
+export class UnknownMarketFamilyError extends Error {
+  readonly value: unknown;
+  constructor(value: unknown) {
+    super(
+      `Unknown market family ${JSON.stringify(value)}. Expected one of ` +
+        `${MARKET_FAMILY_KEYS.join(", ")} or the legacy alias ` +
+        `${Object.keys(FAMILY_ALIASES).join(", ")}.`,
+    );
+    this.name = "UnknownMarketFamilyError";
+    this.value = value;
+  }
+}
+
+/**
+ * The canonical family for any stored or supplied value, or null when there is
+ * none at all.
+ *
+ * Absent is not the same as unrecognised, and that difference is the whole
+ * point. A record with NO family predates the family entrances: it is
+ * product-shaped, and reading it as a product is correct. A record with an
+ * UNRECOGNISED family is a bug or a hostile payload, and reading THAT as a
+ * product would silently apply product rules to it, ask for a shipped quantity
+ * and an Incoterm, and attach a classification the record never had.
+ *
+ * So: null for absent, the family for anything recognised, and a throw for
+ * anything else. It fails closed.
+ */
+export function normaliseMarketFamily(value: unknown): MarketFamily | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (isMarketFamily(value)) return value;
+  if (typeof value === "string" && FAMILY_ALIASES[value]) return FAMILY_ALIASES[value];
+  throw new UnknownMarketFamilyError(value);
+}
+
 export type MarketRecordOrigin = "market_signal" | "member_opportunity";
 
 export const MARKET_RECORD_ORIGINS: readonly {

@@ -280,6 +280,33 @@ real failure gets missed.
 Nothing here has been changed. Repairing the integration touches repository
 settings and possibly a Supabase project, and both are owner decisions.
 
+## Written and NOT applied: family commercial terms
+
+`supabase/migrations/20260728d_family_commercial_terms.sql` (ADR-0014).
+
+Adds two nullable jsonb columns to `listings`, `service_terms` and
+`distribution_terms`, plus three CHECK constraints stating the cross-family
+rule: service terms only on a services record, distribution terms only on a
+distribution record, and no quantity, unit, Incoterm or HS code on a
+non-products record. The last is added `not valid` so applying it cannot fail
+on a historical row; validate it separately after inspecting whatever it
+reports.
+
+Depends on `20260728a_market_classification.sql`, which is already applied in
+production (28 July 2026) and supplies `market_family`.
+
+Nothing existing is renamed, dropped or rewritten. Every existing row stays as
+it is. No RLS policy is added, removed or altered: both columns are new columns
+on an existing table and inherit the policies `listings` already has.
+
+The application does not require it. The submit route retries the write without
+these columns when they are absent, exactly as it already does for the
+classification columns, and the terms also reach the record through the
+synthesised `details`. The branch is therefore safe to deploy before this is
+run.
+
+Rollback is documented in the file itself, including the backup query to take
+first if any non-product record has been created since it was applied.
 ## Written but NOT applied
 
 `20260728c_automated_listing_publication.sql` implements ADR-0013. It has **not**
