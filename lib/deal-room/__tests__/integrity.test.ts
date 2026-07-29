@@ -10,7 +10,15 @@
 // wording.
 
 import assert from "node:assert/strict";
-import { integrityPreflight, invitationIsPermitted, sanctionsPositionFrom, type IntegrityInput } from "../integrity";
+import { readFileSync } from "node:fs";
+import {
+  VERIFICATIONS_COLUMNS,
+  VERIFICATION_EVIDENCE_COLUMNS,
+  integrityPreflight,
+  invitationIsPermitted,
+  sanctionsPositionFrom,
+  type IntegrityInput,
+} from "../integrity";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -326,6 +334,51 @@ test("the limitation is present and says Ponte does not vouch", () => {
   const result = integrityPreflight(BASE);
   assert.match(result.limitation, /does not rate, score or vouch/);
   assert.match(result.limitation, /none of this is a judgement about their honesty/);
+});
+
+// ---------------------------------------------------------------------------
+// LB-004: the pre-flight must read columns production actually has
+// ---------------------------------------------------------------------------
+//
+// The invitation surface has now named a column that does not exist twice: a
+// `profile_id` filter where the column is `user_id`, and a `type` select where
+// the column is `purpose`. Each time, PostgREST returned nothing and the
+// Integrity band reported "Nothing has been checked against an external source"
+// for every member, including fully verified ones. The second was found by the
+// Gate C production preflight, not by a test, because no test could reach it -
+// both are only wrong against a real schema and there is no non-production
+// database (PL-002).
+//
+// So the column set is a constant, and this is what checks it.
+
+test("every column the pre-flight selects exists on production verifications", () => {
+  const selected = VERIFICATION_EVIDENCE_COLUMNS.split(",").map((c) => c.trim());
+  assert.ok(selected.length > 0, "the select list is empty");
+  for (const column of selected) {
+    assert.ok(
+      (VERIFICATIONS_COLUMNS as readonly string[]).includes(column),
+      `the pre-flight selects \`${column}\`, which is not a column on public.verifications`,
+    );
+  }
+});
+
+test("it asks for purpose, and never for the type column that does not exist", () => {
+  assert.match(VERIFICATION_EVIDENCE_COLUMNS, /\bpurpose\b/);
+  assert.doesNotMatch(VERIFICATION_EVIDENCE_COLUMNS, /\btype\b/);
+  assert.ok(!(VERIFICATIONS_COLUMNS as readonly string[]).includes("type"), "the snapshot claims a type column");
+  assert.ok((VERIFICATIONS_COLUMNS as readonly string[]).includes("purpose"), "the snapshot has lost purpose");
+});
+
+test("the invitation surface reads through the constant rather than its own string", () => {
+  const page = readFileSync("app/[locale]/deal-rooms/[roomId]/invitation/page.tsx", "utf8");
+  assert.match(
+    page,
+    /\.from\("verifications"\)[\s\S]{0,40}?\.select\(VERIFICATION_EVIDENCE_COLUMNS\)/,
+    "the surface selects its own literal again, so the constant no longer governs what is asked for",
+  );
+  assert.ok(!/\.select\("type,/.test(page), "the surface still selects type");
+  assert.ok(/row\.purpose/.test(page), "the evidence mapping does not read purpose");
+  assert.ok(!/row\.type\b/.test(page), "the evidence mapping still reads row.type");
 });
 
 console.log(`ok   deal-room integrity: ${passed} assertions passed`);
