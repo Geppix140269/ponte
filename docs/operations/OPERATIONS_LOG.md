@@ -122,6 +122,39 @@ Use this structure:
 - Branch `agent/deal-room-launch-slice`, based on `main` at `0318615`.
 - `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`.
 - `npm test`: all suites pass, including the ten new ones. `tsc --noEmit`: clean. `next build`: all twelve Deal Room routes and the API route emitted.
+
+---
+
+## 2026-07-29 - Family vocabulary downstream of publication (ADR-0014 §9-§10)
+
+### Completed
+
+- Built `lib/listings/record-facts.ts` as the single presenter for a STORED listing row, and routed every surface that presents one through it: `/find/o/[ref]`, `/marketplace/l/[ref]`, `/opportunities`, the workspace rows, `/admin/listings` and the member email templates. Each previously carried its own fixed list of product columns, so a published trade service answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated" and its stated service terms appeared only inside the prose.
+- Member emails now name the record the member posted. `recordNoun` supplies "offer", "requirement", "trade service" or "distribution opportunity", and the metadata block leads with the family's own headline fact instead of "Quantity". A caller that sends no noun keeps the historical wording exactly, so no existing sender changed meaning.
+- The submit route's missing-column fallback was extracted here into `lib/listings/write-fallback.ts` and tested. **That extraction was superseded before this branch merged**: PR #99 landed its own `lib/listings/write-fallback.ts` on `main`, which reads the missing column out of the error and drops it one at a time rather than dropping this branch's two staged groups. On the rebase onto `6b6c85a` the version from #99 was kept in full and this branch's module and its tests were dropped. Nothing here modifies the fallback.
+- Added `lib/structure/discard.ts` and a confirmation in `ClassifyStep`, so a classification change that would destroy answers already given names them and waits. A change that costs nothing is not interrupted.
+- Both public readers now degrade their select when the unapplied family-terms columns are absent, so the pending `20260728e` migration cannot 404 a shareable listing link.
+
+### Decisions
+
+- **ADR-0014 accepted by the owner on 29 July 2026**, and this work merged in PR #100. The ADR was Proposed when this entry was written; acceptance is recorded in the ADR, the decisions README and both decision-log entries. Acceptance is **not** authority to apply `20260728e_family_commercial_terms.sql`, which stays written and unapplied pending its own approval.
+
+### Risks / discrepancies
+
+- `20260728e_family_commercial_terms.sql` remains **written and not applied**. Until it is, `service_terms` and `distribution_terms` are absent, the new surfaces render the family's classification without its terms, and the terms reach readers through the record's synthesised `details`. No production migration was applied by this work.
+- PL-013 recorded: `canonicalServiceCategory`, `canonicalPartnerType` and `canonicalRelationshipTerm` exist to reconcile superseded stored keys and have no callers, so a record stored under a superseded key loses its specialisations on edit. Production incidence is **unmeasured**; it is not asserted to be zero.
+
+### Next
+
+1. Owner accepts or rejects ADR-0014.
+2. On acceptance, apply `20260728e_family_commercial_terms.sql` with owner approval and record it in `DATABASE-STATE.md`.
+3. Triage PL-013 against production data.
+
+### Evidence
+
+- Branch `claude/classify-tests-discard-warning-15173f`, cut from `origin/main` at `923d1e3`, rebased onto `6b6c85a` after PR #95, #99 and the password rotation landed, then merged with `main` at `42a9d22` after PR #98. The rebase kept `main`'s `write-fallback.ts` and submit-route wiring, and kept both operations entries; the merge resolved `package.json` as a strict union of both test lists, 65 suites, and kept every register entry from both sides.
+- **`npm run verify` passes end to end.** This entry originally recorded two failures that were real when it was written: `check-migrations.mjs` on the duplicate `20260728d` identifier and `check-launch-mode.mjs` on a literal it could not find because `AGENTS.md` wrapped the sentence. Both were repaired on `main` by PR #98 under issue #97 decision 3, and are closed as PL-004 and PL-005. The two blocker rows this branch had opened for them (its own LB-001 and LB-002) are removed rather than carried, because the register on `main` now uses LB-001 for the Deal Room loop, and because the conditions they described no longer exist.
+- No production change, no deployment, no migration applied, no feature flag altered.
 ## 2026-07-29 — Start a Deal could not submit or save at all
 
 ### Completed

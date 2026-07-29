@@ -14,7 +14,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Also decided:** the Multi-party Deal Room Bridge v1 is commissioned as a required shared component and transcribed from `PB.dealroom` in the approved engine, rather than substituted with a card grid, tabs or a stepper. Click-to-accept evidence is profile identity, organisation or declared capacity, agreement kind, document version, SHA-256 of the accepted content and a UTC timestamp — **no IP address and no user agent**, by explicit owner decision, and it is never described as an electronic signature. Evidence bytes live in a new private `deal-room-evidence` bucket; the orphan `ponte-deal-docs` bucket is left in place.
 
-**Implementation boundary:** implemented on branch `agent/deal-room-launch-slice`. **No SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set, nothing has been deployed or merged. Applying the migrations, creating the bucket, activating the flag and deploying are four separate owner gates.
+**Implementation boundary:** merged to `main` at `42a9d22` on 29 July 2026, after technical and design approval. Merging changed nothing a member can reach: **no SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set and nothing has been deployed. Applying the migrations, creating the bucket, running the negative-access fixture and activating the flag are four separate owner gates, none of them taken.
 
 **Affected areas:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md`, `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`, `lib/deal-room/`, `components/deal-room/`, `components/ponte/bridge/DealRoomBridge.tsx`, `app/[locale]/deal-rooms/`, `app/api/deal-room/`, `supabase/migrations/20260729a-c`, `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`, `docs/launch/`.
 ## 29 July 2026 - Owner sign-off on the three open ADR-0015 matters
@@ -58,6 +58,21 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Affected areas:** `docs/decisions/ADR-0015-contrast-and-colour-remediation.md`, `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` (v1.1), `docs/plans/active/contrast-and-colour-remediation.md`, `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`, `docs/launch/LAUNCH-BLOCKERS.md`, `docs/operations/OPEN_DECISIONS.md`, `design-system/ponte-flow/documentation/compatibility-aliases.md`, `docs/codex/CURRENT-STATE.md`.
 
+## 29 July 2026 - A family's own vocabulary survives publication, and a discard requires consent
+
+**Decision:** ADR-0014 applies downstream of the composer, not only inside it. Every surface presenting a stored record — the public detail page, the shareable marketplace page, the member's own records, the admin exception console and the member emails — presents that record in its own family's vocabulary, through one shared presenter. And a classification change that would destroy answers the member has already given names them and waits for consent.
+
+**Why:** the family split was correct in the composer and stopped at its edge. Each downstream surface printed its own fixed list of product columns, so a published freight-forwarding record answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated" while its eight stated service terms appeared nowhere but the prose; the emails called every record an "offer". Separately, changing a service category silently discarded the subcategories and specialisations chosen under it — real work, removed without notice, with an absence as the only clue.
+
+**The rule:** a fact a family does not have produces no row, at model-generation level, on a stored record exactly as on a draft. A warning appears only when something real would be lost, and names only what would actually be lost.
+
+**Also:** the missing-column fallback is staged and tested. An absent `service_terms` or `distribution_terms` costs a record its family terms and nothing else; dropping both groups together filed a correctly classified submission as an unclassified row.
+
+**Not:** hiding the product rows with CSS; a second label vocabulary for published records; a confirmation on every classification change.
+
+**Authority:** ADR-0014, sections 9 and 10. **Accepted by the owner on 29 July 2026.**
+
+
 ## 28 July 2026 - Family-specific downstream commercial procedures
 
 **Decision:** Ponte has one shared composer framework and three distinct downstream commercial procedures. Products, Trade services and Distribution and representation share the technical shell, the account gate, the submission orchestration and the design system. They do not share one product-shaped set of commercial questions, blockers, review rows or submission expectations.
@@ -66,7 +81,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Not:** service capacity stored as a product quantity; a distribution opening order stored as a shipped quantity; a product field hidden rather than removed; or the composer duplicated per family.
 
-**Authority:** ADR-0014. Proposed; awaiting owner acceptance.
+**Authority:** ADR-0014. **Accepted by the owner on 29 July 2026.**
 
 
 ## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)

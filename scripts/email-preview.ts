@@ -36,6 +36,32 @@ const LONG_LISTING = {
 /** A decimal quantity, which the retired parser could not survive. */
 const DECIMAL_LISTING = { ref: "PT-0533", id: "8f2c1a44-0000-4000-8000-000000000003", title: "Saffron, Grade I", quantity: "12.5 kg" };
 
+/**
+ * The two non-product families.
+ *
+ * Included for the same reason the awkward product cases are: these are the
+ * ones that were wrong. Every member template called every record an "offer"
+ * and printed a "Quantity" row, so a freight forwarder was told their offer was
+ * live with a blank quantity beside it. A preview that only renders products
+ * cannot show whether that is fixed.
+ */
+const SERVICE_LISTING = {
+  ref: "PT-0301",
+  id: "8f2c1a44-0000-4000-8000-000000000004",
+  title: "Freight forwarding",
+  quantity: null,
+  noun: "trade service",
+  headline: { label: "Capability", value: "Up to 40 containers per month" },
+};
+const DISTRIBUTION_LISTING = {
+  ref: "PT-0302",
+  id: "8f2c1a44-0000-4000-8000-000000000005",
+  title: "Importer or importer of record",
+  quantity: null,
+  noun: "distribution opportunity",
+  headline: { label: "Territory", value: "One country (Spain)" },
+};
+
 const FIXTURES: Record<string, { template: TemplateName; data: unknown }> = {
   listing_published: {
     template: "listing_published",
@@ -48,6 +74,21 @@ const FIXTURES: Record<string, { template: TemplateName; data: unknown }> = {
   "listing_published--long-title-range-quantity": {
     template: "listing_published",
     data: { identity: IDENTITY, listing: LONG_LISTING, completenessScore: 48, completenessBand: "Basic", recommendationCount: 7 },
+  },
+  "listing_published--trade-service": {
+    template: "listing_published",
+    data: { identity: IDENTITY, listing: SERVICE_LISTING, completenessScore: 78, completenessBand: "Complete", recommendationCount: 1 },
+  },
+  "listing_published--distribution-opportunity": {
+    template: "listing_published",
+    data: { identity: IDENTITY, listing: DISTRIBUTION_LISTING, completenessScore: 84, completenessBand: "Complete", recommendationCount: 0 },
+  },
+  "listing_needs_information--trade-service-verification-only": {
+    template: "listing_needs_information",
+    data: {
+      identity: IDENTITY, listing: SERVICE_LISTING, route: "verification",
+      blockingIssues: ["Complete your business verification. Ponte publishes member opportunities from verified businesses only."],
+    },
   },
   listing_needs_information: {
     template: "listing_needs_information",

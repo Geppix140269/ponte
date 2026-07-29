@@ -1330,7 +1330,11 @@
       "continue": "Continue",
       "skip": "Skip this",
       "sectorOptional": "Optional. Choose a sector if you know it.",
-      "relationshipOptional": "Optional. Leave this open if it is negotiable."
+      "relationshipOptional": "Optional. Leave this open if it is negotiable.",
+      "discardTitle": "Changing this will discard answers you have already given",
+      "discardBody": "These belong to the option you are moving away from, so Ponte cannot keep them on the new one. Nothing else on your record changes.",
+      "discardKeep": "Keep what I have",
+      "discardConfirm": "Change it and discard these"
     },
     "field": {
       "intent": "Intent",

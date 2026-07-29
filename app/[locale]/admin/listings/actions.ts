@@ -10,6 +10,7 @@ import { recordListingEvent } from "@/lib/listings/publish";
 import { completenessBand, completenessBandLabel } from "@/lib/listings/eligibility";
 import { vetListing, isAiConfigured } from "@/lib/ai-vet";
 import { checkPublicationGate, gateFailureLabel } from "@/lib/listings/publication-gate";
+import { recordNoun, type FactsRow } from "@/lib/listings/record-facts";
 import { generateWriteup, WriteupBelowMinimum } from "@/lib/writeup";
 
 /**
@@ -63,8 +64,11 @@ export async function decideListingAction(formData: FormData): Promise<void> {
   const adminSb = createAdminClient();
   const { data: listing } = await adminSb
     .from("listings")
+    // The canonical pair is read so the decision email names the record the
+    // member actually posted. Without it every operator decision emailed a
+    // freight forwarder about their "offer".
     .select(
-      "id, ref, product, user_id, status, type, quantity, unit, frequency, payment_terms, submitter_role, chain_depth, validity_type, valid_until",
+      "id, ref, product, user_id, status, type, market_family, market_intent, quantity, unit, frequency, payment_terms, submitter_role, chain_depth, validity_type, valid_until",
     )
     .eq("id", id)
     .maybeSingle();
@@ -193,7 +197,16 @@ export async function decideListingAction(formData: FormData): Promise<void> {
         company: profile?.company ?? null,
         email,
       });
-      const summary = { ref: listing.ref, id: listing.id, title: listing.product };
+      const summary = {
+        ref: listing.ref,
+        id: listing.id,
+        title: listing.product,
+        // "Offer", "requirement", "trade service" or "distribution
+        // opportunity", from the record itself. A decision email that calls a
+        // service an offer is telling the member about a record they did not
+        // create.
+        noun: recordNoun(listing as FactsRow),
+      };
       try {
         if (decision === "approved") {
           const score = Number(
