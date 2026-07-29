@@ -2,6 +2,24 @@
 
 This manifest records the exact owner-approved delivery reviewed on 27 July 2026.
 
+Every row is verified against a file **inside this package**, under
+`source/`, `implementation/` or `reference/`. Nothing here checksums a file that
+lives outside the approved delivery.
+
+That was not always true. `ponte-flow/tokens/ponte-flow-tokens.css` previously
+resolved to the live `design-system/ponte-flow/tokens/ponte-flow-tokens.css`, so
+this manifest pinned a shared token file the Bridge package does not own. Any
+authorised palette change would then have had to edit this record, and the only way
+to keep the check green would have been to re-hash the live file after each change,
+which is a manifest that moves with the thing it is supposed to pin.
+
+ADR-0015 section S-1 decoupled them. The row is unchanged and its hash is unchanged,
+because the package now carries its own **byte-identical snapshot** of the token
+file exactly as delivered on 27 July 2026, at
+`source/ponte-flow/tokens/ponte-flow-tokens.css`. The live token set is governed
+separately, by the Ponte Design Constitution and ADR-0015, and its values move as
+approved decisions require without touching this record.
+
 ## SHA-256
 
 | File | SHA-256 |
