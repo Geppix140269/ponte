@@ -30,7 +30,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Not:** hiding the product rows with CSS; a second label vocabulary for published records; a confirmation on every classification change.
 
-**Authority:** ADR-0014, sections 9 and 10. Proposed; awaiting owner acceptance.
+**Authority:** ADR-0014, sections 9 and 10. **Accepted by the owner on 29 July 2026.**
 
 
 ## 28 July 2026 - Family-specific downstream commercial procedures
@@ -41,7 +41,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Not:** service capacity stored as a product quantity; a distribution opening order stored as a shipped quantity; a product field hidden rather than removed; or the composer duplicated per family.
 
-**Authority:** ADR-0014. Proposed; awaiting owner acceptance.
+**Authority:** ADR-0014. **Accepted by the owner on 29 July 2026.**
 
 
 ## 28 July 2026 — Automated listing publication and one transactional email system (ADR-0012)

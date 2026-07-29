@@ -1,7 +1,8 @@
 # ADR-0014 — Family-specific downstream commercial procedures
 
-- **Status:** Proposed; effective when accepted by the product owner and merged
+- **Status:** **Accepted — 29 July 2026.** Effective on merge of PR #100
 - **Decision date:** 28 July 2026
+- **Accepted:** 29 July 2026, by the repository owner
 - **Owner:** Giuseppe Funaro
 - **Extends:** ADR-0001 (the unified three-family market contract), ADR-0011 (category-first non-product journeys), ADR-0012 (AI product intake)
 - **Supersedes:** Any reading of the shared Structure composer under which one product-shaped set of commercial questions, blockers, review rows and submission expectations applies to all three market families
@@ -106,4 +107,12 @@ The migration is additive, preserves every existing row, changes no RLS policy, 
 
 ## Status of implementation
 
-The code implementing this ADR is on `fix/family-specific-downstream-composer` and is not merged. The migration is written and not applied. Neither may proceed without explicit owner approval, per `AGENTS.md`.
+Sections 1 to 8 shipped on `main` in PR #89. Sections 9 and 10 - the family's own
+vocabulary downstream of publication, and the consented discard - ship in PR #100.
+
+`20260728e_family_commercial_terms.sql` (renamed from `20260728d_` on 29 July 2026)
+remains **written and not applied**. Acceptance of this ADR is not authority to
+apply it: that is a separate owner approval, per `AGENTS.md`. Until it is applied,
+`service_terms` and `distribution_terms` are absent, the submit route retries the
+write without them, both public readers degrade their select rather than 404, and
+the terms still reach readers through the record's synthesised `details`.
