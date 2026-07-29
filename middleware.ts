@@ -6,6 +6,72 @@ import { updateSession, applySession } from "@/lib/supabase/middleware";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
+// TEMPORARY PRIVATE-SITE GATE (2026-07-29)
+//
+// Ponte is intentionally hidden from public view while the founder resolves an
+// external commercial situation. The shared password itself is never committed:
+// only its SHA-256 verifier is stored here. Remove this block and the guard at
+// the start of middleware() when public access is restored.
+const SITE_GATE_USERNAME = "ponte";
+const SITE_GATE_PASSWORD_SHA256 =
+  "7496421d8348a4e2c3cb3d145cc136f70008704c4412a5564c0139a0ec98f3b0";
+
+async function sha256(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+function constantTimeEqual(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+
+  return difference === 0;
+}
+
+async function passesSiteGate(request: NextRequest): Promise<boolean> {
+  const authorization = request.headers.get("authorization");
+  if (!authorization?.startsWith("Basic ")) return false;
+
+  let credentials: string;
+  try {
+    credentials = atob(authorization.slice("Basic ".length));
+  } catch {
+    return false;
+  }
+
+  const separator = credentials.indexOf(":");
+  if (separator < 0) return false;
+
+  const username = credentials.slice(0, separator);
+  const password = credentials.slice(separator + 1);
+  if (username !== SITE_GATE_USERNAME) return false;
+
+  return constantTimeEqual(
+    await sha256(password),
+    SITE_GATE_PASSWORD_SHA256,
+  );
+}
+
+function siteGateChallenge(): NextResponse {
+  return new NextResponse("Ponte Trade is temporarily private.", {
+    status: 401,
+    headers: {
+      "Cache-Control": "no-store",
+      "WWW-Authenticate": 'Basic realm="Ponte Trade", charset="UTF-8"',
+    },
+  });
+}
+
 // Routes that must never be locale routed: auth callbacks carry one-time
 // tokens and API routes are consumed by code, not people. They keep exactly
 // the session-refresh behaviour they had before i18n.
@@ -68,6 +134,10 @@ function splitLocale(pathname: string): [string, string] {
 }
 
 export async function middleware(request: NextRequest) {
+  if (!(await passesSiteGate(request))) {
+    return siteGateChallenge();
+  }
+
   const { pathname } = request.nextUrl;
 
   if (isUnlocalized(pathname)) {
