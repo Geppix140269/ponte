@@ -4,7 +4,8 @@
 **Repository state:** `main` at `d184c1c`
 **Method:** read-only `select` through `scripts/db-query.mjs`. **No SQL was
 applied, no object created, no policy changed, no flag set, nothing deployed.**
-**Outcome:** two findings must be settled before the migrations are applied.
+**Outcome:** two findings, both now settled. LB-004 is fixed on this branch; the
+production-record discrepancy is reconciled by PR #106, merged.
 
 Gate C's four approvals are unchanged and none has been taken: apply the three
 migrations; create the bucket and its two policies; run
@@ -72,48 +73,48 @@ the sanctions gate is unaffected: it lives in `deal_room_invite()`, which reads
 which exist. Nothing is admitted that should not be.
 
 **But it makes a named acceptance criterion of #97 inert on first activation.**
-The fix is one word, `type` → `purpose`, plus the `kind:` mapping beside it. It
-is a code change, not SQL, so it does not touch the approvals this gate is
-about. Recorded as **LB-004** with classification requested, because the owner,
-not the agent, decides whether an inert Integrity band blocks activation.
+The owner classified **LB-004 a Launch Blocker on 29 July 2026** and authorised
+the correction on this branch. It is fixed: the select list is now the exported
+constant `VERIFICATION_EVIDENCE_COLUMNS` in `lib/deal-room/integrity.ts`, naming
+`purpose`, and the `kind:` mapping reads `row.purpose`.
 
-## 3. Finding B — a migration was applied to production with no repository record
+The constant exists so that a test can reach the defect at all.
+`integrity.test.ts` checks that every column it names appears in
+`VERIFICATIONS_COLUMNS` - the production table exactly as section 1 observed it -
+that it asks for `purpose` and never `type`, and that the surface selects through
+the constant rather than a literal of its own. Reintroducing `type` fails two of
+those assertions, which was confirmed by doing it rather than assumed. Nothing
+else about verification was touched.
 
-`20260728e_family_commercial_terms.sql` is recorded in `public.schema_migrations`
-as **applied at 15:44:45 UTC on 29 July 2026**. `listings.service_terms` and
-`listings.distribution_terms` exist, and the constraints landed exactly as the
-file specifies: `listings_service_terms_family` and
-`listings_distribution_terms_family` validated, `listings_product_fields_family`
-`NOT VALID` as designed. **0 existing rows would violate it**, so the owner can
-validate it separately whenever convenient.
+## 3. Finding B — settled by PR #106
 
-The application itself is sound. Two things about it are not.
+The preflight observed that `20260728e_family_commercial_terms.sql` was recorded
+as applied at 15:44:45 UTC on 29 July 2026 while five repository records said it
+was unapplied, and that the ledger checksum did not match `main`'s copy of the
+file. It stopped short of correcting those records, because stating that an
+application was authorised is not an agent's inference to make.
 
-**The repository says the opposite, in five places.** `DATABASE-STATE.md`
-carries it under a heading reading "Written and NOT applied"; `CURRENT-STATE.md`
-row 74, ADR-0014's Status of implementation, the PR #100 description and three
-`OPERATIONS_LOG.md` entries all state it is unapplied. I wrote several of those
-sentences earlier today, and they were true when written.
+**PR #106 made that statement and merged.** It records that both
+`20260728c_automated_listing_publication.sql` (15:42:54 UTC, ledger 41 to 42) and
+`20260728e_family_commercial_terms.sql` (15:44:45 UTC, ledger 42 to 43) were
+applied to production **with explicit owner authorisation**, through
+`node scripts/db-query.mjs --file` against `cptglsmjmzcfpjndqfmc`, with the
+preflight state, the post-application probes, the security-policy verification
+and the rolled-back functional tests all recorded in `DATABASE-STATE.md`.
 
-**The ledger checksum does not match the file on `main`.** The ledger holds
-`4224fa274291…`; `main`'s file hashes to `226faa772430…`. I traced it: the
-applied bytes are the copy on branch `claude/family-procedure-followup-clean`
-(commit `4563683`), which renamed `20260728d_` → `20260728e_` independently of
-the rename that reached `main` through PR #98 (`228b532`). **The difference is
-entirely comments** — one hunk, seven added comment lines, zero non-comment
-changes, verified by diff. The executed SQL is byte-identical in substance.
+It also removed the divergence rather than documenting it. `main`'s copy of
+`20260728e` had gained a seven-line comment block about its rename **after** the
+file was applied; comment or not, that changed its SHA-256. PR #106 restored the
+applied bytes and preserved the block's content in `DATABASE-STATE.md` instead.
+`main` now hashes to
+`4224fa274291f074d1ef0c948c52ba9afbeaa5378111b4686c05cebde9f18fa8`, identical to
+the live ledger row, which I re-verified after merging.
 
-This matters here because `GATE-C-TEST-PLAN.md` §4.8 requires every applied file
-to be recorded "with a SHA-256 matching the file byte for byte". That invariant
-is false on `main` today, for a reason unrelated to the Deal Room, and the same
-check will be run against the Deal Room migrations in a few minutes' time. It
-should be settled first so a real mismatch is never mistaken for this one.
-
-I have **not** corrected the five records, and that is deliberate rather than
-cautious. Writing "applied on 29 July 2026" into `DATABASE-STATE.md` asserts
-that the application was authorised, and by whom. I do not know who ran it or
-under what approval; per `AGENTS.md` that is the owner's statement to make, not
-mine to infer. Recorded as **PL-014** with the correction drafted and unapplied.
+So the invariant §4.8 asserts holds for every row that carries a digest, and the
+Deal Room migrations can be checked against it without ambiguity. **This
+preflight raises no ticket for it**, per the owner decision: the discrepancy is
+resolved, not deferred. One row still carries no digest at all, which is
+section 5.
 
 ## 4. Finding C — no existing Deal can enter a Deal Room
 
@@ -127,28 +128,36 @@ validated against existing production data.** The allowlisted pilot must publish
 a fresh Deal through the composer first, and the propose surface will show an
 empty eligible list until somebody does.
 
-This is stated so the first activation is not read as a failure.
+**Owner decision, 29 July 2026:** this is not a Launch Blocker, and the five
+legacy listings must **not** be backfilled to manufacture a test. Gate C
+validation will publish one fresh, family-classified pilot Deal through the
+current journey and use that Deal for the protected-room test.
 
 ## 5. Pre-existing ledger note
 
 `20260722b_hs_codes.sql` carries the literal string `applied-via-management-api`
 in its `sha256` column instead of a digest. One row of 43, predating all of this
-work, and outside Gate C's scope. Noted so that a future audit of §4.8 does not
-treat it as new.
+work. Every other row carries a real hash and, after PR #106, every one of those
+matches its file byte for byte - so this is the single exception to §4.8, and an
+audit finding it without context could read it as a fresh mismatch.
+
+Indexed as **PL-015** and deliberately not repaired here, per the owner decision:
+it is not a Deal Room blocker.
 
 ## 6. What Gate C should do next
 
-1. **Owner decides LB-004** — fix `type` → `purpose` before activation, or
-   accept an inert Integrity band for the pilot.
-2. **Owner states the authorisation for `20260728e`** so PL-014's record
-   correction can be written truthfully, and decides whether the ledger row is
-   re-recorded against `main`'s checksum or the comment difference is documented
-   in place.
-3. **Then, and only then, the first Gate C approval:** apply `20260729a`, `b`,
-   `c` in order, each recorded in `public.schema_migrations` with the SHA-256
-   above.
+Both preflight findings are settled. LB-004 is fixed and proved on this branch;
+the production record is reconciled by PR #106.
 
-Steps 2 and 3 of Gate C — the bucket and its policies, then
-`npm run deal-room:negative-access` — are unchanged and remain separate
-approvals. The feature flag stays unset, the access wall stays in place, and
-nothing is deployed.
+The first Gate C approval is therefore the next thing to happen, and it has not
+been given: **apply `20260729a`, `b` and `c` in order**, each recorded in
+`public.schema_migrations` with the SHA-256 in section 1. Steps 2 and 3 - the
+`deal-room-evidence` bucket with its two policies, then
+`npm run deal-room:negative-access` - remain separate approvals after it, and the
+flag is set only on a clean pass of that fixture.
+
+The pilot Deal of section 4 must be published before the fixture can exercise a
+real room, since no existing listing can enter one.
+
+The feature flag stays unset, the access wall stays in place, and nothing is
+deployed until each approval has been given.

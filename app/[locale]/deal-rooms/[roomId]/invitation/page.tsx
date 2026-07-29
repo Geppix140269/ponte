@@ -12,7 +12,12 @@ import {
 import { listParticipants, loadRoom, listSubRooms } from "@/lib/deal-room/queries";
 import { canInviteParticipant, mutationBlockedReason } from "@/lib/deal-room/permissions";
 import { buildPreview, INVITATION_TTL_DAYS } from "@/lib/deal-room/invitation";
-import { integrityPreflight, invitationIsPermitted, sanctionsPositionFrom } from "@/lib/deal-room/integrity";
+import {
+  VERIFICATION_EVIDENCE_COLUMNS,
+  integrityPreflight,
+  invitationIsPermitted,
+  sanctionsPositionFrom,
+} from "@/lib/deal-room/integrity";
 import { sendInvitation } from "../../actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,12 +68,29 @@ export default async function InvitationPreviewPage({
     .eq("id", access.viewer?.profileId ?? "")
     .maybeSingle();
 
-  // `user_id`, which is what the column is actually called. The first draft
-  // filtered on a `profile_id` that does not exist on this table, so it read
-  // nothing and the pre-flight was built from an empty evidence list.
+  /*
+   * Every column here is one production actually has, and both halves of that
+   * sentence were learned the hard way.
+   *
+   * The first draft filtered on `profile_id`; the column is `user_id`, so the
+   * query matched nothing and the pre-flight was built from an empty evidence
+   * list. That was corrected. The select list was not re-checked at the same
+   * time, and it named `type` - which does not exist either. PostgREST refuses
+   * an unknown column outright, so the whole read failed and "What Ponte has
+   * checked" reported nothing for every member, including a fully verified one.
+   * The Gate C production preflight found it (LB-004).
+   *
+   * The column is `purpose`, which is what every other reader of this table
+   * uses: `admin/listings/actions.ts`, `marketplace/actions.ts`,
+   * `marketplace/l/[ref]/page.tsx` and `opportunities/page.tsx`.
+   *
+   * `lib/deal-room/__tests__/integrity.test.ts` now asserts this select list
+   * against the real column set, because neither error was reachable by any
+   * test: there is no non-production database to run one against (PL-002).
+   */
   const { data: evidenceRows } = await supabase
     .from("verifications")
-    .select("type, status, created_at, sanctions_hits, rescreened_at")
+    .select(VERIFICATION_EVIDENCE_COLUMNS)
     .eq("user_id", access.viewer?.profileId ?? "")
     .order("created_at", { ascending: false })
     .limit(10);
@@ -86,7 +108,7 @@ export default async function InvitationPreviewPage({
       | "identity_verified"
       | "company_verified",
     verificationEvidence: rows.map((row) => ({
-      kind: (row.type as string) ?? "check",
+      kind: (row.purpose as string) ?? "check",
       source: "Ponte verification",
       result:
         row.status === "verified"

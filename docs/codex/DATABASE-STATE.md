@@ -111,25 +111,73 @@ Authority: issue #97; ADR-0009 as accepted 29 July 2026;
 
 - `20260726a_investigation_kind.sql` was applied to production by hand on 26 July 2026 with owner approval, using `scripts/db-query.mjs`, and probe-verified afterwards. It adds `request_kind` (not null, default `'investigate'`), `capability`, `contact_phone` and `contact_language` to `signal_investigations`, adds the `signal_investigations_kind_check` constraint, and replaces the `(signal_id, requester_id)` unique constraint with `(signal_id, requester_id, request_kind)`. Verified: the four columns exist with the stated nullability and default, both constraints are present in `pg_constraint`, the old two-part constraint is gone, and the single pre-existing row backfilled to `request_kind = 'investigate'`. It was applied by hand because the automatic chain aborts at its first file (see below), so a merge does not apply anything.
 
-## Written but NOT applied
+## APPLIED to production, 29 July 2026: automated listing publication
 
-`20260728c_automated_listing_publication.sql` implements ADR-0012. It has **not**
-been applied to production and has not been probe-verified. It is additive and
-idempotent throughout.
+`20260728c_automated_listing_publication.sql` implements ADR-0013. It was
+**applied to production on 29 July 2026 at 15:42:54 UTC** with explicit owner
+authorisation, via `node scripts/db-query.mjs --file`, against project
+`cptglsmjmzcfpjndqfmc`, and probe-verified immediately afterwards. Recorded in
+`public.schema_migrations` with SHA-256
+`745453c93b8d88614fe45dd2a75639c70760325a4e25ed64c2b06236aabf11c4`, matching the
+file byte for byte. **Ledger 41 to 42.**
+
+It is additive and idempotent throughout.
+
+**Preflight, recorded before applying.** None of the eleven columns existed;
+`listing_events` was absent; `listings` held 5 rows (approved 2, draft 1,
+submitted 2), 4 of them carrying a quantity; `listings_status_check1` was absent,
+so the defensive drop was a no-op; the three policy names the file replaces
+existed under exactly those names, so no orphan or duplicate policy could
+survive; `is_admin()`, `gen_random_uuid()` and `auth.users` were all present.
+
+**Verified in production afterwards.** 11 columns present with the stated types,
+all nullable except `quantity_extracted`, which is `NOT NULL DEFAULT false`; the
+status CHECK carries all 13 values; the five new CHECK constraints are present;
+no duplicate `listings_status_check1`; `listing_events` created with RLS
+**enabled**; all five indexes present.
+
+**Data effects, exactly as predicted.** Still 5 listings, still approved 2 /
+draft 1 / submitted 2 — **nothing was published**. 4 rows backfilled to
+`quantity_mode = 'exact'`, and the one row without a quantity left null. 2
+lifecycle events seeded, one per already-approved listing, as
+`listing_published / admin / legacy_desk_approval`. Zero orphan events.
+
+**Security verified, not assumed.** Seven policies on `listings`, no duplicates.
+No member policy permits writing `approved`, `flagged`, `suspended`,
+`validating` or `needs_information`: the widened update policy allows only
+`draft | submitted | withdrawn`, and the new withdrawal policy only
+`approved -> approved | withdrawn`. **No anonymous SELECT policy exists on
+`listings`**, so nothing was broadened for anonymous readers. `listing_events`
+has SELECT-only policies and **no INSERT policy at all**, so a member cannot
+forge a `listing_published` event.
+
+**Functional probes, run inside a transaction that was rolled back so no test
+row reached production.** The widened vocabulary accepts `validating`; an
+invented status is refused; an inverted range 500-to-200 is refused; a valid
+range 200-to-500 is accepted; a completeness score of 101 is refused; an
+unrecognised `quantity_mode` is refused; a lifecycle event inserts; an
+unrecognised `actor_type` is refused. Eight of eight. The rollback was confirmed
+held afterwards: statuses unchanged, 2 events, no test rows, no `range` mode.
+
+**Private-site gate confirmed intact** after the work: `https://ponte.trade/`
+answers `401` with `WWW-Authenticate: Basic realm="Ponte Trade"`, and
+`middleware.ts` is unchanged.
+
 
 > **This gap has already cost members their submissions.** From the deployment of
 > the automated-publication branch until 29 July 2026, `POST
 > /api/marketplace/submit` sent `quantity_mode`, `quantity_min`, `quantity_max`,
 > `quantity_extracted`, `quantity_confirmed_at` and (once the declaration was
 > accepted) `declaration_accepted_at` and `declaration_version` on **every**
-> write. None of them exists in production. PostgREST refused the insert, the
+> write. None of them existed in production at the time. PostgREST refused the insert, the
 > route's retry dropped only the family-terms and classification groups, and both
 > Submit and Save draft answered 500 for every member and every family.
-> `lib/listings/write-fallback.ts` now drops whatever column the database
-> actually names, so a submission stores instead of failing. That is a bridge:
-> until this file is applied, an accepted declaration cannot be recorded and the
-> validator cannot write `validating`, `needs_information` or `flagged`, so a
-> submission stores and stays `submitted`.
+> `lib/listings/write-fallback.ts` drops whatever column the database actually
+> names, so a submission stores instead of failing. **That bridge is now dormant
+> for these seven columns:** this file was applied on 29 July 2026, so an
+> accepted declaration IS recordable and the validator CAN write `validating`,
+> `needs_information` and `flagged`. The fallback remains in place for any
+> future unapplied column.
 
 What it changes on `listings`: widens the status check constraint to add
 `validating`, `needs_information`, `flagged` and `suspended` (every state
@@ -342,15 +390,73 @@ real failure gets missed.
 Nothing here has been changed. Repairing the integration touches repository
 settings and possibly a Supabase project, and both are owner decisions.
 
-## Written and NOT applied: family commercial terms
+## APPLIED to production, 29 July 2026: family commercial terms
 
-`supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014).
+`supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014, accepted
+by the owner on 29 July 2026).
+
+**Applied to production on 29 July 2026 at 15:44:45 UTC** with explicit owner
+authorisation, via `node scripts/db-query.mjs --file`, against project
+`cptglsmjmzcfpjndqfmc`, immediately after `20260728c` had been fully verified.
+Recorded in `public.schema_migrations` with SHA-256
+`4224fa274291f074d1ef0c948c52ba9afbeaa5378111b4686c05cebde9f18fa8`, matching the
+file byte for byte. **Ledger 42 to 43.**
+
+Applied second because it depends on `20260728c`: its
+`listings_product_fields_family` constraint references `quantity_min` and
+`quantity_max`, which that file creates.
 
 Renamed from `20260728d_` on 29 July 2026 (issue #97, PL-004). It shared the
 identifier `20260728d` with `20260728d_verification_level_canonical.sql`, which
-is applied to production and recorded in the ledger under that exact name with
-its SHA-256, so the applied file kept its identity and this unapplied one moved.
-The SQL is unchanged.
+was already applied to production and recorded in the ledger under that exact
+name with its SHA-256, so the applied file kept its identity and the then-unapplied
+one moved. The SQL is unchanged by the rename.
+
+**Verified in production.** `service_terms` and `distribution_terms` present,
+both `jsonb` and both nullable; `listings_service_terms_family` and
+`listings_distribution_terms_family` present and **valid**;
+`listings_product_fields_family` present and **NOT VALID**, which is exactly
+what the file deploys.
+
+**Data effects: none.** Still 5 listings, still approved 2 / draft 1 /
+submitted 2, zero rows carrying either terms column. Nothing was backfilled and
+nothing could be: no record carries a canonical family yet.
+
+**Functional probes, rolled back.** A services record written the way the
+composer writes one, with product fields cleared, accepts `service_terms`; a
+services record that keeps a quantity is refused; a distribution record accepts
+`distribution_terms`; service terms on a distribution record are refused;
+distribution terms on a products record are refused; a legacy row with a null
+`market_family` is still allowed to hold terms, so nothing created before the
+family entrances became invalid.
+
+**`listings_product_fields_family` is still NOT VALID, deliberately.** Zero
+existing rows would violate it, surveyed directly. Validating it is a separate
+owner decision and was not taken, because the migration deploys the constraint
+`NOT VALID` and validating it would make the deployed object differ from the
+file. When the owner wants it enforced against existing rows:
+
+```sql
+alter table listings validate constraint listings_product_fields_family;
+```
+
+### This file is now immutable, and its own header is stale
+
+The bytes of this migration are what production ran, and the SHA-256 above is
+the proof. Two consequences follow, and both are deliberate:
+
+- **The `NOT APPLIED` comment inside the SQL file is now historically wrong and
+  is left exactly as it is.** Correcting it would change the file's bytes and
+  break the match with `schema_migrations`. What is applied is recorded here,
+  not in the migration's own header.
+- **A seven-line comment block describing the rename, added to this file on
+  `main` by the Deal Room branch, was removed** to restore the applied bytes.
+  Its content is preserved in the paragraph above instead. Nothing inside the
+  SQL statements changed; the block was comment text only.
+
+An operator instruction issued before 29 July may still name the old
+`20260728d_family_commercial_terms.sql`. It is the same SQL, and the current
+filename is the one above.
 
 Adds two nullable jsonb columns to `listings`, `service_terms` and
 `distribution_terms`, plus three CHECK constraints stating the cross-family
@@ -375,11 +481,14 @@ run.
 
 Rollback is documented in the file itself, including the backup query to take
 first if any non-product record has been created since it was applied.
-## Written but NOT applied
+## APPLIED to production, 29 July 2026 (duplicate section)
 
-`20260728c_automated_listing_publication.sql` implements ADR-0013. It has **not**
-been applied to production and has not been probe-verified. It is additive and
-idempotent throughout.
+`20260728c_automated_listing_publication.sql` implements ADR-0013. **It was
+applied on 29 July 2026 at 15:42:54 UTC**; the timestamp, hash, ledger
+transition and every probe are recorded in the section of the same name above,
+which is the authoritative one. This heading is a duplicate that predates the
+application and is corrected rather than deleted, so a reader arriving at either
+copy is told the same true thing.
 
 What it changes on `listings`: widens the status check constraint to add
 `validating`, `needs_information`, `flagged` and `suspended` (every state

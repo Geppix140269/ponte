@@ -2,6 +2,19 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 29 July 2026 - Two listing migrations applied to production
+
+**Decision:** the owner accepted ADR-0014 and authorised applying `20260728c_automated_listing_publication.sql` and `20260728e_family_commercial_terms.sql` to production, one at a time and in that order, each probe-verified before the next was started. Applied at 15:42:54 and 15:44:45 UTC; hashes recorded in `public.schema_migrations` match both files byte for byte; ledger 41 to 43.
+
+**Consequence for the repository:** `20260728e_family_commercial_terms.sql` is now immutable. Its bytes are what production ran, so the `NOT APPLIED` comment inside it is historically wrong and is left unedited; correcting it would break the ledger match. What is applied is recorded in `DATABASE-STATE.md`, not in a migration's own header.
+
+**Not decided:** whether to `validate constraint listings_product_fields_family`. The migration deploys it `NOT VALID` and validating it would make the deployed object differ from the file. Zero existing rows would violate it.
+
+**Nothing was published.** These migrations add columns and constraints; verification remains blocking, so the number of publicly eligible listings is unchanged at zero.
+
+**Authority:** ADR-0013, ADR-0014. Evidence in `docs/codex/DATABASE-STATE.md` and `docs/operations/OPERATIONS_LOG.md`.
+
+
 ## 29 July 2026 - Deal Room launch slice, and ADR-0009 accepted as amended
 
 **Decision:** the owner authorised the first launch-usable Deal Room protected progression loop (issue #97) and accepted ADR-0009 as amended by the Gate A preflight. The Deal Room is built as an **additive `deal_room_*` domain**, not as an adaptation of the legacy Deal-era cluster.
