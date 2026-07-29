@@ -14,6 +14,13 @@ import {
   usesCanonicalKeys,
   type InventoryQuery,
 } from "@/lib/board/inventory-query";
+import {
+  parseSignalSearch,
+  searchPredicate,
+  compareByRelevance,
+  type SignalSearch,
+} from "@/lib/search/signal-search";
+import type { BoardSort } from "@/lib/find/query";
 
 // The query shape and the rules over it are pure and live next door, so a unit
 // test can reach them without this module's database client coming with them.
@@ -48,13 +55,26 @@ export {
  * `ilike` over the product text is kept as an additional filter, never as the
  * mechanism.
  *
+ * **It searches the member's own words, not only the taxonomy.** A category
+ * filter is only usable by someone who already knows Ponte's taxonomy, and
+ * until this existed the only way to find a signal about gas oil was to read
+ * the list. The free text runs as one `ilike` predicate across the public
+ * columns, widened by the governed vocabulary in `lib/search/aliases.ts`, and
+ * it runs at the database over the whole table for exactly the same reason
+ * every other filter does.
+ *
  * ---------------------------------------------------------------------------
- * What this module does NOT do
+ * Ordering, and the one place it is bounded
  * ---------------------------------------------------------------------------
- * It accepts an offset, and it reports a true total, but no surface pages
- * through it yet. Reaching every eligible record is ADR-0011's requirement and
- * it is not met: a member sees the first page and has no way to the rest.
- * Recorded here rather than implied to be finished.
+ * With no query there is nothing to be relevant to, so the order is the
+ * database's: `spotted_at` descending, then `id`, which is a total order and is
+ * therefore safe to page through with an offset.
+ *
+ * With a query, the order is relevance, and relevance cannot be expressed as a
+ * column: it is a function of the query and the row together. So the matched
+ * set is read, ranked and paged here. That is safe precisely because it is
+ * bounded — see `RELEVANCE_CEILING`, and note what happens when a query is too
+ * broad to rank rather than what is assumed to happen.
  */
 
 /**
@@ -82,12 +102,25 @@ export type Coverage = {
   eligible: number;
 };
 
+/**
+ * How the returned page was actually ordered, and how completely.
+ *
+ * `ordering` is what the database and this module DID, which is not always what
+ * was asked for: a query matching more records than can be ranked falls back to
+ * recency. `rankedFully` is false in exactly that case, so the surface can say
+ * so rather than presenting a date order under a heading that claims relevance.
+ */
+export type Ordering = {
+  ordering: BoardSort;
+  rankedFully: boolean;
+};
+
 export type SignalInventory =
   /**
    * The read succeeded AND the filter could see everything it needed to. A
    * result of zero here is conclusive: there really is no match.
    */
-  | { state: "ok"; signals: MarketSignal[]; total: number; offset: number }
+  | ({ state: "ok"; signals: MarketSignal[]; total: number; offset: number } & Ordering)
   /**
    * The read succeeded over PART of the inventory.
    *
@@ -102,13 +135,13 @@ export type SignalInventory =
    * until the moment the last one is. It is not an edge case; it is where the
    * product will live for a while.
    */
-  | {
+  | ({
       state: "partial";
       signals: MarketSignal[];
       total: number;
       offset: number;
       coverage: Coverage;
-    }
+    } & Ordering)
   /**
    * The read could not be answered as asked, because NO Market Signal carries
    * this classification. Never printed as an empty result.
@@ -138,7 +171,7 @@ export type SignalInventory =
    * answer into a conclusive one, and "no match" is the answer a member is most
    * likely to act on.
    */
-  | { state: "coverage_unknown"; signals: MarketSignal[]; total: number; offset: number }
+  | ({ state: "coverage_unknown"; signals: MarketSignal[]; total: number; offset: number } & Ordering)
   /** The sources could not be read. A technical failure, not a finding. */
   | { state: "unavailable" };
 
@@ -161,9 +194,15 @@ type Filterable = {
   eq(column: string, value: unknown): Filterable;
   contains(column: string, value: unknown): Filterable;
   ilike(column: string, value: string): Filterable;
+  or(filters: string): Filterable;
 };
 
-function applySignalFilters<T>(builder: T, query: InventoryQuery, omit: string | null): T {
+function applySignalFilters<T>(
+  builder: T,
+  query: InventoryQuery,
+  omit: string | null,
+  search: SignalSearch | null,
+): T {
   let q = builder as unknown as Filterable;
   if (query.family && omit !== "market_family") q = q.eq("market_family", query.family);
   if (query.serviceCategory && omit !== "service_category_key") {
@@ -181,12 +220,38 @@ function applySignalFilters<T>(builder: T, query: InventoryQuery, omit: string |
   if (query.territory && omit !== "territory_codes") {
     q = q.contains("territory_codes", [query.territory]);
   }
-  // Direction and free-text product are not classification axes, so they are
-  // never omitted: they are part of what the member asked for either way.
+  // Direction, free-text product and the search are not classification axes, so
+  // they are never omitted: they are part of what the member asked for either
+  // way. Omitting the search from the coverage counts in particular would
+  // compare a search's results against the whole family rather than against the
+  // records the search itself reached, and print a denominator that is not the
+  // member's question.
   if (query.side) q = q.eq("side", query.side);
   if (query.product) q = q.ilike("product", `%${query.product}%`);
+  if (search) q = q.or(searchPredicate(search));
   return q as unknown as T;
 }
+
+/**
+ * The largest matched set this module will rank.
+ *
+ * Relevance is computed here rather than by the database, because it is a
+ * function of the query and the row together and there is no column to sort on.
+ * That means the matched set has to be read before it can be ordered, so it has
+ * to be bounded, so there has to be an answer for what happens above the bound.
+ *
+ * The answer is NOT to rank the first thousand and page through them as if they
+ * were the whole result: that would silently hide every record past the
+ * thousandth from a member who was told the total. It is to stop claiming
+ * relevance and fall back to the database's own recency order, which pages
+ * through everything correctly, and to report that through `rankedFully` so the
+ * surface says which order the member is actually looking at.
+ *
+ * A thousand is roughly a third of the current eligible inventory. Any text
+ * query matching more than that is not a search a ranking would help: it is a
+ * browse, and recency is the right order for a browse.
+ */
+export const RELEVANCE_CEILING = 1000;
 
 /**
  * Search the Market Signals inventory.
@@ -196,35 +261,98 @@ function applySignalFilters<T>(builder: T, query: InventoryQuery, omit: string |
  */
 export async function searchSignalInventory(
   query: InventoryQuery,
-  opts: { limit?: number; offset?: number; nowIso?: string } = {},
+  opts: { limit?: number; offset?: number; sort?: BoardSort; nowIso?: string } = {},
 ): Promise<SignalInventory> {
   noStore();
-  if (!isSupabaseConfigured()) return { state: "ok", signals: [], total: 0, offset: 0 };
+  const search = parseSignalSearch(query.text);
+  const asked: BoardSort = opts.sort ?? (search ? "relevance" : "newest");
+  // Relevance without a query has no meaning, and a URL may still ask for it.
+  const wanted: BoardSort = asked === "relevance" && !search ? "newest" : asked;
+
+  if (!isSupabaseConfigured()) {
+    return { state: "ok", signals: [], total: 0, offset: 0, ordering: wanted, rankedFully: true };
+  }
 
   const limit = opts.limit ?? 60;
-  const offset = opts.offset ?? 0;
+  const requestedOffset = Math.max(0, opts.offset ?? 0);
   const nowIso = opts.nowIso ?? new Date().toISOString();
 
   try {
     const sb = createAdminClient();
-    const q = applySignalFilters(
-      sb
-        .from("desk_radar")
-        .select(PUBLIC_SIGNAL_COLUMNS, { count: "exact" })
-        .eq("status", "approved_signal")
-        // Eligibility, in the query. Not applied afterwards to the page.
-        .or(publicWindowPredicate(nowIso)),
-      query,
-      null,
-    );
+    const base = () =>
+      applySignalFilters(
+        sb
+          .from("desk_radar")
+          .select(PUBLIC_SIGNAL_COLUMNS, { count: "exact" })
+          .eq("status", "approved_signal")
+          // Eligibility, in the query. Not applied afterwards to the page.
+          .or(publicWindowPredicate(nowIso)),
+        query,
+        null,
+        search,
+      );
 
-    const { data, error, count } = await q
-      .order("spotted_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-    if (error) throw error;
+    /**
+     * The database's own order, and the reason it ends in `id`.
+     *
+     * `spotted_at` alone is not a total order — the import stamps whole dates,
+     * so hundreds of rows share one value — and an offset over a non-total
+     * order is unstable: the same record can appear on two pages, or on none.
+     * The primary key breaks every remaining tie.
+     */
+    const dbOrdered = (oldest: boolean) =>
+      base().order("spotted_at", { ascending: oldest }).order("id", { ascending: oldest });
 
-    const signals = (data ?? []).map((r) => mapSignalRow(r as SignalRow));
-    const total = count ?? signals.length;
+    let signals: MarketSignal[];
+    let total: number;
+    let offset = requestedOffset;
+    let ordering: BoardSort = wanted;
+    let rankedFully = true;
+
+    if (wanted === "relevance" && search) {
+      // One read, ranked here. The count is exact whatever the range asked for,
+      // so this both fetches the set and establishes whether it was the set.
+      const { data, error, count } = await dbOrdered(false).range(0, RELEVANCE_CEILING - 1);
+      if (error) throw error;
+      total = count ?? (data ?? []).length;
+
+      if (total <= RELEVANCE_CEILING) {
+        const page = rankAndPage(
+          (data ?? []).map((r) => mapSignalRow(r as SignalRow)),
+          search,
+          requestedOffset,
+          limit,
+        );
+        signals = page.signals;
+        offset = page.offset;
+      } else {
+        // Too broad to rank. Recency, over the whole set, correctly paged.
+        ordering = "newest";
+        rankedFully = false;
+        const page = await readPage(dbOrdered(false), requestedOffset, limit, total);
+        signals = page.signals;
+        offset = page.offset;
+      }
+    } else {
+      const oldest = wanted === "oldest";
+      const first = await dbOrdered(oldest).range(requestedOffset, requestedOffset + limit - 1);
+      if (first.error) throw first.error;
+      total = first.count ?? (first.data ?? []).length;
+      const clamped = clampOffset(requestedOffset, total, limit);
+      // An empty set needs no second read: the first one already returned the
+      // nothing that is there, and re-reading it at offset zero would spend a
+      // round trip to fetch the same nothing.
+      if (clamped === requestedOffset || total === 0) {
+        signals = (first.data ?? []).map((r) => mapSignalRow(r as SignalRow));
+      } else {
+        // The result set shrank under a shared link, or the page was invented.
+        // Re-read at the last page that exists rather than printing an empty
+        // page over a total that says records are there.
+        const page = await readPage(dbOrdered(oldest), clamped, limit, total);
+        signals = page.signals;
+      }
+      offset = clamped;
+    }
 
     /**
      * How much of the member's own slice this filter could see.
@@ -237,22 +365,24 @@ export async function searchSignalInventory(
      */
     const column = canonicalColumnFor(query);
     if (column) {
-      const coverage = await signalCoverage(sb, query, column, nowIso);
+      const coverage = await signalCoverage(sb, query, column, nowIso, search);
 
       // An unmeasurable coverage is not a complete one. Falling through to `ok`
       // here would let a failed count upgrade a partial answer into a
       // conclusive "no match", which is the one direction that must never
       // happen by accident.
-      if (coverage === null) return { state: "coverage_unknown", signals, total, offset };
+      if (coverage === null) {
+        return { state: "coverage_unknown", signals, total, offset, ordering, rankedFully };
+      }
       if (coverage.classified === 0) {
         return { state: "unclassified", reason: "nothing_classified", eligible: coverage.eligible };
       }
       if (coverage.classified < coverage.eligible) {
-        return { state: "partial", signals, total, offset, coverage };
+        return { state: "partial", signals, total, offset, coverage, ordering, rankedFully };
       }
     }
 
-    return { state: "ok", signals, total, offset };
+    return { state: "ok", signals, total, offset, ordering, rankedFully };
   } catch (error) {
     // A missing column is a specific, expected and temporary condition, and it
     // is not the same as the sources failing. Saying so lets the surface tell a
@@ -263,6 +393,61 @@ export async function searchSignalInventory(
     }
     return { state: "unavailable" };
   }
+}
+
+/**
+ * The last offset that actually holds a record.
+ *
+ * A page beyond the end is reachable two ways and neither is the member's
+ * fault: a shared link outlives the result set that produced it, and a URL can
+ * simply be typed. Both used to render an empty list under a count saying
+ * thousands of records matched, which reads as a contradiction rather than as
+ * the stale link it is. So the offset is pulled back to the last page that
+ * exists and the read is taken there.
+ *
+ * An empty result set clamps to zero. There is no last page to fall back to,
+ * and leaving the offset where it was would have the pager reporting a page
+ * number over a set with no pages in it.
+ */
+export function clampOffset(offset: number, total: number, limit: number): number {
+  if (total <= 0) return 0;
+  if (offset < total) return Math.max(0, offset);
+  const lastPageStart = Math.floor((total - 1) / limit) * limit;
+  return Math.max(0, lastPageStart);
+}
+
+/**
+ * Order a matched set by relevance and cut one page out of it.
+ *
+ * Pure, and exported, for two reasons. It is the half of the relevance path
+ * that has no database in it, so it can be asserted directly rather than
+ * inferred from the shape of the code around it. And the development evidence
+ * gallery renders through this same function over fixtures, so a captured
+ * frame is a frame of the shipped ordering rather than of a second
+ * implementation that happens to look similar.
+ */
+export function rankAndPage(
+  matched: MarketSignal[],
+  search: SignalSearch,
+  offset: number,
+  limit: number,
+): { signals: MarketSignal[]; offset: number } {
+  const ordered = matched.slice().sort((a, b) => compareByRelevance(a, b, search));
+  const at = clampOffset(offset, ordered.length, limit);
+  return { signals: ordered.slice(at, at + limit), offset: at };
+}
+
+/** Read one page from an already-ordered, already-filtered query. */
+async function readPage(
+  ordered: { range(from: number, to: number): PromiseLike<{ data: unknown[] | null; error: unknown }> },
+  offset: number,
+  limit: number,
+  total: number,
+): Promise<{ signals: MarketSignal[]; offset: number }> {
+  const at = clampOffset(offset, total, limit);
+  const { data, error } = await ordered.range(at, at + limit - 1);
+  if (error) throw error;
+  return { signals: (data ?? []).map((r) => mapSignalRow(r as SignalRow)), offset: at };
 }
 
 /**
@@ -281,6 +466,7 @@ async function signalCoverage(
   query: InventoryQuery,
   column: string,
   nowIso: string,
+  search: SignalSearch | null,
 ): Promise<{ classified: number; eligible: number } | null> {
   const slice = () =>
     applySignalFilters(
@@ -291,6 +477,7 @@ async function signalCoverage(
         .or(publicWindowPredicate(nowIso)),
       query,
       column,
+      search,
     );
 
   const [classifiedRead, eligibleRead] = await Promise.all([

@@ -1046,6 +1046,78 @@
 .ponte-desk .acts { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* ======================================================================
+   9b. BOARD SEARCH, ORDER AND PAGER
+   The Market Signals board's own controls. Built from the primitives that
+   already exist rather than from new ones: the field is the sheet's field
+   (.sigsheet__i), the label is the sheet's label, the action is .b and the
+   pager's controls are .b--2 .b--sm. No page-specific colour, radius,
+   shadow, font or motion is introduced here, and nothing here is a new
+   visual language: it is the Desk's own parts, arranged for a search.
+   ====================================================================== */
+.ponte-desk .sigsearch { margin-bottom: 14px; }
+.ponte-desk .sigsearch__l {
+  display: block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+}
+.ponte-desk .sigsearch__row { display: flex; gap: 9px; align-items: stretch; }
+.ponte-desk .sigsearch__i {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--raised); border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius-in); padding: 10px 12px; min-height: 42px;
+}
+.ponte-desk .sigsearch__i::placeholder { color: var(--ink-3); }
+.ponte-desk .sigsearch__i:focus {
+  outline: none; border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent);
+}
+.ponte-desk .sigsearch__go { flex: 0 0 auto; min-height: 42px; }
+.ponte-desk .sigsearch__active, .ponte-desk .sigsearch__note {
+  font-size: 12.5px; color: var(--ink-2); line-height: 1.55; padding-top: 8px;
+}
+.ponte-desk .sigsearch__active b { color: var(--ink); font-weight: 600; }
+.ponte-desk .sigsearch__active .mono {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ponte-desk .sigsearch__also { color: var(--ink-3); }
+.ponte-desk .sigsearch__clear { color: var(--gold-ink); text-decoration: underline; }
+.ponte-desk .sigsearch__clear:hover { color: var(--ink); }
+
+/* The count and the order sit on one line and wrap to two, in that order:
+   the count is the fact and the control is the adjustment. */
+.ponte-desk .boardbar {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding-bottom: 6px;
+}
+.ponte-desk .boardbar__c { font-size: 11px; color: var(--ink-3); min-width: 0; }
+.ponte-desk .boardbar__note {
+  font-size: 12.5px; color: var(--ink-2); line-height: 1.55; padding-bottom: 10px;
+}
+.ponte-desk .sortlinks { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ponte-desk .sortlinks__l {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ponte-desk .sortlinks__o { font-size: 12px; color: var(--ink-2); }
+.ponte-desk .sortlinks__o:hover { color: var(--gold-ink); }
+/* The current order is stated in weight and in an underline, not in colour
+   alone: Constitution 11.4, selection must survive a monochrome reading. */
+.ponte-desk .sortlinks__o--on {
+  color: var(--ink); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: var(--gold);
+}
+
+.ponte-desk .pager {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 16px 0 4px; margin-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+.ponte-desk .pager__at { font-size: 11px; color: var(--ink-3); text-align: center; }
+.ponte-desk .pager__of { color: var(--mute); }
+
+/* ======================================================================
    10. RESPONSIVE, down to 390
    The register never scrolls sideways and no screen is ever clipped: each
    breakpoint drops a column into the row's own stack rather than letting
@@ -1150,6 +1222,21 @@
 }
 
 @media (max-width: 520px) {
+  /* At 390 the field and its action stop sharing a row. Side by side they
+     would leave the field roughly 210px, which is narrower than the phrases
+     it exists to hold, and a search box a member cannot read their own query
+     in is not a search box. The action goes full width underneath rather than
+     being shrunk to an icon: it is the primary action on the screen. */
+  .ponte-desk .sigsearch__row { flex-direction: column; align-items: stretch; }
+  .ponte-desk .sigsearch__go { width: 100%; }
+  /* The pager's controls keep their 44px touch height and take the row
+     between them, with the range statement below rather than squeezed
+     between two buttons. */
+  .ponte-desk .pager { gap: 10px; }
+  .ponte-desk .pager__at { order: 3; flex-basis: 100%; text-align: left; }
+  .ponte-desk .pager .b { flex: 1 1 0; min-height: 44px; }
+  .ponte-desk .pager__of { display: block; }
+  .ponte-desk .boardbar { gap: 8px; }
   .ponte-desk .fams { grid-template-columns: minmax(0, 1fr); }
   .ponte-desk .sectors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ponte-desk .factgrid { grid-template-columns: minmax(0, 1fr); }

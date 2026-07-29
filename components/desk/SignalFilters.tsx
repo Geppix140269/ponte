@@ -3,7 +3,12 @@ import CategoryLinks, { type CategoryLink } from "@/components/ponte/category/Ca
 import { MARKET_FAMILIES, PRODUCT_SECTORS } from "@/lib/taxonomy/market";
 import { TRADE_SERVICE_CATEGORIES, serviceCategory } from "@/lib/taxonomy/services";
 import { DISTRIBUTION_PARTNER_TYPES, partnerType } from "@/lib/taxonomy/distribution";
-import type { FindQuery } from "@/lib/find/query";
+import {
+  buildBoardHref,
+  clearedAll,
+  withFilters,
+  type FindQuery,
+} from "@/lib/find/query";
 
 /**
  * Structured filters over the Market Signals board.
@@ -21,17 +26,22 @@ import type { FindQuery } from "@/lib/find/query";
  * whole contract.
  */
 
-const FILTER_PARAMS = ["family", "serviceCategory", "partnerType", "sector", "territory"] as const;
-
-/** The board URL for a query, keeping only the filters that are set. */
-export function signalFilterHref(q: Partial<FindQuery>): string {
-  const params = new URLSearchParams();
-  for (const key of FILTER_PARAMS) {
-    const value = q[key];
-    if (value) params.set(key, String(value));
-  }
-  const qs = params.toString();
-  return qs ? `/market-signals?${qs}` : "/market-signals";
+/**
+ * The board URL for a change of filters.
+ *
+ * This used to be a builder of its own, listing five parameters. That was the
+ * defect: it did not know about the direction, the market, the quantity, the
+ * sort or, once the search shipped, the member's own words, so every filter
+ * link silently discarded them. Choosing a category threw away the search that
+ * had just been typed.
+ *
+ * It is now one call into the shared query authority, which preserves the
+ * search and the sort, replaces the structured filters with exactly the set
+ * passed here, and returns to page one because a different filter is a
+ * different result set.
+ */
+export function signalFilterHref(q: FindQuery, filters: Partial<FindQuery>): string {
+  return buildBoardHref(withFilters(q, filters));
 }
 
 export default function SignalFilters({ q }: { q: FindQuery }) {
@@ -42,7 +52,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
     current: q.family === family.key,
     // Changing family clears the family-specific filters below it. Keeping a
     // freight category on a distribution search would be a filter nobody set.
-    href: signalFilterHref({ family: family.key, territory: q.territory }),
+    href: signalFilterHref(q, { family: family.key, territory: q.territory }),
   }));
 
   return (
@@ -54,7 +64,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             key: "__all",
             label: "Every market",
             current: q.family === null,
-            href: signalFilterHref({ territory: q.territory }),
+            href: signalFilterHref(q, { territory: q.territory }),
           },
         ])}
         legend="Filter by market"
@@ -70,7 +80,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             icon: category.icon,
             isOther: category.isOther,
             current: q.serviceCategory === category.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "services",
               serviceCategory: category.key,
               territory: q.territory,
@@ -90,7 +100,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             icon: type.icon,
             isOther: type.isOther,
             current: q.partnerType === type.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "distribution",
               partnerType: type.key,
               territory: q.territory,
@@ -109,7 +119,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             label: sector.label,
             icon: sector.icon,
             current: q.sector === sector.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "products",
               sector: sector.key,
               territory: q.territory,
@@ -138,9 +148,24 @@ export function ActiveFilters({ q }: { q: FindQuery }) {
   return (
     <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 10 }}>
       {parts.join(" · ")}{" "}
-      <Link href="/market-signals" style={{ color: "var(--gold-ink)" }}>
-        Clear
+      {/*
+        Clears the FILTERS and keeps the search. It used to point at a bare
+        `/market-signals`, which cleared everything: a member narrowing a search
+        by category and then removing the category lost the words as well, and
+        got the whole board back under a control labelled as if it had removed
+        one thing.
+      */}
+      <Link href={buildBoardHref(withFilters(q, {}))} style={{ color: "var(--gold-ink)" }}>
+        Clear filters
       </Link>
+      {q.q && (
+        <>
+          {" · "}
+          <Link href={buildBoardHref(clearedAll(q))} style={{ color: "var(--gold-ink)" }}>
+            Clear all
+          </Link>
+        </>
+      )}
     </p>
   );
 }

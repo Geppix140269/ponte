@@ -2,6 +2,25 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 29 July 2026 - Market Signals made searchable, and the search deliberately needs no migration
+
+**Decision:** LB-005. `/market-signals` gets a free-text search over the complete eligible inventory, relevance ordering, exposed pagination and one shared URL contract with `/find`.
+
+**The decision that shaped everything else: the search must work with no SQL applied.** A merge to `main` applies no migration in this repository (the historical chain aborts on its first file), so every schema change is applied by hand with owner approval. A search built on a generated `tsvector`, a maintained search document or an RPC would therefore have shipped as a closed P0 that returned nothing in production until somebody separately ran a file. The search is built on `ilike` over columns that already exist, so it is correct on merge. `20260730a_market_signal_search.sql` adds `pg_trgm` and eight partial GIN trigram indexes, is written and **not applied**, and changes no result when it is: it changes the plan, not the answer. Recorded as PL-016.
+
+**The alias vocabulary is a vocabulary, not a classification.** `lib/search/aliases.ts` joins `gas oil`, `gasoil`, `diesel` and `EN590` into one search, along with seventeen other commercial groups and their common trade-language forms, which is how multilingual input is honoured under an English-only interface. It only ever widens the phrases a query is matched against; every record returned still had to genuinely contain one of them in a public column. So an alias can never manufacture a match, and a wrong alias costs precision rather than truth. That boundary is what keeps it out of `lib/taxonomy/`, where the family rules apply, and it is asserted by a test rather than described. The widening is also stated on the page, because a member who searched for `gas oil` and is shown `Diesel EN590` has been given a correct answer that looks like a wrong one.
+
+**Relevance is bounded, and the bound is disclosed.** Relevance is a function of the query and the row together, so there is no column to sort on and the matched set has to be read before it can be ordered. Above 1,000 matches the board stops claiming relevance, falls back to the database's own recency order, which pages correctly through everything, and says so. Ranking the first thousand and paging through them would have hidden every record past the thousandth from a member who had just been told the total.
+
+**A zero-result search is a third kind of emptiness.** `presentBoard` already separated an empty market from an empty filtered answer; it now separates both from an empty search. "No signal is currently live on the public board" is a statement about the market, and a member reads it as "this market is dead". It must never be printed because somebody's spelling was wrong, or because Ponte's vocabulary does not carry their word yet.
+
+**Also decided:** `signalFilterHref` is replaced by the shared query authority in `lib/find/query.ts`. It serialised five parameters, so every filter link silently discarded the direction, market, quantity, sort and, once it existed, the search. Two builders is how two surfaces come to disagree about what one URL means, so there is one. The six state transitions a member can make (search, filter, sort, page, clear search, clear all) are pure functions with the reset rules asserted once, rather than conventions re-implemented at each href.
+
+**Not decided, and deliberately out of scope:** classifying the existing inventory (PL-017), reconciling the approximately 160-signal batch (PL-018), applying the index migration (PL-016), and any change to `/find`'s Qualified lane beyond making it read the same `q` the same way.
+
+**Implementation boundary:** repository work only. Nothing is deployed, no SQL has been executed, and the blocker stays open in `LAUNCH-BLOCKERS.md` until the search is exercised against the real 3,491-record inventory.
+
+
 ## 29 July 2026 - Two listing migrations applied to production
 
 **Decision:** the owner accepted ADR-0014 and authorised applying `20260728c_automated_listing_publication.sql` and `20260728e_family_commercial_terms.sql` to production, one at a time and in that order, each probe-verified before the next was started. Applied at 15:42:54 and 15:44:45 UTC; hashes recorded in `public.schema_migrations` match both files byte for byte; ledger 41 to 43.

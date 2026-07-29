@@ -53,6 +53,41 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: Market Signal search indexes
+
+`supabase/migrations/20260730a_market_signal_search.sql` (LB-005).
+
+**Not executed anywhere.** Index-only and additive: it creates the `pg_trgm`
+extension, eight partial GIN trigram indexes on `desk_radar` over the public
+columns the search reads (`product`, `summary_line`, `ai_description`,
+`category`, `origin`, `destination`, `hs_code`, `canonical_signal_id`), each
+scoped `where status = 'approved_signal'`, and one btree
+`(spotted_at desc, id desc)` for the board's paging order.
+
+**No column, constraint, policy, trigger, function or default is added or
+changed, and no row is read, written or reclassified.** RLS on `desk_radar` is
+untouched and stays deny-all. There is no backfill: an index is derived from the
+rows already present.
+
+**The search does not depend on it, deliberately.** A merge applies no SQL in
+this repository, so a search built on a new column, a generated `tsvector` or an
+RPC would have shipped as a launch-blocker fix that returned nothing in
+production until somebody separately ran a file. The search is therefore built
+on `ilike` over columns that already exist (verified applied 28 July 2026 via
+`20260728a_market_classification.sql`). This migration only changes the plan:
+applying it changes no result, no ordering, no count and no row.
+
+**Why it matters anyway.** `ilike '%...%'` is unanchored, so no btree can serve
+it and Postgres plans a sequential scan. At the 28 July counts that is 6,735
+rows filtered to 3,491 eligible, which is single-digit milliseconds. The cost is
+linear, so the same query at 100,000 rows costs roughly fifteen times as much.
+`pg_trgm` is the one thing that makes an unanchored `ILIKE` indexable.
+
+Rollback is written out in the file: drop the nine indexes. `pg_trgm` is
+deliberately not dropped, because other objects may come to depend on it.
+
+Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
+
 ## Written but NOT applied: the Deal Room launch slice
 
 Three files, additive throughout, idempotent, and applied in this order at Gate

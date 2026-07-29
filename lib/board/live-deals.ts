@@ -6,6 +6,7 @@ import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { eligibleOwnerIds } from "@/lib/listings/public-filter";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { usesCanonicalKeys, canonicalColumnFor, type InventoryQuery } from "@/lib/board/inventory";
+import { parseSignalSearch, searchPredicate } from "@/lib/search/signal-search";
 import { isVerificationLevel } from "../verification/level";
 
 /**
@@ -83,6 +84,22 @@ export const COUNT_MIN = 8;
 
 const LISTING_COLUMNS =
   "id, user_id, ref, type, product, hs_code, origin, destination, volume, incoterm, payment_terms, validity_type, valid_until, reconfirmed_at, created_at";
+
+/**
+ * The columns a public free-text search may read on `listings`.
+ *
+ * A strict subset of LISTING_COLUMNS. A member's own private prose, their
+ * contact details and every internal field are unreachable by construction: a
+ * search that could test a private column would disclose it, because a hit is
+ * itself an answer about what that column contains.
+ */
+const LISTING_SEARCH_COLUMNS: readonly string[] = [
+  "product",
+  "hs_code",
+  "origin",
+  "destination",
+  "ref",
+];
 
 /** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
 function chapterOf(hsCode: string | null): string | null {
@@ -407,6 +424,7 @@ type Filterable = {
   eq(column: string, value: unknown): Filterable;
   contains(column: string, value: unknown): Filterable;
   ilike(column: string, value: string): Filterable;
+  or(filters: string): Filterable;
 };
 
 function applyDealFilters<T>(builder: T, query: InventoryQuery, omit: string | null): T {
@@ -429,6 +447,21 @@ function applyDealFilters<T>(builder: T, query: InventoryQuery, omit: string | n
   }
   if (query.side) q = q.eq("type", query.side);
   if (query.product) q = q.ilike("product", `%${query.product}%`);
+  /*
+   * The same free text, read the same way, over this table's public columns.
+   *
+   * Not because the Qualified lane needed a search of its own, but because one
+   * URL must not mean two things. `/find` renders both lanes from one query; a
+   * `q` that narrowed the Market Signals lane and was ignored by the Qualified
+   * lane would put a filtered list beside an unfiltered one under a single
+   * heading, and nothing on the page would say which was which.
+   *
+   * These four columns are all in LISTING_COLUMNS, which is the public read
+   * contract for this table. `lib/board/__tests__/market-signals.test.ts`
+   * asserts the containment.
+   */
+  const search = parseSignalSearch(query.text);
+  if (search) q = q.or(searchPredicate(search, LISTING_SEARCH_COLUMNS));
   return q as unknown as T;
 }
 

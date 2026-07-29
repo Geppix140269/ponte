@@ -202,6 +202,7 @@ function signal(over: Partial<MarketSignal> = {}): MarketSignal {
     status: "approved_signal",
     description: null,
     summaryLine: null,
+    category: null,
     ...over,
   };
 }

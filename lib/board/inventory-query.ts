@@ -21,6 +21,15 @@ export type InventoryQuery = {
   /** Free-text product match, still supported alongside the keys. */
   product: string | null;
   side: "offer" | "requirement" | null;
+  /**
+   * The member's own words, matched across every public field.
+   *
+   * Separate from `product`, which is a structured filter on one column that
+   * existing links and existing shared URLs already carry. This one is the
+   * search: it widens through the governed alias vocabulary and it decides the
+   * ordering when it is set.
+   */
+  text: string | null;
 };
 
 export function emptyInventoryQuery(): InventoryQuery {
@@ -33,6 +42,7 @@ export function emptyInventoryQuery(): InventoryQuery {
     territory: null,
     product: null,
     side: null,
+    text: null,
   };
 }
 
