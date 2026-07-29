@@ -15,38 +15,38 @@
 
 .ponte-find {
   /* ---- Surfaces (heritage light) ---- */
-  --surface: #fcfbf7;
-  --raised: #ffffff;
-  --sunken: #f2efe6;
-  --rule: #e5dfd2;
-  --rule-strong: #d5cebc;
+  --surface: var(--pf-surface);
+  --raised: var(--pf-raised);
+  --sunken: var(--pf-sunken);
+  --rule: var(--pf-rule);
+  --rule-strong: var(--pf-rule-strong);
 
   /* ---- Ink ---- */
-  --ink: #0f0f0e;
-  --ink-2: #3a3733;
-  --ink-3: #6e6a61;
-  --mute: #9a958a;
+  --ink: var(--pf-ink);
+  --ink-2: var(--pf-ink-2);
+  --ink-3: var(--pf-ink-3);
+  --mute: var(--pf-mute);
 
   /* ---- Brand signal, never a status ---- */
-  --gold: #c9973a;
-  --gold-ink: #8a6520;
-  --gold-tint: #f5ecd8;
+  --gold: var(--pf-gold);
+  --gold-ink: var(--pf-gold-ink);
+  --gold-tint: var(--pf-gold-tint);
 
   /* ---- Semantic states (reserved meanings, off the accent) ---- */
-  --pos: #0f6e3d;
-  --pos-tint: #e9f1ec;
-  --pos-line: #bfd8c7;
-  --neg: #b4402a;
-  --neg-tint: #f7eae6;
-  --neg-line: #e6c3b8;
-  --review: #4e6472;
-  --review-tint: #eaeff1;
-  --review-line: #c4d2d8;
-  --declared: #6f695e;
-  --declared-tint: #f1eee7;
+  --pos: var(--pf-positive);
+  --pos-tint: var(--pf-positive-tint);
+  --pos-line: var(--pf-positive-line);
+  --neg: var(--pf-danger);
+  --neg-tint: var(--pf-danger-tint);
+  --neg-line: var(--pf-danger-line);
+  --review: var(--pf-review);
+  --review-tint: var(--pf-review-tint);
+  --review-line: var(--pf-review-line);
+  --declared: var(--pf-declared);
+  --declared-tint: var(--pf-declared-tint);
 
   /* ---- Focus ---- */
-  --focus: #1e5fa8;
+  --focus: var(--pf-focus);
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
@@ -667,5 +667,27 @@
   .ponte-landing .agate__panel {
     border-bottom: 1px solid var(--rule-strong) !important;
     border-radius: var(--r-md) !important;
+  }
+}
+
+/* ======================================================================
+   The mobile structural caption floor. Constitution section 18b, ADR-0015
+   Stage 1. Below 860px, mono text carrying structural or factual information is
+   set at no less than 11px. A floor on enumerated roles, not on all mono text.
+   ====================================================================== */
+@media (max-width: 860px) {
+  /* Classification tokens. A Market Signal and a Qualified Opportunity must be
+     equally readable, which is the point of keeping them distinct. */
+  .ponte-find .qorow__kind,
+  .ponte-find .msrow__kind,
+  .ponte-find .qhead__kind,
+  .ponte-find .fstate__badge,
+  /* Field labels and block captions. */
+  .ponte-find .qblock__h,
+  .ponte-find .qfact__k,
+  .ponte-find .qintro__eb,
+  /* Reference lines and the HS code under a category tile. */
+  .ponte-find .hs__tile .n {
+    font-size: 11px;
   }
 }

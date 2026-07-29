@@ -233,3 +233,18 @@
 
 /* Parse-error */
 .ponte-find .err-badge { display: inline-block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neg); }
+
+/* ======================================================================
+   The mobile structural caption floor. Constitution section 18b, ADR-0015
+   Stage 1. Enumerated roles only: field labels, ledger keys, the HS code under a
+   drill tile, and the parse-error badge. Start a Deal is where LB-002 and LB-003
+   are closed, so its labels are the ones that must not be too small to read.
+   ====================================================================== */
+@media (max-width: 860px) {
+  .ponte-find .hstile__n,
+  .ponte-find .tapgroup__l,
+  .ponte-find .lrow__k,
+  .ponte-find .err-badge {
+    font-size: 11px;
+  }
+}

@@ -353,3 +353,15 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
 @media (prefers-reduced-motion: reduce) {
   .pcat__opt { transition: none; }
 }
+
+/* ======================================================================
+   The mobile structural caption floor. Constitution section 18b, ADR-0015
+   Stage 1. The selected marker and the trail key are structural: one states that
+   an option is chosen, the other names which question an answer belongs to.
+   ====================================================================== */
+@media (max-width: 860px) {
+  .pcat__on,
+  .pcat-trail__k {
+    font-size: 11px;
+  }
+}

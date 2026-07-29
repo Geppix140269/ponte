@@ -15,7 +15,7 @@
 .br__deckwrap{position:relative}
 .br__deck{display:block;width:100%;overflow:visible}
 .br__deck path{fill:none;stroke-linecap:round;stroke-width:1.75}
-.br__deck .d-track{stroke:var(--pf-ink);opacity:var(--pf-opacity-track)}
+.br__deck .d-track{stroke:var(--pf-rule-strong)}
 .br__deck .d-live{stroke:var(--pf-ink)}
 .br__deck .d-fwd{stroke:var(--pf-ink);opacity:.55;stroke-dasharray:var(--pf-dash-reserved)}
 .br__deck .d-unconf{stroke:var(--pf-ink);opacity:.6;stroke-dasharray:var(--pf-dash-unconfirmed)}
@@ -47,14 +47,14 @@
 .brst{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;width:176px;max-width:176px;background:none;border:0;padding:0;margin:0;text-align:center;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .brst[disabled]{cursor:default}
 .brst__n{width:var(--br-node);height:var(--br-node);border-radius:50%;border:1.75px solid var(--pf-ink);background:var(--pf-surface);flex:none;transition:width var(--pf-dur-micro) var(--pf-ease),height var(--pf-dur-micro) var(--pf-ease),background var(--pf-dur-micro) var(--pf-ease),border-color var(--pf-dur-micro) var(--pf-ease)}
-.brst__p{width:1px;height:var(--br-pier);background:var(--pf-ink);opacity:.34;transition:opacity var(--pf-dur-micro),width var(--pf-dur-micro)}
+.brst__p{width:1px;height:var(--br-pier);background:var(--pf-rule-strong);transition:background var(--pf-dur-micro),width var(--pf-dur-micro)}
 .brst__ix{display:block;font-family:var(--f-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--pf-ink-3);margin-bottom:6px}
 .brst__t{font-size:15.5px;font-weight:600;line-height:1.28;letter-spacing:-.008em;min-height:2.56em;display:flex;align-items:flex-start;justify-content:center;text-wrap:balance}
 .brst__d{display:block;font-family:var(--f-mono);font-size:10.5px;line-height:1.5;color:var(--pf-ink-3);margin-top:6px;max-width:100%}
 .brst__mk{display:block;font-family:var(--f-mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--pf-gold-ink);margin-top:9px;height:0;overflow:hidden;opacity:0;transition:opacity var(--pf-dur-enter)}
 
 /* hover — a station lifts its own pier, nothing else moves */
-.brst:hover:not([disabled]) .brst__p{opacity:.8}
+.brst:hover:not([disabled]) .brst__p{background:var(--pf-ink-3)}
 .brst:hover:not([disabled]) .brst__n{width:13px;height:13px;background:var(--pf-sunken);margin-block:-1px}
 .brst:hover:not([disabled]) .brst__d{color:var(--pf-ink-2)}
 /* keyboard focus — ring on the node, underline on the label */
@@ -66,7 +66,7 @@
 /* SELECTED — four simultaneous non-colour signals: node fills, node grows,
    pier doubles in weight, and a text marker appears. Colour is the fifth. */
 .brst--on .brst__n{width:15px;height:15px;margin-block:-2px;background:var(--pf-gold-ink);border-color:var(--pf-gold-ink);box-shadow:0 0 0 4px var(--pf-surface),0 0 0 5.5px var(--pf-ink)}
-.brst--on .brst__p{width:2px;opacity:1}
+.brst--on .brst__p{width:2px;background:var(--pf-ink)}
 .brst--on .brst__t{font-weight:700}
 .brst--on .brst__ix{color:var(--pf-gold-ink)}
 .brst--on .brst__d{color:var(--pf-ink-2)}
@@ -77,7 +77,7 @@
    actually reads, and the structural signals carry the state regardless. */
 .br--chosen .brst:not(.brst--on) .brst__t,.br--chosen .brst:not(.brst--on) .brst__ix,.br--chosen .brst:not(.brst--on) .brst__d{color:var(--pf-ink-3)}
 .br--chosen .brst:not(.brst--on) .brst__n{opacity:.5}
-.br--chosen .brst:not(.brst--on) .brst__p{opacity:.16}
+.br--chosen .brst:not(.brst--on) .brst__p{background:var(--pf-rule)}
 .br--chosen .brst:not(.brst--on):hover .brst__t{color:var(--pf-ink)}
 .br--chosen .brst:not(.brst--on):hover .brst__n{opacity:1}
 /* station condition marks reused by the journey and deal-room bridges */
@@ -181,8 +181,8 @@
 .brd{position:relative}
 .brdp{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;width:132px;text-align:center}
 .brdp__n{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--pf-ink);background:var(--pf-surface);flex:none}
-.brdp__p{width:1px;background:var(--pf-ink);opacity:.3}
-.brdp--prin .brdp__p{width:1.75px;opacity:.7}
+.brdp__p{width:1px;background:var(--pf-rule-strong)}
+.brdp--prin .brdp__p{width:1.75px;background:var(--pf-ink-3)}
 .brdp--prin .brdp__n{width:11px;height:11px;background:var(--pf-ink)}
 .brdp__r{font-size:12.5px;font-weight:600;line-height:1.3;margin-top:8px}
 .brdp--add .brdp__r{font-weight:500;font-size:11.5px}

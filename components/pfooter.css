@@ -2,12 +2,14 @@
    colours so it reads correctly on any page it is mounted on, and it is
    box-free by construction (a hairline top rule, no card, no rounded corners). */
 .pfooter {
-  --pf-surface: #fcfbf7;
-  --pf-rule: #e5dfd2;
-  --pf-ink: #0f0f0e;
-  --pf-ink-2: #3a3733;
-  --pf-ink-3: #6e6a61;
-  --pf-gold-ink: #8a6520;
+  /* The six colour customs this scope used to declare are gone. They re-declared
+     the APPROVED token names as literals scoped to the footer, so `var(--pf-ink-3)`
+     meant one thing here and another everywhere else: the footer shadowed the token
+     authority with a stale copy of it. An alias cannot fix a name collision, since
+     `--pf-ink: var(--pf-ink)` is circular, so the declarations are removed and the
+     footer now inherits the real tokens from :root. ADR-0015 section S-4.
+     The font stacks below keep the --pf- prefix: they collide with nothing in the
+     approved set, and renaming them is not in this ADR's scope. */
   --pf-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
   --pf-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
   --pf-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;

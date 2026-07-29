@@ -74,8 +74,8 @@
 
      .brst:hover:not([disabled]) .brst__n   (0,4,0)  13px, sunken fill
      .brst--on            .brst__n          (0,2,0)  15px, gold-ink fill
-     .brst:hover:not([disabled]) .brst__p   (0,4,0)  opacity .8
-     .brst--on            .brst__p          (0,2,0)  2px, opacity 1
+     .brst:hover:not([disabled]) .brst__p   (0,4,0)  lifted pier
+     .brst--on            .brst__p          (0,2,0)  2px, full-weight pier
 
    So moving the pointer onto the family the member had already chosen took its
    node from 15px down to 13px, swapped the gold fill for the sunken grey and
@@ -99,8 +99,14 @@
   border-color: var(--pf-gold-ink);
 }
 
+/* Stage 1 of ADR-0015 moved the pier from ink-at-an-opacity to a solid rule
+   token, so this override has to restate the COLOUR rather than the opacity. It
+   is the same correction for the same reason: the hover rule is more specific
+   than the selected one, and after the token change hover would repaint a chosen
+   station's pier from `--pf-ink` down to `--pf-ink-3`. That is the DS-8 defect
+   again, in the new vocabulary, and it would have been invisible in a token diff. */
 .br .brst--on:hover:not([disabled]) .brst__p {
-  opacity: 1;
+  background: var(--pf-ink);
 }
 
 /* The pier is a vertical rule when the bridge is horizontal and a short

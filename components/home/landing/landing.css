@@ -10,30 +10,30 @@
 
 .ponte-landing {
   /* ---- Surfaces (heritage light) ---- */
-  --surface: #fcfbf7;
-  --raised: #ffffff;
-  --sunken: #f2efe6;
-  --rule: #e5dfd2;
-  --rule-strong: #d5cebc;
+  --surface: var(--pf-surface);
+  --raised: var(--pf-raised);
+  --sunken: var(--pf-sunken);
+  --rule: var(--pf-rule);
+  --rule-strong: var(--pf-rule-strong);
 
   /* ---- Ink ---- */
-  --ink: #0f0f0e;
-  --ink-2: #3a3733;
-  --ink-3: #6e6a61;
-  --mute: #9a958a;
+  --ink: var(--pf-ink);
+  --ink-2: var(--pf-ink-2);
+  --ink-3: var(--pf-ink-3);
+  --mute: var(--pf-mute);
 
   /* ---- Brand signal, never a status ---- */
-  --gold: #c9973a;
-  --gold-ink: #8a6520;
-  --gold-tint: #f5ecd8;
+  --gold: var(--pf-gold);
+  --gold-ink: var(--pf-gold-ink);
+  --gold-tint: var(--pf-gold-tint);
 
   /* ---- Semantic states (only fact colours are used here) ---- */
-  --pos: #0f6e3d;
-  --review: #4e6472;
-  --neg: #b4402a;
+  --pos: var(--pf-positive);
+  --review: var(--pf-review);
+  --neg: var(--pf-danger);
 
   /* ---- Focus ---- */
-  --focus: #1e5fa8;
+  --focus: var(--pf-focus);
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;

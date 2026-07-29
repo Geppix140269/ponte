@@ -28,7 +28,7 @@ approved decisions require without touching this record.
 | `01_IMPLEMENTATION_NOTES.md` | `fda3acb8893c0a088dd2f9b49f18e54c6dbb10bb4351517f6fc9f9e72979688b` |
 | `Ponte Bridge System.html` | `135027122074eed230bcce38ecca2dc7a679e26f424672c26328b9866b2d9b14` |
 | `Ponte Landing - Bridge.html` | `ffe2a287a2604409ff56798b2b276d31a680c67278577df4847a077f95f82d36` |
-| `ponte-bridge.css` | `90e20b416aeda96f6bdb87a6a80191038bae114fa554441c29329e0159296afa` |
+| `ponte-bridge.css` | `ffe542e020f5f563d45d9f81b8f34ba3aa9d24748123b9a9e0c3f181feddf6f5` |
 | `ponte-bridge.js` | `3ff3210464d3208c058bcd9b7feb80801c77dc23db28927c8997df8aa62b5f4f` |
 | `ponte-bridge-demos.js` | `f909d08714825515e9297f603493016c4eae060e1f73355d8fbf4c580c558093` |
 | `ponte-flow/tokens/ponte-flow-tokens.css` | `dabc089f0b9822242cc0a3d8783c2b19ab0021ce98c82d9cfd8f6d1648483d5f` |
@@ -53,3 +53,9 @@ The repository authority contains:
 - the existing canonical Ponte Flow tokens and icon system.
 
 Reference PNGs are approval evidence rather than production assets. The implementation must render from the approved components, code, tokens and real data; screenshots must never be shipped as UI.
+
+## Amendments to the approved delivery
+
+| Date | File | Authority | What changed |
+|---|---|---|---|
+| 29 July 2026 | `ponte-bridge.css` | ADR-0015 section S-3 | Structural contrast only. The passive deck track, the passive station pier, the receded passive pier and the Deal Room passive pier moved from `--pf-ink` at an opacity to the approved structural rule tokens. Geometry, station fractions, node sizes, labels, copy, motion, durations, easing, the gold signal, the selected destination and every semantic state are byte-for-byte unchanged. Verified against re-taken reference renders. |

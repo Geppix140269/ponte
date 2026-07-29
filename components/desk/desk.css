@@ -75,29 +75,37 @@
   --select: var(--pf-select);
 
   /* ======================================================================
-     LOCAL EXTENSIONS, values with no approved `--pf-` counterpart.
+     PROMOTED. These eight were local extensions, declared here as literal hex
+     because the approved Flow set defined each semantic colour but not its
+     surface tint or its hairline.
 
-     Each is a wash or hairline derived from a semantic token above, used to
-     tint a row or draw a status rule at a weight the base token is too strong
-     for. The Flow set defines the semantic colour but not its surface tint,
-     so these cannot be aliased today. They are recorded in
-     design-system/ponte-flow/documentation/compatibility-aliases.md as
-     candidates for promotion into the approved token set, and they are the
-     only literal colours this file may declare.
+     ADR-0015 decided the promotion that
+     design-system/ponte-flow/documentation/compatibility-aliases.md section 3
+     had been holding for an owner ruling. All eight now exist in the approved
+     token set and are aliased here, so the Desk holds no copy of an approved
+     value and there is one place each can change.
 
-     `--gold-tint` is the one the Phase 1 audit named explicitly (section A.2).
-     It is a gold wash on the kicker and the boundary heading. It is a surface,
-     never a status: Constitution section 6 keeps gold off verification,
-     approval, warning and success, and a tint does not soften that rule.
+     The three `*-line` values are why this could not wait: each measured about
+     1.5:1 against white, against the 3:1 Constitution section 18a asks of a band
+     edge, so their values had to change. Once an approved counterpart exists,
+     token-authority.test.ts correctly refuses to let a changed value sit in a
+     local extension.
+
+     `--gold-tint` is a SURFACE, never a status. Constitution section 6 keeps gold
+     off verification, approval, warning and success, and a tint does not soften
+     that.
      ====================================================================== */
-  --gold-tint: #f5ecd8;
-  --pos-tint: #e9f1ec;
-  --pos-line: #bfd8c7;
-  --neg-tint: #f7eae6;
-  --neg-line: #e6c3b8;
-  --review-tint: #eaeff1;
-  --review-line: #c4d2d8;
-  --declared-tint: #f1eee7;
+  --gold-tint: var(--pf-gold-tint);
+  --pos-tint: var(--pf-positive-tint);
+  --pos-line: var(--pf-positive-line);
+  --neg-tint: var(--pf-danger-tint);
+  --neg-line: var(--pf-danger-line);
+  --review-tint: var(--pf-review-tint);
+  --review-line: var(--pf-review-line);
+  --declared-tint: var(--pf-declared-tint);
+
+  /* Gold as a structural line, cap, bar or state marker. Constitution 6b. */
+  --gold-rule: var(--pf-gold-rule);
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
@@ -1171,7 +1179,9 @@
     padding: 10px 0 0; border-left: 0; border-top: 1px solid rgba(242, 239, 232, 0.14);
   }
   .ponte-desk .rail__origin b { margin: 0; }
-  .ponte-desk .st b { font-size: 8px; }
+  /* Superseded by the section 18b caption floor at the foot of this file.
+     Kept as a comment rather than deleted so the change is visible where the
+     old value used to be. */
 }
 
 /* Motion is restrained and always optional. The rail pulse is the only
@@ -1186,4 +1196,76 @@
     scroll-behavior: auto !important;
   }
   .ponte-desk .st--active i { box-shadow: 0 0 0 3px rgba(217, 172, 85, 0.28); }
+}
+
+/* ======================================================================
+   11. THE MOBILE STRUCTURAL CAPTION FLOOR
+
+   Constitution section 18b, via ADR-0015 Stage 1. Below 860px, mono text that
+   carries structural or factual information is set at no less than 11px.
+
+   Contrast is a multiplier on legibility, not a substitute for size. The audit
+   found nine of its fifteen components printing structural information in mono
+   between 8 and 10.5px, and a two-letter country code at 8px on a phone in
+   daylight is not rescued by any ratio.
+
+   This is a FLOOR on enumerated roles, not a licence to enlarge all mono text.
+   The roles are the ones the ExecPlan names: the fact register, the journey rail,
+   crumb trails, classification tokens, field labels and reference lines. Decorative
+   and non-structural mono is deliberately untouched, and so is every label inside
+   the approved Bridge package, which ADR-0015 section S-3 restricts to contrast
+   alone.
+   ====================================================================== */
+@media (max-width: 860px) {
+  /* The fact register: column heads, references, field labels, source lines. */
+  .ponte-desk .reg__head > span,
+  .ponte-desk .reg__cls u,
+  .ponte-desk .reg__f dt,
+  .ponte-desk .reg__src,
+  .ponte-desk .reg__band,
+  .ponte-desk .factgrid dt,
+  /* Record surfaces: the reference and the age line either side of a title. */
+  .ponte-desk .rec__top .r,
+  .ponte-desk .rec__top .a,
+  .ponte-desk .rec__f dt,
+  /* The classification token. A Market Signal must not be harder to read than a
+     Member Opportunity, which is half of why the audit flagged it. */
+  .ponte-desk .cls,
+  /* Crumb trails. */
+  .ponte-desk .crumbs,
+  /* Field labels on the request sheet. */
+  .ponte-desk .sigsheet__l,
+  /* Panel and section captions that carry a count or a state. */
+  .ponte-desk .panel__h b,
+  .ponte-desk .panel__h span {
+    font-size: 11px;
+  }
+
+  /* The journey rail. Its labels were the worst in the audit at 8.5px, and they
+     name the position a member is at. `white-space: nowrap` is kept from the
+     existing breakpoint so a station name still never breaks mid-word. */
+  .ponte-desk .rail__name,
+  .ponte-desk .st b,
+  .ponte-desk .rail__origin b,
+  .ponte-desk .rail__origin span {
+    font-size: 11px;
+  }
+}
+
+/* Below 520px the rail already wraps to two rows, and four station names at 11px
+   no longer fit one line. The existing rule dropped them to 8px to force the fit,
+   which is the trade the floor exists to refuse. Instead the labels keep 11px and
+   the rail is allowed to wrap: a legible name on two lines beats an illegible one
+   on one. */
+@media (max-width: 520px) {
+  .ponte-desk .st b {
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+  .ponte-desk .rail__stations {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
 }
