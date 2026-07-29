@@ -61,7 +61,23 @@ Changing family clears the previous family's classification AND its commercial f
 
 The API identifies the family, validates that family's payload, and refuses cross-family data rather than accepting one universal payload and ignoring the inappropriate parts in the UI. A service specialisation is validated against the chosen service category, not merely against the global list: "sea freight" is a real key and is not an answer a customs brokerage record may give.
 
-### 9. Storage is additive and unapplied
+### 9. A family's own vocabulary survives publication
+
+The decision applies downstream of the composer as well as inside it. Every surface that presents a STORED record — the public detail page, the shareable marketplace page, the member's own records, the admin exception console and the member emails — presents that record in its own family's vocabulary, through one shared presenter (`lib/listings/record-facts.ts`).
+
+This is stated because it did not hold. Each of those surfaces printed its own fixed list of product columns, so a published freight-forwarding record answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated", and its eight stated service terms appeared nowhere but inside the prose. A member walked a correct journey and then read a record describing a shipment they never offered. The member emails compounded it by calling every record an "offer".
+
+The same rule as §4 applies: a fact a family does not have produces no row, at model-generation level. And the same rule as the composer's one-ended route: a product offer reads "Ships from Argentina" rather than a bare place under a heading of "Route".
+
+### 10. Destroying a member's answer requires their consent
+
+Changing a classification answer invalidates the answers conditioned by it, and §7 is unchanged: those values are removed, not hidden. What is added is that the member is told first, and by name.
+
+A member who chose Freight forwarding, answered Sea, Road, temperature controlled and perishable, then changed the category to Customs brokerage lost four deliberate answers with no notice; their only clue was an absence. `lib/structure/discard.ts` computes what a change would discard, and the composer asks before it writes.
+
+The warning is bounded in both directions. It appears only when something real would be lost — a change that costs nothing is never interrupted, because a confirmation on every change teaches members to dismiss it unread — and it names only what would actually be lost, so an answer that survives the change is never reported as at risk.
+
+### 11. Storage is additive and unapplied
 
 `service_terms` and `distribution_terms` are jsonb, alongside the typed classification columns that already exist. They are read with a record rather than searched across it, which is why they are documents and not fourteen sparse columns; the two dimensions a market would plausibly be filtered by (service category, coverage territory) are already typed and indexed by ADR-0011's migration.
 
@@ -75,6 +91,10 @@ The migration is additive, preserves every existing row, changes no RLS policy, 
 - The publication validator's coverage rule for non-product families now reads the structured coverage fields, and still accepts the legacy route columns, so no record created before this change becomes unpublishable.
 - Adding a category-conditioned question is one entry in `SERVICE_SPECIALISATION_GROUPS`, not a branch in a component.
 - Not every service category is modelled to the same depth. The architecture supports category-conditioned questions; a complete model of eleven professions is deliberately not attempted in one change, and a category with no conditioned dimension is simply never asked one.
+- A published record reads back in the vocabulary it was built in, on every surface that presents it, and a member email names the record the member actually posted rather than calling all three families an "offer".
+- The missing-column fallback is staged: an absent `service_terms` or `distribution_terms` costs a record its family terms and nothing else. Dropping the two groups together filed a correctly classified submission as an unclassified row, which is the defect ADR-0011 exists to prevent, reintroduced by a safety net. The rule now lives in `lib/listings/write-fallback.ts` with tests, rather than in an untested closure inside the submit route.
+- A classification change that would destroy work stops and names it. A change that would not is unaffected.
+- Not addressed here, and recorded as PL-004: `canonicalServiceCategory` and `canonicalPartnerType` exist to reconcile a superseded stored key onto its current one and have no callers, so a record stored under a superseded key would lose its specialisations on edit. Production incidence is unmeasured and is not asserted to be zero.
 
 ## Alternatives rejected
 

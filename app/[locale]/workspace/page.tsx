@@ -6,12 +6,19 @@ import { landingFontVars } from "@/components/home/landing/fonts";
 import FindChrome from "@/components/find/FindChrome";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import "@/components/find/find.css";
 
 export const dynamic = "force-dynamic";
 
 type Waiting = { id: string; created_at: string; ref: string; product: string };
-type Mine = { id: string; ref: string; product: string; status: string };
+/**
+ * `kind` is the record's own family and intent in words, not the legacy
+ * three-value `type`. A member with a freight-forwarding record and a durum
+ * wheat offer saw two identical rows before this: the same title treatment,
+ * the same status, and nothing saying which market either belonged to.
+ */
+type Mine = { id: string; ref: string; product: string; status: string; kind: string };
 
 function fmtDate(iso: string, locale: string): string {
   const d = new Date(iso);
@@ -67,13 +74,23 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
     }));
 
     // H04 , listings this member owns.
+    //
+    // The canonical pair is read alongside so each row can name its own market.
+    // Only the two columns are needed: `presentRecord` derives the kind from
+    // them and falls back to the legacy `type` for rows that predate them.
     const { data: own } = await sb
       .from("listings")
-      .select("id, ref, product, status")
+      .select("id, ref, product, status, type, market_family, market_intent")
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false })
       .limit(20);
-    mine = (own ?? []).map((l) => ({ id: l.id, ref: l.ref, product: l.product, status: l.status }));
+    mine = (own ?? []).map((l) => ({
+      id: l.id,
+      ref: l.ref,
+      product: l.product,
+      status: l.status,
+      kind: presentRecord(l as FactsRow).kindLabel,
+    }));
   }
 
   return (
@@ -123,7 +140,9 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
                     {m.status === "approved" ? t("workspace.mineStatusApproved") : t("workspace.mineStatusSubmitted")}
                   </span>
                 </div>
-                <p className="wsrow__meta">{m.ref}</p>
+                <p className="wsrow__meta">
+                  {m.ref} · {m.kind}
+                </p>
               </div>
             ))
           ) : (

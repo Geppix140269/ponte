@@ -52,8 +52,15 @@ function entered(family: string, intent: string, over: Partial<StructureDraft> =
 function classify(initial: StructureDraft): { page: Mounted; draft: () => StructureDraft } {
   const props: Record<string, unknown> = {
     draft: initial,
-    set: (patch: Partial<StructureDraft>) => {
-      props.draft = { ...(props.draft as StructureDraft), ...patch };
+    // The functional form as well as the patch, because the step uses it: the
+    // specialisation clean-up after a category change has to read the CURRENT
+    // draft, and a harness that silently spread a function would report the
+    // change as having no effect at all.
+    set: (
+      patch: Partial<StructureDraft> | ((d: StructureDraft) => Partial<StructureDraft>),
+    ) => {
+      const current = props.draft as StructureDraft;
+      props.draft = { ...current, ...(typeof patch === "function" ? patch(current) : patch) };
     },
     icons: {},
     onNext: () => {},
@@ -347,9 +354,36 @@ test("walking forward and back leaves every earlier answer intact", () => {
   assert.deepEqual(state.draft().serviceSubcategories, ["freight.ocean"]);
 });
 
+/**
+ * The discard warning, or null when the change was free enough not to raise one.
+ *
+ * Found through `deep` because the warning is its own component, and the
+ * project renderer invokes only the component under test.
+ */
+function warning(page: Mounted): TestElement | null {
+  return deep(page).find((el) => el.props.className === "pcat-discard") ?? null;
+}
+
+/** A button in the warning, by the copy key it carries. */
+function discardButton(page: Mounted, label: string): TestElement | undefined {
+  return deep(page).find((el) => el.type === "button" && el.props.children === label);
+}
+
+/** Agree to the pending discard. */
+function confirmDiscard(page: Mounted): void {
+  const confirm = discardButton(page, "classify.discardConfirm");
+  assert.ok(confirm, "the warning offered no way to proceed");
+  fire(confirm!, "onClick");
+}
+
 test("changing the category clears details that belonged to the old one", () => {
   // The opposite rule, and it matters just as much: keeping ocean freight after
   // a switch to customs would store a classification nobody chose.
+  //
+  // It is now a two-step act. The member has answered something that the change
+  // would destroy, so they are told what it costs and the change waits for
+  // them. The clearing rule is unchanged; what changed is that it happens with
+  // their consent instead of behind their back.
   const state = classify(
     entered("services", "seek_trade_service", {
       serviceCategory: "freight",
@@ -357,8 +391,41 @@ test("changing the category clears details that belonged to the old one", () => 
     }),
   );
   fire(picker(state.page), "onChange", "customs");
+
+  assert.equal(state.draft().serviceCategory, "freight", "the category changed before the member agreed");
+  assert.deepEqual(state.draft().serviceSubcategories, ["freight.ocean"], "the detail was dropped before the member agreed");
+  assert.ok(warning(state.page), "nothing warned the member their answer would be discarded");
+
+  confirmDiscard(state.page);
   assert.equal(state.draft().serviceCategory, "customs");
   assert.deepEqual(state.draft().serviceSubcategories, []);
+});
+
+test("keeping what you have leaves the earlier answer exactly as it was", () => {
+  const state = classify(
+    entered("services", "seek_trade_service", {
+      serviceCategory: "freight",
+      serviceSubcategories: ["freight.ocean"],
+    }),
+  );
+  fire(picker(state.page), "onChange", "customs");
+
+  const keep = discardButton(state.page, "classify.discardKeep");
+  assert.ok(keep, "the warning offered no way to back out");
+  fire(keep!, "onClick");
+
+  assert.equal(state.draft().serviceCategory, "freight");
+  assert.deepEqual(state.draft().serviceSubcategories, ["freight.ocean"]);
+  assert.equal(warning(state.page), null, "the warning stayed up after the member declined");
+});
+
+test("a category change that costs nothing is never interrupted", () => {
+  // The other half of the rule. A confirmation on every change teaches members
+  // to dismiss it unread, which protects them less than no warning at all.
+  const state = classify(entered("services", "seek_trade_service"));
+  fire(picker(state.page), "onChange", "freight");
+  assert.equal(warning(state.page), null, "a free change asked for confirmation");
+  assert.equal(state.draft().serviceCategory, "freight");
 });
 
 test("changing the coverage scope drops territories the new scope cannot hold", () => {
@@ -381,8 +448,63 @@ test("changing the coverage scope drops territories the new scope cannot hold", 
   forward();
   forward();
   fire(picker(state.page), "onChange", "worldwide");
+
+  // Two named countries are about to be thrown away, so the member is asked.
+  assert.ok(warning(state.page), "the territories would have gone without notice");
+  confirmDiscard(state.page);
   assert.equal(state.draft().coverageScope, "worldwide");
   assert.deepEqual(state.draft().territoryCodes, []);
+});
+
+test("a coverage change that keeps the countries is not interrupted", () => {
+  const state = classify(
+    entered("distribution", "offer_distribution_or_representation", {
+      distributionPartnerType: "distributor",
+      coverageScope: "country",
+      territoryCodes: ["IT"],
+    }),
+  );
+  const forward = () =>
+    fire(
+      state.page.find(
+        (el) => el.type === "button" && el.props.className === "fbtn fbtn--lg",
+        "continue",
+      ),
+      "onClick",
+    );
+  forward();
+  forward();
+  // One country -> Several countries keeps the list, so there is nothing to
+  // warn about and the correction stays frictionless.
+  fire(picker(state.page), "onChange", "countries");
+  assert.equal(warning(state.page), null);
+  assert.equal(state.draft().coverageScope, "countries");
+  assert.deepEqual(state.draft().territoryCodes, ["IT"]);
+});
+
+test("the discard warning is announced as a decision, not as a passing note", () => {
+  const state = classify(
+    entered("services", "seek_trade_service", {
+      serviceCategory: "freight",
+      serviceSubcategories: ["freight.ocean"],
+    }),
+  );
+  fire(picker(state.page), "onChange", "customs");
+
+  const box = warning(state.page)!;
+  assert.equal(box.props.role, "alertdialog");
+  assert.equal(box.props["aria-labelledby"], "pcat-discard-h");
+
+  // Keep comes first and holds focus, so the destructive option is never the
+  // one a member reaches by pressing Enter out of habit.
+  const buttons = deep(state.page).filter(
+    (el) =>
+      el.type === "button" &&
+      (el.props.children === "classify.discardKeep" ||
+        el.props.children === "classify.discardConfirm"),
+  );
+  assert.equal(buttons[0].props.children, "classify.discardKeep");
+  assert.equal(buttons[0].props.autoFocus, true);
 });
 
 // ---------------------------------------------------------------------------

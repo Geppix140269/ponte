@@ -261,6 +261,63 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
   border-radius: var(--pf-r-sm);
 }
 
+/* What a change would discard, stated before it happens.
+
+   Inline rather than a modal: the answers at stake are visible on this screen,
+   and covering them asks a member to decide about work they can no longer see.
+   Approved tokens only - the raised surface, the standard rule, the standard
+   radius and the standard focus ring. No page-specific colour is introduced:
+   this is a consequential decision, not a warning state, and dressing it in a
+   negative colour would tell the member something has gone wrong. */
+.pcat-discard {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: var(--pf-raised);
+  border: 1px solid var(--pf-rule);
+  border-radius: var(--pf-r-md, 12px);
+}
+.pcat-discard__h {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pf-ink);
+}
+.pcat-discard__d {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--pf-ink-3);
+}
+.pcat-discard__l {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pcat-discard__l li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+.pcat-discard__k {
+  font-family: var(--f-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+.pcat-discard__v { color: var(--pf-ink); }
+.pcat-discard__a {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 /* Chosen territories, as removable entries rather than a sentence. */
 .pcat-terr { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .pcat-terr__i {

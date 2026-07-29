@@ -17,7 +17,15 @@
 
 import assert from "node:assert/strict";
 import { draftFromRow, validityFromRow, type ResumableRow } from "../resume";
-import { openGaps, blockers } from "../draft";
+import {
+  openGaps,
+  blockers,
+  toSubmitPayload,
+  submitPayloads,
+  synthesiseDetails,
+  askKeyFor,
+} from "../draft";
+import { discardedByFamilyChange } from "../discard";
 import { familyOf } from "../procedures/registry";
 import {
   normaliseMarketFamily,
@@ -320,6 +328,245 @@ test("an accepted declaration resumes as accepted", () => {
   assert.equal(d.declarationAccepted, true);
   const fresh = draftFromRow(productRow, NOW);
   assert.equal(fresh.declarationAccepted, false, "and is not assumed when never accepted");
+});
+
+/* ------------------------------------------------------------------ */
+/* E. Round trips: edit, duplicate, intent change, family change       */
+/* ------------------------------------------------------------------ */
+//
+// Resuming a row is only half the contract. A member who resumes a record then
+// SUBMITS it again must get the same record back, and a member who changes
+// something on the way through must get exactly the change they asked for and
+// no other. These walk the full circle - row -> draft -> payload - because that
+// is the loop an edit actually performs, and a fault anywhere in it silently
+// rewrites a record the member believed they were only touching.
+
+const OPTS = { draft: false, nowIso: "2026-07-28T00:00:00.000Z" };
+
+// These fixtures use REAL taxonomy keys, unlike the illustrative rows above.
+// They have to: a round trip passes through `clearForeignClassification`, which
+// validates a specialisation against its category, so a row keyed with an
+// invented category would lose its specialisations here for a reason that has
+// nothing to do with what is being tested.
+//
+// That validation is correct, and it exposed something adjacent that is not
+// fixed here: `canonicalServiceCategory` and `canonicalPartnerType` exist to
+// reconcile a legacy stored key onto its current one, and nothing calls them,
+// so a record stored under a superseded key would lose its specialisations on
+// edit. Recorded as a Post-Launch ticket rather than changed under this task.
+const realFreightRow: ResumableRow = {
+  id: "row-r1",
+  status: "draft",
+  type: "service",
+  market_family: "services",
+  market_intent: "offer_trade_service",
+  product: "Freight forwarding",
+  service_category_key: "freight",
+  service_subcategory_keys: ["freight.forwarding"],
+  payment_terms: "Net 30",
+  submitter_role: "Service provider",
+  validity_type: "standing",
+  service_terms: {
+    scope: "Port-to-door ocean freight, FCL and LCL.",
+    engagement: "ongoing",
+    coverage_countries: ["NL", "DE"],
+    trade_lanes: "Rotterdam to Hamburg",
+    specialisation_keys: ["sea", "road"],
+    capability: "40 containers a month",
+    pricing_basis: "per_shipment",
+    availability: "immediate",
+  },
+};
+
+const realDistributionRow: ResumableRow = {
+  id: "row-r2",
+  status: "draft",
+  type: "offer",
+  market_family: "distribution",
+  market_intent: "offer_distribution_or_representation",
+  product: "Distributor",
+  distribution_partner_type_key: "distributor",
+  distribution_relationship_terms: ["exclusive"],
+  coverage_scope_key: "country",
+  territory_codes: ["ES"],
+  product_sector_key: "food",
+  submitter_role: "Distributor",
+  validity_type: "standing",
+  distribution_terms: {
+    objective: "Place a European FMCG portfolio into Spanish retail.",
+    product_scope: "Ambient food and beverage",
+    channel_keys: ["retail", "wholesale"],
+    capability_keys: ["warehousing", "marketing"],
+    commercial_expectations: "Exclusive, 12-month trial, opening order negotiable",
+    timing: "within_quarter",
+  },
+};
+
+/** The stored row a payload would become, for a second trip round the loop. */
+function rowFromPayload(payload: Record<string, unknown>): ResumableRow {
+  const terms = (payload.service_terms ?? null) as Record<string, unknown> | null;
+  const dist = (payload.distribution_terms ?? null) as Record<string, unknown> | null;
+  return {
+    ...(payload as ResumableRow),
+    service_terms: terms,
+    distribution_terms: dist,
+  };
+}
+
+test("editing a resumed trade service and resubmitting it returns the same record", () => {
+  const first = draftFromRow(realFreightRow, NOW);
+  const payload = toSubmitPayload(first, OPTS);
+  const second = draftFromRow(rowFromPayload(payload), NOW);
+
+  assert.deepEqual(second.canonical, first.canonical);
+  assert.equal(second.serviceCategory, first.serviceCategory);
+  assert.deepEqual(second.serviceSubcategories, first.serviceSubcategories);
+  assert.deepEqual(second.serviceTerms, first.serviceTerms);
+  // And the product fields are still absent on the second trip, not resurrected
+  // by a round through a payload that has columns for them.
+  for (const field of PRODUCT_ONLY) {
+    assert.equal(
+      (second as unknown as Record<string, unknown>)[field] ?? null,
+      null,
+      `${field} appeared on a trade service after an edit round trip`,
+    );
+  }
+});
+
+test("editing a resumed distribution opportunity returns the same record", () => {
+  const first = draftFromRow(realDistributionRow, NOW);
+  const second = draftFromRow(rowFromPayload(toSubmitPayload(first, OPTS)), NOW);
+  assert.deepEqual(second.canonical, first.canonical);
+  assert.equal(second.distributionPartnerType, first.distributionPartnerType);
+  assert.deepEqual(second.territoryCodes, first.territoryCodes);
+  assert.deepEqual(second.distributionTerms, first.distributionTerms);
+});
+
+test("editing a resumed product record returns the same record", () => {
+  const first = draftFromRow(productRow, NOW);
+  const second = draftFromRow(rowFromPayload(toSubmitPayload(first, OPTS)), NOW);
+  assert.equal(second.product, first.product);
+  assert.equal(second.hsCode, first.hsCode);
+  assert.equal(second.quantity, first.quantity);
+  assert.equal(second.unit, first.unit);
+  assert.equal(second.incoterm, first.incoterm);
+  assert.equal(second.origin, first.origin);
+});
+
+test("changing the intent inside a family keeps every answer and flips the wording", () => {
+  // Offering a service and needing one are the same eight facts read from
+  // opposite sides. Nothing is discarded, because nothing stops being a fact
+  // the member has: what changes is who is being described.
+  const offering = draftFromRow(realFreightRow, NOW);
+  const needing: typeof offering = {
+    ...offering,
+    canonical: { family: "services", intent: "seek_trade_service" },
+  };
+
+  assert.deepEqual(needing.serviceTerms, offering.serviceTerms, "an intent change lost a service term");
+  assert.deepEqual(openGaps(needing), openGaps(offering), "an intent change changed which facts are open");
+
+  // The questions and the review both change side.
+  assert.equal(askKeyFor("serviceCapability", offering), "ask.serviceCapability");
+  assert.equal(askKeyFor("serviceCapability", needing), "ask.serviceCapabilityNeeded");
+  assert.match(synthesiseDetails(needing), /Capacity required:/);
+  assert.match(synthesiseDetails(offering), /Service capability:/);
+
+  // And the record it becomes carries the new intent, not the old one.
+  const payload = toSubmitPayload(needing, OPTS);
+  assert.equal(payload.market_intent, "seek_trade_service");
+  assert.equal((payload.service_terms as Record<string, unknown>).capability, "40 containers a month");
+});
+
+test("changing the distribution intent flips whose capability is being described", () => {
+  const seeking = draftFromRow(
+    { ...realDistributionRow, market_intent: "seek_distribution_partner" },
+    NOW,
+  );
+  const representing = {
+    ...seeking,
+    canonical: { family: "distribution", intent: "seek_brands_or_products_to_represent" },
+  };
+  // Seeking brands to represent is the member stating their OWN channels, so it
+  // reads like offering representation and not like requiring it.
+  assert.equal(askKeyFor("distributionCapabilities", seeking), "ask.distributionCapabilitiesSought");
+  assert.equal(
+    askKeyFor("distributionCapabilities", representing),
+    "ask.distributionCapabilitiesOffered",
+  );
+  assert.match(synthesiseDetails(representing), /Capabilities offered:/);
+  assert.match(synthesiseDetails(seeking), /Capabilities expected of the partner:/);
+});
+
+test("changing the family discards the old family's answers and nothing else", () => {
+  const service = draftFromRow(realFreightRow, NOW);
+  // What the member is told they will lose, before it happens.
+  const warned = discardedByFamilyChange(service, "distribution").map((i) => i.key);
+  assert.ok(warned.includes("serviceScope"), "the warning omitted the service scope");
+  assert.ok(warned.includes("serviceCapability"), "the warning omitted the service capability");
+
+  const moved = { ...service, canonical: { family: "distribution", intent: "seek_distribution_partner" } };
+  const payload = toSubmitPayload(moved, OPTS);
+
+  // Everything warned about is gone from the record...
+  assert.equal(payload.service_terms, undefined);
+  assert.equal(payload.service_category_key, null);
+  assert.deepEqual(payload.service_subcategory_keys, []);
+  assert.ok(!/Port-to-door ocean freight/.test(payload.details as string), "a discarded service scope survived into the record's text");
+
+  // ...and everything shared is kept, which is why the warning must not name it.
+  assert.equal(payload.submitter_role, "Service provider");
+  assert.equal(payload.validity_type, "standing");
+  assert.equal(payload.market_family, "distribution");
+});
+
+test("a multi-product draft duplicates into one clean record per product", () => {
+  // The composer's only duplication path: a member who uploaded a document
+  // naming several products and chose separate records. Each becomes its own
+  // record carrying the shared commercial terms, and each has to be as
+  // family-clean as a record built one at a time.
+  const base = draftFromRow(productRow, NOW);
+  const resolution = (name: string, hs: string) => ({
+    originalWording: name,
+    normalised: name,
+    productKey: name.toLowerCase().replace(/\s+/g, "_"),
+    synonyms: [],
+    categoryPath: [],
+    sector: "agri",
+    attributes: [],
+    candidateHs: { code: hs, description: name, confirmed: true },
+    searchText: name,
+    searchTerms: [name],
+  });
+  const multi = {
+    ...base,
+    resolution: resolution("Refined sugar ICUMSA 45", "1701.99"),
+    siblings: [resolution("Raw cane sugar", "1701.14")],
+    programme: false,
+  };
+
+  const payloads = submitPayloads(multi, OPTS);
+  assert.equal(payloads.length, 2, "the separate-records choice produced one record");
+  assert.deepEqual(
+    payloads.map((p) => p.product),
+    ["Refined sugar ICUMSA 45", "Raw cane sugar"],
+  );
+  for (const p of payloads) {
+    assert.equal(p.market_family, "products");
+    assert.equal(p.submitter_role, "Producer", "a duplicated record lost the shared terms");
+    assert.equal(p.service_terms, undefined, "a duplicated product record carried service terms");
+    assert.equal(p.distribution_terms, undefined);
+  }
+  // The two records carry their OWN classifications, which is the whole reason
+  // they are separate records rather than one generic listing.
+  assert.equal(payloads[0].hs_code, "1701.99");
+  assert.equal(payloads[1].hs_code, "1701.14");
+
+  // And the combined programme, which is the member's own choice, is one record
+  // that names the others rather than two.
+  const programme = submitPayloads({ ...multi, programme: true }, OPTS);
+  assert.equal(programme.length, 1);
+  assert.match(programme[0].details as string, /Raw cane sugar/);
 });
 
 console.log(`structure/resume: ${passed} passed`);
