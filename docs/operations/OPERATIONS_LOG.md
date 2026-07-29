@@ -137,7 +137,7 @@ Use this structure:
 
 ### Decisions
 
-- None requiring the owner. This is implementation of ADR-0014, which remains **Proposed** and awaiting acceptance.
+- **ADR-0014 accepted by the owner on 29 July 2026**, and this work merged in PR #100. The ADR was Proposed when this entry was written; acceptance is recorded in the ADR, the decisions README and both decision-log entries. Acceptance is **not** authority to apply `20260728e_family_commercial_terms.sql`, which stays written and unapplied pending its own approval.
 
 ### Risks / discrepancies
 

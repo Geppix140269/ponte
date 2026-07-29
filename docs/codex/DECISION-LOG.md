@@ -17,6 +17,46 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** merged to `main` at `42a9d22` on 29 July 2026, after technical and design approval. Merging changed nothing a member can reach: **no SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set and nothing has been deployed. Applying the migrations, creating the bucket, running the negative-access fixture and activating the flag are four separate owner gates, none of them taken.
 
 **Affected areas:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md`, `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`, `lib/deal-room/`, `components/deal-room/`, `components/ponte/bridge/DealRoomBridge.tsx`, `app/[locale]/deal-rooms/`, `app/api/deal-room/`, `supabase/migrations/20260729a-c`, `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`, `docs/launch/`.
+## 29 July 2026 - Owner sign-off on the three open ADR-0015 matters
+
+**Decision:** All three matters raised when ADR-0015 was opened are resolved, and two further points confirmed. Direction B with Direction C's mobile rules remains the approved contrast direction.
+
+**S-1, the Bridge manifest is decoupled, not re-hashed.** `SOURCE-MANIFEST.md` was checksumming the live shared token file through a resolver in `check-governance.mjs`, so a manifest describing an approved Bridge delivery would have had to change on every palette decision. A byte-identical package-local snapshot of the handoff token file is preserved and verified instead, and no Bridge manifest row resolves to `design-system/ponte-flow` any more. Simply replacing the live checksum after each palette change was **explicitly rejected**: it would make the manifest a moving record and remove the protection the check exists to give. Recorded as OD-008.
+
+**S-2, PL-004 is fixed in the checker, not in `AGENTS.md`.** Normalise whitespace before matching, in a separate minimal PR on `fix/launch-mode-whitespace-check`, before Stage 1, proving the check fails before and passes after.
+
+**S-3, the Bridge deck and passive pier are in Stage 1.** The central Ponte Bridge must not remain at approximately 1.42:1 structural contrast while the rest of the interface is remediated. Contrast only: geometry, station fractions, node sizes, labels, motion and gold semantics unchanged; arrived and selected destinations remain gold. The eight approved reference renders must be re-taken, since they describe the old contrast. Closes OD-007.
+
+**S-4, value-neutral alias conversion approved** for `find.css`, `landing.css`, `legal.css` and `pfooter.css`, which hold literal copies of the palette and would not otherwise receive the central remediation. Must not redesign those routes; subsequent visual change comes from the central Stage 1 tokens.
+
+**Correction, same day.** Two claims that prompted parts of this sign-off were wrong. `check-launch-mode.mjs` failing and the duplicate `20260728d` migration identifier were **both already fixed on `main`** by `228b532` in PR #98, before either was reported. They were asserted from a local `main` ref that had not been fetched and was nine commits stale. Consequences: no migration hotfix branch is created, because the file to rename no longer exists and `20260728e` is now correctly held by it; no `LB-003 - duplicate migration identifier` record is created, because recording a closed defect as an open blocker would make the register untrue; and the redundant checker-fix pull request is recommended for closure. Numbering corrected: `main` already holds LB-001, PL-004 and PL-005, so the contrast blockers are LB-002 and LB-003 and this work adds no PL entry.
+
+**S-5, LB-002 and LB-003 confirmed**, closable only on field boundaries at sufficient non-text contrast, missing-data labels at sufficient text contrast, desktop and 390 x 844 evidence, and no regression in factual hierarchy or task completion.
+
+**Implementation boundary:** still **nothing implemented**. Governance records only. Stage 1 is blocked until both the PL-004 fix and the governance PR are merged.
+
+**Affected areas:** `docs/decisions/ADR-0015-contrast-and-colour-remediation.md` (new sections S-1 to S-5, and a Stage 0), `docs/plans/active/contrast-and-colour-remediation.md` (sections 3, 4, 6.4, 6.5, 7, 9, 11, 11.1, 12, 13), `docs/operations/OPEN_DECISIONS.md` (OD-007 decided, OD-008 added), `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-004 in progress).
+
+
+## 29 July 2026 - Contrast and colour remediation: strengthened paper with a blue interaction family (ADR-0015)
+
+**Decision:** Ponte adopts Direction B, paper with blue interaction, incorporating Direction C's three non-colour mobile rules. The Design Constitution becomes v1.1.
+
+**The rule:** Ponte now has two semantic colour families and they do not overlap. Gold is exclusively the Ponte signal, movement across an approved Bridge, an arrived or selected Bridge destination, and approved editorial emphasis. Blue is exclusively interaction: links, navigational emphasis, selected controls that are not journey positions, active and expanded controls, active form boundaries, and keyboard focus through the existing focus semantics.
+
+**Where they meet, the Bridge wins:** a chosen Bridge family is both a selected control and an arrived destination, and it stays gold. Blue takes selected controls that are not journey positions, so chips, segments, tabs, rows and tiles. Without that line, blue walks into the Bridge and the two systems stop meaning different things.
+
+**Not:** blue for verification, success, warning, review, commercial completion or Bridge arrival; `--pf-focus` repurposed as a general interaction token; a whole-product repaint; any change to Bridge geometry, motion, typography families or the meaning of gold.
+
+**Rationale:** the audit measured 163 colour pairs and found 96 short. The split was the finding: 39 of 55 text pairs already clear AA, while 80 of 108 non-text pairs fall short. The palette states the words clearly and whispers the shape of the page, which is exactly what the focus group reported. Direction A fixes the measurement completely but leaves the second half of the finding standing, because Ponte's only accent is gold and section 6 bars gold from meaning "act here", so A has nothing to spend on affordance.
+
+**Also decided:** the eight local tint and line extensions in `desk.css`, which `compatibility-aliases.md` section 3 had been holding for an owner ruling, are promoted into the approved token set. Section 18 of the Constitution gains numeric contrast targets; it previously said "at approved contrast levels" without naming a level, which meant the rule could not be failed.
+
+**Launch blockers recorded:** LB-002, required form and input boundaries at approximately 1.52:1. LB-003, meaningful missing-data text such as `Not stated` at approximately 2.98:1. Both are unmet duties under Constitution sections 13 and 14 rather than new requirements.
+
+**Implementation boundary:** at this record point **nothing is implemented**. This entry covers the governance change only: the ADR, the Constitution amendment, the ExecPlan and the registers. No production token, stylesheet, route or component has been modified, nothing is deployed, and Stage 1 must not begin until the governance PR is merged. One item awaits the owner's specific sign-off: the Bridge deck and pier in the approved Bridge authority package, recorded in the ExecPlan section 12.
+
+**Affected areas:** `docs/decisions/ADR-0015-contrast-and-colour-remediation.md`, `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` (v1.1), `docs/plans/active/contrast-and-colour-remediation.md`, `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`, `docs/launch/LAUNCH-BLOCKERS.md`, `docs/operations/OPEN_DECISIONS.md`, `design-system/ponte-flow/documentation/compatibility-aliases.md`, `docs/codex/CURRENT-STATE.md`.
 
 ## 29 July 2026 - A family's own vocabulary survives publication, and a discard requires consent
 
