@@ -473,3 +473,91 @@
     width: 100%;
   }
 }
+
+/* ---------------------------------------------------------------- *
+   Command forms
+
+   Added when the loop was wired. Labels stay visible (Constitution
+   section 13: a placeholder is not a label), every input has a
+   designed focus state, and the fields are readable at 390 without
+   the page scrolling sideways.
+ * ---------------------------------------------------------------- */
+
+.dr__form {
+  margin-top: 18px;
+  max-width: 46rem;
+}
+
+.dr__field {
+  margin: 0 0 16px;
+}
+
+.dr__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.dr__help {
+  display: block;
+  font-size: 12.5px;
+  color: var(--pf-ink-3);
+  line-height: 1.5;
+  margin-bottom: 7px;
+  max-width: 62ch;
+}
+
+.dr__input {
+  font: inherit;
+  font-size: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--pf-rule-strong);
+  border-radius: var(--pf-r-sm);
+  background: var(--pf-raised);
+  color: var(--pf-ink);
+}
+
+.dr__input:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 1px;
+  border-color: var(--pf-focus);
+}
+
+.dr__button:focus-visible,
+.dr__link:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 2px;
+}
+
+/* A form's own submit sits below its fields, not in the shared action row. */
+.dr__form .dr__button {
+  margin-top: 4px;
+}
+
+@media (max-width: 459px) {
+  .dr__form .dr__button {
+    width: 100%;
+  }
+}
+
+/* The agreement text a member accepts, shown in full before they do. Mono,
+   because it is the exact wording the stored checksum is taken over, and it
+   must not be reflowed into something that merely resembles it. */
+.dr__document {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--pf-rule);
+  border-radius: var(--pf-r-sm);
+  background: var(--pf-sunken);
+  color: var(--pf-ink-2);
+  max-height: 22rem;
+}

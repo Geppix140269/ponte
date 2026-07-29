@@ -199,20 +199,59 @@ test("the activity table is append-only against the table owner too", () => {
   );
 });
 
-test("evidence versions are immutable: no UPDATE and no DELETE policy", () => {
-  const policies = Array.from(rls.matchAll(/create policy\s+"([^"]+)"\s+on\s+public\.deal_room_evidence_versions\s+for\s+(\w+)/g));
-  const commands = policies.map((m) => m[2].toLowerCase()).sort();
-  assert.deepEqual(commands, ["insert", "select"]);
+/**
+ * The invariant the owner review of 29 July 2026 introduced.
+ *
+ * Members hold SELECT and nothing else, on every one of the fourteen tables.
+ * Every material change runs through a SECURITY DEFINER command that checks
+ * authority, performs the transition and writes the activity event in one
+ * transaction.
+ *
+ * This is written as a blanket rule rather than table by table because it is
+ * the assertion that would have caught the original `deal_rooms` INSERT policy,
+ * the one that let any authenticated member open a room against somebody else's
+ * published Deal. A new write policy on any Deal Room table now fails here and
+ * has to be argued for.
+ */
+test("no member INSERT, UPDATE or DELETE policy exists on ANY Deal Room table", () => {
+  const writes = Array.from(
+    rlsSql.matchAll(/create policy\s+"([^"]+)"\s+on\s+public\.(deal_rooms|deal_room\w*)\s+for\s+(insert|update|delete)/gi),
+  ).map((m) => `${m[2]}: "${m[1]}" (${m[3].toLowerCase()})`);
+
+  assert.deepEqual(
+    writes,
+    [],
+    "a direct member write policy reappeared. Material state changes go through the command functions, which is what keeps the activity event atomic with the change it records.",
+  );
 });
 
-test("agreement acceptances are immutable: no UPDATE and no DELETE policy", () => {
-  const policies = Array.from(rls.matchAll(/create policy\s+"([^"]+)"\s+on\s+public\.deal_room_agreement_acceptances\s+for\s+(\w+)/g));
-  assert.deepEqual(policies.map((m) => m[2].toLowerCase()).sort(), ["insert", "select"]);
+test("every table has a read policy and nothing but read policies", () => {
+  for (const table of TABLES) {
+    const commands = Array.from(
+      rlsSql.matchAll(new RegExp(`create policy\\s+"([^"]+)"\\s+on\\s+public\\.${table}\\s+for\\s+(\\w+)`, "g")),
+    ).map((m) => m[2].toLowerCase());
+    assert.ok(commands.length > 0, `${table} has no policy at all, so nobody can read it`);
+    assert.deepEqual(
+      Array.from(new Set(commands)),
+      ["select"],
+      `${table} carries a non-select policy: ${commands.join(", ")}`,
+    );
+  }
 });
 
-test("no DELETE policy exists on any Deal Room table", () => {
-  const deletes = Array.from(rls.matchAll(/create policy\s+"([^"]+)"\s+on\s+public\.(\w+)\s+for\s+delete/gi));
-  assert.deepEqual(deletes, [], "history is superseded, never removed");
+test("the first draft's write policies are explicitly dropped, not merely absent", () => {
+  // A database that received the earlier draft must be corrected by running
+  // this file, not by being rebuilt.
+  for (const name of [
+    "deal room create",
+    "entitlement create",
+    "participant self progress",
+    "evidence author edit",
+    "step advance state",
+    "blocker update",
+  ]) {
+    assert.ok(rlsSql.includes(`drop policy if exists "${name}"`), `the earlier policy '${name}' is not dropped`);
+  }
 });
 
 test("invitations have no member SELECT policy beyond the administrator's", () => {
@@ -257,7 +296,110 @@ test("only admitted and active participants satisfy the membership predicates", 
   );
 });
 
-test("every writable path checks deal_room_is_writable", () => {
+/* ------------------------------------------------------------------ *
+ * The five fail-open paths the owner review named
+ * ------------------------------------------------------------------ */
+
+test("a missing entitlement fails closed", () => {
+  const fn = /create or replace function public\.deal_room_is_writable[\s\S]*?\$\$;/.exec(rlsSql);
+  assert.ok(fn);
+  assert.ok(
+    /join public\.deal_room_entitlements/.test(fn![0]),
+    "the entitlement must be joined, not left-joined: a room with no entitlement row is not writable",
+  );
+  assert.ok(
+    !/e\.id is null/.test(fn![0]),
+    "treating a missing entitlement row as permission was the third fail-open path",
+  );
+});
+
+test("room creation proves ownership, publication and family facts", () => {
+  const fn = /create or replace function public\.deal_room_propose[\s\S]*?\$\$;/.exec(rlsSql);
+  assert.ok(fn, "deal_room_propose is missing");
+  const body = fn![0];
+  assert.ok(body.includes("v_l.user_id <> auth.uid()"), "ownership of the listing is not proved");
+  assert.ok(body.includes("Only the owner of a Deal can take it into a Deal Room"));
+  assert.ok(body.includes("v_l.status <> 'approved'"), "publication is not proved");
+  assert.ok(body.includes("already used its Starter Deal Room"), "the Starter is not bounded");
+  // The snapshot is built, not accepted, so a caller cannot supply one.
+  assert.ok(!/p_deal_snapshot|p_snapshot/.test(body), "the Deal snapshot must not be a parameter");
+  assert.ok(body.includes("jsonb_build_object"), "the snapshot is not built from the listing row");
+  // Family-correct facts, each family checked on its own terms.
+  for (const clause of ["v_l.quantity is null", "v_l.service_category_key is null", "v_l.distribution_partner_type_key is null"]) {
+    assert.ok(body.includes(clause), `the family check '${clause}' is missing`);
+  }
+});
+
+test("no command creates an entitlement other than a bounded Starter", () => {
+  const inserts = Array.from(rlsSql.matchAll(/insert into public\.deal_room_entitlements[\s\S]{0,200}/g));
+  assert.equal(inserts.length, 1, "an entitlement is created in exactly one place");
+  assert.ok(inserts[0][0].includes("'starter'"), "the only entitlement a command may create is a Starter");
+});
+
+test("the selected visibility is gone from the constraint and from the predicate", () => {
+  const column = /visibility\s+text not null default 'sub_room'[\s\S]{0,200}/.exec(coreSql);
+  assert.ok(column);
+  assert.ok(!column![0].includes("'selected'"), "`selected` is still an allowed visibility");
+  const predicate = /create or replace function public\.deal_room_can_read_evidence[\s\S]*?\$\$;/.exec(rlsSql);
+  assert.ok(predicate);
+  assert.ok(!predicate![0].includes("'selected'"), "the read predicate still mentions `selected`");
+});
+
+test("every command that changes state checks that the room is writable", () => {
+  const commands = [
+    "deal_room_invite",
+    "deal_room_declare_participation",
+    "deal_room_accept_agreement",
+    "deal_room_admit_participant",
+    "deal_room_propose_procedure",
+    "deal_room_approve_procedure",
+    "deal_room_submit_evidence",
+    "deal_room_request_clarification",
+    "deal_room_answer_clarification",
+    "deal_room_accept_evidence_for_procedure",
+    "deal_room_open_blocker",
+    "deal_room_resolve_blocker",
+  ];
+  for (const name of commands) {
+    const fn = new RegExp(`create or replace function public\\.${name}[\\s\\S]*?\\$\\$;`).exec(rlsSql);
+    assert.ok(fn, `${name} is missing`);
+    assert.ok(
+      fn![0].includes("deal_room_is_writable"),
+      `${name} can change state without checking that the room is writable`,
+    );
+  }
+});
+
+test("the whole loop has a command, so no transition needs a direct write", () => {
+  for (const name of [
+    "deal_room_propose",
+    "deal_room_invite",
+    "deal_room_accept_invitation",
+    "deal_room_declare_participation",
+    "deal_room_accept_agreement",
+    "deal_room_admit_participant",
+    "deal_room_propose_procedure",
+    "deal_room_approve_procedure",
+    "deal_room_submit_evidence",
+    "deal_room_request_clarification",
+    "deal_room_answer_clarification",
+    "deal_room_accept_evidence_for_procedure",
+    "deal_room_open_blocker",
+    "deal_room_resolve_blocker",
+    "deal_room_set_read_only",
+  ]) {
+    assert.ok(
+      rlsSql.includes(`create or replace function public.${name}(`),
+      `${name} is missing, so that transition has no command path`,
+    );
+    assert.ok(
+      new RegExp(`grant execute on function public\\.${name}\\(`).test(rlsSql),
+      `${name} is not granted to authenticated, so the loop cannot call it`,
+    );
+  }
+});
+
+test("the legacy write-policy check is retained for any policy that reappears", () => {
   // Read-only continuity is a database property, not a UI one.
   const insertsAndUpdates = Array.from(rlsSql.matchAll(/create policy\s+"([^"]+)"\s+on\s+public\.(\w+)\s+for\s+(insert|update)[\s\S]*?;/g));
   const exempt = new Set([

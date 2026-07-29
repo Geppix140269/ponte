@@ -1,12 +1,29 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Banner, Empty, RoomHeader } from "@/components/deal-room/primitives";
+import {
+  Band,
+  Banner,
+  CommandError,
+  CommandForm,
+  Empty,
+  Field,
+  RoomHeader,
+  SelectField,
+  Submit,
+  TextField,
+} from "@/components/deal-room/primitives";
 import { dealRoomGate } from "@/lib/deal-room/queries";
 import { createClient } from "@/lib/supabase/server";
-import { assessCredibleInterest, type DealFacts } from "@/lib/deal-room/interest";
+import {
+  assessCredibleInterest,
+  INTEREST_ROUTES,
+  INTEREST_ROUTE_LABEL,
+  type DealFacts,
+} from "@/lib/deal-room/interest";
 import { templateFor } from "@/lib/deal-room/procedure";
 import { STARTER_LIMITS_PROPOSED } from "@/lib/deal-room/entitlement";
 import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/states";
+import { proposeRoom } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +46,7 @@ export default async function ProposeRoomPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { deal?: string };
+  searchParams: { deal?: string; error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -86,6 +103,7 @@ export default async function ProposeRoomPage({
 
   return (
     <>
+      <CommandError message={searchParams.error} />
       <RoomHeader
         reference="Deal Rooms"
         title="Take this Deal forward"
@@ -211,12 +229,67 @@ export default async function ProposeRoomPage({
             </ul>
           </Band>
 
-          <div className="dr__actions">
-            <Action
-              label="Create the proposed room"
-              reason="Name the counterparty first. A room is proposed to somebody, and Ponte will not open one without an identified principal on the other side."
-            />
-          </div>
+          <Band title="Name the counterparty and open the room">
+            <p className="dr__item-meta">
+              A room is proposed to somebody. Ponte will not open one without an identified principal on the other
+              side, a stated role and a stated objective: curiosity is not credible commercial interest.
+            </p>
+
+            <CommandForm
+              action={proposeRoom}
+              hidden={{
+                locale: params.locale,
+                listingId: selected.id,
+                returnTo: `/${params.locale}/deal-rooms/propose?deal=${selected.id}`,
+              }}
+            >
+              <Field
+                label="Counterparty member id"
+                name="counterpartyProfileId"
+                required
+                help="The Ponte member you are taking this Deal forward with. They receive a protected invitation; nothing about this room is disclosed to them before they accept it."
+              />
+              <Field
+                label="Their role in this transaction"
+                name="counterpartyRole"
+                required
+                defaultValue="Buyer"
+                help="Responsibilities in the procedure are assigned by role."
+              />
+              <TextField
+                label="What they want, in their words"
+                name="objective"
+                required
+                help="The substance of the interest they expressed. This is recorded as the credible-interest event and stays in the room history."
+              />
+              <SelectField
+                label="How this interest arose"
+                name="interestRoute"
+                defaultValue="accepted_introduction"
+                options={INTEREST_ROUTES.map((route) => ({ value: route, label: INTEREST_ROUTE_LABEL[route] }))}
+              />
+              <SelectField
+                label="Operating mode"
+                name="operatingMode"
+                defaultValue="software_only"
+                options={LAUNCH_OPERATING_MODES.map((mode) => ({ value: mode, label: OPERATING_MODE_LABEL[mode] }))}
+                help="Ponte-facilitated and Ponte-managed modes commit human Ponte work and are not offered in this release."
+              />
+              <Field
+                label="Purpose of the first private workspace"
+                name="subRoomPurpose"
+                required
+                defaultValue={`Negotiation: ${assessment.scope!.subject}`}
+                help="A separate permission boundary for this counterparty. No other participant can see it, or infer that it exists."
+              />
+              <Submit label="Create the proposed room" />
+            </CommandForm>
+
+            <p className="dr__why">
+              Creating the room reserves your Starter entitlement. The 30-day term does not begin until the invited
+              principal is admitted, so an invitation nobody answers does not spend it.
+            </p>
+          </Band>
         </>
       ) : null}
     </>

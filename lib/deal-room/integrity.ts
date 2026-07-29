@@ -66,10 +66,38 @@ export interface IntegrityInput {
   declaredRole: string | null;
   /** Whether they have declared authority to participate in that role. */
   authorityDeclared: boolean;
-  /** Sanctions screening outcome where one has run. */
-  sanctionsScreened: boolean;
-  sanctionsCandidateOpen: boolean;
+  /**
+   * The sanctions position, and the shape is the point.
+   *
+   * The first version of this module took two booleans, `sanctionsScreened` and
+   * `sanctionsCandidateOpen`. The invitation surface passed `true` and `false`
+   * unconditionally, and the pre-flight duly printed "Screened against the
+   * lists Ponte holds, with no unresolved candidate" over nothing at all. That
+   * is exactly the fabricated verification the product rules forbid, and as a
+   * claim about sanctions it is a compliance misrepresentation rather than a
+   * cosmetic one.
+   *
+   * A boolean was the wrong type. This one cannot express the claim without the
+   * evidence for it: to say a screening happened you must supply when it ran,
+   * what ran it, and what it returned. `{ screened: false }` is the only other
+   * option, and it lands in the unproved bucket.
+   */
+  sanctions: SanctionsPosition;
 }
+
+export type SanctionsPosition =
+  | { screened: false }
+  | {
+      screened: true;
+      /** ISO date the screening ran. */
+      checkedAt: string;
+      /** What ran it, for the provenance line. */
+      source: string;
+      /** From the stored `ScreenResult`. */
+      clean: boolean;
+      /** Candidates at or above the strong threshold, which triage cannot clear. */
+      strongCount: number;
+    };
 
 export interface IntegrityFact {
   /** Short label, e.g. "Legal entity". */
@@ -217,14 +245,27 @@ export function integrityPreflight(input: IntegrityInput): IntegrityPreflight {
       : "No declaration of authority has been made yet.",
   });
 
-  if (input.sanctionsScreened && !input.sanctionsCandidateOpen) {
+  if (!input.sanctions.screened) {
+    unproved.push({
+      label: "Sanctions screening",
+      statement:
+        "No screening result exists for this participant. Nothing here says they are clear, and nothing says they are not.",
+    });
+  } else if (input.sanctions.clean) {
     checked.push({
       label: "Sanctions screening",
       statement: "Screened against the lists Ponte holds, with no unresolved candidate.",
-      source: "Ponte sanctions screening",
+      source: input.sanctions.source,
+      checkedAt: input.sanctions.checkedAt,
     });
-  } else if (!input.sanctionsScreened) {
-    unproved.push({ label: "Sanctions screening", statement: "No screening has been run for this participant." });
+  } else {
+    // A screening that returned candidates is a fact about a name, and it goes
+    // in the unproved bucket rather than the checked one. The inconsistency
+    // below is what asks for it to be resolved.
+    unproved.push({
+      label: "Sanctions screening",
+      statement: "A screening ran and returned at least one candidate that has not been resolved.",
+    });
   }
 
   unproved.push({
@@ -244,10 +285,11 @@ export function integrityPreflight(input: IntegrityInput): IntegrityPreflight {
    * candidate is the one item that should stop an invitation, and even there
    * the sentence describes a name similarity rather than a person.
    */
-  if (input.sanctionsCandidateOpen) {
+  if (input.sanctions.screened && !input.sanctions.clean) {
     inconsistencies.push({
       label: "Sanctions screening",
-      observation: "A name on this participant's record is similar to an entry on a sanctions list, and the match has not been resolved.",
+      observation:
+        "A name on this participant's record is similar to an entry on a sanctions list, and the match has not been resolved.",
       clarification: "Resolve the screening candidate before inviting this participant.",
     });
   }
@@ -292,6 +334,41 @@ export function integrityPreflight(input: IntegrityInput): IntegrityPreflight {
         };
 
   return { checked, declared, unproved, inconsistencies, action, limitation: LIMITATION };
+}
+
+/**
+ * Derive the sanctions position from stored verification rows.
+ *
+ * The screening the product already runs writes its `ScreenResult` into
+ * `verifications.sanctions_hits` - `{ clean, candidates, strongCount }` - and
+ * stamps `rescreened_at` when it re-runs. This reads that and nothing else.
+ *
+ * The absence of a result is reported as an absence. A row whose
+ * `sanctions_hits` is null was never screened, and a row whose payload does not
+ * carry a boolean `clean` is not a screening result this can interpret; both
+ * return `{ screened: false }` rather than a guess. That is the whole reason
+ * this function exists rather than a boolean at the call site.
+ */
+export function sanctionsPositionFrom(
+  rows: readonly { sanctionsHits: unknown; rescreenedAt: string | null; createdAt: string }[],
+): SanctionsPosition {
+  for (const row of rows) {
+    const hits = row.sanctionsHits;
+    if (!hits || typeof hits !== "object") continue;
+
+    const result = hits as { clean?: unknown; strongCount?: unknown };
+    if (typeof result.clean !== "boolean") continue;
+
+    return {
+      screened: true,
+      checkedAt: String(row.rescreenedAt ?? row.createdAt).slice(0, 10),
+      source: "Ponte sanctions screening",
+      clean: result.clean,
+      strongCount: typeof result.strongCount === "number" ? result.strongCount : 0,
+    };
+  }
+
+  return { screened: false };
 }
 
 /**

@@ -1,10 +1,20 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Banner, RoomHeader } from "@/components/deal-room/primitives";
+import {
+  Action,
+  Band,
+  Banner,
+  CommandError,
+  CommandForm,
+  Field,
+  RoomHeader,
+  Submit,
+} from "@/components/deal-room/primitives";
 import { listParticipants, loadRoom, listSubRooms } from "@/lib/deal-room/queries";
 import { canInviteParticipant, mutationBlockedReason } from "@/lib/deal-room/permissions";
 import { buildPreview, INVITATION_TTL_DAYS } from "@/lib/deal-room/invitation";
-import { integrityPreflight, invitationIsPermitted } from "@/lib/deal-room/integrity";
+import { integrityPreflight, invitationIsPermitted, sanctionsPositionFrom } from "@/lib/deal-room/integrity";
+import { sendInvitation } from "../../actions";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,8 +37,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function InvitationPreviewPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; roomId: string };
+  searchParams?: { error?: string; sent?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -37,6 +49,9 @@ export default async function InvitationPreviewPage({
 
   const [participants, subRooms] = await Promise.all([listParticipants(params.roomId), listSubRooms(params.roomId)]);
   const base = `/${params.locale}/deal-rooms/${params.roomId}`;
+  const firstSubRoom = subRooms[0] ?? null;
+  const sentToken = searchParams?.sent;
+  const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const blockedReason = mutationBlockedReason(access.viewer, access.context);
   const inviteReason = canInviteParticipant(access.viewer, access.context)
     ? null
@@ -49,13 +64,17 @@ export default async function InvitationPreviewPage({
     .eq("id", access.viewer?.profileId ?? "")
     .maybeSingle();
 
+  // `user_id`, which is what the column is actually called. The first draft
+  // filtered on a `profile_id` that does not exist on this table, so it read
+  // nothing and the pre-flight was built from an empty evidence list.
   const { data: evidenceRows } = await supabase
     .from("verifications")
-    .select("type, status, created_at")
-    .eq("profile_id", access.viewer?.profileId ?? "")
+    .select("type, status, created_at, sanctions_hits, rescreened_at")
+    .eq("user_id", access.viewer?.profileId ?? "")
     .order("created_at", { ascending: false })
     .limit(10);
 
+  const rows = (evidenceRows ?? []) as Record<string, unknown>[];
   const organisationName = ((me?.organizations as { name?: string } | null)?.name as string) ?? null;
 
   const preflight = integrityPreflight({
@@ -67,7 +86,7 @@ export default async function InvitationPreviewPage({
       | "unverified"
       | "identity_verified"
       | "company_verified",
-    verificationEvidence: ((evidenceRows ?? []) as Record<string, unknown>[]).map((row) => ({
+    verificationEvidence: rows.map((row) => ({
       kind: (row.type as string) ?? "check",
       source: "Ponte verification",
       result:
@@ -81,8 +100,17 @@ export default async function InvitationPreviewPage({
     dealOriginCountry: (access.room.dealSnapshot.origin_country as string | null) ?? null,
     declaredRole: access.viewer?.participantClass ?? null,
     authorityDeclared: Boolean(access.viewer),
-    sanctionsScreened: true,
-    sanctionsCandidateOpen: false,
+    // Derived from real screening rows. When none exists this reports
+    // `{ screened: false }` and the pre-flight prints it under Unproved. The
+    // first draft passed `true`/`false` here unconditionally and displayed a
+    // sanctions clearance over nothing, which the owner review caught.
+    sanctions: sanctionsPositionFrom(
+      rows.map((row) => ({
+        sanctionsHits: row.sanctions_hits,
+        rescreenedAt: (row.rescreened_at as string | null) ?? null,
+        createdAt: String(row.created_at ?? ""),
+      })),
+    ),
   });
 
   const preview = buildPreview({
@@ -99,6 +127,7 @@ export default async function InvitationPreviewPage({
 
   return (
     <>
+      <CommandError message={searchParams?.error} />
       <RoomHeader
         reference={`${access.room.ref} · Invitation`}
         title="Ponte Integrity pre-flight"
@@ -222,15 +251,49 @@ export default async function InvitationPreviewPage({
             <p className="dr__next-owner">{preflight.action.because}</p>
           </div>
 
+          {permitted && !inviteReason && firstSubRoom ? (
+            <CommandForm
+              action={sendInvitation}
+              hidden={{
+                locale: params.locale,
+                roomId: params.roomId,
+                subRoomId: firstSubRoom.id,
+                returnTo: `${base}/invitation`,
+              }}
+            >
+              <Field
+                label="Counterparty email"
+                name="email"
+                type="email"
+                required
+                help="Where the protected invitation link goes. The link is single use, expires, and is stored only as a hash."
+              />
+              <Field label="Proposed role" name="role" required defaultValue="Principal counterparty" />
+              <Submit label="Send protected invitation" />
+            </CommandForm>
+          ) : (
+            <div className="dr__actions">
+              <Action
+                label="Send protected invitation"
+                reason={
+                  !permitted
+                    ? "An unresolved sanctions screening candidate must be settled before an invitation can be sent."
+                    : !firstSubRoom
+                      ? "This room has no private workspace to invite anyone into."
+                      : inviteReason
+                }
+              />
+            </div>
+          )}
+
+          {sentToken ? (
+            <Banner tone="quiet" title="The invitation is ready to pass on">
+              This link is shown once and is not stored: Ponte keeps only a hash of it. Send it to the counterparty by
+              your own means. {`${appOrigin}/${params.locale}/deal-rooms/invitation/${sentToken}`}
+            </Banner>
+          ) : null}
+
           <div className="dr__actions">
-            <Action
-              label="Send protected invitation"
-              reason={
-                permitted
-                  ? inviteReason
-                  : "An unresolved sanctions screening candidate must be settled before an invitation can be sent."
-              }
-            />
             <Action label="Back to the room" href={base} secondary />
           </div>
 

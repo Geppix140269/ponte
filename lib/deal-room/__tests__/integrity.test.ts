@@ -10,7 +10,7 @@
 // wording.
 
 import assert from "node:assert/strict";
-import { integrityPreflight, invitationIsPermitted, type IntegrityInput } from "../integrity";
+import { integrityPreflight, invitationIsPermitted, sanctionsPositionFrom, type IntegrityInput } from "../integrity";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -35,8 +35,7 @@ const BASE: IntegrityInput = {
   dealOriginCountry: "BR",
   declaredRole: "Seller",
   authorityDeclared: true,
-  sanctionsScreened: true,
-  sanctionsCandidateOpen: false,
+  sanctions: { screened: true, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: true, strongCount: 0 },
 };
 
 // ---------------------------------------------------------------------------
@@ -91,8 +90,7 @@ test("no wording accuses anybody, even in the worst case", () => {
     ],
     jurisdiction: "PA",
     dealOriginCountry: "BR",
-    sanctionsScreened: true,
-    sanctionsCandidateOpen: true,
+    sanctions: { screened: true, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: false, strongCount: 1 },
   });
   const text = JSON.stringify(worst).toLowerCase();
   for (const word of ACCUSATIONS) {
@@ -118,7 +116,7 @@ test("the only action is ever about the invitation, never about the person", () 
   for (const input of [
     BASE,
     { ...BASE, verificationLevel: "unverified" as const },
-    { ...BASE, sanctionsCandidateOpen: true },
+    { ...BASE, sanctions: { screened: true as const, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: false, strongCount: 1 } },
   ]) {
     const action = integrityPreflight(input).action.label.toLowerCase();
     for (const word of ["reject", "approve this party", "admit", "block this member", "decline"]) {
@@ -206,13 +204,13 @@ test("a named entity with no identity check is an observation, not a refusal", (
 // ---------------------------------------------------------------------------
 
 test("an open sanctions candidate is the only thing that stops an invitation", () => {
-  const result = integrityPreflight({ ...BASE, sanctionsCandidateOpen: true });
+  const result = integrityPreflight({ ...BASE, sanctions: { screened: true as const, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: false, strongCount: 1 } });
   assert.equal(invitationIsPermitted(result), false);
   assert.equal(result.action.clarificationFirst, true);
 });
 
 test("the sanctions wording describes a name similarity, not a person", () => {
-  const result = integrityPreflight({ ...BASE, sanctionsCandidateOpen: true });
+  const result = integrityPreflight({ ...BASE, sanctions: { screened: true as const, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: false, strongCount: 1 } });
   const item = result.inconsistencies.find((i) => i.label === "Sanctions screening")!;
   assert.match(item.observation, /similar to an entry/);
 });
@@ -223,9 +221,100 @@ test("everything else permits the invitation", () => {
     { ...BASE, verificationLevel: "unverified" as const },
     { ...BASE, jurisdiction: "PA" },
     { ...BASE, authorityDeclared: false },
-    { ...BASE, sanctionsScreened: false },
+    { ...BASE, sanctions: { screened: false as const } },
   ]) {
     assert.equal(invitationIsPermitted(integrityPreflight(input)), true);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Sanctions: the finding the owner review caught
+// ---------------------------------------------------------------------------
+//
+// The first version took two booleans and the invitation surface passed
+// `true`/`false` unconditionally, so the pre-flight printed a sanctions
+// clearance over nothing at all. These assertions exist so that cannot recur.
+
+test("an unscreened participant is reported as unproved, never as clear", () => {
+  const result = integrityPreflight({ ...BASE, sanctions: { screened: false } });
+
+  assert.ok(
+    !result.checked.some((f) => f.label === "Sanctions screening"),
+    "an unscreened participant must never appear in the checked bucket",
+  );
+
+  const item = result.unproved.find((f) => f.label === "Sanctions screening");
+  assert.ok(item, "an unscreened participant must appear in the unproved bucket");
+  assert.match(item!.statement, /No screening result exists/);
+  // The sentence must not read as a clearance in either direction.
+  assert.match(item!.statement, /nothing says they are not/);
+});
+
+test("no wording anywhere claims a screening that did not happen", () => {
+  const result = integrityPreflight({ ...BASE, sanctions: { screened: false } });
+  const text = JSON.stringify(result);
+  assert.ok(
+    !text.includes("Screened against the lists"),
+    "the clearance sentence appeared without a screening result behind it",
+  );
+  assert.ok(!text.includes("no unresolved candidate"));
+});
+
+test("an unscreened participant may still be invited", () => {
+  // Absence of a screening is not a finding against anybody, so it does not
+  // stop an invitation. Only a real unresolved candidate does.
+  assert.equal(invitationIsPermitted(integrityPreflight({ ...BASE, sanctions: { screened: false } })), true);
+});
+
+test("a screening with candidates is unproved, not checked, and stops the invitation", () => {
+  const result = integrityPreflight({
+    ...BASE,
+    sanctions: { screened: true, checkedAt: "2026-07-20", source: "Ponte sanctions screening", clean: false, strongCount: 2 },
+  });
+  assert.ok(!result.checked.some((f) => f.label === "Sanctions screening"));
+  assert.ok(result.unproved.some((f) => f.label === "Sanctions screening"));
+  assert.equal(invitationIsPermitted(result), false);
+});
+
+test("a clean screening carries its date and source, so the claim is attributable", () => {
+  const fact = integrityPreflight(BASE).checked.find((f) => f.label === "Sanctions screening");
+  assert.ok(fact);
+  assert.equal(fact!.checkedAt, "2026-07-20");
+  assert.equal(fact!.source, "Ponte sanctions screening");
+});
+
+test("sanctionsPositionFrom reports absence when no screening was stored", () => {
+  assert.deepEqual(sanctionsPositionFrom([]), { screened: false });
+  assert.deepEqual(
+    sanctionsPositionFrom([{ sanctionsHits: null, rescreenedAt: null, createdAt: "2026-07-20T00:00:00Z" }]),
+    { screened: false },
+  );
+  // A payload that is not a ScreenResult is not a screening this can read.
+  assert.deepEqual(
+    sanctionsPositionFrom([{ sanctionsHits: { candidates: [] }, rescreenedAt: null, createdAt: "2026-07-20T00:00:00Z" }]),
+    { screened: false },
+  );
+});
+
+test("sanctionsPositionFrom reads a real stored ScreenResult", () => {
+  const position = sanctionsPositionFrom([
+    { sanctionsHits: { clean: true, candidates: [], strongCount: 0 }, rescreenedAt: "2026-07-25T09:00:00Z", createdAt: "2026-07-20T00:00:00Z" },
+  ]);
+  assert.equal(position.screened, true);
+  if (position.screened) {
+    assert.equal(position.clean, true);
+    assert.equal(position.checkedAt, "2026-07-25");
+  }
+});
+
+test("sanctionsPositionFrom carries a non-clean result through", () => {
+  const position = sanctionsPositionFrom([
+    { sanctionsHits: { clean: false, candidates: [{}], strongCount: 1 }, rescreenedAt: null, createdAt: "2026-07-20T00:00:00Z" },
+  ]);
+  assert.equal(position.screened, true);
+  if (position.screened) {
+    assert.equal(position.clean, false);
+    assert.equal(position.strongCount, 1);
   }
 });
 

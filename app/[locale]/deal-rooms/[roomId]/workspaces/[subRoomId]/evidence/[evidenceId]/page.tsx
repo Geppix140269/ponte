@@ -1,6 +1,19 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Banner, Empty, EvidenceStateChip, RoomHeader } from "@/components/deal-room/primitives";
+import {
+  Action,
+  Band,
+  Banner,
+  CommandError,
+  CommandForm,
+  Empty,
+  EvidenceStateChip,
+  Field,
+  RoomHeader,
+  Submit,
+  TextField,
+} from "@/components/deal-room/primitives";
+import { acceptEvidence, answerClarification, requestClarification } from "../../../../../actions";
 import { loadEvidence, loadGoverningProcedure, loadRoom, loadSubRoom } from "@/lib/deal-room/queries";
 import { canAcceptEvidence, canRequestClarification, mutationBlockedReason } from "@/lib/deal-room/permissions";
 import {
@@ -30,8 +43,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function EvidenceDetailPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; roomId: string; subRoomId: string; evidenceId: string };
+  searchParams?: { error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -74,8 +89,11 @@ export default async function EvidenceDetailPage({
 
   const openClarification = clarifications.find((item) => item.state === "open");
 
+  const here_evidence = `${here}/evidence/${params.evidenceId}`;
+
   return (
     <>
+      <CommandError message={searchParams?.error} />
       {openClarification ? (
         <Banner tone="review" title="A clarification is open on this item">
           {openClarification.question}
@@ -154,6 +172,34 @@ export default async function EvidenceDetailPage({
             </p>
           </Band>
 
+          {openClarification && isProvider ? (
+            <Band title="Answer the clarification">
+              <p className="dr__item-meta">{openClarification.question}</p>
+              <CommandForm
+                action={answerClarification}
+                encType="multipart/form-data"
+                hidden={{
+                  locale: params.locale,
+                  roomId: params.roomId,
+                  subRoomId: params.subRoomId,
+                  evidenceId: params.evidenceId,
+                  clarificationId: openClarification.id,
+                  returnTo: here_evidence,
+                }}
+              >
+                <TextField label="Your answer" name="answer" required />
+                <Field
+                  label="Corrected document, if the answer needs one"
+                  name="file"
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp"
+                  help="Optional. A corrected file becomes a new version; the version the reviewer questioned is retained and stays readable."
+                />
+                <Submit label="Answer, and supply any correction" />
+              </CommandForm>
+            </Band>
+          ) : null}
+
           <Band title="Clarifications">
             {clarifications.length === 0 ? (
               <Empty>No clarification has been requested on this item.</Empty>
@@ -181,12 +227,56 @@ export default async function EvidenceDetailPage({
 
         <aside className="dr__rail">
           <Band title="Review">
+            {acceptReason ? (
+              <div className="dr__actions">
+                <Action label="Accept for procedure" reason={acceptReason} />
+              </div>
+            ) : (
+              <CommandForm
+                action={acceptEvidence}
+                hidden={{
+                  locale: params.locale,
+                  roomId: params.roomId,
+                  subRoomId: params.subRoomId,
+                  evidenceId: params.evidenceId,
+                  returnTo: here_evidence,
+                }}
+              >
+                <Submit label="Accept for procedure" />
+              </CommandForm>
+            )}
+
+            {clarifyReason ? (
+              <div className="dr__actions">
+                <Action label="Request clarification" reason={clarifyReason} secondary />
+              </div>
+            ) : (
+              <CommandForm
+                action={requestClarification}
+                hidden={{
+                  locale: params.locale,
+                  roomId: params.roomId,
+                  subRoomId: params.subRoomId,
+                  evidenceId: params.evidenceId,
+                  returnTo: here_evidence,
+                }}
+              >
+                <TextField label="What do you need clarified?" name="question" required />
+                <Submit label="Request clarification" secondary />
+              </CommandForm>
+            )}
+
             <div className="dr__actions">
-              <Action label="Accept for procedure" reason={acceptReason} />
-              <Action label="Request clarification" reason={clarifyReason} secondary />
-              <Action label="Reject for procedure" reason={acceptReason} secondary />
-              <Action label="Mark superseded" reason={acceptReason} secondary />
-              <Action label="Record independent verification" reason={acceptReason} secondary />
+              <Action
+                label="Reject for procedure"
+                reason="Rejection is a later release. Request a clarification instead, or leave the item under review."
+                secondary
+              />
+              <Action
+                label="Record independent verification"
+                reason="Recording an independent check is a later release. It is a separate act from accepting for the procedure, with its own date and limitation."
+                secondary
+              />
             </div>
             <p className="dr__why">
               Accepting for the procedure means the parties agreed this satisfies a requirement. It is not a finding

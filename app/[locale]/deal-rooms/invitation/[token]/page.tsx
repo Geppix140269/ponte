@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Banner, RoomHeader } from "@/components/deal-room/primitives";
+import { Band, Banner, CommandError, CommandForm, RoomHeader, Submit } from "@/components/deal-room/primitives";
 import { dealRoomRoutesEnabled } from "@/lib/deal-room/flags";
 import { resolveInvitation } from "@/lib/deal-room/invitation-server";
 import { INVITATION_FAILURE_MESSAGE } from "@/lib/deal-room/invitation";
+import { acceptInvitation } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function InvitationLandingPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; token: string };
+  searchParams?: { error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -56,6 +59,7 @@ export default async function InvitationLandingPage({
   return (
     <>
       <meta name="referrer" content="no-referrer" />
+      <CommandError message={searchParams?.error} />
 
       <RoomHeader
         reference="Ponte Trade · Protected invitation"
@@ -126,13 +130,30 @@ export default async function InvitationLandingPage({
           ))}
         </ul>
 
-        <div className="dr__actions">
-          <Action label="Continue to admission" href={`/${params.locale}/deal-rooms/invitation/${params.token}/admission`} />
-          <Action label="Decline this invitation" href={`/${params.locale}/deal-rooms/invitation/${params.token}?decline=1`} secondary />
-        </div>
+        {/*
+          Accepting is a command, not a link. It creates the participation that
+          the admission checklist then completes, and it is the point at which
+          this person exists inside the room at all - still outside the gate,
+          still unable to act.
+        */}
+        <CommandForm
+          action={acceptInvitation}
+          hidden={{
+            locale: params.locale,
+            token: params.token,
+            returnTo: `/${params.locale}/deal-rooms/invitation/${params.token}`,
+          }}
+        >
+          <Submit label="Accept and continue to admission" />
+        </CommandForm>
+
         <p className="dr__why">
-          Declining is recorded and the organisation that invited you is told. It costs them nothing and it does not
-          affect anything else on Ponte. Reference {invitationId.slice(0, 8)}.
+          Accepting does not admit you. It starts the admission checklist, and you can stop at any point in it. Nothing
+          in the room is visible to you until every item is complete.
+        </p>
+        <p className="dr__why">
+          If this was not meant for you, close this page. Declining is recorded and the organisation that invited you is
+          told; it costs them nothing and affects nothing else on Ponte. Reference {invitationId.slice(0, 8)}.
         </p>
       </Band>
     </>

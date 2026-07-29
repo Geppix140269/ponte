@@ -59,7 +59,18 @@ Three files, additive throughout, idempotent, and applied in this order at Gate
 C only:
 
 - `supabase/migrations/20260729a_deal_room_core.sql` — 14 `deal_room_*` tables, their constraints, indexes and triggers, plus `deal_room_uuid_or_null()` and the append-only guard `deal_room_events_append_only()`.
-- `supabase/migrations/20260729b_deal_room_rls.sql` — RLS on all 14, four SECURITY DEFINER helper predicates, every policy, and five authorised command functions.
+- `supabase/migrations/20260729b_deal_room_rls.sql` — RLS on all 14, four SECURITY DEFINER helper predicates, **read-only policies for members**, and fifteen authorised command functions covering the whole loop.
+
+  Rewritten on 29 July 2026 after the owner review of PR #98 closed five
+  fail-open paths in the first draft: a `deal_rooms` INSERT policy that let any
+  authenticated member open a room against another member's Deal with a snapshot
+  of their choosing; a member-writable entitlement table; `deal_room_is_writable()`
+  treating a missing entitlement row as permission; direct member DML that
+  bypassed the commands and their atomic activity events; and a `selected`
+  evidence visibility evaluated as ordinary sub-room visibility, so a label
+  promising restriction delivered none. The file names and drops the earlier
+  policies explicitly, so a database that received the first draft is corrected
+  by running it rather than by being rebuilt.
 - `supabase/migrations/20260729c_deal_room_storage.sql` — the private `deal-room-evidence` bucket and its two `storage.objects` policies.
 
 **None has been executed anywhere.** There is no non-production database to run

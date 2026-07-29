@@ -245,6 +245,194 @@ export function MomentumPanel({ momentum }: { momentum: ProfessionalMomentum }) 
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * Commands
+ *
+ * A control that changes state is a submit button inside a form whose action
+ * is a server action. That sentence is the correction the owner review asked
+ * for: the first draft rendered `Action` on its own, outside any form and with
+ * no `formAction`, which is a button that submits nothing.
+ *
+ * `CommandForm` exists so a surface cannot make that mistake again - it takes
+ * the action, so there is no way to render its button without one.
+ * ------------------------------------------------------------------ */
+
+export function CommandForm({
+  action,
+  hidden,
+  children,
+  encType,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  /** Context the command needs: ids, locale, and where to return on refusal. */
+  hidden: Record<string, string | null | undefined>;
+  children: ReactNode;
+  encType?: string;
+}) {
+  return (
+    <form action={action} className="dr__form" encType={encType}>
+      {Object.entries(hidden).map(([name, value]) =>
+        value === null || value === undefined ? null : (
+          <input type="hidden" name={name} value={value} key={name} />
+        ),
+      )}
+      {children}
+    </form>
+  );
+}
+
+export function Field({
+  label,
+  name,
+  help,
+  type = "text",
+  required,
+  defaultValue,
+  placeholder,
+  accept,
+}: {
+  label: string;
+  name: string;
+  help?: string;
+  type?: string;
+  required?: boolean;
+  defaultValue?: string;
+  placeholder?: string;
+  accept?: string;
+}) {
+  const id = `f-${name}`;
+  return (
+    <p className="dr__field">
+      {/* The label stays visible. A placeholder is not a label. */}
+      <label className="dr__label" htmlFor={id}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
+      {help ? (
+        <span className="dr__help" id={`${id}-help`}>
+          {help}
+        </span>
+      ) : null}
+      <input
+        className="dr__input"
+        id={id}
+        name={name}
+        type={type}
+        required={required}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        accept={accept}
+        aria-describedby={help ? `${id}-help` : undefined}
+      />
+    </p>
+  );
+}
+
+export function TextField({
+  label,
+  name,
+  help,
+  required,
+  rows = 3,
+}: {
+  label: string;
+  name: string;
+  help?: string;
+  required?: boolean;
+  rows?: number;
+}) {
+  const id = `f-${name}`;
+  return (
+    <p className="dr__field">
+      <label className="dr__label" htmlFor={id}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
+      {help ? (
+        <span className="dr__help" id={`${id}-help`}>
+          {help}
+        </span>
+      ) : null}
+      <textarea
+        className="dr__input"
+        id={id}
+        name={name}
+        rows={rows}
+        required={required}
+        aria-describedby={help ? `${id}-help` : undefined}
+      />
+    </p>
+  );
+}
+
+export function SelectField({
+  label,
+  name,
+  options,
+  help,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  options: readonly { value: string; label: string }[];
+  help?: string;
+  defaultValue?: string;
+}) {
+  const id = `f-${name}`;
+  return (
+    <p className="dr__field">
+      <label className="dr__label" htmlFor={id}>
+        {label}
+      </label>
+      {help ? (
+        <span className="dr__help" id={`${id}-help`}>
+          {help}
+        </span>
+      ) : null}
+      <select
+        className="dr__input"
+        id={id}
+        name={name}
+        defaultValue={defaultValue}
+        aria-describedby={help ? `${id}-help` : undefined}
+      >
+        {options.map((option) => (
+          <option value={option.value} key={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </p>
+  );
+}
+
+/** The submit control of a `CommandForm`. */
+export function Submit({ label, secondary }: { label: string; secondary?: boolean }) {
+  return (
+    <button type="submit" className={secondary ? "dr__button dr__button--secondary" : "dr__button"}>
+      {label}
+    </button>
+  );
+}
+
+/**
+ * What a command refused, and why.
+ *
+ * The sentence comes from the database function that refused it - "Admission
+ * blocked: nda not yet accepted", "Only the owner of a Deal can take it into a
+ * Deal Room" - so the member reads the actual rule rather than a generic
+ * failure. `role="alert"` because it appears after an action they just took.
+ */
+export function CommandError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <div className="dr__banner dr__banner--danger" role="alert">
+      <p className="dr__banner-title">That did not go through</p>
+      <p className="dr__banner-body">{message}</p>
+    </div>
+  );
+}
+
 /** The identity strip every room surface opens with. */
 export function RoomHeader({
   reference,

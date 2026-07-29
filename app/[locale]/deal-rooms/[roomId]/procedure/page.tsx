@@ -1,10 +1,21 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Banner, Empty, RoomHeader, StepStateChip } from "@/components/deal-room/primitives";
+import {
+  Action,
+  Band,
+  Banner,
+  CommandError,
+  CommandForm,
+  Empty,
+  RoomHeader,
+  StepStateChip,
+  Submit,
+} from "@/components/deal-room/primitives";
 import { loadGoverningProcedure, loadRoom, listParticipants } from "@/lib/deal-room/queries";
 import { canApproveProcedure, canProposeProcedure, mutationBlockedReason } from "@/lib/deal-room/permissions";
-import { procedureDefects } from "@/lib/deal-room/procedure";
+import { procedureDefects, templateFor } from "@/lib/deal-room/procedure";
 import { procedureProgress } from "@/lib/deal-room/progress";
+import { approveProcedure, proposeProcedure } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +35,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function ProcedurePage({
   params,
+  searchParams,
 }: {
   params: { locale: string; roomId: string };
+  searchParams?: { error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -43,19 +56,40 @@ export default async function ProcedurePage({
   if (!procedure) {
     return (
       <>
+        <CommandError message={searchParams?.error} />
         <RoomHeader reference={access.room.ref} title="Agree how this Deal will move" />
         <Band title="No procedure yet">
           <Empty>
             Nothing is assigned and no evidence is expected until the parties agree a procedure. The procedure sets the
             steps, who is responsible for each, what evidence is required, who reviews it, and what counts as complete.
           </Empty>
-          <div className="dr__actions">
-            <Action
-              label="Propose the standard procedure for this family"
-              reason={canProposeProcedure(access.viewer, access.context) ? null : (blockedReason ?? "Only a principal participant or the room administrator can propose the procedure.")}
-              href={canProposeProcedure(access.viewer, access.context) ? `${base}/procedure` : undefined}
-            />
-          </div>
+          {canProposeProcedure(access.viewer, access.context) ? (
+            <CommandForm
+              action={proposeProcedure}
+              hidden={{
+                locale: params.locale,
+                roomId: params.roomId,
+                family: access.room.marketFamily,
+                returnTo: `${base}/procedure`,
+              }}
+            >
+              <Submit label={`Propose the ${access.room.marketFamily} procedure`} />
+            </CommandForm>
+          ) : (
+            <div className="dr__actions">
+              <Action
+                label="Propose the procedure"
+                reason={
+                  blockedReason ??
+                  "Only a principal participant or the room administrator can propose the procedure."
+                }
+              />
+            </div>
+          )}
+          <p className="dr__why">
+            The proposal is the family&rsquo;s own procedure: {templateFor(access.room.marketFamily).summary} It
+            governs nothing until every required approver has approved it, and either side can amend it before then.
+          </p>
         </Band>
       </>
     );
@@ -73,6 +107,7 @@ export default async function ProcedurePage({
 
   return (
     <>
+      <CommandError message={searchParams?.error} />
       <RoomHeader
         reference={`${access.room.ref} · Procedure version ${procedure.version}`}
         title={governs ? "The agreed procedure" : "Proposed procedure"}
@@ -167,19 +202,38 @@ export default async function ProcedurePage({
           </p>
         ) : null}
 
+        {canApproveProcedure(access.viewer, access.context) && defects.length === 0 && !governs ? (
+          <CommandForm
+            action={approveProcedure}
+            hidden={{
+              locale: params.locale,
+              roomId: params.roomId,
+              procedureId: procedure.id,
+              returnTo: `${base}/procedure`,
+            }}
+          >
+            <Submit label="Approve this version" />
+            <p className="dr__why">
+              Your approval is recorded against you. The version governs only when every required approver has
+              approved it, and the completion percentage appears at that moment and not before.
+            </p>
+          </CommandForm>
+        ) : (
+          <div className="dr__actions">
+            <Action
+              label="Approve this version"
+              reason={
+                canApproveProcedure(access.viewer, access.context)
+                  ? defects.length > 0
+                    ? "This version cannot be approved while its structure is invalid."
+                    : "This version is already approved and governs the room."
+                  : (blockedReason ?? "Only a designated required approver can approve the procedure.")
+              }
+            />
+          </div>
+        )}
+
         <div className="dr__actions">
-          <Action
-            label="Approve this version"
-            reason={
-              canApproveProcedure(access.viewer, access.context)
-                ? defects.length > 0
-                  ? "This version cannot be approved while its structure is invalid."
-                  : governs
-                    ? "This version is already approved and governs the room."
-                    : null
-                : (blockedReason ?? "Only a designated required approver can approve the procedure.")
-            }
-          />
           <Action label="Back to the room" href={base} secondary />
         </div>
       </Band>

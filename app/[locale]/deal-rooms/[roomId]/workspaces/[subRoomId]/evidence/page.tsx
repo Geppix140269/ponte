@@ -1,9 +1,26 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Action, Band, Empty, EvidenceStateChip, RoomHeader } from "@/components/deal-room/primitives";
+import {
+  Action,
+  Band,
+  CommandError,
+  CommandForm,
+  Empty,
+  EvidenceStateChip,
+  Field,
+  RoomHeader,
+  SelectField,
+  Submit,
+} from "@/components/deal-room/primitives";
+import { submitEvidence } from "../../../../actions";
 import { listEvidence, loadGoverningProcedure, loadRoom, loadSubRoom } from "@/lib/deal-room/queries";
 import { canUploadEvidence, mutationBlockedReason } from "@/lib/deal-room/permissions";
-import { EVIDENCE_VISIBILITY_LABEL, EVIDENCE_STATES, EVIDENCE_STATE_LABEL } from "@/lib/deal-room/states";
+import {
+  EVIDENCE_VISIBILITIES,
+  EVIDENCE_VISIBILITY_LABEL,
+  EVIDENCE_STATES,
+  EVIDENCE_STATE_LABEL,
+} from "@/lib/deal-room/states";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +39,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function EvidenceRegisterPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; roomId: string; subRoomId: string };
+  searchParams?: { error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -58,6 +77,7 @@ export default async function EvidenceRegisterPage({
 
   return (
     <>
+      <CommandError message={searchParams?.error} />
       <RoomHeader
         reference={`${access.room.ref} · ${subRoom.ref}`}
         title="Evidence"
@@ -138,8 +158,49 @@ export default async function EvidenceRegisterPage({
           </ul>
         )}
 
+        {uploadReason ? (
+          <div className="dr__actions">
+            <Action label="Submit evidence" reason={uploadReason} />
+          </div>
+        ) : (
+          <CommandForm
+            action={submitEvidence}
+            encType="multipart/form-data"
+            hidden={{
+              locale: params.locale,
+              roomId: params.roomId,
+              subRoomId: params.subRoomId,
+              provenance: "member_uploaded",
+              returnTo: `${here}/evidence`,
+            }}
+          >
+            <Field label="What this document is" name="title" required />
+            <SelectField
+              label="Which requirement it answers"
+              name="stepKey"
+              options={expecting.map((step) => ({ value: step.key, label: step.title }))}
+              help="The procedure decides who reviews it. An item with no requirement can still be supplied, but nothing completes on it."
+            />
+            <SelectField
+              label="Who can see it"
+              name="visibility"
+              defaultValue="sub_room"
+              options={EVIDENCE_VISIBILITIES.map((v) => ({ value: v, label: EVIDENCE_VISIBILITY_LABEL[v] }))}
+              help="Shown here, at the point of creation, rather than hidden in a setting."
+            />
+            <Field
+              label="File"
+              name="file"
+              type="file"
+              required
+              accept="application/pdf,image/png,image/jpeg,image/webp"
+              help="PDF, PNG, JPEG or WebP, up to 25 MB. The file is stored privately; submitting it is not a check, and it is not accepted until a reviewer accepts it for the procedure."
+            />
+            <Submit label="Submit evidence" />
+          </CommandForm>
+        )}
+
         <div className="dr__actions">
-          <Action label="Submit evidence" reason={uploadReason} />
           <Action label="Back to the workspace" href={here} secondary />
         </div>
       </Band>

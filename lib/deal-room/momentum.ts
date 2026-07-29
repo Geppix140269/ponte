@@ -235,6 +235,83 @@ export function blockerResolvedMomentum(facts: {
 }
 
 /**
+ * The recognition for the most recent material event in a room.
+ *
+ * One place that maps an event type onto its recognition, so a surface cannot
+ * choose the wrong one or invent a sixth part. Returns null for an event that
+ * is not a completion or a recovery: not everything that happens deserves a
+ * recognition, and showing one for a routine event is how the pattern becomes
+ * noise.
+ */
+export function momentumFor(
+  eventType: string | undefined,
+  facts: {
+    href: string;
+    organisationLabel: string;
+    currentValue: number | null;
+    nextStepTitle: string;
+    nextStepOwner: string;
+  },
+): ProfessionalMomentum | null {
+  switch (eventType) {
+    case "participant_admitted":
+      return admittedMomentum({
+        organisationLabel: facts.organisationLabel,
+        roomHref: facts.href,
+        previousValue: null,
+        currentValue: facts.currentValue,
+      });
+    case "procedure_approved":
+      return procedureApprovedMomentum({
+        roomHref: facts.href,
+        previousValue: null,
+        currentValue: facts.currentValue,
+        firstStepTitle: facts.nextStepTitle,
+        firstStepOwner: facts.nextStepOwner,
+      });
+    case "evidence_submitted":
+      return evidenceSubmittedMomentum({
+        evidenceTitle: "the evidence",
+        reviewerLabel: facts.organisationLabel,
+        href: facts.href,
+        previousValue: facts.currentValue,
+        currentValue: facts.currentValue,
+      });
+    case "evidence_clarification_answered":
+      return clarificationResolvedMomentum({
+        evidenceTitle: "the evidence",
+        href: facts.href,
+        reviewerLabel: facts.organisationLabel,
+        previousValue: facts.currentValue,
+        currentValue: facts.currentValue,
+      });
+    case "evidence_accepted_for_procedure":
+      return evidenceAcceptedMomentum({
+        evidenceTitle: "The evidence",
+        stepTitle: "The requirement it answered",
+        href: facts.href,
+        previousValue: null,
+        currentValue: facts.currentValue,
+        nextStepTitle: facts.nextStepTitle,
+        nextStepOwner: facts.nextStepOwner,
+      });
+    case "blocker_resolved":
+      return blockerResolvedMomentum({
+        blockerTitle: "the blocker",
+        href: facts.href,
+        previousValue: null,
+        currentValue: facts.currentValue,
+        nextStepTitle: facts.nextStepTitle,
+        nextStepOwner: facts.nextStepOwner,
+      });
+    case "room_read_only":
+      return readOnlyMomentum({ href: facts.href });
+    default:
+      return null;
+  }
+}
+
+/**
  * The recovery state. Issue #97 requires momentum at recovery, not only at
  * completion, and this is the one that proves the room did not lose anything.
  */

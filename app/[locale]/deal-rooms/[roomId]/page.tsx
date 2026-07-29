@@ -1,9 +1,24 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import DealRoomBridge from "@/components/ponte/bridge/DealRoomBridge";
-import { Action, Band, Banner, Empty, NextAction, ProgressLine, RoomHeader, StepStateChip } from "@/components/deal-room/primitives";
+import {
+  Action,
+  Band,
+  Banner,
+  CommandError,
+  CommandForm,
+  Empty,
+  MomentumPanel,
+  NextAction,
+  ProgressLine,
+  RoomHeader,
+  StepStateChip,
+  Submit,
+} from "@/components/deal-room/primitives";
 import { loadOverview, loadRoom } from "@/lib/deal-room/queries";
-import { ACTIVITY_EVENT_LABEL, MILESTONES } from "@/lib/deal-room/activity";
+import { ACTIVITY_EVENT_LABEL, MILESTONES, isMaterialForMomentum } from "@/lib/deal-room/activity";
+import { momentumFor } from "@/lib/deal-room/momentum";
+import { setReadOnly } from "../actions";
 import { canSeeSubRoomPortfolio, mutationBlockedReason } from "@/lib/deal-room/permissions";
 import { ROOM_STAGE_LABEL, BLOCKER_CATEGORY_LABEL } from "@/lib/deal-room/states";
 import { daysRemaining, usageSummary } from "@/lib/deal-room/entitlement";
@@ -24,8 +39,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function CommandViewPage({
   params,
+  searchParams,
 }: {
   params: { locale: string; roomId: string };
+  searchParams?: { error?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -46,8 +63,20 @@ export default async function CommandViewPage({
 
   const days = access.entitlement ? daysRemaining(access.entitlement) : null;
 
+  // Professional Momentum for the most recent material completion, so the
+  // recognition appears where the member lands after the action that earned it.
+  const lastMaterial = overview.activity.find((event) => isMaterialForMomentum(event.eventType));
+  const momentum = momentumFor(lastMaterial?.eventType, {
+    href: `${base}/activity`,
+    organisationLabel: overview.participants.find((p) => p.profileId !== access.viewer?.profileId)?.organisation ?? "The other party",
+    currentValue: overview.progress.value,
+    nextStepTitle: nextStep?.title ?? "Await the other participants",
+    nextStepOwner: nextStep?.responsibleRole ?? "The other participants",
+  });
+
   return (
     <>
+      <CommandError message={searchParams?.error} />
       {access.readOnly ? (
         <Banner tone="quiet" title="This room is read-only">
           {access.room.state === "paused"
@@ -176,6 +205,12 @@ export default async function CommandViewPage({
             </Band>
           ) : null}
 
+          {momentum ? (
+            <Band title="What that completed">
+              <MomentumPanel momentum={momentum} />
+            </Band>
+          ) : null}
+
           <Band title="Recent material activity">
             {overview.activity.length === 0 ? (
               <Empty>Nothing material has happened in this room yet.</Empty>
@@ -265,6 +300,19 @@ export default async function CommandViewPage({
                 <p className="dr__why">
                   The term has ended. Nothing has been deleted and everything here stays readable.
                 </p>
+              ) : null}
+
+              {access.viewer?.isRoomAdministrator && !access.readOnly ? (
+                <CommandForm
+                  action={setReadOnly}
+                  hidden={{ locale: params.locale, roomId: access.room.id, returnTo: base }}
+                >
+                  <Submit label="Close this room to changes" secondary />
+                  <p className="dr__why">
+                    The room becomes read-only. Every document, decision, clarification and event stays readable to the
+                    people who were admitted. Nothing is deleted.
+                  </p>
+                </CommandForm>
               ) : null}
             </Band>
           ) : null}

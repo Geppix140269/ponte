@@ -18,6 +18,38 @@ Use this structure:
 
 ---
 
+## 2026-07-29 - Deal Room Gate B corrections after owner review (no production change)
+
+### Completed
+
+- The owner review of PR #98 did not accept Gate B. Five findings, all correct. Fixed on the same branch:
+  - **The loop is now operable.** `app/[locale]/deal-rooms/actions.ts` holds fifteen server actions, each calling one `deal_room_*` command through the caller's own session client. Every surface is wired to them with real inputs. Previously the controls existed and nothing joined them to the commands.
+  - **The invented sanctions check is gone.** `IntegrityInput` now takes a `SanctionsPosition` union that cannot express a screening without its date, source and result, and `sanctionsPositionFrom()` derives it from `verifications.sanctions_hits`. Absence reports under Unproved. A latent defect surfaced in the same code: the query filtered on `profile_id`, which is not a column on `verifications`, so it had been reading nothing.
+  - **Five RLS fail-open paths closed.** No member INSERT, UPDATE or DELETE policy remains on any of the fourteen tables. Room creation proves listing ownership, publication, family facts and Starter bounds, and builds the Deal snapshot rather than accepting one. Entitlement is created only by that command and only as a bounded Starter. `deal_room_is_writable()` joins the entitlement, so a missing row fails closed. `selected` evidence visibility is removed from launch scope.
+  - **An executable negative-access fixture.** `scripts/deal-room-negative-access.mjs` drives the loop with three real member sessions and asserts every property the review listed, including that even the service role cannot rewrite the activity history. Plan: `docs/codex/audits/deal-room/GATE-C-TEST-PLAN.md`.
+- `npm run verify` passes end to end. The contract test now carries the blanket "no member write policy" assertion that would have caught the original defect.
+
+### Decisions
+
+- `selected` visibility removed rather than given an ACL. Implementing an exact recipient relation is real work with its own negative tests and the launch loop does not need it; a label that overstates its own protection is worse than no label.
+- Server actions redirect with the command's own sentence on refusal, rather than returning a result. The whole slice stays server-rendered and no surface becomes a client component for the sake of one error string.
+
+### Risks / discrepancies
+
+- **The visual evidence still has not been captured.** The review directed that the harness be run with the owner-held `PONTE_SITE_PASSWORD`; that value is not present in this environment and the access wall must not be altered. `npx playwright test e2e/deal-room-bridge.spec.ts --list` enumerates all 20 captures, so the spec is wired and ready. One command with the password completes it.
+- The migrations are still executed nowhere, so the negative-access fixture is unrun. It is the first Gate C step.
+
+### Next
+
+1. Owner supplies `PONTE_SITE_PASSWORD`, or runs `npm run evidence:deal-room` directly, and reviews the frames.
+2. Gate C, in order: apply the three migrations; create the bucket and policies; run `npm run deal-room:negative-access`; only on a clean pass, set the flag and deploy.
+
+### Evidence
+
+- Branch `agent/deal-room-launch-slice`. `npm run verify` clean. `next build` emits all twelve surfaces plus the dev harness.
+
+---
+
 ## 2026-07-29 - Deal Room launch slice, Gate B (no production change)
 
 ### Completed

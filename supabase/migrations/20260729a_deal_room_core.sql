@@ -535,8 +535,22 @@ create table if not exists public.deal_room_evidence (
 
   provenance         text not null
                        check (provenance in ('member_declared','member_uploaded','third_party_supplied','ponte_checked')),
+  -- `selected` is deliberately NOT in this list.
+  --
+  -- It appears in the product definition's visibility vocabulary, and the first
+  -- draft of this migration carried it. The owner review caught what that
+  -- meant in practice: there is no selected-recipient relation in this slice,
+  -- so `selected` was evaluated as ordinary sub-room visibility and every
+  -- admitted participant could read an item labelled as restricted to a few.
+  -- A label that overstates its own protection is worse than no label.
+  --
+  -- Implementing an exact recipient ACL is real work with its own negative
+  -- tests, and it is not needed by the launch loop. So the value is removed
+  -- from launch scope: an item is visible to its own organisation, to the
+  -- private workspace, to principals only, or to Ponte. Restoring `selected`
+  -- means adding the ACL table and its tests in the same change.
   visibility         text not null default 'sub_room'
-                       check (visibility in ('own_org','sub_room','principals','selected','ponte_only')),
+                       check (visibility in ('own_org','sub_room','principals','ponte_only')),
   state              text not null default 'draft'
                        check (state in ('draft','uploaded','disclosed','under_review','clarification_required',
                                         'accepted_for_procedure','rejected','superseded','withdrawn',

@@ -340,14 +340,27 @@ export const EVIDENCE_STATE_LIMITATION: Record<EvidenceState, string> = {
     "This was checked against an independent source. The check is recorded with its own date and limitation.",
 };
 
-export const EVIDENCE_VISIBILITIES = ["own_org", "sub_room", "principals", "selected", "ponte_only"] as const;
+/**
+ * `selected` is deliberately absent.
+ *
+ * The product definition lists it, and this vocabulary carried it until the
+ * owner review of 29 July 2026 established what it meant here: with no
+ * selected-recipient relation in the slice, the policy evaluated `selected` as
+ * ordinary sub-room visibility, so an item labelled as restricted to a few
+ * people was readable by every admitted participant. A label that overstates
+ * its own protection is worse than no label at all.
+ *
+ * Restoring it means adding the exact recipient ACL and its negative tests in
+ * the same change. Until then the four values below each mean exactly what they
+ * say, and the database CHECK constraint carries the same four.
+ */
+export const EVIDENCE_VISIBILITIES = ["own_org", "sub_room", "principals", "ponte_only"] as const;
 export type EvidenceVisibility = (typeof EVIDENCE_VISIBILITIES)[number];
 
 export const EVIDENCE_VISIBILITY_LABEL: Record<EvidenceVisibility, string> = {
   own_org: "Your organisation only",
   sub_room: "This private workspace",
   principals: "Principal parties only",
-  selected: "Selected participants",
   ponte_only: "Ponte only",
 };
 
