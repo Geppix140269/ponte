@@ -14,7 +14,7 @@
 
 import assert from "node:assert/strict";
 import { renderTransactionalEmail } from "../render";
-import { TEMPLATE_NAMES, type TemplateName } from "../templates";
+import { TEMPLATES, TEMPLATE_NAMES, type TemplateName } from "../templates";
 import { memberIdentity, salutation, companyForOperator, nameForOperator } from "../identity";
 import { EMAIL_COLOUR } from "../tokens";
 import { BRAND_LINE } from "../shell";
@@ -257,6 +257,87 @@ test("no template links or attaches a member-uploaded document", () => {
       `${name} exposes uploaded material`,
     );
   }
+});
+
+// ---------------------------------------------------------------------------
+// A member is told about the record they actually posted
+// ---------------------------------------------------------------------------
+//
+// Every member-facing template was written when the only record was a product
+// offer, so all of them said "offer" and the metadata block said "Quantity". A
+// freight forwarder was told their offer was live, about a service they never
+// offered for sale, with a blank quantity beside it. The noun and the headline
+// fact now come from the stored record's own family.
+
+const FREIGHT_LISTING = {
+  ref: "PT-0301",
+  id: "svc-1",
+  title: "Freight forwarding",
+  quantity: null,
+  noun: "trade service",
+  headline: { label: "Capability", value: "Up to 40 containers per month" },
+};
+
+const DISTRIBUTION_LISTING = {
+  ref: "PT-0302",
+  id: "dst-1",
+  title: "Importer or importer of record",
+  quantity: null,
+  noun: "distribution opportunity",
+  headline: { label: "Territory", value: "One country (Spain)" },
+};
+
+test("a published trade service is not called an offer", () => {
+  const out = TEMPLATES.listing_published({
+    identity: IDENTITY, listing: FREIGHT_LISTING, completenessScore: 72,
+    completenessBand: "Complete", recommendationCount: 0,
+  });
+  assert.match(out.subject, /Your Ponte trade service is now live/);
+  assert.ok(!/offer/i.test(out.subject), `the subject still says offer: ${out.subject}`);
+  const titles = out.blocks.filter((b) => b.kind === "title").map((b) => JSON.stringify(b));
+  assert.ok(titles.some((b) => /Your trade service is live/.test(b)), "the title still says offer");
+});
+
+test("a published trade service leads with its capability, never with a quantity", () => {
+  const out = TEMPLATES.listing_published({
+    identity: IDENTITY, listing: FREIGHT_LISTING, completenessScore: 72,
+    completenessBand: "Complete", recommendationCount: 0,
+  });
+  const meta = out.blocks.find((b) => b.kind === "metadata") as { rows: { label: string; value: string }[] };
+  const labels = meta.rows.map((r) => r.label);
+  assert.ok(!labels.includes("Quantity"), "a service email asked about a shipped quantity");
+  assert.ok(labels.includes("Capability"));
+  assert.equal(meta.rows.find((r) => r.label === "Capability")?.value, "Up to 40 containers per month");
+});
+
+test("a distribution opportunity is named as one on every member template", () => {
+  const needs = TEMPLATES.listing_needs_information({
+    identity: IDENTITY, listing: DISTRIBUTION_LISTING, blockingIssues: ["State the market or territory this covers."],
+  });
+  assert.match(needs.subject, /Complete your Ponte distribution opportunity to publish it/);
+
+  const verifyOnly = TEMPLATES.listing_needs_information({
+    identity: IDENTITY, listing: DISTRIBUTION_LISTING, route: "verification",
+    blockingIssues: ["Complete your business verification."],
+  });
+  assert.match(verifyOnly.subject, /Verify your business to publish your Ponte distribution opportunity/);
+
+  const flagged = TEMPLATES.listing_flagged_member({
+    identity: IDENTITY, listing: DISTRIBUTION_LISTING, reason: "Held for a manual check.",
+  });
+  assert.match(flagged.subject, /Your Ponte distribution opportunity needs an additional check/);
+});
+
+test("a caller that sends no noun keeps the historical wording exactly", () => {
+  // Nothing that already calls these builders changes meaning: the default is
+  // the word every template used before the family split.
+  const out = TEMPLATES.listing_published({
+    identity: IDENTITY, listing: LISTING, completenessScore: 72,
+    completenessBand: "Complete", recommendationCount: 0,
+  });
+  assert.equal(out.subject, "Your Ponte offer is now live");
+  const meta = out.blocks.find((b) => b.kind === "metadata") as { rows: { label: string; value: string }[] };
+  assert.equal(meta.rows.find((r) => r.label === "Quantity")?.value, "25,000 MT");
 });
 
 console.log(`email/system: ${passed} passed`);

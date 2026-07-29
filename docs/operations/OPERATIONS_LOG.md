@@ -18,6 +18,38 @@ Use this structure:
 
 ---
 
+## 2026-07-29 - Family vocabulary downstream of publication (ADR-0014 §9-§10)
+
+### Completed
+
+- Built `lib/listings/record-facts.ts` as the single presenter for a STORED listing row, and routed every surface that presents one through it: `/find/o/[ref]`, `/marketplace/l/[ref]`, `/opportunities`, the workspace rows, `/admin/listings` and the member email templates. Each previously carried its own fixed list of product columns, so a published trade service answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated" and its stated service terms appeared only inside the prose.
+- Member emails now name the record the member posted. `recordNoun` supplies "offer", "requirement", "trade service" or "distribution opportunity", and the metadata block leads with the family's own headline fact instead of "Quantity". A caller that sends no noun keeps the historical wording exactly, so no existing sender changed meaning.
+- Extracted the submit route's missing-column fallback into `lib/listings/write-fallback.ts` and put it under test. The staging rule was correct on `main` but lived in an untested inline closure; it is now pinned that an absent `service_terms` or `distribution_terms` drops only those two columns and keeps every live classification column.
+- Added `lib/structure/discard.ts` and a confirmation in `ClassifyStep`, so a classification change that would destroy answers already given names them and waits. A change that costs nothing is not interrupted.
+- Both public readers now degrade their select when the unapplied family-terms columns are absent, so the pending `20260728d` migration cannot 404 a shareable listing link.
+
+### Decisions
+
+- None requiring the owner. This is implementation of ADR-0014, which remains **Proposed** and awaiting acceptance.
+
+### Risks / discrepancies
+
+- `20260728d_family_commercial_terms.sql` remains **written and not applied**. Until it is, `service_terms` and `distribution_terms` are absent, the new surfaces render the family's classification without its terms, and the terms reach readers through the record's synthesised `details`. No production migration was applied by this work.
+- PL-004 recorded: `canonicalServiceCategory`, `canonicalPartnerType` and `canonicalRelationshipTerm` exist to reconcile superseded stored keys and have no callers, so a record stored under a superseded key loses its specialisations on edit. Production incidence is **unmeasured**; it is not asserted to be zero.
+
+### Next
+
+1. Owner accepts or rejects ADR-0014.
+2. On acceptance, apply `20260728d_family_commercial_terms.sql` with owner approval and record it in `DATABASE-STATE.md`.
+3. Triage PL-004 against production data.
+
+### Evidence
+
+- Branch `claude/family-procedure-followup-clean`, rebased onto `origin/main` at `6b6c85a` (PR #99). The staged missing-column fallback this branch originally carried was SUPERSEDED by PR #99's dynamic one and was dropped in the rebase; `lib/listings/write-fallback.ts` is main's.
+- `npm run verify` completes on this branch; see the closing report for per-stage exit codes.
+- No production change, no deployment, no migration applied, no feature flag altered.
+---
+
 ## 2026-07-29 — Start a Deal could not submit or save at all
 
 ### Completed

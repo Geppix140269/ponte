@@ -11,6 +11,7 @@ import {
   type QualifiedOpportunity,
 } from "@/lib/board/qualified-opportunity";
 import type { PublicLabelKey } from "@/lib/listings/public-labels";
+import { presentRecord } from "@/lib/listings/record-facts";
 import "@/components/find/find.css";
 
 export const dynamic = "force-dynamic";
@@ -87,27 +88,22 @@ async function Detail({
   locale: string;
   t: Awaited<ReturnType<typeof getTranslations>>;
 }) {
-  const intentLabel =
-    o.type === "offer" ? t("facts.sell") : o.type === "requirement" ? t("facts.buy") : t("facts.service");
   const lastConfirmed = fmtDate(o.lastConfirmed, locale);
   const ns = t("facts.notStated");
 
-  const route =
-    (o.originCode ?? o.originText) && (o.destinationCode ?? o.destinationText)
-      ? `${o.originCode ?? o.originText} → ${o.destinationCode ?? o.destinationText}`
-      : null;
-
-  const facts: { k: string; v: string | null; conf?: boolean }[] = [
-    { k: t("facts.quantity"), v: o.quantity ? `${o.quantity}${o.unit ? ` ${o.unit}` : ""}` : null },
-    { k: t("facts.incoterm"), v: o.incoterm },
-    { k: t("facts.origin"), v: o.originText },
-    { k: t("facts.destination"), v: o.destinationText },
-    { k: t("facts.hsCode"), v: o.hsCode },
-    { k: t("facts.frequency"), v: o.frequency },
-    { k: t("facts.role"), v: o.submitterRole },
-    { k: t("facts.payment"), v: o.payment },
-    { k: t("facts.validUntil"), v: fmtDate(o.validUntil, locale) },
-  ];
+  /**
+   * The record's own facts, in its own family's vocabulary.
+   *
+   * This used to be a fixed list of nine product columns, printed for every
+   * record. A freight forwarder's public page therefore answered "Quantity",
+   * "Incoterm", "HS code", "Origin" and "Destination" with "Not stated": five
+   * questions the composer had correctly never asked them, restored by the page
+   * that publishes the answer. `presentRecord` emits a family's own facts and
+   * NOTHING else, so a row that does not belong cannot be rendered.
+   */
+  const presentation = presentRecord(o.record);
+  const intentLabel = presentation.kindLabel;
+  const facts = presentation.facts;
 
   const requestLabels: RequestLabels = {
     eyebrow: t("request.eyebrow"),
@@ -174,9 +170,9 @@ async function Detail({
           <h2 className="qblock__h">{t("detail.factsHeading")}</h2>
           <dl className="qfacts">
             {facts.map((f) => (
-              <div className="qfact" key={f.k}>
-                <dt className="qfact__k">{f.k}</dt>
-                <dd className={`qfact__v${f.v ? "" : " ns"}`}>{f.v ?? ns}</dd>
+              <div className="qfact" key={f.key}>
+                <dt className="qfact__k">{f.label}</dt>
+                <dd className={`qfact__v${f.value ? "" : " ns"}`}>{f.value ?? ns}</dd>
               </div>
             ))}
           </dl>

@@ -2,6 +2,21 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 29 July 2026 - A family's own vocabulary survives publication, and a discard requires consent
+
+**Decision:** ADR-0014 applies downstream of the composer, not only inside it. Every surface presenting a stored record — the public detail page, the shareable marketplace page, the member's own records, the admin exception console and the member emails — presents that record in its own family's vocabulary, through one shared presenter. And a classification change that would destroy answers the member has already given names them and waits for consent.
+
+**Why:** the family split was correct in the composer and stopped at its edge. Each downstream surface printed its own fixed list of product columns, so a published freight-forwarding record answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated" while its eight stated service terms appeared nowhere but the prose; the emails called every record an "offer". Separately, changing a service category silently discarded the subcategories and specialisations chosen under it — real work, removed without notice, with an absence as the only clue.
+
+**The rule:** a fact a family does not have produces no row, at model-generation level, on a stored record exactly as on a draft. A warning appears only when something real would be lost, and names only what would actually be lost.
+
+**Also:** the missing-column fallback is staged and tested. An absent `service_terms` or `distribution_terms` costs a record its family terms and nothing else; dropping both groups together filed a correctly classified submission as an unclassified row.
+
+**Not:** hiding the product rows with CSS; a second label vocabulary for published records; a confirmation on every classification change.
+
+**Authority:** ADR-0014, sections 9 and 10. Proposed; awaiting owner acceptance.
+
+
 ## 28 July 2026 - Family-specific downstream commercial procedures
 
 **Decision:** Ponte has one shared composer framework and three distinct downstream commercial procedures. Products, Trade services and Distribution and representation share the technical shell, the account gate, the submission orchestration and the design system. They do not share one product-shaped set of commercial questions, blockers, review rows or submission expectations.
