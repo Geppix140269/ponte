@@ -312,6 +312,8 @@ test("a service member is offered service roles, not a grower and an end buyer",
   assert.ok(labels.includes("Freight forwarder"), labels.join(" | "));
   for (const foreign of ["Grower / farmer", "End buyer", "Exclusive distributor"]) {
     assert.ok(!labels.includes(foreign), `a trade service was offered "${foreign}"`);
+  }
+});
 
 // ---- 5. the publication declaration ----------------------------------------
 //
