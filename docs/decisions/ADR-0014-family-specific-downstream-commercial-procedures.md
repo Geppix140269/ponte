@@ -1,6 +1,6 @@
 # ADR-0014 — Family-specific downstream commercial procedures
 
-- **Status:** Proposed; effective when accepted by the product owner and merged
+- **Status:** **Accepted** by the repository owner on 29 July 2026. The supporting migration `20260728e_family_commercial_terms.sql` was applied to production the same day; see `docs/codex/DATABASE-STATE.md`.
 - **Decision date:** 28 July 2026
 - **Owner:** Giuseppe Funaro
 - **Extends:** ADR-0001 (the unified three-family market contract), ADR-0011 (category-first non-product journeys), ADR-0012 (AI product intake)
@@ -106,4 +106,6 @@ The migration is additive, preserves every existing row, changes no RLS policy, 
 
 ## Status of implementation
 
-The code implementing this ADR is on `fix/family-specific-downstream-composer` and is not merged. The migration is written and not applied. Neither may proceed without explicit owner approval, per `AGENTS.md`.
+The composer half of this ADR merged as PR #89. Sections 9 and 10 - the family-aware presentation of a stored record, and the consented discard - are on `claude/family-procedure-followup-clean` as PR #101, which is **not merged**.
+
+The migration is **applied**: `20260728e_family_commercial_terms.sql` was applied to production on 29 July 2026 at 15:44:45 UTC with explicit owner authorisation, after `20260728c_automated_listing_publication.sql` at 15:42:54 UTC, both probe-verified. `listings_product_fields_family` remains `NOT VALID` by design; validating it against existing rows is a separate owner decision, and zero rows would currently violate it.
