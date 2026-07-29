@@ -40,6 +40,7 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0012](ADR-0012-market-classification-implementation-contract.md) | The market classification contract, as implemented (implements ADR-0011) | Proposed; awaiting owner review |
 | [ADR-0014](ADR-0014-family-specific-downstream-commercial-procedures.md) | Family-specific downstream commercial procedures for the shared composer (completes ADR-0011) | Proposed; awaiting owner review |
 | [ADR-0013](ADR-0013-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
+| [ADR-0015](ADR-0015-contrast-and-colour-remediation.md) | Contrast and colour remediation: strengthened paper with a blue interaction family (amends the Constitution to v1.1) | Accepted by owner; effective on merge |
 
 ## Unresolved numbering collision on ADR-0012
 

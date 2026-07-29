@@ -99,6 +99,41 @@ token. That would retire this table entirely. Not done in this PR: the token
 file is an approved authority under CODEOWNERS and adding nine values to it is
 an owner decision, not an implementation one.
 
+### DECIDED, 29 July 2026 — promote them
+
+The owner accepted **ADR-0015**, which decides this proposal: the eight tint and
+line extensions are promoted into the approved `--pf-*` set, with new values from
+the contrast audit, and this table is retired down to `--e-2` alone.
+
+| Local extension | Promoted to | Value now | Value after Stage 1 |
+|---|---|---|---|
+| `--gold-tint` | `--pf-gold-tint` | `#f5ecd8` | `#E4DBC7` |
+| `--pos-tint` | `--pf-positive-tint` | `#e9f1ec` | `#D6DED9` |
+| `--pos-line` | `--pf-positive-line` | `#bfd8c7` | `#698271` |
+| `--neg-tint` | `--pf-danger-tint` | `#f7eae6` | `#E6D9D5` |
+| `--neg-line` | `--pf-danger-line` | `#e6c3b8` | `#977469` |
+| `--review-tint` | `--pf-review-tint` | `#eaeff1` | `#D8DDDF` |
+| `--review-line` | `--pf-review-line` | `#c4d2d8` | `#707E84` |
+| `--declared-tint` | `--pf-declared-tint` | `#f1eee7` | `#DFDCD5` |
+| `--e-2` | **not promoted** | ink at 16% | unchanged. Not a colour, and ADR-0015 does not cover elevation |
+
+The three `*-line` values were the reason this could not wait. Each measured
+about 1.5:1 against white, against the 3:1 that Constitution section 18a now asks
+of a band edge, so their values had to change; and once an approved counterpart
+exists, `token-authority.test.ts` correctly refuses to let a changed value sit in
+a local extension. Promotion and revaluation are therefore one piece of work, not
+two.
+
+`--gold-tint` was the entry the Phase 1 audit named as needing an owner ruling.
+ADR-0015 gives it: promoted, and still a surface rather than a status. Gold is not
+verification, approval, warning or success at any opacity, and the amendment does
+not soften that.
+
+**Not yet done.** This is the governance record. Stage 1 of ADR-0015 performs the
+promotion, updates `LOCAL_EXTENSIONS` and `counterparts` in
+`token-authority.test.ts`, and reduces this table to one row. It must not begin
+until the governance PR is merged.
+
 ## 4. Not aliased, and why
 
 Two literal colours remain in `desk.css` outside the extensions table. Both are
@@ -130,14 +165,28 @@ declare the same Brand v5 values under their own names:
 
 | Stylesheet | Scope | Retired by |
 |---|---|---|
-| `components/find/find.css` | `.ponte-find` | Journey slices 6 and 8 |
-| `components/home/landing/landing.css` | `.ponte-landing` | Phase 4 (already orphaned) |
-| `components/legal/legal.css` | `.ponte-legal` | Journey slice 12 |
-| `components/pfooter.css` | shared footer | Phase 4 |
+| `components/find/find.css` | `.ponte-find` | ~~Journey slices 6 and 8~~ **Stage 1 of ADR-0015** |
+| `components/home/landing/landing.css` | `.ponte-landing` | ~~Phase 4~~ **Stage 1 of ADR-0015** |
+| `components/legal/legal.css` | `.ponte-legal` | ~~Journey slice 12~~ **Stage 1 of ADR-0015** |
+| `components/pfooter.css` | shared footer | ~~Phase 4~~ **Stage 1 of ADR-0015** |
 
 These were out of scope for this PR, which the ExecPlan scoped to the Desk. They
 are the same defect at a smaller scale and each is cheapest to fix while its
 journey is being rewritten.
+
+**Reassigned, 29 July 2026.** ADR-0015 moves all four into Stage 1, because
+waiting is no longer an option: these four sheets hold the Brand v5 values as
+literal hex, so a change to the approved token set does not reach them. Leaving
+them would mean Start a Deal and the landing keep the failing values, and
+**LB-001 would not be closed** by the token change that is meant to close it.
+
+The conversion is value-neutral in itself: each literal is replaced by the
+`var(--pf-*)` it already equals, in the same commit that changes the approved
+value. That is the point of doing it here rather than later — it is what makes the
+one token change reach the whole product.
+
+After Stage 1 there is exactly one place a Ponte colour can be changed, which is
+the state this section has been asking for since Phase 2.
 
 Note that `ponte-flow.css` carries a comment arguing against writing an alias
 layer for `.ponte-landing` and `.ponte-find`, on the grounds that the two
