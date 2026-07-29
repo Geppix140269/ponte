@@ -125,7 +125,7 @@ type Listing = {
    * The canonical classification and family terms.
    *
    * The console reads with `select("*")`, so these arrive whenever the column
-   * exists; the family terms (`20260728d`) are still unapplied and arrive as
+   * exists; the family terms (`20260728e`) are still unapplied and arrive as
    * undefined until it is. They are declared here so the reviewer's fact list
    * can be built from the record's OWN family rather than from the six product
    * columns the console printed for every record.

@@ -83,7 +83,7 @@ export default async function StructurePage({
  * Read one of the member's own listings back into a draft.
  *
  * Selected column by column rather than with `*`: the family-terms columns
- * arrive with `20260728d`, which is not applied, and naming them explicitly is
+ * arrive with `20260728e`, which is not applied, and naming them explicitly is
  * what lets the absent-column case be caught and retried instead of failing the
  * whole read.
  */

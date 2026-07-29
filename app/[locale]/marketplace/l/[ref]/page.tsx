@@ -25,7 +25,7 @@ import {
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
 import { truthfulLabels } from "@/lib/listings/public-labels";
-import { isMissingColumnError } from "@/lib/listings/classification";
+import { readWithMissingColumnFallback } from "@/lib/listings/read-fallback";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import type { Locale } from "@/i18n/routing";
 import { levelRank } from "@/lib/verification/level";
@@ -98,14 +98,30 @@ type Deal = {
   distribution_terms?: Record<string, unknown> | null;
 };
 
-const DEAL_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, quantity_mode, quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at, " +
-  "market_family, market_intent, service_category_key, service_subcategory_keys, " +
-  "distribution_partner_type_key, distribution_relationship_terms, coverage_scope_key, " +
-  "territory_codes, product_sector_key, custom_category_label";
-
-/** `20260728d` is unapplied, so these are asked for separately. See the reader. */
-const DEAL_FAMILY_TERMS = "service_terms, distribution_terms";
+/**
+ * Every column this page wants, as a list rather than a string.
+ *
+ * A list because the read degrades one column at a time. Asking for a column
+ * the database does not have fails the WHOLE select, and this page answers that
+ * with `notFound()` - so a live, approved listing 404s on a link a member has
+ * already forwarded, because a migration is pending.
+ *
+ * Two migrations are written and unapplied, so several of these do not exist in
+ * production: `quantity_mode`, `quantity_min` and `quantity_max` from
+ * `20260728c`, and `service_terms` and `distribution_terms` from `20260728e`.
+ */
+const DEAL_COLUMNS: readonly string[] = [
+  "id", "user_id", "ref", "type", "product", "hs_code", "origin", "destination",
+  "volume", "quantity", "quantity_mode", "quantity_min", "quantity_max", "unit",
+  "frequency", "incoterm", "payment_terms", "submitter_role", "chain_depth",
+  "mandate_sighted", "validity_type", "valid_until", "reconfirmed_at",
+  "decided_at", "desk_version", "details", "created_at",
+  "market_family", "market_intent", "service_category_key",
+  "service_subcategory_keys", "distribution_partner_type_key",
+  "distribution_relationship_terms", "coverage_scope_key", "territory_codes",
+  "product_sector_key", "custom_category_label",
+  "service_terms", "distribution_terms",
+];
 
 // Public, shareable page for ONE approved listing. This is the link members
 // forward on WhatsApp: OG tags carry the product photo and teaser, and the
@@ -121,8 +137,8 @@ async function getDeal(
   if (!isSupabaseConfigured()) return null;
   const adminSb = createAdminClient();
   // The row shape is named rather than inferred: the select is built from a
-  // variable so the family terms can be dropped, and the generated Supabase
-  // types cannot infer a row from a non-literal column string.
+  // variable so absent columns can be dropped, and the generated Supabase types
+  // cannot infer a row from a non-literal column string.
   const read = async (columns: string): Promise<{ data: Deal | null; error: unknown }> => {
     const res = await adminSb
       .from("listings")
@@ -133,10 +149,14 @@ async function getDeal(
     return { data: (res.data as Deal | null) ?? null, error: res.error };
   };
 
-  // With the family terms, then without. A shareable link must not 404 because
-  // a migration is pending; the terms still reach the reader through `details`.
-  let { data, error } = await read(`${DEAL_COLUMNS}, ${DEAL_FAMILY_TERMS}`);
-  if (error && isMissingColumnError(error)) ({ data, error } = await read(DEAL_COLUMNS));
+  // Drop exactly the columns this database turns out not to have, one at a
+  // time. A shareable link must not 404 because a migration is pending; the
+  // absent facts still reach the reader through `details`. Any other failure is
+  // returned as itself rather than answered by asking for less.
+  const { data, dropped } = await readWithMissingColumnFallback(read, DEAL_COLUMNS);
+  if (dropped.length > 0) {
+    console.warn(`[ponte] listing read without absent column(s): ${dropped.join(", ")}`);
+  }
   if (!data) return null;
 
   // Not-current opportunities are not public: a passed finite validity OR a

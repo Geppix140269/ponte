@@ -293,7 +293,7 @@ test("an unrecognised stored family refuses to resume", () => {
 /* ---- Shared resume behaviour --------------------------------------- */
 
 test("the family terms columns may be absent, and resume still works", () => {
-  // 20260728d is not applied. Until it is, these columns do not exist and the
+  // 20260728e is not applied. Until it is, these columns do not exist and the
   // read falls back to the base column list, so the row arrives without them.
   const { service_terms, ...withoutTerms } = freightRow;
   void service_terms;

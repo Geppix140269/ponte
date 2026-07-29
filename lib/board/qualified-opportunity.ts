@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode } from "@/lib/listing-terms";
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
-import { isMissingColumnError } from "@/lib/listings/classification";
+import { readWithMissingColumnFallback } from "@/lib/listings/read-fallback";
 import { truthfulLabels, type PublicLabel } from "@/lib/listings/public-labels";
 import type { FactsRow } from "@/lib/listings/record-facts";
 import { levelRank } from "../verification/level";
@@ -90,25 +90,38 @@ export type QualifiedOpportunityLookup =
   | { state: "gone" }
   | { state: "missing" };
 
-const QO_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, quantity_mode, quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, desk_managed, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at, " +
+/**
+ * Every column this reader wants, as a list rather than a string.
+ *
+ * A list because the read degrades one column at a time. Asking for a column
+ * the database does not have fails the WHOLE select - PostgREST returns an
+ * error, not a partial row - and this reader turns that into
+ * `{ state: "missing" }`, so a live, approved listing 404s on a public page
+ * because a migration is pending.
+ *
+ * Two migrations are currently written and unapplied, so several of these do
+ * not exist in production: `quantity_mode`, `quantity_min` and `quantity_max`
+ * from `20260728c`, and `service_terms` and `distribution_terms` from
+ * `20260728e`. `readWithMissingColumnFallback` drops exactly the column the
+ * database names and retries, so the record still comes back with everything
+ * that does exist. The absent facts still reach the reader through the
+ * record's own `details` text until the migrations are applied.
+ */
+const QO_COLUMNS: readonly string[] = [
+  "id", "user_id", "ref", "type", "product", "hs_code", "origin", "destination",
+  "volume", "quantity", "quantity_mode", "quantity_min", "quantity_max", "unit",
+  "frequency", "incoterm", "payment_terms", "submitter_role", "chain_depth",
+  "mandate_sighted", "desk_managed", "validity_type", "valid_until",
+  "reconfirmed_at", "decided_at", "desk_version", "details", "created_at",
   // The classification (20260728a). Applied in production, and what makes the
   // detail page able to print a trade service as a trade service.
-  "market_family, market_intent, service_category_key, service_subcategory_keys, " +
-  "distribution_partner_type_key, distribution_relationship_terms, coverage_scope_key, " +
-  "territory_codes, product_sector_key, custom_category_label";
-
-/**
- * The family commercial terms (20260728d), which are NOT applied.
- *
- * Named separately and appended optionally for the same reason the submit
- * route's write fallback is staged: asking for a column the database does not
- * have fails the WHOLE select, and a detail page that 404s because a migration
- * is pending is worse than one that renders the record without its terms. The
- * terms still reach the reader through the record's own `details` text until
- * the migration is applied.
- */
-const QO_FAMILY_TERMS = "service_terms, distribution_terms";
+  "market_family", "market_intent", "service_category_key",
+  "service_subcategory_keys", "distribution_partner_type_key",
+  "distribution_relationship_terms", "coverage_scope_key", "territory_codes",
+  "product_sector_key", "custom_category_label",
+  // The family commercial terms (20260728e). Not applied.
+  "service_terms", "distribution_terms",
+];
 
 /**
  * The row this reader returns.
@@ -174,10 +187,15 @@ export async function getQualifiedOpportunity(
       return { data: (res.data as QoRow | null) ?? null, error: res.error };
     };
 
-    // With the family terms, then without them. Only a missing column earns the
-    // retry: any other failure is a real failure and is thrown.
-    let { data, error } = await read(`${QO_COLUMNS}, ${QO_FAMILY_TERMS}`);
-    if (error && isMissingColumnError(error)) ({ data, error } = await read(QO_COLUMNS));
+    // Drop exactly the columns this database turns out not to have, one at a
+    // time, and keep everything else. Any other failure is a real failure and
+    // is thrown, so an RLS refusal is never answered by quietly asking for less.
+    const { data, error, dropped } = await readWithMissingColumnFallback(read, QO_COLUMNS);
+    if (dropped.length > 0) {
+      // Each one is a migration still owed, and the record is being presented
+      // without a fact it may actually hold.
+      console.warn(`[ponte] listing read without absent column(s): ${dropped.join(", ")}`);
+    }
     if (error) throw error;
     if (!data) return { state: "missing" };
 
