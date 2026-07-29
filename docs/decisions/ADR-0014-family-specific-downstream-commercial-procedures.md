@@ -94,7 +94,7 @@ The migration is additive, preserves every existing row, changes no RLS policy, 
 - A published record reads back in the vocabulary it was built in, on every surface that presents it, and a member email names the record the member actually posted rather than calling all three families an "offer".
 - The missing-column fallback is staged: an absent `service_terms` or `distribution_terms` costs a record its family terms and nothing else. Dropping the two groups together filed a correctly classified submission as an unclassified row, which is the defect ADR-0011 exists to prevent, reintroduced by a safety net. The rule now lives in `lib/listings/write-fallback.ts` with tests, rather than in an untested closure inside the submit route.
 - A classification change that would destroy work stops and names it. A change that would not is unaffected.
-- Not addressed here, and recorded as PL-004: `canonicalServiceCategory` and `canonicalPartnerType` exist to reconcile a superseded stored key onto its current one and have no callers, so a record stored under a superseded key would lose its specialisations on edit. Production incidence is unmeasured and is not asserted to be zero.
+- Not addressed here, and recorded as PL-013: `canonicalServiceCategory` and `canonicalPartnerType` exist to reconcile a superseded stored key onto its current one and have no callers, so a record stored under a superseded key would lose its specialisations on edit. Production incidence is unmeasured and is not asserted to be zero.
 
 ## Alternatives rejected
 

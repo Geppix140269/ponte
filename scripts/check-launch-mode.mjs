@@ -13,9 +13,29 @@ function read(relativePath) {
   return fs.readFileSync(absolutePath, "utf8");
 }
 
+/**
+ * Collapse every run of whitespace to one space.
+ *
+ * The required strings are sentences, and a Markdown file wraps sentences. On
+ * 29 July 2026 this check failed on an unmodified `main` because `AGENTS.md`
+ * wraps "No additional cleanup, refactoring or adjacent improvement is
+ * authorised" after the comma, so a raw `includes` missed a policy that was
+ * present and correct. The check was asserting the line width of a paragraph,
+ * not its meaning.
+ *
+ * Normalising both sides fixes that without weakening anything: every word, in
+ * order, must still appear. Reflowing a paragraph now passes; deleting or
+ * rewording the assertion still fails, which is the only thing this check
+ * exists to catch. Authorised as PL-005 on issue #97.
+ */
+function normalise(text) {
+  return text.replace(/\s+/g, " ");
+}
+
 function requireText(relativePath, content, snippets) {
+  const flattened = normalise(content);
   for (const snippet of snippets) {
-    if (!content.includes(snippet)) {
+    if (!flattened.includes(normalise(snippet))) {
       failures.push(`${relativePath} is missing required text: ${snippet}`);
     }
   }
