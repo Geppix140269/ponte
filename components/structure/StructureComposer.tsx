@@ -363,7 +363,10 @@ export default function StructureComposer({
 type T = ReturnType<typeof useTranslations>;
 
 // ---- S01 intent -> product -------------------------------------------------
-function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; set: (p: Partial<StructureDraft>) => void; icons: CategoryIconMap; onNext: () => void; t: T }) {
+// `set` is the composer's own SetDraft, not the narrow patch-only form. It has
+// to be: this step hands it to ClassifyStep, whose specialisation clean-up
+// after a category change reads the CURRENT draft through the functional form.
+function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; set: SetDraft; icons: CategoryIconMap; onNext: () => void; t: T }) {
   const intents: { key: Intent; label: string; desc: string }[] = [
     { key: "requirement", label: t("intent.buy"), desc: t("intent.buyDesc") },
     { key: "offer", label: t("intent.sell"), desc: t("intent.sellDesc") },
