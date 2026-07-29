@@ -361,7 +361,11 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
    ====================================================================== */
 @media (max-width: 860px) {
   .pcat__on,
-  .pcat-trail__k {
+  .pcat-trail__k,
+  /* Added after rebasing onto main: PR #100 introduced the discard notice, whose
+     key names which answer is about to be lost. That is a field label carrying a
+     fact, so it belongs in the floor rather than outside it. */
+  .pcat-discard__k {
     font-size: 11px;
   }
 }
