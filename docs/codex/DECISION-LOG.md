@@ -17,6 +17,25 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** implemented on branch `agent/deal-room-launch-slice`. **No SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set, nothing has been deployed or merged. Applying the migrations, creating the bucket, activating the flag and deploying are four separate owner gates.
 
 **Affected areas:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md`, `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`, `lib/deal-room/`, `components/deal-room/`, `components/ponte/bridge/DealRoomBridge.tsx`, `app/[locale]/deal-rooms/`, `app/api/deal-room/`, `supabase/migrations/20260729a-c`, `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`, `docs/launch/`.
+## 29 July 2026 - Contrast and colour remediation: strengthened paper with a blue interaction family (ADR-0015)
+
+**Decision:** Ponte adopts Direction B, paper with blue interaction, incorporating Direction C's three non-colour mobile rules. The Design Constitution becomes v1.1.
+
+**The rule:** Ponte now has two semantic colour families and they do not overlap. Gold is exclusively the Ponte signal, movement across an approved Bridge, an arrived or selected Bridge destination, and approved editorial emphasis. Blue is exclusively interaction: links, navigational emphasis, selected controls that are not journey positions, active and expanded controls, active form boundaries, and keyboard focus through the existing focus semantics.
+
+**Where they meet, the Bridge wins:** a chosen Bridge family is both a selected control and an arrived destination, and it stays gold. Blue takes selected controls that are not journey positions, so chips, segments, tabs, rows and tiles. Without that line, blue walks into the Bridge and the two systems stop meaning different things.
+
+**Not:** blue for verification, success, warning, review, commercial completion or Bridge arrival; `--pf-focus` repurposed as a general interaction token; a whole-product repaint; any change to Bridge geometry, motion, typography families or the meaning of gold.
+
+**Rationale:** the audit measured 163 colour pairs and found 96 short. The split was the finding: 39 of 55 text pairs already clear AA, while 80 of 108 non-text pairs fall short. The palette states the words clearly and whispers the shape of the page, which is exactly what the focus group reported. Direction A fixes the measurement completely but leaves the second half of the finding standing, because Ponte's only accent is gold and section 6 bars gold from meaning "act here", so A has nothing to spend on affordance.
+
+**Also decided:** the eight local tint and line extensions in `desk.css`, which `compatibility-aliases.md` section 3 had been holding for an owner ruling, are promoted into the approved token set. Section 18 of the Constitution gains numeric contrast targets; it previously said "at approved contrast levels" without naming a level, which meant the rule could not be failed.
+
+**Launch blockers recorded:** LB-001, required form and input boundaries at approximately 1.52:1. LB-002, meaningful missing-data text such as `Not stated` at approximately 2.98:1. Both are unmet duties under Constitution sections 13 and 14 rather than new requirements.
+
+**Implementation boundary:** at this record point **nothing is implemented**. This entry covers the governance change only: the ADR, the Constitution amendment, the ExecPlan and the registers. No production token, stylesheet, route or component has been modified, nothing is deployed, and Stage 1 must not begin until the governance PR is merged. One item awaits the owner's specific sign-off: the Bridge deck and pier in the approved Bridge authority package, recorded in the ExecPlan section 12.
+
+**Affected areas:** `docs/decisions/ADR-0015-contrast-and-colour-remediation.md`, `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` (v1.1), `docs/plans/active/contrast-and-colour-remediation.md`, `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`, `docs/launch/LAUNCH-BLOCKERS.md`, `docs/operations/OPEN_DECISIONS.md`, `design-system/ponte-flow/documentation/compatibility-aliases.md`, `docs/codex/CURRENT-STATE.md`.
 
 ## 28 July 2026 - Family-specific downstream commercial procedures
 

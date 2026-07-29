@@ -2,7 +2,8 @@
 
 **Reconciled:** 28 July 2026  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
-**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`, ADR-0002 and ADR-0010 (complete-interface scope)  
+**Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` **v1.1**, ADR-0002, ADR-0010 (complete-interface scope) and ADR-0015 (contrast and colour remediation, amends sections 6, 15, 18 and 22)  
+**Contrast baseline:** `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`. 163 pairs measured, 96 short. Remediation is **Designed, not started**; see `docs/plans/active/contrast-and-colour-remediation.md`  
 **Bridge authority:** `design/authority/bridge/v1/` (merged; production primitives incomplete. `components/ponte/bridge/BridgeRoute.tsx` is the Family and Action Bridge and is the only one built)  
 **Language authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-26-02-ENGLISH-ONLY-INTERFACE-POLICY.md`  
 **Market discoverability authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`  
@@ -45,6 +46,7 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Area | Repository status | Production status | Notes |
 |---|---|---|---|
 | Source-of-truth operating procedure | On `main` | Operating rule | `AGENTS.md`, `CLAUDE.md`, SOP, ADRs and governance checks are canonical. |
+| Contrast and colour remediation | Designed | Not started | ADR-0015 accepted 29 July 2026; Constitution v1.1. Governance records only. **No production token, stylesheet or component has changed.** Stage 1 (structural tokens, alias conversions, 11px mobile caption floor) must not begin until the governance PR is merged. Stage 2 (the `--pf-interact-*` family) follows Stage 1, journey by journey. LB-001 and LB-002 open. OD-007 awaiting owner sign-off on the Bridge deck. |
 | Complete Market Signal discoverability and category-first journeys | Designed and owner-accepted on branch `agent/record-market-discoverability`; development brief issued to Claude Code | Not implemented or production-verified | ADR-0011 makes every eligible signal discoverable and requires Trade Services and Distribution to begin with structured categories. The current 60-record board, generic non-product subject field and approximately 160-row upload remain implementation/reconciliation work. |
 | Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No design, code, schema, migration, deployment or production action. |
 | Deal-to-Room and Sub-Room Model | Designed and owner-accepted on branch | Not started | Structured Deals may be published free. One paid master Deal Room corresponds to one Deal and may contain any number of private related sub-rooms. Five room slots mean five concurrent master Deals, not five conversations. |

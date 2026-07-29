@@ -1,9 +1,38 @@
-# Ponte Design Constitution v1
+# Ponte Design Constitution v1.1
 
 **Status:** APPROVED — AUTHORITATIVE  
 **Owner:** Giuseppe Funaro  
 **Approval date:** 27 July 2026  
+**Amended:** 29 July 2026 (v1.1, contrast and colour remediation — ADR-0015)  
 **Scope:** Every Ponte-controlled production interface, component, icon, animation, document surface and interaction.
+
+## Amendment record
+
+Amendments are listed newest first. Each must satisfy section 3 in full.
+
+### v1.1 — 29 July 2026 — Contrast and colour remediation
+
+- **Rules affected:** section 6 (colour law), section 15 (surfaces and rule
+  weight), section 18 (approved contrast levels, previously unquantified) and
+  section 22 (two items added to the pull-request design gate, so the new rules
+  are enforced rather than merely stated). Sections 6, 15 and 18 gain subsections
+  rather than losing text: no existing sentence in the Constitution was deleted
+  or weakened by this amendment.
+- **Reason:** Accepted focus-group finding that members cannot reliably
+  distinguish surfaces, modules, controls and states, worst at 390 × 844. The
+  audit at `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`
+  measured 163 pairs and found 96 short of target, including every control
+  boundary in the product and the Bridge deck at 1.42:1.
+- **What changed:** structural token values strengthened; a gold structural-rule
+  token added; a blue interaction family added as a second semantic colour
+  family; numeric contrast targets written into section 18; an 11px floor for
+  structural mono captions below 860px.
+- **What did not change:** the warm paper identity, the meaning of gold, Bridge
+  geometry, motion, typography families, iconography, spacing, or any other
+  section.
+- **Authority:** ADR-0015, accepted by Giuseppe Funaro on 29 July 2026.
+- **Migration and rollback:** two stages, recorded in ADR-0015 and in
+  `docs/plans/active/contrast-and-colour-remediation.md`.
 
 ## 1. Constitutional authority
 
@@ -92,6 +121,62 @@ Approved tokens are the sole colour source.
 - Colour is never the only carrier of meaning.
 
 Hard-coded hexadecimal, RGB, HSL or named interface colours outside the approved token files are prohibited unless an accepted amendment records the need.
+
+### 6a. Gold and blue are two different systems (v1.1)
+
+Ponte has exactly two semantic colour families beyond ink and the state colours.
+They do not overlap and they may not be substituted for one another.
+
+**Gold is exclusively:**
+
+- the Ponte signal;
+- movement across an approved Bridge;
+- an arrived or selected Bridge destination;
+- approved editorial emphasis.
+
+**Blue is exclusively interaction:**
+
+- links;
+- navigational emphasis;
+- selected controls that are **not** journey positions;
+- active and expanded controls;
+- active form boundaries;
+- keyboard focus, through the existing focus semantics.
+
+Blue must never mean verification, success, warning, review, commercial
+completion or Bridge arrival.
+
+Where the two meet, the Bridge wins: **a chosen Bridge family or station is an
+arrived destination and stays gold**, even though it is also a selected control.
+Blue takes selected controls that are not journey positions — chips, segmented
+controls, tabs, rows, tiles and expanded modules. Every journey slice in which a
+Bridge appears beside a selected control must state that this boundary was
+checked.
+
+`--pf-focus` is not a general interaction token. It means keyboard focus and
+nothing else, and it must remain visually distinct from the interaction border so
+that a focused control and a selected control never look the same.
+
+### 6b. Gold as text and gold as a line are different tokens (v1.1)
+
+Gold at brand saturation does not carry a 1px rule or a small state marker.
+
+- `--pf-gold-ink` is gold **as text**.
+- `--pf-gold-rule` is gold **as a structural line, cap, bar or state marker**.
+- `--pf-gold` is the brand fill, for large marks and full control fills only,
+  where the contrast that matters is the label against the fill.
+
+A rule, a cap, a progress fill, a selection bar or a state dot drawn in
+`--pf-gold` is a defect, not a style choice.
+
+### 6c. Recession is expressed in colour, not in container opacity (v1.1)
+
+`opacity` on a subtree that contains text multiplies the contrast of every
+descendant, so a recessed module becomes an unreadable one. Recession, disabled
+state and unavailability are expressed with token colour at full opacity.
+
+Opacity may still be applied to a single non-text mark — a node, a pier, a
+rule — where the resulting composited value is measured and meets its target.
 
 ## 7. Icon law
 
@@ -213,6 +298,27 @@ Prohibited:
 
 Unequal content may use natural height. Artificial symmetry must not damage hierarchy or clarity.
 
+### 15a. A surface boundary is drawn, not implied (v1.1)
+
+Two adjacent surfaces are never separated by their fills alone. Warm paper cannot
+carry enough luminance difference between a page ground, a working surface and a
+sunken well to make a fill the boundary, and attempting it produces the blue-grey
+SaaS surfaces this section already prohibits.
+
+Every adjacent surface pair therefore carries **both**:
+
+- a fill difference of at least 1.15:1, and
+- a rule at `--pf-rule-strong` or stronger, meeting 3:1 against both surfaces.
+
+There are two rule weights and they are not interchangeable:
+
+- `--pf-rule` is a divider **inside** a module — a row separator, a hairline
+  between facts. It is not a component boundary and owes 1.5:1, not 3:1.
+- `--pf-rule-strong` is the boundary **of** a module or a control — a panel edge,
+  an input, a button, a chip, a tile, a segmented control. It owes 3:1.
+
+A control whose boundary is drawn in `--pf-rule` is using the wrong token.
+
 ## 16. Spacing and layout rhythm
 
 Spacing must derive from approved tokens or approved component rules.
@@ -244,6 +350,40 @@ Every approved component must remain understandable:
 - at approved contrast levels.
 
 Duplicated animation elements must be hidden from assistive technology. Reduced motion removes non-essential movement rather than merely slowing it.
+
+### 18a. Approved contrast levels, stated numerically (v1.1)
+
+This section previously required "approved contrast levels" without naming one,
+which meant the rule could not be failed. The approved levels are:
+
+| What is being drawn | Minimum | Basis |
+|---|---|---|
+| Text, at every size this product uses | 4.5:1 | WCAG SC 1.4.3. Ponte sets structural captions in mono at small sizes, so the large-text exemption is not claimed anywhere |
+| The boundary of a control | 3:1 | WCAG SC 1.4.11 |
+| A state indicator, including a selection mark | 3:1 | WCAG SC 1.4.11 |
+| A focus indicator | 3:1 | WCAG SC 1.4.11 |
+| A Bridge deck, pier, cap or node | 3:1 | Section 8 makes the Bridge structural, so it is a state indicator and not decoration |
+| A divider inside a module | 1.5:1 | Ponte rule, not a WCAG duty |
+| Two adjacent surface fills | 1.15:1, plus a 3:1 rule | Ponte rule, not a WCAG duty. See section 15a |
+
+Measured against the **darkest surface the value is ever drawn on**, not the
+lightest. A value solved against white and then used in the sunken well fails
+there, which is the specific error the 29 July audit found repeatedly.
+
+Composited values are measured after compositing. An `opacity` or a
+`color-mix()` is not a contrast reduction of the same size and must be flattened
+before it is checked.
+
+### 18b. Structural captions have a size floor on mobile (v1.1)
+
+Below 860px, mono text carrying structural or factual information — a
+classification, a reference, a station name, a field label, a country or HS
+code — is set at **no less than 11px**.
+
+Contrast is a multiplier on legibility, not a substitute for size. A two-letter
+country code at 8px on a phone in daylight is not rescued by any ratio.
+
+This is a floor, not a licence to set everything at 11px.
 
 ## 19. State completeness
 
@@ -286,6 +426,8 @@ Every UI pull request must confirm:
 - approved Ponte components used;
 - approved tokens used;
 - approved icons used;
+- contrast measured against section 18a, for every value the change introduces or alters, against the darkest surface it is drawn on;
+- gold and blue used within their section 6a meanings, and the Bridge boundary checked where a Bridge appears beside a selected control;
 - no generic substitute introduced;
 - editorial typography preserved;
 - bridge language preserved where applicable;
