@@ -122,6 +122,38 @@ Use this structure:
 - Branch `agent/deal-room-launch-slice`, based on `main` at `0318615`.
 - `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`.
 - `npm test`: all suites pass, including the ten new ones. `tsc --noEmit`: clean. `next build`: all twelve Deal Room routes and the API route emitted.
+## 2026-07-29 - Two migrations applied to production (ADR-0013, ADR-0014)
+
+### Completed
+
+- The owner accepted **ADR-0014** and authorised applying two migrations to production, one at a time and in order. Both were applied with `node scripts/db-query.mjs --file` against `cptglsmjmzcfpjndqfmc`, each probe-verified before the next was started.
+- `20260728c_automated_listing_publication.sql` at **15:42:54 UTC**. SHA-256 `745453c9...aabf11c4`, matching the file byte for byte. Ledger 41 to 42. Adds 11 columns, widens the status vocabulary to 13 values, adds 5 CHECK constraints and 5 indexes, creates `listing_events` with RLS enabled, backfills 4 rows to `quantity_mode = 'exact'`, and seeds one `listing_published` event per already-approved listing.
+- `20260728e_family_commercial_terms.sql` at **15:44:45 UTC**. SHA-256 `4224fa27...de9f18fa8`, matching byte for byte. Ledger 42 to 43. Adds `service_terms` and `distribution_terms` as nullable jsonb and three cross-family CHECK constraints.
+- **Nothing was published.** `listings` still holds 5 rows at approved 2, draft 1, submitted 2, exactly as before. No status changed, and no row carries a family or family terms yet.
+- Functional probes for both files were run inside transactions that were **rolled back**, so no test row reached production; the rollbacks were confirmed held afterwards.
+
+### Decisions
+
+- The owner accepted ADR-0014, approved the `20260728e` rename, and approved the Launch Mode checker fix.
+- **`listings_product_fields_family` was deliberately left `NOT VALID`.** The migration deploys it that way and validating it would make the deployed object differ from the file. Zero existing rows would violate it; enforcing it against existing rows is a separate owner decision.
+
+### Risks / discrepancies
+
+- The gap that broke Start a Deal is closed: the seven `20260728c` columns now exist, so an accepted declaration is recordable and the validator can write `validating`, `needs_information` and `flagged`. The dynamic write fallback remains in place and is now dormant for those columns rather than load-bearing.
+- **Automated publication still produces nothing on its own.** Verification remains blocking by owner decision, and no member holds a passing bound member-business verification, so there is still no publicly eligible listing. That is the recorded bottleneck, unchanged by these migrations.
+- PL-004 remains open and untouched.
+
+### Next
+
+1. Owner reviews PR #101 and decides on merge.
+2. Separately decide whether to `validate constraint listings_product_fields_family`.
+3. Verification throughput remains the blocker on anything becoming publicly visible.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, the two "APPLIED to production, 29 July 2026" sections, carrying preflight, post-application probes, security verification and the rolled-back functional results.
+- `public.schema_migrations` rows for both filenames, with hashes matching the files.
+- PR #101, `claude/family-procedure-followup-clean`.
 ## 2026-07-29 - Family vocabulary downstream of publication (ADR-0014 §9-§10)
 
 ### Completed
