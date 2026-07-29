@@ -121,9 +121,22 @@ beside a selected control.
 
 ## Migration: two controlled stages
 
+### Stage 0 — the two governance and validation corrections
+
+Neither is a palette change, and both must be merged before Stage 1 opens:
+
+1. **PL-004**, on `fix/launch-mode-whitespace-check`. Without it `npm run verify`
+   cannot pass and Stage 1 cannot report a green gate (S-2).
+2. **This governance PR**, carrying the ADR, the Constitution amendment, the
+   ExecPlan and the registers.
+
 ### Stage 1 — structural contrast
 
 One dedicated pull request. Central token and typography changes only.
+
+Its **first step** is the Bridge manifest decoupling from S-1, before any token
+value changes, because the package-local snapshot must be byte-identical to the
+approved handoff and the live file stops being that as soon as a value moves.
 
 Stage 1 lands the **approved Direction B structural values**, not Direction A's.
 Direction B is the accepted destination, and landing A's surfaces first would
@@ -183,6 +196,113 @@ A token-value change is therefore permitted where a cross-route restyling is
 not. If a reviewer finds component-level styling in the Stage 1 diff that is not
 one of the enumerated wrong-token call sites, that is a scope breach and the PR
 should be rejected on it.
+
+## Owner sign-off on the open matters, 29 July 2026
+
+Three matters were raised for decision when this ADR was first opened. All three
+are now decided, together with two confirmations. Recorded here because they change
+what Stage 1 contains.
+
+### S-1. Decouple the Bridge manifest from the live token file — approved
+
+> Approve decoupling the approved Bridge package manifest from the live shared
+> Ponte Flow token file. The Bridge manifest must verify the approved Bridge
+> delivery itself.
+
+`design/authority/bridge/v1/SOURCE-MANIFEST.md` records a SHA-256 for the row
+`ponte-flow/tokens/ponte-flow-tokens.css`, and the resolver in
+`scripts/check-governance.mjs` maps that row to the **live**
+`design-system/ponte-flow/tokens/ponte-flow-tokens.css`. A manifest describing an
+approved Bridge delivery was therefore checksumming a shared file that the Bridge
+does not own and that every future palette decision must change.
+
+The durable correction, as directed:
+
+- preserve a **byte-identical package-local snapshot** of the token file contained
+  in the original approved Bridge handoff;
+- verify that package-local snapshot through `SOURCE-MANIFEST.md`;
+- stop resolving any Bridge manifest entry to the live `design-system/ponte-flow`
+  token file;
+- continue checksum-verifying the Bridge engine, stylesheet, references and every
+  other package-local asset, unchanged;
+- **do not** simply replace the live token checksum after each authorised palette
+  change. That was the wrong fix and is explicitly rejected: it would make the
+  manifest a moving record and remove the protection it exists to give.
+
+This is a packaging and authority-boundary correction. It amends no Bridge
+geometry, interaction or motion, and it removes nothing from the checksum
+coverage the check gives today.
+
+**Hard ordering constraint.** The live token file currently hashes to
+`dabc089f0b9822242cc0a3d8783c2b19ab0021ce98c82d9cfd8f6d1648483d5f`, which is
+exactly the value the manifest records, so a byte-identical snapshot can still be
+taken from the working tree. That stops being true the moment Stage 1 edits the
+file. **The snapshot must therefore be created before any token value changes**,
+as the first step of Stage 1, and the ExecPlan sequences it that way.
+
+### S-2. PL-004 — approved as a narrow separate fix
+
+> Fix the brittle validation logic by normalising whitespace or parsing the
+> required rule robustly. Do not rewrite `AGENTS.md` solely to satisfy an exact
+> substring check.
+
+`scripts/check-launch-mode.mjs` substring-matches a phrase that `AGENTS.md` wraps
+across a newline, so the check fails on `main` and `npm run verify` cannot pass.
+The checker is corrected, not the prose. Delivered as its own minimal pull request
+on `fix/launch-mode-whitespace-check`, before Stage 1, containing no unrelated
+governance or product change and proving the check fails before and passes after.
+
+### S-3. OD-007, Bridge structural contrast — include it in Stage 1
+
+> The central Ponte Bridge must not remain at the audit's approximately 1.42:1
+> structural contrast while the rest of the interface is remediated.
+
+Included in Stage 1, scope limited to contrast:
+
+- geometry unchanged;
+- station fractions unchanged;
+- node sizes unchanged;
+- labels unchanged;
+- motion unchanged;
+- gold semantics unchanged;
+- arrived and selected destinations remain gold;
+- blocked, review and other semantic states unchanged.
+
+Passive track and pier treatments use the approved structural rule tokens.
+`--pf-opacity-track` is withdrawn if the accepted implementation no longer needs
+it.
+
+Any edit to the authoritative Bridge stylesheet must be explicitly recorded in
+this ADR, is covered by CODEOWNERS, and must be verified against **updated
+reference evidence** — the approved renders under
+`design/authority/bridge/v1/reference/` are part of the package and must be
+re-taken rather than left describing the old contrast.
+
+### S-4. Value-neutral token adoption in the four duplicated stylesheets — approved
+
+Alias conversion approved for `components/find/find.css`,
+`components/home/landing/landing.css`, `components/legal/legal.css` and
+`components/pfooter.css`. These hold literal copies of the palette and would not
+otherwise receive the central remediation.
+
+The conversion must be **initially value-neutral** and must not redesign those
+routes. Each literal is replaced by the `var(--pf-*)` it already equals. All
+subsequent visual change comes from the approved central Stage 1 tokens, not from
+edits to these four files.
+
+### S-5. LB-001 and LB-002 — confirmed, with closure criteria
+
+Both confirmed as launch blockers. They may be closed only when Stage 1
+demonstrates:
+
+- required field boundaries at sufficient non-text contrast;
+- meaningful missing-data labels at sufficient text contrast;
+- desktop and 390 x 844 evidence;
+- no regression in factual hierarchy or task completion.
+
+The last criterion is the one that can fail while the numbers pass: the 11px
+caption floor reflows dense mono rows, so the fact register, the journey rail and
+the crumb trails must be re-read for hierarchy at 390px, not only re-measured.
 
 ## Launch Mode classification
 

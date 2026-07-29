@@ -17,6 +17,25 @@ Newest entries should be added at the top with date, decision, rationale and aff
 **Implementation boundary:** implemented on branch `agent/deal-room-launch-slice`. **No SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set, nothing has been deployed or merged. Applying the migrations, creating the bucket, activating the flag and deploying are four separate owner gates.
 
 **Affected areas:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md`, `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`, `lib/deal-room/`, `components/deal-room/`, `components/ponte/bridge/DealRoomBridge.tsx`, `app/[locale]/deal-rooms/`, `app/api/deal-room/`, `supabase/migrations/20260729a-c`, `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`, `docs/launch/`.
+## 29 July 2026 - Owner sign-off on the three open ADR-0015 matters
+
+**Decision:** All three matters raised when ADR-0015 was opened are resolved, and two further points confirmed. Direction B with Direction C's mobile rules remains the approved contrast direction.
+
+**S-1, the Bridge manifest is decoupled, not re-hashed.** `SOURCE-MANIFEST.md` was checksumming the live shared token file through a resolver in `check-governance.mjs`, so a manifest describing an approved Bridge delivery would have had to change on every palette decision. A byte-identical package-local snapshot of the handoff token file is preserved and verified instead, and no Bridge manifest row resolves to `design-system/ponte-flow` any more. Simply replacing the live checksum after each palette change was **explicitly rejected**: it would make the manifest a moving record and remove the protection the check exists to give. Recorded as OD-008.
+
+**S-2, PL-004 is fixed in the checker, not in `AGENTS.md`.** Normalise whitespace before matching, in a separate minimal PR on `fix/launch-mode-whitespace-check`, before Stage 1, proving the check fails before and passes after.
+
+**S-3, the Bridge deck and passive pier are in Stage 1.** The central Ponte Bridge must not remain at approximately 1.42:1 structural contrast while the rest of the interface is remediated. Contrast only: geometry, station fractions, node sizes, labels, motion and gold semantics unchanged; arrived and selected destinations remain gold. The eight approved reference renders must be re-taken, since they describe the old contrast. Closes OD-007.
+
+**S-4, value-neutral alias conversion approved** for `find.css`, `landing.css`, `legal.css` and `pfooter.css`, which hold literal copies of the palette and would not otherwise receive the central remediation. Must not redesign those routes; subsequent visual change comes from the central Stage 1 tokens.
+
+**S-5, LB-001 and LB-002 confirmed**, closable only on field boundaries at sufficient non-text contrast, missing-data labels at sufficient text contrast, desktop and 390 x 844 evidence, and no regression in factual hierarchy or task completion.
+
+**Implementation boundary:** still **nothing implemented**. Governance records only. Stage 1 is blocked until both the PL-004 fix and the governance PR are merged.
+
+**Affected areas:** `docs/decisions/ADR-0015-contrast-and-colour-remediation.md` (new sections S-1 to S-5, and a Stage 0), `docs/plans/active/contrast-and-colour-remediation.md` (sections 3, 4, 6.4, 6.5, 7, 9, 11, 11.1, 12, 13), `docs/operations/OPEN_DECISIONS.md` (OD-007 decided, OD-008 added), `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-004 in progress).
+
+
 ## 29 July 2026 - Contrast and colour remediation: strengthened paper with a blue interaction family (ADR-0015)
 
 **Decision:** Ponte adopts Direction B, paper with blue interaction, incorporating Direction C's three non-colour mobile rules. The Design Constitution becomes v1.1.

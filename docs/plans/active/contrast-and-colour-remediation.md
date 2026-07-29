@@ -78,14 +78,17 @@ manifest row `ponte-flow/tokens/ponte-flow-tokens.css` to the **live**
 `design-system/ponte-flow/tokens/ponte-flow-tokens.css`, not to a vendored copy.
 
 **Consequence: Stage 1 fails `check-governance.mjs` the moment it changes a token
-value, whether or not it touches anything in the Bridge package.** The manifest
-row must be updated with the new hash in the same commit.
+value, whether or not it touches anything in the Bridge package.**
 
-That is not an implementation action. The manifest describes an owner-approved
-delivery, and the check exists precisely because the repository once did not hold
-what the manifest described. The Stage 1 PR must therefore state plainly that it
-amends the manifest, quote the old and new hashes, and rely on ADR-0015 as the
-authority for the value change. Recorded as an open item in section 12.
+**Resolved by owner sign-off S-1: the manifest is decoupled, not re-hashed.** A
+byte-identical package-local snapshot of the handoff token file is preserved and
+verified through `SOURCE-MANIFEST.md`, and no Bridge manifest row resolves to
+`design-system/ponte-flow` any more. Replacing the live checksum after each
+palette change was considered and rejected: it would make the manifest a moving
+record and remove the protection the check exists to give.
+
+The implementation is Stage 1 step 0, in section 6.5, and it must run before any
+token value change.
 
 ### The test that dictates part of the shape of Stage 1
 
@@ -108,8 +111,11 @@ behaviour and is the mechanism that keeps Stage 1 complete.
 - `components/structure/structure.css`, `components/verify/verify.css`, `components/check/verify.css`, `components/explore/explore.css`, `components/signals/signal.css` — wrong-token call sites only
 - `components/ponte/state/state.css` — the active/loading point moves to `--pf-gold-rule`
 - `components/ponte/category/category.css` — the selection mark moves to `--pf-gold-rule`
-- `design/authority/bridge/v1/source/ponte-bridge.css` — **owner sign-off required, see section 12**
-- `design/authority/bridge/v1/SOURCE-MANIFEST.md` — **unavoidable.** The manifest hashes the live token file, so any token value change fails the governance check until the row is updated. See section 3
+- `design/authority/bridge/v1/source/ponte-bridge.css` — deck and passive pier contrast only, approved S-3. See section 6.4
+- `design/authority/bridge/v1/source/ponte-flow/tokens/ponte-flow-tokens.css` — **new**, the byte-identical handoff snapshot, approved S-1. See section 6.5
+- `design/authority/bridge/v1/SOURCE-MANIFEST.md` — the token row is re-pointed at the snapshot and annotated; the eight reference-render hashes change with the re-takes
+- `design/authority/bridge/v1/reference/*.png` — eight re-takes, required by S-3. See section 11
+- `scripts/check-governance.mjs` — `locate()` stops resolving a Bridge manifest row to `design-system/`, approved S-1
 - `design-system/ponte-flow/__tests__/token-authority.test.ts` — update the ratchet lists
 - `design-system/ponte-flow/documentation/compatibility-aliases.md` — retire section 3
 - `design-system/ponte-flow/documentation/accessibility.md` — record the numeric targets
@@ -260,7 +266,52 @@ a large brand mark, or gold on ink where it already measures 7.28:1:
   4.5:1 for labels and 3:1 for markers on ink.
 - `desk.css:705` `.sk` skeleton gains a visible base and sweep.
 
-### 6.4 The 11px caption floor
+### 6.4 Bridge structural contrast, Stage 1, contrast only
+
+Approved by owner sign-off S-3. Four declarations in
+`design/authority/bridge/v1/source/ponte-bridge.css`:
+
+| Selector | Now | Stage 1 | Measured |
+|---|---|---|---|
+| `.br__deck .d-track` | `stroke: var(--pf-ink); opacity: var(--pf-opacity-track)` (.16) | `stroke: var(--pf-rule-strong)`, no opacity | 1.42 to **3.51** |
+| `.brst__p` (pier) | `background: var(--pf-ink); opacity: .34` | `background: var(--pf-rule-strong)`, no opacity | 2.22 to **3.51** |
+| `.br--chosen .brst:not(.brst--on) .brst__p` (receded pier) | `opacity: .16` | `background: var(--pf-rule)` | 1.42 to 1.80 |
+| `.brdp__p` (deal-room pier) | `background: var(--pf-ink); opacity: .3` | `background: var(--pf-rule-strong)` | 2.00 to **3.51** |
+
+The recession relationship the approved source expresses through opacity is
+preserved, not lost: a live pier reads `--pf-rule-strong` and a receded one reads
+`--pf-rule`, which is the same two-weight law section 15a states for every other
+rule in the product.
+
+Explicitly **not** changed: `.d-live`, `.d-fwd`, `.d-unconf`, `.d-off`, `.d-past`,
+`.d-blocked`, `.cap`, `.cap--gold`, `.br__pt`, `.br__tail`, every `.brst--*`
+condition, every node size, every dash array, every duration and the reduced-motion
+block. The forward, unconfirmed and unavailable decks already measure 4.20, 4.99
+and 3.05 and are left alone.
+
+`--pf-opacity-track` is withdrawn once no selector reads it.
+
+### 6.5 Stage 1 step 0 — decouple the Bridge manifest
+
+Approved by owner sign-off S-1. **This runs before any token value change**, and
+the ordering is not a preference.
+
+| Step | Action |
+|---|---|
+| 0.1 | Copy the current `design-system/ponte-flow/tokens/ponte-flow-tokens.css` to a package-local path inside the approved delivery, e.g. `design/authority/bridge/v1/source/ponte-flow/tokens/ponte-flow-tokens.css`. It must be **byte-identical**. Verified today at `dabc089f0b9822242cc0a3d8783c2b19ab0021ce98c82d9cfd8f6d1648483d5f`, which is exactly the value `SOURCE-MANIFEST.md` already records, so the existing manifest row needs **no new hash** |
+| 0.2 | Change `locate()` in `scripts/check-governance.mjs` so a `ponte-flow/` manifest row resolves inside `design/authority/bridge/v1/source/`, never to `design-system/` |
+| 0.3 | Add a note to `SOURCE-MANIFEST.md` stating that the token row verifies the package-local handoff snapshot, and that the live token set is governed separately by the Constitution and ADR-0015 |
+| 0.4 | Confirm `check-governance.mjs` still reports 13 files matching, and that it now passes **after** a deliberate change to the live token file |
+
+The snapshot must be taken from the working tree before step 1 edits the live file.
+Once a value moves, the live file is no longer the approved handoff and the
+byte-identical property cannot be recovered from the working tree.
+
+The desirable consequence is that the manifest stops needing maintenance on every
+palette decision, which is the outcome the owner directed and the reason a
+checksum swap was rejected.
+
+### 6.6 The 11px caption floor
 
 A single media query per scoped stylesheet, below 860px, raising structural mono
 captions to 11px. Affects the fact register, the journey rail, crumb trails,
@@ -276,9 +327,14 @@ No database, schema or production data is involved.
 
 | Step | Change | Reversal |
 |---|---|---|
-| Governance | This PR: ADR-0015, Constitution v1.1, this plan, LB-001, LB-002, register updates | Revert the PR |
-| Stage 1 | Central tokens, alias conversions, enumerated call sites, caption floor, tests | Revert the token block; the alias conversions are value-neutral and may stay |
+| Stage 0a | PL-004, on `fix/launch-mode-whitespace-check`. Corrects `check-launch-mode.mjs` so `npm run verify` can pass. No governance or product change | Revert the PR |
+| Stage 0b | This governance PR: ADR-0015, Constitution v1.1, this plan, LB-001, LB-002, register updates | Revert the PR |
+| Stage 1 step 0 | Bridge manifest decoupling: package-local snapshot, resolver change, manifest annotation | Revert; the snapshot is additive and the resolver change is three lines |
+| Stage 1 | Central tokens, alias conversions, enumerated call sites, Bridge deck and pier contrast, caption floor, reference re-takes, tests | Revert the token block; the alias conversions are value-neutral and may stay |
 | Stage 2 | Four interaction tokens, applied per journey | Re-point the four tokens to `--pf-ink` and `--pf-gold-ink`, restoring current semantics without removing the tokens |
+
+Stage 0a and Stage 0b must both be merged before Stage 1 opens: 0a so the
+validation gate can pass, 0b so the authority exists.
 
 Forward path after Stage 1: the four remaining duplicated stylesheets are aliased,
 so there is exactly one place a Ponte colour can be changed. That is the state
@@ -314,12 +370,14 @@ Every screen in section 11's evidence matrix must be captured in all of:
 - `npm run verify` before declaring Stage 1 complete. It runs
   `check-encoding.mjs` (no em dashes in `app/` or `components/`),
   `check-governance.mjs`, the token-authority test and the full test suite.
-  **`check-launch-mode.mjs` currently fails on `main` for an unrelated reason
-  (PL-004) and must be fixed before Stage 1 can report a passing gate.**
-- `check-governance.mjs` will fail until
-  `design/authority/bridge/v1/SOURCE-MANIFEST.md` carries the new token-file
-  hash. That is expected, not a surprise, and it is called out here so a reviewer
-  does not read the manifest edit as scope creep.
+  PL-004 fixes `check-launch-mode.mjs` in Stage 0a, so the gate is passable before
+  Stage 1 opens.
+- `check-governance.mjs` must be re-run **after** a deliberate token value change,
+  to prove the decoupling in step 0 actually holds. A run that only passes before
+  the values move proves nothing.
+- The eight Bridge reference re-takes must be diffed against their predecessors for
+  geometry, not only inspected. Identical station fractions and node sizes, with
+  only track and pier weight differing.
 - `token-authority.test.ts` updated in the same commit as the promotions, with
   `LOCAL_EXTENSIONS` shrinking from 9 entries to 1 (`--e-2` only) and the
   `counterparts` map reduced to the elevation gap.
@@ -359,6 +417,41 @@ For each: desktop **and** 390 x 844, in neutral, selected, focus, and disabled o
 secondary state, plus a greyscale comparison. Measured contrast values before and
 after for every value the screen displays.
 
+**Additionally, per owner sign-off S-3**, the eight approved Bridge reference
+renders must be re-taken, because they are part of the approved package and
+currently describe the old deck contrast:
+
+| Reference | Viewport |
+|---|---|
+| `desktop-0-full-composition.png` | desktop |
+| `desktop-1-family-neutral.png` | desktop |
+| `desktop-2-products-selected.png` | desktop |
+| `desktop-3-trade-services-selected.png` | desktop |
+| `desktop-4-distribution-selected.png` | desktop |
+| `mobile-1-family-neutral-390x844.png` | 390 x 844 |
+| `mobile-2-family-selected-390x844.png` | 390 x 844 |
+| `mobile-3-action-revealed-390x844.png` | 390 x 844 |
+
+Their `SOURCE-MANIFEST.md` hashes change with them. Each re-take must show
+identical geometry, identical station fractions and identical node sizes against
+the old render, with only track and pier weight differing. A geometry difference in
+any pair is a regression under Constitution section 21, not an improvement.
+
+### 11.1 Closure criteria for LB-001 and LB-002
+
+Fixed by owner sign-off S-5. Both may be closed only when Stage 1 demonstrates all
+four:
+
+| Criterion | How it is evidenced |
+|---|---|
+| Required field boundaries at sufficient non-text contrast | Measured value per input on Start a Deal, against the 3:1 of section 18a, on the darkest surface each is drawn on |
+| Meaningful missing-data labels at sufficient text contrast | Measured value for `Not stated` on white, on the page ground and in the sunken well, against 4.5:1 |
+| Desktop and 390 x 844 evidence | The matrix above, for all four screens |
+| No regression in factual hierarchy or task completion | A read-through, not a measurement. The 11px floor reflows dense mono rows, so the fact register, the journey rail and the crumb trails must be re-read for hierarchy at 390px, and a Start a Deal submission must be completed end to end |
+
+The fourth is the one that can fail while the first three pass, and it is the
+reason Stage 1 is not complete when the numbers are green.
+
 ## 12. Decisions and discoveries
 
 ### Decided by the owner, 29 July 2026
@@ -380,45 +473,47 @@ after for every value the screen displays.
   and `token-authority.test.ts` will not allow a changed value to sit in a local
   extension once its approved counterpart exists.
 
-### Open, and requiring the owner's specific sign-off before Stage 1 begins
+### Resolved by owner sign-off, 29 July 2026
 
-**1. Amending the approved Bridge source manifest.** Recorded in section 3, and
-not optional: `SOURCE-MANIFEST.md` hashes the live token file, so Stage 1 cannot
-pass `check-governance.mjs` without updating that row. The manifest describes an
-owner-approved delivery, so an agent should not rewrite it silently even though
-the mechanical change is one hash. The Stage 1 PR will quote both hashes and cite
-ADR-0015. **Confirm this is acceptable, or direct that the manifest be
-restructured so it stops pinning a file that lives outside the package.** The
-second is arguably the better fix, and it is a separate piece of work.
+All three open matters are decided. The detail is in ADR-0015 sections S-1 to S-5;
+the consequences for this plan are below.
 
-**2. A pre-existing failure that blocks the validation gate.**
-`scripts/check-launch-mode.mjs` fails on `main` today, for a reason unrelated to
-this work: it substring-matches a phrase that `AGENTS.md:128` wraps across a
-newline. Logged as PL-004. `npm run verify` cannot pass until it is fixed, so
-Stage 1 cannot honestly report a green gate. It needs resolving before or with
-Stage 1; the one-line fix is in PL-004.
+**1. The Bridge manifest is decoupled from the live token file, not re-hashed.**
+Approved as a packaging and authority-boundary correction. A byte-identical
+package-local snapshot of the handoff token file is preserved and verified through
+`SOURCE-MANIFEST.md`; no Bridge manifest entry resolves to
+`design-system/ponte-flow` any more; every other package-local asset stays
+checksum-verified. Simply replacing the live checksum after each palette change
+was considered and **explicitly rejected**: it would turn the manifest into a
+moving record and remove the protection it exists to provide.
 
-**3. The Bridge deck and pier.** Finding 4 of the audit is
-`design/authority/bridge/v1/source/ponte-bridge.css`, where the deck is drawn as
-`--pf-ink` at `--pf-opacity-track` (.16), measuring **1.42:1**, and the pier at
-.34, measuring 2.22:1. The fix is to stroke `--pf-rule-strong` at full opacity for
-the deck and pier, and `--pf-rule` for a receded pier, which preserves the
-recession relationship the approved source expresses through opacity.
+This is now **Stage 1 step 0**, and the ordering is load-bearing. See section 6.5.
 
-It is raised separately because:
+**2. PL-004 is fixed in the checker, not in `AGENTS.md`.** Approved as its own
+minimal PR on `fix/launch-mode-whitespace-check`, before Stage 1, proving the
+check fails before and passes after. Rewriting the prose to satisfy an exact
+substring match was rejected: a governance checker that breaks on a line wrap will
+break again.
 
-- the owner's Stage 1 scope does not name it;
-- the file is a **binding approved authority package** under §8 and CODEOWNERS,
-  not an implementation stylesheet;
-- it is arguably the "wrong semantic token" case Stage 1 permits, since a
-  structural rule should read from a rule token, but that is a reading, not an
-  instruction.
+**3. The Bridge deck and passive pier are in Stage 1, contrast only.** Geometry,
+station fractions, node sizes, labels, motion and gold semantics unchanged;
+arrived and selected destinations remain gold; blocked, review and other semantic
+states unchanged. Passive track and pier use the approved structural rule tokens,
+and `--pf-opacity-track` is withdrawn if the accepted implementation no longer
+needs it.
 
-Geometry, station spacing, node sizes and gold semantics are untouched either way.
-Leaving it means Stage 1 ships with the audit's own headline finding open, and the
-Bridge is the product's central metaphor. **Recommendation: include it in Stage 1,
-with the diff limited to the four stroke declarations and the withdrawal of
-`--pf-opacity-track`.**
+Two conditions attach: the edit must be recorded in ADR-0015 (done, S-3), and it
+must be **verified against updated reference evidence**. The approved renders in
+`design/authority/bridge/v1/reference/` are part of the package and describe the
+old contrast, so they must be re-taken rather than left stale. That adds eight
+renders to the Stage 1 evidence set, listed in section 11.
+
+**4. The four duplicated stylesheets are approved for value-neutral conversion**,
+and must not be redesigned in the process. All subsequent visual change comes from
+the central tokens.
+
+**5. LB-001 and LB-002 closure criteria are fixed by the owner**, recorded in
+section 11.1.
 
 ### Discovered
 
@@ -440,9 +535,13 @@ To be completed as work lands.
 
 | Item | Status |
 |---|---|
-| Governance PR (ADR-0015, Constitution v1.1, this plan, LB-001, LB-002) | Open; not merged |
-| Stage 1 PR | Not started. Blocked on the governance PR merging |
+| Stage 0a — PL-004 PR, `fix/launch-mode-whitespace-check` | Open; not merged |
+| Stage 0b — governance PR #102 (ADR-0015, Constitution v1.1, this plan, LB-001, LB-002) | Open; not merged. Updated with owner sign-off S-1 to S-5 |
+| Stage 1 PR, `design/contrast-stage-1-structural-tokens` | Not started. Blocked on Stage 0a and Stage 0b merging |
+| Stage 1 step 0, Bridge manifest decoupling | Not started |
 | Stage 1 evidence, four screens, two viewports, four states, greyscale | Not captured |
+| Bridge reference re-takes, eight renders | Not captured |
+| LB-001 and LB-002 closure evidence, all four criteria in section 11.1 | Not captured |
 | Stage 2 PRs, six journeys | Not started |
 | `npm run verify` on Stage 1 | Not run |
 | Production deployment | Not done. No production change is authorised by this plan |
@@ -451,5 +550,12 @@ To be completed as work lands.
 
 - **29 July 2026** — Audit completed and accepted; owner approved Direction B
   with Direction C's mobile rules; ADR-0015, Constitution v1.1, this ExecPlan,
-  LB-001 and LB-002 drafted in the governance PR. Stage 1 not started. One item
-  awaiting owner sign-off: the Bridge deck and pier, section 12.
+  LB-001 and LB-002 drafted in governance PR #102.
+- **29 July 2026, later** — Owner sign-off S-1 to S-5 received and recorded. All
+  three open matters resolved: the Bridge manifest is decoupled rather than
+  re-hashed (S-1, now Stage 1 step 0); PL-004 is fixed in the checker rather than
+  in `AGENTS.md` (S-2, Stage 0a); the Bridge deck and passive pier are in Stage 1
+  as contrast-only work with re-taken reference evidence (S-3). Value-neutral
+  alias conversion approved for the four duplicated stylesheets (S-4). LB-001 and
+  LB-002 closure criteria fixed (S-5). Stage 1 still not started, and blocked on
+  Stage 0a and Stage 0b merging.
