@@ -14,7 +14,7 @@ const intlMiddleware = createIntlMiddleware(routing);
 // the start of middleware() when public access is restored.
 const SITE_GATE_USERNAME = "ponte";
 const SITE_GATE_PASSWORD_SHA256 =
-  "7496421d8348a4e2c3cb3d145cc136f70008704c4412a5564c0139a0ec98f3b0";
+  "18739404615ffa3a2fc149fd013d38af6ba19ecc9227a83d9ac0516a869db07a";
 
 async function sha256(value: string): Promise<string> {
   const digest = await crypto.subtle.digest(
