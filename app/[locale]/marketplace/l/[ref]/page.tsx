@@ -25,6 +25,8 @@ import {
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
 import { truthfulLabels } from "@/lib/listings/public-labels";
+import { isMissingColumnError } from "@/lib/listings/classification";
+import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import type { Locale } from "@/i18n/routing";
 import { levelRank } from "@/lib/verification/level";
 
@@ -46,6 +48,9 @@ const LANGS: { code: string; label: string }[] = [
 export const dynamic = "force-dynamic";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ponte.trade";
+
+/** Facts set in the tabular monospace face: figures and codes, not prose. */
+const MONO_FACTS = new Set(["quantity", "incoterm", "hsCode"]);
 
 type DeskVersion = { qualification?: string | null; limitations?: string | null } | null;
 
@@ -74,7 +79,33 @@ type Deal = {
   desk_version: DeskVersion;
   details: string;
   created_at: string;
+  // The canonical classification and family terms, so the page can present the
+  // record in its own family's vocabulary rather than as a shipment.
+  market_family?: string | null;
+  market_intent?: string | null;
+  service_category_key?: string | null;
+  service_subcategory_keys?: string[] | null;
+  distribution_partner_type_key?: string | null;
+  distribution_relationship_terms?: string[] | null;
+  coverage_scope_key?: string | null;
+  territory_codes?: string[] | null;
+  product_sector_key?: string | null;
+  custom_category_label?: string | null;
+  quantity_mode?: string | null;
+  quantity_min?: number | null;
+  quantity_max?: number | null;
+  service_terms?: Record<string, unknown> | null;
+  distribution_terms?: Record<string, unknown> | null;
 };
+
+const DEAL_COLUMNS =
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, quantity_mode, quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at, " +
+  "market_family, market_intent, service_category_key, service_subcategory_keys, " +
+  "distribution_partner_type_key, distribution_relationship_terms, coverage_scope_key, " +
+  "territory_codes, product_sector_key, custom_category_label";
+
+/** `20260728d` is unapplied, so these are asked for separately. See the reader. */
+const DEAL_FAMILY_TERMS = "service_terms, distribution_terms";
 
 // Public, shareable page for ONE approved listing. This is the link members
 // forward on WhatsApp: OG tags carry the product photo and teaser, and the
@@ -89,14 +120,23 @@ async function getDeal(
 } | null> {
   if (!isSupabaseConfigured()) return null;
   const adminSb = createAdminClient();
-  const { data } = await adminSb
-    .from("listings")
-    .select(
-      "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at",
-    )
-    .eq("ref", ref.toUpperCase())
-    .eq("status", "approved")
-    .maybeSingle();
+  // The row shape is named rather than inferred: the select is built from a
+  // variable so the family terms can be dropped, and the generated Supabase
+  // types cannot infer a row from a non-literal column string.
+  const read = async (columns: string): Promise<{ data: Deal | null; error: unknown }> => {
+    const res = await adminSb
+      .from("listings")
+      .select(columns)
+      .eq("ref", ref.toUpperCase())
+      .eq("status", "approved")
+      .maybeSingle();
+    return { data: (res.data as Deal | null) ?? null, error: res.error };
+  };
+
+  // With the family terms, then without. A shareable link must not 404 because
+  // a migration is pending; the terms still reach the reader through `details`.
+  let { data, error } = await read(`${DEAL_COLUMNS}, ${DEAL_FAMILY_TERMS}`);
+  if (error && isMissingColumnError(error)) ({ data, error } = await read(DEAL_COLUMNS));
   if (!data) return null;
 
   // Not-current opportunities are not public: a passed finite validity OR a
@@ -148,7 +188,7 @@ async function getDeal(
   if (!ownerEligible) return null;
 
   return {
-    deal: data as Deal,
+    deal: data,
     image,
     trustLevel: profile ? levelRank(profile.verification_level) : null,
     businessVerified: ownerEligible,
@@ -324,35 +364,34 @@ export default async function DealPage({
   const place = (end: { code: string | null; text: string | null }) =>
     end.text ? (end.code ? `${end.text} (${end.code})` : end.text) : null;
 
+  /**
+   * The record's own terms, in its own family's vocabulary.
+   *
+   * This was a fixed twelve-row grid of product columns printed for every
+   * record: quantity, unit, Incoterm, origin, destination, HS code, frequency.
+   * A trade service has none of those, so a freight forwarder's shareable page
+   * answered seven questions they were never asked with "Not stated", and the
+   * eight service terms they DID state appeared nowhere except inside the prose.
+   *
+   * `presentRecord` emits a family's own facts and nothing else. The three rows
+   * below it are true of every record regardless of family, so they are added
+   * here rather than pushed into the shared presenter.
+   */
+  const presentation = presentRecord(deal as FactsRow);
+  // The first three facts this record actually states, for the lead line of a
+  // non-product family. Only stated facts: a lead line of blanks is not a lead.
+  const leadFacts = presentation.facts
+    .filter((f) => f.value !== null && f.key !== "service")
+    .slice(0, 3);
   const terms: { label: string; value: string | null; mono?: boolean }[] = [
-    {
-      label: t("detail.terms.quantity"),
-      value: vol.quantity
-        ? vol.quantityNumeric !== null
-          ? formatQuantity(vol.quantityNumeric, locale)
-          : vol.quantity
-        : null,
-      mono: true,
-    },
-    { label: t("detail.terms.unit"), value: labelFor(vol.unit, UNIT_KEYS, tf), mono: true },
-    { label: t("detail.terms.incoterm"), value: deal.incoterm, mono: true },
-    { label: t("detail.terms.origin"), value: place(from) },
-    { label: t("detail.terms.destination"), value: place(to) },
-    // Payment terms are now a structured column the composer writes. Still
-    // honestly empty when the member did not state them.
-    { label: t("detail.terms.payment"), value: deal.payment_terms },
-    { label: t("detail.terms.hsCode"), value: deal.hs_code, mono: true },
-    {
-      label: t("detail.terms.frequency"),
-      value: labelFor(vol.frequency, FREQUENCY_KEYS, tf),
-    },
+    ...presentation.facts.map((f) => ({
+      label: f.label,
+      value: f.value,
+      mono: MONO_FACTS.has(f.key),
+    })),
     {
       label: t("detail.terms.timing"),
       value: labelFor(extractTiming(deal.details), TIMING_KEYS, tf),
-    },
-    {
-      label: t("detail.terms.role"),
-      value: labelFor(deal.submitter_role, ROLE_KEYS, tf),
     },
     {
       label: t("detail.terms.chain"),
@@ -394,68 +433,97 @@ export default async function DealPage({
                     : { border: "1px solid rgba(255,255,255,0.18)", color: "#9CA3AF" }
               }
             >
-              {typeLabel(t, deal.type)}
+              {/* The canonical intent, which is the only value that can say
+                  "distribution" at all. `listings.type` stores a distribution
+                  requirement and a product requirement identically. */}
+              {presentation.kindLabel}
             </span>
             <span className="mono text-[12px] text-gold">{deal.ref}</span>
           </div>
 
-          {/* The trade line: the same four facts the board row leads with. */}
-          <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-3">
-            <span className="flex flex-wrap items-baseline gap-x-2">
-              {vol.quantity ? (
-                <>
-                  <span
-                    className="mono tabular-nums text-cream"
-                    style={{ fontSize: 30, letterSpacing: "-0.02em" }}
-                  >
-                    {vol.quantityNumeric !== null
-                      ? formatQuantity(vol.quantityNumeric, locale)
-                      : vol.quantity}
-                  </span>
-                  {vol.unit && (
-                    <span className="mono text-[14px] text-gray-2">
-                      {labelFor(vol.unit, UNIT_KEYS, tf)}
+          {/* The lead line.
+              A product record leads with the three facts a trader asks first:
+              how much, on what delivery basis, over which corridor. A trade
+              service and a distribution opportunity have none of those, and
+              leading with an empty quantity and an arrow between two blanks
+              described a shipment that does not exist. They lead with their own
+              first facts instead. */}
+          {presentation.family === "products" ? (
+            <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-3">
+              <span className="flex flex-wrap items-baseline gap-x-2">
+                {vol.quantity ? (
+                  <>
+                    <span
+                      className="mono tabular-nums text-cream"
+                      style={{ fontSize: 30, letterSpacing: "-0.02em" }}
+                    >
+                      {vol.quantityNumeric !== null
+                        ? formatQuantity(vol.quantityNumeric, locale)
+                        : vol.quantity}
                     </span>
-                  )}
-                </>
+                    {vol.unit && (
+                      <span className="mono text-[14px] text-gray-2">
+                        {labelFor(vol.unit, UNIT_KEYS, tf)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-[14px] text-gray-2/55">{t("notStated")}</span>
+                )}
+              </span>
+              {deal.incoterm && (
+                <span
+                  className="mono inline-flex items-center rounded-[6px] px-2.5 py-1 text-[13px] text-gold"
+                  style={{
+                    background: "rgba(201,151,58,0.12)",
+                    border: "1px solid rgba(201,151,58,0.4)",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {deal.incoterm}
+                </span>
+              )}
+              <span
+                dir="ltr"
+                className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                title={[from.text, to.text].filter(Boolean).join(" > ")}
+              >
+                {from.code ? (
+                  <span className="mono text-[16px] text-cream">{from.code}</span>
+                ) : from.text ? (
+                  <span className="text-[14px] text-cream">{from.text}</span>
+                ) : (
+                  <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
+                )}
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-gold/70" />
+                {to.code ? (
+                  <span className="mono text-[16px] text-cream">{to.code}</span>
+                ) : to.text ? (
+                  <span className="text-[14px] text-cream">{to.text}</span>
+                ) : (
+                  <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-3">
+              {leadFacts.length > 0 ? (
+                leadFacts.map((f) => (
+                  <span key={f.key} className="flex flex-col gap-1">
+                    <span
+                      className="text-[10px] uppercase text-gray-2/70"
+                      style={{ letterSpacing: "0.14em" }}
+                    >
+                      {f.label}
+                    </span>
+                    <span className="text-[16px] leading-snug text-cream">{f.value}</span>
+                  </span>
+                ))
               ) : (
                 <span className="text-[14px] text-gray-2/55">{t("notStated")}</span>
               )}
-            </span>
-            {deal.incoterm && (
-              <span
-                className="mono inline-flex items-center rounded-[6px] px-2.5 py-1 text-[13px] text-gold"
-                style={{
-                  background: "rgba(201,151,58,0.12)",
-                  border: "1px solid rgba(201,151,58,0.4)",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {deal.incoterm}
-              </span>
-            )}
-            <span
-              dir="ltr"
-              className="flex flex-wrap items-center gap-x-2 gap-y-1"
-              title={[from.text, to.text].filter(Boolean).join(" > ")}
-            >
-              {from.code ? (
-                <span className="mono text-[16px] text-cream">{from.code}</span>
-              ) : from.text ? (
-                <span className="text-[14px] text-cream">{from.text}</span>
-              ) : (
-                <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
-              )}
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-gold/70" />
-              {to.code ? (
-                <span className="mono text-[16px] text-cream">{to.code}</span>
-              ) : to.text ? (
-                <span className="text-[14px] text-cream">{to.text}</span>
-              ) : (
-                <span className="text-[12px] text-gray-2/55">{t("notStated")}</span>
-              )}
-            </span>
-          </div>
+            </div>
+          )}
 
           {/* Specification. Every term the desk holds, stated or not stated. */}
           <p

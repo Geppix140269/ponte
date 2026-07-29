@@ -18,6 +18,36 @@ Use this structure:
 
 ---
 
+## 2026-07-29 - Family vocabulary downstream of publication (ADR-0014 §9-§10)
+
+### Completed
+
+- Built `lib/listings/record-facts.ts` as the single presenter for a STORED listing row, and routed every surface that presents one through it: `/find/o/[ref]`, `/marketplace/l/[ref]`, `/opportunities`, the workspace rows, `/admin/listings` and the member email templates. Each previously carried its own fixed list of product columns, so a published trade service answered Quantity, Incoterm, HS code, Origin and Destination with "Not stated" and its stated service terms appeared only inside the prose.
+- Member emails now name the record the member posted. `recordNoun` supplies "offer", "requirement", "trade service" or "distribution opportunity", and the metadata block leads with the family's own headline fact instead of "Quantity". A caller that sends no noun keeps the historical wording exactly, so no existing sender changed meaning.
+- The submit route's missing-column fallback was extracted here into `lib/listings/write-fallback.ts` and tested. **That extraction was superseded before this branch merged**: PR #99 landed its own `lib/listings/write-fallback.ts` on `main`, which reads the missing column out of the error and drops it one at a time rather than dropping this branch's two staged groups. On the rebase onto `6b6c85a` the version from #99 was kept in full and this branch's module and its tests were dropped. Nothing here modifies the fallback.
+- Added `lib/structure/discard.ts` and a confirmation in `ClassifyStep`, so a classification change that would destroy answers already given names them and waits. A change that costs nothing is not interrupted.
+- Both public readers now degrade their select when the unapplied family-terms columns are absent, so the pending `20260728d` migration cannot 404 a shareable listing link.
+
+### Decisions
+
+- None requiring the owner. This is implementation of ADR-0014, which remains **Proposed** and awaiting acceptance.
+
+### Risks / discrepancies
+
+- `20260728d_family_commercial_terms.sql` remains **written and not applied**. Until it is, `service_terms` and `distribution_terms` are absent, the new surfaces render the family's classification without its terms, and the terms reach readers through the record's synthesised `details`. No production migration was applied by this work.
+- PL-004 recorded: `canonicalServiceCategory`, `canonicalPartnerType` and `canonicalRelationshipTerm` exist to reconcile superseded stored keys and have no callers, so a record stored under a superseded key loses its specialisations on edit. Production incidence is **unmeasured**; it is not asserted to be zero.
+
+### Next
+
+1. Owner accepts or rejects ADR-0014.
+2. On acceptance, apply `20260728d_family_commercial_terms.sql` with owner approval and record it in `DATABASE-STATE.md`.
+3. Triage PL-004 against production data.
+
+### Evidence
+
+- Branch `claude/classify-tests-discard-warning-15173f`, cut from `origin/main` at `923d1e3` and rebased onto `6b6c85a` after PR #95, #99 and the password rotation landed. The rebase kept `main`'s `write-fallback.ts` and submit-route wiring, and kept both operations entries.
+- `npm test` passes and `tsc --noEmit` is clean. **`npm run verify` is NOT green, on this branch or on `main`**: `check-migrations.mjs` fails on the duplicate `20260728d` identifier and `check-launch-mode.mjs` fails on a literal it cannot find because `AGENTS.md` wraps the sentence. Both reproduce on a clean `origin/main` checkout and are recorded as LB-001 and LB-002; neither is repaired here.
+- No production change, no deployment, no migration applied, no feature flag altered.
 ## 2026-07-29 — Start a Deal could not submit or save at all
 
 ### Completed

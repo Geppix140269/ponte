@@ -3,6 +3,8 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { createClient } from "@/lib/supabase/server";
+import { isMissingColumnError } from "@/lib/listings/classification";
+import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import { railFor } from "@/lib/desk/journey";
 import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
@@ -76,13 +78,37 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
   const user = auth?.user ?? null;
 
   // The member's own records, read with their own session. RLS decides.
-  const { data: rows } = user
-    ? await supabase
-        .from("listings")
-        .select("id, ref, type, product, status, hs_code, origin, destination, quantity, unit, incoterm, valid_until, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-    : { data: null };
+  //
+  // The classification columns are selected because a member's own record must
+  // read back to them in the vocabulary they built it in. Before this, every
+  // record on this page printed "Quantity" and "Delivery", so a member who had
+  // just completed the trade-service journey - which never asks for either -
+  // was shown their own freight capability as two blank product fields.
+  //
+  // The family terms are appended optionally: `20260728d` is not applied, and
+  // selecting a column that does not exist fails the whole read. A member must
+  // not lose sight of their records to a pending migration.
+  const BASE =
+    "id, ref, type, product, status, hs_code, origin, destination, quantity, quantity_mode, " +
+    "quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, " +
+    "validity_type, valid_until, created_at, market_family, market_intent, " +
+    "service_category_key, service_subcategory_keys, distribution_partner_type_key, " +
+    "distribution_relationship_terms, coverage_scope_key, territory_codes, product_sector_key, " +
+    "custom_category_label";
+
+  const readOwn = (columns: string) =>
+    supabase
+      .from("listings")
+      .select(columns)
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+
+  let rows: Record<string, unknown>[] | null = null;
+  if (user) {
+    let { data, error } = await readOwn(`${BASE}, service_terms, distribution_terms`);
+    if (error && isMissingColumnError(error)) ({ data, error } = await readOwn(BASE));
+    rows = (data as Record<string, unknown>[] | null) ?? null;
+  }
 
   // The bound member-business verification, which is what decides whether an
   // approved record may be published. Read for explanation, never to override.
@@ -160,49 +186,56 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
             </div>
           ) : (
             <>
-              {records.map((r) => {
+              {records.map((row) => {
+                const r = row as Record<string, string>;
                 const copy = STATUS_COPY[r.status] ?? {
                   label: r.status,
                   slot: "complete",
                   note: "",
                 };
+                // The record in its own family's words. `kindLabel` states the
+                // canonical intent ("Offer a trade service"), not the legacy
+                // three-value `type`, which cannot express distribution at all
+                // and cannot tell a service request from a service offer.
+                const p = presentRecord(row as FactsRow);
+                // The two facts that lead. Product records still lead with
+                // quantity and Incoterm; a service leads with what it can
+                // commit to and when, and a distribution opportunity with its
+                // territory and timing. Only STATED facts appear here: this is
+                // a summary card, and "Not stated" twice is not a summary.
+                const lead = p.facts
+                  .filter((f) => f.value !== null && f.key !== "product" && f.key !== "service")
+                  .slice(0, 2);
                 return (
                   <article className="rec rec--opp" key={r.id}>
                     <div className="rec__m">
                       <div className="rec__top">
-                        <span className="cls cls--opp">
-                          {r.type === "requirement" ? "Requirement" : r.type === "offer" ? "Offer" : "Trade service"}
-                        </span>
+                        <span className="cls cls--opp">{p.kindLabel}</span>
                         <span className="r">{r.ref}</span>
                         <span className={`slot slot--${copy.slot}`}>{copy.label}</span>
                       </div>
-                      <h3>{r.product}</h3>
-                      <div className="rec__cor">
-                        {r.origin || r.destination ? (
-                          <>
-                            <PonteIcon name="primitive.span" size={18} />
-                            <span>{[r.origin, r.destination].filter(Boolean).join(" to ")}</span>
-                          </>
-                        ) : null}
-                        {r.hs_code ? <span style={{ color: "var(--mute)" }}>{`HS ${r.hs_code}`}</span> : null}
-                      </div>
+                      <h3>{p.subject ?? r.ref}</h3>
+                      {p.headline ? (
+                        <div className="rec__cor">
+                          <PonteIcon name="primitive.span" size={18} />
+                          <span>{p.headline.value}</span>
+                        </div>
+                      ) : null}
                       <p className="d" style={{ marginTop: 10 }}>
                         {copy.note}
                       </p>
                     </div>
 
-                    <dl className="rec__f">
-                      <div>
-                        <dt>Quantity</dt>
-                        <dd className={r.quantity ? undefined : "na"}>
-                          {r.quantity ? `${r.quantity}${r.unit ? ` ${r.unit}` : ""}` : "Not stated"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Delivery</dt>
-                        <dd className={r.incoterm ? undefined : "na"}>{r.incoterm ?? "Not stated"}</dd>
-                      </div>
-                    </dl>
+                    {lead.length > 0 ? (
+                      <dl className="rec__f">
+                        {lead.map((f) => (
+                          <div key={f.key}>
+                            <dt>{f.label}</dt>
+                            <dd>{f.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : null}
                   </article>
                 );
               })}
@@ -210,7 +243,7 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
               {/* The publication contract, stated rather than worked around.
                   An approved record that is not public has one reason, and the
                   member is entitled to read it. */}
-              {records.some((r) => r.status === "approved") && !passing ? (
+              {records.some((r) => (r as { status?: string }).status === "approved") && !passing ? (
                 <div className="notice" style={{ marginTop: 12 }}>
                   <PonteIcon name="evidence.evreview" size={18} />
                   <div>

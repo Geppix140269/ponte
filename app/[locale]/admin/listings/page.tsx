@@ -22,6 +22,7 @@ import {
   type ExceptionRow,
 } from "@/lib/listings/exceptions";
 import type { SafetyFlag } from "@/lib/listings/safety";
+import { presentRecord, statedFacts, type FactsRow } from "@/lib/listings/record-facts";
 import { meetsMemberBusinessFloor } from "@/lib/verification/level";
 
 export const dynamic = "force-dynamic";
@@ -120,6 +121,30 @@ type Listing = {
   ai_reviewed_at: string | null;
   ai_version: AiVersion;
   desk_version: DeskVersion;
+  /**
+   * The canonical classification and family terms.
+   *
+   * The console reads with `select("*")`, so these arrive whenever the column
+   * exists; the family terms (`20260728d`) are still unapplied and arrive as
+   * undefined until it is. They are declared here so the reviewer's fact list
+   * can be built from the record's OWN family rather than from the six product
+   * columns the console printed for every record.
+   */
+  market_family?: string | null;
+  market_intent?: string | null;
+  service_category_key?: string | null;
+  service_subcategory_keys?: string[] | null;
+  distribution_partner_type_key?: string | null;
+  distribution_relationship_terms?: string[] | null;
+  coverage_scope_key?: string | null;
+  territory_codes?: string[] | null;
+  product_sector_key?: string | null;
+  custom_category_label?: string | null;
+  quantity_mode?: string | null;
+  quantity_min?: number | null;
+  quantity_max?: number | null;
+  service_terms?: Record<string, unknown> | null;
+  distribution_terms?: Record<string, unknown> | null;
 };
 
 type VerRow = {
@@ -440,7 +465,10 @@ export default async function AdminListingsPage({
       <div className="glass p-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="mono text-[12px] text-gold">{l.ref}</span>
-          <span className="badge uppercase">{l.type}</span>
+          {/* The canonical intent, not the legacy `type`. A reviewer could not
+              tell a distribution opportunity from a product requirement:
+              `listings.type` stores both as "requirement". */}
+          <span className="badge">{presentRecord(l as FactsRow).kindLabel}</span>
           <span className="flex-1 text-[15px] text-cream">{l.product}</span>
           <span className="text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.14em" }}>
             {l.status} · {new Date(l.created_at).toLocaleDateString("en-GB")}
@@ -503,27 +531,24 @@ export default async function AdminListingsPage({
           </p>
         )}
 
+        {/* The record's own facts, in its own family's vocabulary.
+            This grid used to be six product columns: HS, origin, destination,
+            volume, Incoterm and payment. A reviewer opening a flagged
+            freight-forwarding record therefore saw its reference, its type and
+            its prose, and none of the eight service terms the member had
+            actually stated - the very facts a review turns on. `statedFacts`
+            returns whatever THIS record has and nothing it does not. */}
         <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
           <span>From: {emailById.get(l.user_id) ?? l.user_id.slice(0, 8)}</span>
-          {l.submitter_role && (
-            <span className="text-gold">
-              {l.submitter_role}
-              {l.chain_depth ? ` · ${l.chain_depth}` : ""}
+          {l.chain_depth && <span className="text-gold">Chain: {l.chain_depth}</span>}
+          {statedFacts(l as FactsRow).map((f) => (
+            <span key={f.key} className={f.key === "role" ? "text-gold" : undefined}>
+              {f.label}: {f.value}
             </span>
-          )}
-          {l.hs_code && <span>HS: {l.hs_code}</span>}
-          {l.origin && <span>Origin: {l.origin}</span>}
-          {l.destination && <span>Destination: {l.destination}</span>}
+          ))}
           {l.volume && <span>Volume: {l.volume}</span>}
-          {l.incoterm && <span>Incoterm: {l.incoterm}</span>}
           {l.indicative_value_usd && (
             <span>Value: ${Number(l.indicative_value_usd).toLocaleString("en-US")}</span>
-          )}
-          {l.payment_terms && <span>Payment: {l.payment_terms}</span>}
-          {l.validity_type && (
-            <span>
-              Validity: {l.validity_type === "dated" ? `until ${l.valid_until}` : "standing"}
-            </span>
           )}
         </div>
 

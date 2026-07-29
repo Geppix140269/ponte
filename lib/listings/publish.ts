@@ -25,6 +25,7 @@ import { evaluateListing, completenessBand, completenessBandLabel, resolutionRou
 import { outcomeStatus } from "./eligibility";
 import { topSeverity, memberFacingFlagReason } from "./safety";
 import { quantityFromRow, formatQuantity } from "./quantity";
+import { presentRecord, recordNoun, type FactsRow } from "./record-facts";
 import type { ListingStatus, LifecycleActor } from "./status";
 import { memberIdentity, type MemberIdentity } from "../email/identity";
 import {
@@ -225,12 +226,21 @@ export async function publishOrHold(
     },
   });
 
-  const quantity = formatQuantity(quantityFromRow(listing));
+  // The record as its own family reads it, so the member emails name the thing
+  // they actually posted. Before this every template said "offer" and every
+  // metadata block said "Quantity", so a freight forwarder was told their offer
+  // was live with a blank quantity beside it.
+  const presentation = presentRecord(listing as FactsRow);
   const summary = {
     ref: listing.ref,
     id: listing.id,
     title: String(listing.product ?? listing.ref),
-    quantity,
+    // Kept for a product record, and for any caller reading the field directly.
+    quantity: formatQuantity(quantityFromRow(listing)),
+    noun: recordNoun(listing as FactsRow),
+    headline: presentation.headline
+      ? { label: presentation.headline.label, value: presentation.headline.value! }
+      : null,
   };
 
   let operatorAlerted = false;

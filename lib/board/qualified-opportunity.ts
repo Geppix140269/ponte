@@ -4,7 +4,9 @@ import { isSupabaseConfigured } from "@/lib/auth";
 import { isoCode } from "@/lib/listing-terms";
 import { isPubliclyCurrent } from "@/lib/listings/validity";
 import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate";
+import { isMissingColumnError } from "@/lib/listings/classification";
 import { truthfulLabels, type PublicLabel } from "@/lib/listings/public-labels";
+import type { FactsRow } from "@/lib/listings/record-facts";
 import { levelRank } from "../verification/level";
 
 /**
@@ -71,6 +73,16 @@ export type QualifiedOpportunity = {
   trustLevel: number | null;
   /** The dated-evidence receipts this record truthfully supports. */
   evidence: PublicLabel[];
+  /**
+   * The stored classification and family terms, for the family-aware
+   * presentation.
+   *
+   * Carried as the ROW rather than as flattened fields on purpose: the detail
+   * page renders it through `presentRecord`, which is the one module that
+   * decides what a family's record says. Flattening here would mean this file
+   * deciding it too, and the two would disagree the first time one changed.
+   */
+  record: FactsRow;
 };
 
 export type QualifiedOpportunityLookup =
@@ -79,7 +91,48 @@ export type QualifiedOpportunityLookup =
   | { state: "missing" };
 
 const QO_COLUMNS =
-  "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, desk_managed, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at";
+  "id, user_id, ref, type, product, hs_code, origin, destination, volume, quantity, quantity_mode, quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, chain_depth, mandate_sighted, desk_managed, validity_type, valid_until, reconfirmed_at, decided_at, desk_version, details, created_at, " +
+  // The classification (20260728a). Applied in production, and what makes the
+  // detail page able to print a trade service as a trade service.
+  "market_family, market_intent, service_category_key, service_subcategory_keys, " +
+  "distribution_partner_type_key, distribution_relationship_terms, coverage_scope_key, " +
+  "territory_codes, product_sector_key, custom_category_label";
+
+/**
+ * The family commercial terms (20260728d), which are NOT applied.
+ *
+ * Named separately and appended optionally for the same reason the submit
+ * route's write fallback is staged: asking for a column the database does not
+ * have fails the WHOLE select, and a detail page that 404s because a migration
+ * is pending is worse than one that renders the record without its terms. The
+ * terms still reach the reader through the record's own `details` text until
+ * the migration is applied.
+ */
+const QO_FAMILY_TERMS = "service_terms, distribution_terms";
+
+/**
+ * The row this reader returns.
+ *
+ * Declared because the select is now built from a variable rather than a string
+ * literal, and the generated Supabase types cannot infer a row shape from one.
+ * Naming the columns here keeps the read as checked as it was.
+ */
+type QoRow = FactsRow & {
+  id: string;
+  user_id: string;
+  ref: string;
+  type: string;
+  product: string;
+  volume: string | null;
+  chain_depth: string | null;
+  mandate_sighted: boolean | null;
+  desk_managed: boolean | null;
+  reconfirmed_at: string | null;
+  decided_at: string | null;
+  desk_version: DeskVersion;
+  details: string | null;
+  created_at: string;
+};
 
 /** Two-digit HS chapter from any HS code shape ("1701.99" -> "17"). */
 function chapterOf(hsCode: string | null): string | null {
@@ -109,12 +162,22 @@ export async function getQualifiedOpportunity(
 
   try {
     const sb = createAdminClient();
-    const { data, error } = await sb
-      .from("listings")
-      .select(QO_COLUMNS)
-      .eq("ref", ref.toUpperCase())
-      .eq("status", "approved")
-      .maybeSingle();
+    const read = async (
+      columns: string,
+    ): Promise<{ data: QoRow | null; error: unknown }> => {
+      const res = await sb
+        .from("listings")
+        .select(columns)
+        .eq("ref", ref.toUpperCase())
+        .eq("status", "approved")
+        .maybeSingle();
+      return { data: (res.data as QoRow | null) ?? null, error: res.error };
+    };
+
+    // With the family terms, then without them. Only a missing column earns the
+    // retry: any other failure is a real failure and is thrown.
+    let { data, error } = await read(`${QO_COLUMNS}, ${QO_FAMILY_TERMS}`);
+    if (error && isMissingColumnError(error)) ({ data, error } = await read(QO_COLUMNS));
     if (error) throw error;
     if (!data) return { state: "missing" };
 
@@ -152,24 +215,24 @@ export async function getQualifiedOpportunity(
       ref: data.ref,
       type: data.type,
       product: data.product,
-      hsCode: data.hs_code,
-      chapter: chapterOf(data.hs_code),
+      hsCode: data.hs_code ?? null,
+      chapter: chapterOf(data.hs_code ?? null),
       chapterTitle: null,
       volume: data.volume,
       quantity: data.quantity != null ? Number(data.quantity) : null,
-      unit: data.unit,
-      frequency: data.frequency,
-      incoterm: data.incoterm,
-      payment: data.payment_terms,
-      originText: data.origin,
-      destinationText: data.destination,
-      originCode: isoCode(data.origin),
-      destinationCode: isoCode(data.destination),
-      submitterRole: data.submitter_role,
+      unit: data.unit ?? null,
+      frequency: data.frequency ?? null,
+      incoterm: data.incoterm ?? null,
+      payment: data.payment_terms ?? null,
+      originText: data.origin ?? null,
+      destinationText: data.destination ?? null,
+      originCode: isoCode(data.origin ?? null),
+      destinationCode: isoCode(data.destination ?? null),
+      submitterRole: data.submitter_role ?? null,
       chainDepth: data.chain_depth,
       mandateSighted: Boolean(data.mandate_sighted),
-      validityType: data.validity_type,
-      validUntil: data.valid_until,
+      validityType: data.validity_type ?? null,
+      validUntil: data.valid_until ?? null,
       lastConfirmed,
       deskQualification: desk?.qualification?.trim() || null,
       deskLimitations: desk?.limitations?.trim() || null,
@@ -181,11 +244,13 @@ export async function getQualifiedOpportunity(
       // because this reader only ever returns an approved listing.
       evidence: truthfulLabels({
         businessVerified: ownerEligible,
-        submitterRole: data.submitter_role,
+        submitterRole: data.submitter_role ?? null,
         mandateSighted: Boolean(data.mandate_sighted),
         reviewed: true,
         lastConfirmed,
       }),
+      // Handed on whole. `presentRecord` reads it; nothing here interprets it.
+      record: data as FactsRow,
     };
 
     await decorateChapter(sb, opportunity);

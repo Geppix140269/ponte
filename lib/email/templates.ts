@@ -66,6 +66,37 @@ export type ListingSummary = {
   title: string;
   /** Formatted for display by the caller. Null when none is stated. */
   quantity?: string | null;
+  /**
+   * What to call this record in a sentence: "offer", "requirement", "trade
+   * service", "distribution opportunity".
+   *
+   * These templates were written when every record was a product offer, so
+   * they said "offer" throughout. A freight forwarder was told their offer was
+   * live, about a service they never offered for sale, and a member seeking a
+   * distributor was told the same about a requirement. `recordNoun` on the
+   * stored row supplies the right word; absent, it stays "offer" so nothing
+   * that already calls these builders changes meaning.
+   */
+  noun?: string | null;
+  /**
+   * The one fact worth naming in the metadata block, in this family's
+   * vocabulary: a quantity for a product, a capability for a service, a
+   * territory for a distribution opportunity.
+   */
+  headline?: { label: string; value: string } | null;
+};
+
+/**
+ * The noun a template uses for a record, defaulting to the historical wording.
+ *
+ * `quantity` is still honoured as a headline for a caller that has not been
+ * updated, so no existing sender loses the fact it was already sending.
+ */
+const nounOf = (l: ListingSummary): string => (l.noun ?? "").trim() || "offer";
+
+const headlineRow = (l: ListingSummary): { label: string; value: string }[] => {
+  if (l.headline && l.headline.value) return [l.headline];
+  return l.quantity ? [{ label: "Quantity", value: l.quantity }] : [];
 };
 
 export type TemplateData = {
@@ -169,11 +200,11 @@ export type TemplateName = keyof TemplateData;
 type Builder<K extends TemplateName> = (data: TemplateData[K]) => EmailContent;
 
 const listing_published: Builder<"listing_published"> = (d) => ({
-  subject: "Your Ponte offer is now live",
+  subject: `Your Ponte ${nounOf(d.listing)} is now live`,
   preheader: `${d.listing.title} is published and discoverable on Ponte Trade.`,
   reason: "listing_owner",
   blocks: [
-    { kind: "title", text: "Your offer is live." },
+    { kind: "title", text: `Your ${nounOf(d.listing)} is live.` },
     { kind: "status", tone: "published", label: "Published" },
     { kind: "paragraph", text: salutation(d.identity) },
     {
@@ -185,7 +216,7 @@ const listing_published: Builder<"listing_published"> = (d) => ({
       rows: [
         { label: "Listing", value: d.listing.title },
         { label: "Reference", value: d.listing.ref },
-        ...(d.listing.quantity ? [{ label: "Quantity", value: d.listing.quantity }] : []),
+        ...headlineRow(d.listing),
         { label: "Detail level", value: `${d.completenessBand} (${d.completenessScore}%)` },
       ],
     },
@@ -213,10 +244,10 @@ const listing_needs_information: Builder<"listing_needs_information"> = (d) => {
 
   return {
     // When verification is the only thing standing in the way, the subject says
-    // so. "Complete your offer" is untrue in that case: the offer IS complete.
+    // so. "Complete your offer" is untrue in that case: the record IS complete.
     subject: verificationOnly
-      ? "Verify your business to publish your Ponte offer"
-      : "Complete your Ponte offer to publish it",
+      ? `Verify your business to publish your Ponte ${nounOf(d.listing)}`
+      : `Complete your Ponte ${nounOf(d.listing)} to publish it`,
     preheader: verificationOnly
       ? `${d.listing.title} is ready. Your business verification is the last step.`
       : `${d.listing.title} is saved. A few required details are still missing.`,
@@ -225,8 +256,8 @@ const listing_needs_information: Builder<"listing_needs_information"> = (d) => {
       {
         kind: "title",
         text: verificationOnly
-          ? "Your offer is ready. Your business is not verified yet."
-          : "Your offer is saved, but not yet live.",
+          ? `Your ${nounOf(d.listing)} is ready. Your business is not verified yet.`
+          : `Your ${nounOf(d.listing)} is saved, but not yet live.`,
       },
       { kind: "status", tone: "action", label: "Action needed" },
       { kind: "paragraph", text: salutation(d.identity) },
@@ -314,11 +345,11 @@ const listing_flagged_internal: Builder<"listing_flagged_internal"> = (d) => ({
 });
 
 const listing_flagged_member: Builder<"listing_flagged_member"> = (d) => ({
-  subject: "Your Ponte offer needs an additional check",
+  subject: `Your Ponte ${nounOf(d.listing)} needs an additional check`,
   preheader: `${d.listing.title} is held for a short check before publication.`,
   reason: "listing_owner",
   blocks: [
-    { kind: "title", text: "Your offer needs an additional check." },
+    { kind: "title", text: `Your ${nounOf(d.listing)} needs an additional check.` },
     { kind: "status", tone: "hold", label: "On hold" },
     { kind: "paragraph", text: salutation(d.identity) },
     {

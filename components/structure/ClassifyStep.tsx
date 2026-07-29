@@ -24,6 +24,7 @@ import {
   coverageScopeTakesCountries,
   partnerTypeNeedsCustomLabel,
 } from "@/lib/taxonomy/distribution";
+import { sanitiseSpecialisations } from "@/lib/taxonomy/service-terms";
 import { journeyFor, type ClassificationStep } from "@/lib/taxonomy/journey";
 import { PRODUCT_SECTORS } from "@/lib/taxonomy/market";
 import {
@@ -32,6 +33,13 @@ import {
   needsCustomLabel,
   type StructureDraft,
 } from "@/lib/structure/draft";
+import {
+  discardedByServiceCategoryChange,
+  discardedByPartnerTypeChange,
+  discardedByCoverageScopeChange,
+  isMeaningfulDiscard,
+  type DiscardItem,
+} from "@/lib/structure/discard";
 
 /**
  * What the record is, chosen before anything is described.
@@ -67,7 +75,15 @@ export default function ClassifyStep({
   t,
 }: {
   draft: StructureDraft;
-  set: (patch: Partial<StructureDraft>) => void;
+  /**
+   * Accepts a function as well as a patch, because the specialisation clean-up
+   * below reads the CURRENT draft. A patch built from the closed-over draft
+   * would use the value as it was at render time, which is the stale-copy bug
+   * the composer's own `set` was widened to avoid.
+   */
+  set: (
+    patch: Partial<StructureDraft> | ((draft: StructureDraft) => Partial<StructureDraft>),
+  ) => void;
   icons: CategoryIconMap;
   onNext: () => void;
   t: T;
@@ -102,6 +118,27 @@ export default function ClassifyStep({
   const step = steps[cursor];
   const ready = classificationComplete(draft);
 
+  /**
+   * A change that would destroy work, held until the member agrees to it.
+   *
+   * Null means nothing is pending, which is the state almost every change
+   * leaves it in: `confirmThenApply` only stops when there is something real to
+   * lose. A member who has answered nothing downstream changes their category
+   * with no interruption at all.
+   */
+  const [pendingDiscard, setPendingDiscard] = useState<{
+    items: DiscardItem[];
+    apply: () => void;
+  } | null>(null);
+
+  const confirmThenApply = (items: DiscardItem[], apply: () => void) => {
+    if (!isMeaningfulDiscard(items)) {
+      apply();
+      return;
+    }
+    setPendingDiscard({ items, apply });
+  };
+
   if (!journey || !step) return null;
 
   const answeredBefore = steps.slice(0, cursor).filter((s) => stepAnswered(draft, s));
@@ -126,6 +163,18 @@ export default function ClassifyStep({
     <div>
       <Trail draft={draft} steps={answeredBefore} onChange={(s) => setCursor(steps.indexOf(s))} t={t} />
 
+      {pendingDiscard && (
+        <DiscardWarning
+          items={pendingDiscard.items}
+          onCancel={() => setPendingDiscard(null)}
+          onConfirm={() => {
+            pendingDiscard.apply();
+            setPendingDiscard(null);
+          }}
+          t={t}
+        />
+      )}
+
       {step === "service_category" && (
         <TradeServiceCategoryPicker
           icons={icons}
@@ -136,13 +185,21 @@ export default function ClassifyStep({
           selectedLabel={t("classify.chosen")}
           value={draft.serviceCategory}
           onChange={(key) =>
-            set({
-              serviceCategory: key,
-              // A different category cannot keep the previous category's
-              // subcategories: they would be a classification nobody chose.
-              serviceSubcategories: [],
-              customCategoryLabel: null,
-            })
+            // A different category cannot keep the previous category's
+            // subcategories or its specialisations: they would be a
+            // classification nobody chose. The member is told what the change
+            // costs BEFORE it is applied, and only when it costs something.
+            confirmThenApply(discardedByServiceCategoryChange(draft, key), () =>
+              set((d) => ({
+                serviceCategory: key,
+                serviceSubcategories: [],
+                customCategoryLabel: null,
+                serviceTerms: {
+                  ...d.serviceTerms,
+                  specialisationKeys: sanitiseSpecialisations(key, d.serviceTerms.specialisationKeys),
+                },
+              })),
+            )
           }
         >
           {serviceCategoryNeedsCustomLabel(draft.serviceCategory) && (
@@ -201,7 +258,11 @@ export default function ClassifyStep({
           legend={t("classify.choosePartner")}
           selectedLabel={t("classify.chosen")}
           value={draft.distributionPartnerType}
-          onChange={(key) => set({ distributionPartnerType: key, customCategoryLabel: null })}
+          onChange={(key) =>
+            confirmThenApply(discardedByPartnerTypeChange(draft, key), () =>
+              set({ distributionPartnerType: key, customCategoryLabel: null }),
+            )
+          }
         >
           {partnerTypeNeedsCustomLabel(draft.distributionPartnerType) && (
             <WriteIn
@@ -232,12 +293,16 @@ export default function ClassifyStep({
           selectedLabel={t("classify.chosen")}
           value={draft.coverageScope}
           onChange={(key) =>
-            set({
-              coverageScope: key,
-              // Codes belong to a scope that takes them. Keeping them across a
-              // change to Worldwide would store a territory nobody declared.
-              territoryCodes: coverageScopeTakesCountries(key) ? draft.territoryCodes : [],
-            })
+            // Codes belong to a scope that takes them. Keeping them across a
+            // change to Worldwide would store a territory nobody declared, and
+            // dropping a list of named countries without saying so destroys
+            // work the member did country by country.
+            confirmThenApply(discardedByCoverageScopeChange(draft, key), () =>
+              set({
+                coverageScope: key,
+                territoryCodes: coverageScopeTakesCountries(key) ? draft.territoryCodes : [],
+              }),
+            )
           }
         >
           {coverageScopeTakesCountries(draft.coverageScope) && (
@@ -288,6 +353,55 @@ export default function ClassifyStep({
         )}
         <button className="fbtn fbtn--lg" type="button" disabled={!canAdvance} onClick={advance}>
           {last ? `${t("intent.cta")} →` : t("classify.continue")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The change, and what it costs, before it happens.
+ *
+ * Rendered inline above the question rather than as a modal on purpose: the
+ * answers being discarded are the ones the member can see on this screen, and a
+ * dialog that covers them asks somebody to decide about work they can no longer
+ * look at. `role="alertdialog"` and the focus-carrying Keep button give it the
+ * standing of a decision without taking the page away.
+ *
+ * Keep is first and is the default action. The destructive option is never the
+ * one a member reaches by pressing Enter out of habit.
+ */
+function DiscardWarning({
+  items,
+  onCancel,
+  onConfirm,
+  t,
+}: {
+  items: readonly DiscardItem[];
+  onCancel: () => void;
+  onConfirm: () => void;
+  t: T;
+}) {
+  return (
+    <div className="pcat-discard" role="alertdialog" aria-labelledby="pcat-discard-h">
+      <p className="pcat-discard__h" id="pcat-discard-h">
+        {t("classify.discardTitle")}
+      </p>
+      <p className="pcat-discard__d">{t("classify.discardBody")}</p>
+      <ul className="pcat-discard__l">
+        {items.map((i) => (
+          <li key={i.key}>
+            <span className="pcat-discard__k">{t(`field.${i.labelKey}`)}</span>
+            <span className="pcat-discard__v">{i.value}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="pcat-discard__a">
+        <button className="fbtn" type="button" autoFocus onClick={onCancel}>
+          {t("classify.discardKeep")}
+        </button>
+        <button className="fbtn fbtn--ghost" type="button" onClick={onConfirm}>
+          {t("classify.discardConfirm")}
         </button>
       </div>
     </div>
