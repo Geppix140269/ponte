@@ -164,6 +164,28 @@ test("a widened search says so", () => {
   assert.ok(/also searching/i.test(body), "the widening is silent");
 });
 
+test("an HS code is not reported as a widened search", () => {
+  // The format variants of one code are the same code, written the way
+  // different sources stored it. Listing them told somebody who had typed
+  // 99999999 that Ponte was "also searching 9999.9999", which is true and a
+  // strange thing to say about a number they had just typed in full.
+  const body = text(render(SignalSearch, { q: Q({ q: "99999999" }) }));
+  assert.ok(body.includes("99999999"), "the active query is not shown");
+  assert.ok(!/also searching/i.test(body), `a code was reported as widened: ${body}`);
+});
+
+test("a widened search lists the terms once each", () => {
+  const body = text(render(SignalSearch, { q: Q({ q: "gas oil" }) }));
+  assert.ok(/also searching/i.test(body), "the widening is silent");
+  assert.ok(body.includes("diesel"), "the widening does not name what it added");
+  // `en590` and `en 590` are one term to a reader, however many phrases they
+  // are to the database.
+  const listed = body.slice(body.indexOf("also searching"));
+  assert.ok(!/en590.*en 590|en 590.*en590/.test(listed), `near-duplicates listed: ${listed}`);
+  // And the member's own words are not read back to them as an addition.
+  assert.ok(!/also searching[^.]*gas oil/.test(listed), `own words listed: ${listed}`);
+});
+
 test("a query too short to run is not presented as a result", () => {
   const body = text(render(SignalSearch, { q: Q({ q: "a" }) }));
   assert.ok(/at least two/i.test(body), "a one-character query was run silently");

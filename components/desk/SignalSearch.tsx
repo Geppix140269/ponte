@@ -67,13 +67,28 @@ export default function SignalSearch({ q }: { q: FindQuery }) {
   // claiming to be a result.
   const tooShort = q.q !== null && search === null;
   /**
-   * The phrases the vocabulary added, in the member's reading order.
+   * The terms the VOCABULARY added, and only those.
    *
-   * Their own words are always first in `phrases`, so everything after the
-   * first entry is what was added. Capped at four: the point is to show that
-   * the search was widened and roughly how, not to print the table.
+   * Read from the matched alias groups rather than from `phrases`, which also
+   * carries the format variants of an HS code. Those are the same code written
+   * the way different sources stored it, so listing them told somebody who had
+   * typed `99999999` that Ponte was "also searching 9999.9999" - true, and a
+   * strange thing to say about a number they had just typed in full.
+   *
+   * Near-duplicates are collapsed on their spacing, so `en590` and `en 590`
+   * appear once. Capped at four: the point is to show that the search was
+   * widened and roughly how, not to print the table.
    */
-  const widened = (search?.phrases ?? []).slice(1, 5);
+  const widened: string[] = [];
+  const seen = new Set<string>([(search?.normalised ?? "").replace(/ /g, "")]);
+  for (const group of search?.groups ?? []) {
+    for (const term of group.terms) {
+      const key = term.replace(/ /g, "");
+      if (seen.has(key) || widened.length >= 4) continue;
+      seen.add(key);
+      widened.push(term);
+    }
+  }
 
   return (
     <div className="sigsearch">
