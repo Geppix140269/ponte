@@ -25,6 +25,8 @@
   /* ---- Brand signal, never a status ---- */
   --gold: var(--pf-gold);
   --gold-ink: var(--pf-gold-ink);
+  /* Gold as a structural line or state mark. Constitution 6b. */
+  --gold-rule: var(--pf-gold-rule);
   --gold-tint: var(--pf-gold-tint);
 
   /* ---- Semantic states (only fact colours are used here) ---- */
@@ -452,7 +454,7 @@ body:has(.ponte-landing) {
     stroke var(--dur-2);
 }
 .ponte-landing .f-dot.hot {
-  stroke: var(--gold);
+  stroke: var(--gold-rule);
   fill: var(--gold-tint);
 }
 .ponte-landing .f-dotn {
@@ -467,7 +469,7 @@ body:has(.ponte-landing) {
    it leaves the first marker and out as it reaches the second, so the loop has
    no visible jump back. Pure decoration, and it never moves anything else. */
 .ponte-landing .f-run {
-  fill: var(--gold);
+  fill: var(--gold-rule);
   animation: ponte-flow-run 3.4s var(--ease) infinite;
 }
 @keyframes ponte-flow-run {
@@ -532,7 +534,7 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .rlabel:hover,
 .ponte-landing .rlabel.hot {
-  border-top-color: var(--gold);
+  border-top-color: var(--gold-rule);
 }
 .ponte-landing .rlabel__n {
   flex-shrink: 0;
@@ -608,7 +610,7 @@ body:has(.ponte-landing) {
     background var(--dur-1);
 }
 .ponte-landing .popular__i:hover {
-  border-color: var(--gold);
+  border-color: var(--gold-rule);
   background: var(--gold-tint);
 }
 .ponte-landing .popular__n {
@@ -642,7 +644,7 @@ body:has(.ponte-landing) {
   transition: border-color var(--dur-1);
 }
 .ponte-landing .lnote__a:hover {
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- header links ---- */
@@ -662,7 +664,7 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .lhead__link:hover {
   color: var(--ink);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- footer ---- */

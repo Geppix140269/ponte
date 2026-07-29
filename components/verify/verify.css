@@ -35,7 +35,7 @@
   padding-bottom: 2px;
   transition: border-color var(--dur-1);
 }
-.ponte-find .vback:hover { border-bottom-color: var(--gold); }
+.ponte-find .vback:hover { border-bottom-color: var(--gold-rule); }
 
 /* ---- the two services ---------------------------------------------------- */
 .ponte-find .vchoices {
@@ -53,7 +53,7 @@
   text-decoration: none;
   transition: border-color var(--dur-1);
 }
-.ponte-find .vchoice:hover { border-bottom-color: var(--gold); }
+.ponte-find .vchoice:hover { border-bottom-color: var(--gold-rule); }
 .ponte-find .vchoice__n {
   flex: none;
   font-family: var(--f-mono);

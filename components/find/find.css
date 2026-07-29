@@ -30,6 +30,9 @@
   /* ---- Brand signal, never a status ---- */
   --gold: var(--pf-gold);
   --gold-ink: var(--pf-gold-ink);
+  /* Gold as a structural line or state mark. Constitution 6b. Explore, Structure,
+     Verify and Check all render inside .ponte-find, so they inherit it. */
+  --gold-rule: var(--pf-gold-rule);
   --gold-tint: var(--pf-gold-tint);
 
   /* ---- Semantic states (reserved meanings, off the accent) ---- */
@@ -168,7 +171,7 @@
    ====================================================================== */
 .ponte-find .fphead { padding: var(--s-7) 0 var(--s-5); border-bottom: 1px solid var(--rule); }
 .ponte-find .fphead__eb { display: inline-flex; align-items: center; gap: 10px; margin-bottom: var(--s-3); }
-.ponte-find .fphead__rule { width: 26px; height: 1px; background: var(--gold); }
+.ponte-find .fphead__rule { width: 26px; height: 1px; background: var(--gold-rule); }
 .ponte-find .fphead__h {
   font-family: var(--f-serif);
   font-size: clamp(28px, 3.4vw, 44px);
@@ -223,7 +226,7 @@
 }
 .ponte-find .flane__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); padding-bottom: var(--s-3); }
 .ponte-find .flane__t { display: flex; align-items: center; gap: 9px; font-family: var(--f-serif); font-size: 20px; font-weight: 500; color: var(--ink); }
-.ponte-find .flane__t .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.ponte-find .flane__t .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold-rule); }
 .ponte-find .flane__n { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
 .ponte-find .flane__note { font-size: 13px; color: var(--ink-3); margin: 0 0 var(--s-2); max-width: 56ch; }
 /* The Market Signals lane is set apart by a dashed top rule and slate voice. */
@@ -241,7 +244,7 @@
 .ponte-find .qorow:first-of-type { border-top: none; }
 .ponte-find .qorow__top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 .ponte-find .qorow__kind { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
-.ponte-find .qorow__kind .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.ponte-find .qorow__kind .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-rule); }
 .ponte-find .qorow__intent { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-2); border: 1px solid var(--rule-strong); padding: 1px 7px; border-radius: 3px; }
 .ponte-find .qorow__title { font-family: var(--f-serif); font-size: 18px; font-weight: 500; line-height: 1.2; color: var(--ink); margin: var(--s-2) 0 0; }
 .ponte-find .qorow:hover .qorow__title { color: var(--gold-ink); }
@@ -300,7 +303,9 @@
 }
 .ponte-find .fbtn:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 .ponte-find .fbtn:active { transform: translateY(1px); }
-.ponte-find .fbtn[disabled] { opacity: 0.45; cursor: not-allowed; }
+/* Constitution 6c and section 12: token colour at full opacity, and the reason is
+   printed beside the control rather than implied by a fade. */
+.ponte-find .fbtn[disabled] { background: var(--sunken); border-color: var(--rule-strong); color: var(--ink-3); cursor: not-allowed; }
 .ponte-find .fbtn--secondary { background: transparent; color: var(--ink); }
 .ponte-find .fbtn--secondary:hover { background: var(--sunken); border-color: var(--rule-strong); color: var(--ink); }
 .ponte-find .fbtn--ghost { background: transparent; border-color: transparent; color: var(--ink-2); padding: 8px 10px; }
@@ -375,7 +380,11 @@
 .ponte-find .fpick__hit:hover .fpick__hitname { color: var(--gold-ink); }
 .ponte-find .fpick__hitname { font-size: 14px; }
 .ponte-find .fpick__hitcode { font-size: 12px; color: var(--ink-3); }
-.ponte-find .fchip.is-listening { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+/* Constitution section 6: colour is never the only carrier. This was a gold fill
+   and nothing else, so "listening" and "idle" differed by hue alone. The pressed
+   weight and the printed word carry it now; the fill is the third signal. */
+.ponte-find .fchip.is-listening { background: var(--gold); border-color: var(--gold-rule); color: var(--ink); font-weight: 700; }
+.ponte-find .fchip.is-listening::after { content: " Listening"; font-weight: 700; }
 .ponte-find .fpick__crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 8px 0 4px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
 .ponte-find .fpick__crumb button { background: none; border: none; cursor: pointer; color: var(--gold-ink); padding: 0; font: inherit; }
 .ponte-find .fpick__crumbcur { color: var(--ink-2); }
@@ -407,7 +416,7 @@
 .ponte-find .qhead { border-bottom: 1px solid var(--rule); padding-bottom: var(--s-4); }
 .ponte-find .qhead__tags { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); }
 .ponte-find .qhead__kind { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
-.ponte-find .qhead__kind .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.ponte-find .qhead__kind .g-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold-rule); }
 .ponte-find .qhead__intent { font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); border: 1px solid var(--rule-strong); padding: 1px 8px; border-radius: 3px; }
 .ponte-find .qhead__h { font-family: var(--f-serif); font-size: clamp(28px, 3.6vw, 44px); font-weight: 500; letter-spacing: -0.018em; line-height: 1.06; color: var(--ink); margin: 0; }
 .ponte-find .qhead__ref { font-family: var(--f-mono); font-size: 13px; color: var(--ink-3); margin-top: var(--s-3); }
@@ -478,10 +487,10 @@
    ====================================================================== */
 .ponte-find .req { display: grid; gap: var(--s-5); }
 .ponte-find .reqctx { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); padding-bottom: var(--s-3); border-bottom: 1px solid var(--rule); }
-.ponte-find .reqctx .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.ponte-find .reqctx .g-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-rule); }
 .ponte-find .readiness { display: grid; gap: 6px; }
 .ponte-find .readiness__track { height: 3px; background: var(--rule); overflow: hidden; }
-.ponte-find .readiness__fill { height: 3px; background: var(--gold); width: 0; transition: width var(--dur-3) var(--ease); }
+.ponte-find .readiness__fill { height: 3px; background: var(--gold-rule); width: 0; transition: width var(--dur-3) var(--ease); }
 .ponte-find .readiness__label { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
 .ponte-find .reqq { display: grid; gap: var(--s-2); }
 .ponte-find .reqq__label { font-size: 13.5px; color: var(--ink); font-weight: 600; }

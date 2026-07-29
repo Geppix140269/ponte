@@ -283,7 +283,7 @@
 }
 .ponte-desk .rail__name {
   font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.4);
+  text-transform: uppercase; color: #979591;
   margin: 0 0 18px; text-align: center; line-height: 1.5;
 }
 .ponte-desk .rail__stations {
@@ -300,19 +300,19 @@
 .ponte-desk .st__n { position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
 .ponte-desk .st__n::after {
   content: ""; position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
-  width: 1.75px; height: 34px; background: rgba(242, 239, 232, 0.5);
+  width: 1.75px; height: 34px; background: #817F7B;
 }
 .ponte-desk .st:last-child .st__n::after { display: none; }
-.ponte-desk .st i { display: block; width: 9px; height: 9px; border-radius: 50%; background: rgba(242, 239, 232, 0.32); }
+.ponte-desk .st i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #817F7B; }
 .ponte-desk .st b {
   font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.09em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.42);
+  text-transform: uppercase; color: #7C7B77;
   text-align: center; line-height: 1.3; font-weight: 500; max-width: 84px;
 }
 /* The four route conditions, plus active. The only conditions a rail may
    express. Each is a shape and a weight as well as a colour. */
 .ponte-desk .st--done i { background: var(--surface); width: 11px; height: 11px; }
-.ponte-desk .st--done b { color: rgba(242, 239, 232, 0.8); }
+.ponte-desk .st--done b { color: #C5C2BC; }
 .ponte-desk .st--here i { background: var(--gold); width: 13px; height: 13px; box-shadow: 0 0 0 4px rgba(217, 172, 85, 0.2); }
 .ponte-desk .st--here b { color: var(--surface); font-weight: 700; }
 /* NOT ALIASED, recorded gap DS-1, same cause as the ink focus ring above.
@@ -323,11 +323,11 @@
    distinct weight, and `.st__n::after` states the condition in words. */
 .ponte-desk .st--halt i { background: #9db4c0; width: 11px; height: 11px; }
 .ponte-desk .st--halt b { color: #9db4c0; font-weight: 600; }
-.ponte-desk .st--reserved i { background: none; border: 1.5px dashed rgba(242, 239, 232, 0.3); }
-.ponte-desk .st--reserved b { color: rgba(242, 239, 232, 0.34); }
+.ponte-desk .st--reserved i { background: none; border: 1.5px dashed #605F5B; }
+.ponte-desk .st--reserved b { color: #7C7B77; }
 .ponte-desk .st--reserved .st__n::after,
 .ponte-desk .st--halt .st__n::after {
-  background: repeating-linear-gradient(180deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+  background: repeating-linear-gradient(180deg, #605F5B 0 3px, transparent 3px 8px);
 }
 .ponte-desk .st--active i { background: var(--gold); width: 13px; height: 13px; animation: dk-pt 1.9s var(--ease) infinite; }
 .ponte-desk .st--active b { color: var(--surface); font-weight: 700; }
@@ -342,10 +342,10 @@
 }
 .ponte-desk .rail__origin b {
   display: block; font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.36); margin-bottom: 4px;
+  text-transform: uppercase; color: #7C7B77; margin-bottom: 4px;
 }
 .ponte-desk .rail__origin span {
-  font-family: var(--f-mono); font-size: 9.5px; color: rgba(242, 239, 232, 0.7);
+  font-family: var(--f-mono); font-size: 9.5px; color: #AEACA7;
   overflow-wrap: anywhere;
 }
 
@@ -365,7 +365,19 @@
 .ponte-desk .b--lg { min-height: 46px; padding: 12px 20px; font-size: 14px; }
 .ponte-desk .b--sm { min-height: 32px; padding: 6px 11px; font-size: 12px; }
 .ponte-desk .b--block { width: 100%; }
-.ponte-desk .b[aria-disabled="true"] { opacity: 0.42; pointer-events: none; }
+/* Constitution 6c and section 12. Opacity on a control containing a label drove
+   the label to 2.86:1, and an opacity states no reason. One treatment now, in
+   token colour at full opacity: a sunken ground, the control-boundary rule and
+   secondary ink. The reason belongs beside the control in copy, which the Start a
+   Deal and Workspace surfaces already print. */
+.ponte-desk .b[aria-disabled="true"],
+.ponte-desk .act[aria-disabled="true"],
+.ponte-desk .fbtn[disabled] {
+  background: var(--sunken);
+  border-color: var(--rule-strong);
+  color: var(--ink-3);
+  pointer-events: none;
+}
 
 /* The Desk action primitive: a labelled action with its own consequence line
    underneath. Part of the delivered system and unused in this slice, because
@@ -381,7 +393,7 @@
 .ponte-desk .act span { display: block; font-family: var(--f-mono); font-weight: 400; font-size: 11px; opacity: 0.72; margin-top: 4px; }
 .ponte-desk .act--2 { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
 .ponte-desk .act--2:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
-.ponte-desk .act[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+
 
 /* ======================================================================
    4. SURFACES
@@ -413,7 +425,7 @@
   text-transform: uppercase; color: var(--gold-ink);
   display: flex; align-items: center; gap: 9px;
 }
-.ponte-desk .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold); flex: none; }
+.ponte-desk .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-rule); flex: none; }
 
 /* The classification token, before every record title. A word, never a
    colour alone, and never an icon alone. */
@@ -427,7 +439,7 @@
   border-radius: 50%; flex: none;
 }
 .ponte-desk .cls--opp { color: var(--ink); }
-.ponte-desk .cls--opp::before { border: 0; background: var(--gold); width: 7px; height: 7px; }
+.ponte-desk .cls--opp::before { border: 0; background: var(--gold-rule); width: 7px; height: 7px; }
 
 /* ======================================================================
    5. FACT REGISTER, the Ledger borrowing, dense listings only
@@ -454,7 +466,10 @@
 }
 .ponte-desk .reg__row { border-bottom: 1px solid var(--rule); align-items: start; transition: background var(--dur-1); }
 .ponte-desk .reg__row:last-child { border-bottom: 0; }
-.ponte-desk .reg__row:hover { background: color-mix(in srgb, var(--sunken) 55%, transparent); }
+/* Constitution section 6: colour was the only carrier here, and at 1.08:1 it was
+   barely a carrier at all. The row now gains an inset edge at the control-boundary
+   token as well as the wash, so the affordance survives greyscale. */
+.ponte-desk .reg__row:hover { background: var(--sunken); box-shadow: inset 3px 0 0 var(--rule-strong); }
 .ponte-desk .reg__row > * { padding: 13px 14px; min-width: 0; }
 .ponte-desk .reg__cls { border-left: 3px dashed var(--review-line); }
 .ponte-desk .reg__row--opp .reg__cls { border-left: 3px solid var(--ink); }
@@ -618,7 +633,7 @@
 .ponte-desk .fbtn--secondary { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
 .ponte-desk .fbtn--secondary:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
 .ponte-desk .fbtn--block { width: 100%; }
-.ponte-desk .fbtn[disabled] { opacity: 0.42; pointer-events: none; }
+
 .ponte-desk .sigsheet__done {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
   border-radius: var(--dk-radius); background: var(--pos-tint);
@@ -708,9 +723,12 @@
    8. STATES: loading, empty, error
    ====================================================================== */
 .ponte-desk .sk {
+  /* Was a 1.15:1 base with a 1.06:1 sweep, so loading and empty looked the same.
+     The base is now the sunken well against a raised panel and the sweep runs to
+     the hairline rule, which is a visible band rather than a suggestion. */
   background: linear-gradient(
     90deg, var(--sunken) 25%,
-    color-mix(in srgb, var(--sunken) 55%, var(--rule)) 50%, var(--sunken) 75%);
+    var(--rule) 50%, var(--sunken) 75%);
   background-size: 200% 100%;
   animation: dk-sh 1.4s ease infinite;
   border-radius: 3px; display: block;
@@ -1112,7 +1130,7 @@
   }
   .ponte-desk .st--reserved .st__n::after,
   .ponte-desk .st--halt .st__n::after {
-    background: repeating-linear-gradient(90deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+    background: repeating-linear-gradient(90deg, #605F5B 0 3px, transparent 3px 8px);
   }
   .ponte-desk .rail__origin {
     margin-top: 0; width: auto; padding: 0 0 0 14px; text-align: left;
