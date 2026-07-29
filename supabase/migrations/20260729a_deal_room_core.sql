@@ -161,6 +161,17 @@ create table if not exists public.deal_rooms (
   intended_counterparty_profile_id uuid references public.profiles(id) on delete restrict,
   intended_counterparty_email      text,
   intended_counterparty_name       text,
+
+  -- The transaction role proposed for that principal, fixed at proposal.
+  --
+  -- The owner final review of 29 July 2026 found that the role was stated at
+  -- proposal, validated, and then discarded, so `deal_room_invite()` took the
+  -- role and the participant class from whoever called it. A direct RPC could
+  -- invite the correct person as an observer or a provider - and class governs
+  -- admission activation, approval and permissions, so that is a permission
+  -- decision, not a label. It is persisted here and read from here.
+  intended_counterparty_role       text not null,
+
   constraint deal_rooms_intended_counterparty
     check (
       intended_counterparty_profile_id is not null

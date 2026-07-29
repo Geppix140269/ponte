@@ -122,7 +122,6 @@ export async function sendInvitation(formData: FormData): Promise<void> {
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
-  const role = String(formData.get("role") ?? "Principal counterparty");
   const back = returnTo(formData, `${room(locale, roomId)}/invitation`);
 
   /*
@@ -139,6 +138,10 @@ export async function sendInvitation(formData: FormData): Promise<void> {
    * the room's persisted intended counterparty rather than from a form field.
    * There is no email parameter to disagree with the room's own record.
    *
+   * The role and the participant class went the same way in the owner final
+   * review: the role is read from the room's proposal and the class is
+   * `principal`, so this file no longer has an opinion about either.
+   *
    * The raw token is the one thing that cannot come from the database: it must
    * never be stored, so it is generated here and only its digest is sent.
    */
@@ -147,8 +150,6 @@ export async function sendInvitation(formData: FormData): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.rpc("deal_room_invite", {
     p_sub_room_id: subRoomId,
-    p_role: role,
-    p_class: "principal",
     p_token_sha256: minted.tokenSha256,
     p_expires_at: minted.expiresAt.toISOString(),
   });

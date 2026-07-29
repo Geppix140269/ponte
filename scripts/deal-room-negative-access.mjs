@@ -254,8 +254,6 @@ async function main() {
   refused(
     await stranger.client.rpc("deal_room_invite", {
       p_sub_room_id: subRoomId,
-      p_role: "Buyer",
-      p_class: "principal",
       p_token_sha256: tokenHash,
       p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
     }),
@@ -301,11 +299,27 @@ async function main() {
     "a member cannot insert an invitation row directly either",
   );
 
+  /* ----- Trust defect 5: the role and class cannot be chosen by the caller -- */
+
+  // The five-argument signature that took `p_role` and `p_class` must no longer
+  // exist. Validating a caller-supplied copy of the role is not the same as
+  // refusing to accept one: while that signature was callable, a direct RPC
+  // could invite the correct principal as an observer or a provider, and class
+  // governs admission activation, approval rights and permissions.
+  refused(
+    await owner.client.rpc("deal_room_invite", {
+      p_sub_room_id: subRoomId,
+      p_role: "Observer",
+      p_class: "observer",
+      p_token_sha256: createHash("sha256").update(randomUUID()).digest("hex"),
+      p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
+    }),
+    "the five-argument invite signature, which accepted a caller-chosen role and class, no longer exists",
+  );
+
   allowed(
     await owner.client.rpc("deal_room_invite", {
       p_sub_room_id: subRoomId,
-      p_role: "Buyer",
-      p_class: "principal",
       p_token_sha256: tokenHash,
       p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
     }),
@@ -314,9 +328,26 @@ async function main() {
 
   const stored = await admin
     .from("deal_room_invitations")
-    .select("preview_facts, integrity_preflight")
+    .select("preview_facts, integrity_preflight, proposed_role, proposed_participant_class")
     .eq("token_sha256", tokenHash)
     .maybeSingle();
+
+  check(
+    "the invitation carries the role persisted at proposal",
+    stored.data?.proposed_role === "Buyer",
+    `stored: ${stored.data?.proposed_role}`,
+  );
+  check(
+    "and the principal participant class, which no caller supplied",
+    stored.data?.proposed_participant_class === "principal",
+    `stored: ${stored.data?.proposed_participant_class}`,
+  );
+  check(
+    "the disclosed preview states the same role and class as the row",
+    stored.data?.preview_facts?.proposedRole === "Buyer" &&
+      stored.data?.preview_facts?.proposedParticipantClass === "principal",
+    `stored: ${JSON.stringify(stored.data?.preview_facts)?.slice(0, 200)}`,
+  );
 
   check(
     "the stored pre-flight was derived by the command, carrying its own timestamp",
@@ -339,8 +370,38 @@ async function main() {
     "an invitee cannot read the invitations table",
   );
 
+  /* ----- Trust defect 6: the token is not the identity --------------------- */
+
+  // The genuine, unexpired, unaccepted token, in the wrong hands. A link can be
+  // forwarded, disclosed or intercepted; if holding one were enough, credible
+  // interest would have been recorded for one principal and a different member
+  // would become the participant.
+  refused(
+    await stranger.client.rpc("deal_room_accept_invitation", { p_token_sha256: tokenHash }),
+    "a stranger holding the genuine token cannot accept it",
+  );
+
+  // And the refusal changed nothing: not the invitation, not the participant
+  // list, not the workspace, not the durable history.
+  const afterStranger = await admin
+    .from("deal_room_invitations")
+    .select("state, accepted_by")
+    .eq("token_sha256", tokenHash)
+    .maybeSingle();
+  check(
+    "the refused attempt left the invitation untouched",
+    afterStranger.data?.state === "sent" && afterStranger.data?.accepted_by === null,
+    `state ${afterStranger.data?.state}, accepted_by ${afterStranger.data?.accepted_by}`,
+  );
+  const strangerParticipant = await admin
+    .from("deal_room_participants")
+    .select("id")
+    .eq("room_id", roomId)
+    .eq("profile_id", stranger.id);
+  check("and made the stranger a participant of nothing", (strangerParticipant.data ?? []).length === 0);
+
   const accept = await counterparty.client.rpc("deal_room_accept_invitation", { p_token_sha256: tokenHash });
-  allowed(accept, "the invitee can accept the invitation");
+  allowed(accept, "the intended member can accept the invitation");
   const participantId = accept.data;
 
   // The gate. Accepted, but not admitted.
@@ -425,6 +486,121 @@ async function main() {
     }),
     "an external principal without a name is refused",
   );
+
+  /* ----- The external intended principal, end to end ---------------------- */
+  //
+  // A separate room, because the member branch above compares `auth.uid()` with
+  // the persisted profile and the external branch compares confirmed addresses.
+  // Both need proving, and a room holds one intended counterparty. A separate
+  // owner too, because a Starter entitlement is one per organisation.
+  console.log("\n3b. The external intended principal");
+
+  const externalOwner = await member("external-owner");
+  const externalPrincipal = await member("external-principal");
+  created.users.push(externalOwner.id, externalPrincipal.id);
+
+  const externalListingId = randomUUID();
+  const { error: externalSeedError } = await admin.from("listings").insert({
+    id: externalListingId,
+    ref: `TEST-${externalListingId.slice(0, 8)}`,
+    user_id: externalOwner.id,
+    type: "offer",
+    product: "Durum wheat semolina",
+    details: "Negative-access fixture. Fictional.",
+    status: "approved",
+    market_family: "products",
+    market_intent: "offer_product",
+    quantity: 250,
+    unit: "MT",
+    origin_country: "IT",
+    destination_country: "DE",
+    flexibility: {},
+  });
+  if (externalSeedError) throw new Error(`could not seed the external listing: ${externalSeedError.message}`);
+  created.listings.push(externalListingId);
+
+  const externalPropose = await externalOwner.client.rpc("deal_room_propose", {
+    p_listing_id: externalListingId,
+    p_counterparty_profile: null,
+    // Named as an address rather than as a member. The account that holds it
+    // exists, but the room does not know that and must not need to.
+    p_counterparty_email: externalPrincipal.email,
+    p_counterparty_name: "Norddeutsche Mühlen GmbH",
+    p_counterparty_role: "Buyer",
+    p_objective: "Secure 250 MT of semolina for the spring milling season.",
+    p_interest_route: "qualified_member_discussion",
+    p_operating_mode: "software_only",
+    p_sub_room_purpose: "Negotiation: durum wheat semolina",
+  });
+  allowed(externalPropose, "a room can be proposed to a named external principal");
+  const externalRoomId = externalPropose.data;
+
+  if (externalRoomId) {
+    created.rooms.push(externalRoomId);
+
+    const { data: externalSubRooms } = await externalOwner.client
+      .from("deal_room_sub_rooms")
+      .select("id")
+      .eq("room_id", externalRoomId);
+    const externalSubRoomId = externalSubRooms?.[0]?.id;
+
+    const externalToken = randomBytes(32).toString("base64url");
+    const externalHash = createHash("sha256").update(externalToken, "utf8").digest("hex");
+
+    allowed(
+      await externalOwner.client.rpc("deal_room_invite", {
+        p_sub_room_id: externalSubRoomId,
+        p_token_sha256: externalHash,
+        p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
+      }),
+      "the external invitation is issued to the persisted address",
+    );
+
+    const externalInvitation = await admin
+      .from("deal_room_invitations")
+      .select("invited_email, proposed_role, proposed_participant_class")
+      .eq("token_sha256", externalHash)
+      .maybeSingle();
+    check(
+      "addressed to the external principal recorded at proposal",
+      externalInvitation.data?.invited_email === externalPrincipal.email.toLowerCase(),
+      `addressed to ${externalInvitation.data?.invited_email}`,
+    );
+    check(
+      "carrying the persisted role and the principal class",
+      externalInvitation.data?.proposed_role === "Buyer" &&
+        externalInvitation.data?.proposed_participant_class === "principal",
+      `stored: ${externalInvitation.data?.proposed_role} / ${externalInvitation.data?.proposed_participant_class}`,
+    );
+
+    // An authenticated account whose confirmed address is NOT the invited one.
+    refused(
+      await stranger.client.rpc("deal_room_accept_invitation", { p_token_sha256: externalHash }),
+      "an account whose confirmed email does not match the invited address cannot accept",
+    );
+    // And the counterparty from the other room, who is a legitimate Ponte
+    // member in good standing - just not this one.
+    refused(
+      await counterparty.client.rpc("deal_room_accept_invitation", { p_token_sha256: externalHash }),
+      "nor can any other member, however legitimate elsewhere",
+    );
+
+    const externalAccept = await externalPrincipal.client.rpc("deal_room_accept_invitation", {
+      p_token_sha256: externalHash,
+    });
+    allowed(externalAccept, "the account holding the invited confirmed address can accept");
+
+    const externalEvents = await admin
+      .from("deal_room_activity_events")
+      .select("event_type")
+      .eq("room_id", externalRoomId);
+    const externalTypes = (externalEvents.data ?? []).map((row) => row.event_type);
+    check(
+      "and that acceptance is recorded as invitation_accepted, not as admission",
+      externalTypes.includes("invitation_accepted") && !externalTypes.includes("participant_admitted"),
+      `events: ${externalTypes.join(", ")}`,
+    );
+  }
 
   /* ----- Trust defect 4: acceptance is not written as admission ------------ */
 

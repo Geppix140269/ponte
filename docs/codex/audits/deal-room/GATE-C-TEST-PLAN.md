@@ -93,6 +93,22 @@ the server action is not the boundary — the function is granted to
 | 3 | The counterparty is proved, persisted and bound | the invitation is addressed to the persisted intended counterparty and not to any other address; the room carries `intended_counterparty_profile_id`; a counterparty who is not a member is refused; an external principal without a name is refused |
 | 4 | Acceptance is not written as admission | accepting records `invitation_accepted` and **not** `participant_admitted`; `participant_admitted` appears exactly once, after the gate is passed |
 
+### The two invitation bindings from the owner final review of 29 July 2026
+
+The first four boundaries stopped a caller authoring facts. These two stop a
+caller *being* somebody, and stop the room's own proposal being overruled at the
+invitation boundary. A bearer token proves only that somebody holds a link.
+
+| # | Binding | Assertions |
+|---|---|---|
+| 5 | Acceptance is bound to the persisted intended identity | a stranger holding the genuine, unexpired, unaccepted token is refused, and the refusal leaves the invitation `sent`, `accepted_by` null and the stranger a participant of nothing; the intended member accepts; for an external principal, an account whose confirmed address matches accepts and two accounts that do not - including a legitimate member from another room - are refused |
+| 6 | The role and the participant class come from the proposal | the five-argument `deal_room_invite` signature, which took `p_role` and `p_class`, no longer exists; the issued invitation carries the role persisted at proposal and the class `principal`; the disclosed preview states the same role and class as the row it was stored beside |
+
+Boundary 5 needs a second room and a second Deal owner: the member branch
+compares `auth.uid()` with the persisted profile, the external branch compares
+confirmed addresses, a room holds one intended counterparty, and a Starter
+entitlement is one per organisation. The fixture creates both.
+
 It also proves the positive path, because a negative proof over a loop that
 never ran is worthless: the owner creates the room, the invitee accepts,
 declares, accepts four agreements and is admitted; the procedure is proposed,

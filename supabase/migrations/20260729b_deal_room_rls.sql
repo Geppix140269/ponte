@@ -564,6 +564,8 @@ begin
   if coalesce(btrim(p_objective), '') = '' then
     raise exception 'Record what the interested party wants. Curiosity does not open a room' using errcode = '23514';
   end if;
+  -- The role is persisted below, not merely validated. `deal_room_invite()`
+  -- reads it from the room and takes no role of its own.
   if coalesce(btrim(p_counterparty_role), '') = '' then
     raise exception 'State the counterparty role' using errcode = '23514';
   end if;
@@ -634,7 +636,8 @@ begin
   insert into public.deal_rooms
     (ref, listing_id, deal_snapshot, market_family, market_intent, title, purpose,
      completion_condition, operating_mode, initiator_profile_id, sponsor_profile_id, sponsor_org_id, state,
-     intended_counterparty_profile_id, intended_counterparty_email, intended_counterparty_name)
+     intended_counterparty_profile_id, intended_counterparty_email, intended_counterparty_name,
+     intended_counterparty_role)
   values
     (v_ref, v_l.id, v_snapshot, v_family, v_l.market_intent, v_subject,
      p_objective,
@@ -642,7 +645,8 @@ begin
      p_operating_mode, auth.uid(), auth.uid(), v_org, 'proposed',
      p_counterparty_profile,
      case when p_counterparty_profile is null then lower(btrim(p_counterparty_email)) end,
-     case when p_counterparty_profile is null then btrim(p_counterparty_name) end)
+     case when p_counterparty_profile is null then btrim(p_counterparty_name) end,
+     btrim(p_counterparty_role))
   returning id into v_room;
 
   insert into public.deal_room_entitlements (room_id, org_id, kind, state, reserved_at)
@@ -681,7 +685,7 @@ $$;
 /*
  * Issue the protected invitation.
  *
- * ## Three parameters are gone, and that is the correction
+ * ## Five parameters are gone, and that is the correction
  *
  * The first draft took `p_email`, `p_preview` and `p_preflight`. The server
  * action derived all three from real records, but this function is granted to
@@ -702,12 +706,18 @@ $$;
  *   facts is the point. Sanctions state is read from `verifications.sanctions_hits`
  *   and is absent when nothing was screened.
  *
+ * The owner final review of 29 July 2026 then removed two more: `p_role` and
+ * `p_class`. Validating a caller-supplied copy of the role is not the same as
+ * refusing to accept one. The role now comes from the room's own proposal
+ * record, and the class is `principal` because that is what this launch
+ * sub-room is: the first principal counterparty workspace. A direct RPC can no
+ * longer invite the intended principal as an observer or a provider, and class
+ * governs admission activation, approval rights and permissions.
+ *
  * The raw token still never reaches the database; only its digest does.
  */
 create or replace function public.deal_room_invite(
   p_sub_room_id uuid,
-  p_role        text,
-  p_class       text,
   p_token_sha256 text,
   p_expires_at  timestamptz
 ) returns uuid
@@ -717,6 +727,8 @@ declare
   v_r public.deal_rooms%rowtype;
   v_id uuid;
   v_email text;
+  v_role text;
+  v_class constant text := 'principal';
   v_sponsor text;
   v_preview jsonb;
   v_preflight jsonb;
@@ -745,8 +757,11 @@ begin
   if p_expires_at <= now() then
     raise exception 'An invitation cannot expire in the past' using errcode = '23514';
   end if;
-  if p_class not in ('principal','intermediary','provider','adviser','ponte_facilitator','observer') then
-    raise exception 'Unknown participant class' using errcode = '23514';
+
+  -- The role proposed when the room was opened, read rather than accepted.
+  v_role := btrim(coalesce(v_r.intended_counterparty_role, ''));
+  if v_role = '' then
+    raise exception 'This room records no proposed role for its counterparty' using errcode = '23514';
   end if;
 
   -- Bound to the room's own record of who this room is about.
@@ -803,8 +818,8 @@ begin
     'invitingOrganisation', v_sponsor,
     'dealSubject', coalesce(v_r.deal_snapshot ->> 'subject', v_r.title),
     'marketFamily', v_r.market_family,
-    'proposedRole', p_role,
-    'proposedParticipantClass', p_class,
+    'proposedRole', v_role,
+    'proposedParticipantClass', v_class,
     'roomSponsor', coalesce(v_org_name, v_sponsor),
     'expiresAt', to_char(p_expires_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
 
@@ -819,8 +834,8 @@ begin
     (room_id, sub_room_id, token_sha256, invited_email, proposed_role,
      proposed_participant_class, preview_facts, integrity_preflight, state, expires_at, created_by)
   values
-    (v_r.id, p_sub_room_id, p_token_sha256, v_email, p_role,
-     p_class, v_preview, v_preflight, 'sent', p_expires_at, auth.uid())
+    (v_r.id, p_sub_room_id, p_token_sha256, v_email, v_role,
+     v_class, v_preview, v_preflight, 'sent', p_expires_at, auth.uid())
   returning id into v_id;
 
   update public.deal_rooms set state = 'awaiting_principal_admission'
@@ -836,9 +851,12 @@ begin
 end;
 $$;
 
--- The old eight-argument signature is dropped. Leaving it in place would keep a
--- callable path that still accepts caller-authored preview and pre-flight JSON.
+-- Both superseded signatures are dropped. Leaving either in place would keep a
+-- callable path that still accepts caller-authored facts: the eight-argument
+-- form took the preview and Integrity pre-flight JSON, and the five-argument
+-- form took the participant role and class.
 drop function if exists public.deal_room_invite(uuid, text, text, text, text, timestamptz, jsonb, jsonb);
+drop function if exists public.deal_room_invite(uuid, text, text, text, timestamptz);
 
 /*
  * Accept an invitation.
@@ -846,6 +864,25 @@ drop function if exists public.deal_room_invite(uuid, text, text, text, text, ti
  * Callable by somebody who is not yet a participant of anything, which is why
  * it takes the token digest rather than a room id: there is no row they could
  * name that they would also be allowed to read.
+ *
+ * ## The token is not the identity
+ *
+ * A bearer token proves only that somebody holds a link. The owner final review
+ * of 29 July 2026 found that this command accepted any authenticated caller who
+ * held one, so a forwarded, disclosed or intercepted link made a different
+ * member the participant - defeating the whole point of persisting the intended
+ * counterparty, since credible interest had been recorded for somebody else.
+ *
+ * The identity is therefore checked here, against the room's own record:
+ *
+ * - a member target must be `deal_rooms.intended_counterparty_profile_id`;
+ * - an external target must hold a CONFIRMED address equal to the invitation's,
+ *   compared case-insensitively. Unconfirmed is refused, because an
+ *   unconfirmed address is a claim rather than a fact and anybody can claim one.
+ *
+ * The check runs before every state change in this function, including the
+ * expiry write, so a refusal leaves the invitation, the participant, the
+ * workspace and the activity record exactly as they were.
  */
 create or replace function public.deal_room_accept_invitation(p_token_sha256 text)
 returns uuid
@@ -853,6 +890,8 @@ language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
   v_inv public.deal_room_invitations%rowtype;
+  v_r public.deal_rooms%rowtype;
+  v_actor_email text;
   v_participant uuid;
 begin
   if auth.uid() is null then
@@ -863,6 +902,29 @@ begin
   if not found then
     raise exception 'This invitation link is not valid' using errcode = '42501';
   end if;
+
+  select * into v_r from public.deal_rooms where id = v_inv.room_id;
+  if not found then
+    raise exception 'This invitation link is not valid' using errcode = '42501';
+  end if;
+
+  if v_r.intended_counterparty_profile_id is not null then
+    if auth.uid() <> v_r.intended_counterparty_profile_id then
+      raise exception 'This invitation was issued to another member' using errcode = '42501';
+    end if;
+  else
+    select lower(btrim(u.email)) into v_actor_email
+    from auth.users u
+    where u.id = auth.uid() and u.email_confirmed_at is not null;
+
+    if v_actor_email is null then
+      raise exception 'Confirm your email address before accepting this invitation' using errcode = '42501';
+    end if;
+    if v_actor_email <> lower(btrim(v_inv.invited_email)) then
+      raise exception 'This invitation was issued to a different address' using errcode = '42501';
+    end if;
+  end if;
+
   if v_inv.state <> 'sent' then
     raise exception 'This invitation is no longer open' using errcode = '23514';
   end if;

@@ -465,6 +465,70 @@ test("4. invitation acceptance is not written to history as admission", () => {
   );
 });
 
+test("5. acceptance is bound to the persisted intended identity", () => {
+  const accept = /create or replace function public\.deal_room_accept_invitation[\s\S]*?\$\$;/.exec(rlsSql)![0];
+
+  assert.ok(
+    accept.includes("from public.deal_rooms where id = v_inv.room_id"),
+    "acceptance never reads the room, so it cannot know who was intended",
+  );
+  assert.ok(
+    accept.includes("auth.uid() <> v_r.intended_counterparty_profile_id"),
+    "a member target is not compared with the persisted intended profile",
+  );
+  assert.ok(
+    accept.includes("u.email_confirmed_at is not null"),
+    "an unconfirmed address would satisfy an external invitation, and anyone can claim one",
+  );
+  assert.ok(
+    accept.includes("v_actor_email <> lower(btrim(v_inv.invited_email))"),
+    "an external target is not compared with the invited address, case-insensitively",
+  );
+
+  // The refusal must precede every write, including the expiry update, so a
+  // rejected attempt leaves invitation, participant, workspace and history
+  // exactly as they were.
+  const identityAt = accept.indexOf("intended_counterparty_profile_id");
+  const firstWrite = Math.min(
+    ...["update public.deal_room_invitations", "insert into public.deal_room_participants"]
+      .map((needle) => accept.indexOf(needle))
+      .filter((at) => at >= 0),
+  );
+  assert.ok(identityAt >= 0 && identityAt < firstWrite, "the identity check runs after something has already changed");
+});
+
+test("6. the invitation role and class are persisted, not supplied", () => {
+  assert.ok(
+    coreSql.includes("intended_counterparty_role       text not null"),
+    "the room does not persist the role proposed for the counterparty",
+  );
+
+  const signature = /create or replace function public\.deal_room_invite\(([\s\S]*?)\)\s*returns/.exec(rlsSql)![1];
+  assert.ok(!/p_role|p_class/.test(signature), "the caller can still choose the participant role or class");
+
+  const propose = /create or replace function public\.deal_room_propose[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(propose.includes("intended_counterparty_role"), "the proposed role is validated and then discarded");
+
+  const invite = /create or replace function public\.deal_room_invite[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(invite.includes("v_r.intended_counterparty_role"), "the role is not read from the room's own proposal");
+  assert.ok(
+    invite.includes("v_class constant text := 'principal'"),
+    "the participant class is not fixed as principal for this launch sub-room",
+  );
+
+  // Both superseded signatures must be dropped, not merely left unused.
+  assert.ok(
+    rlsSql.includes("drop function if exists public.deal_room_invite(uuid, text, text, text, timestamptz);"),
+    "the role/class overload is still callable",
+  );
+  assert.ok(
+    rlsSql.includes(
+      "drop function if exists public.deal_room_invite(uuid, text, text, text, text, timestamptz, jsonb, jsonb);",
+    ),
+    "the preview/pre-flight overload is still callable",
+  );
+});
+
 test("the whole loop has a command, so no transition needs a direct write", () => {
   for (const name of [
     "deal_room_propose",

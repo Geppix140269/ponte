@@ -6,7 +6,6 @@ import {
   Banner,
   CommandError,
   CommandForm,
-  Field,
   RoomHeader,
   Submit,
 } from "@/components/deal-room/primitives";
@@ -117,7 +116,9 @@ export default async function InvitationPreviewPage({
     invitingOrganisation: organisationName ?? ((me?.full_name as string | null) ?? "Your organisation"),
     dealSubject: String(access.room.dealSnapshot.subject ?? access.room.title),
     marketFamily: access.room.marketFamily,
-    proposedRole: "Principal counterparty",
+    // The same value the command will read from the room, so what is shown here
+    // is what will be stored rather than a second opinion about it.
+    proposedRole: access.room.intendedCounterpartyRole || "Principal counterparty",
     proposedParticipantClass: "principal",
     roomSponsor: organisationName ?? ((me?.full_name as string | null) ?? "Your organisation"),
     expiresAt: new Date(Date.now() + INVITATION_TTL_DAYS * 24 * 60 * 60 * 1000),
@@ -262,16 +263,18 @@ export default async function InvitationPreviewPage({
               }}
             >
               {/*
-                No email field. The invitation is addressed from the room's
-                persisted intended counterparty, so it cannot be redirected to
-                somebody other than the principal credible interest was recorded
-                for. The pre-flight below is likewise derived inside the command
-                and stored from database facts, not from anything sent here.
+                No email field, and no role field either. The address, the role
+                and the participant class all come from the room's own proposal
+                record, so the invitation cannot be redirected to somebody other
+                than the principal credible interest was recorded for, nor
+                downgrade them to an observer. The pre-flight below is likewise
+                derived inside the command and stored from database facts, not
+                from anything sent here. This form carries no facts at all.
               */}
-              <Field label="Proposed role" name="role" required defaultValue="Principal counterparty" />
               <p className="dr__help">
-                The invitation goes to the counterparty recorded when this room was proposed. It is single use, it
-                expires, and Ponte stores only a hash of the link.
+                The invitation goes to the counterparty recorded when this room was proposed, as{" "}
+                <strong>{access.room.intendedCounterpartyRole || "the proposed principal"}</strong> and as a principal
+                of the transaction. It is single use, it expires, and Ponte stores only a hash of the link.
               </p>
               <Submit label="Send protected invitation" />
             </CommandForm>

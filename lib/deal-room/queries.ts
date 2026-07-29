@@ -59,6 +59,9 @@ export interface RoomAccess {
     listingId: string;
     initiatorProfileId: string;
     activatedAt: string | null;
+    /* The role proposed for the counterparty when the room was opened. The
+       invitation command reads it from the row, so this is display only. */
+    intendedCounterpartyRole: string;
   };
   entitlement: {
     kind: EntitlementKind;
@@ -172,7 +175,7 @@ export async function loadRoom(roomId: string): Promise<RoomAccess | null> {
   const { data: room } = await supabase
     .from("deal_rooms")
     .select(
-      "id, ref, title, purpose, completion_condition, market_family, deal_snapshot, state, listing_id, initiator_profile_id, activated_at, sponsor_profile_id",
+      "id, ref, title, purpose, completion_condition, market_family, deal_snapshot, state, listing_id, initiator_profile_id, activated_at, sponsor_profile_id, intended_counterparty_role",
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -247,6 +250,7 @@ export async function loadRoom(roomId: string): Promise<RoomAccess | null> {
       listingId: room.listing_id as string,
       initiatorProfileId: room.initiator_profile_id as string,
       activatedAt: (room.activated_at as string | null) ?? null,
+      intendedCounterpartyRole: (room.intended_counterparty_role as string | null) ?? "",
     },
     entitlement: entitlement
       ? {
