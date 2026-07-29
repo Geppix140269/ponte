@@ -4,7 +4,8 @@
 **Authority:** ADR-0015; Ponte Design Constitution v1.1 sections 6a, 6b, 6c, 15a, 18a, 18b.
 **Audit:** `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`
 **Owner decision:** Giuseppe Funaro, 29 July 2026.
-**Launch blockers:** LB-001, LB-002.
+**Launch blockers:** LB-002, LB-003. `main` already holds LB-001 for the Deal Room progression loop.
+**Rebased onto:** `origin/main` at `42a9d22`.
 
 ---
 
@@ -19,9 +20,9 @@ failures put a member at risk of a wrong commercial read rather than merely
 irritating them:
 
 - required input boundaries at approximately 1.52:1, so a member may not see the
-  field they must complete (LB-001);
+  field they must complete (LB-002);
 - `Not stated` at approximately 2.98:1, so a member may read an absent commercial
-  fact as a stated one (LB-002).
+  fact as a stated one (LB-003).
 
 The outcome is measured, not judged: every value in section 18a of the
 Constitution is met, against the darkest surface it is drawn on, with the warm
@@ -327,15 +328,15 @@ No database, schema or production data is involved.
 
 | Step | Change | Reversal |
 |---|---|---|
-| Stage 0a | PL-004, on `fix/launch-mode-whitespace-check`, PR #103. Corrects `check-launch-mode.mjs`. No governance or product change | Revert the PR |
-| Stage 0a2 | PL-005, the duplicate `20260728d` migration identifier. **Awaiting owner classification**, and also required before the gate can pass | Rename is reversible; the applied file keeps its identifier |
-| Stage 0b | This governance PR: ADR-0015, Constitution v1.1, this plan, LB-001, LB-002, register updates | Revert the PR |
+| Stage 0 | This governance PR: ADR-0015, Constitution v1.1, this plan, LB-002, LB-003, register updates | Revert the PR |
 | Stage 1 step 0 | Bridge manifest decoupling: package-local snapshot, resolver change, manifest annotation | Revert; the snapshot is additive and the resolver change is three lines |
 | Stage 1 | Central tokens, alias conversions, enumerated call sites, Bridge deck and pier contrast, caption floor, reference re-takes, tests | Revert the token block; the alias conversions are value-neutral and may stay |
 | Stage 2 | Four interaction tokens, applied per journey | Re-point the four tokens to `--pf-ink` and `--pf-gold-ink`, restoring current semantics without removing the tokens |
 
-Stage 0a and Stage 0b must both be merged before Stage 1 opens: 0a so the
-validation gate can pass, 0b so the authority exists.
+Stage 0 must be merged before Stage 1 opens, so the authority exists. There is no
+second prerequisite: the two validation failures previously listed here were
+already fixed on `main` in PR #98, and the report that put them here was wrong.
+See section 12.
 
 Forward path after Stage 1: the four remaining duplicated stylesheets are aliased,
 so there is exactly one place a Ponte colour can be changed. That is the state
@@ -371,10 +372,9 @@ Every screen in section 11's evidence matrix must be captured in all of:
 - `npm run verify` before declaring Stage 1 complete. It runs
   `check-encoding.mjs` (no em dashes in `app/` or `components/`),
   `check-governance.mjs`, the token-authority test and the full test suite.
-  PL-004 fixes `check-launch-mode.mjs` in Stage 0a. **`npm run verify` will still
-  fail after it**, because `check-migrations.mjs` also fails on `main` on a
-  duplicate `20260728d` identifier, logged as PL-005 and awaiting owner
-  classification. Both must be resolved before Stage 1 can report a green gate.
+  Verified green on `main` at `42a9d22` for every repository check:
+  `check-encoding`, `check-governance`, `check-messages`, `check-migrations`,
+  `check-launch-mode` and `check-deps` (the last needs `node_modules` present).
 - `check-governance.mjs` must be re-run **after** a deliberate token value change,
   to prove the decoupling in step 0 actually holds. A run that only passes before
   the values move proves nothing.
@@ -440,7 +440,7 @@ identical geometry, identical station fractions and identical node sizes against
 the old render, with only track and pier weight differing. A geometry difference in
 any pair is a regression under Constitution section 21, not an improvement.
 
-### 11.1 Closure criteria for LB-001 and LB-002
+### 11.1 Closure criteria for LB-002 and LB-003
 
 Fixed by owner sign-off S-5. Both may be closed only when Stage 1 demonstrates all
 four:
@@ -462,7 +462,7 @@ reason Stage 1 is not complete when the numbers are green.
 - Direction B with Direction C's three non-colour mobile rules.
 - Gold and blue semantics as recorded in Constitution section 6a.
 - `--pf-focus` not repurposed; a separate `--pf-interact-*` family.
-- LB-001 and LB-002 are launch blockers. The 11px floor is part of the launch
+- LB-002 and LB-003 are launch blockers. The 11px floor is part of the launch
   remediation, not a separate redesign.
 - Governance PR first; Stage 1 not to begin until it is merged.
 
@@ -492,11 +492,20 @@ moving record and remove the protection it exists to provide.
 
 This is now **Stage 1 step 0**, and the ordering is load-bearing. See section 6.5.
 
-**2. PL-004 is fixed in the checker, not in `AGENTS.md`.** Approved as its own
-minimal PR on `fix/launch-mode-whitespace-check`, before Stage 1, proving the
-check fails before and passes after. Rewriting the prose to satisfy an exact
-substring match was rejected: a governance checker that breaks on a line wrap will
-break again.
+**2. The two validation failures were already fixed on `main`, and the report that
+raised them was wrong.** `check-launch-mode.mjs` and the duplicate `20260728d`
+identifier were both corrected by `228b532` in PR #98, before either was reported.
+The claims were made against a local `main` ref that had not been fetched and was
+nine commits stale, so the failures were real in that working tree and absent from
+the repository. The remedy the owner directed for the checker is, independently,
+exactly what upstream implemented.
+
+Consequences: no migration hotfix branch (the file to rename no longer exists, and
+`20260728e` is now correctly held by it); no `LB-003 — duplicate migration
+identifier` record, because recording a closed defect as an open blocker would make
+the register untrue; PR #103 is redundant and recommended for closure. `LB-003` is
+instead the second contrast blocker, since `main` already holds `LB-001` for the
+Deal Room loop and `PL-004`/`PL-005` for the two fixes above.
 
 **3. The Bridge deck and passive pier are in Stage 1, contrast only.** Geometry,
 station fractions, node sizes, labels, motion and gold semantics unchanged;
@@ -515,14 +524,14 @@ renders to the Stage 1 evidence set, listed in section 11.
 and must not be redesigned in the process. All subsequent visual change comes from
 the central tokens.
 
-**5. LB-001 and LB-002 closure criteria are fixed by the owner**, recorded in
+**5. LB-002 and LB-003 closure criteria are fixed by the owner**, recorded in
 section 11.1.
 
 ### Discovered
 
 - The `.ponte-find` and `.ponte-landing` literal blocks mean a token change alone
   reaches only the Desk. Aliasing them is not optional scope creep; without it,
-  Start a Deal and the landing keep the failing values and LB-001 is not closed.
+  Start a Deal and the landing keep the failing values and LB-002 is not closed.
 - `--pf-gold` is used 63 times across 12 stylesheets, and only about a third are
   the structural marks that must move. The rest are full fills where the label
   carries the contrast, so a blanket replacement would be wrong.
@@ -538,13 +547,13 @@ To be completed as work lands.
 
 | Item | Status |
 |---|---|
-| Stage 0a — PL-004 PR, `fix/launch-mode-whitespace-check` | Open; not merged |
-| Stage 0b — governance PR #102 (ADR-0015, Constitution v1.1, this plan, LB-001, LB-002) | Open; not merged. Updated with owner sign-off S-1 to S-5 |
-| Stage 1 PR, `design/contrast-stage-1-structural-tokens` | Not started. Blocked on Stage 0a and Stage 0b merging |
+| Stage 0 — governance PR #102 (ADR-0015, Constitution v1.1, this plan, LB-002, LB-003) | Open; not merged. Rebased onto `42a9d22`, updated with owner sign-off S-1 to S-5 |
+| PR #103, the checker fix | Redundant. The equivalent fix is already on `main` in PR #98. Recommended for closure |
+| Stage 1 PR, `design/contrast-stage-1-structural-tokens` | Not started. Blocked on Stage 0 merging |
 | Stage 1 step 0, Bridge manifest decoupling | Not started |
 | Stage 1 evidence, four screens, two viewports, four states, greyscale | Not captured |
 | Bridge reference re-takes, eight renders | Not captured |
-| LB-001 and LB-002 closure evidence, all four criteria in section 11.1 | Not captured |
+| LB-002 and LB-003 closure evidence, all four criteria in section 11.1 | Not captured |
 | Stage 2 PRs, six journeys | Not started |
 | `npm run verify` on Stage 1 | Not run |
 | Production deployment | Not done. No production change is authorised by this plan |
@@ -553,12 +562,25 @@ To be completed as work lands.
 
 - **29 July 2026** — Audit completed and accepted; owner approved Direction B
   with Direction C's mobile rules; ADR-0015, Constitution v1.1, this ExecPlan,
-  LB-001 and LB-002 drafted in governance PR #102.
-- **29 July 2026, later** — Owner sign-off S-1 to S-5 received and recorded. All
-  three open matters resolved: the Bridge manifest is decoupled rather than
-  re-hashed (S-1, now Stage 1 step 0); PL-004 is fixed in the checker rather than
-  in `AGENTS.md` (S-2, Stage 0a); the Bridge deck and passive pier are in Stage 1
-  as contrast-only work with re-taken reference evidence (S-3). Value-neutral
-  alias conversion approved for the four duplicated stylesheets (S-4). LB-001 and
-  LB-002 closure criteria fixed (S-5). Stage 1 still not started, and blocked on
-  Stage 0a and Stage 0b merging.
+  LB-002 and LB-003 drafted in governance PR #102.
+- **29 July 2026, later** — Owner sign-off S-1 to S-5 received and recorded. The
+  Bridge manifest is decoupled rather than re-hashed (S-1, now Stage 1 step 0); the
+  Bridge deck and passive pier are in Stage 1 as contrast-only work with re-taken
+  reference evidence (S-3); value-neutral alias conversion approved for the four
+  duplicated stylesheets (S-4); LB-002 and LB-003 closure criteria fixed (S-5).
+- **29 July 2026, correction** — Rebased onto `origin/main` at `42a9d22`, nine
+  commits ahead of the ref this work was branched from. Two claims in the earlier
+  report were wrong and are corrected in S-2: the `check-launch-mode.mjs` failure
+  and the duplicate `20260728d` migration identifier were **both already fixed on
+  `main`** by `228b532` in PR #98, before either was reported. They were asserted
+  from an unfetched local ref.
+
+  Re-verified against `42a9d22` after the rebase, and all of it still holds: the
+  Bridge manifest still resolves its token row to the live file, the token file is
+  still byte-identical at `dabc089f…` so the S-1 snapshot is still takeable, and
+  `ponte-flow-tokens.css`, `desk.css`, `find.css` and `ponte-bridge.css` are
+  unchanged, so the audit's 163 measurements still describe `main`.
+
+  Launch-blocker numbering corrected to **LB-002** and **LB-003**; `main` already
+  holds `LB-001`, `PL-004` and `PL-005`. Stage 1 still not started, blocked only on
+  Stage 0 merging.

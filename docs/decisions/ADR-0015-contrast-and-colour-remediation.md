@@ -121,14 +121,17 @@ beside a selected control.
 
 ## Migration: two controlled stages
 
-### Stage 0 — the two governance and validation corrections
+### Stage 0 — governance only
 
-Neither is a palette change, and both must be merged before Stage 1 opens:
+One prerequisite, not two. The validation corrections that were thought to be
+prerequisites are already on `main` (S-2):
 
-1. **PL-004**, on `fix/launch-mode-whitespace-check`. Without it `npm run verify`
-   cannot pass and Stage 1 cannot report a green gate (S-2).
-2. **This governance PR**, carrying the ADR, the Constitution amendment, the
+1. **This governance PR**, carrying the ADR, the Constitution amendment, the
    ExecPlan and the registers.
+
+`npm run verify` is green on `main` at `42a9d22` for every repository check.
+`check-deps` fails only in a worktree without `node_modules`, which is an
+environment condition and not a repository failure.
 
 ### Stage 1 — structural contrast
 
@@ -240,17 +243,46 @@ taken from the working tree. That stops being true the moment Stage 1 edits the
 file. **The snapshot must therefore be created before any token value changes**,
 as the first step of Stage 1, and the ExecPlan sequences it that way.
 
-### S-2. PL-004 — approved as a narrow separate fix
+### S-2. The two validation failures — already fixed upstream, correction recorded
 
-> Fix the brittle validation logic by normalising whitespace or parsing the
-> required rule robustly. Do not rewrite `AGENTS.md` solely to satisfy an exact
-> substring check.
+The owner approved fixing `check-launch-mode.mjs` by normalising whitespace rather
+than rewriting `AGENTS.md`, and separately classified the duplicate migration
+identifier as a launch blocker to be renamed on its own branch.
 
-`scripts/check-launch-mode.mjs` substring-matches a phrase that `AGENTS.md` wraps
-across a newline, so the check fails on `main` and `npm run verify` cannot pass.
-The checker is corrected, not the prose. Delivered as its own minimal pull request
-on `fix/launch-mode-whitespace-check`, before Stage 1, containing no unrelated
-governance or product change and proving the check fails before and passes after.
+**Both defects were already fixed on `main` before either was reported here, and
+the report that prompted these two decisions was wrong.** The correction, in full:
+
+| Reported | Actual state of `main` |
+|---|---|
+| `check-launch-mode.mjs` fails on `main` | **Fixed** by `228b532`, merged in PR #98. The upstream fix normalises whitespace on both sides of the comparison, which is the same remedy the owner directed and is functionally identical to the one drafted here. Recorded upstream as its own **PL-005** |
+| Duplicate migration identifier `20260728d` | **Fixed** by `228b532`, merged in PR #98. `20260728d_family_commercial_terms.sql` was renamed to `20260728e_family_commercial_terms.sql`; the applied `20260728d_verification_level_canonical.sql` correctly kept its identifier. Recorded upstream as its own **PL-004** |
+
+**Root cause of the false report:** the claims were made against a local `main`
+ref that had not been fetched, and which was nine commits stale. `origin/main` had
+already advanced to `42a9d22` through PR #98. Every check was run in a working tree
+based on that stale ref, so the failures were real in that tree and absent from the
+repository. The single missing step was `git fetch` before asserting the state of
+`main`.
+
+**Consequences for this decision:**
+
+- No migration hotfix branch is created. Renaming
+  `20260728d_family_commercial_terms.sql` is impossible because it no longer
+  exists, and `20260728e` is now correctly held by that very file. Creating a
+  further rename would introduce a new duplicate rather than remove one.
+- No `LB-003 — duplicate migration identifier` record is created. The defect is
+  closed, and recording a resolved upstream fix as an open launch blocker would
+  make this register state something untrue. **LB-003 is instead the second
+  contrast blocker**, and the numbering below reflects that.
+- The pull request drafted for the checker fix is redundant and is recommended for
+  closure rather than merge.
+
+**Numbering collision, resolved.** `main` already holds `LB-001` for the Deal Room
+progression loop, and `PL-004` and `PL-005` for the two fixes above. The contrast
+blockers are therefore recorded as **LB-002** and **LB-003**, and no `PL-` entry is
+added by this work. This is the third instance of the same defect class the
+repository has now hit, after the `20260728a` duplicate and the ADR-0012 collision:
+concurrent branches allocating identifiers from a register they have not re-read.
 
 ### S-3. OD-007, Bridge structural contrast — include it in Stage 1
 
@@ -290,7 +322,7 @@ routes. Each literal is replaced by the `var(--pf-*)` it already equals. All
 subsequent visual change comes from the approved central Stage 1 tokens, not from
 edits to these four files.
 
-### S-5. LB-001 and LB-002 — confirmed, with closure criteria
+### S-5. LB-002 and LB-003 — confirmed, with closure criteria
 
 Both confirmed as launch blockers. They may be closed only when Stage 1
 demonstrates:
@@ -307,7 +339,7 @@ the crumb trails must be re-read for hierarchy at 390px, not only re-measured.
 ## Launch Mode classification
 
 The owner classified two findings as **Launch Blockers**, recorded in
-`docs/launch/LAUNCH-BLOCKERS.md` as LB-001 and LB-002:
+`docs/launch/LAUNCH-BLOCKERS.md` as LB-002 and LB-003:
 
 1. Required form and input boundaries too faint to identify reliably
    (approximately 1.52:1 on the audited Start a Deal surfaces).
@@ -383,7 +415,7 @@ simulation for any screen where a gold mark and a blue control appear together.
 - `design-system/ponte-flow/documentation/compatibility-aliases.md`
 - `design-system/ponte-flow/documentation/colour-and-state-rules.md`
 - `design/authority/bridge/v1/source/ponte-bridge.css`
-- `docs/launch/LAUNCH-BLOCKERS.md` (LB-001, LB-002)
+- `docs/launch/LAUNCH-BLOCKERS.md` (LB-002, LB-003)
 - `docs/codex/CURRENT-STATE.md`
 - `docs/codex/DECISION-LOG.md`
 - `docs/operations/OPEN_DECISIONS.md` (OD-006 decided, OD-007 open)

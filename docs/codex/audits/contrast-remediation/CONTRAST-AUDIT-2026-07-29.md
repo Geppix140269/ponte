@@ -101,7 +101,7 @@ Ranked by share of the reported problem.
 | 6 | `dd.na`, `.reg__f dt`, `.cor .hs` | `desk.css` | `--mute` on `Not stated`, field labels and HS codes. A section 14 duty printed at 2.98:1. | 2.98:1 |
 | 7 | `.reg__cls`, `.rec` | `desk.css` | Market Signal versus Member Opportunity carried by a 3px left rule: dashed `--review-line` at 1.55:1 against solid ink at 19:1. The two classifications are not equally legible. | 1.55:1 |
 | 8 | `.fchip`, `.fseg`, `.spill`, `.hstile` | `find.css`, `structure.css` | Unpressed chip, segment and tile edges at 1.28 to 1.52:1; pressed jumps to ink at 19:1, so the pair is unbalanced as well as low. | 1.52:1 |
-| 9 | `.qfield__i`, `.snote`, `.sigsheet__i`, `.vcp__input` | `structure.css`, `desk.css` | Input boundaries at 1.52:1. A text field is a UI component and its boundary owes 3:1. **LB-001.** | 1.52:1 |
+| 9 | `.qfield__i`, `.snote`, `.sigsheet__i`, `.vcp__input` | `structure.css`, `desk.css` | Input boundaries at 1.52:1. A text field is a UI component and its boundary owes 3:1. **LB-002.** | 1.52:1 |
 | 10 | `.pst--active`, `.pst--loading` | `state.css` | The one lifecycle state meaning "work is happening now" is the only one that fails: gold point 2.54:1, tail dots 1.34:1 and 1.18:1. Waiting, review, blocked and completed all pass. | 2.54:1 |
 | 11 | `.prodblock` | `structure.css` | `opacity:.35` on a subtree containing text: 1.61 to 1.96:1. Container opacity multiplies every descendant's contrast. | 1.61:1 |
 | 12 | `.b[aria-disabled]`, `.fbtn[disabled]`, `.act` | `desk.css`, `find.css` | Three different disabled opacities (.42, .45, .5); label falls to 2.86:1. Section 12 also asks for a reason, which an opacity does not give. | 2.86:1 |

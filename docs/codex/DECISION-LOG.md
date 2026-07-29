@@ -29,7 +29,9 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **S-4, value-neutral alias conversion approved** for `find.css`, `landing.css`, `legal.css` and `pfooter.css`, which hold literal copies of the palette and would not otherwise receive the central remediation. Must not redesign those routes; subsequent visual change comes from the central Stage 1 tokens.
 
-**S-5, LB-001 and LB-002 confirmed**, closable only on field boundaries at sufficient non-text contrast, missing-data labels at sufficient text contrast, desktop and 390 x 844 evidence, and no regression in factual hierarchy or task completion.
+**Correction, same day.** Two claims that prompted parts of this sign-off were wrong. `check-launch-mode.mjs` failing and the duplicate `20260728d` migration identifier were **both already fixed on `main`** by `228b532` in PR #98, before either was reported. They were asserted from a local `main` ref that had not been fetched and was nine commits stale. Consequences: no migration hotfix branch is created, because the file to rename no longer exists and `20260728e` is now correctly held by it; no `LB-003 - duplicate migration identifier` record is created, because recording a closed defect as an open blocker would make the register untrue; and the redundant checker-fix pull request is recommended for closure. Numbering corrected: `main` already holds LB-001, PL-004 and PL-005, so the contrast blockers are LB-002 and LB-003 and this work adds no PL entry.
+
+**S-5, LB-002 and LB-003 confirmed**, closable only on field boundaries at sufficient non-text contrast, missing-data labels at sufficient text contrast, desktop and 390 x 844 evidence, and no regression in factual hierarchy or task completion.
 
 **Implementation boundary:** still **nothing implemented**. Governance records only. Stage 1 is blocked until both the PL-004 fix and the governance PR are merged.
 
@@ -50,7 +52,7 @@ Newest entries should be added at the top with date, decision, rationale and aff
 
 **Also decided:** the eight local tint and line extensions in `desk.css`, which `compatibility-aliases.md` section 3 had been holding for an owner ruling, are promoted into the approved token set. Section 18 of the Constitution gains numeric contrast targets; it previously said "at approved contrast levels" without naming a level, which meant the rule could not be failed.
 
-**Launch blockers recorded:** LB-001, required form and input boundaries at approximately 1.52:1. LB-002, meaningful missing-data text such as `Not stated` at approximately 2.98:1. Both are unmet duties under Constitution sections 13 and 14 rather than new requirements.
+**Launch blockers recorded:** LB-002, required form and input boundaries at approximately 1.52:1. LB-003, meaningful missing-data text such as `Not stated` at approximately 2.98:1. Both are unmet duties under Constitution sections 13 and 14 rather than new requirements.
 
 **Implementation boundary:** at this record point **nothing is implemented**. This entry covers the governance change only: the ADR, the Constitution amendment, the ExecPlan and the registers. No production token, stylesheet, route or component has been modified, nothing is deployed, and Stage 1 must not begin until the governance PR is merged. One item awaits the owner's specific sign-off: the Bridge deck and pier in the approved Bridge authority package, recorded in the ExecPlan section 12.
 
