@@ -3,7 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { createClient } from "@/lib/supabase/server";
-import { isMissingColumnError } from "@/lib/listings/classification";
+import { readWithMissingColumnFallback } from "@/lib/listings/read-fallback";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import { railFor } from "@/lib/desk/journey";
 import { marketEntrances } from "@/lib/desk/entrances";
@@ -85,29 +85,40 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
   // just completed the trade-service journey - which never asks for either -
   // was shown their own freight capability as two blank product fields.
   //
-  // The family terms are appended optionally: `20260728d` is not applied, and
-  // selecting a column that does not exist fails the whole read. A member must
-  // not lose sight of their records to a pending migration.
-  const BASE =
-    "id, ref, type, product, status, hs_code, origin, destination, quantity, quantity_mode, " +
-    "quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, " +
-    "validity_type, valid_until, created_at, market_family, market_intent, " +
-    "service_category_key, service_subcategory_keys, distribution_partner_type_key, " +
-    "distribution_relationship_terms, coverage_scope_key, territory_codes, product_sector_key, " +
-    "custom_category_label";
+  // Several of these do not exist in production: `quantity_mode`,
+  // `quantity_min` and `quantity_max` from the unapplied `20260728c`, and
+  // `service_terms` and `distribution_terms` from the unapplied `20260728e`.
+  // Selecting a column the database lacks fails the WHOLE read, and this page
+  // answers an empty read with "You have not created a record yet" - so a
+  // member would be told they have no records at all because a migration is
+  // pending. The read drops exactly what the database names and keeps the rest.
+  const OWN_COLUMNS: readonly string[] = [
+    "id", "ref", "type", "product", "status", "hs_code", "origin", "destination",
+    "quantity", "quantity_mode", "quantity_min", "quantity_max", "unit",
+    "frequency", "incoterm", "payment_terms", "submitter_role", "validity_type",
+    "valid_until", "created_at", "market_family", "market_intent",
+    "service_category_key", "service_subcategory_keys",
+    "distribution_partner_type_key", "distribution_relationship_terms",
+    "coverage_scope_key", "territory_codes", "product_sector_key",
+    "custom_category_label", "service_terms", "distribution_terms",
+  ];
 
-  const readOwn = (columns: string) =>
-    supabase
+  const readOwn = async (columns: string) => {
+    const res = await supabase
       .from("listings")
       .select(columns)
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
+    return { data: (res.data as Record<string, unknown>[] | null) ?? null, error: res.error };
+  };
 
   let rows: Record<string, unknown>[] | null = null;
   if (user) {
-    let { data, error } = await readOwn(`${BASE}, service_terms, distribution_terms`);
-    if (error && isMissingColumnError(error)) ({ data, error } = await readOwn(BASE));
-    rows = (data as Record<string, unknown>[] | null) ?? null;
+    const { data, dropped } = await readWithMissingColumnFallback(readOwn, OWN_COLUMNS);
+    if (dropped.length > 0) {
+      console.warn(`[ponte] own records read without absent column(s): ${dropped.join(", ")}`);
+    }
+    rows = data;
   }
 
   // The bound member-business verification, which is what decides whether an

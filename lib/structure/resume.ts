@@ -59,7 +59,7 @@ export type ResumableRow = {
   product_sector_key?: string | null;
   custom_category_label?: string | null;
   additional_details?: string | null;
-  // Family terms (20260728d). NOT yet applied, so both may be absent.
+  // Family terms (20260728e). NOT yet applied, so both may be absent.
   service_terms?: Record<string, unknown> | null;
   distribution_terms?: Record<string, unknown> | null;
 };

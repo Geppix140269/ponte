@@ -130,7 +130,7 @@ Use this structure:
 - Member emails now name the record the member posted. `recordNoun` supplies "offer", "requirement", "trade service" or "distribution opportunity", and the metadata block leads with the family's own headline fact instead of "Quantity". A caller that sends no noun keeps the historical wording exactly, so no existing sender changed meaning.
 - Extracted the submit route's missing-column fallback into `lib/listings/write-fallback.ts` and put it under test. The staging rule was correct on `main` but lived in an untested inline closure; it is now pinned that an absent `service_terms` or `distribution_terms` drops only those two columns and keeps every live classification column.
 - Added `lib/structure/discard.ts` and a confirmation in `ClassifyStep`, so a classification change that would destroy answers already given names them and waits. A change that costs nothing is not interrupted.
-- Both public readers now degrade their select when the unapplied family-terms columns are absent, so the pending `20260728d` migration cannot 404 a shareable listing link.
+- Added `lib/listings/read-fallback.ts`, the read-side counterpart of PR #99's write-side fallback, and applied it to all three listing readers. A first attempt at this dropped a fixed GROUP - `service_terms` and `distribution_terms` - and retried; against the current production schema that retry still named `quantity_mode`, `quantity_min` and `quantity_max`, none of which exists because `20260728c` is unapplied, so it failed exactly as the first attempt did. PostgREST refuses a select naming an absent column outright, so `/marketplace/l/[ref]` answered `notFound()`, `/find/o/[ref]` answered "missing", and `/opportunities` told a member they had no records at all. The read now drops exactly the column the database names, one at a time, and never drops an essential one: a missing `id`, `ref`, `type`, `product`, `user_id`, `details`, `status`, `validity_type` or `valid_until` fails visibly rather than presenting a record it cannot identify.
 
 ### Decisions
 
@@ -173,7 +173,7 @@ Use this structure:
 
 - **The code fix stops the data loss; it does not restore the behaviour the missing columns carry.** Until `20260728c` is applied, a member's accepted declaration cannot be stored (`declaration_accepted_at`), so the publication gate will not see it, and `publishOrHold` cannot write the `validating` / `needs_information` / `flagged` states the widened status constraint permits. A submission therefore stores and stays `submitted`, and the member is told it is with the desk. That is honest but it is not automated publication.
 - `20260728e_family_commercial_terms.sql` remains written and unapplied, unchanged by this work.
-- `node scripts/check-migrations.mjs` fails on a pre-existing duplicate letter suffix: `20260728e_family_commercial_terms.sql` and `20260728d_verification_level_canonical.sql`. Not introduced here and not repaired here.
+- `node scripts/check-migrations.mjs` fails on a pre-existing duplicate letter suffix: `20260728d_family_commercial_terms.sql` and `20260728d_verification_level_canonical.sql` (the names as they stood that day; the first was renamed to `20260728e_...` on 29 July). Not introduced here and not repaired here.
 
 ### Next
 
