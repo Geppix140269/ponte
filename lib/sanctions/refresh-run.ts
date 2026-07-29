@@ -1,8 +1,9 @@
 // The nightly sanctions job, in one place.
 //
-// Refresh the five published lists, alert on a list that has now failed twice
-// running, then re-screen everyone currently holding a clean verdict against
-// the lists as they now stand.
+// Refresh the published financial-sanctions lists and the US Consolidated
+// Screening List, alert on a source that has now failed twice running, then
+// re-screen everyone currently holding a clean verdict against the lists as
+// they now stand.
 //
 // This lives here rather than in the API route because it has two callers and
 // the alerting rule must not be written twice:
@@ -14,18 +15,26 @@
 // being able to load it. See the note in lib/supabase/admin.ts.
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { refreshAll, type RefreshSummary, type SourceList } from "./refresh";
+import {
+  refreshAll,
+  type RefreshSummary as CoreRefreshSummary,
+  type SourceList as CoreSourceList,
+} from "./refresh";
+import { refreshUsCsl, type UsCslSummary, US_CSL_SOURCE } from "./csl";
 import { rescreenVerified, type RescreenSummary } from "@/lib/verification/rescreen";
 import { sendAdminNotice } from "@/lib/email";
+
+export type ComplianceSource = CoreSourceList | typeof US_CSL_SOURCE;
+export type ComplianceRefreshSummary = CoreRefreshSummary | UsCslSummary;
 
 export type RefreshRunSummary = {
   /** Every list refreshed and the re-screen completed. */
   ok: boolean;
   /** Set when the refresh could not run at all. Null on a normal run. */
   fatalError: string | null;
-  lists: RefreshSummary[];
+  lists: ComplianceRefreshSummary[];
   /** Lists that have now failed twice consecutively. A human was emailed. */
-  persistentFailures: SourceList[];
+  persistentFailures: ComplianceSource[];
   rescreen: RescreenSummary | null;
   /** Set when the lists loaded but the re-screen threw. */
   rescreenError: string | null;
@@ -38,14 +47,14 @@ export type RefreshRunSummary = {
  * Two in a row means the feed has moved or the parser has rotted, and
  * screening is running against a stale copy of that list.
  *
- * The row for this run is already written by refreshAll, so two failing rows
- * at the head of the log means it also failed the time before.
+ * The row for this run is already written by each refresh function, so two
+ * failing rows at the head of the log means it also failed the time before.
  */
 async function findPersistentFailures(
-  failed: RefreshSummary[],
-): Promise<SourceList[]> {
+  failed: ComplianceRefreshSummary[],
+): Promise<ComplianceSource[]> {
   const sb = createAdminClient();
-  const persistent: SourceList[] = [];
+  const persistent: ComplianceSource[] = [];
 
   for (const item of failed) {
     const { data: recent, error } = await sb
@@ -77,9 +86,9 @@ async function findPersistentFailures(
 export async function runRefreshAndRescreen(): Promise<RefreshRunSummary> {
   const startedAt = new Date();
 
-  // Preflight. Without a database the run would download five feeds, tens of
-  // megabytes, fail every source at the load step and then fail to write the
-  // log rows that say so. Better to stop in a second with a reason.
+  // Preflight. Without a database the run would download several large feeds,
+  // fail every source at the load step and then fail to write the log rows that
+  // say so. Better to stop in a second with a reason.
   try {
     createAdminClient();
   } catch (err) {
@@ -99,9 +108,11 @@ export async function runRefreshAndRescreen(): Promise<RefreshRunSummary> {
     };
   }
 
-  let lists: RefreshSummary[];
+  let lists: ComplianceRefreshSummary[];
   try {
-    lists = await refreshAll();
+    // The existing feeds remain sequential inside refreshAll to cap memory.
+    // US CSL follows them because its downloadable JSON is also tens of MB.
+    lists = [...(await refreshAll()), await refreshUsCsl()];
   } catch (err) {
     const message = (err as Error).message;
     await sendAdminNotice({
@@ -128,7 +139,7 @@ export async function runRefreshAndRescreen(): Promise<RefreshRunSummary> {
   }
 
   const failed = lists.filter((r) => r.status !== "ok");
-  let persistentFailures: SourceList[] = [];
+  let persistentFailures: ComplianceSource[] = [];
 
   if (failed.length > 0) {
     persistentFailures = await findPersistentFailures(failed);
