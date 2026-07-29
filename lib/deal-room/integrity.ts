@@ -46,6 +46,61 @@
 /** The canonical member verification vocabulary, as stored in production. */
 export type VerificationLevel = "unverified" | "identity_verified" | "company_verified";
 
+/**
+ * The columns the invitation surface reads from `verifications`.
+ *
+ * A constant rather than a string literal at the call site, so a test can
+ * assert it. LB-004, found by the Gate C production preflight: the surface read
+ * `type`, which is not a column on that table, and PostgREST refuses an unknown
+ * column outright - so the whole query failed and the Integrity pre-flight
+ * reported nothing checked for every member, verified or not. The same query
+ * had already been corrected once, from a `profile_id` filter to `user_id`.
+ *
+ * Twice is a pattern, and the pattern is that no test could reach either error:
+ * both are only wrong against a real schema, and there is no non-production
+ * database to run one against (PL-002). So the column set is pinned here and
+ * checked against `VERIFICATIONS_COLUMNS` below, which is the production table
+ * as the Gate C preflight observed it on 29 July 2026.
+ */
+export const VERIFICATION_EVIDENCE_COLUMNS = "purpose, status, created_at, sanctions_hits, rescreened_at";
+
+/**
+ * `public.verifications` as production actually holds it, in order.
+ *
+ * Observed read-only during the Gate C preflight and recorded in
+ * `docs/codex/audits/deal-room/GATE-C-PREFLIGHT-2026-07-29.md`. It exists so
+ * that `VERIFICATION_EVIDENCE_COLUMNS` can be checked against something rather
+ * than merely inspected. It is a snapshot, not an authority: if the table gains
+ * or loses a column, this list is updated in the same change, and the test that
+ * compares them is what makes that impossible to forget.
+ */
+export const VERIFICATIONS_COLUMNS = [
+  "id",
+  "user_id",
+  "guest_email",
+  "subject_name",
+  "subject_country",
+  "subject_reg_number",
+  "subject_vat",
+  "subject_lei",
+  "level_requested",
+  "status",
+  "registry",
+  "vies",
+  "gleif",
+  "sanctions_hits",
+  "ai_summary",
+  "verdict_reason",
+  "credit_ledger_id",
+  "reviewed_by",
+  "rescreened_at",
+  "created_at",
+  "decided_at",
+  "purpose",
+  "attested_at",
+  "attestation_version",
+] as const;
+
 export interface IntegrityInput {
   /** Legal or trading name as the member states it. */
   organisationName: string | null;
