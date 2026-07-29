@@ -1,0 +1,102 @@
+[
+  {
+    "where": "Landing fact block",
+    "viewport": "desktop",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register",
+    "viewport": "desktop",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register (row hover)",
+    "viewport": "desktop",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#E2DBC4",
+    "fontSize": "12px",
+    "ratio": 4.52,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register (row hover)",
+    "viewport": "desktop",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signal detail facts",
+    "viewport": "desktop",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "14px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Landing fact block",
+    "viewport": "mobile-390x844",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register",
+    "viewport": "mobile-390x844",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register (row hover)",
+    "viewport": "mobile-390x844",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#E2DBC4",
+    "fontSize": "12px",
+    "ratio": 4.52,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signals register (row hover)",
+    "viewport": "mobile-390x844",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "12px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  },
+  {
+    "where": "Market Signal detail facts",
+    "viewport": "mobile-390x844",
+    "selector": "dd.na",
+    "colour": "#656055",
+    "background": "#FFFFFF",
+    "fontSize": "14px",
+    "ratio": 6.25,
+    "text": "Not stated"
+  }
+]

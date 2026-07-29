@@ -455,6 +455,28 @@ four:
 The fourth is the one that can fail while the first three pass, and it is the
 reason Stage 1 is not complete when the numbers are green.
 
+#### What was captured, 29 July 2026
+
+Criteria 1 to 3 are answered by `e2e/stage1-blockers.spec.ts`, run against a local
+production build with live Supabase data. 26 measurements, none below target.
+Evidence and method: `e2e/evidence/stage1/blockers/README.md`.
+
+| Criterion | Result |
+|---|---|
+| Boundaries at 3:1 | Worst case **3.63:1**. All four named inputs — `.qfield__i`, `.snote`, `.sigsheet__i`, `.vcp__input` — reached and asserted present, neutral and focus, both viewports, plus one disabled control. Measured against both adjacent colours, not the page ground alone |
+| Missing-data labels at 4.5:1 | **6.25:1** on the white card, **4.52:1** in the sunken well. Both viewports, three surfaces |
+| Desktop and 390 x 844 | Every measurement taken twice, once per viewport, with the viewport set on the browser context so the Bridge hydrates against the right media state |
+| No regression in hierarchy or completion | **Not done.** A read-through, and it requires a submission completed end to end, which writes a record. Left with the owner |
+
+Two things are recorded rather than smoothed over. The **page ground** is the one
+named background with no rendered instance of missing-data text on any surface
+reachable without a member session; its 5.45:1 is computed and labelled as such.
+And the **first closure attempt reported nothing**, because it reused the
+screen-level contrast spec whose selectors matched no elements — every one of the
+four inputs is several steps into a journey. An empty sample reads exactly like a
+pass, which is why each target is now asserted present and the suite fails if it
+cannot be reached.
+
 ## 12. Decisions and discoveries
 
 ### Decided by the owner, 29 July 2026
@@ -506,6 +528,29 @@ identifier` record, because recording a closed defect as an open blocker would m
 the register untrue; PR #103 is redundant and recommended for closure. `LB-003` is
 instead the second contrast blocker, since `main` already holds `LB-001` for the
 Deal Room loop and `PL-004`/`PL-005` for the two fixes above.
+
+**3a. The approved Bridge reference renders cannot be re-taken, and this is a gap
+in the approved package.**
+
+Discovered 29 July 2026 while carrying out S-3. The eight PNGs in
+`design/authority/bridge/v1/reference/` were rendered from
+`Ponte Landing - Bridge.html`, at 60% and 70% for desktop and 390 x 844 rescaled
+from 62% for mobile. That file, and `Ponte Bridge System.html`, are listed in
+`SOURCE-MANIFEST.md` but are **not vendored** — `check-governance.mjs` names all
+three in its `notVendored` set, which is why it verifies 13 of 16 rows. Neither has
+been committed on any branch and neither is on the development machine.
+
+The renders therefore still show pre-Stage-1 contrast, and their hashes are
+unchanged. Re-rendering from the product's landing page would be differently
+framed, which the owner excluded; reconstructing the prototype page would mean
+inventing its navigation, ticker and hero and then presenting the result as an
+owner-approved reference. Neither was done. The full reasoning is recorded in
+`SOURCE-MANIFEST.md`, and S-3's geometry requirement is separately proved by
+`check-bridge-invariance.mjs` and `check-bridge-geometry.mjs`.
+
+**To close:** supply the two HTML files. Their SHA-256 rows are already in the
+manifest, so a supplied copy can be verified as the genuine delivery before use,
+after which the re-take is mechanical.
 
 **3. The Bridge deck and passive pier are in Stage 1, contrast only.** Geometry,
 station fractions, node sizes, labels, motion and gold semantics unchanged;

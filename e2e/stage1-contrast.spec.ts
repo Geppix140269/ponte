@@ -165,10 +165,26 @@ async function measure(page: Page, screen: string, viewport: string) {
       // the legacy obsidian body, which is not part of this system and made the
       // pair measure 1:1 against itself.
       const scope = document.querySelector(".ponte-desk, .ponte-find, .ponte-landing");
-      const raised = document.querySelector(
-        ".ponte-desk .panel, .ponte-desk .reg, .ponte-desk .rec, .ponte-desk .fam," +
-          ".ponte-find .fchip, .ponte-find .msrow, .ponte-find .qunv, .ponte-find .hs__tile",
-      );
+      /*
+       * The raised element must actually PAINT a fill.
+       *
+       * Taking the first match and calling bgOf() on it reported a 1:1 "failure" at
+       * 390 on Market Signals. The cause was responsive and correct: at that width
+       * `.reg` drops its card fill and each `.reg__row` becomes the white card
+       * instead. bgOf() then walked past the transparent `.reg` up to `.ponte-desk`
+       * and compared the ground with itself. So candidates whose own background is
+       * transparent are skipped rather than resolved to their parent, which is the
+       * only way this pair means anything.
+       */
+      const raised = Array.from(
+        document.querySelectorAll(
+          ".ponte-desk .panel, .ponte-desk .reg, .ponte-desk .reg__row, .ponte-desk .rec, .ponte-desk .fam," +
+            ".ponte-find .fchip, .ponte-find .msrow, .ponte-find .qunv, .ponte-find .hs__tile",
+        ),
+      ).find((el) => {
+        const c = getComputedStyle(el).backgroundColor;
+        return rgb(c) && alpha(c) > 0.95;
+      });
       if (scope && raised) {
         const a = rgb(getComputedStyle(scope).backgroundColor) ?? [255, 255, 255];
         const b = bgOf(raised);

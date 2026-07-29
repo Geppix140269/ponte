@@ -173,3 +173,41 @@ The live token file currently hashes to `dabc089f0b9822242cc0a3d8783c2b19ab0021c
 ### Canonical record
 
 ADR-0015 section S-1; ExecPlan sections 3, 4 and 6.5.
+
+## OD-009 — The approved Bridge reference renders cannot be re-taken
+
+**Status:** OPEN
+**Owner:** Giuseppe Funaro
+**Raised:** 29 July 2026
+
+### Decision required
+
+ADR-0015 section S-3 requires the eight authoritative reference renders under `design/authority/bridge/v1/reference/` to be re-taken so they show the approved Stage 1 structural contrast rather than the old contrast. They cannot be, and the obstacle is a gap in the approved package rather than a choice made here.
+
+The renders came from `Ponte Landing - Bridge.html`, at 60% and 70% scale for the desktop frames and 390 x 844 rescaled from 62% for the mobile frames, per `design/authority/bridge/v1/implementation/00_README.md`. That file and `Ponte Bridge System.html` are both recorded in `SOURCE-MANIFEST.md` as part of the delivery but are **not vendored**: `scripts/check-governance.mjs` names them, with `ponte-bridge-demos.js`, in its `notVendored` set, which is why it verifies 13 of the 16 rows. Neither has been committed on any branch in the repository's history, and neither is present on the development machine.
+
+`desktop-0-full-composition.png` shows that prototype's own navigation, ticker strip and hero, so the product's landing page cannot reproduce the framing either.
+
+### What was not done, and why
+
+- **The renders were not replaced** and their hashes were not touched.
+- **Re-rendering from the product's landing page** was rejected: differently framed, which the owner explicitly excluded.
+- **Reconstructing the prototype page** was rejected: it would mean inventing markup for a navigation, ticker and hero that are not in the repository, then presenting the result as an owner-approved reference render. Fabricating an authority artefact is worse than leaving a stale one in place and recording that it is stale.
+
+The manifest's amendment row previously claimed the change had been "verified against re-taken reference renders". That claim was untrue and has been corrected to state what was actually verified.
+
+### What S-3's substance does have
+
+Geometry invariance is proved twice, independently of the renders: `scripts/check-bridge-invariance.mjs` (479 non-colour declarations, 6 at-rules and 23 timings identical, with all 15 colour changes enumerated) and `scripts/check-bridge-geometry.mjs` (8 rendered views, 1208 measured values identical to 0.05px). A pixel diff is deliberately not used, because the colours are meant to differ and an image comparison would report a difference on every changed pixel while proving nothing about shape.
+
+Equivalent Stage 1 Bridge frames, rendered from the product and framed to the product, are at `e2e/evidence/stage1/after/bridge-*.png` for the same eight views. They are evidence, not a substitute, and are not proposed as replacements.
+
+### Options
+
+1. **Supply the two HTML files.** Their SHA-256 rows are already in the manifest, so any copy can be verified as the genuine approved delivery before use. The re-take is then mechanical and this closes.
+2. **Re-scope S-3** to accept the two programmatic invariance proofs as the verification, and record the reference PNGs as historical approval evidence frozen at the 27 July 2026 delivery rather than as renders that track the live palette.
+3. **Re-approve a new reference set** rendered from the product, framed to the product, as a fresh design approval. This is a new approval, not an implementation of S-3, and would need the owner's visual sign-off in its own right.
+
+### Canonical record
+
+ADR-0015 section S-3 and its 29 July 2026 implementation note; ExecPlan section 12, discovery 3a; `design/authority/bridge/v1/SOURCE-MANIFEST.md`.

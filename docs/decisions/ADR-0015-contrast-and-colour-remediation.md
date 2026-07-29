@@ -310,6 +310,33 @@ reference evidence** — the approved renders under
 `design/authority/bridge/v1/reference/` are part of the package and must be
 re-taken rather than left describing the old contrast.
 
+#### S-3 implementation note, 29 July 2026 — the re-take is blocked, and not by a choice
+
+The stylesheet change is done and the invariance requirement above is proved twice,
+at stylesheet level (`scripts/check-bridge-invariance.mjs`: 479 non-colour
+declarations, 6 at-rules and 23 timings identical, 15 colour changes enumerated) and
+at rendered-DOM level (`scripts/check-bridge-geometry.mjs`: 8 views, 1208 values
+identical to 0.05px). A pixel diff is deliberately not the instrument, because the
+colours are meant to differ.
+
+**The reference re-take could not be carried out.** The eight PNGs were rendered
+from `Ponte Landing - Bridge.html` at 60% and 70% for desktop and 390 x 844
+rescaled from 62% for mobile. That file is recorded in `SOURCE-MANIFEST.md` as part
+of the delivery but is **not vendored**, has never been committed on any branch, and
+is not on the development machine. `desktop-0-full-composition.png` shows the
+prototype's own navigation, ticker and hero, so the product's landing page cannot
+reproduce the framing either.
+
+The renders and their hashes are therefore unchanged, and the manifest now says so
+in place of the earlier claim that they had been re-taken. Reconstructing the
+prototype page to produce them was rejected: presenting invented markup as an
+owner-approved reference render would corrupt the authority this ADR exists to
+protect.
+
+**This is a live gap, not a closed item.** It needs the two HTML files; their
+SHA-256 rows are already in the manifest, so a supplied copy is verifiable as
+genuine before use, and the re-take is then mechanical.
+
 ### S-4. Value-neutral token adoption in the four duplicated stylesheets — approved
 
 Alias conversion approved for `components/find/find.css`,
