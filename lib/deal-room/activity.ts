@@ -20,6 +20,7 @@ export const ACTIVITY_EVENT_TYPES = [
   "room_proposed",
   "sub_room_created",
   "invitation_sent",
+  "invitation_accepted",
   "invitation_declined",
   "invitation_expired",
   "participant_admitted",
@@ -59,9 +60,12 @@ export const ACTIVITY_EVENT_LABEL: Record<ActivityEventType, string> = {
   room_proposed: "Room proposed",
   sub_room_created: "Private workspace created",
   invitation_sent: "Protected invitation sent",
+  // Accepting an invitation starts admission. It is not admission, and the two
+  // must read differently in a record nobody can afterwards correct.
+  invitation_accepted: "Invitation accepted, admission started",
   invitation_declined: "Invitation declined",
-  invitation_expired: "Invitation expired",
   participant_admitted: "Participant admitted",
+  invitation_expired: "Invitation expired",
   participant_removed: "Participant removed",
   agreement_accepted: "Agreement accepted",
   room_activated: "Room activated",

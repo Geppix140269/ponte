@@ -261,14 +261,18 @@ export default async function InvitationPreviewPage({
                 returnTo: `${base}/invitation`,
               }}
             >
-              <Field
-                label="Counterparty email"
-                name="email"
-                type="email"
-                required
-                help="Where the protected invitation link goes. The link is single use, expires, and is stored only as a hash."
-              />
+              {/*
+                No email field. The invitation is addressed from the room's
+                persisted intended counterparty, so it cannot be redirected to
+                somebody other than the principal credible interest was recorded
+                for. The pre-flight below is likewise derived inside the command
+                and stored from database facts, not from anything sent here.
+              */}
               <Field label="Proposed role" name="role" required defaultValue="Principal counterparty" />
+              <p className="dr__help">
+                The invitation goes to the counterparty recorded when this room was proposed. It is single use, it
+                expires, and Ponte stores only a hash of the link.
+              </p>
               <Submit label="Send protected invitation" />
             </CommandForm>
           ) : (

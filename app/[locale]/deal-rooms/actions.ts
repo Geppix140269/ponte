@@ -5,10 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dealRoomGate } from "@/lib/deal-room/queries";
-import { buildPreview, mintInvitationToken } from "@/lib/deal-room/invitation";
-import { integrityPreflight, sanctionsPositionFrom } from "@/lib/deal-room/integrity";
+import { mintInvitationToken } from "@/lib/deal-room/invitation";
 import { templateFor, type MarketFamily } from "@/lib/deal-room/procedure";
-import { AGREEMENT_DOCUMENTS } from "@/lib/deal-room/agreements";
 
 /**
  * Every material state change in the Deal Room, as a server action.
@@ -98,6 +96,8 @@ export async function proposeRoom(formData: FormData): Promise<void> {
   const { data, error } = await supabase.rpc("deal_room_propose", {
     p_listing_id: String(formData.get("listingId") ?? ""),
     p_counterparty_profile: String(formData.get("counterpartyProfileId") ?? "") || null,
+    p_counterparty_email: String(formData.get("counterpartyEmail") ?? ""),
+    p_counterparty_name: String(formData.get("counterpartyName") ?? ""),
     p_counterparty_role: String(formData.get("counterpartyRole") ?? ""),
     p_objective: String(formData.get("objective") ?? ""),
     p_interest_route: String(formData.get("interestRoute") ?? "accepted_introduction"),
@@ -122,99 +122,41 @@ export async function sendInvitation(formData: FormData): Promise<void> {
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
-  const email = String(formData.get("email") ?? "");
   const role = String(formData.get("role") ?? "Principal counterparty");
-
-  const supabase = createClient();
-
-  // The pre-flight snapshot travels with the invitation, so what was known at
-  // the moment of sending stays readable afterwards. Sanctions state is derived
-  // from real screening rows; when none exists it reports as unproved.
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("full_name, country, verification_level, organizations(name, country)")
-    .eq("id", allowed.profileId)
-    .maybeSingle();
-
-  const { data: verifications } = await supabase
-    .from("verifications")
-    .select("type, status, created_at, sanctions_hits, rescreened_at")
-    .eq("user_id", allowed.profileId)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  const { data: roomRow } = await supabase
-    .from("deal_rooms")
-    .select("title, market_family, deal_snapshot")
-    .eq("id", roomId)
-    .maybeSingle();
-
-  const rows = (verifications ?? []) as Record<string, unknown>[];
-  const organisationName = ((me?.organizations as { name?: string } | null)?.name as string) ?? null;
   const back = returnTo(formData, `${room(locale, roomId)}/invitation`);
 
-  const preflight = integrityPreflight({
-    organisationName,
-    declaredCapacity: organisationName ? null : ((me?.full_name as string | null) ?? null),
-    jurisdiction:
-      ((me?.organizations as { country?: string } | null)?.country as string) ?? ((me?.country as string | null) ?? null),
-    verificationLevel: ((me?.verification_level as string) ?? "unverified") as
-      | "unverified"
-      | "identity_verified"
-      | "company_verified",
-    verificationEvidence: rows.map((row) => ({
-      kind: (row.type as string) ?? "check",
-      source: "Ponte verification",
-      result:
-        row.status === "verified" ? ("passed" as const)
-          : row.status === "rejected" ? ("failed" as const)
-            : ("in_review" as const),
-      checkedAt: String(row.created_at ?? "").slice(0, 10),
-    })),
-    dealOriginCountry:
-      ((roomRow?.deal_snapshot as Record<string, unknown> | null)?.origin_country as string | null) ?? null,
-    declaredRole: role,
-    authorityDeclared: true,
-    sanctions: sanctionsPositionFrom(
-      rows.map((row) => ({
-        sanctionsHits: row.sanctions_hits,
-        rescreenedAt: (row.rescreened_at as string | null) ?? null,
-        createdAt: String(row.created_at ?? ""),
-      })),
-    ),
-  });
-
-  if (preflight.action.clarificationFirst) {
-    fail(back, "Resolve the sanctions screening candidate before inviting this participant.");
-  }
-
+  /*
+   * This action mints the token and nothing else.
+   *
+   * It used to build the invitation preview and the Integrity pre-flight here
+   * and pass them as JSON. The owner review of 29 July 2026 found the hole in
+   * that: the RPC is granted to `authenticated`, so a room administrator could
+   * skip this file entirely and store fabricated "checked" facts, which the
+   * invitee is then shown as Ponte's own Integrity statement.
+   *
+   * Both are now derived inside `deal_room_invite()` from `profiles`,
+   * `organizations` and `verifications`, and the recipient's address comes from
+   * the room's persisted intended counterparty rather than from a form field.
+   * There is no email parameter to disagree with the room's own record.
+   *
+   * The raw token is the one thing that cannot come from the database: it must
+   * never be stored, so it is generated here and only its digest is sent.
+   */
   const minted = mintInvitationToken();
-  const preview = buildPreview({
-    invitingOrganisation: organisationName ?? ((me?.full_name as string | null) ?? "The inviting organisation"),
-    dealSubject: String((roomRow?.deal_snapshot as Record<string, unknown> | null)?.subject ?? roomRow?.title ?? ""),
-    marketFamily: (roomRow?.market_family as MarketFamily) ?? "products",
-    proposedRole: role,
-    proposedParticipantClass: "principal",
-    roomSponsor: organisationName ?? ((me?.full_name as string | null) ?? "The inviting organisation"),
-    expiresAt: minted.expiresAt,
-  });
 
+  const supabase = createClient();
   const { error } = await supabase.rpc("deal_room_invite", {
     p_sub_room_id: subRoomId,
-    p_email: email,
     p_role: role,
     p_class: "principal",
     p_token_sha256: minted.tokenSha256,
     p_expires_at: minted.expiresAt.toISOString(),
-    p_preview: preview,
-    p_preflight: preflight,
   });
 
   if (error) fail(back, readable(error));
 
   revalidatePath(room(locale, roomId));
-  // The raw token is returned once, to the sender, so they can pass it on. It
-  // is not stored and never appears in a log line.
+  // Shown once, to the sender, so they can pass it on. Never stored, never logged.
   redirect(`${room(locale, roomId)}/invitation?sent=${minted.token}`);
 }
 
@@ -264,16 +206,18 @@ export async function declareParticipation(formData: FormData): Promise<void> {
  */
 export async function acceptAgreement(formData: FormData): Promise<void> {
   const kind = String(formData.get("kind") ?? "");
-  const document = AGREEMENT_DOCUMENTS[kind as keyof typeof AGREEMENT_DOCUMENTS];
   const back = returnTo(formData, "/");
-  if (!document) fail(back, "Unknown agreement.");
 
+  // No version and no checksum are sent. The command reads the canonical
+  // document from `deal_room_agreement_documents`, which no member can write.
+  // The first draft passed them from here, and because the RPC is granted to
+  // `authenticated` a member could call it directly with any values they liked
+  // and still satisfy admission. What this action supplies is the assent; the
+  // identity of what was assented to is the database's to state.
   const supabase = createClient();
   const { error } = await supabase.rpc("deal_room_accept_agreement", {
     p_participant_id: String(formData.get("participantId") ?? ""),
     p_kind: kind,
-    p_version: document.version,
-    p_sha256: document.sha256,
   });
 
   if (error) fail(back, readable(error));

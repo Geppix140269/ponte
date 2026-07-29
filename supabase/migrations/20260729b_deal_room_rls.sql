@@ -239,6 +239,7 @@ alter table public.deal_room_evidence_versions     enable row level security;
 alter table public.deal_room_clarifications        enable row level security;
 alter table public.deal_room_blockers              enable row level security;
 alter table public.deal_room_activity_events       enable row level security;
+alter table public.deal_room_agreement_documents   enable row level security;
 
 -- ---------------------------------------------------------------------
 -- 3. Remove the first draft's write policies
@@ -477,6 +478,8 @@ $$;
 create or replace function public.deal_room_propose(
   p_listing_id           uuid,
   p_counterparty_profile uuid,
+  p_counterparty_email   text,
+  p_counterparty_name    text,
   p_counterparty_role    text,
   p_objective            text,
   p_interest_route       text,
@@ -526,11 +529,37 @@ begin
     raise exception 'This Deal carries no intent' using errcode = '23514';
   end if;
 
-  if p_counterparty_profile is null then
+  /*
+   * The intended principal, proved and persisted.
+   *
+   * The first draft checked only that a uuid was non-null and not the caller,
+   * then discarded it. Nothing recorded who the room was about, so the later
+   * invitation could go to any address - the credible-interest gate was
+   * ceremonial. Either an existing member is named and proved to exist, or an
+   * external principal is named with a durable name and address.
+   */
+  if p_counterparty_profile is not null then
+    if p_counterparty_profile = auth.uid() then
+      raise exception 'The Deal owner and the counterparty cannot be the same member' using errcode = '23514';
+    end if;
+    if not exists (select 1 from public.profiles where id = p_counterparty_profile) then
+      raise exception 'That counterparty is not a Ponte member' using errcode = '23503';
+    end if;
+    if not exists (select 1 from auth.users where id = p_counterparty_profile and email is not null) then
+      raise exception 'That counterparty has no address an invitation could reach' using errcode = '23514';
+    end if;
+  elsif coalesce(btrim(p_counterparty_email), '') <> '' then
+    if coalesce(btrim(p_counterparty_name), '') = '' then
+      raise exception 'Name the external principal as well as their address' using errcode = '23514';
+    end if;
+    if p_counterparty_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+      raise exception 'That is not a usable email address' using errcode = '23514';
+    end if;
+    if lower(btrim(p_counterparty_email)) = (select lower(email) from auth.users where id = auth.uid()) then
+      raise exception 'The Deal owner and the counterparty cannot be the same person' using errcode = '23514';
+    end if;
+  else
     raise exception 'A room is proposed to somebody: identify the counterparty' using errcode = '23514';
-  end if;
-  if p_counterparty_profile = auth.uid() then
-    raise exception 'The Deal owner and the counterparty cannot be the same member' using errcode = '23514';
   end if;
   if coalesce(btrim(p_objective), '') = '' then
     raise exception 'Record what the interested party wants. Curiosity does not open a room' using errcode = '23514';
@@ -604,12 +633,16 @@ begin
 
   insert into public.deal_rooms
     (ref, listing_id, deal_snapshot, market_family, market_intent, title, purpose,
-     completion_condition, operating_mode, initiator_profile_id, sponsor_profile_id, sponsor_org_id, state)
+     completion_condition, operating_mode, initiator_profile_id, sponsor_profile_id, sponsor_org_id, state,
+     intended_counterparty_profile_id, intended_counterparty_email, intended_counterparty_name)
   values
     (v_ref, v_l.id, v_snapshot, v_family, v_l.market_intent, v_subject,
      p_objective,
      'Both principals have confirmed that the agreed procedure is complete and the transaction may proceed to formal contracting outside Ponte.',
-     p_operating_mode, auth.uid(), auth.uid(), v_org, 'proposed')
+     p_operating_mode, auth.uid(), auth.uid(), v_org, 'proposed',
+     p_counterparty_profile,
+     case when p_counterparty_profile is null then lower(btrim(p_counterparty_email)) end,
+     case when p_counterparty_profile is null then btrim(p_counterparty_name) end)
   returning id into v_room;
 
   insert into public.deal_room_entitlements (room_id, org_id, kind, state, reserved_at)
@@ -645,31 +678,65 @@ begin
 end;
 $$;
 
-/* Issue the protected invitation. The raw token never reaches the database. */
+/*
+ * Issue the protected invitation.
+ *
+ * ## Three parameters are gone, and that is the correction
+ *
+ * The first draft took `p_email`, `p_preview` and `p_preflight`. The server
+ * action derived all three from real records, but this function is granted to
+ * `authenticated`, so a room administrator could call it directly and store
+ * fabricated "checked" facts - which the invitee is then shown as Ponte's own
+ * Integrity statement. The owner review of 29 July 2026 named that as the
+ * second trust defect, and the unbound email as the third.
+ *
+ * Now:
+ *
+ * - the address comes from the room's persisted intended counterparty, so the
+ *   person invited IS the principal credible interest was recorded for;
+ * - `preview_facts` is built here from the room and the sponsor;
+ * - `integrity_preflight` is built here from `profiles`, `organizations` and
+ *   `verifications`, and stores the attributable SOURCE FACTS rather than a
+ *   rendered report. The wording stays in `lib/deal-room/integrity.ts`, which
+ *   renders these facts; keeping one copy of the wording and one copy of the
+ *   facts is the point. Sanctions state is read from `verifications.sanctions_hits`
+ *   and is absent when nothing was screened.
+ *
+ * The raw token still never reaches the database; only its digest does.
+ */
 create or replace function public.deal_room_invite(
   p_sub_room_id uuid,
-  p_email       text,
   p_role        text,
   p_class       text,
   p_token_sha256 text,
-  p_expires_at  timestamptz,
-  p_preview     jsonb,
-  p_preflight   jsonb
+  p_expires_at  timestamptz
 ) returns uuid
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
-  v_room uuid;
+  v_r public.deal_rooms%rowtype;
   v_id uuid;
+  v_email text;
+  v_sponsor text;
+  v_preview jsonb;
+  v_preflight jsonb;
+  v_level text;
+  v_org_name text;
+  v_jurisdiction text;
+  v_sanctions jsonb;
 begin
-  select room_id into v_room from public.deal_room_sub_rooms where id = p_sub_room_id;
-  if v_room is null then
+  select r.* into v_r
+  from public.deal_rooms r
+  join public.deal_room_sub_rooms s on s.room_id = r.id
+  where s.id = p_sub_room_id;
+
+  if not found then
     raise exception 'Workspace not found' using errcode = '42501';
   end if;
-  if not public.deal_room_can_administer(v_room) then
+  if not public.deal_room_can_administer(v_r.id) then
     raise exception 'Only a room administrator can send an invitation' using errcode = '42501';
   end if;
-  if not public.deal_room_is_writable(v_room) then
+  if not public.deal_room_is_writable(v_r.id) then
     raise exception 'This room cannot be changed in its current state' using errcode = '42501';
   end if;
   if p_token_sha256 !~ '^[0-9a-f]{64}$' then
@@ -678,26 +745,100 @@ begin
   if p_expires_at <= now() then
     raise exception 'An invitation cannot expire in the past' using errcode = '23514';
   end if;
+  if p_class not in ('principal','intermediary','provider','adviser','ponte_facilitator','observer') then
+    raise exception 'Unknown participant class' using errcode = '23514';
+  end if;
+
+  -- Bound to the room's own record of who this room is about.
+  if v_r.intended_counterparty_profile_id is not null then
+    select lower(u.email) into v_email
+    from auth.users u where u.id = v_r.intended_counterparty_profile_id;
+  else
+    v_email := lower(btrim(v_r.intended_counterparty_email));
+  end if;
+
+  if coalesce(v_email, '') = '' then
+    raise exception 'This room has no reachable intended counterparty' using errcode = '23514';
+  end if;
+
+  -- The inviting side's own facts, read rather than accepted.
+  select coalesce(o.name, pr.full_name, 'The inviting organisation'),
+         pr.verification_level,
+         coalesce(o.country, pr.country)
+    into v_sponsor, v_level, v_jurisdiction
+  from public.profiles pr
+  left join public.organizations o on o.id = pr.organization_id
+  where pr.id = auth.uid();
+
+  select o.name into v_org_name
+  from public.organizations o where o.id = v_r.sponsor_org_id;
+
+  -- Sanctions: the stored ScreenResult, or an explicit absence. Never invented.
+  select case
+           when v.sanctions_hits is null then null
+           when jsonb_typeof(v.sanctions_hits -> 'clean') <> 'boolean' then null
+           else jsonb_build_object(
+             'screened', true,
+             'clean', (v.sanctions_hits ->> 'clean')::boolean,
+             'strongCount', coalesce((v.sanctions_hits ->> 'strongCount')::int, 0),
+             'checkedAt', to_char(coalesce(v.rescreened_at, v.created_at), 'YYYY-MM-DD'),
+             'source', 'Ponte sanctions screening')
+         end
+    into v_sanctions
+  from public.verifications v
+  where v.user_id = auth.uid() and v.sanctions_hits is not null
+  order by coalesce(v.rescreened_at, v.created_at) desc
+  limit 1;
+
+  -- The one gate Ponte Integrity imposes, enforced here rather than in the
+  -- interface. An unresolved screening candidate is a compliance boundary, and
+  -- a check that only ran in the server action would be bypassed by the same
+  -- direct RPC call that made the preview forgeable.
+  if v_sanctions is not null and (v_sanctions ->> 'clean')::boolean is false then
+    raise exception 'Resolve the sanctions screening candidate before inviting this participant'
+      using errcode = '23514';
+  end if;
+
+  v_preview := jsonb_build_object(
+    'invitingOrganisation', v_sponsor,
+    'dealSubject', coalesce(v_r.deal_snapshot ->> 'subject', v_r.title),
+    'marketFamily', v_r.market_family,
+    'proposedRole', p_role,
+    'proposedParticipantClass', p_class,
+    'roomSponsor', coalesce(v_org_name, v_sponsor),
+    'expiresAt', to_char(p_expires_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+
+  v_preflight := jsonb_build_object(
+    'derivedAt', to_char(now() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+    'organisationName', v_org_name,
+    'jurisdiction', v_jurisdiction,
+    'verificationLevel', coalesce(v_level, 'unverified'),
+    'sanctions', coalesce(v_sanctions, jsonb_build_object('screened', false)));
 
   insert into public.deal_room_invitations
     (room_id, sub_room_id, token_sha256, invited_email, proposed_role,
      proposed_participant_class, preview_facts, integrity_preflight, state, expires_at, created_by)
   values
-    (v_room, p_sub_room_id, p_token_sha256, lower(btrim(p_email)), p_role,
-     p_class, p_preview, p_preflight, 'sent', p_expires_at, auth.uid())
+    (v_r.id, p_sub_room_id, p_token_sha256, v_email, p_role,
+     p_class, v_preview, v_preflight, 'sent', p_expires_at, auth.uid())
   returning id into v_id;
 
   update public.deal_rooms set state = 'awaiting_principal_admission'
-   where id = v_room and state = 'proposed';
+   where id = v_r.id and state = 'proposed';
   update public.deal_room_sub_rooms set state = 'invitation_pending'
    where id = p_sub_room_id and state = 'draft';
 
-  perform public.deal_room_log_event(v_room, p_sub_room_id, 'invitation_sent', 'invitation', v_id,
-    'A protected invitation was sent. It discloses only the authorised preview facts.', null);
+  perform public.deal_room_log_event(v_r.id, p_sub_room_id, 'invitation_sent', 'invitation', v_id,
+    'A protected invitation was sent to the intended counterparty. It discloses only the authorised preview facts.',
+    null);
 
   return v_id;
 end;
 $$;
+
+-- The old eight-argument signature is dropped. Leaving it in place would keep a
+-- callable path that still accepts caller-authored preview and pre-flight JSON.
+drop function if exists public.deal_room_invite(uuid, text, text, text, text, timestamptz, jsonb, jsonb);
 
 /*
  * Accept an invitation.
@@ -749,9 +890,25 @@ begin
   update public.deal_room_sub_rooms set state = 'awaiting_admission'
    where id = v_inv.sub_room_id and state = 'invitation_pending';
 
-  perform public.deal_room_log_event(v_inv.room_id, v_inv.sub_room_id, 'participant_admitted',
+  /*
+   * `invitation_accepted`, not `participant_admitted`.
+   *
+   * The first draft wrote `participant_admitted` here, while the participant
+   * was still `prerequisites_pending` and outside the gate - and then the real
+   * admission command wrote a second `participant_admitted` later. The durable
+   * history therefore stated that somebody had been admitted before anything
+   * had verified their identity, capacity, role, authority or agreements. The
+   * owner review of 29 July 2026 named it as the fourth trust defect, and it is
+   * the worst kind: an append-only record that cannot be corrected, saying
+   * something the database had not proved.
+   *
+   * `participant_admitted` is now written in exactly one place, by the command
+   * that has checked all of it.
+   */
+  perform public.deal_room_log_event(v_inv.room_id, v_inv.sub_room_id, 'invitation_accepted',
     'participant', v_participant,
-    'An invitation was accepted. The participant is inside the admission gate and cannot yet act.', null);
+    'An invitation was accepted and admission began. The participant is inside the admission gate and cannot yet act.',
+    null);
 
   return v_participant;
 end;
@@ -814,14 +971,33 @@ begin
 end;
 $$;
 
-/* Record one versioned acceptance. No IP, no user agent, by owner decision. */
+/*
+ * Record one versioned acceptance.
+ *
+ * ## There is no version or checksum parameter, deliberately
+ *
+ * The first draft took `p_version` and `p_sha256` from the caller. The
+ * TypeScript action passed the canonical values, but this function is granted
+ * to `authenticated`, so a member could call it directly with any version and
+ * any hash - and admission only checked that a row existed for each required
+ * kind. The acceptance record, which is the whole evidentiary point of the
+ * admission gate, was forgeable. The owner review of 29 July 2026 named it as
+ * the first trust defect.
+ *
+ * The identity of what was accepted is now read from
+ * `deal_room_agreement_documents`, which no member holds any policy on. A
+ * forged version is not rejected; it cannot be expressed.
+ *
+ * No IP address and no user agent, by the owner decision of 29 July 2026.
+ */
 create or replace function public.deal_room_accept_agreement(
-  p_participant_id uuid, p_kind text, p_version text, p_sha256 text
+  p_participant_id uuid, p_kind text
 ) returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
   v_p public.deal_room_participants%rowtype;
+  v_doc public.deal_room_agreement_documents%rowtype;
   v_as text;
 begin
   select * into v_p from public.deal_room_participants where id = p_participant_id;
@@ -834,8 +1010,14 @@ begin
   if not public.deal_room_is_writable(v_p.room_id) then
     raise exception 'This room cannot be changed in its current state' using errcode = '42501';
   end if;
-  if p_sha256 !~ '^[0-9a-f]{64}$' then
-    raise exception 'The accepted document has no valid checksum' using errcode = '23514';
+
+  select * into v_doc
+  from public.deal_room_agreement_documents
+  where kind = p_kind and current;
+
+  if not found then
+    raise exception 'There is no current Ponte agreement of kind %', coalesce(p_kind, 'null')
+      using errcode = '23514';
   end if;
 
   select coalesce(o.name, v_p.declared_capacity, 'Declared capacity not stated') into v_as
@@ -846,15 +1028,20 @@ begin
   insert into public.deal_room_agreement_acceptances
     (participant_id, room_id, sub_room_id, agreement_kind, document_version, document_sha256, accepted_as)
   values
-    (p_participant_id, v_p.room_id, v_p.sub_room_id, p_kind, p_version, p_sha256, v_as)
+    (p_participant_id, v_p.room_id, v_p.sub_room_id, v_doc.kind, v_doc.version, v_doc.sha256, v_as)
   on conflict (participant_id, agreement_kind, document_version) do nothing;
 
   perform public.deal_room_log_event(v_p.room_id, v_p.sub_room_id, 'agreement_accepted',
     'participant', p_participant_id,
     'An agreement was accepted, recorded with its version and a checksum of the text accepted.',
-    jsonb_build_object('kind', p_kind, 'version', p_version));
+    jsonb_build_object('kind', v_doc.kind, 'version', v_doc.version));
 end;
 $$;
+
+-- The old four-argument signature is dropped rather than left beside the new
+-- one: an overload that still accepted a caller's version would reopen exactly
+-- the hole this closes.
+drop function if exists public.deal_room_accept_agreement(uuid, text, text, text);
 
 /* Admission: the gate. */
 create or replace function public.deal_room_admit_participant(p_participant_id uuid)
@@ -882,15 +1069,28 @@ begin
     raise exception 'Admission needs a declaration of authority to participate' using errcode = '23514';
   end if;
 
-  select array_agg(kind) into v_missing
-  from unnest(array['participation','nda','room_rules','authority_declaration']) as kind
-  where not exists (
-    select 1 from public.deal_room_agreement_acceptances a
-    where a.participant_id = p_participant_id and a.agreement_kind = kind
-  );
+  /*
+   * Every required agreement, accepted, AT THE CURRENT VERSION AND CHECKSUM.
+   *
+   * The join to `deal_room_agreement_documents` is what makes this a gate
+   * rather than a row count. Checking only that a row exists per kind is what
+   * let a forged acceptance satisfy admission in the first draft; an acceptance
+   * that does not match the current canonical document now does not count, and
+   * neither does one recorded against a retired version.
+   */
+  select array_agg(d.kind) into v_missing
+  from public.deal_room_agreement_documents d
+  where d.current
+    and not exists (
+      select 1 from public.deal_room_agreement_acceptances a
+      where a.participant_id = p_participant_id
+        and a.agreement_kind = d.kind
+        and a.document_version = d.version
+        and a.document_sha256 = d.sha256
+    );
 
   if v_missing is not null and array_length(v_missing, 1) > 0 then
-    raise exception 'Admission blocked: % not yet accepted', array_to_string(v_missing, ', ')
+    raise exception 'Admission blocked: % not yet accepted at the current version', array_to_string(v_missing, ', ')
       using errcode = '23514';
   end if;
 
@@ -1443,11 +1643,16 @@ $$;
 
 revoke all on function public.deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb) from public;
 
-grant execute on function public.deal_room_propose(uuid, uuid, text, text, text, text, text) to authenticated;
-grant execute on function public.deal_room_invite(uuid, text, text, text, text, timestamptz, jsonb, jsonb) to authenticated;
+grant execute on function public.deal_room_propose(uuid, uuid, text, text, text, text, text, text, text) to authenticated;
+grant execute on function public.deal_room_invite(uuid, text, text, text, timestamptz) to authenticated;
 grant execute on function public.deal_room_accept_invitation(text) to authenticated;
 grant execute on function public.deal_room_declare_participation(uuid, text, text, text, text, text) to authenticated;
-grant execute on function public.deal_room_accept_agreement(uuid, text, text, text) to authenticated;
+grant execute on function public.deal_room_accept_agreement(uuid, text) to authenticated;
+
+-- The agreement authority is readable only through the commands. A member who
+-- could select it could not forge an acceptance - the command no longer takes a
+-- version - but there is no reason for it to be reachable either.
+revoke all on table public.deal_room_agreement_documents from anon, authenticated;
 grant execute on function public.deal_room_admit_participant(uuid) to authenticated;
 grant execute on function public.deal_room_propose_procedure(uuid, uuid, text, text, jsonb) to authenticated;
 grant execute on function public.deal_room_approve_procedure(uuid) to authenticated;

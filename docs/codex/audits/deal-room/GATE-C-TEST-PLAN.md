@@ -79,6 +79,20 @@ The owner review named eight properties. Each maps to assertions in the script.
 | 7 | Activity cannot be forged, changed or deleted | member INSERT, UPDATE and DELETE all refused; **the service role's UPDATE is refused too**, by the append-only trigger |
 | 8 | Evidence bytes and signed URLs follow the same permission result | a stranger cannot download the object, cannot mint a signed URL for it, and a crafted object path is refused rather than raising |
 
+### The four trust boundaries from the follow-up review of 29 July 2026
+
+Added after the owner found that four durable records could say something the
+database had not proved. Each is tested by calling the RPC **directly**, because
+the server action is not the boundary — the function is granted to
+`authenticated`, so anything the action does can be skipped.
+
+| # | Boundary | Assertions |
+|---|---|---|
+| 1 | The agreement version and checksum cannot be forged | the four-argument `deal_room_accept_agreement` signature no longer exists; a member cannot read or rewrite `deal_room_agreement_documents`; a member cannot insert an acceptance row directly; an unpublished agreement kind is refused; every recorded acceptance carries the canonical version and checksum; admission succeeds only then |
+| 2 | The Integrity pre-flight and preview cannot be authored | the eight-argument `deal_room_invite` signature, which took `p_preview` and `p_preflight`, no longer exists; a member cannot insert an invitation row directly; the stored pre-flight carries the command's own `derivedAt`; it reports sanctions as unscreened because no screening result exists; the stored preview names the Deal from the room |
+| 3 | The counterparty is proved, persisted and bound | the invitation is addressed to the persisted intended counterparty and not to any other address; the room carries `intended_counterparty_profile_id`; a counterparty who is not a member is refused; an external principal without a name is refused |
+| 4 | Acceptance is not written as admission | accepting records `invitation_accepted` and **not** `participant_admitted`; `participant_admitted` appears exactly once, after the gate is passed |
+
 It also proves the positive path, because a negative proof over a loop that
 never ran is worthless: the owner creates the room, the invitee accepts,
 declares, accepts four agreements and is admitted; the procedure is proposed,

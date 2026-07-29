@@ -109,6 +109,9 @@ const TABLES = [
   "deal_room_activity_events",
 ];
 
+// The agreement authority is deliberately NOT in TABLES: it has no policy at
+// all, because no member may read or write it. It is asserted separately.
+
 // ---------------------------------------------------------------------------
 // Vocabulary: every TypeScript value appears in the SQL
 // ---------------------------------------------------------------------------
@@ -169,9 +172,30 @@ for (const table of TABLES) {
   });
 }
 
-test("all fourteen tables, no more and no fewer", () => {
+/** The fourteen member-facing tables, plus the agreement authority. */
+const ALL_TABLES = [...TABLES, "deal_room_agreement_documents"];
+
+test("fifteen tables, no more and no fewer", () => {
   const created = Array.from(core.matchAll(/create table if not exists public\.(\w+)/g)).map((m) => m[1]);
-  assert.deepEqual(created.sort(), [...TABLES].sort());
+  assert.deepEqual(created.sort(), [...ALL_TABLES].sort());
+});
+
+test("the agreement authority carries no policy at all", () => {
+  // Not an oversight: no member may read or write it, so RLS with no policy is
+  // the whole access model. A policy here would be a regression, which is why
+  // this table is asserted separately rather than folded into TABLES.
+  const policies = Array.from(
+    rlsSql.matchAll(/create policy\s+"[^"]+"\s+on\s+public\.deal_room_agreement_documents/g),
+  );
+  assert.deepEqual(policies, [], "the agreement authority became member-reachable");
+  assert.ok(
+    /alter table public\.deal_room_agreement_documents\s+enable row level security/.test(rlsSql),
+    "RLS is not enabled on the agreement authority",
+  );
+  assert.ok(
+    /revoke all on table public\.deal_room_agreement_documents from anon, authenticated/.test(rlsSql),
+    "member privileges on the agreement authority are not revoked",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -370,6 +394,77 @@ test("every command that changes state checks that the room is writable", () => 
   }
 });
 
+/* ------------------------------------------------------------------ *
+ * The four trust defects from the owner follow-up review of 29 July 2026
+ * ------------------------------------------------------------------ */
+
+test("1. the acceptance command cannot be handed a version or a checksum", () => {
+  const signature = /create or replace function public\.deal_room_accept_agreement\(([\s\S]*?)\)\s*returns/.exec(rlsSql);
+  assert.ok(signature, "the acceptance command is missing");
+  assert.ok(!/p_version|p_sha256/.test(signature![1]), "the caller can still supply the identity of what they accepted");
+  assert.ok(
+    coreSql.includes("create table if not exists public.deal_room_agreement_documents"),
+    "there is no database authority for the canonical version and checksum",
+  );
+});
+
+test("2. the invite command cannot be handed preview or pre-flight JSON", () => {
+  const signature = /create or replace function public\.deal_room_invite\(([\s\S]*?)\)\s*returns/.exec(rlsSql);
+  assert.ok(signature, "the invite command is missing");
+  assert.ok(!/p_preview|p_preflight/.test(signature![1]), "the caller can still author the Integrity statement");
+  assert.ok(!/p_email/.test(signature![1]), "the caller can still choose who the invitation reaches");
+
+  const body = /create or replace function public\.deal_room_invite[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(body.includes("v_preview := jsonb_build_object"), "the preview is not derived in the command");
+  assert.ok(body.includes("v_preflight := jsonb_build_object"), "the pre-flight is not derived in the command");
+  assert.ok(body.includes("from public.verifications"), "the sanctions position is not read from real records");
+  assert.ok(
+    body.includes("Resolve the sanctions screening candidate"),
+    "the sanctions gate is not enforced inside the command",
+  );
+});
+
+test("3. the intended counterparty is proved, persisted and bound", () => {
+  assert.ok(
+    coreSql.includes("intended_counterparty_profile_id"),
+    "the room does not persist who credible interest was recorded for",
+  );
+  assert.ok(coreSql.includes("deal_rooms_intended_counterparty"), "nothing requires an intended counterparty");
+
+  const propose = /create or replace function public\.deal_room_propose[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(
+    propose.includes("not exists (select 1 from public.profiles where id = p_counterparty_profile)"),
+    "a named member counterparty is not proved to exist",
+  );
+  assert.ok(propose.includes("intended_counterparty_profile_id"), "the counterparty is not persisted");
+
+  const invite = /create or replace function public\.deal_room_invite[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(
+    invite.includes("v_r.intended_counterparty_profile_id") && invite.includes("v_r.intended_counterparty_email"),
+    "the invitation address is not taken from the room's own record",
+  );
+});
+
+test("4. invitation acceptance is not written to history as admission", () => {
+  const accept = /create or replace function public\.deal_room_accept_invitation[\s\S]*?\$\$;/.exec(rlsSql)![0];
+  assert.ok(accept.includes("'invitation_accepted'"), "acceptance does not record invitation_accepted");
+  assert.ok(
+    !accept.includes("'participant_admitted'"),
+    "acceptance still records participant_admitted while the participant is outside the gate",
+  );
+
+  // Exactly one command may claim admission.
+  const claims = ACTIVITY_EVENT_TYPES.includes("invitation_accepted");
+  assert.ok(claims, "invitation_accepted is not in the event vocabulary");
+
+  const admitting = Array.from(rlsSql.matchAll(/'participant_admitted'/g));
+  assert.equal(
+    admitting.length,
+    1,
+    "participant_admitted is written in more than one place; only the command that verified the gate may claim it",
+  );
+});
+
 test("the whole loop has a command, so no transition needs a direct write", () => {
   for (const name of [
     "deal_room_propose",
@@ -477,7 +572,7 @@ test("the orphan ponte-deal-docs bucket is not touched by any statement", () => 
 test("no existing table is altered anywhere in the three files", () => {
   const alters = Array.from(allSql.matchAll(/alter table\s+(?:if exists\s+)?(?:public\.)?(\w+)/gi)).map((m) => m[1]);
   for (const table of alters) {
-    assert.ok(TABLES.includes(table), `'${table}' is altered but is not one of the new Deal Room tables`);
+    assert.ok(ALL_TABLES.includes(table), `'${table}' is altered but is not one of the new Deal Room tables`);
   }
 });
 
@@ -519,11 +614,22 @@ test("storage_path is unique, so an object maps to at most one evidence version"
 // The commands
 // ---------------------------------------------------------------------------
 
-test("admission refuses a participant missing any required agreement", () => {
-  const fn = /create or replace function public\.deal_room_admit_participant[\s\S]*?\$\$;/.exec(rls);
+test("admission requires every current agreement, read from the authority", () => {
+  const fn = /create or replace function public\.deal_room_admit_participant[\s\S]*?\$\$;/.exec(rlsSql);
   assert.ok(fn);
+
+  // The required set is no longer a literal list inside the function: it is
+  // every row of `deal_room_agreement_documents` marked current, matched on
+  // version AND checksum. That is what makes a forged acceptance fail the gate
+  // rather than merely be recorded beside a real one.
+  assert.match(fn![0], /from public\.deal_room_agreement_documents d/);
+  assert.match(fn![0], /where d\.current/);
+  assert.match(fn![0], /a\.document_version = d\.version/);
+  assert.match(fn![0], /a\.document_sha256 = d\.sha256/);
+
+  // And the authority publishes every kind the vocabulary knows about.
   for (const kind of AGREEMENT_KINDS) {
-    assert.ok(fn![0].includes(`'${kind}'`), `admission does not require the ${kind} agreement`);
+    assert.ok(coreSql.includes(`'${kind}'`), `the authority does not publish the ${kind} agreement`);
   }
 });
 

@@ -243,11 +243,28 @@ export default async function ProposeRoomPage({
                 returnTo: `/${params.locale}/deal-rooms/propose?deal=${selected.id}`,
               }}
             >
+              {/*
+                The intended principal is persisted on the room, and the later
+                invitation is addressed from that record rather than from a
+                form field, so the person invited is necessarily the person
+                credible interest was recorded for. Either an existing member,
+                or a named external principal.
+              */}
               <Field
                 label="Counterparty member id"
                 name="counterpartyProfileId"
-                required
-                help="The Ponte member you are taking this Deal forward with. They receive a protected invitation; nothing about this room is disclosed to them before they accept it."
+                help="If they are already a Ponte member. Their existence is checked, and the invitation goes to their registered address - it cannot be redirected afterwards."
+              />
+              <Field
+                label="Or, their email"
+                name="counterpartyEmail"
+                type="email"
+                help="If they are not a member yet. Give this and their name instead of a member id."
+              />
+              <Field
+                label="And their name"
+                name="counterpartyName"
+                help="Who the external principal is. Recorded on the room as the party this Deal is being taken forward with."
               />
               <Field
                 label="Their role in this transaction"

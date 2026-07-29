@@ -147,6 +147,26 @@ create table if not exists public.deal_rooms (
   sponsor_profile_id     uuid references public.profiles(id) on delete set null,
   sponsor_org_id         uuid references public.organizations(id) on delete set null,
 
+  -- The principal for whom credible interest was recorded.
+  --
+  -- The first draft took a counterparty id, checked only that it was non-null
+  -- and not the caller, and then threw it away: nothing persisted it and the
+  -- later invitation could be addressed to any email at all. That made the
+  -- credible-interest gate ceremonial, which the owner review of 29 July 2026
+  -- named as the third trust defect.
+  --
+  -- Either an existing member or a named external principal. The invitation
+  -- command reads the address from HERE and takes no email parameter, so the
+  -- person invited is structurally the person the room was proposed about.
+  intended_counterparty_profile_id uuid references public.profiles(id) on delete restrict,
+  intended_counterparty_email      text,
+  intended_counterparty_name       text,
+  constraint deal_rooms_intended_counterparty
+    check (
+      intended_counterparty_profile_id is not null
+      or (intended_counterparty_email is not null and intended_counterparty_name is not null)
+    ),
+
   state                  text not null default 'draft'
                            check (state in ('draft','proposed','awaiting_principal_admission','activation_pending',
                                             'active_procedure_not_agreed','active_procedure_agreed','blocked','paused',
@@ -357,6 +377,59 @@ comment on table public.deal_room_invitations is
 
 create index if not exists deal_room_invitations_room_idx on public.deal_room_invitations (room_id);
 create index if not exists deal_room_invitations_sub_idx  on public.deal_room_invitations (sub_room_id);
+
+-- ---------------------------------------------------------------------
+-- 5b. deal_room_agreement_documents - the canonical agreement authority
+-- ---------------------------------------------------------------------
+--
+-- The version and checksum of each agreement, held where the caller cannot
+-- reach them.
+--
+-- The first draft let `deal_room_accept_agreement()` take `p_version` and
+-- `p_sha256` from its caller. The TypeScript action supplied the canonical
+-- values, but the function is granted to `authenticated`, so a member could
+-- call the RPC directly with any version and any hash and then satisfy
+-- admission, which only checked that a row existed per kind. The owner review
+-- of 29 July 2026 named this as the first trust defect.
+--
+-- The fix is structural rather than defensive: the acceptance command no longer
+-- HAS a version or checksum parameter. It reads the current row from this
+-- table. A forged value is not rejected, it is unrepresentable.
+--
+-- Members hold no policy on this table at all, so it is readable only through
+-- the SECURITY DEFINER commands and by the service role. Publishing a new
+-- version is a deliberate, separately reviewed migration.
+
+create table if not exists public.deal_room_agreement_documents (
+  kind        text primary key
+                check (kind in ('participation','nda','room_rules','authority_declaration')),
+  version     text not null,
+  title       text not null,
+  sha256      text not null check (sha256 ~ '^[0-9a-f]{64}$'),
+  -- Superseding a version means inserting a new row and retiring this one, so
+  -- an acceptance recorded against the old version stays explicable.
+  current     boolean not null default true,
+  published_at timestamptz not null default now()
+);
+
+comment on table public.deal_room_agreement_documents is
+  'Canonical agreement version and checksum. Written only by migration; no member policy. deal_room_accept_agreement() reads it and takes no version or hash from the caller.';
+
+-- The four launch documents. These values are asserted against
+-- `lib/deal-room/agreements.ts` by `lib/deal-room/__tests__/agreements.test.ts`,
+-- which recomputes the SHA-256 from the shipped text, so the table and the
+-- retrievable source cannot drift apart without a failing test.
+insert into public.deal_room_agreement_documents (kind, version, title, sha256)
+values
+  ('participation',         'v1-2026-07-29', 'Deal Room Participation Agreement',
+   'dd885c8d81a933c274c7d55038021131ec85bac052ae94f00d89af9290f481d5'),
+  ('nda',                   'v1-2026-07-29', 'Confidentiality and non-disclosure obligations',
+   'e44504eb267a19b4023b038ac21abca77e156ae79312f5d8216c2043acf02fa6'),
+  ('room_rules',            'v1-2026-07-29', 'Room rules',
+   '0476733ce77c73e7a8dc376f5e824c0dc2906e0dabf399d135a062f22455507e'),
+  ('authority_declaration', 'v1-2026-07-29', 'Declaration of authority to participate',
+   '83edf304b5d706a89dd652fdc4f576f8ee5043e89945f56dcee0da15dfb6dea4')
+on conflict (kind) do nothing;
 
 -- ---------------------------------------------------------------------
 -- 6. deal_room_agreement_acceptances

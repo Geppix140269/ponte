@@ -168,6 +168,8 @@ async function main() {
     await stranger.client.rpc("deal_room_propose", {
       p_listing_id: listingId,
       p_counterparty_profile: owner.id,
+      p_counterparty_email: "",
+      p_counterparty_name: "",
       p_counterparty_role: "Buyer",
       p_objective: "Trying to open a room against a Deal I do not own.",
       p_interest_route: "accepted_introduction",
@@ -193,6 +195,8 @@ async function main() {
   const propose = await owner.client.rpc("deal_room_propose", {
     p_listing_id: listingId,
     p_counterparty_profile: counterparty.id,
+    p_counterparty_email: "",
+    p_counterparty_name: "",
     p_counterparty_role: "Buyer",
     p_objective: "Source 500 MT for Q4 delivery into Valencia.",
     p_interest_route: "accepted_introduction",
@@ -211,6 +215,8 @@ async function main() {
     await owner.client.rpc("deal_room_propose", {
       p_listing_id: listingId,
       p_counterparty_profile: counterparty.id,
+      p_counterparty_email: "",
+      p_counterparty_name: "",
       p_counterparty_role: "Buyer",
       p_objective: "A second Starter room.",
       p_interest_route: "accepted_introduction",
@@ -248,29 +254,84 @@ async function main() {
   refused(
     await stranger.client.rpc("deal_room_invite", {
       p_sub_room_id: subRoomId,
-      p_email: "x@example.invalid",
       p_role: "Buyer",
       p_class: "principal",
       p_token_sha256: tokenHash,
       p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
-      p_preview: {},
-      p_preflight: {},
     }),
     "a stranger cannot issue an invitation into a workspace they cannot see",
+  );
+
+  /* ----- Trust defect 2: preview and pre-flight cannot be authored --------- */
+
+  // The eight-argument signature that took `p_preview` and `p_preflight` must
+  // no longer exist. A room administrator calling it directly was how
+  // fabricated "checked" facts could be shown to an invitee as Ponte's own
+  // Integrity statement.
+  refused(
+    await owner.client.rpc("deal_room_invite", {
+      p_sub_room_id: subRoomId,
+      p_email: stranger.email,
+      p_role: "Buyer",
+      p_class: "principal",
+      p_token_sha256: createHash("sha256").update(randomUUID()).digest("hex"),
+      p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
+      p_preview: { dealSubject: "Anything I like" },
+      p_preflight: {
+        checked: [{ label: "Sanctions screening", statement: "Screened, no unresolved candidate." }],
+      },
+    }),
+    "the eight-argument invite signature, which accepted preview and pre-flight JSON, no longer exists",
+  );
+
+  refused(
+    await owner.client.from("deal_room_invitations").insert({
+      room_id: roomId,
+      sub_room_id: subRoomId,
+      token_sha256: createHash("sha256").update(randomUUID()).digest("hex"),
+      invited_email: stranger.email,
+      proposed_role: "Buyer",
+      proposed_participant_class: "principal",
+      preview_facts: { dealSubject: "Forged" },
+      integrity_preflight: { checked: [{ label: "Sanctions screening", statement: "Clear." }] },
+      state: "sent",
+      expires_at: new Date(Date.now() + 8.64e7).toISOString(),
+      created_by: owner.id,
+    }),
+    "a member cannot insert an invitation row directly either",
   );
 
   allowed(
     await owner.client.rpc("deal_room_invite", {
       p_sub_room_id: subRoomId,
-      p_email: counterparty.email,
       p_role: "Buyer",
       p_class: "principal",
       p_token_sha256: tokenHash,
       p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
-      p_preview: { dealSubject: "Refined cane sugar" },
-      p_preflight: { sanctions: { screened: false } },
     }),
     "the administrator can issue the invitation",
+  );
+
+  const stored = await admin
+    .from("deal_room_invitations")
+    .select("preview_facts, integrity_preflight")
+    .eq("token_sha256", tokenHash)
+    .maybeSingle();
+
+  check(
+    "the stored pre-flight was derived by the command, carrying its own timestamp",
+    Boolean(stored.data?.integrity_preflight?.derivedAt),
+    `stored: ${JSON.stringify(stored.data?.integrity_preflight)?.slice(0, 200)}`,
+  );
+  check(
+    "and reports sanctions as unscreened, because no screening result exists",
+    stored.data?.integrity_preflight?.sanctions?.screened === false,
+    `stored: ${JSON.stringify(stored.data?.integrity_preflight?.sanctions)}`,
+  );
+  check(
+    "the stored preview names the Deal from the room, not from a caller",
+    stored.data?.preview_facts?.dealSubject === "Refined cane sugar",
+    `stored: ${JSON.stringify(stored.data?.preview_facts)?.slice(0, 200)}`,
   );
 
   refused(
@@ -307,6 +368,84 @@ async function main() {
     "admission is refused before the agreements are accepted",
   );
 
+  /* ----- Trust defect 3: the invitation is bound to the intended principal -- */
+
+  const strangerEmail = stranger.email;
+  const invitedTo = await admin
+    .from("deal_room_invitations")
+    .select("invited_email")
+    .eq("token_sha256", tokenHash)
+    .maybeSingle();
+  check(
+    "the invitation is addressed to the persisted intended counterparty",
+    invitedTo.data?.invited_email === counterparty.email.toLowerCase(),
+    `addressed to ${invitedTo.data?.invited_email}, expected ${counterparty.email.toLowerCase()}`,
+  );
+  check(
+    "and not to some other address the inviter might have chosen",
+    invitedTo.data?.invited_email !== strangerEmail.toLowerCase(),
+  );
+
+  const room = await admin
+    .from("deal_rooms")
+    .select("intended_counterparty_profile_id")
+    .eq("id", roomId)
+    .maybeSingle();
+  check(
+    "the intended counterparty is persisted on the room",
+    room.data?.intended_counterparty_profile_id === counterparty.id,
+  );
+
+  refused(
+    await owner.client.rpc("deal_room_propose", {
+      p_listing_id: listingId,
+      p_counterparty_profile: randomUUID(), // a profile that does not exist
+      p_counterparty_email: "",
+      p_counterparty_name: "",
+      p_counterparty_role: "Buyer",
+      p_objective: "Naming a counterparty who is not a member.",
+      p_interest_route: "accepted_introduction",
+      p_operating_mode: "software_only",
+      p_sub_room_purpose: "Attempted",
+    }),
+    "a counterparty who is not a Ponte member is refused",
+  );
+
+  refused(
+    await owner.client.rpc("deal_room_propose", {
+      p_listing_id: listingId,
+      p_counterparty_profile: null,
+      p_counterparty_email: "someone@example.invalid",
+      p_counterparty_name: "",
+      p_counterparty_role: "Buyer",
+      p_objective: "An external principal with no name.",
+      p_interest_route: "accepted_introduction",
+      p_operating_mode: "software_only",
+      p_sub_room_purpose: "Attempted",
+    }),
+    "an external principal without a name is refused",
+  );
+
+  /* ----- Trust defect 4: acceptance is not written as admission ------------ */
+
+  const acceptEvents = await admin
+    .from("deal_room_activity_events")
+    .select("event_type, summary")
+    .eq("room_id", roomId)
+    .in("event_type", ["invitation_accepted", "participant_admitted"]);
+
+  const types = (acceptEvents.data ?? []).map((row) => row.event_type);
+  check(
+    "accepting an invitation records invitation_accepted",
+    types.includes("invitation_accepted"),
+    `events so far: ${types.join(", ")}`,
+  );
+  check(
+    "and does NOT record participant_admitted before the gate is passed",
+    !types.includes("participant_admitted"),
+    `events so far: ${types.join(", ")}`,
+  );
+
   allowed(
     await counterparty.client.rpc("deal_room_declare_participation", {
       p_participant_id: participantId,
@@ -323,32 +462,98 @@ async function main() {
     await stranger.client.rpc("deal_room_accept_agreement", {
       p_participant_id: participantId,
       p_kind: "nda",
-      p_version: "v1-2026-07-29",
-      p_sha256: "0".repeat(64),
     }),
     "nobody can accept an agreement on another participant's behalf",
   );
 
-  // Real versions and hashes, from the repository's own documents.
-  const { AGREEMENT_DOCUMENTS } = await import("../lib/deal-room/agreements.ts").catch(() => ({}));
-  const docs = AGREEMENT_DOCUMENTS ?? null;
+  /* ----- Trust defect 1: the agreement version cannot be forged ------------ */
+
+  // The forgeable four-argument signature must no longer exist. Postgres reports
+  // an unknown function rather than running anything, which is the point: the
+  // hole is not guarded, it is absent.
+  refused(
+    await counterparty.client.rpc("deal_room_accept_agreement", {
+      p_participant_id: participantId,
+      p_kind: "nda",
+      p_version: "v0-forged",
+      p_sha256: "0".repeat(64),
+    }),
+    "the four-argument accept_agreement signature no longer exists",
+  );
+
+  refused(
+    await counterparty.client.from("deal_room_agreement_documents").select("kind, version, sha256"),
+    "a member cannot read the agreement authority",
+  );
+  refused(
+    await counterparty.client
+      .from("deal_room_agreement_documents")
+      .update({ sha256: "0".repeat(64) })
+      .eq("kind", "nda"),
+    "a member cannot rewrite the canonical checksum",
+  );
+  refused(
+    await counterparty.client.from("deal_room_agreement_acceptances").insert({
+      participant_id: participantId,
+      room_id: roomId,
+      sub_room_id: subRoomId,
+      agreement_kind: "nda",
+      document_version: "v0-forged",
+      document_sha256: "0".repeat(64),
+      accepted_as: "Forged",
+    }),
+    "a member cannot insert an acceptance row directly",
+  );
+
+  refused(
+    await counterparty.client.rpc("deal_room_accept_agreement", {
+      p_participant_id: participantId,
+      p_kind: "not_a_real_agreement",
+    }),
+    "an agreement kind Ponte does not publish is refused",
+  );
+
+  // The canonical values, taken from the same source the migration seeds from.
   for (const kind of ["participation", "nda", "room_rules", "authority_declaration"]) {
-    const version = docs?.[kind]?.version ?? "v1-2026-07-29";
-    const sha = docs?.[kind]?.sha256 ?? createHash("sha256").update(kind).digest("hex");
     allowed(
       await counterparty.client.rpc("deal_room_accept_agreement", {
         p_participant_id: participantId,
         p_kind: kind,
-        p_version: version,
-        p_sha256: sha,
       }),
       `the invitee accepts ${kind}`,
     );
   }
 
+  const recorded = await admin
+    .from("deal_room_agreement_acceptances")
+    .select("agreement_kind, document_version, document_sha256")
+    .eq("participant_id", participantId);
+  const canonical = await admin.from("deal_room_agreement_documents").select("kind, version, sha256");
+  const byKind = new Map((canonical.data ?? []).map((d) => [d.kind, d]));
+  check(
+    "every acceptance carries the canonical version and checksum",
+    (recorded.data ?? []).length === 4 &&
+      (recorded.data ?? []).every(
+        (a) =>
+          byKind.get(a.agreement_kind)?.version === a.document_version &&
+          byKind.get(a.agreement_kind)?.sha256 === a.document_sha256,
+      ),
+  );
+
   allowed(
     await counterparty.client.rpc("deal_room_admit_participant", { p_participant_id: participantId }),
-    "admission succeeds once every agreement is accepted",
+    "admission succeeds once every agreement is accepted at the current version",
+  );
+
+  const admitted = await admin
+    .from("deal_room_activity_events")
+    .select("event_type")
+    .eq("room_id", roomId)
+    .eq("event_type", "participant_admitted");
+  check(
+    "participant_admitted appears only now, after the gate was passed",
+    (admitted.data ?? []).length === 1,
+    `found ${(admitted.data ?? []).length}`,
   );
 
   /* ---------------- 4. Sub-room isolation ---------------------------- */
