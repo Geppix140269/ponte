@@ -60,6 +60,27 @@ export const ESSENTIAL_LISTING_READ_COLUMNS: readonly string[] = [
   "status",
   "validity_type",
   "valid_until",
+  // The canonical pair. Dropping either does not lose a fact, it CHANGES one,
+  // which is worse than an absence and invisible to the reader.
+  //
+  // Without `market_family`, `familyOfRow` falls through to the legacy reading
+  // - `type === "service" ? services : products` - and `listings.type` stores a
+  // distribution record as `offer` or `requirement`. So a distribution
+  // opportunity would be presented as a product: quantity, route, Incoterm and
+  // HS code asked of a record that has none of them, which is the exact defect
+  // ADR-0014 exists to remove.
+  //
+  // Without `market_intent`, the direction reverses. `presentRecord` reads it
+  // to decide whether channels and capabilities are the member's OWN or are
+  // required OF a counterparty. A member offering representation would have
+  // their own channels labelled as demands on somebody else, and a member
+  // seeking a service would read as offering it.
+  //
+  // Both are live: `20260728a_market_classification.sql` is applied in
+  // production, so requiring them costs nothing today and fails loudly rather
+  // than silently misrepresenting a record if that ever stops being true.
+  "market_family",
+  "market_intent",
 ];
 
 export type ReadWithFallbackOptions = {
