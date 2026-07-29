@@ -13,7 +13,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { readClassification, isMissingColumnError } from "../classification";
+import {
+  readClassification,
+  isMissingColumnError,
+  missingColumnFrom,
+} from "../classification";
 import {
   emptyDraft,
   toSubmitPayload,
@@ -273,6 +277,48 @@ test("a missing column is recognised however the driver reports it", () => {
   assert.equal(isMissingColumnError({ code: "23505", message: "duplicate key" }), false);
   assert.equal(isMissingColumnError(null), false);
   assert.equal(isMissingColumnError("boom"), false);
+});
+
+test("the missing column is read out of the error, not guessed from a list", () => {
+  // The retry used to drop two NAMED GROUPS of columns, which only works for a
+  // column somebody remembered to put in a group. `20260728c` is written and
+  // unapplied, so production has no `quantity_mode`, `quantity_extracted`,
+  // `declaration_accepted_at` and four more. This route sends all of them on
+  // every write, for every family. Neither group contained any of them, so both
+  // retries re-sent a row the database had already refused and every Start a
+  // Deal submission and every saved draft failed with "Could not save your
+  // listing".
+  assert.equal(
+    missingColumnFrom({
+      code: "PGRST204",
+      message: "Could not find the 'quantity_mode' column of 'listings' in the schema cache",
+    }),
+    "quantity_mode",
+  );
+  assert.equal(
+    missingColumnFrom({
+      code: "42703",
+      message: 'column "declaration_accepted_at" of relation "listings" does not exist',
+    }),
+    "declaration_accepted_at",
+  );
+  // A missing-column error that names nothing droppable leaves the older staged
+  // fallback to run, which is the only reason that list is still worth having.
+  assert.equal(missingColumnFrom({ code: "PGRST204" }), null);
+  // And an ordinary failure never yields a column to drop: silently removing a
+  // value because of an unrelated error would store a record the member did not
+  // write.
+  assert.equal(missingColumnFrom({ code: "23505", message: "duplicate key" }), null);
+});
+
+test("no submit payload key is dropped for a column the listing cannot lose", () => {
+  // The retry refuses to drop user_id, type, product, details or status. A row
+  // stored without one of those is not a repaired submission, it is a corrupt
+  // one, and `product` and `details` are exactly what the route requires.
+  const payload = toSubmitPayload(services(), { draft: false, nowIso: NOW });
+  for (const essential of ["type", "product", "details"]) {
+    assert.ok(payload[essential], `the payload no longer carries ${essential}`);
+  }
 });
 
 // ---------------------------------------------------------------------------

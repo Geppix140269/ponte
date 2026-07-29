@@ -117,6 +117,20 @@ Authority: issue #97; ADR-0009 as accepted 29 July 2026;
 been applied to production and has not been probe-verified. It is additive and
 idempotent throughout.
 
+> **This gap has already cost members their submissions.** From the deployment of
+> the automated-publication branch until 29 July 2026, `POST
+> /api/marketplace/submit` sent `quantity_mode`, `quantity_min`, `quantity_max`,
+> `quantity_extracted`, `quantity_confirmed_at` and (once the declaration was
+> accepted) `declaration_accepted_at` and `declaration_version` on **every**
+> write. None of them exists in production. PostgREST refused the insert, the
+> route's retry dropped only the family-terms and classification groups, and both
+> Submit and Save draft answered 500 for every member and every family.
+> `lib/listings/write-fallback.ts` now drops whatever column the database
+> actually names, so a submission stores instead of failing. That is a bridge:
+> until this file is applied, an accepted declaration cannot be recorded and the
+> validator cannot write `validating`, `needs_information` or `flagged`, so a
+> submission stores and stays `submitted`.
+
 What it changes on `listings`: widens the status check constraint to add
 `validating`, `needs_information`, `flagged` and `suspended` (every state
 already in use is preserved, and `approved` remains the stored value for a

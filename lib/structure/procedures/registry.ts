@@ -1,4 +1,13 @@
 import { normaliseMarketFamily, type MarketFamily } from "../../taxonomy/market";
+import {
+  PRODUCT_ROLE_GROUPS,
+  SERVICE_PROVIDER_ROLE_GROUPS,
+  SERVICE_SEEKER_ROLE_GROUPS,
+  DISTRIBUTION_BRAND_SIDE,
+  DISTRIBUTION_CHANNEL_SIDE,
+  DISTRIBUTION_ADVISORY_SIDE,
+  type TapGroup,
+} from "../vocabulary";
 import type { StructureDraft } from "../draft";
 import type { CompletionField } from "./types";
 import { statesOwnCapability } from "./shared";
@@ -125,6 +134,46 @@ export function askKeyFor(field: CompletionField, draft: StructureDraft): string
 
   if (field === "serviceScope") return "ask.serviceScope";
   return `ask.${field}`;
+}
+
+/**
+ * The roles a member of THIS family can actually hold.
+ *
+ * "What is your role?" was answered from one combined list for every record, so
+ * a freight forwarder offering road freight was shown producer, grower, end
+ * buyer and exclusive distributor alongside the five service roles. A list
+ * mostly made of impossible answers is not a longer vocabulary; it is a
+ * question the member has to work out is not addressed to them.
+ *
+ * Which side of a service the member is on matters as much as the family: a
+ * member OFFERING a service is the service side, and a member SEEKING one is
+ * the customer for it, whose role is their position in the underlying trade.
+ * Same field, same stored strings, opposite lists.
+ *
+ * Distribution gets both sides whichever intent it entered through, because a
+ * manufacturer seeking a distributor and a distributor seeking brands are the
+ * two ends of one conversation; only the order changes, so the likely side
+ * reads first.
+ */
+export function roleGroupsFor(draft: StructureDraft): readonly TapGroup[] {
+  const family = familyOf(draft);
+  const intent = draft.canonical?.intent;
+
+  if (family === "services") {
+    return intent === "seek_trade_service"
+      ? SERVICE_SEEKER_ROLE_GROUPS
+      : SERVICE_PROVIDER_ROLE_GROUPS;
+  }
+
+  if (family === "distribution") {
+    // A member seeking a partner is the brand side; a member offering coverage
+    // or seeking brands to represent is the channel side.
+    return intent === "seek_distribution_partner"
+      ? [DISTRIBUTION_BRAND_SIDE, DISTRIBUTION_CHANNEL_SIDE, DISTRIBUTION_ADVISORY_SIDE]
+      : [DISTRIBUTION_CHANNEL_SIDE, DISTRIBUTION_BRAND_SIDE, DISTRIBUTION_ADVISORY_SIDE];
+  }
+
+  return PRODUCT_ROLE_GROUPS;
 }
 
 export * from "./types";

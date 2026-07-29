@@ -152,6 +152,89 @@ test("the tapped product and intent are never lost by navigating", () => {
   assert.equal(d.hsCode, "100590");
 });
 
+// ---- 4. one screen asks one thing ------------------------------------------
+
+/** Drive a trade-service composer to its facts screen. */
+function atServiceFacts(): Mounted {
+  const page = mount(StructureComposer as unknown as (p: unknown) => unknown, {
+    entrance: { family: "services", intent: "offer_trade_service" },
+  });
+  const intentStep = stepWith(page, "onNext");
+  (intentStep.props.set as (p: Partial<StructureDraft>) => void)({
+    serviceCategory: "freight",
+    serviceSubcategories: ["freight.road"],
+  });
+  fire(stepWith(page, "onNext"), "onNext");                       // -> structuring
+  fire(page.find((el) => typeof el.props.onDone === "function", "structuring"), "onDone");
+  return page;
+}
+
+/**
+ * Every element a subtree renders, nested components included.
+ *
+ * The renderer is deliberately shallow, and a question's control is two
+ * components below the step that owns it (CompleteStep -> CompletionControl ->
+ * the chips or the box). Reading only the first level would assert nothing
+ * about what the member can actually tap.
+ */
+function expand(roots: TestElement[], levels = 4): TestElement[] {
+  const out: TestElement[] = [];
+  let queue = roots;
+  for (let depth = 0; depth < levels && queue.length > 0; depth += 1) {
+    const next: TestElement[] = [];
+    for (const el of queue) {
+      out.push(el);
+      if (typeof el.type === "function") {
+        next.push(...mount(el.type as (p: unknown) => unknown, el.props).all());
+      }
+    }
+    queue = next;
+  }
+  return out.concat(queue);
+}
+
+/** Every control the completion step renders for one question. */
+function controlsOn(page: Mounted, field: CompletionField): TestElement[] {
+  (stepWith(page, "onAdd").props.onAdd as (f: CompletionField) => void)(field);
+  const complete = page.find((el) => Array.isArray(el.props.fields), "the completion step");
+  return expand(mount(complete.type as (p: unknown) => unknown, complete.props).all());
+}
+
+test("the service scope asks for the scope, and nothing else", () => {
+  // The defect: the engagement chips sat under the scope box and were the only
+  // thing on the screen that could be TAPPED. A member tapped one, pressed
+  // Save, and their record still read "Scope: Not stated".
+  const controls = controlsOn(atServiceFacts(), "serviceScope");
+  assert.equal(
+    controls.filter((el) => el.type === "textarea").length,
+    1,
+    "the scope question does not offer one box to answer it",
+  );
+  assert.equal(
+    controls.filter((el) => "aria-pressed" in el.props).length,
+    0,
+    "the scope question still offers taps that do not answer it",
+  );
+});
+
+test("the engagement is asked as its own question", () => {
+  const controls = controlsOn(atServiceFacts(), "serviceEngagement");
+  const chips = controls.filter((el) => "aria-pressed" in el.props);
+  assert.ok(chips.length >= 3, `expected the engagement options, found ${chips.length}`);
+  assert.equal(controls.filter((el) => el.type === "textarea").length, 0);
+});
+
+test("a service member is offered service roles, not a grower and an end buyer", () => {
+  const controls = controlsOn(atServiceFacts(), "role");
+  const labels = controls
+    .map((el) => el.props.children)
+    .filter((c): c is string => typeof c === "string");
+  assert.ok(labels.includes("Freight forwarder"), labels.join(" | "));
+  for (const foreign of ["Grower / farmer", "End buyer", "Exclusive distributor"]) {
+    assert.ok(!labels.includes(foreign), `a trade service was offered "${foreign}"`);
+  }
+});
+
 let passed = 0;
 for (const t of tests) {
   try {
