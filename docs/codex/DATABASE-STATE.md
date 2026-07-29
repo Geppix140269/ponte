@@ -346,11 +346,37 @@ settings and possibly a Supabase project, and both are owner decisions.
 
 `supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014).
 
-Renamed from `20260728d_` on 29 July 2026 (issue #97, PL-004). It shared the
-identifier `20260728d` with `20260728d_verification_level_canonical.sql`, which
-is applied to production and recorded in the ledger under that exact name with
-its SHA-256, so the applied file kept its identity and this unapplied one moved.
-The SQL is unchanged.
+**Renamed on 29 July 2026, from `20260728d_family_commercial_terms.sql`.** Two
+pull requests each merged a migration claiming the `20260728d` identifier, which
+failed `scripts/check-migrations.mjs` and therefore failed the whole of
+`npm run verify` for every task on `main`. Recorded on `main` as PL-004/PL-005
+against issue #97; the same rename was made independently on the ADR-0014
+follow-up branch, and both arrived at the same filename.
+
+This file was the one renamed because, at the time, it was the one that had
+**never been applied**. `20260728d_verification_level_canonical.sql` was applied
+to production on 28 July and is recorded in `schema_migrations` with a SHA-256
+that matches it byte for byte, so renaming *that* file would have desynchronised
+the ledger from production. The SQL is unchanged by the rename.
+
+**It has since been applied.** See the section above for the timestamp, hash and
+probe evidence. That makes the file itself immutable from here: its bytes are
+what production ran, and its recorded SHA-256
+`4224fa27...de9f18fa8` is the proof.
+
+Two consequences follow, and both are deliberate:
+
+- **The `NOT APPLIED` comment inside the file is now historically wrong, and is
+  left exactly as it is.** Correcting it would change the file's bytes and break
+  the match with the ledger. The record of what is applied lives here, not in
+  the migration's own header.
+- **A comment block added to this file on `main` by the Deal Room branch was NOT
+  taken** when the ADR-0014 follow-up branch reconciled onto it, for the same
+  reason: it changes the hash. The prose of that block is preserved here instead.
+
+An operator instruction issued before 29 July may still name the old
+`20260728d_family_commercial_terms.sql`. It is the same SQL, and the current
+filename is the one above.
 
 Adds two nullable jsonb columns to `listings`, `service_terms` and
 `distribution_terms`, plus three CHECK constraints stating the cross-family
