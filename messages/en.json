@@ -1503,7 +1503,8 @@
       "resolve": "Resolve",
       "submit": "Submit for Ponte review",
       "saveDraft": "Save draft",
-      "verifyNow": "Verify my business"
+      "verifyNow": "Verify my business",
+      "declarationAccept": "I accept these terms."
     },
     "blocker": {
       "quantity": "Quantity not set",

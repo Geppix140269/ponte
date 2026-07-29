@@ -21,10 +21,10 @@ import { publishOrHold } from "@/lib/listings/publish";
 import { DECLARATION_VERSION, resolutionRoute } from "@/lib/listings/eligibility";
 import {
   readClassification,
-  isMissingColumnError,
   FAMILY_TERMS_COLUMNS,
   ALL_CLASSIFICATION_COLUMNS,
 } from "@/lib/listings/classification";
+import { writeWithMissingColumnFallback } from "@/lib/listings/write-fallback";
 
 type SavedListing = { id: string; ref: string };
 
@@ -260,62 +260,30 @@ export async function POST(req: NextRequest) {
   const supabase = createClient();
 
   /**
-   * Write, and survive the window where the classification columns do not
-   * exist yet.
+   * Write, and survive the window where a column does not exist yet.
    *
    * A merge to `main` applies no migration in this repository: the chain is
-   * broken and every schema change is run by hand with owner approval. So
-   * between this route shipping and that SQL being applied, `listings` has no
-   * `service_category_key`. A member who classified their record correctly
-   * must not lose the submission to that gap, so the write is retried without
-   * the classification columns and the classification still reaches the record
-   * in the synthesised `details`, which is where it travelled before any of
-   * these columns were proposed.
+   * broken and every schema change is run by hand with owner approval. So a
+   * window always exists in which this route sends a column the database does
+   * not have, and a member who filled in a correct record must not lose the
+   * submission to it. The rule and its history live in
+   * `lib/listings/write-fallback.ts`; the two staged groups below are what it
+   * falls through when the database will not say WHICH column it is missing.
    *
-   * This is a bridge, not a design. Once the migration is applied the retry
-   * never fires, and `docs/codex/DATABASE-STATE.md` records what is required.
+   * This is a bridge, not a design. See docs/codex/DATABASE-STATE.md for the
+   * migrations production still owes.
    */
-  const without = (
-    row: Record<string, unknown>,
-    columns: readonly string[],
-  ): Record<string, unknown> => {
-    const copy = { ...row };
-    for (const column of columns) delete copy[column];
-    return copy;
-  };
-
-  /**
-   * Write, and drop only what the database actually cannot take.
-   *
-   * Two groups, at two different stages of their life. The classification
-   * columns are LIVE: applied by hand on 28 July 2026. The family commercial
-   * terms are NOT: their migration is written and unapplied.
-   *
-   * So the retry is staged. Drop the family terms first and keep everything
-   * else, because everything else stores perfectly. Only if the database
-   * reports a missing column AGAIN does the older, wider fallback run.
-   *
-   * Dropping both groups together, which is what a single retry over one
-   * combined list did, meant that an absent `service_terms` silently cost a
-   * trade service its market family, its canonical intent, its service
-   * category, its subcategories, its coverage and its territory codes. Every
-   * one of those columns exists in production. The member would have been told
-   * the record was filed, and it would have been filed unclassified.
-   */
-  const writeWithFallback = async <T>(
+  const writeWithFallback = <T>(
     attempt: (row: Record<string, unknown>) => Promise<{ data: T | null; error: unknown }>,
     row: Record<string, unknown>,
-  ): Promise<{ data: T | null; error: unknown }> => {
-    const first = await attempt(row);
-    if (!first.error || !isMissingColumnError(first.error)) return first;
-
-    console.warn("[ponte] family terms columns absent; storing without them");
-    const second = await attempt(without(row, FAMILY_TERMS_COLUMNS));
-    if (!second.error || !isMissingColumnError(second.error)) return second;
-
-    console.warn("[ponte] classification columns absent too; storing without those as well");
-    return await attempt(without(row, ALL_CLASSIFICATION_COLUMNS));
-  };
+  ) =>
+    writeWithMissingColumnFallback(attempt, row, {
+      fallbackGroups: [FAMILY_TERMS_COLUMNS, ALL_CLASSIFICATION_COLUMNS],
+      // A dropped column is a schema change somebody still owes production, so
+      // it is named in the log rather than absorbed silently.
+      onDrop: (column) =>
+        console.warn(`[ponte] listings has no '${column}' column; storing without it`),
+    });
 
   // -------- Owner edit: update in place, and return an approved listing to
   //          review if a material term changed (brief Block C). --------------

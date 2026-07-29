@@ -455,3 +455,42 @@ export function isMissingColumnError(error: unknown): boolean {
   const message = (error as { message?: unknown }).message;
   return typeof message === "string" && /could not find the '.*' column/i.test(message);
 }
+
+/**
+ * WHICH column the database says it does not have.
+ *
+ * The staged retry above drops two named GROUPS of columns, which only works
+ * for a column somebody remembered to put in a group. On 29 July 2026 that
+ * assumption cost every Start a Deal submission: `20260728c` is written and
+ * unapplied, so `listings` has no `quantity_mode`, `quantity_min`,
+ * `quantity_max`, `quantity_extracted`, `quantity_confirmed_at`,
+ * `declaration_accepted_at` or `declaration_version`, and the submit route
+ * sends all of them on every write, for every family. PostgREST refused the
+ * insert, neither group contained the column it named, the retry sent the same
+ * unacceptable row twice more, and the member was told "Ponte kept your words"
+ * on both Submit and Save draft.
+ *
+ * So the column is read out of the error rather than guessed from a list. Both
+ * reporters name it:
+ *
+ *   PostgREST  Could not find the 'quantity_mode' column of 'listings' in the
+ *              schema cache
+ *   Postgres   column "quantity_mode" of relation "listings" does not exist
+ *
+ * Returns null when the error is a missing column but does not say which, which
+ * is what keeps the older staged fallback worth having.
+ */
+export function missingColumnFrom(error: unknown): string | null {
+  if (!isMissingColumnError(error)) return null;
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== "string") return null;
+  const named =
+    /could not find the '([^']+)' column/i.exec(message) ??
+    /column "([^"]+)" of relation/i.exec(message) ??
+    /column ([a-z0-9_]+) does not exist/i.exec(message);
+  if (!named) return null;
+  // PostgREST reports an embedded resource as "table.column"; only the column
+  // half is a key of the row being written.
+  const column = named[1].split(".").pop() ?? "";
+  return column || null;
+}

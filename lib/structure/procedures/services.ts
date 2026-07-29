@@ -46,9 +46,16 @@ import type {
  * Scope first, because it is the fact a counterparty reads first and the one
  * everything else qualifies. Availability last before the shared three, because
  * it is the answer most likely to change.
+ *
+ * Engagement is its own step. It used to be rendered UNDER the scope question,
+ * as the only tappable control on a screen whose actual answer was a sentence
+ * the member had to type. A member who tapped "Ongoing arrangement" and pressed
+ * Save had answered a question they were never asked, and their record still
+ * read "Scope: Not stated" with no indication why. One screen asks one thing.
  */
 const QUEUE: readonly CompletionField[] = [
   "serviceScope",
+  "serviceEngagement",
   "serviceCoverage",
   "serviceSpecialisation",
   "serviceCapability",
@@ -71,6 +78,7 @@ function isFilled(draft: StructureDraft, field: CompletionField): boolean {
   const terms = draft.serviceTerms;
   switch (field) {
     case "serviceScope": return has(terms.scope);
+    case "serviceEngagement": return has(terms.engagement);
     // Coverage is stated by countries, by a corridor, or by both. A remote
     // advisory service genuinely covering no fixed territory answers with the
     // lanes field; requiring a country list would force an invented one.
@@ -190,6 +198,15 @@ export const servicesProcedure: FamilyProcedure = {
         editField: "serviceScope",
       },
       {
+        // Printed whether or not it was stated, and openable either way. It was
+        // previously inserted only when it already held a value, so a member who
+        // had not answered it could not see that it existed, let alone answer it.
+        key: "serviceEngagement",
+        labelKey: "serviceEngagement",
+        value: serviceEngagementType(terms.engagement)?.label ?? null,
+        editField: "serviceEngagement",
+      },
+      {
         key: "serviceCoverage",
         labelKey: seeking ? "serviceCoverageNeeded" : "serviceCoverage",
         value: coverageValue(draft),
@@ -228,14 +245,6 @@ export const servicesProcedure: FamilyProcedure = {
       },
       { key: "validity", labelKey: "validity", ...validityValue(draft), editField: "validity" },
     );
-
-    if (terms.engagement) {
-      rows.splice(3, 0, {
-        key: "serviceEngagement",
-        labelKey: "serviceEngagement",
-        value: serviceEngagementType(terms.engagement)?.label ?? null,
-      });
-    }
 
     return {
       family: "services",

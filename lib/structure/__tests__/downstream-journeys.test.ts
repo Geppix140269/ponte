@@ -25,6 +25,7 @@ import {
   toSubmitPayload,
   procedureFor,
   askKeyFor,
+  roleGroupsFor,
   legacyTypeForIntent,
   type StructureDraft,
 } from "../draft";
@@ -334,6 +335,85 @@ test("every blocker and every fact bucket every family reports has copy", () => 
     }
   }
   assert.deepEqual(missing, [], `blockers or facts with no copy:\n  ${missing.join("\n  ")}`);
+});
+
+test("every key the composer names outright has copy", () => {
+  // The sweeps above walk keys the PROCEDURES emit, which is why they never saw
+  // `structure.submit.declarationAccept`: the composer writes that one itself,
+  // and it was missing from the catalogue. The submit screen printed the dotted
+  // path where the checkbox label belongs, next to the terms a member has to
+  // accept before Ponte will publish for them.
+  const source = readFileSync("components/structure/StructureComposer.tsx", "utf8");
+  const missing: string[] = [];
+  for (const call of Array.from(source.matchAll(/\bt\(\s*"([a-zA-Z0-9_.]+)"/g))) {
+    if (!exists(call[1])) missing.push(call[1]);
+  }
+  assert.deepEqual(missing, [], `composer keys with no copy:\n  ${missing.join("\n  ")}`);
+});
+
+test("a member is only offered roles their own family can hold", () => {
+  const optionsFor = (draft: StructureDraft): string[] =>
+    roleGroupsFor(draft).flatMap((g) => g.options);
+
+  const forwarder = optionsFor(at("services", "offer_trade_service"));
+  assert.ok(forwarder.includes("Freight forwarder"), "a forwarder cannot declare their own role");
+  for (const foreign of ["Grower / farmer", "End buyer", "Exclusive distributor"]) {
+    assert.ok(!forwarder.includes(foreign), `a service offer was offered "${foreign}"`);
+  }
+
+  // Seeking a service is the other side of it: the member is the customer, so
+  // their role is their position in the trade the service serves.
+  const shipper = optionsFor(at("services", "seek_trade_service"));
+  assert.ok(shipper.includes("Exporter / shipper"));
+  assert.ok(!shipper.includes("Certification or testing body"));
+
+  const product = optionsFor(at("products", "offer_product"));
+  assert.ok(product.includes("Producer / manufacturer"));
+  for (const foreign of ["Freight forwarder", "Customs broker", "Inspection company"]) {
+    assert.ok(!product.includes(foreign), `a product offer was offered "${foreign}"`);
+  }
+
+  const distribution = optionsFor(at("distribution", "offer_distribution_or_representation"));
+  assert.ok(distribution.includes("Distributor") && distribution.includes("Brand owner"));
+  assert.ok(!distribution.includes("Freight forwarder"));
+
+  // Every family offers something, and no list is a single ungrouped run.
+  for (const entry of MARKET_INTENTS) {
+    const groups = roleGroupsFor(at(entry.family as MarketFamily, entry.key as MarketIntent));
+    assert.ok(groups.length > 0 && groups.every((g) => g.options.length > 0), entry.key);
+  }
+});
+
+test("the engagement question is its own step, and does not answer the scope", () => {
+  const service = at("services", "offer_trade_service", {
+    serviceCategory: "freight",
+    serviceSubcategories: ["freight.road"],
+  });
+  const queue = openGaps(service);
+  assert.ok(queue.includes("serviceScope"));
+  assert.ok(queue.includes("serviceEngagement"), "engagement is not asked at all");
+  assert.equal(queue.indexOf("serviceEngagement"), queue.indexOf("serviceScope") + 1);
+
+  // The defect: answering engagement left the scope unstated, on a screen where
+  // engagement was the only thing that could be tapped.
+  const engaged = {
+    ...service,
+    serviceTerms: { ...service.serviceTerms, engagement: "ongoing" },
+  };
+  assert.ok(openGaps(engaged).includes("serviceScope"), "the scope stopped being asked");
+  assert.ok(
+    blockers(engaged).some((b) => b.key === "serviceScope"),
+    "the scope stopped blocking publication",
+  );
+  assert.ok(!openGaps(engaged).includes("serviceEngagement"));
+
+  // And the review can open it, stated or not.
+  const engagementRow = procedureFor(service)
+    .reviewModel(service)
+    .publicSections.flatMap((s) => s.rows)
+    .find((r) => r.key === "serviceEngagement");
+  assert.ok(engagementRow, "the review has no engagement row until it is answered");
+  assert.equal(engagementRow?.editField, "serviceEngagement");
 });
 
 console.log(`structure/downstream-journeys: ${passed} passed`);
