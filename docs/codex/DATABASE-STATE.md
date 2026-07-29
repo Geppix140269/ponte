@@ -53,6 +53,43 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: the Deal Room launch slice
+
+Three files, additive throughout, idempotent, and applied in this order at Gate
+C only:
+
+- `supabase/migrations/20260729a_deal_room_core.sql` — 14 `deal_room_*` tables, their constraints, indexes and triggers, plus `deal_room_uuid_or_null()` and the append-only guard `deal_room_events_append_only()`.
+- `supabase/migrations/20260729b_deal_room_rls.sql` — RLS on all 14, four SECURITY DEFINER helper predicates, every policy, and five authorised command functions.
+- `supabase/migrations/20260729c_deal_room_storage.sql` — the private `deal-room-evidence` bucket and its two `storage.objects` policies.
+
+**None has been executed anywhere.** There is no non-production database to run
+them against (PL-002), and applying SQL to production is a separate explicit
+owner decision. They have been read and reviewed, not run: treat their behaviour
+as unproven until Gate C verification.
+
+**Nothing existing is touched.** No existing table, column, constraint, index,
+policy, function, trigger or bucket is altered in any of the three files. The
+legacy Deal-era cluster — `deals`, `deal_documents`, `deal_events`,
+`deal_status_history`, `messages`, `settlements`, `settlement_milestones`,
+`settlement_events` and `is_deal_participant()` — is left exactly as it is, and
+so is the orphan `ponte-deal-docs` bucket. `is_admin()` and `touch_updated_at()`
+are reused, not redefined.
+`lib/deal-room/__tests__/rls-contract.test.ts` asserts all of that on every run.
+
+**Backfill: none.** All 14 tables begin empty and no existing row is read,
+written or reclassified.
+
+**Rollback.** The rollback of record is the feature flag: unset
+`NEXT_PUBLIC_DEAL_ROOM` and redeploy, which removes the slice in one deploy
+cycle with no database action. If the schema itself must be withdrawn, each file
+carries its own reverse-order drop list. That is clean only while the tables are
+empty: once a member has uploaded evidence, withdrawal becomes a retention
+decision and an owner action, not a rollback step.
+
+Authority: issue #97; ADR-0009 as accepted 29 July 2026;
+`docs/codex/audits/2026-07-29-deal-room-preflight.md`;
+`docs/plans/active/deal-room-launch-slice.md`.
+
 ## Known production-aligned changes
 
 - Blocks A-F migrations dated `20260723a` through `20260723f` were reported applied to production and verified during the founding-launch work.
@@ -282,7 +319,13 @@ settings and possibly a Supabase project, and both are owner decisions.
 
 ## Written and NOT applied: family commercial terms
 
-`supabase/migrations/20260728d_family_commercial_terms.sql` (ADR-0014).
+`supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014).
+
+Renamed from `20260728d_` on 29 July 2026 (issue #97, PL-004). It shared the
+identifier `20260728d` with `20260728d_verification_level_canonical.sql`, which
+is applied to production and recorded in the ledger under that exact name with
+its SHA-256, so the applied file kept its identity and this unapplied one moved.
+The SQL is unchanged.
 
 Adds two nullable jsonb columns to `listings`, `service_terms` and
 `distribution_terms`, plus three CHECK constraints stating the cross-family

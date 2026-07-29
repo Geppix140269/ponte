@@ -5,7 +5,7 @@
 **Authorising issue:** #97 (programme register: #69, slice P2-08)
 **Branch:** `agent/deal-room-launch-slice`
 **Base:** `main` at `0318615459575d42d0fb8542e66c6c644c6560a6`
-**Gate reached:** **A - preflight complete, stopped for owner review**
+**Gate reached:** **B - implementation complete, stopped for owner review before merge**
 **Launch Mode classification:** Launch Blocker LB-001, recorded in `docs/launch/LAUNCH-BLOCKERS.md`
 
 Preflight evidence, the disposition table, the full schema and RLS design and
@@ -184,8 +184,16 @@ route or journey. Activation in production is a separate owner gate (C).
 ## 11. Progress log
 
 - **29 July 2026 - Gate A complete.** Branch created from a verified-fresh `main`. All authorities in issue #97 read in full. Production Deal Room-era schema, RLS, functions, indexes, foreign keys and storage inspected read-only. Disposition table, additive schema, RLS model, private storage design, rollback plan, file list, risks and stop conditions produced. LB-001 recorded. Seven post-launch tickets recorded. **Stopped for owner review. No SQL applied, nothing merged, deployed or activated.**
-- **Remaining - Gate B.** Implementation pull request: migrations written (not applied), domain and services, twelve surfaces, tests including negative permission tests, visual evidence, source-of-truth updates. Stops for owner review before merge.
-- **Remaining - Gate C.** Production SQL, storage policies, flag activation, deployment. Each a separate explicit owner approval.
+- **29 July 2026 - Gate B complete.** Owner approved Gate A and the four decisions on issue #97. Delivered: `lib/deal-room/` (14 modules), `components/deal-room/`, the commissioned `DealRoomBridge`, twelve surfaces under `app/[locale]/deal-rooms/`, one signed-URL API route, three additive migration files, a dev-only state gallery and a Playwright evidence spec. Ten new test suites, 280 assertions. The two authorised repairs done and PL-004/PL-005 closed. `npm run verify` passes end to end. **Stopped for owner review. No SQL executed anywhere, no bucket created, no flag set, nothing merged or deployed.**
+- **Remaining - Gate C.** Four separate owner approvals: apply the three migrations by hand and record them in `schema_migrations`; create the storage bucket and its two policies; run the live negative-access tests against production; then set `NEXT_PUBLIC_DEAL_ROOM` and `DEAL_ROOM_ALLOWLIST` and deploy.
+
+### Two things Gate B could not produce here, and why
+
+Both are stated rather than worked around, and both have a committed, one-command path.
+
+1. **No visual evidence was captured.** Ponte is behind the temporary private-site access wall added on 29 July 2026. Its password exists only as a SHA-256 in `middleware.ts`, and modifying the wall is prohibited by this task and by the owner's Gate B authorisation. The harness and the spec are both committed: `/en/dev/deal-room` renders all eight states from the real domain and 404s in production, and `npm run evidence:deal-room` captures desktop 1280, 390 x 844 and reduced motion for each, asserting no horizontal overflow at 390. Run it with `PONTE_SITE_PASSWORD` set.
+
+2. **The migrations have been executed nowhere, and the live negative RLS tests are outstanding.** There is no non-production database to run them against (PL-002), and applying SQL to production is a Gate C decision. `lib/deal-room/__tests__/rls-contract.test.ts` asserts the policy contract textually in the meantime - vocabulary agreement between TypeScript and SQL, no policy naming `anon`, only a SELECT policy on the activity table, no UPDATE or DELETE path on evidence versions or acceptances, and no statement touching the legacy cluster - but a textual contract is not a live test and is not presented as one.
 
 ## 12. Decisions and discoveries
 
@@ -195,6 +203,12 @@ route or journey. Activation in production is a separate owner gate (C).
 2. **Resolve the Deal Room Bridge gap.** Constitution section 8 makes it authoritative and section 24 makes a missing approved component a stop condition. Commission it, or approve a named interim treatment.
 3. **Authorise the two minimal repairs that unblock `npm run verify`** (section 12 discoveries 1 and 2), or accept criterion 19 being evidenced with those pre-existing failures called out.
 4. **Confirm the click-to-accept evidence set.** Version + document hash + identity + timestamp, with no IP address or user agent stored, on data-minimisation grounds.
+
+**Decisions taken during Gate B, within the authorised scope:**
+
+1. **No message fragment was added, and `messages/en.json` is byte-identical to `main`.** The Gate A file list anticipated `messages/_fragments/deal-room.json`. Deal Room copy instead lives with the domain that owns it - `lib/deal-room/states.ts`, `momentum.ts`, `integrity.ts` and the surfaces - which is where `components/ponte/state/LifecycleState.tsx` already keeps its approved state copy. Most of this copy is not decoration: the limitation attached to each evidence state, the five parts of a Professional Momentum recognition and the pre-flight's bucket wording are all under test, and a test asserting a translation key proves nothing about what the member reads. Ponte is English-only, so nothing is deferred by this; if the language policy reopens, these tables are the extraction point.
+2. **`DealRoomBridge.tsx` was added to the `RAW_SVG_BASELINE` ratchet** in `check-governance.mjs`, with its argument written beside the two existing entries. The check refused the file first and the entry exists because of that. A bridge deck is structural interaction geometry from the approved package, using `.br__deck path` and its stroke classes, and Constitution section 7's prohibition is on ad hoc *icons*. The same argument already carries `BridgeRoute.tsx`.
+3. **The Bridge uses an isomorphic layout effect.** Next server-renders client components, and React warns correctly that a layout effect cannot be encoded into server output. The warning fired on every render of every Deal Room page. Measurement still runs in the layout phase on the client; on the server neither branch does anything, because the component is authored in its end state.
 
 **Discoveries, all logged and none implemented:**
 
@@ -209,8 +223,27 @@ route or journey. Activation in production is a separate owner gate (C).
 
 ## 13. Final evidence
 
-Gate A: this plan, `docs/codex/audits/2026-07-29-deal-room-preflight.md`,
-LB-001 and PL-004 to PL-010.
+**Gate A:** this plan, `docs/codex/audits/2026-07-29-deal-room-preflight.md`,
+LB-001 and PL-004 to PL-010. Approved at `35d2071`.
 
-**Production changes: none. Migrations applied: none. Merges: none.
-Deployments: none. Feature flags changed: none.**
+**Gate B:** branch `agent/deal-room-launch-slice`, based on `main` at `0318615`.
+
+| Check | Result |
+|---|---|
+| `npm run verify` | **Passes end to end**, run under bash: deps, messages, encoding, migrations, governance, launch mode, level guard, `npm test`, `tsc --noEmit`, `next build` |
+| `npm test` | All suites pass, including ten new ones: 264 domain assertions plus 16 Bridge markup assertions |
+| `tsc --noEmit --incremental false` | Clean |
+| `next build` | All twelve Deal Room routes and the evidence API route emitted |
+| `node scripts/check-migrations.mjs` | `ok 46 migrations: no duplicate dated identifiers` (was failing on `main`) |
+| `node scripts/check-launch-mode.mjs` | `Launch Mode governance check passed.` (was failing on `main`) |
+| Visual evidence | **Not captured.** Blocked by the temporary site access wall; harness and spec committed and unrun |
+| Live negative RLS tests | **Not run.** No database has the schema; Gate C step |
+
+Environment note, recorded separately from repository state as `AGENTS.md`
+requires: `npm run verify` fails on Windows `cmd` at
+`lib/verification/__tests__/guard.mjs`, which uses the POSIX `|| true`. The file
+is untouched by this branch and the guard passes under bash and in CI.
+
+**Production changes: none. SQL executed: none, anywhere. Storage buckets or
+policies created: none. Feature flags changed: none. Merges: none.
+Deployments: none.**

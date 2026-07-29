@@ -137,3 +137,55 @@
 .ponte-desk .br .brst:focus-visible {
   box-shadow: none;
 }
+
+/* ----------------------------------------------------------------------
+   3. The Multi-party Deal Room Bridge wrapper
+
+   Commissioned by the owner on issue #97, decision 2.
+
+   Every part of the bridge itself - `.brd`, `.brdp`, `.brdp__n`, `.brdp__p`,
+   `.brdp__r`, `.brdp__s`, `.brdp__cap`, `.brdp__tag`, `.brd__ms`, `.d-track`,
+   `.d-live`, `.d-fwd`, `.d-blocked` and the `.brj__state` chips - is already
+   declared in the approved stylesheet and is used unchanged. Nothing below
+   restyles any of them.
+
+   What the approved source does not express is the block AROUND the bridge:
+   where the state chips sit relative to the drawing, and the room reference
+   beside them. `PB.dealroom` is called on an element the host page has already
+   laid out, so that layout was the host's job in the original and is this
+   file's job here, which is what section 0 of this file exists for.
+
+   Tokens only. No colour, radius, font or spacing value is invented.
+   ---------------------------------------------------------------------- */
+
+.pf-dealroom-bridge {
+  display: block;
+}
+
+.pf-dealroom-bridge__facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+/* The room reference. Mono, because the Constitution assigns mono to
+   references, classifications and procedural notation. */
+.pf-dealroom-bridge__ref {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+
+/* At 390 the chips stack rather than compressing into unreadable pills. The
+   bridge itself is already in its approved elevation treatment below a 460px
+   container, drawn by the shared drawer. */
+@media (max-width: 459px) {
+  .pf-dealroom-bridge__facts {
+    gap: 8px;
+    margin-top: 14px;
+  }
+}

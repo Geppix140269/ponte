@@ -1,9 +1,27 @@
 # ADR-0009 — Deal Room technical architecture
 
-- **Status:** Proposed for owner approval
-- **Decision date:** 27 July 2026
+- **Status:** Accepted by the product owner on 29 July 2026, as amended below
+- **Decision date:** 27 July 2026; accepted as amended 29 July 2026
 - **Owner:** Giuseppe Funaro
-- **Implementation status:** Not started
+- **Implementation status:** Launch slice implemented on branch `agent/deal-room-launch-slice`. No SQL applied, nothing deployed, feature flag off.
+- **Acceptance record:** issue #97, owner comment of 29 July 2026, decision 1
+
+## Amendments accepted on 29 July 2026
+
+The owner accepted this ADR as amended by the Gate A preflight and the active
+ExecPlan. The amendments are:
+
+1. **An additive `deal_room_*` domain**, rather than adaptation of the legacy Deal-era cluster. The Gate A inspection established that `deals.listing_id` references `listings_legacy_20260720` rather than the live `listings`, and that `is_deal_participant()` is two-party with no concept of an organisation, a sub-room, an admission state or an agreement acceptance.
+2. **Existing legacy objects are left untouched** - not dropped, renamed, altered or declared.
+3. **Organisation or declared professional capacity at admission**, because production holds zero organisations and no profile is bound to one.
+4. **A new private `deal-room-evidence` bucket** with database-enforced access, rather than the orphan `ponte-deal-docs` bucket, which is left in place.
+5. **Derived deterministic progress** rather than a stored progress snapshot.
+6. **No production SQL, Storage policy, feature activation, deployment or charging** without the later owner gate.
+
+The reference to `PT-TECH-2026-07-27-01-DEAL-ROOM-TECHNICAL-ARCHITECTURE-AND-IMPLEMENTATION-PLAN-V1.md`
+is removed: that file was never merged and does not exist in the repository. The
+owner directed that no second overlapping long-form technical authority be
+created to fill the stale filename. The records below carry that content instead.
 
 ## Context
 
@@ -72,8 +90,9 @@ This ADR does not authorise code, SQL, migrations, Stripe configuration, product
 
 ## Related authority
 
-- `docs/ponte-authority/PT-TECH-2026-07-27-01-DEAL-ROOM-TECHNICAL-ARCHITECTURE-AND-IMPLEMENTATION-PLAN-V1.md`
-- `docs/ponte-authority/PT-DESIGN-2026-07-27-01-DEAL-ROOM-EXPERIENCE-DESIGN-V1.md`
+- `docs/codex/audits/2026-07-29-deal-room-preflight.md` - the Gate A preflight, disposition table, schema, RLS and storage design
+- `docs/plans/active/deal-room-launch-slice.md` - the active ExecPlan
+- `docs/ponte-authority/PT-DESIGN-2026-07-27-01-DEAL-ROOM-EXPERIENCE-DESIGN-V1.md` - approved as the Deal Room experience authority on 29 July 2026
 - `docs/ponte-authority/PT-PRODUCT-2026-07-27-04-DEAL-ROOM-DETAILED-PRODUCT-DEFINITION-V1.md`
 - `docs/codex/DATABASE-STATE.md`
-- Issues #52, #57 and #58
+- Issue #97, and issues #52, #57 and #58

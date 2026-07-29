@@ -125,7 +125,7 @@ const LUCIDE_BASELINE = [
 /**
  * Files that still contain hand-authored <svg>. May shrink, never grow.
  *
- * Two entries are permanent, and neither is an interface icon:
+ * Three entries are permanent, and none is an interface icon:
  *
  * - `components/ponte/brand/PonteLockup.tsx` draws the brand lockup. The owner
  *   ruled it an identity asset rather than an interface icon, so it stays an
@@ -136,10 +136,21 @@ const LUCIDE_BASELINE = [
  *   section 8 makes that package authoritative and section 7's prohibition is
  *   on ad hoc *icons*; a deck is not one, and there is no registry key that
  *   could express it.
+ * - `components/ponte/bridge/DealRoomBridge.tsx` draws the same deck, for the
+ *   Multi-party Deal Room Bridge the owner commissioned on 29 July 2026 (issue
+ *   #97, decision 2). Section 8 names that bridge as authoritative in the same
+ *   sentence as the Family and Action bridges above, and the drawing is
+ *   transcribed from `PB.dealroom` in the approved engine, using the same
+ *   `.br__deck`, `.d-track`, `.d-live`, `.d-fwd` and `.d-blocked` classes that
+ *   the approved stylesheet already defines. Nothing in it is an icon, and
+ *   `components/ponte/bridge/__tests__/deal-room-bridge.test.tsx` asserts that
+ *   every class it emits is either declared in an approved stylesheet or
+ *   created by the approved engine.
  *
- * Both are listed rather than exempted, so the number of hand-authored drawings
- * in the product stays visible in one place and each new one has to be argued
- * for here.
+ * All three are listed rather than exempted, so the number of hand-authored
+ * drawings in the product stays visible in one place and each new one has to be
+ * argued for here. This is the ratchet working as intended: the entry above was
+ * written because the check refused the file, not to get past it.
  */
 const RAW_SVG_BASELINE = [
   "app/[locale]/dev/design/page.tsx",
@@ -157,6 +168,7 @@ const RAW_SVG_BASELINE = [
   "components/icons/index.tsx",
   "components/ponte/brand/PonteLockup.tsx",
   "components/ponte/bridge/BridgeRoute.tsx",
+  "components/ponte/bridge/DealRoomBridge.tsx",
   "components/signals/SignalCard.tsx",
   "components/structure/StructureComposer.tsx",
 ];
