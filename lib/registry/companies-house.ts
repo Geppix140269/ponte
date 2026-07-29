@@ -10,6 +10,8 @@
 // Endpoints used:
 //   GET /company/{number}
 //   GET /company/{number}/officers
+//   GET /company/{number}/persons-with-significant-control
+//   GET /company/{number}/persons-with-significant-control-statements
 //   GET /search/companies
 //
 // This file never throws for an upstream problem and never decides a verdict.
@@ -22,6 +24,8 @@ const SOURCE = "companies_house";
 const TIMEOUT_MS = 10_000;
 const OFFICER_PAGE_SIZE = 100;
 const MAX_OFFICER_PAGES = 5; // 500 officers, far beyond any real company
+const PSC_PAGE_SIZE = 100;
+const MAX_PSC_PAGES = 5;
 const SEARCH_PAGE_SIZE = 20;
 
 export function isConfigured(): boolean {
@@ -29,12 +33,12 @@ export function isConfigured(): boolean {
 }
 
 /**
- * Full company record: profile plus the officer list.
+ * Full company record: profile, officers and persons with significant control.
  *
- * The officers are part of the answer, not an extra. If the profile comes
- * back but the officer list does not, the result is marked unavailable with
- * the profile fields still populated, so a reviewer sees the company while
- * the pipeline knows the screen is incomplete.
+ * Officers and PSCs are part of the answer, not extras. If any list cannot be
+ * obtained, the result is marked unavailable with the profile fields still
+ * populated, so a reviewer sees the company while the pipeline knows the
+ * sanctions screen was incomplete.
  */
 export async function lookupCompany(regNumber: string): Promise<RegistryResult> {
   const checkedAt = new Date().toISOString();
@@ -102,14 +106,21 @@ export async function lookupCompany(regNumber: string): Promise<RegistryResult> 
       dateOfCessation: str(body.date_of_cessation),
       statusDetail: str(body.company_status_detail),
       registeredOfficeAddress: asRecord(body.registered_office_address),
-      hasInsolvencyHistory: typeof body.has_insolvency_history === "boolean" ? body.has_insolvency_history : undefined,
+      hasInsolvencyHistory:
+        typeof body.has_insolvency_history === "boolean"
+          ? body.has_insolvency_history
+          : undefined,
       hasCharges: typeof body.has_charges === "boolean" ? body.has_charges : undefined,
       accountsNextDue: str(asRecord(body.accounts)?.next_due),
     },
   };
 
-  const officers = await getOfficers(number, key);
-  if (!officers.ok) {
+  const [officers, control] = await Promise.all([
+    getOfficers(number, key),
+    getPersonsWithSignificantControl(number, key),
+  ]);
+
+  if ("reason" in officers) {
     return {
       ...base,
       available: false,
@@ -117,10 +128,32 @@ export async function lookupCompany(regNumber: string): Promise<RegistryResult> 
     };
   }
 
-  return { ...base, officers: officers.officers };
+  if ("reason" in control) {
+    return {
+      ...base,
+      officers: officers.officers,
+      available: false,
+      reason: `company profile and officers retrieved but the Companies House PSC record was not: ${control.reason}. Beneficial owners were not screened.`,
+    };
+  }
+
+  const allScreeningNames = dedupeOfficers([...officers.officers, ...control.controllers]);
+  const raw = asRecord(base.raw) ?? {};
+
+  return {
+    ...base,
+    officers: allScreeningNames,
+    raw: {
+      ...raw,
+      personsWithSignificantControl: control.rawControllers,
+      pscStatements: control.statements,
+      pscActiveCount: control.activeCount,
+      pscCeasedCount: control.ceasedCount,
+    },
+  };
 }
 
-/** Search the register by name. Candidates only, no officer lists. */
+/** Search the register by name. Candidates only, no officer or PSC lists. */
 export async function searchCompany(name: string): Promise<RegistrySearchResult> {
   const checkedAt = new Date().toISOString();
   const key = process.env.COMPANIES_HOUSE_API_KEY;
@@ -206,9 +239,9 @@ async function getOfficers(number: string, key: string): Promise<OfficersOutcome
     // for this company, which is a real answer.
     if (res.kind === "not_found") return { ok: true, officers };
 
-    const body = asRecord(res.body) ?? {};
-    const items = arr(body.items);
-    total = typeof body.total_results === "number" ? body.total_results : items.length;
+    const result = asRecord(res.body) ?? {};
+    const items = arr(result.items);
+    total = typeof result.total_results === "number" ? result.total_results : items.length;
 
     for (const item of items) {
       const row = asRecord(item) ?? {};
@@ -233,6 +266,164 @@ async function getOfficers(number: string, key: string): Promise<OfficersOutcome
     ok: false,
     reason: `the officer list exceeded ${MAX_OFFICER_PAGES * OFFICER_PAGE_SIZE} entries and was truncated`,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Persons with significant control / beneficial owners
+// ---------------------------------------------------------------------------
+
+type ControlOutcome =
+  | {
+      ok: true;
+      controllers: RegistryOfficer[];
+      rawControllers: Record<string, unknown>[];
+      statements: Record<string, unknown>[];
+      activeCount?: number;
+      ceasedCount?: number;
+    }
+  | { ok: false; reason: string };
+
+async function getPersonsWithSignificantControl(
+  number: string,
+  key: string,
+): Promise<ControlOutcome> {
+  const controllers: RegistryOfficer[] = [];
+  const rawControllers: Record<string, unknown>[] = [];
+  let startIndex = 0;
+  let total = 0;
+  let activeCount: number | undefined;
+  let ceasedCount: number | undefined;
+
+  for (let page = 0; page < MAX_PSC_PAGES; page++) {
+    const params = new URLSearchParams({
+      items_per_page: String(PSC_PAGE_SIZE),
+      start_index: String(startIndex),
+      register_view: "false",
+    });
+    const res = await getJson(
+      `${BASE}/company/${encodeURIComponent(number)}/persons-with-significant-control?${params.toString()}`,
+      key,
+    );
+    if (res.kind === "error") return { ok: false, reason: res.reason };
+    if (res.kind === "not_found") break;
+
+    const result = asRecord(res.body) ?? {};
+    const items = arr(result.items);
+    total = typeof result.total_results === "number" ? result.total_results : items.length;
+    if (typeof result.active_count === "number") activeCount = result.active_count;
+    if (typeof result.ceased_count === "number") ceasedCount = result.ceased_count;
+
+    for (const item of items) {
+      const row = asRecord(item) ?? {};
+      rawControllers.push({
+        name: str(row.name) ?? nameFromElements(asRecord(row.name_elements)),
+        kind: str(row.kind),
+        notifiedOn: str(row.notified_on),
+        ceasedOn: str(row.ceased_on),
+        nationality: str(row.nationality),
+        countryOfResidence: str(row.country_of_residence),
+        naturesOfControl: arr(row.natures_of_control).filter(
+          (value): value is string => typeof value === "string",
+        ),
+        address: asRecord(row.address),
+        identification: asRecord(row.identification),
+        identityVerificationDetails: asRecord(row.identity_verification_details),
+        isSanctioned:
+          typeof row.is_sanctioned === "boolean" ? row.is_sanctioned : undefined,
+      });
+      const controlName = str(row.name) ?? nameFromElements(asRecord(row.name_elements));
+      if (!controlName) continue;
+      const ceasedOn = str(row.ceased_on);
+      const kind = str(row.kind) ?? "person-with-significant-control";
+      const controls = arr(row.natures_of_control)
+        .filter((v): v is string => typeof v === "string")
+        .join(", ");
+      const roleBase = controls ? `PSC: ${controls}` : `PSC: ${kind}`;
+      controllers.push({
+        name: controlName,
+        role: ceasedOn ? `${roleBase} (ceased ${ceasedOn})` : roleBase,
+        appointedOn: str(row.notified_on),
+      });
+    }
+
+    startIndex += items.length;
+    if (items.length === 0 || rawControllers.length >= total) break;
+  }
+
+  if (total > MAX_PSC_PAGES * PSC_PAGE_SIZE && rawControllers.length < total) {
+    return {
+      ok: false,
+      reason: `the PSC list exceeded ${MAX_PSC_PAGES * PSC_PAGE_SIZE} entries and was truncated`,
+    };
+  }
+
+  const statements = await getPscStatements(number, key);
+  if ("reason" in statements) return { ok: false, reason: statements.reason };
+
+  return {
+    ok: true,
+    controllers,
+    rawControllers,
+    statements: statements.statements,
+    activeCount,
+    ceasedCount,
+  };
+}
+
+type StatementsOutcome =
+  | { ok: true; statements: Record<string, unknown>[] }
+  | { ok: false; reason: string };
+
+async function getPscStatements(number: string, key: string): Promise<StatementsOutcome> {
+  const params = new URLSearchParams({
+    items_per_page: String(PSC_PAGE_SIZE),
+    start_index: "0",
+    register_view: "false",
+  });
+  const res = await getJson(
+    `${BASE}/company/${encodeURIComponent(number)}/persons-with-significant-control-statements?${params.toString()}`,
+    key,
+  );
+  if (res.kind === "error") return { ok: false, reason: res.reason };
+  if (res.kind === "not_found") return { ok: true, statements: [] };
+
+  const body = asRecord(res.body) ?? {};
+  const items = arr(body.items).map(asRecord).filter((v): v is Record<string, unknown> => Boolean(v));
+  const total = typeof body.total_results === "number" ? body.total_results : items.length;
+  if (total > items.length) {
+    return {
+      ok: false,
+      reason: `the PSC statements list reported ${total} rows but only ${items.length} were returned`,
+    };
+  }
+  return { ok: true, statements: items };
+}
+
+function dedupeOfficers(officers: RegistryOfficer[]): RegistryOfficer[] {
+  const out: RegistryOfficer[] = [];
+  const seen = new Set<string>();
+  for (const officer of officers) {
+    const key = officer.name.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(officer);
+  }
+  return out;
+}
+
+function nameFromElements(elements?: Record<string, unknown>): string | undefined {
+  if (!elements) return undefined;
+  const name = [
+    str(elements.title),
+    str(elements.forename),
+    str(elements.middle_name),
+    str(elements.surname),
+  ]
+    .filter((v): v is string => Boolean(v))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return name || undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -271,8 +462,8 @@ async function getJson(url: string, key: string): Promise<JsonOutcome> {
     }
 
     // Body is parsed, never logged.
-    const body = (await res.json()) as unknown;
-    return { kind: "ok", body };
+    const responseBody = (await res.json()) as unknown;
+    return { kind: "ok", body: responseBody };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       return { kind: "error", reason: `Companies House timed out after ${TIMEOUT_MS / 1000} seconds` };
