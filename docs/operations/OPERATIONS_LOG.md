@@ -18,6 +18,46 @@ Use this structure:
 
 ---
 
+## 2026-07-29 - Two listing migrations applied to production (ADR-0013, ADR-0014)
+
+### Completed
+
+- The owner accepted **ADR-0014** and authorised applying two migrations to production, one at a time and in order. Both were applied with `node scripts/db-query.mjs --file` against `cptglsmjmzcfpjndqfmc`, each fully probe-verified before the next was started.
+
+| Migration | Applied (UTC) | SHA-256 recorded in `public.schema_migrations` | Ledger |
+|---|---|---|---|
+| `20260728c_automated_listing_publication.sql` | 15:42:54 | `745453c93b8d88614fe45dd2a75639c70760325a4e25ed64c2b06236aabf11c4` | 41 to 42 |
+| `20260728e_family_commercial_terms.sql` | 15:44:45 | `4224fa274291f074d1ef0c948c52ba9afbeaa5378111b4686c05cebde9f18fa8` | 42 to 43 |
+
+- Both hashes match their files byte for byte. `20260728e` was applied second because it depends on `20260728c`: its `listings_product_fields_family` constraint references `quantity_min` and `quantity_max`.
+- **Preflight:** none of the thirteen columns existed; `listing_events` absent; `listings` held 5 rows (approved 2, draft 1, submitted 2), 4 carrying a quantity; no duplicate `listings_status_check1`; the three policy names `20260728c` replaces existed under exactly those names, so no orphan policy could survive; `is_admin()`, `gen_random_uuid()` and `auth.users` all present.
+- **Post-application probes:** 11 columns with the stated types, all nullable except `quantity_extracted` (`NOT NULL DEFAULT false`); status CHECK carrying all 13 values; 5 new CHECK constraints; `listing_events` with RLS enabled; 5 indexes; `service_terms` and `distribution_terms` as nullable jsonb; the two family CHECKs valid and `listings_product_fields_family` NOT VALID, exactly as the file deploys.
+- **Nothing was published.** `listings` still holds 5 rows at approved 2, draft 1, submitted 2. No status changed. The only data written is the documented `quantity_mode = 'exact'` backfill on the 4 rows that already carried a quantity, and 2 seeded `listing_published / admin / legacy_desk_approval` events, one per already-approved listing, with zero orphans.
+- **Security verified.** Seven policies on `listings`, no duplicates; no member policy permits writing `approved`, `flagged`, `suspended`, `validating` or `needs_information`; **no anonymous SELECT policy exists on `listings`**; `listing_events` has SELECT-only policies and no INSERT policy, so a member cannot forge a publication event.
+- **Functional probes ran inside transactions that were rolled back**, and the rollbacks were confirmed held: 8 of 8 for `20260728c`, and all cross-family cases for `20260728e`.
+- **Private-site gate confirmed intact:** `https://ponte.trade/` answers `401` with `WWW-Authenticate: Basic realm="Ponte Trade"`, and `middleware.ts` is unchanged.
+
+### Decisions
+
+- The owner accepted ADR-0014 and authorised both applications.
+- **`listings_product_fields_family` was deliberately left `NOT VALID`.** The migration deploys it that way and validating it would make the deployed object differ from the file. Zero existing rows would violate it; enforcing it is a separate owner decision.
+
+### Risks / discrepancies
+
+- The `NOT APPLIED` comment inside `20260728e_family_commercial_terms.sql` is now historically wrong and is **left unedited on purpose**: the file's bytes are what production ran, and editing them would break the match with `schema_migrations`. Recorded in `DATABASE-STATE.md` instead.
+- **Automated publication still produces nothing on its own.** Verification remains blocking by owner decision and no member holds a passing bound member-business verification, so there is still no publicly eligible listing. Unchanged by these migrations.
+
+### Next
+
+1. Merge this reconciliation, then close PR #101 as superseded by PR #100 plus this record.
+2. Separately decide whether to `validate constraint listings_product_fields_family`.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, the two "APPLIED to production, 29 July 2026" sections.
+- `public.schema_migrations` rows for both filenames, hashes matching the files.
+- The tested read-side implementation preserved at PR #101 head `53c9d99`; see PL-014.
+
 ## 2026-07-29 - Deal Room: four trust boundaries closed (no production change)
 
 ### Completed
