@@ -57,7 +57,13 @@ import { draftQuantity as computeDraftQuantity, has } from "./procedures/shared"
 
 export type { Blocker, CompletionField, FactBuckets, ServiceTerms, DistributionTerms };
 export { asksFor } from "./procedures/products";
-export { procedureFor, procedureForFamily, askKeyFor, statesOwnCapability } from "./procedures/registry";
+export {
+  procedureFor,
+  procedureForFamily,
+  askKeyFor,
+  roleGroupsFor,
+  statesOwnCapability,
+} from "./procedures/registry";
 export { FIELD_FAMILY, fieldBelongsTo } from "./procedures/types";
 export type {
   FamilyProcedure,

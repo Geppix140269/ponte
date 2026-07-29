@@ -17,6 +17,7 @@ import {
   blockers as computeBlockers,
   procedureFor,
   askKeyFor,
+  roleGroupsFor,
   statesOwnCapability,
   submitPayloads,
   type StructureDraft,
@@ -36,7 +37,6 @@ import {
   INCOTERM_GROUPS,
   INCOTERM_MEANING,
   PAYMENT_GROUPS,
-  ROLE_GROUPS,
   VALIDITY_DAYS,
   UNITS,
   FREQUENCIES,
@@ -250,6 +250,15 @@ export default function StructureComposer({
         // after the loop; collecting outcomes per response removes that need.
         const body: Record<string, unknown> = await res.json().catch(() => ({}));
         if (!res.ok) {
+          // The member is told something reassuring and true, and the reason is
+          // put where it can be read. Until now a refusal left NOTHING behind:
+          // no status, no field, no message, so a submission that failed for
+          // every member for two days looked identical to a dropped connection.
+          console.error(
+            `[ponte] submit refused (${res.status})`,
+            body.error ?? body,
+            body.field ? `field: ${body.field}` : "",
+          );
           replace("error");
           return;
         }
@@ -1051,22 +1060,26 @@ function CompletionControl({ field, draft, set, t }: { field: CompletionField; d
 
     // ---- Trade services ---------------------------------------------------
     case "serviceScope":
+      // One question, one control. The engagement chips used to sit under this
+      // box, and they were the only thing on the screen that could be tapped:
+      // a member answered them, pressed Save, and their scope was still not
+      // stated. Engagement is its own step now.
       return (
-        <div className="qty">
-          <LongText
-            id="service-scope"
-            label={null}
-            placeholder={t("ask.serviceScopePlaceholder")}
-            value={draft.serviceTerms.scope}
-            onChange={(v) => service({ scope: v })}
-          />
-          <p className="pcat__writeh">{t("ask.serviceEngagement")}</p>
-          <KeyChips
-            options={SERVICE_ENGAGEMENT_TYPES}
-            value={draft.serviceTerms.engagement}
-            onPick={(key) => service({ engagement: key })}
-          />
-        </div>
+        <LongText
+          id="service-scope"
+          label={null}
+          placeholder={t("ask.serviceScopePlaceholder")}
+          value={draft.serviceTerms.scope}
+          onChange={(v) => service({ scope: v })}
+        />
+      );
+    case "serviceEngagement":
+      return (
+        <KeyChips
+          options={SERVICE_ENGAGEMENT_TYPES}
+          value={draft.serviceTerms.engagement}
+          onPick={(key) => service({ engagement: key })}
+        />
       );
     case "serviceCoverage":
       // Countries, a corridor, or both. A remote advisory service covering no
@@ -1199,7 +1212,10 @@ function CompletionControl({ field, draft, set, t }: { field: CompletionField; d
         </div>
       );
     case "role":
-      return <ChipGroups groups={ROLE_GROUPS} value={draft.role} onPick={(v) => set({ role: v })} />;
+      // The roles this family can actually hold. One combined list showed a
+      // freight forwarder "Grower / farmer" and "End buyer" as answers to
+      // "What is your role?".
+      return <ChipGroups groups={roleGroupsFor(draft)} value={draft.role} onPick={(v) => set({ role: v })} />;
     case "note":
       return <textarea className="snote" placeholder={t("ask.notePlaceholder")} value={draft.note ?? ""} onChange={(e) => set({ note: e.target.value })} />;
   }

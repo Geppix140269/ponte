@@ -126,12 +126,26 @@ export const PAYMENT_GROUPS: readonly TapGroup[] = [
 export const VALIDITY_DAYS: readonly number[] = [7, 14, 30, 60, 90, 180];
 
 /**
- * The role the member holds in the transaction. The old five could not describe
- * a trader on own account, a freight forwarder, or either kind of agent, and a
- * declared role is the one thing the chain rule rests on: it has to be possible
- * to declare the true one.
+ * The role the member holds, by the family of record they are creating.
+ *
+ * One list for every family was wrong in the way a member notices immediately.
+ * A freight forwarder listing road freight was asked "What is your role?" and
+ * shown "Principal to the deal", "Acting for a principal" and "Service side" in
+ * one column: producer, grower, end buyer, exclusive distributor and customs
+ * broker offered as answers to the same question. Two thirds of that list
+ * cannot be true of the record being created, and a list mostly made of
+ * impossible answers reads as a question the member has misunderstood.
+ *
+ * A declared role is also the one thing the chain rule rests on, so the list
+ * has to make the TRUE answer easy to find, not merely present.
+ *
+ * `roleGroupsFor` in `procedures/registry.ts` chooses between these. Values are
+ * stored as the strings below, exactly as they always were: a record that
+ * already holds "Freight forwarder" keeps it.
  */
-export const ROLE_GROUPS: readonly TapGroup[] = [
+
+/** Buying or selling goods: the member is on one side of a shipment. */
+export const PRODUCT_ROLE_GROUPS: readonly TapGroup[] = [
   {
     label: "Principal to the deal",
     options: [
@@ -154,16 +168,137 @@ export const ROLE_GROUPS: readonly TapGroup[] = [
       "Intermediary",
     ],
   },
+];
+
+/**
+ * Offering a trade service: the member is the service side, and the only real
+ * question is whether they perform the work or arrange it.
+ *
+ * A producer, a grower and an end buyer are not roles anybody can hold on a
+ * record offering freight, customs clearance or inspection.
+ */
+export const SERVICE_PROVIDER_ROLE_GROUPS: readonly TapGroup[] = [
   {
-    label: "Service side",
+    label: "Performing the service",
     options: [
+      "Service provider (own account)",
+      "Carrier or asset operator",
       "Freight forwarder",
       "Customs broker",
       "Inspection company",
       "Warehouse or terminal operator",
       "Trade finance provider",
+      "Insurance intermediary",
+      "Certification or testing body",
+      "Trade adviser or consultant",
     ],
   },
+  {
+    label: "Arranging it for others",
+    options: [
+      "Agent for a service provider",
+      "Broker",
+      "Intermediary",
+    ],
+  },
+];
+
+/**
+ * Seeking a trade service: the member is the CUSTOMER for it, so their role is
+ * their position in the trade the service serves, not the service itself.
+ *
+ * The third group is not a contradiction. A forwarder buying line-haul capacity
+ * and a customs broker subcontracting an inspection are both real, and both are
+ * a service business buying a service.
+ */
+export const SERVICE_SEEKER_ROLE_GROUPS: readonly TapGroup[] = [
+  {
+    label: "Principal to the underlying trade",
+    options: [
+      "Producer / manufacturer",
+      "Processor",
+      "Trader (own account)",
+      "Exporter / shipper",
+      "Importer / consignee",
+      "End buyer",
+    ],
+  },
+  {
+    label: "Acting for a principal",
+    options: [
+      "Mandated seller's agent",
+      "Mandated buyer's agent",
+      "Distributor",
+      "Broker",
+      "Intermediary",
+    ],
+  },
+  {
+    label: "Buying capacity for my own service business",
+    options: [
+      "Freight forwarder",
+      "Customs broker",
+      "Warehouse or terminal operator",
+      "Other service provider",
+    ],
+  },
+];
+
+/**
+ * Distribution and representation: the member is on the brand side or the
+ * channel side of an arrangement, never on the service side of a shipment.
+ *
+ * Both sides are offered whichever intent the member entered through, because
+ * a manufacturer seeking a distributor and a distributor seeking brands are the
+ * two ends of the same conversation and a member may genuinely be either. The
+ * ORDER changes with the intent, so the likely side reads first.
+ */
+export const DISTRIBUTION_BRAND_SIDE: TapGroup = {
+  label: "Brand or supply side",
+  options: [
+    "Producer / manufacturer",
+    "Brand owner",
+    "Processor",
+    "Exporter (own account)",
+    "Trader (own account)",
+  ],
+};
+
+export const DISTRIBUTION_CHANNEL_SIDE: TapGroup = {
+  label: "Channel or market side",
+  options: [
+    "Exclusive distributor",
+    "Distributor",
+    "Importer",
+    "Wholesaler",
+    "Retailer",
+    "Sales agent",
+    "Commercial representative",
+    "Reseller",
+  ],
+};
+
+export const DISTRIBUTION_ADVISORY_SIDE: TapGroup = {
+  label: "Acting for a principal",
+  options: [
+    "Mandated seller's agent",
+    "Mandated buyer's agent",
+    "Broker",
+    "Intermediary",
+    "Market-entry consultant",
+  ],
+};
+
+/**
+ * The legacy combined list.
+ *
+ * Kept only so a caller that has no family to reason from still has every role
+ * available. Nothing in the composer reads it: the composer always knows its
+ * family, and `roleGroupsFor` is what it asks.
+ */
+export const ROLE_GROUPS: readonly TapGroup[] = [
+  ...PRODUCT_ROLE_GROUPS,
+  { label: "Service side", options: SERVICE_PROVIDER_ROLE_GROUPS[0].options },
 ];
 
 export const UNITS: readonly string[] = ["MT", "kg", "litres", "m3", "containers", "TEU", "pieces"];

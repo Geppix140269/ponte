@@ -49,6 +49,7 @@ export type CompletionField =
   | "payment"
   // Trade services
   | "serviceScope"
+  | "serviceEngagement"
   | "serviceCoverage"
   | "serviceSpecialisation"
   | "serviceCapability"
@@ -86,6 +87,7 @@ export const FIELD_FAMILY: Readonly<Record<CompletionField, readonly MarketFamil
   payment: ["products"],
 
   serviceScope: ["services"],
+  serviceEngagement: ["services"],
   serviceCoverage: ["services"],
   serviceSpecialisation: ["services"],
   serviceCapability: ["services"],
