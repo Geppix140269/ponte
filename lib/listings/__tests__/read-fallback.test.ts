@@ -286,3 +286,70 @@ for (const [label, file, name] of READERS) {
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// The canonical pair is never dropped
+// ---------------------------------------------------------------------------
+//
+// These two are protected for a different reason from the rest. Dropping `ref`
+// or `details` loses a fact, and the page renders visibly incomplete. Dropping
+// the canonical pair CHANGES a fact, and the page renders confidently wrong:
+//
+//   market_family absent -> familyOfRow falls through to the legacy reading,
+//   and listings.type stores a distribution record as "offer"/"requirement", so
+//   the record is presented as a product with a quantity, a route and an
+//   Incoterm it does not have.
+//
+//   market_intent absent -> presentRecord cannot tell whose channels and
+//   capabilities these are, so a member offering representation has their own
+//   capabilities labelled as demands on a counterparty, and vice versa.
+//
+// A misrepresented record is worse than a missing one, so these fail loudly.
+
+for (const column of ["market_family", "market_intent"]) {
+  test(`a missing ${column} returns the original error and is never retried`, async () => {
+    const original = missing(column);
+    const selects: string[] = [];
+    const result = await readWithMissingColumnFallback(async (columns) => {
+      selects.push(columns);
+      return { data: null, error: original };
+    }, READER_COLUMNS);
+
+    // The caller gets the database's own error, not a repaired record.
+    assert.equal(result.error, original, `${column} did not surface the original error`);
+    assert.equal(result.data, null);
+
+    // And it was attempted exactly once: no retry with the column removed.
+    assert.equal(selects.length, 1, `${column} was retried ${selects.length} times`);
+    assert.ok(selects[0].includes(column), `the one attempt did not ask for ${column}`);
+    assert.deepEqual(result.dropped, [], `${column} was recorded as dropped`);
+  });
+
+  test(`${column} is protected on every reader, not just in the default list`, async () => {
+    // The readers pass no `essential` override, so they inherit the default.
+    // This asserts the protection reaches them rather than only the constant.
+    assert.ok(
+      ESSENTIAL_LISTING_READ_COLUMNS.includes(column),
+      `${column} is not in ESSENTIAL_LISTING_READ_COLUMNS`,
+    );
+    for (const [label, file, name] of READERS) {
+      const columns = columnListFrom(file, name);
+      assert.ok(columns.includes(column), `${label} does not select ${column}`);
+
+      const table = fakeTable([column]);
+      const result = await readWithMissingColumnFallback(table.attempt, columns);
+      assert.ok(result.error, `${label} degraded rather than failing on a missing ${column}`);
+      assert.equal(result.data, null);
+    }
+  });
+}
+
+test("a record is never presented after the canonical pair has been dropped", async () => {
+  // The end state the two rules above exist to prevent: a successful read whose
+  // family or intent is absent, which presentRecord would then guess at.
+  for (const column of ["market_family", "market_intent"]) {
+    const table = fakeTable([column]);
+    const result = await readWithMissingColumnFallback(table.attempt, READER_COLUMNS);
+    assert.equal(result.data, null, `a record came back without ${column}`);
+  }
+});
