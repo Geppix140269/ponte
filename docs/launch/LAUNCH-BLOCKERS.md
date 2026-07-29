@@ -10,7 +10,7 @@ Discovery alone does not make an issue a blocker. The repository owner has final
 
 | ID | Title | Discovered | Core journey or system | Evidence | Owner | Status | Resolution PR | Verification |
 |---|---|---|---|---|---|---|---|---|
-| — | No active blocker recorded | — | — | — | — | — | — | — |
+| LB-001 | No launch-usable Deal Room progression loop exists | 2026-07-29 | PROGRESS: the downstream journey after credible commercial interest | Classified as a Launch Blocker by the repository owner in issue #97. Verified on `main` at `0318615`: no Deal Room route, component, service or type exists, and no code references the Deal Room-era database cluster. A member who reaches credible commercial interest has nowhere to go inside Ponte, so the core journey cannot be completed at all. Preflight: `docs/codex/audits/2026-07-29-deal-room-preflight.md` | Giuseppe Funaro | Open - Gate B implementation complete on `agent/deal-room-launch-slice`, awaiting owner review before merge | — | Partial. `npm run verify` passes end to end (criterion 19). 280 assertions cover the family-correct procedure, the no-percentage-before-approval rule, the 22% baseline and the reversion case, the admission gate, read-only continuity, the four Ponte Integrity prohibitions, the invitation preview allowlist and the RLS policy contract. **Outstanding:** desktop and 390 x 844 visual evidence, blocked by the temporary site access wall (harness and spec committed, unrun); and the live negative-access tests, which need the schema applied at Gate C. The blocker closes only after Gate C production verification. |
 
 ## Resolved blockers
 

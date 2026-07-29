@@ -2,6 +2,22 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 29 July 2026 - Deal Room launch slice, and ADR-0009 accepted as amended
+
+**Decision:** the owner authorised the first launch-usable Deal Room protected progression loop (issue #97) and accepted ADR-0009 as amended by the Gate A preflight. The Deal Room is built as an **additive `deal_room_*` domain**, not as an adaptation of the legacy Deal-era cluster.
+
+**Why the legacy cluster is not reused.** Inspected read-only in production on 29 July 2026: all eight tables hold zero rows, no application code references any of them, six of the eight have no write policy at all, `deals.listing_id` references `listings_legacy_20260720` rather than the live `listings`, and `is_deal_participant()` is strictly two-party with no concept of an organisation, a sub-room, an admission state or an agreement acceptance. Adapting it would have meant rewriting every column and its foreign key, which is a replacement wearing the old table's name. **Every legacy object is left untouched** — not dropped, renamed, altered or declared — and its disposition is deferred to PL-010.
+
+**The progress scale, stated because it differs from the repository's other one.** `lib/ponte/progress.ts` remains the progress authority and its validator `assertWeights` is reused unchanged. Its *mapping* is not: `progressValue` maps earned weight onto 20–100 for a draft, where the floor is the reward for starting. A Deal Room has no floor because it shows no number at all until a procedure is approved, and the accepted product definition fixes its scale directly — earned weight **is** the percentage, giving 22% at procedure agreement, inside the Constitution's 18–25 band. Both obey the progress law; they are different scales, which the engine contract itself requires.
+
+**Sub-room isolation is a database property.** The `deal_room_sub_rooms` SELECT policy returns **zero rows** to a non-participant — not an error, not a redacted row. Every list, count, navigation item, notification and AI context is built from that filtered read, because no unfiltered read exists to build them from.
+
+**Also decided:** the Multi-party Deal Room Bridge v1 is commissioned as a required shared component and transcribed from `PB.dealroom` in the approved engine, rather than substituted with a card grid, tabs or a stepper. Click-to-accept evidence is profile identity, organisation or declared capacity, agreement kind, document version, SHA-256 of the accepted content and a UTC timestamp — **no IP address and no user agent**, by explicit owner decision, and it is never described as an electronic signature. Evidence bytes live in a new private `deal-room-evidence` bucket; the orphan `ponte-deal-docs` bucket is left in place.
+
+**Implementation boundary:** implemented on branch `agent/deal-room-launch-slice`. **No SQL has been executed anywhere**, no Storage bucket or policy has been created, no feature flag has been set, nothing has been deployed or merged. Applying the migrations, creating the bucket, activating the flag and deploying are four separate owner gates.
+
+**Affected areas:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md`, `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`, `lib/deal-room/`, `components/deal-room/`, `components/ponte/bridge/DealRoomBridge.tsx`, `app/[locale]/deal-rooms/`, `app/api/deal-room/`, `supabase/migrations/20260729a-c`, `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`, `docs/launch/`.
+
 ## 28 July 2026 - Family-specific downstream commercial procedures
 
 **Decision:** Ponte has one shared composer framework and three distinct downstream commercial procedures. Products, Trade services and Distribution and representation share the technical shell, the account gate, the submission orchestration and the design system. They do not share one product-shaped set of commercial questions, blockers, review rows or submission expectations.

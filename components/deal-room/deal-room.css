@@ -1,0 +1,604 @@
+/* ======================================================================
+   Deal Room surfaces.
+
+   Composition only. Every colour, radius, font, shadow and spacing value is an
+   approved Ponte Flow token; nothing here invents one, and no approved
+   component is copied, forked or restyled. The Bridge comes from
+   `design/authority/bridge/v1/source/ponte-bridge.css` unchanged, plus the
+   wrapper rules in `components/ponte/bridge/bridge-integration.css`.
+
+   Constitution section 15 forbids a generic SaaS card grid as a default page
+   composition, so the room is built from ruled bands and an editorial hierarchy
+   rather than from equal-height tiles. Section 16 forbids inventing a page-local
+   spacing scale, so the rhythm below is expressed in the --pf-space steps.
+
+   Mobile is prioritisation, not compression (Experience Design 2.8): below
+   860px the context rail moves under the working surface rather than shrinking
+   beside it, and at 390 the room leads with stage, next action, blockers and
+   recent change.
+   ====================================================================== */
+
+/* ---------------------------------------------------------------- *
+   The room establishes its own surface.
+
+   Found by the visual evidence on 29 July 2026, which is what the
+   evidence is for: every Deal Room surface was rendering ink-on-
+   obsidian and was close to illegible. `--pf-ink` and `--pf-surface`
+   were resolving correctly to the heritage-light values, but nothing
+   painted the background, so the app's obsidian body showed through
+   underneath near-black text.
+
+   The landing, Find and Structure each solve this by scoping their
+   own surface container (`.ponte-find` and friends). The Deal Room
+   does the same, in one place, for its own routes only. No adjacent
+   page is touched and no token is redeclared: this reads the approved
+   values rather than restating them.
+ * ---------------------------------------------------------------- */
+
+/* The full-bleed surface. `.dr` is width-limited, so painting it alone would
+   leave the obsidian body down both margins; a fixed pseudo-element paints only
+   one viewport, which left a black band below the fold on a tall page. Both
+   were visible in the 29 July evidence. This element carries the surface for
+   the whole document. */
+.dr-page {
+  background: var(--pf-surface);
+  min-height: 100dvh;
+}
+
+/* The canvas.
+ *
+ * `body` is obsidian and is taller than its own children - measured at 902px
+ * against 844px of content on a 390 x 844 capture - so the app's dark canvas
+ * showed as a band below the fold however tall `.dr-page` was made. Painting
+ * `.dr-page` cannot fix that, because the gap is outside it.
+ *
+ * `:has()` scopes this to documents that actually contain a Deal Room, so no
+ * adjacent page is repainted: on every other route the body keeps the obsidian
+ * it has today. This is the narrowest rule that reaches the canvas. */
+body:has(.dr-page) {
+  background: var(--pf-surface);
+}
+
+.dr {
+  --dr-gap: 28px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px 24px 96px;
+  color: var(--pf-ink);
+}
+
+/* ---------------------------------------------------------------- *
+   Identity strip
+ * ---------------------------------------------------------------- */
+
+.dr__ref {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+
+.dr__title {
+  font-family: var(--f-serif);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 8px 0 0;
+}
+
+.dr__deal {
+  font-size: 14px;
+  color: var(--pf-ink-2);
+  margin: 10px 0 0;
+  max-width: 62ch;
+}
+
+/* ---------------------------------------------------------------- *
+   Bands. A rule, not a card: the Constitution's fine ruled structure
+   for procedural facts.
+ * ---------------------------------------------------------------- */
+
+.dr__band {
+  border-top: 1px solid var(--pf-rule);
+  padding-top: 22px;
+  margin-top: var(--dr-gap);
+}
+
+.dr__band-title {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+  margin: 0 0 14px;
+}
+
+.dr__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 40px;
+  align-items: start;
+  margin-top: var(--dr-gap);
+}
+
+.dr__rail {
+  border-left: 1px solid var(--pf-rule);
+  padding-left: 24px;
+}
+
+/* ---------------------------------------------------------------- *
+   Next action. One, and visually primary.
+ * ---------------------------------------------------------------- */
+
+.dr__next {
+  border: 1px solid var(--pf-rule-strong);
+  border-radius: var(--pf-r-md);
+  background: var(--pf-raised);
+  padding: 18px 20px;
+}
+
+.dr__next-label {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pf-gold-ink);
+  margin: 0 0 8px;
+}
+
+.dr__next-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.dr__next-owner {
+  font-size: 13px;
+  color: var(--pf-ink-2);
+  margin: 8px 0 0;
+}
+
+/* ---------------------------------------------------------------- *
+   Progress. The number, and the sentence that keeps it honest.
+ * ---------------------------------------------------------------- */
+
+.dr__progress {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dr__stage {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dr__value {
+  font-family: var(--f-mono);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dr__progress-note {
+  font-size: 13px;
+  color: var(--pf-ink-2);
+  margin: 6px 0 0;
+}
+
+/* No percentage yet. A named state, not a zero. */
+.dr__no-value {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+
+/* ---------------------------------------------------------------- *
+   Lists of procedural facts
+ * ---------------------------------------------------------------- */
+
+.dr__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dr__item {
+  border-top: 1px solid var(--pf-rule);
+  padding: 16px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 20px;
+  align-items: start;
+}
+
+.dr__item:first-child {
+  border-top: none;
+}
+
+.dr__item-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dr__item-meta {
+  font-size: 13px;
+  color: var(--pf-ink-2);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.dr__item-limit {
+  font-size: 12.5px;
+  color: var(--pf-ink-3);
+  margin: 6px 0 0;
+  line-height: 1.5;
+  max-width: 66ch;
+}
+
+.dr__weight {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--pf-ink-3);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- *
+   State chips. Colour is never the only carrier: each has its word.
+ * ---------------------------------------------------------------- */
+
+.dr__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border: 1px solid var(--pf-rule-strong);
+  border-radius: var(--pf-r-pill);
+  color: var(--pf-ink-2);
+  background: var(--pf-raised);
+  white-space: nowrap;
+}
+
+.dr__chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pf-ink);
+  flex: none;
+}
+
+.dr__chip--done {
+  border-color: var(--pf-positive);
+  color: var(--pf-positive);
+}
+.dr__chip--done::before {
+  background: var(--pf-positive);
+}
+
+.dr__chip--review {
+  border-color: var(--pf-review);
+  color: var(--pf-review);
+}
+.dr__chip--review::before {
+  background: none;
+  border: 1.25px dashed var(--pf-review);
+}
+
+.dr__chip--danger {
+  border-color: var(--pf-danger);
+  color: var(--pf-danger);
+}
+.dr__chip--danger::before {
+  background: var(--pf-danger);
+}
+
+/* Declared but unconfirmed: the approved dashed treatment. */
+.dr__chip--declared {
+  border-style: dashed;
+  color: var(--pf-ink-3);
+}
+.dr__chip--declared::before {
+  background: none;
+  border: 1.25px dashed var(--pf-ink-3);
+}
+
+/* ---------------------------------------------------------------- *
+   Banners: read-only, blocked, unavailable action
+ * ---------------------------------------------------------------- */
+
+.dr__banner {
+  border: 1px solid var(--pf-rule-strong);
+  border-left-width: 3px;
+  border-radius: var(--pf-r-sm);
+  padding: 14px 18px;
+  background: var(--pf-sunken);
+  margin-bottom: var(--dr-gap);
+}
+
+.dr__banner--danger {
+  border-left-color: var(--pf-danger);
+}
+.dr__banner--review {
+  border-left-color: var(--pf-review);
+}
+.dr__banner--quiet {
+  border-left-color: var(--pf-rule-strong);
+}
+
+.dr__banner-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dr__banner-body {
+  font-size: 13px;
+  color: var(--pf-ink-2);
+  margin: 6px 0 0;
+  line-height: 1.55;
+  max-width: 74ch;
+}
+
+/* ---------------------------------------------------------------- *
+   Professional Momentum
+ * ---------------------------------------------------------------- */
+
+.dr__momentum {
+  border: 1px solid var(--pf-rule-strong);
+  border-radius: var(--pf-r-md);
+  padding: 20px 22px;
+  background: var(--pf-raised);
+}
+
+.dr__momentum dt {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+  margin-top: 14px;
+}
+
+.dr__momentum dt:first-of-type {
+  margin-top: 0;
+}
+
+.dr__momentum dd {
+  margin: 5px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pf-ink);
+}
+
+/* ---------------------------------------------------------------- *
+   Actions
+ * ---------------------------------------------------------------- */
+
+.dr__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.dr__button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 18px;
+  border-radius: var(--pf-r-sm);
+  border: 1px solid var(--pf-ink);
+  background: var(--pf-ink);
+  color: var(--pf-surface);
+  cursor: pointer;
+}
+
+.dr__button--secondary {
+  background: transparent;
+  color: var(--pf-ink);
+}
+
+.dr__button[disabled] {
+  cursor: not-allowed;
+  border-color: var(--pf-rule-strong);
+  background: var(--pf-sunken);
+  color: var(--pf-ink-3);
+}
+
+/* Why an action is unavailable, beside it rather than instead of it. */
+.dr__why {
+  font-size: 12.5px;
+  color: var(--pf-ink-3);
+  margin: 10px 0 0;
+  max-width: 68ch;
+  line-height: 1.5;
+}
+
+.dr__link {
+  color: var(--pf-ink);
+  text-underline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- *
+   Checklist (admission)
+ * ---------------------------------------------------------------- */
+
+.dr__check {
+  border-top: 1px solid var(--pf-rule);
+  padding: 18px 0;
+}
+
+.dr__check:first-of-type {
+  border-top: none;
+}
+
+.dr__check-why {
+  font-size: 13px;
+  color: var(--pf-ink-2);
+  margin: 6px 0 0;
+  line-height: 1.55;
+  max-width: 70ch;
+}
+
+.dr__check-who {
+  font-size: 12.5px;
+  color: var(--pf-ink-3);
+  margin: 6px 0 0;
+}
+
+/* ---------------------------------------------------------------- *
+   Empty states. Never "nothing here".
+ * ---------------------------------------------------------------- */
+
+.dr__empty {
+  border: 1px dashed var(--pf-rule-strong);
+  border-radius: var(--pf-r-md);
+  padding: 22px 24px;
+  color: var(--pf-ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 74ch;
+}
+
+/* ---------------------------------------------------------------- *
+   Responsive. Prioritisation, not compression.
+ * ---------------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .dr__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .dr__rail {
+    border-left: none;
+    border-top: 1px solid var(--pf-rule);
+    padding-left: 0;
+    padding-top: 22px;
+  }
+}
+
+@media (max-width: 459px) {
+  .dr {
+    padding: 28px 16px 72px;
+    --dr-gap: 22px;
+  }
+
+  .dr__title {
+    font-size: 24px;
+  }
+
+  .dr__item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* A weight sits under its step rather than being squeezed beside it. */
+  .dr__weight {
+    justify-self: start;
+  }
+
+  .dr__actions .dr__button {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+   Command forms
+
+   Added when the loop was wired. Labels stay visible (Constitution
+   section 13: a placeholder is not a label), every input has a
+   designed focus state, and the fields are readable at 390 without
+   the page scrolling sideways.
+ * ---------------------------------------------------------------- */
+
+.dr__form {
+  margin-top: 18px;
+  max-width: 46rem;
+}
+
+.dr__field {
+  margin: 0 0 16px;
+}
+
+.dr__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.dr__help {
+  display: block;
+  font-size: 12.5px;
+  color: var(--pf-ink-3);
+  line-height: 1.5;
+  margin-bottom: 7px;
+  max-width: 62ch;
+}
+
+.dr__input {
+  font: inherit;
+  font-size: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--pf-rule-strong);
+  border-radius: var(--pf-r-sm);
+  background: var(--pf-raised);
+  color: var(--pf-ink);
+}
+
+.dr__input:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 1px;
+  border-color: var(--pf-focus);
+}
+
+.dr__button:focus-visible,
+.dr__link:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 2px;
+}
+
+/* A form's own submit sits below its fields, not in the shared action row. */
+.dr__form .dr__button {
+  margin-top: 4px;
+}
+
+@media (max-width: 459px) {
+  .dr__form .dr__button {
+    width: 100%;
+  }
+}
+
+/* The agreement text a member accepts, shown in full before they do. Mono,
+   because it is the exact wording the stored checksum is taken over, and it
+   must not be reflowed into something that merely resembles it. */
+.dr__document {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--pf-rule);
+  border-radius: var(--pf-r-sm);
+  background: var(--pf-sunken);
+  color: var(--pf-ink-2);
+  max-height: 22rem;
+}

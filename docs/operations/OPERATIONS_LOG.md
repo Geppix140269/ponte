@@ -18,6 +18,110 @@ Use this structure:
 
 ---
 
+## 2026-07-29 - Deal Room: four trust boundaries closed (no production change)
+
+### Completed
+
+- The owner follow-up review of PR #98 found four defects that let the durable Deal Room record state something the database had not proved. All four are closed on the same branch, each with direct-RPC negative tests, because the server action is not the boundary: every command is granted to `authenticated`, so anything the action does can be skipped.
+  - **Agreement acceptance was forgeable.** `deal_room_accept_agreement()` took the version and checksum from its caller. It now takes neither: the canonical values are read from a new `deal_room_agreement_documents` table that no member holds a policy on, the old four-argument signature is dropped, and admission joins acceptances to that authority on version **and** checksum, so a forged or retired acceptance no longer satisfies the gate.
+  - **The Integrity pre-flight and invitation preview were caller-authored.** `deal_room_invite()` took `p_preview` and `p_preflight` as JSON. Both are now derived inside the command from `profiles`, `organizations` and `verifications`; the stored pre-flight carries the command's own `derivedAt` and reports sanctions as unscreened when nothing was screened. The sanctions refusal moved into the command too. The eight-argument signature is dropped.
+  - **The counterparty was not durable.** `deal_room_propose()` now proves the named member exists and has a reachable address, or requires a named external principal, and persists them on the room. `deal_room_invite()` has no email parameter: the address comes from that record, so the invitation cannot be redirected.
+  - **Acceptance was written to history as admission.** `deal_room_accept_invitation()` recorded `participant_admitted` while the participant was still outside the gate. It now records `invitation_accepted`, and `participant_admitted` is written in exactly one place, by the command that verified identity, capacity, role, authority and every current agreement.
+- New `lib/deal-room/__tests__/agreements.test.ts` recomputes each agreement's SHA-256 from the shipped text and asserts it against the literal seeded in the migration, so the retrievable source and the database authority cannot drift.
+
+### Decisions
+
+- The agreement authority is a table rather than a hard-coded list in the function, so publishing a new version is a reviewed migration and old acceptances stay explicable against the version they named.
+- The pre-flight stores attributable **source facts**, not a rendered report. The wording stays in `lib/deal-room/integrity.ts` and renders those facts, so there is one copy of the wording and one copy of the facts.
+
+### Risks / discrepancies
+
+- Still executed nowhere. The four boundaries are enforced in SQL that no database has run, so they are reviewed and not proven. `npm run deal-room:negative-access` is the first Gate C step and now covers all four.
+
+### Next
+
+1. Owner review of the four corrections and the embedded frames.
+2. Gate C, unchanged in order: apply the three migrations; create the bucket and policies; run the negative-access fixture; only on a clean pass, set the flag and deploy.
+
+### Evidence
+
+- Branch `agent/deal-room-launch-slice`, reconciled with `main` at `6b6c85a`. `npm run verify` clean.
+
+---
+
+## 2026-07-29 - Deal Room Gate B corrections after owner review (no production change)
+
+### Completed
+
+- The owner review of PR #98 did not accept Gate B. Five findings, all correct. Fixed on the same branch:
+  - **The loop is now operable.** `app/[locale]/deal-rooms/actions.ts` holds fifteen server actions, each calling one `deal_room_*` command through the caller's own session client. Every surface is wired to them with real inputs. Previously the controls existed and nothing joined them to the commands.
+  - **The invented sanctions check is gone.** `IntegrityInput` now takes a `SanctionsPosition` union that cannot express a screening without its date, source and result, and `sanctionsPositionFrom()` derives it from `verifications.sanctions_hits`. Absence reports under Unproved. A latent defect surfaced in the same code: the query filtered on `profile_id`, which is not a column on `verifications`, so it had been reading nothing.
+  - **Five RLS fail-open paths closed.** No member INSERT, UPDATE or DELETE policy remains on any of the fourteen tables. Room creation proves listing ownership, publication, family facts and Starter bounds, and builds the Deal snapshot rather than accepting one. Entitlement is created only by that command and only as a bounded Starter. `deal_room_is_writable()` joins the entitlement, so a missing row fails closed. `selected` evidence visibility is removed from launch scope.
+  - **An executable negative-access fixture.** `scripts/deal-room-negative-access.mjs` drives the loop with three real member sessions and asserts every property the review listed, including that even the service role cannot rewrite the activity history. Plan: `docs/codex/audits/deal-room/GATE-C-TEST-PLAN.md`.
+- `npm run verify` passes end to end. The contract test now carries the blanket "no member write policy" assertion that would have caught the original defect.
+
+### Decisions
+
+- `selected` visibility removed rather than given an ACL. Implementing an exact recipient relation is real work with its own negative tests and the launch loop does not need it; a label that overstates its own protection is worse than no label.
+- Server actions redirect with the command's own sentence on refusal, rather than returning a result. The whole slice stays server-rendered and no surface becomes a client component for the sake of one error string.
+
+- **Visual evidence captured**, after the owner supplied `PONTE_SITE_PASSWORD`. The value was verified against the SHA-256 in `middleware.ts` before use; the wall was not altered, and no page or route was exempted from it. 17 frames in `docs/codex/audits/deal-room/evidence/`, all 20 checks passing twice in succession.
+
+  The gate did its job. Two defects in this slice were visible only in the frames:
+  - every Deal Room surface was rendering ink-on-obsidian and was close to illegible, because nothing painted the Ponte paper surface behind the room. Fixed with the room's own surface container plus `body:has(.dr-page)` to reach the canvas, scoped so no adjacent page is repainted.
+  - a blocked room printed "Blocked" twice, as the condition chip and again as the momentum chip. The momentum chip is now suppressed when it would repeat the condition.
+
+  A third finding was in the harness: the 390 overflow assertion raced the bridge's post-webfont re-fit and passed only on a re-run. The capture now waits on `document.fonts.ready` and a measured stage height.
+
+### Risks / discrepancies
+
+- The migrations are still executed nowhere, so the negative-access fixture is unrun. It is the first Gate C step.
+
+### Next
+
+1. Owner reviews the 17 frames and records design approval.
+2. Gate C, in order: apply the three migrations; create the bucket and policies; run `npm run deal-room:negative-access`; only on a clean pass, set the flag and deploy.
+
+### Evidence
+
+- Branch `agent/deal-room-launch-slice`. `npm run verify` clean. `next build` emits all twelve surfaces plus the dev harness.
+
+---
+
+## 2026-07-29 - Deal Room launch slice, Gate B (no production change)
+
+### Completed
+
+- Gate A preflight approved by the owner at `35d2071`. Gate B implemented on `agent/deal-room-launch-slice`: the protected progression loop of issue #97, behind `NEXT_PUBLIC_DEAL_ROOM` and a server-side `DEAL_ROOM_ALLOWLIST`, both unset.
+- `lib/deal-room/` holds the domain: states, procedure, progress, momentum, permissions, integrity, credible interest, invitation, entitlement, activity, bridge model, flags and the server query layer. 264 assertions across nine suites, plus 16 markup assertions for the Bridge, all in `npm test`.
+- Twelve surfaces under `app/[locale]/deal-rooms/`, plus one API route that issues short-lived signed URLs for evidence after re-checking permission through the caller's own session.
+- **Multi-party Deal Room Bridge v1** built as commissioned: `components/ponte/bridge/DealRoomBridge.tsx`, transcribed from `PB.dealroom` in the approved engine (deck height 104, rise 46, station fractions, participant block cap 140, shared elevation drawer below a 460px container). Its wrapper rules are the only new CSS, in `bridge-integration.css`, tokens only.
+- Three additive migration files written: 14 `deal_room_*` tables, four RLS helper predicates, every policy, five authorised command functions, and one private storage bucket.
+- The two separately authorised repairs (issue #97, decision 3): `20260728d_family_commercial_terms.sql` renamed to `20260728e_`, and `check-launch-mode.mjs` made whitespace-tolerant. Both now pass. PL-004 and PL-005 moved to Completed.
+
+### Decisions
+
+- ADR-0009 accepted as amended (issue #97, decision 1). Recorded in `DECISION-LOG.md`.
+- `components/ponte/bridge/DealRoomBridge.tsx` added to the `RAW_SVG_BASELINE` ratchet in `check-governance.mjs`, with its argument written beside the two existing entries. The check refused the file first; the entry was written because of that, not to get past it. A bridge deck is structural interaction geometry from the approved package, not an interface icon.
+
+### Risks / discrepancies
+
+- **The migrations have been executed nowhere.** There is no non-production database to run them against (PL-002) and applying SQL to production is a Gate C decision. They are reviewed, not proven: treat their runtime behaviour as unverified until Gate C.
+- **No visual evidence was captured.** Ponte is behind the temporary Basic-auth wall, whose password exists only as a SHA-256 in `middleware.ts`, and modifying the wall is prohibited. The evidence harness (`/en/dev/deal-room`, which 404s in production) and the capture spec (`npm run evidence:deal-room`) are both committed and unrun. One command with `PONTE_SITE_PASSWORD` set produces desktop, 390 x 844 and reduced-motion captures of all eight states.
+- **Live negative RLS tests are outstanding** for the same reason: they need a running Postgres and two real member sessions. `lib/deal-room/__tests__/rls-contract.test.ts` asserts the policy contract textually in the meantime, including that no policy names `anon`, that the activity table has only a SELECT policy, that evidence versions and acceptances have no UPDATE or DELETE path, and that no statement touches the legacy cluster.
+- `npm run verify` fails on Windows at `lib/verification/__tests__/guard.mjs`, which uses the POSIX `|| true`. Environment failure, not a repository failure: the file is untouched by this branch and the guard passes under bash and in CI.
+
+### Next
+
+1. Owner review of the Gate B pull request, and design approval of the Bridge.
+2. Capture the visual evidence with the site-wall password, or authorise it to be captured against a deploy preview.
+3. Gate C, as four separate approvals: apply the three migrations by hand and record them in `schema_migrations`; create the bucket and its policies; run the live negative-access tests against production before activation; then set the flag and the allowlist and deploy.
+
+### Evidence
+
+- Branch `agent/deal-room-launch-slice`, based on `main` at `0318615`.
+- `docs/codex/audits/2026-07-29-deal-room-preflight.md`, `docs/plans/active/deal-room-launch-slice.md`.
+- `npm test`: all suites pass, including the ten new ones. `tsc --noEmit`: clean. `next build`: all twelve Deal Room routes and the API route emitted.
 ## 2026-07-29 — Start a Deal could not submit or save at all
 
 ### Completed
@@ -76,14 +180,14 @@ Use this structure:
 
 ### Risks / discrepancies
 
-- `20260728d_family_commercial_terms.sql` adds `service_terms` and `distribution_terms` as additive nullable jsonb, with cross-family CHECK constraints and a rollback path. It is **written and not applied**. The submit route already retries the write without them and the terms also travel in the synthesised `details`, so the branch is safe to deploy before the migration is run.
+- `20260728e_family_commercial_terms.sql` adds `service_terms` and `distribution_terms` as additive nullable jsonb, with cross-family CHECK constraints and a rollback path. It is **written and not applied**. The submit route already retries the write without them and the terms also travel in the synthesised `details`, so the branch is safe to deploy before the migration is run.
 - The `listings_product_fields_family` constraint is added `not valid` so applying it cannot fail on a historical row. Validating it is a separate, deliberate step.
 - Not every trade-service category is modelled to the same conditioned depth. The architecture supports category-conditioned questions; a complete model of eleven professions was not attempted here.
 
 ### Next
 
 1. Owner review of ADR-0014 and of PR for `fix/family-specific-downstream-composer`.
-2. On acceptance: merge, then apply `20260728d_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
+2. On acceptance: merge, then apply `20260728e_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
 3. Validate `listings_product_fields_family` after inspecting any rows it reports.
 
 ### Evidence
