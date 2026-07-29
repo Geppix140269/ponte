@@ -463,10 +463,19 @@ export default function DealRoomBridge({ model, caption }: DealRoomBridgeProps) 
             {chip.label}
           </span>
         ) : null}
-        <span className="brj__state">
-          <i aria-hidden="true" />
-          {MOMENTUM_LABEL[model.momentum]}
-        </span>
+        {/*
+          The momentum chip is suppressed when it would repeat the condition.
+          A blocked room's momentum IS "Blocked", and the 29 July evidence
+          showed the word twice in two different treatments, reading as two
+          separate facts when it is one. The condition chip is the more
+          specific of the two, so it is the one that stays.
+        */}
+        {chip && chip.label === MOMENTUM_LABEL[model.momentum] ? null : (
+          <span className="brj__state">
+            <i aria-hidden="true" />
+            {MOMENTUM_LABEL[model.momentum]}
+          </span>
+        )}
         {caption ? <span className="pf-dealroom-bridge__ref">{caption}</span> : null}
       </div>
     </div>

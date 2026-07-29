@@ -68,6 +68,17 @@ async function open(page: Page, state: string): Promise<void> {
   // The bridge measures its container and draws in a layout effect, so wait for
   // the deck rather than for a timeout.
   await page.waitForSelector(".br__deck path.d-live", { timeout: 15_000 });
+
+  // Then wait for fonts. The component re-fits itself on `document.fonts.ready`
+  // because a label that reflows after a webfont loads would otherwise overlap
+  // what follows it - and on the first run of this suite the 390 overflow check
+  // caught exactly that mid-reflow and failed, then passed on a re-run.
+  // Evidence that only holds on the second attempt is not evidence.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.waitForFunction(() => {
+    const stage = document.querySelector<HTMLElement>(".br__stage, .br__rows");
+    return Boolean(stage && stage.getBoundingClientRect().height > 0);
+  });
 }
 
 test.describe("Deal Room bridge evidence", () => {
@@ -134,7 +145,14 @@ test.describe("Deal Room bridge evidence", () => {
     await open(page, "procedure-proposed");
 
     const text = await page.locator(".dr").innerText();
-    expect(text).toContain("No completion value until the procedure is agreed");
+
+    // Case-insensitive: `.dr__no-value` is `text-transform: uppercase`, so
+    // `innerText()` returns the rendered casing rather than the source string.
+    // The assertion is about the sentence being present, not about its casing.
+    expect(text.toLowerCase()).toContain("no completion value until the procedure is agreed");
+
+    // The one that matters: no numeral reaches the page before the procedure
+    // governs. Not a zero, not a bar, not a percentage anywhere.
     expect(text).not.toMatch(/\b\d{1,3}%/);
   });
 

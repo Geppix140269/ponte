@@ -102,7 +102,8 @@ export default async function DealRoomStatesPage({
 
   return (
     <div className={landingFontVars}>
-      <div className="dr" style={{ minHeight: "100dvh" }}>
+      <div className="dr-page">
+        <div className="dr">
         {!only ? (
           <header style={{ marginBottom: 40 }}>
             <p className="dr__ref">Development only · not indexed · not linked</p>
@@ -149,6 +150,7 @@ export default async function DealRoomStatesPage({
             </div>
           </section>
         ) : null}
+        </div>
       </div>
     </div>
   );

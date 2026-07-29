@@ -198,7 +198,16 @@ route or journey. Activation in production is a separate owner gate (C).
 
 Both are stated rather than worked around, and both have a committed, one-command path.
 
-1. **No visual evidence was captured.** The owner review directed that the harness be run with the owner-held `PONTE_SITE_PASSWORD`. **That value was not present in this environment** - not in the shell, not in `.env.local`, nowhere reachable - and the wall must not be altered, so the captures could not be produced. Everything short of the password is done and verified: `npx playwright test e2e/deal-room-bridge.spec.ts --list` enumerates all 20 captures and checks, so the spec is wired and will run first time. The harness (`/en/dev/deal-room`, 404s in production) renders all eight states from the real domain. One command completes it:
+1. **Visual evidence: captured on 29 July 2026, and it found two real defects.** The owner supplied `PONTE_SITE_PASSWORD`; it was verified against the SHA-256 in `middleware.ts` before use, and the wall was not altered. 17 frames in `docs/codex/audits/deal-room/evidence/`: 8 desktop at 1280, 8 mobile at 390 x 844, and reduced motion. All 20 checks pass, twice in succession.
+
+   **What the frames found, which nothing else had:**
+
+   - **Every Deal Room surface was rendering ink-on-obsidian and was close to illegible.** `--pf-ink` and `--pf-surface` resolved correctly to the heritage-light values, but nothing painted the background, so the app's dark canvas showed through behind near-black text. Fixed by giving the room its own surface container, exactly as the landing, Find and Structure each do. A first attempt using a fixed pseudo-element then left a black band below the fold on a tall page, because `body` measures 902px against 844px of content; the canvas is now reached by `body:has(.dr-page)`, which is scoped to documents that actually contain a Deal Room and repaints no adjacent page.
+   - **A blocked room printed "Blocked" twice**, once as the red condition chip and once as the momentum chip, in two different treatments, reading as two separate facts when it is one. The momentum chip is now suppressed when it would repeat the condition.
+
+   Both are defects in this slice's own code, found by the gate that exists to find them, and fixed inside it. No adjacent page was repainted.
+
+   A third finding was in the harness rather than the product: the 390 overflow assertion passed on a re-run after failing once, because it raced the bridge's post-webfont re-fit. Evidence that only holds on the second attempt is not evidence, so the capture now waits on `document.fonts.ready` and a measured stage height.
 
    ```bash
    PONTE_SITE_PASSWORD=... npm run evidence:deal-room

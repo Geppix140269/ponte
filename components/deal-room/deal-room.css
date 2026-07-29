@@ -18,6 +18,47 @@
    recent change.
    ====================================================================== */
 
+/* ---------------------------------------------------------------- *
+   The room establishes its own surface.
+
+   Found by the visual evidence on 29 July 2026, which is what the
+   evidence is for: every Deal Room surface was rendering ink-on-
+   obsidian and was close to illegible. `--pf-ink` and `--pf-surface`
+   were resolving correctly to the heritage-light values, but nothing
+   painted the background, so the app's obsidian body showed through
+   underneath near-black text.
+
+   The landing, Find and Structure each solve this by scoping their
+   own surface container (`.ponte-find` and friends). The Deal Room
+   does the same, in one place, for its own routes only. No adjacent
+   page is touched and no token is redeclared: this reads the approved
+   values rather than restating them.
+ * ---------------------------------------------------------------- */
+
+/* The full-bleed surface. `.dr` is width-limited, so painting it alone would
+   leave the obsidian body down both margins; a fixed pseudo-element paints only
+   one viewport, which left a black band below the fold on a tall page. Both
+   were visible in the 29 July evidence. This element carries the surface for
+   the whole document. */
+.dr-page {
+  background: var(--pf-surface);
+  min-height: 100dvh;
+}
+
+/* The canvas.
+ *
+ * `body` is obsidian and is taller than its own children - measured at 902px
+ * against 844px of content on a 390 x 844 capture - so the app's dark canvas
+ * showed as a band below the fold however tall `.dr-page` was made. Painting
+ * `.dr-page` cannot fix that, because the gap is outside it.
+ *
+ * `:has()` scopes this to documents that actually contain a Deal Room, so no
+ * adjacent page is repainted: on every other route the body keeps the obsidian
+ * it has today. This is the narrowest rule that reaches the canvas. */
+body:has(.dr-page) {
+  background: var(--pf-surface);
+}
+
 .dr {
   --dr-gap: 28px;
   max-width: 1180px;

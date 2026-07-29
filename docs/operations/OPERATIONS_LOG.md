@@ -34,14 +34,21 @@ Use this structure:
 - `selected` visibility removed rather than given an ACL. Implementing an exact recipient relation is real work with its own negative tests and the launch loop does not need it; a label that overstates its own protection is worse than no label.
 - Server actions redirect with the command's own sentence on refusal, rather than returning a result. The whole slice stays server-rendered and no surface becomes a client component for the sake of one error string.
 
+- **Visual evidence captured**, after the owner supplied `PONTE_SITE_PASSWORD`. The value was verified against the SHA-256 in `middleware.ts` before use; the wall was not altered, and no page or route was exempted from it. 17 frames in `docs/codex/audits/deal-room/evidence/`, all 20 checks passing twice in succession.
+
+  The gate did its job. Two defects in this slice were visible only in the frames:
+  - every Deal Room surface was rendering ink-on-obsidian and was close to illegible, because nothing painted the Ponte paper surface behind the room. Fixed with the room's own surface container plus `body:has(.dr-page)` to reach the canvas, scoped so no adjacent page is repainted.
+  - a blocked room printed "Blocked" twice, as the condition chip and again as the momentum chip. The momentum chip is now suppressed when it would repeat the condition.
+
+  A third finding was in the harness: the 390 overflow assertion raced the bridge's post-webfont re-fit and passed only on a re-run. The capture now waits on `document.fonts.ready` and a measured stage height.
+
 ### Risks / discrepancies
 
-- **The visual evidence still has not been captured.** The review directed that the harness be run with the owner-held `PONTE_SITE_PASSWORD`; that value is not present in this environment and the access wall must not be altered. `npx playwright test e2e/deal-room-bridge.spec.ts --list` enumerates all 20 captures, so the spec is wired and ready. One command with the password completes it.
 - The migrations are still executed nowhere, so the negative-access fixture is unrun. It is the first Gate C step.
 
 ### Next
 
-1. Owner supplies `PONTE_SITE_PASSWORD`, or runs `npm run evidence:deal-room` directly, and reviews the frames.
+1. Owner reviews the 17 frames and records design approval.
 2. Gate C, in order: apply the three migrations; create the bucket and policies; run `npm run deal-room:negative-access`; only on a clean pass, set the flag and deploy.
 
 ### Evidence
