@@ -327,7 +327,8 @@ No database, schema or production data is involved.
 
 | Step | Change | Reversal |
 |---|---|---|
-| Stage 0a | PL-004, on `fix/launch-mode-whitespace-check`. Corrects `check-launch-mode.mjs` so `npm run verify` can pass. No governance or product change | Revert the PR |
+| Stage 0a | PL-004, on `fix/launch-mode-whitespace-check`, PR #103. Corrects `check-launch-mode.mjs`. No governance or product change | Revert the PR |
+| Stage 0a2 | PL-005, the duplicate `20260728d` migration identifier. **Awaiting owner classification**, and also required before the gate can pass | Rename is reversible; the applied file keeps its identifier |
 | Stage 0b | This governance PR: ADR-0015, Constitution v1.1, this plan, LB-001, LB-002, register updates | Revert the PR |
 | Stage 1 step 0 | Bridge manifest decoupling: package-local snapshot, resolver change, manifest annotation | Revert; the snapshot is additive and the resolver change is three lines |
 | Stage 1 | Central tokens, alias conversions, enumerated call sites, Bridge deck and pier contrast, caption floor, reference re-takes, tests | Revert the token block; the alias conversions are value-neutral and may stay |
@@ -370,8 +371,10 @@ Every screen in section 11's evidence matrix must be captured in all of:
 - `npm run verify` before declaring Stage 1 complete. It runs
   `check-encoding.mjs` (no em dashes in `app/` or `components/`),
   `check-governance.mjs`, the token-authority test and the full test suite.
-  PL-004 fixes `check-launch-mode.mjs` in Stage 0a, so the gate is passable before
-  Stage 1 opens.
+  PL-004 fixes `check-launch-mode.mjs` in Stage 0a. **`npm run verify` will still
+  fail after it**, because `check-migrations.mjs` also fails on `main` on a
+  duplicate `20260728d` identifier, logged as PL-005 and awaiting owner
+  classification. Both must be resolved before Stage 1 can report a green gate.
 - `check-governance.mjs` must be re-run **after** a deliberate token value change,
   to prove the decoupling in step 0 actually holds. A run that only passes before
   the values move proves nothing.
