@@ -34,13 +34,13 @@ Use this structure:
 
 ### Risks / discrepancies
 
-- `20260728d_family_commercial_terms.sql` remains **written and not applied**. Until it is, `service_terms` and `distribution_terms` are absent, the new surfaces render the family's classification without its terms, and the terms reach readers through the record's synthesised `details`. No production migration was applied by this work.
+- `20260728e_family_commercial_terms.sql` remains **written and not applied**. Until it is, `service_terms` and `distribution_terms` are absent, the new surfaces render the family's classification without its terms, and the terms reach readers through the record's synthesised `details`. No production migration was applied by this work.
 - PL-004 recorded: `canonicalServiceCategory`, `canonicalPartnerType` and `canonicalRelationshipTerm` exist to reconcile superseded stored keys and have no callers, so a record stored under a superseded key loses its specialisations on edit. Production incidence is **unmeasured**; it is not asserted to be zero.
 
 ### Next
 
 1. Owner accepts or rejects ADR-0014.
-2. On acceptance, apply `20260728d_family_commercial_terms.sql` with owner approval and record it in `DATABASE-STATE.md`.
+2. On acceptance, apply `20260728e_family_commercial_terms.sql` with owner approval and record it in `DATABASE-STATE.md`.
 3. Triage PL-004 against production data.
 
 ### Evidence
@@ -69,13 +69,13 @@ Use this structure:
 ### Risks / discrepancies
 
 - **The code fix stops the data loss; it does not restore the behaviour the missing columns carry.** Until `20260728c` is applied, a member's accepted declaration cannot be stored (`declaration_accepted_at`), so the publication gate will not see it, and `publishOrHold` cannot write the `validating` / `needs_information` / `flagged` states the widened status constraint permits. A submission therefore stores and stays `submitted`, and the member is told it is with the desk. That is honest but it is not automated publication.
-- `20260728d_family_commercial_terms.sql` remains written and unapplied, unchanged by this work.
-- `node scripts/check-migrations.mjs` fails on a pre-existing duplicate letter suffix: `20260728d_family_commercial_terms.sql` and `20260728d_verification_level_canonical.sql`. Not introduced here and not repaired here.
+- `20260728e_family_commercial_terms.sql` remains written and unapplied, unchanged by this work.
+- `node scripts/check-migrations.mjs` fails on a pre-existing duplicate letter suffix: `20260728e_family_commercial_terms.sql` and `20260728d_verification_level_canonical.sql`. Not introduced here and not repaired here.
 
 ### Next
 
 1. Owner review and merge.
-2. Apply `20260728c_automated_listing_publication.sql` by hand with owner authorisation, then `20260728d_family_commercial_terms.sql`, and record both in `DATABASE-STATE.md`. Until then the composer's own log names every column being dropped on each write.
+2. Apply `20260728c_automated_listing_publication.sql` by hand with owner authorisation, then `20260728e_family_commercial_terms.sql`, and record both in `DATABASE-STATE.md`. Until then the composer's own log names every column being dropped on each write.
 3. Re-walk one trade-service submission end to end after the migration and confirm the listing carries its declaration and reaches a decided state.
 
 ### Evidence
@@ -108,14 +108,14 @@ Use this structure:
 
 ### Risks / discrepancies
 
-- `20260728d_family_commercial_terms.sql` adds `service_terms` and `distribution_terms` as additive nullable jsonb, with cross-family CHECK constraints and a rollback path. It is **written and not applied**. The submit route already retries the write without them and the terms also travel in the synthesised `details`, so the branch is safe to deploy before the migration is run.
+- `20260728e_family_commercial_terms.sql` adds `service_terms` and `distribution_terms` as additive nullable jsonb, with cross-family CHECK constraints and a rollback path. It is **written and not applied**. The submit route already retries the write without them and the terms also travel in the synthesised `details`, so the branch is safe to deploy before the migration is run.
 - The `listings_product_fields_family` constraint is added `not valid` so applying it cannot fail on a historical row. Validating it is a separate, deliberate step.
 - Not every trade-service category is modelled to the same conditioned depth. The architecture supports category-conditioned questions; a complete model of eleven professions was not attempted here.
 
 ### Next
 
 1. Owner review of ADR-0014 and of PR for `fix/family-specific-downstream-composer`.
-2. On acceptance: merge, then apply `20260728d_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
+2. On acceptance: merge, then apply `20260728e_family_commercial_terms.sql` by hand with owner authorisation, then record the application in `DATABASE-STATE.md`.
 3. Validate `listings_product_fields_family` after inspecting any rows it reports.
 
 ### Evidence

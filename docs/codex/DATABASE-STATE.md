@@ -296,7 +296,23 @@ settings and possibly a Supabase project, and both are owner decisions.
 
 ## Written and NOT applied: family commercial terms
 
-`supabase/migrations/20260728d_family_commercial_terms.sql` (ADR-0014).
+`supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014).
+
+**Renamed on 29 July 2026, from `20260728d_family_commercial_terms.sql`.** Two
+pull requests each merged a migration claiming the `20260728d` identifier, which
+failed `scripts/check-migrations.mjs` and therefore failed the whole of
+`npm run verify` for every task on `main`.
+
+This file was the one renamed because it is the one that has **never been
+applied**. `20260728d_verification_level_canonical.sql` was applied to
+production on 28 July and is recorded in `schema_migrations` with a SHA-256 that
+matches it byte for byte, so renaming *that* file would have desynchronised the
+ledger from production. This file has no such record and nothing depends on its
+name.
+
+An operator instruction issued before this date may still name the old
+`20260728d_family_commercial_terms.sql`. It is the same file, unchanged except
+for the identifier, and the command below is the current one.
 
 Adds two nullable jsonb columns to `listings`, `service_terms` and
 `distribution_terms`, plus three CHECK constraints stating the cross-family

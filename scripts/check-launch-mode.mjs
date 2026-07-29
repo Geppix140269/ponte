@@ -13,9 +13,29 @@ function read(relativePath) {
   return fs.readFileSync(absolutePath, "utf8");
 }
 
+/**
+ * Whitespace as Markdown itself treats it: any run of it is one space.
+ *
+ * The required sentences below are prose in wrapped Markdown, and a literal
+ * `includes()` made this check depend on where the line breaks fell. It broke
+ * on exactly that: AGENTS.md wraps "No additional cleanup, refactoring or
+ * adjacent improvement is authorised" after the comma, so the sentence WAS
+ * present, at AGENTS.md:128-129, and the check reported it missing. Because
+ * this is the sixth step of `npm run verify`, the mandatory gate could not
+ * complete for any task on `main` until a governance document was re-wrapped to
+ * suit a string comparison.
+ *
+ * Normalising both sides makes the check assert what it means - that the
+ * sentence is there - rather than how the file happens to be laid out. It only
+ * ever widens what matches: every snippet that matched before still matches,
+ * because collapsing whitespace cannot separate text that was already adjacent.
+ */
+const flattenWhitespace = (text) => text.replace(/\s+/g, " ");
+
 function requireText(relativePath, content, snippets) {
+  const flattened = flattenWhitespace(content);
   for (const snippet of snippets) {
-    if (!content.includes(snippet)) {
+    if (!flattened.includes(flattenWhitespace(snippet))) {
       failures.push(`${relativePath} is missing required text: ${snippet}`);
     }
   }

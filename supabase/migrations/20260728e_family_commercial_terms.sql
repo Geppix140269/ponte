@@ -1,7 +1,7 @@
 -- Family commercial terms: the facts a Trade Service and a Distribution
 -- opportunity actually have, downstream of their classification.
 --
--- Run: node scripts/db-query.mjs --file supabase/migrations/20260728d_family_commercial_terms.sql
+-- Run: node scripts/db-query.mjs --file supabase/migrations/20260728e_family_commercial_terms.sql
 --
 -- NOT APPLIED. This file is written and reviewed; it has not been run against
 -- production and must not be until the owner approves it. A merge to `main`
