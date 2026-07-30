@@ -677,6 +677,27 @@
       "disclosure": "Ponte uses AI to understand what you type."
     }
   },
+  "journey": {
+    "back": "Back",
+    "backToStart": "Back to start",
+    "backAriaLabel": "Go back to the previous step",
+    "unsaved": {
+      "title": "You have unsaved changes",
+      "body": "Leaving this page may cause you to lose the information you have entered.",
+      "continueEditing": "Continue editing",
+      "saveDraft": "Save as draft",
+      "leave": "Leave without saving",
+      "signInAndSave": "Sign in and save",
+      "signInToSave": "Sign in to save this as a draft and continue later.",
+      "dialogAriaLabel": "Unsaved changes"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "body": "We could not complete that step. Your place in Ponte Trade is safe. Try again, or return to the home page.",
+      "retry": "Try again",
+      "home": "Return to Ponte Trade"
+    }
+  },
   "legal": {
     "originalsInEnglish": "Legal originals in English. This page is not translated: the English text is the binding version."
   },

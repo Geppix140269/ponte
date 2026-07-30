@@ -5,6 +5,10 @@
    design-system/ponte-flow/ponte-flow.css for the reconciliation against the
    existing Brand v5 token blocks. */
 @import "../design-system/ponte-flow/ponte-flow.css";
+/* Shared journey navigation: the labelled Back control and the unsaved-changes
+   dialog. Imported globally, not per-route, because both render in either
+   chrome and must be styled wherever a journey mounts them. */
+@import "../components/ponte/nav/nav.css";
 
 @tailwind base;
 @tailwind components;
