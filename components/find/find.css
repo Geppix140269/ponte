@@ -51,6 +51,12 @@
   /* ---- Focus ---- */
   --focus: var(--pf-focus);
 
+  /* ---- Interaction blue (ADR-0015 Stage 2): act/edit, never a status ---- */
+  --interact: var(--pf-interact);
+  --interact-border: var(--pf-interact-border);
+  --interact-active: var(--pf-interact-active);
+  --interact-tint: var(--pf-interact-tint);
+
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
   --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;

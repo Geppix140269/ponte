@@ -147,7 +147,15 @@ const LUCIDE_BASELINE = [
  *   every class it emits is either declared in an approved stylesheet or
  *   created by the approved engine.
  *
- * All three are listed rather than exempted, so the number of hand-authored
+ * - `components/ponte/bridge/TaskCompletionBridge.tsx` draws the completion deck
+ *   for the universal Task Completion Bridge (ADR-0016, Bridge System v1
+ *   component #3). Same argument as the two above: section 8 makes the Bridge
+ *   System authoritative, a shallow deck with a travelled gold segment is
+ *   structural crossing geometry rather than an ad hoc icon, and no Flow
+ *   registry key expresses a progress deck. The signal node is a `<circle>` on
+ *   that deck, not an icon.
+ *
+ * All four are listed rather than exempted, so the number of hand-authored
  * drawings in the product stays visible in one place and each new one has to be
  * argued for here. This is the ratchet working as intended: the entry above was
  * written because the check refused the file, not to get past it.
@@ -169,6 +177,7 @@ const RAW_SVG_BASELINE = [
   "components/ponte/brand/PonteLockup.tsx",
   "components/ponte/bridge/BridgeRoute.tsx",
   "components/ponte/bridge/DealRoomBridge.tsx",
+  "components/ponte/bridge/TaskCompletionBridge.tsx",
   "components/signals/SignalCard.tsx",
   "components/structure/StructureComposer.tsx",
 ];

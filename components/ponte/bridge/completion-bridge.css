@@ -1,0 +1,102 @@
+/* ======================================================================
+   Task Completion Bridge (ADR-0016, Bridge System v1 component #3).
+
+   Layout and the lawful gold signal only. Every value is an existing token
+   from the Brand v5 heritage-light block the composer route already loads
+   (find.css) and the Ponte Flow bundle. No page-local colour, radius, shadow,
+   font, easing or duration is invented here.
+
+   Scoped under `.ponte-find .tcb` so nothing here reaches another route.
+   ====================================================================== */
+
+.ponte-find .tcb {
+  display: block;
+  margin: 0 0 var(--s-5);
+}
+
+/* The neutral null state: one line, a dot, no arch and no percentage. */
+.ponte-find .tcb--neutral {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.ponte-find .tcb__dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--rule-strong);
+}
+
+.ponte-find .tcb__neutral {
+  max-width: 60ch;
+}
+
+/* Value and band. */
+.ponte-find .tcb__top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+}
+
+.ponte-find .tcb__pct {
+  font-family: var(--f-serif);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--gold-ink);
+}
+
+.ponte-find .tcb__pctn {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  margin-left: 2px;
+}
+
+.ponte-find .tcb__band {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* The deck. */
+.ponte-find .tcb__arc {
+  margin-top: var(--s-2);
+}
+
+.ponte-find .tcb__deck {
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+}
+
+.ponte-find .tcb__trav {
+  stroke: var(--gold-ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 500ms ease;
+}
+
+.ponte-find .tcb__node {
+  fill: var(--gold-ink);
+}
+
+/* The two ends of the crossing. */
+.ponte-find .tcb__abut {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--s-2);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Movement is meaning here, but it is not information: the settled position is
+   the same with motion removed. */
+@media (prefers-reduced-motion: reduce) {
+  .ponte-find .tcb__trav {
+    transition: none;
+  }
+}
