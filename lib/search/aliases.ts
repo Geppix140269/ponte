@@ -82,6 +82,25 @@ export type AliasGroup = {
    * sequences: `evoo`, `ulsd`, `fcl`, `lcl`, `sgs`, `en590`, `n46`.
    */
   terms: readonly string[];
+  /**
+   * Terms that IDENTIFY this group when a member types one, and are never
+   * contributed to anybody else's search.
+   *
+   * The distinction exists because triggering and expanding are not the same
+   * risk. A member who types `diesel` has said what they mean, and searching
+   * their own word broadly is answering them. Adding `diesel` to a search for
+   * `gas oil` is different: it is Ponte widening a fuel enquiry into every
+   * record with `diesel` in its name, and `ilike` has no notion of a word, so
+   * that includes `Diesel Generator`, `Diesel Engine` and `Diesel Pump` -
+   * equipment, not cargo. Found in the live production run, where a search for
+   * `gas oil` returned a generator.
+   *
+   * So a term goes here when it names the group reliably but is too broad to
+   * push onto a query that did not use it. The fuel-specific forms
+   * (`diesel fuel`, `automotive diesel`) stay in `terms` and do the widening
+   * instead.
+   */
+  triggerOnly?: readonly string[];
   /** Why this group exists, for whoever edits it next. */
   note?: string;
 };
@@ -98,19 +117,24 @@ export const ALIAS_GROUPS: readonly AliasGroup[] = [
   {
     key: "gasoil",
     canonical: "gas oil",
-    note: "Middle distillate. The single most aliased product in the inventory: the same cargo is offered as gas oil, gasoil, diesel and by its European standard number.",
+    note: "Middle distillate. The most aliased product in the inventory: the same cargo is offered as gas oil, gasoil, diesel and by its European standard number. Ordered most useful first, because the variant cap keeps the leading terms.",
     terms: [
       "gas oil",
       "gasoil",
-      "diesel",
       "en590",
+      "diesel fuel",
+      "automotive diesel",
       "en 590",
       "automotive gas oil",
+      "diesel oil",
       "ulsd",
       "gasoleo",
       "gasolio",
       "dieselkraftstoff",
     ],
+    // Names the group, never widens another query into equipment. See
+    // `triggerOnly` on the type.
+    triggerOnly: ["diesel"],
   },
   {
     key: "jet-fuel",
@@ -233,11 +257,17 @@ export const ALIAS_GROUPS: readonly AliasGroup[] = [
   },
 ];
 
-/** Normalised term -> the group that owns it. Built once. */
+/**
+ * Normalised term -> the group it names. Built once.
+ *
+ * Both sets are indexed, because both IDENTIFY a group. Only `terms` is ever
+ * read back out as an expansion, which is where the two differ and is the whole
+ * point of the split.
+ */
 const BY_TERM = new Map<string, AliasGroup>();
 const ALL_TERMS: string[] = [];
 for (const group of ALIAS_GROUPS) {
-  for (const term of group.terms) {
+  for (const term of [...group.terms, ...(group.triggerOnly ?? [])]) {
     BY_TERM.set(term, group);
     if (ALL_TERMS.indexOf(term) < 0) ALL_TERMS.push(term);
   }
@@ -246,6 +276,18 @@ for (const group of ALIAS_GROUPS) {
 /** The group a normalised phrase belongs to, or null. Exact phrase match only. */
 export function aliasGroupFor(phrase: string): AliasGroup | null {
   return BY_TERM.get(phrase) ?? null;
+}
+
+/**
+ * The phrases this group may contribute to a search that did not name them.
+ *
+ * Deliberately a function rather than the `terms` field read directly: a caller
+ * reaching for `group.terms` gets the same answer today, and would silently
+ * reintroduce the `Diesel Generator` defect the day a trigger-only term is
+ * added to a group that has none.
+ */
+export function expansionTerms(group: AliasGroup): readonly string[] {
+  return group.terms;
 }
 
 /** Every distinct term across the whole vocabulary. Used by the tests. */

@@ -453,13 +453,13 @@ test("an unavailable family URL gets concise commercial copy", async ({ page }) 
   const cases = [
     {
       family: "services",
-      heading: "No live trade-service signals are currently available",
+      heading: "Trade services filtering is not currently available.",
       action: "Post a trade-service opportunity",
       frame: "20-desktop-services-unavailable",
     },
     {
       family: "distribution",
-      heading: "No live distribution opportunities are currently available",
+      heading: "Distribution and representation filtering is not currently available.",
       action: "Post a distribution opportunity",
       frame: "21-desktop-distribution-unavailable",
     },
@@ -468,8 +468,11 @@ test("an unavailable family URL gets concise commercial copy", async ({ page }) 
     await open(page, `${FIXTURE}?family=${family}&availability=products`);
     const body = await page.locator(".sec").first().innerText();
     expect(body).toContain(heading);
-    expect(body).toContain("View all signals");
+    expect(body).toContain("Search all signals");
     expect(body).toContain(action);
+    // It says the FILTER is unavailable, never that the family is empty: the
+    // count behind it counts classified records, not live ones.
+    expect(body).not.toContain("No live");
     for (const forbidden of [
       "taxonomy",
       "classified",
@@ -490,7 +493,7 @@ test("a zero-result search inside an available family stays a search failure", a
   await open(page, `${FIXTURE}?q=zzzznotarealthing&family=services&${TWO_FAMILIES}`);
   const body = await page.locator(".sec").first().innerText();
   expect(body).toContain("No signal matches this search");
-  expect(body).not.toContain("No live trade-service signals are currently available");
+  expect(body).not.toContain("Trade services filtering is not currently available.");
   await shot(page, "22-desktop-empty-search-in-available-family");
 });
 

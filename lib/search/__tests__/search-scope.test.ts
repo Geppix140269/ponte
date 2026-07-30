@@ -25,7 +25,14 @@ import {
   MAX_PREDICATE_CHARS,
   type RankableSignal,
 } from "../signal-search";
-import { allAliasTerms, LONGEST_ALIAS_WORDS, LARGEST_ALIAS_GROUP } from "../aliases";
+import {
+  ALIAS_GROUPS,
+  aliasGroupFor,
+  allAliasTerms,
+  expansionTerms,
+  LONGEST_ALIAS_WORDS,
+  LARGEST_ALIAS_GROUP,
+} from "../aliases";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -118,11 +125,95 @@ test("an alias-only search still reaches every sibling term", () => {
   const search = must("gas oil");
   assert.equal(matchesSearch(DIESEL_ONLY, search), true, "gas oil no longer reaches diesel");
   assert.equal(matchesSearch(EN590_QUALIFIED, search), true, "gas oil no longer reaches EN590");
-  // And the widening is in the predicate, not only in memory.
+  // And the widening is in the predicate, not only in memory. The fuel-specific
+  // form, not the bare word: see the diesel-generator regression above.
   const predicate = searchPredicate(search);
-  assert.ok(predicate.includes('product.ilike."*diesel*"'), "diesel is not searched");
+  assert.ok(predicate.includes('product.ilike."*diesel fuel*"'), "the fuel form is not searched");
   assert.ok(predicate.includes('product.ilike."*en590*"'), "EN590 is not searched");
   assert.equal(conceptCount(predicate), 1, "one concept became several");
+});
+
+/**
+ * A real production record, and the reason bare `diesel` is trigger-only.
+ *
+ * `ilike '%diesel%'` has no notion of a word, so widening `gas oil` with the
+ * bare term reached this. A generator is equipment; a member asking about gas
+ * oil is asking about cargo. Found by reading the live run's sample rows, not
+ * by reasoning about the table.
+ */
+const DIESEL_GENERATOR = sig({
+  id: "g1",
+  product: "Diesel Generator",
+  category: "Machinery and equipment",
+  originText: "China",
+  destinationText: "Nigeria",
+});
+
+test("gas oil does not match a diesel generator", () => {
+  // The regression. Every one of these names the fuel, and none of them may
+  // reach equipment that merely has the word in its name.
+  for (const query of ["gas oil", "gasoil", "EN590", "ULSD"]) {
+    const search = must(query);
+    assert.equal(
+      matchesSearch(DIESEL_GENERATOR, search),
+      false,
+      `"${query}" matched a diesel generator`,
+    );
+    assert.ok(
+      !searchPredicate(search).includes('product.ilike."*diesel*"'),
+      `"${query}" sends the bare term to the database`,
+    );
+  }
+});
+
+test("a typed diesel query keeps its own broad match", () => {
+  // The other half of the rule. A member who typed the word has said what they
+  // mean, and their own literal term is searched: this record is a legitimate
+  // answer to `diesel`, even though it is not one to `gas oil`.
+  const search = must("diesel");
+  assert.equal(matchesSearch(DIESEL_GENERATOR, search), true, "the member's own word was dropped");
+  assert.ok(searchPredicate(search).includes('product.ilike."*diesel*"'));
+  // And it still reaches the fuel under its other names.
+  assert.equal(search.groups[0]?.key, "gasoil", "the typed word no longer finds the group");
+  assert.equal(matchesSearch(EN590_QUALIFIED, search), true, "diesel no longer reaches EN590");
+});
+
+test("a fuel-specific form still reaches the fuel and not the equipment", () => {
+  const search = must("gas oil");
+  const fuel = sig({
+    id: "g2",
+    product: "Diesel fuel, 10ppm",
+    category: "Petroleum products",
+    originText: "Netherlands",
+  });
+  assert.equal(matchesSearch(fuel, search), true, "gas oil no longer reaches diesel fuel");
+  assert.equal(matchesSearch(DIESEL_GENERATOR, search), false);
+});
+
+test("a trigger-only term names its group but never widens another query", () => {
+  // The invariant, stated over the whole vocabulary rather than over one group,
+  // so a trigger-only term added later cannot leak into an expansion.
+  for (const group of ALIAS_GROUPS) {
+    for (const trigger of group.triggerOnly ?? []) {
+      // It names the group.
+      assert.equal(
+        aliasGroupFor(trigger)?.key,
+        group.key,
+        `"${trigger}" does not name ${group.key}`,
+      );
+      // It is not in the expansion set.
+      assert.ok(
+        !expansionTerms(group).includes(trigger),
+        `"${trigger}" is both trigger-only and expanded`,
+      );
+      // And no sibling term's search carries it.
+      const sibling = expansionTerms(group)[0];
+      assert.ok(
+        !must(sibling).phrases.includes(trigger),
+        `searching "${sibling}" widened to the trigger-only "${trigger}"`,
+      );
+    }
+  }
 });
 
 test("the predicate ANDs the concepts and ORs inside them", () => {

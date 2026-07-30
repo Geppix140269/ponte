@@ -48,32 +48,48 @@ import {
  */
 
 /**
- * What a member reads when they ask for a family that has nothing live.
+ * What a member reads when they ask to filter by a family Ponte cannot filter by.
  *
- * Commercial, short, and about the board rather than about Ponte's schema. The
- * box this replaced explained the canonical category columns, which historical
- * rows carry them and how the coverage probe works: all true, none of it a
- * customer's business, and all of it in place of the one thing they needed,
- * which is what to do next.
+ * ---------------------------------------------------------------------------
+ * Why this says "filtering is not available" and not "there are no signals"
+ * ---------------------------------------------------------------------------
+ * The count behind this state is a count of signals carrying a canonical
+ * `market_family`. Zero means **no record is classified into that family**, and
+ * that is not the same fact as the family being empty. A trade-service
+ * requirement can be sitting on the board right now, findable by searching for
+ * it, and still count zero here because nothing has classified it.
  *
- * The action goes to the existing composer entrance for the family. It is a
- * route into creating the thing that is missing, which is the honest offer when
- * the market Ponte can show is empty.
+ * So the first version of this copy - "No live trade-service signals are
+ * currently available" - was a claim Ponte had not established. It reported an
+ * unclassified inventory as an absent market, which is precisely the error the
+ * board's other states are careful about, reintroduced by the wording of a
+ * state built to remove a different one.
+ *
+ * What is true, and all that is true, is that the filter cannot be offered. The
+ * search still reaches everything, which is why the first action is to search
+ * rather than to give up.
+ *
+ * None of this explains taxonomy, classification, columns, migrations or
+ * historical rows. Why the filter is unavailable is Ponte's problem; that it is
+ * unavailable, and what to do instead, is the member's.
  */
-const FAMILY_EMPTY: Record<MarketFamily, { heading: string; body: string; action: string }> = {
+const FAMILY_UNAVAILABLE: Record<
+  MarketFamily,
+  { heading: string; body: string; action: string }
+> = {
   products: {
-    heading: "No live product signals are currently available",
-    body: "View all Market Signals or publish a product opportunity.",
+    heading: "Product filtering is not currently available.",
+    body: "Search all Market Signals, or publish a product opportunity.",
     action: "Post a product opportunity",
   },
   services: {
-    heading: "No live trade-service signals are currently available",
-    body: "View all Market Signals or publish a trade-service opportunity.",
+    heading: "Trade services filtering is not currently available.",
+    body: "Search all Market Signals, or publish a trade-service opportunity.",
     action: "Post a trade-service opportunity",
   },
   distribution: {
-    heading: "No live distribution opportunities are currently available",
-    body: "View all Market Signals or publish a distribution opportunity.",
+    heading: "Distribution and representation filtering is not currently available.",
+    body: "Search all Market Signals, or publish a distribution opportunity.",
     action: "Post a distribution opportunity",
   },
 };
@@ -158,26 +174,29 @@ export default function SignalBoard({
 
       {unavailableFamily ? (
         /*
-         * A family a member asked for that has no live inventory.
+         * A family a member asked to filter by that Ponte cannot filter by.
          *
          * This replaced a box that explained canonical category columns,
-         * historical rows and database coverage to a customer. All of that is
-         * true and none of it is theirs: what they need to know is that this
-         * board has nothing of that kind live right now, and what they can do
-         * next. The filter itself is no longer offered, so this state is only
-         * reachable through a kept or shared URL.
+         * historical rows and database coverage to a customer. All of that was
+         * true and none of it was theirs.
+         *
+         * It says the FILTER is unavailable, not that the family is empty: the
+         * count behind it counts classified records, so zero means nothing is
+         * classified, which is not evidence that nothing is there. See
+         * FAMILY_UNAVAILABLE. The filter itself is no longer offered, so this
+         * state is only reachable through a kept or shared URL.
          */
         <div className="empty">
           <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
           <div>
-            <b>{FAMILY_EMPTY[unavailableFamily].heading}</b>
-            <p>{FAMILY_EMPTY[unavailableFamily].body}</p>
+            <b>{FAMILY_UNAVAILABLE[unavailableFamily].heading}</b>
+            <p>{FAMILY_UNAVAILABLE[unavailableFamily].body}</p>
             <div className="empty__a">
               <Link className="b" href={buildBoardHref(withFilters(q, {}))}>
-                View all signals
+                Search all signals
               </Link>
               <Link className="b b--2" href={`/structure?family=${unavailableFamily}`}>
-                {FAMILY_EMPTY[unavailableFamily].action}
+                {FAMILY_UNAVAILABLE[unavailableFamily].action}
               </Link>
             </div>
           </div>
@@ -204,17 +223,19 @@ export default function SignalBoard({
          * A filter Ponte cannot answer, on an axis with no family to name.
          *
          * Reachable through a kept URL carrying a territory or sector nothing
-         * is classified on. Concise and commercial for the same reason as
-         * above: the internal state is real and is preserved in
-         * `SignalInventory` for tests, logs and governance, but it is not a
-         * customer's problem to read.
+         * is classified on. Says the filter is unavailable rather than that the
+         * slice is empty, for the same reason as the family state above: an
+         * unclassified axis is not an absent market. The internal state is real
+         * and is preserved in `SignalInventory` for tests, logs and governance,
+         * but it is not a customer's problem to read.
          */
         <div className="empty">
           <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
           <div>
-            <b>No live signals match this filter</b>
+            <b>This filter is not currently available.</b>
             <p>
-              Nothing currently on the public board answers it. The board itself is not empty.
+              Search all Market Signals instead. Everything on the public board is reachable that
+              way.
             </p>
             <div className="empty__a">
               <Link className="b" href={buildBoardHref(withFilters(q, {}))}>

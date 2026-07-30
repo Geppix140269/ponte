@@ -2,6 +2,18 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - Two Market Signals corrections: alias precision, and what a zero family count means
+
+**A widening term must be narrower than the thing it widens.** The gas-oil group carried bare `diesel` as an expansion term. `ilike` has no notion of a word, so a search for `gas oil` reached `Diesel Generator`, `Diesel Engine` and `Diesel Pump`: equipment, where the member asked about cargo. It was visible in the sample rows of the read-only production run and not in any assertion, because a widened search returns MORE and that looks like a search that works.
+
+The vocabulary now separates **triggering** from **expanding**. `diesel` still names the group, so a member typing it still reaches EN590 and gas oil, and their own literal word is still searched broadly because they chose it. It is no longer pushed onto a query that did not use it; the fuel-specific forms `diesel fuel`, `automotive diesel` and `diesel oil` do that instead. Measured against production: `gas oil` went from 68 matches to 59 and now reaches **zero** diesel-equipment records, while `diesel` still reaches 7. Both figures are in the evidence file, and the check is now permanent in `scripts/verify-signal-search.ts` rather than something a reader had to notice.
+
+**A zero family count means the filter is unavailable, not that the market is empty.** The count behind the family selector counts records carrying a canonical `market_family`. Zero therefore means *nothing is classified into that family*, which is a different fact from *that family has no signals*: a trade-service requirement can be live on the board right now, findable by searching for it, and still count zero. The copy said "No live trade-service signals are currently available", which is a claim Ponte had not established. It now says "Trade services filtering is not currently available." and offers the search, which does reach those records. A test drives the state with a live unclassified inventory and refuses any wording that reports it as an absent market.
+
+That correction matters more than its size. The state existed to stop the board explaining its schema to a customer, and its first wording replaced one untrue statement with another.
+
+**Also:** this branch had duplicated the bridge-invariance gate defect as its own blocker. `main` records it as LB-006; the duplicate is removed and the Market Signals blocker is renumbered to **LB-007**. Two references in shared records that a blind renumber on this branch had reassigned from `main`'s LB-005 are restored.
+
 ## 30 July 2026 - Gate C Approval 1, and a schema that stops half applied
 
 **Decision:** the owner authorised Gate C Approval 1 - applying the three Deal
@@ -16,7 +28,7 @@ drops: the owner's final trust review removed `p_role` and `p_class`, taking the
 function from five arguments to three, and the grant block was never updated.
 Postgres refuses the whole file. Every one of the 21 declared functions was
 audited against its grant programmatically rather than by eye, and exactly one
-disagrees. Recorded as **LB-006**. Correcting it changes the file's SHA-256, which
+disagrees. Recorded as **LB-005**. Correcting it changes the file's SHA-256, which
 is why it needs its own authorisation rather than being quietly fixed: the
 checksum in the preflight audit is what the ledger will be checked against.
 
@@ -74,12 +86,12 @@ is the entire content of the file. `GATE-C-TEST-PLAN.md` treats them as Approval
 
 **Two of the three qualifier checks are recorded as VACUOUS.** `distributor` and `freight forwarding` match zero eligible signals, so narrowing them to zero proves nothing; the script says so rather than printing a passing row. The inventory is entirely product signals today, which is the same fact PL-017 records.
 
-**LB-006 stays open.** Nothing is deployed. Executing a predicate against production is not the same as a member searching the live board.
+**LB-007 stays open.** Nothing is deployed. Executing a predicate against production is not the same as a member searching the live board.
 
 
 ## 29 July 2026 - Market Signals made searchable, and the search deliberately needs no migration
 
-**Decision:** LB-006. `/market-signals` gets a free-text search over the complete eligible inventory, relevance ordering, exposed pagination and one shared URL contract with `/find`.
+**Decision:** LB-007. `/market-signals` gets a free-text search over the complete eligible inventory, relevance ordering, exposed pagination and one shared URL contract with `/find`.
 
 **The decision that shaped everything else: the search must work with no SQL applied.** A merge to `main` applies no migration in this repository (the historical chain aborts on its first file), so every schema change is applied by hand with owner approval. A search built on a generated `tsvector`, a maintained search document or an RPC would therefore have shipped as a closed P0 that returned nothing in production until somebody separately ran a file. The search is built on `ilike` over columns that already exist, so it is correct on merge. `20260730a_market_signal_search.sql` adds `pg_trgm` and eight partial GIN trigram indexes, is written and **not applied**, and changes no result when it is: it changes the plan, not the answer. Recorded as PL-016.
 

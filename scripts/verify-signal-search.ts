@@ -78,7 +78,7 @@ function loadEnv(path: string): Record<string, string> {
 
 /** The representative queries the acceptance audit asks for, plus the extremes. */
 const QUERIES: Array<{ q: string; note: string }> = [
-  { q: "gas oil", note: "alias group, one concept" },
+  { q: "gas oil", note: "alias group, one concept; must not reach diesel equipment" },
   { q: "EN590", note: "sibling term reaches the same group" },
   { q: "diesel cargo rotterdam", note: "alias plus two mandatory qualifiers" },
   { q: "olive oil", note: "multi-word alias, one concept" },
@@ -203,6 +203,7 @@ async function main(): Promise<void> {
   // on this inventory would itself be worth knowing.
   console.log("qualifiers stay mandatory (executed, not inferred)");
   const pairs: Array<[string, string]> = [
+    ["gas oil", "gas oil cargo rotterdam"],
     ["diesel", "diesel cargo rotterdam"],
     ["distributor", "distributor spain"],
     ["freight forwarding", "freight forwarding morocco"],
@@ -234,6 +235,48 @@ async function main(): Promise<void> {
     const verdict = tight > wide ? "BROADENED" : wide === 0 ? "VACUOUS" : "ok";
     const why = wide === 0 ? "   (nothing matches the alias alone, so this proves nothing)" : "";
     console.log(`  ${verdict}  "${broad}" = ${wide}   ->   "${narrow}" = ${tight}${why}`);
+  }
+  console.log("");
+
+  // -------------------------------------------------------------------------
+  // Alias precision: what a widened search must NOT reach
+  // -------------------------------------------------------------------------
+  // A count alone cannot show this. Widening a fuel enquiry with the bare word
+  // `diesel` pulled equipment into the results - `Diesel Generator` appeared in
+  // the sample rows of an earlier run of this very script - and a search
+  // returning MORE looks like a search that works. So the equipment records are
+  // counted directly, under the fuel query and under the typed word, and the two
+  // answers must differ.
+  console.log("alias precision (the diesel-generator case)");
+  {
+    const equipment = ["generator", "engine", "pump"];
+    for (const query of ["gas oil", "diesel"]) {
+      const search = parseSignalSearch(query)!;
+      const predicate = searchPredicate(search);
+      const sends = predicate.includes('product.ilike."*diesel*"');
+      let reached = 0;
+      for (const word of equipment) {
+        const read = await sb
+          .from("desk_radar")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "approved_signal")
+          .or(publicWindowPredicate(nowIso))
+          .or(predicate)
+          .ilike("product", `%diesel %${word}%`);
+        if (read.error) {
+          failures += 1;
+          console.log(`  "${query}" x ${word}  FAILED: ${read.error.message}`);
+        } else {
+          reached += read.count ?? 0;
+        }
+      }
+      const verdict = query === "gas oil" ? (reached === 0 ? "ok" : "IMPRECISE") : "expected";
+      if (query === "gas oil" && reached > 0) failures += 1;
+      console.log(
+        `  ${verdict}  "${query}" reaches ${reached} diesel-equipment record(s); ` +
+          `bare term in predicate: ${sends ? "yes" : "no"}`,
+      );
+    }
   }
   console.log("");
 

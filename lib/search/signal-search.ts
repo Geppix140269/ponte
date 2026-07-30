@@ -1,5 +1,6 @@
 import {
   aliasGroupFor,
+  expansionTerms,
   LONGEST_ALIAS_WORDS,
   type AliasGroup,
 } from "./aliases";
@@ -355,7 +356,9 @@ function buildSlots(
         // their search, never to replace it: a cap that cut their own phrase
         // would answer a question they did not ask.
         for (const v of accentVariants(source)) add(v);
-        for (const term of group.terms) add(term);
+        // `expansionTerms`, not `group.terms`: a trigger-only term names the
+        // group and must never be pushed onto a query that did not use it.
+        for (const term of expansionTerms(group)) add(term);
         built.push({ source, group, variants });
       } else {
         built.push({ source, group: null, variants: accentVariants(source) });

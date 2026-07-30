@@ -177,17 +177,35 @@ test("no alias term belongs to two groups", () => {
 
 test("gas oil, gasoil, diesel and EN590 are one vocabulary", () => {
   // The requirement's own example, and the reason this layer exists at all.
+  // Every one of these five queries must find the same group.
   for (const query of ["gas oil", "gasoil", "diesel", "EN590", "EN 590"]) {
     const search = must(query);
     assert.equal(search.groups.length, 1, `"${query}" found no group`);
     assert.equal(search.groups[0].key, "gasoil", `"${query}" found ${search.groups[0].key}`);
-    for (const expected of ["gas oil", "gasoil", "diesel", "en590"]) {
+  }
+
+  // And each must reach the fuel by its other names. Bare `diesel` is NOT in
+  // that set: it is trigger-only, because pushing it onto a query that did not
+  // use it widens a cargo enquiry into equipment. See the regression case in
+  // lib/search/__tests__/search-scope.test.ts.
+  for (const query of ["gas oil", "gasoil", "EN590", "EN 590"]) {
+    const search = must(query);
+    for (const expected of ["gas oil", "gasoil", "en590", "diesel fuel"]) {
       assert.ok(
         search.phrases.includes(expected),
         `"${query}" does not search for "${expected}"`,
       );
     }
+    assert.ok(
+      !search.phrases.includes("diesel"),
+      `"${query}" was widened to bare "diesel"`,
+    );
   }
+
+  // A member who typed the word themselves keeps their own literal search.
+  const typed = must("diesel");
+  assert.ok(typed.phrases.includes("diesel"), "the member's own word was dropped");
+  assert.equal(typed.phrases[0], "diesel", "the member's own word is not searched first");
 });
 
 test("the other required commercial vocabularies join up", () => {
@@ -319,11 +337,17 @@ test("one concept needs no wrapper, because the caller supplies the outer or=", 
 });
 
 test("an alias phrase is searched even though its words are absent", () => {
-  // The exact record the alias exists to find: `Diesel EN590` contains neither
-  // the word `gas` nor the word `oil`, so an all-words rule alone would miss it.
+  // The exact record the alias exists to find: `En590 Diesel, 10 PPM` contains
+  // neither the word `gas` nor the word `oil`, so an all-words rule alone would
+  // miss it. `en590` is what reaches it.
   const predicate = searchPredicate(must("gas oil"));
-  assert.ok(predicate.includes('product.ilike."*diesel*"'));
-  assert.ok(predicate.includes('product.ilike."*en590*"'));
+  assert.ok(predicate.includes('product.ilike."*en590*"'), "EN590 is not searched");
+  assert.ok(predicate.includes('product.ilike."*diesel fuel*"'), "the fuel form is not searched");
+  // And not the bare word, which would reach a generator.
+  assert.ok(
+    !predicate.includes('product.ilike."*diesel*"'),
+    "a gas oil search still widens to bare diesel",
+  );
 });
 
 test("a hostile query cannot break out of the filter", () => {

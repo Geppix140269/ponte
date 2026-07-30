@@ -306,7 +306,10 @@ test("a filter that cannot be answered never claims the board is empty", async (
    */
   await page.goto("/market-signals?family=services", { waitUntil: "domcontentloaded" });
   const body = await page.locator(".sec").first().innerText();
-  expect(body).toContain("No live trade-service signals are currently available");
+  expect(body).toContain("Trade services filtering is not currently available.");
+  // Never that the family is empty. The count behind this state counts records
+  // carrying a canonical family, so zero means nothing is classified.
+  expect(body).not.toContain("No live");
   expect(body).not.toContain("Ponte cannot filter signals by this category yet");
   expect(body).not.toContain("No signal is currently live on the public board");
   expect(body).not.toContain("taxonomy");

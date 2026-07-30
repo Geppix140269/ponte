@@ -302,6 +302,20 @@ function boardText(over: Partial<Record<string, unknown>> = {}): string {
   return out.join(" | ");
 }
 
+/**
+ * Source with its comments removed.
+ *
+ * A file is allowed to NAME the copy it removed, and does: the reason a state
+ * exists belongs next to it. What must not survive is a string literal that
+ * could still be rendered, so the check runs on code rather than on prose.
+ */
+function stripComments(source: string): string {
+  return source
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, " ")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
 /** Every state a kept URL can land a member in, rendered. */
 function everyBoardState(): string {
   return [
@@ -362,8 +376,10 @@ test("the technical classification box is gone from the public journey", () => {
   ]) {
     assert.ok(!rendered.includes(gone), `the public journey still renders: ${gone}`);
   }
-  // And no parallel copy survives anywhere in the board's own source.
-  const src = readFileSync("components/desk/SignalBoard.tsx", "utf8");
+  // And no parallel copy survives as a STRING anywhere in the board's source.
+  // Comments are stripped: the file is allowed to name the copy it removed, and
+  // this check exists to catch a literal that could still be rendered.
+  const src = stripComments(readFileSync("components/desk/SignalBoard.tsx", "utf8"));
   assert.ok(!src.includes("Ponte cannot filter"), "a parallel version remains in the source");
 });
 
@@ -386,28 +402,101 @@ test("no rendered word explains the classification implementation", () => {
   }
 });
 
-test("every family with no live inventory gets its own commercial state", () => {
+test("every unavailable family says the FILTER is unavailable", () => {
+  // Not "there are no signals". The count behind this state counts records
+  // carrying a canonical family, so zero means nothing is classified, which is
+  // not evidence that nothing is there.
   const cases: Array<[string, string, string]> = [
-    ["products", "No live product signals are currently available", "Post a product opportunity"],
-    ["services", "No live trade-service signals are currently available", "Post a trade-service opportunity"],
-    ["distribution", "No live distribution opportunities are currently available", "Post a distribution opportunity"],
+    ["products", "Product filtering is not currently available.", "Post a product opportunity"],
+    [
+      "services",
+      "Trade services filtering is not currently available.",
+      "Post a trade-service opportunity",
+    ],
+    [
+      "distribution",
+      "Distribution and representation filtering is not currently available.",
+      "Post a distribution opportunity",
+    ],
   ];
   for (const [family, heading, action] of cases) {
     const rendered = boardText({ q: Q({ family }), availability: noFamilyInventory() });
     assert.ok(rendered.includes(heading), `${family} is missing its heading`);
     assert.ok(rendered.includes(action), `${family} is missing its creation action`);
-    assert.ok(rendered.includes("View all signals"), `${family} offers no route back`);
+    assert.ok(rendered.includes("Search all signals"), `${family} offers no route to the search`);
   }
 });
 
-test("an unmeasurable availability never claims a family is empty", () => {
+test("no state claims a family has no live signals", () => {
+  // The claim this copy was corrected to stop making. Ponte has not established
+  // it and cannot from this count.
+  const rendered = everyBoardState();
+  for (const claim of [
+    "No live product signals",
+    "No live trade-service signals",
+    "No live distribution opportunities",
+    "No live signals match this filter",
+  ]) {
+    assert.ok(!rendered.includes(claim), `the board still claims: ${claim}`);
+  }
+});
+
+test("an unclassified inventory is not reported as an empty family", () => {
+  /*
+   * The case that makes the wording matter.
+   *
+   * The board holds live, eligible, searchable records. None of them carries a
+   * canonical `market_family`, so the family count is zero and the filter cannot
+   * be offered. What Ponte must NOT say is that the family has nothing in it:
+   * the records are right there, and a member can find them by searching.
+   */
+  const rendered = boardText({
+    q: Q({ family: "services" }),
+    availability: noFamilyInventory(),
+    board: {
+      state: "unclassified",
+      reason: "nothing_classified",
+      eligible: 3458,
+    },
+  });
+  assert.ok(
+    rendered.includes("Trade services filtering is not currently available."),
+    "the filter-unavailable statement is missing",
+  );
+  for (const claim of [
+    "No live trade-service signals",
+    "no signals",
+    "is empty",
+    "nothing is live",
+  ]) {
+    assert.ok(
+      !new RegExp(claim, "i").test(rendered),
+      `an unclassified inventory was reported as an empty family: "${claim}"`,
+    );
+  }
+  // And the way out is the search, which does reach those records.
+  assert.ok(rendered.includes("Search all signals"), "no route to the search that would find them");
+});
+
+test("a non-family axis with nothing classified says the same thing", () => {
+  const rendered = boardText({
+    q: Q({ territory: "DE" }),
+    board: { state: "unclassified", reason: "nothing_classified", eligible: 3458 },
+  });
+  assert.ok(rendered.includes("This filter is not currently available."));
+  assert.ok(!rendered.includes("No live"), "an unclassified axis was reported as an empty market");
+});
+
+test("an unmeasurable availability never claims the filter is unavailable", () => {
   // Fail closed on the filter, open on the board. A failed count must not become
-  // "this market is empty", which is a finding Ponte did not make.
+  // any statement at all about that family: not that it is empty, and not that
+  // filtering it is unavailable, because neither was established.
   const rendered = boardText({ q: Q({ family: "services" }), availability: null });
   assert.ok(
-    !rendered.includes("No live trade-service signals are currently available"),
-    "a failed measurement was printed as an empty market",
+    !rendered.includes("Trade services filtering is not currently available."),
+    "a failed measurement was printed as a finding",
   );
+  assert.ok(!rendered.includes("No live"), "a failed measurement was printed as an empty market");
 });
 
 test("an availability failure does not suppress the unfiltered board", () => {
@@ -474,13 +563,13 @@ test("a product-only board renders its records with no family panel", () => {
 test("the family-unavailable copy is commercial and offers a way forward", () => {
   const src = readFileSync("components/desk/SignalBoard.tsx", "utf8");
   for (const heading of [
-    "No live product signals are currently available",
-    "No live trade-service signals are currently available",
-    "No live distribution opportunities are currently available",
+    "Product filtering is not currently available.",
+    "Trade services filtering is not currently available.",
+    "Distribution and representation filtering is not currently available.",
   ]) {
     assert.ok(src.includes(heading), `missing the commercial heading: ${heading}`);
   }
-  assert.ok(src.includes("View all signals"), "no route back to the whole board");
+  assert.ok(src.includes("Search all signals"), "no route to the search");
   for (const action of [
     "Post a product opportunity",
     "Post a trade-service opportunity",
@@ -498,7 +587,7 @@ test("an empty search and an unavailable family stay different statements", () =
   // or the reverse.
   const src = readFileSync("components/desk/SignalBoard.tsx", "utf8");
   assert.ok(src.includes("No signal matches this search"), "the search-empty copy has gone");
-  assert.ok(src.includes("No live trade-service signals are currently available"));
+  assert.ok(src.includes("Trade services filtering is not currently available."));
   // The family state is decided BEFORE the result states, so a kept URL for an
   // empty family never renders as a failed search.
   assert.ok(

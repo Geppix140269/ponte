@@ -2,34 +2,34 @@ Market Signals search: read-only verification against PostgREST
 
 project           cptglsmjmzcfpjndqfmc
 url               https://cptglsmjmzcfpjndqfmc.supabase.co
-clock             2026-07-30T03:51:58.301Z
+clock             2026-07-30T04:44:48.374Z
 searched columns  product, hs_code, summary_line, ai_description, origin, destination, category, side, canonical_signal_id
 caps              MAX_SLOTS=6 MAX_GROUP_VARIANTS=5 MAX_EXPANDED_GROUPS=2 MAX_PREDICATE_CHARS=6144
 
 eligible public signals   3458
 
-"gas oil"   (alias group, one concept)
-  predicate       1249 chars, 1 concept(s) [5 variants]
-  matched         68 of 3458   (509 ms)
+"gas oil"   (alias group, one concept; must not reach diesel equipment)
+  predicate       1393 chars, 1 concept(s) [5 variants]
+  matched         59 of 3458   (520 ms)
     EXT-G4WB-003308  En590 Diesel, 10 PPM
     EXT-G4WB-003210  En590 10Ppm Diesel
-    EXT-G4WB-003010  Diesel Generator
+    EXT-G4WB-002798  Diesel Fuel En590 (Ulsd 10 Ppm), Industrial
 
 "EN590"   (sibling term reaches the same group)
-  predicate       1249 chars, 1 concept(s) [5 variants]
-  matched         68 of 3458   (496 ms)
+  predicate       1393 chars, 1 concept(s) [5 variants]
+  matched         59 of 3458   (462 ms)
     EXT-G4WB-003308  En590 Diesel, 10 PPM
     EXT-G4WB-003210  En590 10Ppm Diesel
-    EXT-G4WB-003010  Diesel Generator
+    EXT-G4WB-002798  Diesel Fuel En590 (Ulsd 10 Ppm), Industrial
 
 "diesel cargo rotterdam"   (alias plus two mandatory qualifiers)
-  predicate       1784 chars, 3 concept(s) [5+1+1 variants]
-  matched         0 of 3458   (227 ms)
+  predicate       1829 chars, 3 concept(s) [5+1+1 variants]
+  matched         0 of 3458   (224 ms)
     (no records)
 
 "olive oil"   (multi-word alias, one concept)
   predicate       1573 chars, 1 concept(s) [5 variants]
-  matched         13 of 3458   (571 ms)
+  matched         13 of 3458   (525 ms)
     EXT-G4WB-003486  Pomace Olive Oil
     EXT-G4WB-003487  Extra Virgin Olive Oil
     EXT-G4WB-002625  Olive Oil
@@ -41,36 +41,41 @@ eligible public signals   3458
 
 "170199"   (HS code, both stored spellings)
   predicate       508 chars, 1 concept(s) [2 variants]
-  matched         0 of 3458   (252 ms)
+  matched         0 of 3458   (253 ms)
     (no records)
 
 "cafe"   (accent-folded form only)
   predicate       231 chars, 1 concept(s) [1 variants]
-  matched         1 of 3458   (182 ms)
+  matched         1 of 3458   (181 ms)
     EXT-G4WB-000933  Nescafe Coffee
 
 "café"   (accented query, both forms searched)
   predicate       463 chars, 1 concept(s) [2 variants]
-  matched         1 of 3458   (271 ms)
+  matched         1 of 3458   (260 ms)
     EXT-G4WB-000933  Nescafe Coffee
 
 "99999999"   (expected to match nothing)
   predicate       803 chars, 1 concept(s) [3 variants]
-  matched         0 of 3458   (332 ms)
+  matched         0 of 3458   (341 ms)
     (no records)
 
 qualifiers stay mandatory (executed, not inferred)
+  ok  "gas oil" = 59   ->   "gas oil cargo rotterdam" = 0
   ok  "diesel" = 68   ->   "diesel cargo rotterdam" = 0
   VACUOUS  "distributor" = 0   ->   "distributor spain" = 0   (nothing matches the alias alone, so this proves nothing)
   VACUOUS  "freight forwarding" = 0   ->   "freight forwarding morocco" = 0   (nothing matches the alias alone, so this proves nothing)
 
+alias precision (the diesel-generator case)
+  ok  "gas oil" reaches 0 diesel-equipment record(s); bare term in predicate: no
+  expected  "diesel" reaches 7 diesel-equipment record(s); bare term in predicate: yes
+
 the largest permitted requests
   two longest alias groups plus filler
-    3558 chars (within bound), 3 concepts, dropped 0 -> accepted, 0 matched, 291 ms
+    3558 chars (within bound), 3 concepts, dropped 0 -> accepted, 0 matched, 290 ms
   maximum length, distinct two-letter words
-    1312 chars (within bound), 6 concepts, dropped 34 -> accepted, 0 matched, 224 ms
+    1312 chars (within bound), 6 concepts, dropped 34 -> accepted, 0 matched, 217 ms
   maximum length, single repeated word
-    1384 chars (within bound), 1 concepts, dropped 0 -> accepted, 62 matched, 492 ms
+    1384 chars (within bound), 1 concepts, dropped 0 -> accepted, 62 matched, 488 ms
 
 accent forms, as ILIKE actually resolves them
   "cafe"  searched as [cafe]  ->  1 matched
