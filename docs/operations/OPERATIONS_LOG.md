@@ -18,6 +18,49 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - Authentication and transactional email pinned; nothing applied to production (LB-012, ADR-0017)
+
+### Completed
+
+- The repository owner classified **authentication and transactional email as a launch-blocking workstream**. Recorded as **LB-012** in `docs/launch/LAUNCH-BLOCKERS.md` and decided in **ADR-0017**, which extends ADR-0013 rather than altering it.
+- **The reported malformed CSS does not exist in this repository at any revision.** `git log --all -S "32border"` returns nothing; `lib/email/shell.ts` has been modified in exactly two commits (`cc438c2` and its merge `b378ad2`) and has carried `padding:24px 32px;border-bottom:` since it was written; the layout `cc438c2` retired was `<div>`-based on `#0F1E3C`/`#E8A020` and contained no such declaration. The only place those bytes lived outside the code was `docs/email-provider-template-configuration.md`, the Supabase Auth template **that a human pastes by hand**, and that document carried its bodies as fragments with `style="..."` placeholders so every body had to be reassembled by hand.
+- **The Supabase Auth template is now generated, committed and checksummed.** `lib/email/auth-templates.ts` builds it through the same `wrapDocument()` shell and tokens as the thirteen application templates; `npm run auth:templates` writes `supabase/templates/`; the test suite fails if the committed file stops matching the generator. SHA-256 of `auth-otp.html` is recorded in `supabase/templates/README.md`.
+- **`lib/email/audit.ts`** reads every generated email as a document: tag structure, attribute well-formedness, and every declaration checked for a fused neighbour by requiring each numeric token to wear a real CSS unit. Dependency-free, so it runs inside `npm test`.
+- **`lib/email/send.ts` sender identity corrected** from the bare `hello@ponte.trade` to `Ponte Trade <hello@ponte.trade>`, wrapping a bare address supplied through `RESEND_FROM_EMAIL` rather than passing it through.
+- **Twelve client-compatibility frames captured** to `docs/codex/audits/email/evidence/` by `npm run email:clients:capture`. They are **not** renders by Gmail, Yahoo or Outlook: each is the same document with that client's documented limitations applied as an explicit transformation.
+- Two record conflicts resolved: the dark `#06070A`/`#CBFB5E` E1 template in `AUTH-EMAIL-SETUP.md` §5 is **superseded** (its colours are in no approved token file), and the ten-minute against one-hour code lifetime is settled at **ten minutes**, from one constant that produces both the email's sentence and the required dashboard value.
+- **A dead footer link was removed.** Every application email footer linked "Notification preferences" to `/account/notifications`, a route nothing under `app/` serves - a 404 in all thirteen templates. The link is removed from the member footer in HTML and plain text; Privacy and Terms, which resolve, stay; no route was created and no consent semantics changed. The genuine preferences feature is deferred as **PL-025**. Owner-directed correction of 30 July 2026.
+- **The live Resend provider state was verified (30 July 2026), resolving most of OD-010.** Querying the account directly: `ponte.trade` is **verified**, sending **enabled**, **DKIM verified**, **SPF (MX + TXT) verified**, and **open and click tracking are both off** — so ADR-0017 §8 is already satisfied in production and delivery is authenticated. The live send log shows real Ponte mail delivered to Gmail, Yahoo and external inboxes, so the operational path works. **Still owner-held:** DMARC (`_dmarc.ponte.trade`, not managed or reported by Resend) and the `auth@ → hello@` reply forward. See OD-010.
+- **The Supabase auth OTP template is confirmed NOT applied.** The Resend send log shows the most recent authentication emails carrying the subjects "Confirm your email address" and "Welcome to Ponte · confirm your email", **not** the ADR-0017 subject "Your Ponte Trade sign-in code". So production is still on the Supabase defaults; applying `supabase/templates/auth-otp.html` remains an unperformed owner dashboard action, exactly as `docs/email-provider-template-configuration.md` states.
+- **Identifier collisions resolved by renumber, three times, as `main` moved under the branch.** Claimed `LB-008` when free → PR #113 took `LB-008` (anon-EXECUTE) → `LB-009` → PR #112 took `LB-009` and `ADR-0016` (multilingual) → `LB-010` and `ADR-0017` → PR #115 took `LB-010` and `LB-011` (product resolver, product-entry review) → **`LB-012`**. `LB-012` and `ADR-0017` were verified free against `origin/main` immediately before the final push; the four backlog tickets moved to `PL-025..028` for the same reason. Recorded in `LAUNCH-BLOCKERS.md` "Reserved identifiers". The recurring cause is that identifiers invented on unmerged branches are treated as reserved before they merge; the fix that ends it is to merge, which locks the number on `main`.
+
+### Decisions
+
+- ADR-0017, accepted 30 July 2026. One template for both Confirm signup and Magic Link with one subject; a code and never a link; the light Ponte Flow palette; ten minutes; `Ponte Trade <address>` always; open and click tracking disabled; only templates with a Ponte journey behind them are written.
+
+### Risks / discrepancies
+
+- **No production change was made, and none is authorised by this entry.** The Supabase templates, the SMTP sender name (`Ponte Trade`, not `Ponte`), the `600`-second OTP expiry and the Resend tracking toggles are **all unapplied**. Nothing in this repository can apply them.
+- **The production-deployed commit could not be determined.** Netlify writes no GitHub deployment (`gh api .../deployments` returns `[]`); the last deployment noted in this log is the 28 July hotfix of `b378ad2`, whose stated next action - confirm the deployment succeeded - has no recorded outcome; and `https://ponte.trade/` answers `401` behind the Basic-auth wall, so no build identifier can be read. `main` is `23637d3` and the working branch is identical to it.
+- **`ponte.trade`'s email-authentication state is unrecorded.** Whether DKIM, SPF and DMARC are published is not in any file here, and without them a test send goes to spam in all three clients however well the HTML renders. Raised as **OD-010**.
+- **The `auth@ponte.trade` to `hello@ponte.trade` forward has no record of being set up**, so a reply to a sign-in code goes nowhere. Recommended 22 July 2026.
+- `CURRENT-STATE.md` described the unified transactional email system as "Not merged, not deployed". It has been on `main` since `b378ad2` on 28 July 2026. Corrected in the same change.
+- **The launch-blocker register is churning faster than branches can land.** In one afternoon `LB-005`, `LB-007`, `LB-008` and `LB-009` each collided between concurrent branches, and this branch alone renumbered twice. The recurring cause is that identifiers invented on unmerged branches are treated as reserved before they merge; the mitigation is to re-read the register against `origin/main` immediately before each push, which is what caught both collisions here.
+
+### Next
+
+1. Read and record the four settings in **OD-010**: domain verification with DKIM/SPF/DMARC, both tracking toggles, and the reply forward.
+2. Apply the Supabase dashboard changes by following `docs/email-provider-template-configuration.md`, and record the applied checksum here.
+3. Run the closing test sends to real Gmail, Yahoo and Outlook mailboxes and record whether each arrived **outside spam** and rendered correctly. That, and only that, closes LB-012.
+4. Confirm or reassign this PR's `LB-012` / `ADR-0017` before merge, since the register churned twice under it.
+
+### Evidence
+
+- `docs/codex/audits/email/2026-07-30-auth-and-transactional-email.md`.
+- `lib/email/__tests__/auth-email.test.ts` - 25 assertion groups, exit 0. Includes the reader proved to fail in three directions: the reintroduced fusion, a dropped closing tag and a lost attribute quote.
+- `npx tsc --noEmit --incremental false` - clean. `npm test` - all suites pass.
+- `docs/codex/audits/email/evidence/` - 12 frames, with `README.md` stating what they are and are not.
+
 ## 2026-07-30 - `20260730b_deal_room_function_acl.sql` applied; anonymous path closed, LB-008 still open
 
 ### Completed

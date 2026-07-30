@@ -223,3 +223,85 @@ Options 1 and 3 are not taken. Option 1 remains available if the HTML files ever
 ### Canonical record
 
 ADR-0015 section S-3 and its 29 July 2026 implementation note; ExecPlan section 12, discovery 3a; `design/authority/bridge/v1/SOURCE-MANIFEST.md`.
+
+---
+
+## OD-010 — Ponte's sending domain email-authentication state (mostly verified 30 July 2026)
+
+**Status:** PARTIALLY RESOLVED — most settings verified live; two owner items remain
+**Owner:** Giuseppe Funaro
+**Raised:** 30 July 2026
+**Verified against the live Resend account:** 30 July 2026
+
+### What was verified, and how
+
+The Resend account was queried directly on 30 July 2026 (`domains.get` on
+`ponte.trade`, ID `ff7c9ce0-ca23-4958-abe7-a2251b7c4f15`). The four settings this
+decision was raised over are now mostly **confirmed**, not unknown:
+
+| Setting | Required | **Actual (verified 30 Jul 2026)** |
+|---|---|---|
+| `ponte.trade` domain | verified, sending enabled | **verified, sending enabled**, region eu-west-1 ✓ |
+| DKIM (`resend._domainkey`) | published | **verified** ✓ |
+| SPF (`send` MX + TXT `v=spf1 include:amazonses.com ~all`) | published | **verified** ✓ |
+| **Open tracking** | disabled | **false (disabled)** ✓ — satisfies ADR-0017 §8 |
+| **Click tracking** | disabled | **false (disabled)** ✓ — satisfies ADR-0017 §8 |
+| **DMARC** (`_dmarc.ponte.trade` TXT) | published | **NOT confirmed** — Resend does not manage or report DMARC; it is a separate DNS record the owner sets at the registrar. Unverified from here |
+| `auth@ponte.trade` → `hello@ponte.trade` forward | in place | **NOT confirmed** — no record; Resend has receiving **disabled** on the domain, so any forward is external to Resend |
+
+So the tracking decision (ADR-0017 §8) is **already satisfied in production**: open
+and click tracking are both off on the domain, and delivery is DKIM- and
+SPF-authenticated. A test send that lands in spam would therefore not be explained
+by missing DKIM/SPF or by tracking rewrites.
+
+**Independently corroborated by the live send log:** the Resend account has
+delivered real Ponte mail (`status: delivered`) to Gmail, Yahoo and external
+addresses across July 2026, so the operational sending path is live and working.
+
+### What remains genuinely open (owner-held)
+
+1. **DMARC.** Confirm `_dmarc.ponte.trade` publishes a policy (at minimum
+   `v=DMARC1; p=none; rua=...`). Its absence is the one remaining
+   authentication gap that could still push a message to spam, and it is not
+   visible from Resend.
+2. **The reply forward** `auth@ponte.trade` → `hello@ponte.trade` (AUTH-EMAIL-SETUP §3).
+3. **Domain-wide tracking policy.** Tracking is off now, which is correct for
+   transactional mail. If Ponte later wants tracked marketing, it must go on a
+   separate subdomain rather than re-enabling tracking on the domain that carries
+   sign-in codes. This is the only part that is a forward-looking *decision*
+   rather than a fact to read.
+
+### Prior evidence (superseded by the live check above)
+
+- `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are recorded as existing in Netlify
+  (`docs/platform/RUNBOOK.md`, `docs/platform/VERSIONS.md`).
+- The forward was **recommended** in `docs/platform/AUTH-EMAIL-SETUP.md` §3 on
+  22 July 2026, with no record of it being set up.
+
+### Why it is a decision and not a task
+
+Two of the four are owner-held facts that need reading, not deciding — but the
+consequence of not knowing them is that `LB-012`'s closing test cannot be
+interpreted. If a test send lands in spam and the DNS records are absent, the
+result says nothing about the template; if it lands in the inbox and click
+tracking is on, the email that arrived is not the email in this repository,
+because every link in it was rewritten through a third-party host.
+
+Tracking is genuinely a decision: Resend sets it per **domain**, so disabling it
+for authentication and operational mail disables it for anything else Ponte later
+sends from `ponte.trade`, including future marketing. ADR-0017 §8 decides it for
+transactional mail; whether Ponte accepts that constraint domain-wide, or later
+separates marketing onto its own subdomain, is unresolved.
+
+### Recommended decision
+
+1. Read and record all four states in `docs/operations/OPERATIONS_LOG.md`.
+2. Publish DKIM, SPF and DMARC if any is missing, and set the forward.
+3. Disable both tracking toggles now, and accept the domain-wide consequence for
+   launch. If Ponte later wants tracked marketing, put it on a separate
+   subdomain rather than turning tracking back on for the domain that carries
+   sign-in codes.
+
+### Blocks
+
+`LB-012`. Also blocks any honest reading of its closing test sends.

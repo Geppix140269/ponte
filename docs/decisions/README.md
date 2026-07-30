@@ -41,6 +41,7 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0014](ADR-0014-family-specific-downstream-commercial-procedures.md) | Family-specific downstream commercial procedures for the shared composer (completes ADR-0011) | Accepted 29 July 2026 |
 | [ADR-0013](ADR-0013-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 | [ADR-0015](ADR-0015-contrast-and-colour-remediation.md) | Contrast and colour remediation: strengthened paper with a blue interaction family (amends the Constitution to v1.1) | Accepted by owner; effective on merge |
+| [ADR-0017](ADR-0017-authentication-and-operational-email.md) | Authentication and operational transactional email: generated Supabase templates, a strict document reader, sender identity and no tracking (extends ADR-0013) | Accepted 30 July 2026 |
 
 ## Unresolved numbering collision on ADR-0012
 

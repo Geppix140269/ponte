@@ -1,158 +1,187 @@
-# Email templates that must be configured in the provider console
+# Email that must be configured in the provider console
 
-**Status:** Manual deployment step. Not applied by any pull request.
+**Status:** Manual production action. **Not applied by any pull request.**
 **Owner action required:** yes.
-**Related:** ADR-0013, `docs/platform/AUTH-EMAIL-SETUP.md`.
+**Authority:** ADR-0013 (application email), ADR-0017 (authentication and
+operational email), `docs/launch/LAUNCH-BLOCKERS.md` `LB-012`.
+**Related:** `docs/platform/AUTH-EMAIL-SETUP.md`,
+`docs/codex/audits/email/2026-07-30-auth-and-transactional-email.md`.
 
 Ponte's application-generated email is committed code (`lib/email/`). Supabase
 Auth's email is not: Supabase renders its own templates from the dashboard, and
-nothing in this repository can change them. They are therefore listed here with
-the exact content to paste, so the gap is visible rather than discovered.
+nothing in this repository can change them.
 
-Until these are applied, **authentication emails will not match the Ponte
-design system.** They will still work; they will look like Supabase defaults.
+**Merging a change to this document changes what SHOULD be in production. It does
+not change what is.** Whether any of it has been applied is recorded in
+`docs/operations/OPERATIONS_LOG.md` and nowhere else.
+
+## What changed on 30 July 2026, and why
+
+This document previously carried the templates as prose, with each body written
+as a FRAGMENT — `<h1 style="...">`, with the real declarations listed separately
+further up the page. A person applying it had to reassemble every body by hand,
+for every template, and one of the pieces to reassemble was the header's
+`padding:24px 32px;border-bottom:1px solid #E5DFD2`.
+
+That declaration has a specific failure mode. Lose the `px;` and it becomes
+`padding:24px 32border-bottom:1px solid #E5DFD2`, which is not a syntax error to
+any HTML parser: the attribute is still quoted, the tag still closes, the document
+still renders. Every email client silently discards the whole declaration it
+cannot parse, so the header loses its padding and its rule and the email arrives
+looking broken with nothing anywhere reporting a fault.
+
+`padding:24px 32border-bottom` does not appear in this repository at any revision
+(`git log --all -S "32border"` is empty, and `lib/email/shell.ts` has carried the
+correct form since it was written). A hand-reassembled paste into a dashboard form
+is the one place it can come from, and it is the one part of Ponte's email that
+had no test on the far side of it.
+
+So the templates are now **generated, committed files** under
+`supabase/templates/`, checksummed, and read by the same strict reader
+(`lib/email/audit.ts`) that reads the application mail. What you paste is a whole
+file. `lib/email/__tests__/auth-email.test.ts` fails if the file stops matching
+its generator, and asserts the header declaration by name in both the application
+shell and the pasted template.
+
+**Never edit `supabase/templates/*` by hand.** Change
+`lib/email/auth-templates.ts` and run `npm run auth:templates`.
 
 ## Which emails this covers
 
-| Template | Supabase name | Status |
-|---|---|---|
-| Sign-up confirmation | Confirm signup | Provider-side, not yet applied |
-| Magic link | Magic Link | Provider-side, not yet applied |
-| Password recovery | Reset Password | Provider-side, not yet applied |
-| Email address change | Change Email Address | Provider-side, not yet applied |
-| Invitation | Invite user | Provider-side, not yet applied |
+| Template | Supabase name | Source | Status |
+|---|---|---|---|
+| Sign-in / sign-up code | **Confirm signup** and **Magic Link** | `supabase/templates/auth-otp.html` | Generated, committed, **not applied** |
+| Password recovery | Reset Password | — | **Deliberately not written.** Ponte has no password |
+| Email address change | Change Email Address | — | **Deferred.** No journey in launch scope |
+| Invitation | Invite user | — | **Deferred.** No invitation flow in launch scope |
 
-Every other Ponte email is application-generated and already uses the shared
-shell. See the inventory in the pull request description.
+A template pasted for a journey that does not exist is a template nobody will
+notice has gone stale. The three deferred ones stay as Supabase defaults, on
+purpose, and are recorded in `docs/launch/POST-LAUNCH-BACKLOG.md`.
+
+## One template, both names
+
+`signInWithOtp()` sends **Confirm signup** to an address Supabase has not seen
+before and **Magic Link** to one it has. The member did the same thing in both
+cases and is waiting for the same code, so both dashboard templates take the same
+document and the same subject. Two wordings would mean a member's second sign-in
+looked different from their first, for a reason that is about Supabase's
+bookkeeping and nothing to do with them.
+
+## A code, never a link
+
+Neither template may contain `{{ .ConfirmationURL }}`. `lib/auth/use-otp.ts`
+requests a code with no `emailRedirectTo` and establishes the session with
+`verifyOtp` in the surface that asked for it. A link would reopen the redirect
+flow that, in July 2026, left a member signing in on a shared browser looking at
+the previous member's account — the defect that hook exists to end. The absence
+of a link is a security property and it is asserted by test.
 
 ## Constraints Supabase imposes
-
-Three things the application templates do are not possible here.
 
 1. **No plain-text part.** Supabase sends the HTML body only. This is the one
    place where Ponte's "every email has a text alternative" rule cannot be met,
    and it is a provider limitation rather than a decision.
-2. **No Reply-To.** Recorded already in `docs/platform/AUTH-EMAIL-SETUP.md` §3.
-3. **Provider variables are required.** `{{ .Token }}`, `{{ .ConfirmationURL }}`
-   and `{{ .SiteURL }}` must survive verbatim. Removing one breaks sign-in.
+   `supabase/templates/auth-otp.txt` is generated anyway so the wording is
+   reviewable in a diff that is not a style attribute; it is never delivered.
+2. **No Reply-To.** See `docs/platform/AUTH-EMAIL-SETUP.md` §3. The mitigation is
+   a forward from `auth@ponte.trade` to `hello@ponte.trade`, recommended on
+   22 July 2026, **with no record of it being set up**.
+3. **`{{ .Token }}` must survive verbatim.** Removing it breaks sign-in.
 
-## The shell
+## The settings, exactly
 
-Paste this into each template, replacing `<!--BODY-->` with the per-template
-body below and `<!--PREHEADER-->` with the per-template preheader.
+Every row is a manual dashboard change. Values come from
+`lib/email/auth-templates.ts`, which is the single source for both the sentence in
+the email and the value the field must hold.
 
-Colours are the approved light Ponte Flow tokens, identical to
-`lib/email/tokens.ts`. If those tokens change, this file must be re-derived and
-re-pasted; nothing automates that.
+### Supabase → Authentication → Email Templates
 
-```html
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#FCFBF7">
-  <tr><td align="center" style="padding:32px 16px">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#FFFFFF;border:1px solid #E5DFD2;border-radius:14px;overflow:hidden">
-      <tr><td style="padding:24px 32px;border-bottom:1px solid #E5DFD2">
-        <p style="margin:0;font-family:Georgia,'Times New Roman',Times,serif;font-size:20px;line-height:1.2;color:#0F0F0E">Ponte Trade</p>
-        <p style="margin:4px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.4;color:#6E6A61">Cross-border trade, with greater clarity.</p>
-      </td></tr>
-      <tr><td style="padding:32px">
-        <!--BODY-->
-      </td></tr>
-      <tr><td style="padding:24px 32px;border-top:1px solid #E5DFD2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#6E6A61">
-        <p style="margin:0 0 8px">Ponte Trade will never ask you for your password, a payment detail or a verification code by email.</p>
-        <p style="margin:0 0 8px">You are receiving this because of activity on your Ponte Trade account.</p>
-        <p style="margin:0">Ponte Trade is operated by 1402 Celsius Ltd. <a href="{{ .SiteURL }}" style="color:#6E6A61;text-decoration:underline">ponte.trade</a></p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-```
+| Template | Subject | Body |
+|---|---|---|
+| Confirm signup | `Your Ponte Trade sign-in code` | the whole of `supabase/templates/auth-otp.html` |
+| Magic Link | `Your Ponte Trade sign-in code` | the same file |
 
-The 6-digit code block, used by every template that carries `{{ .Token }}`:
+### Supabase → Authentication → Providers → Email
 
-```html
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
-  <tr><td style="padding:16px 24px;background:#F2EFE6;border:1px solid #E5DFD2;border-radius:9px;font-family:'SFMono-Regular',Menlo,Consolas,monospace;font-size:30px;letter-spacing:.18em;color:#0F0F0E">{{ .Token }}</td></tr>
-</table>
-```
+| Field | Value | Why |
+|---|---|---|
+| Confirm email | enabled | unchanged |
+| **Email OTP Expiration** | **`600`** seconds | The email says "expires in 10 minutes". A member told ten minutes and given an hour will not use the extra time; a member told an hour and given ten minutes types a code that has expired and is told it is incorrect |
 
-The heading and paragraph styles used by every body below:
+### Supabase → Project Settings → Authentication → SMTP
 
-- `h1`: `margin:0 0 8px;font-family:Georgia,'Times New Roman',Times,serif;font-size:26px;line-height:1.25;font-weight:400;color:#0F0F0E`
-- `p`: `margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#3A3733`
+| Field | Value |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | the Resend API key already in Netlify as `RESEND_API_KEY` |
+| Sender email | `auth@ponte.trade` |
+| **Sender name** | **`Ponte Trade`** — not `Ponte` |
+| Rate limit for sending emails | at least `100` per hour |
 
-## Per-template content
+The full identity a recipient sees must be `Ponte Trade <auth@ponte.trade>`.
+Operational mail is `Ponte Trade <hello@ponte.trade>`, set in `lib/email/send.ts`
+and not configured here.
 
-### Confirm signup
+### Resend → Domains → `ponte.trade`
 
-- **Subject:** `Your Ponte Trade verification code`
-- **Preheader:** `Enter this code to finish setting up your account.`
+| Setting | Required state | Why |
+|---|---|---|
+| Domain verified, DKIM + SPF + DMARC published | **yes** | `auth@ponte.trade` cannot send at all until the domain is verified, and without SPF and DMARC the message goes to spam in Gmail, Yahoo and Outlook regardless of how well the HTML renders |
+| **Open tracking** | **disabled** | An open pixel in an email about a credential. Ponte's emails contain no `<img>` at all, so enabling it would insert the only image in the document |
+| **Click tracking** | **disabled** | It rewrites every `href` to the provider's domain. That puts a third-party redirector inside a Ponte link, in a message whose whole purpose is to be trustworthy, and it is a documented spam-filter signal |
 
-```html
-<h1 style="...">Confirm your email address.</h1>
-<p style="...">Enter this code on the page that asked for it. It expires in one hour.</p>
-<!-- code block -->
-<p style="...">If you did not create a Ponte Trade account, ignore this email and nothing happens.</p>
-```
-
-### Magic Link
-
-- **Subject:** `Your Ponte Trade sign-in code`
-- **Preheader:** `Enter this code to sign in.`
-
-```html
-<h1 style="...">Sign in to Ponte Trade.</h1>
-<p style="...">Enter this code on the page that asked for it. It expires in one hour.</p>
-<!-- code block -->
-<p style="...">If you did not try to sign in, ignore this email. Your account is unchanged.</p>
-```
-
-### Reset Password
-
-- **Subject:** `Reset your Ponte Trade password`
-- **Preheader:** `Use this code to set a new password.`
-
-```html
-<h1 style="...">Reset your password.</h1>
-<p style="...">Enter this code on the password reset page. It expires in one hour.</p>
-<!-- code block -->
-<p style="...">If you did not ask to reset your password, ignore this email and your password stays as it is.</p>
-```
-
-### Change Email Address
-
-- **Subject:** `Confirm your new Ponte Trade email address`
-- **Preheader:** `Confirm the change to finish updating your account.`
-
-```html
-<h1 style="...">Confirm your new email address.</h1>
-<p style="...">Enter this code to move your Ponte Trade account to this address.</p>
-<!-- code block -->
-<p style="...">If you did not ask to change your email address, contact Ponte immediately: somebody may have access to your account.</p>
-```
-
-### Invite user
-
-- **Subject:** `You have been invited to Ponte Trade`
-- **Preheader:** `Accept the invitation to set up your account.`
-
-```html
-<h1 style="...">You have been invited to Ponte Trade.</h1>
-<p style="...">Ponte Trade is a commercial intelligence and controlled-execution layer for cross-border trade.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
-  <tr><td style="border-radius:5px;background:#0F0F0E">
-    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;color:#FCFBF7;text-decoration:none;border-radius:5px">Accept your invitation</a>
-  </td></tr>
-</table>
-<p style="...">If you were not expecting this, ignore it and no account is created.</p>
-```
+Tracking is a setting on the **domain**, not a per-send flag, so the repository
+cannot switch it off — only prove it asks for nothing. It does: the
+`resend.emails.send()` call passes exactly `from`, `to`, `subject`, `html`,
+`text`, asserted by test, and every `href` in every document must be an absolute
+`https://ponte.trade` URL.
 
 ## How to apply
 
-1. Supabase dashboard → Authentication → Email Templates.
-2. For each template: paste the subject, then the shell with its body.
-3. Confirm `{{ .Token }}` / `{{ .ConfirmationURL }}` / `{{ .SiteURL }}` survived.
-4. Send one test of each to a real inbox and check it on a phone.
-5. Record the date applied in `docs/codex/CURRENT-STATE.md`.
+1. Confirm the Resend domain state and the two tracking toggles above.
+2. Set the SMTP fields, including **Sender name `Ponte Trade`**.
+3. Set **Email OTP Expiration** to `600`.
+4. `npm run auth:templates:check` — confirms the committed file matches its
+   generator before you copy it.
+5. Compare `supabase/templates/auth-otp.html` against the SHA-256 in
+   `supabase/templates/README.md`.
+6. Paste the subject and the whole file into **Confirm signup**, then into
+   **Magic Link**.
+7. Confirm `{{ .Token }}` survived, and that `{{ .ConfirmationURL }}` is absent.
+8. Set up the `auth@ponte.trade` → `hello@ponte.trade` forward if it does not
+   exist.
+9. Run the test sends below.
+10. Record the date, the applied checksum and the test results in
+    `docs/operations/OPERATIONS_LOG.md`, and update `LB-012`.
 
-Step 4 is not optional. There is no automated test on the far side of the
-dashboard, so a broken auth template is discovered by a member who cannot sign
-in.
+## The test sends, which are what closes `LB-012`
+
+Steps 1 to 8 are configuration. None of them proves a message arrives. Request a
+code from `/login` to a real mailbox in each of **Gmail, Yahoo and Outlook** and
+confirm, for each:
+
+- [ ] it arrives **in the inbox, not in spam or promotions**;
+- [ ] the sender reads `Ponte Trade <auth@ponte.trade>`, not Supabase and not
+      `auth`;
+- [ ] the subject is `Your Ponte Trade sign-in code`;
+- [ ] the header has visible padding and a hairline rule beneath it. **This is the
+      declaration that was fused.** A missing rule or text against the card edge
+      means the paste is wrong, not that the design is;
+- [ ] there is a six-digit code, and **no link that signs you in**;
+- [ ] the code is legible on a phone without pinching;
+- [ ] no link in the email points anywhere but `ponte.trade` — a rewritten link
+      means click tracking is still on;
+- [ ] the code is refused after ten minutes;
+- [ ] a reply reaches `hello@ponte.trade`, which proves the forward;
+- [ ] signing in as a second account, in a browser already signed in as the
+      first, ends with the **second** account on `/account`. That is the bug the
+      whole code flow exists for, so test it deliberately.
+
+Also send one operational email — the incomplete-listing notice is the worst case
+— and confirm it arrives outside spam from `Ponte Trade <hello@ponte.trade>`.
+
+Nothing on the far side of a dashboard has an automated test. A broken auth
+template is otherwise discovered by a member who cannot sign in.

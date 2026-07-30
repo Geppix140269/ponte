@@ -119,6 +119,75 @@ anonymous RPC to the logger returning `42501` where it returns `23503` today.
 C Approval 1 remains incomplete until this migration is approved, applied and
 production-verified.
 
+## 30 July 2026 - Authentication email becomes a committed artefact, not a document
+
+**Decision:** ADR-0017. Authentication and operational transactional email is a
+launch-blocking workstream (**LB-012**), and the Supabase Auth template stops being
+prose. It is generated from `lib/email/auth-templates.ts`, committed to
+`supabase/templates/`, checksummed, and read by the same strict reader that reads
+every application email.
+
+**Why, and it is not a branding decision.** The template reached production by a
+person copying HTML out of a document into a dashboard form, and the document
+carried each body as a FRAGMENT - `<h1 style="...">`, with the real declarations
+listed separately further up the page - so every body had to be reassembled by
+hand. One of the pieces is the header's
+`padding:24px 32px;border-bottom:1px solid #E5DFD2`, and losing the `px;` fuses it
+into `padding:24px 32border-bottom:...`, which no HTML parser rejects. The
+attribute is still quoted, the tag still closes, the document still renders, and
+every client silently drops the declaration it cannot parse - so the header loses
+its padding and its rule and the email arrives broken with nothing reporting a
+fault.
+
+**What the investigation actually found, which reframed the task.** That string
+exists in **no revision of this repository**. `git log --all -S "32border"` is
+empty; `lib/email/shell.ts` has been modified in two commits and has always
+carried the correct form; the layout it retired had no such declaration at all. So
+the defect surface was never the application code. It was the one part of Ponte's
+email with no test on the far side of it - and the document said so itself, in its
+last line, before this change.
+
+**The lesson, which is about what a test asserts.** The existing suite has 23
+assertions and passes a document whose header CSS is fused, because every one of
+them checks what the email *says*: one shell, a plain-text part, no unescaped
+value, the right noun for a trade service. None of them reads the output as a
+document. `lib/email/audit.ts` now does, and the generic rule that catches the
+class is narrow and cheap: **every numeric token in a declaration value must wear
+a real CSS unit.** `32px` yields `px`. `32border-bottom` yields `border-bottom`,
+which is not one. The suite reintroduces the fusion, a dropped closing tag and a
+lost attribute quote, and requires the reader to name each - a check that has never
+failed is a check nobody has reason to believe.
+
+**Four decisions of substance settled two conflicting records.** One template for
+both Confirm signup and Magic Link with one subject, because `signInWithOtp()`
+chooses between them on bookkeeping a member cannot observe. The light Ponte Flow
+palette, superseding the dark `#06070A`/`#CBFB5E` E1 template whose colours are in
+no approved token file - the same violation ADR-0013 removed from application
+email, in a document written before ADR-0002 made the Constitution binding. Ten
+minutes rather than one hour, from a single constant that produces both the
+email's sentence and the required dashboard value, because it is the only value an
+instruction was ever written for and it is the shorter, which is the safer way to
+be wrong about a credential. And `Ponte Trade <address>` always - `lib/email/send.ts`
+had been sending the bare `hello@ponte.trade`, so an operational email arrived from
+a sender the inbox list showed as `hello`.
+
+**What was deliberately not done.** Open and click tracking are decided off, and
+the repository cannot switch them: Resend sets both on the sending domain. So the
+code proves it asks for nothing - the send call passes exactly five fields, no
+email contains an `<img>`, every link is an absolute `ponte.trade` URL - and the
+dashboard state is raised as **OD-010** together with the unrecorded DKIM, SPF and
+DMARC state, which decides whether a test send lands in spam regardless of how the
+HTML renders.
+
+**Affected:** `lib/email/` (`audit.ts`, `auth-templates.ts`, `send.ts`, `shell.ts`,
+`blocks.ts`, `tokens.ts`), `supabase/templates/`, ADR-0017, LB-012, OD-010,
+PL-025 to PL-027, `docs/email-provider-template-configuration.md`,
+`docs/platform/AUTH-EMAIL-SETUP.md` (section 5 superseded).
+
+**Not applied to production.** Merging changes what should be in the Supabase
+dashboard, not what is. LB-012 closes on fresh Gmail, Yahoo and Outlook sends that
+render correctly and arrive outside spam.
+
 ## 30 July 2026 - Two Market Signals corrections: alias precision, and what a zero family count means
 
 **A widening term must be narrower than the thing it widens.** The gas-oil group carried bare `diesel` as an expansion term. `ilike` has no notion of a word, so a search for `gas oil` reached `Diesel Generator`, `Diesel Engine` and `Diesel Pump`: equipment, where the member asked about cargo. It was visible in the sample rows of the read-only production run and not in any assertion, because a widened search returns MORE and that looks like a search that works.
@@ -165,7 +234,7 @@ Playwright tests. `middleware.ts` and the private-site gate were untouched.
 **Affected areas.** `lib/products/fuzzy.ts`,
 `components/products/intake/ReviewPanel.tsx`, `components/products/intake/intake.css`,
 their tests, `e2e/product-entry-ux.spec.ts`, `docs/launch/LAUNCH-BLOCKERS.md`
-(LB-010, LB-011), `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-021 to PL-024) and
+(LB-010, LB-011), `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-025 to PL-028) and
 `docs/codex/audits/2026-07-30-platform-ux-audit/`.
 
 ## 30 July 2026 - the corrected `20260729b` applied, and a revoke that named the wrong grantee

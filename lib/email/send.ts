@@ -21,7 +21,35 @@ import { Resend } from "resend";
 import { renderTransactionalEmail } from "./render";
 import type { TemplateData, TemplateName } from "./templates";
 
-const FROM = process.env.RESEND_FROM_EMAIL || "hello@ponte.trade";
+/**
+ * The operational sender identity.
+ *
+ * `Ponte Trade <hello@ponte.trade>`, always with the display name. The previous
+ * value was the bare address, which is what the recipient's inbox list then
+ * shows: an operational email from Ponte arrived looking as though it came from
+ * somebody called "hello". A display name is also one of the signals a
+ * receiving domain weighs when it decides whether a message is worth the inbox,
+ * and Yahoo and Outlook weigh it more heavily than Gmail does.
+ *
+ * `RESEND_FROM_EMAIL` may still override it, and may be set either to a bare
+ * address or to a full identity. A bare address is wrapped in the brand name
+ * rather than sent as it stands, so a configuration that forgets the display
+ * name cannot silently reintroduce the defect. Authentication mail is a separate
+ * identity (`Ponte Trade <auth@ponte.trade>`) sent by Supabase over Resend SMTP,
+ * and is not configured here — see `docs/platform/AUTH-EMAIL-SETUP.md`.
+ */
+export const OPERATIONAL_ADDRESS = "hello@ponte.trade";
+
+export function senderIdentity(configured = process.env.RESEND_FROM_EMAIL): string {
+  const raw = (configured ?? "").trim();
+  if (raw === "") return `Ponte Trade <${OPERATIONAL_ADDRESS}>`;
+  // Already a full identity: honour it verbatim, so an owner who deliberately
+  // sets a different display name gets the one they set.
+  if (/^.+<[^<>]+>$/.test(raw)) return raw;
+  return `Ponte Trade <${raw}>`;
+}
+
+const FROM = senderIdentity();
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);

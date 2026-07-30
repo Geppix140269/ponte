@@ -1,11 +1,33 @@
 # Auth email: Resend SMTP, 6-digit codes, and the E1 template
 
-What Giuseppe pastes into the Supabase dashboard. The code side (the OTP entry
-UI, `verifyOtp`, the gate modal) ships separately and is useless without this.
-
 Written 2026-07-22, after live testing found that a newly registered member
 confirming their email in a browser that already held a session landed on
 `/account` looking at the previous member's account.
+
+> **Partly superseded, 30 July 2026 — ADR-0017.**
+>
+> Sections 1 to 4 and 6 remain current, with two corrections marked in place:
+> the **Sender name is `Ponte Trade`**, not `Ponte`, and the OTP expiry is
+> confirmed at `600` seconds.
+>
+> **Section 5's template is superseded and must not be pasted.** It is the dark
+> E1 layout (`#06070A`, `#0A0C11`, lime `#CBFB5E`, Inter, the `ponte.`
+> wordmark), and none of those colours is in any approved token file. That is
+> the same class of violation as the `#0F1E3C`/`#E8A020` palette ADR-0013
+> removed from application email: a palette that exists only in email. This
+> document predates ADR-0002, which made the Design Constitution binding.
+>
+> The current template is **generated and committed** at
+> `supabase/templates/auth-otp.html`, from the same shell and tokens as every
+> other Ponte email. Apply it by following
+> `docs/email-provider-template-configuration.md`, which supersedes section 5
+> and carries the full settings table and the test-send checklist.
+>
+> Section 5 is kept below, unedited, as the record of what was designed on
+> 22 July 2026 and why. It is history, not an instruction.
+
+What Giuseppe pastes into the Supabase dashboard. The code side (the OTP entry
+UI, `verifyOtp`, the gate modal) ships separately and is useless without this.
 
 ## Why this is a bug fix, not a branding job
 
@@ -49,7 +71,7 @@ Dashboard, Project Settings, Authentication, SMTP Settings. Enable custom SMTP.
 | Username | `resend` |
 | Password | your Resend API key, the same `RESEND_API_KEY` already in Netlify |
 | Sender email | `auth@ponte.trade` |
-| Sender name | `Ponte` |
+| Sender name | `Ponte Trade` — **corrected 30 July 2026.** This document said `Ponte`, which makes the recipient's sender read `Ponte <auth@ponte.trade>`. The brand name is `Ponte Trade` everywhere else in the product and in every application email |
 
 Then raise **Rate limit for sending emails** on the same screen. Supabase caps
 the built-in sender at a handful per hour, which is fine for a project nobody
@@ -90,7 +112,14 @@ the templates so they carry the code and no link at all.
 Leave **Site URL** as `https://ponte.trade` and keep the existing redirect
 allow-list. Nothing in the code flow uses them, but Google OAuth still does.
 
-## 5. The E1 template
+## 5. The E1 template — SUPERSEDED, do not paste
+
+> Superseded 30 July 2026 by `supabase/templates/auth-otp.html` and ADR-0017. The
+> palette below is in no approved token file. Retained unedited as the record of
+> the 22 July 2026 design and its reasoning, several parts of which the current
+> template keeps: text wordmark rather than SVG, tables rather than flexbox,
+> 600px, one letter-spaced code block, and no unsubscribe link. The subject is now
+> `Your Ponte Trade sign-in code`.
 
 Dashboard, Authentication, Email Templates. Paste the HTML below into **Magic
 Link** and into **Confirm signup**, and set both subjects to:
