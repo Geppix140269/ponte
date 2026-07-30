@@ -34,7 +34,7 @@ export default async function FindChrome({
           <Link className="fnav__link" href="/market-signals">
             {t("nav.signals")}
           </Link>
-          <Link className="fnav__link" href="/marketplace/new">
+          <Link className="fnav__link" href="/structure">
             {t("nav.submit")}
           </Link>
           <Link className="fnav__link" href="/verify">

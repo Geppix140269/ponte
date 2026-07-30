@@ -57,7 +57,7 @@ export default async function PricingPage({
             <p className="mt-4 flex-1 text-[13px] leading-relaxed text-gray-2">
               {t("marketplace.body")}
             </p>
-            <Link href="/marketplace/new" className="btn-gold mt-6">{t("marketplace.cta")} <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/structure" className="btn-gold mt-6">{t("marketplace.cta")} <ArrowRight className="h-4 w-4" /></Link>
           </div>
 
           {/* Credits. The only thing on the platform that is paid for. */}

@@ -58,7 +58,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Post a listing",
         short_name: "Post",
-        url: "/marketplace/new?source=pwa",
+        url: "/structure?source=pwa",
       },
       {
         name: "Verify a company",

@@ -54,7 +54,18 @@ const PUBLICATION_DISCLAIMER =
   "Ponte has not independently verified the commercial claims in it.";
 
 const listingLink = (ref: string) => route(`/marketplace/l/${encodeURIComponent(ref)}`);
-const editLink = (id: string) => route(`/marketplace/new?id=${encodeURIComponent(id)}`);
+
+// Reopen a saved listing in the current constitutional composer.
+//
+// This once pointed at `/marketplace/new?id=`, the retired obsidian editor —
+// and with `id=`, a parameter that page did not read, so the member arrived at
+// a blank form rather than the listing this email is about (LB-013). Every
+// "Complete / Improve / Open / Edit / Extend your listing" CTA resolves through
+// here, so the single canonical destination is fixed once, in one place. The
+// Structure composer reads `?edit=<id>`, enforces ownership by query and RLS,
+// and fails closed on an unreadable record; `/structure` is a route in every
+// deployment, independent of the landing journey flag.
+const editLink = (id: string) => route(`/structure?edit=${encodeURIComponent(id)}`);
 
 /* ------------------------------------------------------------------ */
 /* Template data                                                       */
