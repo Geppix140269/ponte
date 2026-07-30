@@ -58,6 +58,40 @@ Use this structure:
 - `public.schema_migrations` rows for both filenames, hashes matching the files.
 - The tested read-side implementation preserved at PR #101 head `53c9d99`; see PL-014.
 
+## 2026-07-30 - Gate C Approval 1: 20260729a applied, and stopped there
+
+### Completed
+
+- **`20260729a_deal_room_core.sql` applied to production** (`cptglsmjmzcfpjndqfmc`) under Gate C Approval 1, from `main` at `7f979e0` with a clean worktree. All three checksums were recomputed and matched the preflight audit before anything ran, and each was re-verified immediately before its own execution. Recorded in `public.schema_migrations` with SHA-256 `24932e4a...58a78c8a`, matching the file byte for byte. **Ledger 43 to 44.**
+- Verified in production: 15 tables, 34 CHECK constraints, 52 foreign keys, 54 indexes, 9 non-internal triggers, 2 helper functions, public tables 53 to 68. The append-only trigger is on `deal_room_activity_events`, and the agreement authority is seeded with all four documents at `v1-2026-07-29`, each `current` and carrying its checksum.
+- Full record, every probe result: `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`.
+
+### Decisions
+
+- **None taken by me that the owner had not already taken, with one exception, flagged below.** Gate C Approvals 2, 3 and 4 remain untaken.
+- `20260729c` was not applied. Its three executable statements create the `deal-room-evidence` bucket and its two policies, which the instruction listed as not authorised while also listing the file as one to apply. `GATE-C-TEST-PLAN.md` treats the bucket as Approval 2, which resolves it: not applied.
+
+### Risks / discrepancies
+
+- **A production change outside the approved files, and it needs owner confirmation.** Migration `a` creates the tables; `b` enables RLS. Between them, production held 15 tables with `relrowsecurity = false` while Supabase's default privileges granted `anon` and `authenticated` SELECT, INSERT and UPDATE on all 15 - an anonymous write path through PostgREST to every Deal Room table, including the append-only activity record. The tables were empty and no write was attempted while it was open. It was closed with `alter table ... enable row level security` on the 15 tables and nothing else: no policy created, nothing granted, nothing revoked. Fail-closed, and a prefix of what `b` does. Proved with an anon-key client: SELECT `200 []`, INSERT `401 / 42501`. Reversible in one statement per table.
+- **LB-005: `20260729b` cannot be applied.** Postgres refused it and rolled the file back - it grants execute on `deal_room_invite(uuid, text, text, text, timestamptz)`, a signature the same file drops, because the owner's final trust review took that function from five arguments to three. All 21 declared functions were audited programmatically; exactly one broken grant. Correcting it changes the file's SHA-256, so it needs its own authorisation and a new recorded checksum.
+- **A 502 that was not a failure.** `db-query.mjs --file` returned an HTML 502 from `api.supabase.com` on `20260729a`. The transaction had committed; only the reply was lost. Because the script exits before its ledger write on a failed call, production briefly held 15 tables with no record they existed - the exact defect PR #106 had just repaired for another migration. The row was written explicitly. Its `applied_at` is the write time, not the execution time, and the record says so.
+- The test suite did not and could not catch LB-005: `rls-contract.test.ts` scans the file for command names and member write policies, not for grant signatures against the functions the same file declares. The check is three lines and belongs in that suite. Not added - no fix was authorised.
+
+### Next
+
+1. Owner decides LB-005 and authorises the corrected `20260729b` with its new checksum.
+2. Owner confirms or reverses the RLS containment.
+3. Owner confirms `20260729c` belongs to Approval 2.
+4. Then: apply the corrected `20260729b`, verify against `GATE-C-TEST-PLAN.md` sections 4.1 to 4.4, and record it.
+
+### Evidence
+
+- Branch `gate-c-approval-1`, from `main` at `7f979e0`. `npm run verify` clean.
+- Production, after: 15 `deal_room_*` tables, RLS on all 15, **0 policies**, 2 functions, ledger 44 rows with one `20260729a` entry. No Storage bucket or policy. `NEXT_PUBLIC_DEAL_ROOM` unset, allowlist unchanged, nothing deployed, access wall untouched. Legacy cluster 8 tables / 0 rows, `is_deal_participant()` unaltered, `ponte-deal-docs` 0 objects, `listings` 5 rows.
+
+---
+
 ## 2026-07-29 - Deal Room: four trust boundaries closed (no production change)
 
 ### Completed
