@@ -101,7 +101,7 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the Deal Room function ACL correction (LB-008)
+## APPLIED to production, 30 July 2026: the Deal Room function ACL correction (LB-008)
 
 `supabase/migrations/20260730b_deal_room_function_acl.sql`.
 
@@ -109,7 +109,43 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 |---|---|
 | SHA-256 | `15f488d87705e5a88def6e1c25e0b006daceda9d3316747eb8bbe87b3f542b31` |
 | Size | 11,672 bytes, no BOM; raw-byte and utf8-string hashes identical |
-| Status | **written, tested, NOT applied.** Applying it is a separate owner instruction |
+| Status | **APPLIED 2026-07-30 07:59:45.928 UTC**, one transaction, exit 0, no ambiguous transport response. Recorded as exactly one ledger row, **45 → 46**, checksum matching byte for byte |
+
+**The anonymous execution path is closed, and proved closed through a real
+client.** `anon` now holds EXECUTE on **0 of 23** `deal_room_*` functions, down
+from 23; `PUBLIC` holds 0; and `deal_room_log_event` is reachable by `postgres`
+and `service_role` only. An anon-key RPC to the logger returns
+**`401 / 42501 permission denied for function deal_room_log_event`** where the same
+call returned `409 / 23503` before — an FK violation, which is how LB-008 was
+proved, because it meant the body had executed. It no longer executes.
+
+Nothing else moved. All nine before/after md5 fingerprints are identical: function
+bodies, policy definitions, triggers, indexes, constraints, columns, RLS state and
+`pg_default_acl` (24 rows). `service_role` unchanged at 23. 14 policies, 4
+agreement documents, 0 rooms, 0 activity rows.
+
+**LB-008 nevertheless stays ACTIVE, because one probe failed.** `authenticated`
+holds EXECUTE on **22** functions, not the specified 19: the 19 intended plus
+`deal_room_is_writable`, `deal_room_uuid_or_null` and
+`deal_room_events_append_only`. The migration revokes `authenticated` only on the
+logger, and re-granting the 19 cannot remove grants Supabase's default privileges
+had already created on all 23. The three are closed to `anon`; none of them
+writes; the forgery path itself is closed. So the material security objective is
+met and the ACL contract as specified is not.
+
+`lib/deal-room/__tests__/function-acl.test.ts` asserts "`authenticated` should end
+with execute on exactly 19" and passes — **because it counts grant statements in
+the file.** A file-text test cannot see a privilege the file never mentions. That
+is the LB-008 error one level up: LB-008 was a file asserting something about
+itself, and the test written to catch it asserts something about that file. Only
+the catalogue could answer it. Full probe-by-probe record:
+`docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 11 to 16.
+
+**Probe 6 is pending, not passed.** A real authenticated direct RPC needs a member
+JWT and there are no authorised test credentials; production's 9 confirmed users
+are real member accounts, and minting a session for one to satisfy a probe is not a
+test credential. Probes 8 and 9 are catalogue-verified and behaviourally pending
+for the same reason.
 
 **Why a new file rather than an edit.** `20260729b` is applied and its checksum
 `b379f869…fea3153` is in `public.schema_migrations`. An applied file is immutable;

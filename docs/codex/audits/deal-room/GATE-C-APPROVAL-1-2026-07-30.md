@@ -597,3 +597,177 @@ The Deal Room remains unreachable by any member.
 LB-005 is closed. LB-004 is closed and moved to the resolved register. LB-001
 stays open until Gate C completes. Approvals 2, 3 and 4 are untaken and
 unauthorised.
+
+---
+
+# Continuation, 30 July 2026: `20260730b` applied. Anonymous path closed; one probe failed.
+
+**Authorised:** owner, "Gate C Approval 1 continuation is authorised: apply
+`20260730b_deal_room_function_acl.sql` only", 30 July 2026.
+**Repository state:** `main` at `9c91e095227a5164ffa06ffa6ee012f4f451c5e7` — the
+reviewed merge commit, unadvanced, so no reconciliation was needed. Clean worktree,
+`npm run verify` exit 0.
+**Executed:** **2026-07-30 07:59:45.928 UTC**, one transaction, exit 0, no timeout,
+no HTML, no 502.
+**Outcome:** **the anonymous execution path is closed and proved closed through a
+real client. Probe 7 failed and probe 10 failed for three of its four functions.
+LB-008 therefore stays ACTIVE.**
+
+## 11. Pre-execution evidence
+
+| Check | Required | Result |
+|---|---|---|
+| `origin/main` | `9c91e09…c5e7` | **matches** |
+| Worktree | clean | **clean** |
+| `npm run verify` | exit 0 | **exit 0**, including `48 migrations` and `function ACL: 22 assertions` |
+| `20260730b` SHA-256 | `15f488d8…542b31` | **matches**, raw bytes and utf8 string identical, 11,672 bytes, no BOM |
+| `20260729b` SHA-256 | `b379f869…fea3153` | **matches**, and the production ledger row records that same value |
+| Ledger `20260729a` / `20260729b` / `20260730b` | 1 / 1 / 0 | **1 / 1 / 0** |
+| `deal_room_*` functions | 23 | **23** |
+| `anon` EXECUTE | held (the defect) | **23 of 23** |
+| Deal Room policies | 14 | **14** |
+| Deal Rooms | 0 | **0** |
+| `deal-room-evidence` | absent | **absent** |
+
+Every read-only probe used `--sql`. `--file` was used exactly once, for the
+authorised migration.
+
+**A before-baseline was captured** so that "unchanged" could be proved rather than
+asserted: md5 fingerprints of all function bodies, policy definitions, triggers,
+indexes, constraints, columns, RLS state and `pg_default_acl`, plus `service_role`
+privilege counts and row counts.
+
+## 12. The probes, one by one
+
+| # | Probe | Result |
+|---|---|---|
+| 1 | one `20260730b` ledger row, checksum matching | **PASS.** Exactly 1 row, `15f488d8…542b31`, `applied_at 2026-07-30 07:59:45.928 UTC`, **ledger 45 → 46** |
+| 2 | `anon` EXECUTE on zero `deal_room_*` functions | **PASS. 0 of 23**, from 23 |
+| 3 | `PUBLIC` EXECUTE on zero | **PASS. 0** |
+| 4 | `authenticated` cannot execute the logger | **PASS.** `has_function_privilege` false; ACL is `postgres=X ; service_role=X` only |
+| 5 | real anonymous RPC to the logger returns `42501`, not `23503` | **PASS.** `401 / 42501 permission denied for function deal_room_log_event`. The same call returned `409 / 23503` before, which is how LB-008 was proved: an FK violation meant the body had run. It no longer runs |
+| 6 | real authenticated direct RPC to the logger refused | **PENDING.** No authorised test credentials exist — see section 14 |
+| 7 | `authenticated` retains EXECUTE on exactly the 19 | **FAIL. 22, not 19** — see section 13 |
+| 8 | four RLS helpers usable by authenticated policy evaluation | **PARTIAL.** Catalogue: `has_function_privilege('authenticated', …)` true for all four. Behavioural confirmation needs an authenticated session and a room; pending |
+| 9 | fifteen commands executable by authenticated | **PARTIAL.** Catalogue: true for all fifteen. Behavioural pending, same reason |
+| 10 | four internal functions unavailable to member roles | **FAIL for three of four.** `deal_room_log_event` closed to both member roles. `deal_room_is_writable`, `deal_room_uuid_or_null` and `deal_room_events_append_only` are closed to `anon` but **still executable by `authenticated`** |
+| 11 | `service_role` privileges unchanged | **PASS. 23 of 23**, exactly as before |
+| 12 | bodies, tables, policies, triggers, indexes, data and project-wide default privileges unchanged | **PASS on every dimension.** All nine md5 fingerprints identical to the before-baseline: function bodies, policy definitions, triggers, indexes, constraints, columns, RLS state, and `pg_default_acl` (24 rows, unchanged). 14 policies, 4 agreement documents, 0 rooms, 0 activity rows |
+
+Two further checks, not required but worth recording:
+
+- Anonymous RPC to `deal_room_propose`, `deal_room_accept_invitation`,
+  `deal_room_can_administer` and `deal_room_is_master_participant` now all return
+  **`42501 permission denied for function …`**. Before the migration the commands
+  returned `42501 Not authenticated` from *inside* the body. The refusal has moved
+  from the function's own check to the grant, which is where it belongs.
+- Member table reads still return **`200 []`**, not an error. This matters:
+  revoking the RLS helpers from `anon` could in principle have broken policy
+  evaluation. It does not, because the 14 policies are scoped `to authenticated`,
+  so for an anonymous request no policy applies and the helpers are never called.
+  That reasoning is now confirmed against the live database rather than assumed.
+
+## 13. Why probe 7 failed, and why the regression suite did not catch it
+
+**`authenticated` holds EXECUTE on 22 of the 23 functions: the 19 intended, plus
+`deal_room_is_writable`, `deal_room_uuid_or_null` and
+`deal_room_events_append_only`.**
+
+The migration does what its own text says. It revokes `PUBLIC` and `anon` on all
+23, revokes `authenticated` on the logger, and grants `authenticated` on the 19.
+What it does **not** do is revoke `authenticated` on the other three — and
+re-granting the 19 cannot remove a grant that Supabase's default privileges had
+already created on all 23. Instruction step 2 named only the logger for an
+`authenticated` revoke; instruction step 4 required `authenticated` EXECUTE to be
+preserved "only for" the helpers and the commands. The file satisfies the first
+and not the second.
+
+**The regression suite asserted the wrong thing, in exactly the way LB-008 did.**
+`function-acl.test.ts` contains:
+
+> `authenticated` should end with execute on exactly 19 Deal Room functions
+
+and it passes — because it counts `grant` statements in the file. A file-text test
+cannot see a privilege the file never mentions, so three functions granted by
+Supabase's defaults and named nowhere in the corrective migration were invisible
+to it. That is the same error one level up: **LB-008 was a file asserting
+something about itself, and the test written to catch LB-008 was a test asserting
+something about that file.** Only the catalogue could answer it, and the catalogue
+was not consulted until after the migration was applied.
+
+The suite's wording is now known to overstate its reach. Correcting the test and
+the migration is a fix, and no fix is authorised here.
+
+**Residual exposure from the three, stated precisely so it is neither dismissed nor
+inflated.** All three are closed to `anon`. What remains is an authenticated
+member being able to call:
+
+- `deal_room_is_writable(uuid)` — a `boolean` predicate over
+  `deal_room_entitlements` and room state. It reads; it writes nothing. A member
+  could learn whether a room id is writable, which the room's own surface already
+  tells a participant.
+- `deal_room_uuid_or_null(text)` — pure text-to-uuid coercion, no table access.
+- `deal_room_events_append_only()` — a trigger function. Called directly outside
+  a trigger context it raises, because it dereferences `OLD`/`NEW`.
+
+**None of them writes, and none of them is the forgery path.** The one function
+that could forge the append-only history, `deal_room_log_event`, is closed to
+`anon` and to `authenticated`, proved both in the catalogue and through a real
+anonymous client. So the material security objective of LB-008 is met; the ACL
+contract as specified is not.
+
+## 14. Probe 6 is pending, and why no substitute was invented
+
+A real authenticated direct RPC needs a member JWT. There are **no authorised test
+credentials**: `.env.local` carries only the anon key, the service-role key and
+the management token, and no test account is documented anywhere in the
+repository.
+
+Production holds 9 confirmed users. **They are real member accounts, and none is
+identified as an authorised test account.** Minting a session for somebody's real
+account — by admin-generated link or otherwise — to satisfy a probe is not a test
+credential and was not done. Creating a user was explicitly not authorised.
+
+So probe 6 is recorded **pending**, and probes 8 and 9 are recorded **partial**:
+their catalogue halves pass, their behavioural halves need the same session. The
+instruction is explicit that a pending authenticated client means LB-008 is not
+claimed fully resolved, and it is not.
+
+What closing them needs, in order: an authorised test account, or authorisation to
+create one; then Approval 2 (bucket and policies) and a published pilot Deal, so
+that `npm run deal-room:negative-access` has a real room to drive. That fixture is
+the thing that finally proves probes 8, 9, and requirements 12 and 13 of the
+previous pass.
+
+## 15. Production state after this pass
+
+| | |
+|---|---|
+| Ledger | **46 rows**; one each for `20260729a`, `20260729b`, `20260730b` |
+| `deal_room_*` functions | 23, bodies byte-identical to before |
+| `anon` EXECUTE | **0** |
+| `PUBLIC` EXECUTE | **0** |
+| `authenticated` EXECUTE | **22** — 19 intended, 3 unintended (section 13) |
+| `service_role` EXECUTE | 23, unchanged |
+| `deal_room_log_event` | reachable by `postgres` and `service_role` only |
+| Policies | 14, definitions unchanged |
+| Rooms / activity rows | 0 / 0 |
+| Storage | `deal-room-evidence` **absent**; `ponte-deal-docs` untouched |
+| Flag | `NEXT_PUBLIC_DEAL_ROOM` **unset**, allowlist unchanged, nothing deployed, access wall untouched |
+| Project-wide default privileges | **unchanged**, 24 rows |
+
+## 16. What Gate C needs next
+
+1. **LB-008 stays active.** Two things close it: a follow-up migration revoking
+   `authenticated` on the three internal functions, and probe 6. Neither is
+   authorised here.
+2. **The regression suite needs a correction**, because its "exactly 19" assertion
+   is not true of production and cannot be made true by reading the file. The
+   honest local form is to assert the file's *intent* and record that the outcome
+   is catalogue-only verifiable.
+3. An authorised test account, or authorisation to create one, for probe 6.
+4. Approval 2: the `deal-room-evidence` bucket and its two policies.
+5. Approval 3: a published, family-classified pilot Deal, then
+   `npm run deal-room:negative-access` — which closes probes 8 and 9 and
+   requirements 12 and 13.
+6. Approval 4: flag and deploy.
