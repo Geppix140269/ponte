@@ -73,6 +73,17 @@ const ALIASED: Record<string, string> = {
   "--declared": "--pf-declared",
   "--focus": "--pf-focus",
   "--select": "--pf-select",
+  // Promoted from local extensions by ADR-0015. Each was literal hex here until
+  // the approved set gained a counterpart; now the Desk holds no copy.
+  "--gold-tint": "--pf-gold-tint",
+  "--pos-tint": "--pf-positive-tint",
+  "--pos-line": "--pf-positive-line",
+  "--neg-tint": "--pf-danger-tint",
+  "--neg-line": "--pf-danger-line",
+  "--review-tint": "--pf-review-tint",
+  "--review-line": "--pf-review-line",
+  "--declared-tint": "--pf-declared-tint",
+  "--gold-rule": "--pf-gold-rule",
   "--dur-1": "--pf-dur-micro",
   "--dur-2": "--pf-dur-enter",
   "--dur-3": "--pf-dur-deliberate",
@@ -87,18 +98,13 @@ const ALIASED: Record<string, string> = {
  * diff of this file as well as the stylesheet.
  */
 const LOCAL_EXTENSIONS = [
-  "--gold-tint",
-  "--pos-tint",
-  "--pos-line",
-  "--neg-tint",
-  "--neg-line",
-  "--review-tint",
-  "--review-line",
-  "--declared-tint",
+  // The eight tint and line extensions that used to be here were promoted into
+  // the approved set by ADR-0015 and are now aliased above. One entry remains.
+  //
   // Elevation, not colour. The Flow set defines no shadow token at all, so
   // there is nothing to alias onto: `--e-2` carries an ink shadow at 16% alpha
-  // as part of a box-shadow value. Recorded with the tints because it is the
-  // same kind of debt — a derived value the approved set does not yet name.
+  // as part of a box-shadow value. ADR-0015 covers colour and deliberately does
+  // not promote it, so it stays recorded as the single outstanding debt.
   "--e-2",
 ];
 
@@ -145,14 +151,9 @@ test("each recorded local extension genuinely has no approved counterpart", () =
   // Guards the list against becoming a dumping ground: if the Flow set ever
   // gains one of these, the extension must be retired rather than kept.
   const counterparts: Record<string, string> = {
-    "--gold-tint": "--pf-gold-tint",
-    "--pos-tint": "--pf-positive-tint",
-    "--pos-line": "--pf-positive-line",
-    "--neg-tint": "--pf-danger-tint",
-    "--neg-line": "--pf-danger-line",
-    "--review-tint": "--pf-review-tint",
-    "--review-line": "--pf-review-line",
-    "--declared-tint": "--pf-declared-tint",
+    // The eight promoted names are gone from LOCAL_EXTENSIONS, so asserting their
+    // absence from the token file would now be exactly backwards: they are
+    // SUPPOSED to be there. Only the outstanding debt is guarded.
     "--e-2": "--pf-elevation-2",
   };
   for (const [local, pf] of Object.entries(counterparts)) {

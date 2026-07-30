@@ -455,6 +455,48 @@ four:
 The fourth is the one that can fail while the first three pass, and it is the
 reason Stage 1 is not complete when the numbers are green.
 
+#### What was captured, 29 July 2026
+
+Criteria 1 to 3 are answered by `e2e/stage1-blockers.spec.ts`, run against a local
+production build with live Supabase data. 26 measurements, none below target.
+Evidence and method: `e2e/evidence/stage1/blockers/README.md`.
+
+| Criterion | Result |
+|---|---|
+| Boundaries at 3:1 | Worst case **3.63:1**. All four named inputs — `.qfield__i`, `.snote`, `.sigsheet__i`, `.vcp__input` — reached and asserted present, neutral and focus, both viewports, plus one disabled control. Measured against both adjacent colours, not the page ground alone |
+| Missing-data labels at 4.5:1 | **6.25:1** on the white card, **4.52:1** in the sunken well. Both viewports, three surfaces |
+| Desktop and 390 x 844 | Every measurement taken twice, once per viewport, with the viewport set on the browser context so the Bridge hydrates against the right media state |
+| No regression in hierarchy or completion | **Met, 30 July 2026.** The owner reviewed the PR #104 deploy preview on desktop and mobile and completed one Start a Deal journey end to end, approving the increased contrast, the surface and field separation, the readability of secondary and missing-data text, the preservation of the warm Ponte identity and the weight of the stronger rules |
+
+Two things are recorded rather than smoothed over. The **page ground** is the one
+named background with no rendered instance of missing-data text on any surface
+reachable without a member session; its 5.45:1 is computed and labelled as such.
+And the **first closure attempt reported nothing**, because it reused the
+screen-level contrast spec whose selectors matched no elements — every one of the
+four inputs is several steps into a journey. An empty sample reads exactly like a
+pass, which is why each target is now asserted present and the suite fails if it
+cannot be reached.
+
+**LB-002 and LB-003 were closed by the owner on 30 July 2026** on this evidence plus
+the read-through above. Both are moved to the resolved register in
+`docs/launch/LAUNCH-BLOCKERS.md`; the remediation reaches `main` when #104 is merged.
+
+#### The evidence tooling was removed, 30 July 2026
+
+`scripts/evidence-build.mjs`, which patched `middleware.ts` for the duration of a
+local build and restored it under a sha256 assertion, is **deleted at the owner's
+instruction**, along with its `evidence:build` package script. It never weakened the
+deployed gate and the bypass was never committed, but a committed script whose
+purpose is to skip the private-access gate is a thing that can be misused, and the
+owner's judgement is that it should not exist in the repository.
+
+Retained: every captured frame and measurement, `check-contrast.mjs`,
+`check-token-adoption.mjs`, `check-bridge-invariance.mjs`,
+`check-bridge-geometry.mjs`, `stage1-contrast.spec.ts`,
+`stage1-blockers.spec.ts` and `stage1-bridge-geometry.spec.ts`. None of them depends
+on the removed script. Re-capturing frames now requires the gate credential supplied
+at run time, or a tree where the gate has been retired.
+
 ## 12. Decisions and discoveries
 
 ### Decided by the owner, 29 July 2026
@@ -506,6 +548,33 @@ identifier` record, because recording a closed defect as an open blocker would m
 the register untrue; PR #103 is redundant and recommended for closure. `LB-003` is
 instead the second contrast blocker, since `main` already holds `LB-001` for the
 Deal Room loop and `PL-004`/`PL-005` for the two fixes above.
+
+**3a. The approved Bridge reference renders cannot be re-taken, and this is a gap
+in the approved package.**
+
+Discovered 29 July 2026 while carrying out S-3. The eight PNGs in
+`design/authority/bridge/v1/reference/` were rendered from
+`Ponte Landing - Bridge.html`, at 60% and 70% for desktop and 390 x 844 rescaled
+from 62% for mobile. That file, and `Ponte Bridge System.html`, are listed in
+`SOURCE-MANIFEST.md` but are **not vendored** — `check-governance.mjs` names all
+three in its `notVendored` set, which is why it verifies 13 of 16 rows. Neither has
+been committed on any branch and neither is on the development machine.
+
+The renders therefore still show pre-Stage-1 contrast, and their hashes are
+unchanged. Re-rendering from the product's landing page would be differently
+framed, which the owner excluded; reconstructing the prototype page would mean
+inventing its navigation, ticker and hero and then presenting the result as an
+owner-approved reference. Neither was done. The full reasoning is recorded in
+`SOURCE-MANIFEST.md`, and S-3's geometry requirement is separately proved by
+`check-bridge-invariance.mjs` and `check-bridge-geometry.mjs`.
+
+**Closed by the owner on 30 July 2026, OD-009 option 2.** The eight PNGs are
+preserved unchanged as historical approval evidence of the 27 July 2026 delivery; the
+invariance and geometry proofs are accepted as the authority evidence for this
+contrast-only amendment; the missing prototype HTML is not to be reconstructed; and
+it is recorded that Stage 1 changes contrast only, which is what keeps everything
+else the PNGs attest to accurate. If the HTML files ever surface a re-take becomes
+mechanical, but nothing is waiting on them.
 
 **3. The Bridge deck and passive pier are in Stage 1, contrast only.** Geometry,
 station fractions, node sizes, labels, motion and gold semantics unchanged;

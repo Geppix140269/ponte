@@ -104,7 +104,7 @@
   top: 14px;
   bottom: 14px;
   width: 3px;
-  background: var(--gold);
+  background: var(--gold-rule);
 }
 .ponte-find .vopt__t {
   display: block;
@@ -274,7 +274,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--gold-rule);
   animation: vrun-pulse 1s ease-in-out infinite;
 }
 .ponte-find .vrun__dots i:nth-child(2) {

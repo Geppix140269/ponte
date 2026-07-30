@@ -114,7 +114,7 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
 
 /* Navigation marks where you are with the same three signals selection uses,
    so a category reads identically whether it is chosen or being walked. */
-.pcat__opt[data-current="true"] .pcat__mark { background: var(--pf-gold); }
+.pcat__opt[data-current="true"] .pcat__mark { background: var(--pf-gold-rule); }
 .pcat__opt[data-current="true"] .pcat__t { color: var(--pf-gold-ink); }
 .pcat__opt[data-current="true"] .pcat__ico { color: var(--pf-gold-ink); }
 
@@ -135,7 +135,7 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
   border-radius: 0;
   background: transparent;
 }
-.pcat__opt[aria-checked="true"] .pcat__mark { background: var(--pf-gold); }
+.pcat__opt[aria-checked="true"] .pcat__mark { background: var(--pf-gold-rule); }
 
 /* The icon column is reserved whether or not the registry has a drawing for
    this option, so a grid where only some options are drawn still aligns. */
@@ -352,4 +352,20 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
    it is removed rather than replaced with anything. */
 @media (prefers-reduced-motion: reduce) {
   .pcat__opt { transition: none; }
+}
+
+/* ======================================================================
+   The mobile structural caption floor. Constitution section 18b, ADR-0015
+   Stage 1. The selected marker and the trail key are structural: one states that
+   an option is chosen, the other names which question an answer belongs to.
+   ====================================================================== */
+@media (max-width: 860px) {
+  .pcat__on,
+  .pcat-trail__k,
+  /* Added after rebasing onto main: PR #100 introduced the discard notice, whose
+     key names which answer is about to be lost. That is a field label carrying a
+     fact, so it belongs in the floor rather than outside it. */
+  .pcat-discard__k {
+    font-size: 11px;
+  }
 }

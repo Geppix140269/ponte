@@ -310,6 +310,51 @@ reference evidence** — the approved renders under
 `design/authority/bridge/v1/reference/` are part of the package and must be
 re-taken rather than left describing the old contrast.
 
+#### S-3 implementation note, 29 July 2026 — the re-take is blocked, and not by a choice
+
+The stylesheet change is done and the invariance requirement above is proved twice,
+at stylesheet level (`scripts/check-bridge-invariance.mjs`: 479 non-colour
+declarations, 6 at-rules and 23 timings identical, 15 colour changes enumerated) and
+at rendered-DOM level (`scripts/check-bridge-geometry.mjs`: 8 views, 1208 values
+identical to 0.05px). A pixel diff is deliberately not the instrument, because the
+colours are meant to differ.
+
+**The reference re-take could not be carried out.** The eight PNGs were rendered
+from `Ponte Landing - Bridge.html` at 60% and 70% for desktop and 390 x 844
+rescaled from 62% for mobile. That file is recorded in `SOURCE-MANIFEST.md` as part
+of the delivery but is **not vendored**, has never been committed on any branch, and
+is not on the development machine. `desktop-0-full-composition.png` shows the
+prototype's own navigation, ticker and hero, so the product's landing page cannot
+reproduce the framing either.
+
+The renders and their hashes are therefore unchanged, and the manifest now says so
+in place of the earlier claim that they had been re-taken. Reconstructing the
+prototype page to produce them was rejected: presenting invented markup as an
+owner-approved reference render would corrupt the authority this ADR exists to
+protect.
+
+#### S-3 amended by owner decision, 30 July 2026 — OD-009 option 2
+
+The requirement above, that the reference renders "must be re-taken rather than left
+describing the old contrast", is **amended**. The owner decided:
+
+- the eight PNGs are **preserved unchanged as historical approval evidence** of the
+  27 July 2026 delivery, and are not renders that track the live palette;
+- the **stylesheet invariance proof and the rendered geometry comparison are the
+  authority evidence** for this contrast-only amendment;
+- the missing prototype HTML is **not to be reconstructed or fabricated**;
+- it is recorded that ADR-0015 Stage 1 **changes contrast only**.
+
+That last point is what makes the decision coherent rather than a concession. Because
+the amendment moves colour and nothing else — proved by 479 identical non-colour
+declarations and 1208 identical measured values — everything the PNGs attest to
+(geometry, composition, station positions, node sizes, labels, motion) is still
+accurate. The single thing they no longer show is the current contrast, and that is
+now documented beside them instead of being silently wrong.
+
+**This is closed.** Option 1 remains available if the HTML files ever surface, but
+nothing is waiting on them. Recorded at OD-009.
+
 ### S-4. Value-neutral token adoption in the four duplicated stylesheets — approved
 
 Alias conversion approved for `components/find/find.css`,

@@ -255,10 +255,25 @@ if (existsSync(`${BRIDGE}/SOURCE-MANIFEST.md`)) {
 
   // Where each manifest name lives in the repository. The manifest names files
   // as the delivered package laid them out; the repository groups them.
+  //
+  // `ponte-flow/tokens/ponte-flow-tokens.css` used to resolve to the LIVE
+  // `design-system/ponte-flow/tokens/ponte-flow-tokens.css`, which made this
+  // manifest checksum a shared file the Bridge package does not own. Every
+  // authorised palette decision would then have had to edit a record of an
+  // owner-approved delivery, and the only way to keep the check green would have
+  // been to re-hash the live file after each change: a manifest that moves with
+  // the thing it is supposed to pin verifies nothing.
+  //
+  // ADR-0015 section S-1 decoupled them. The package now carries its own
+  // byte-identical snapshot of the token file as delivered on 27 July 2026, at
+  // `source/ponte-flow/tokens/ponte-flow-tokens.css`, and the row below verifies
+  // that. No special case is needed any more: the default branch already resolves
+  // a manifest name inside the package, which is where an approved delivery's
+  // files belong. The live token set is governed separately, by the Constitution
+  // and ADR-0015.
   const locate = (name) => {
     if (name.endsWith(".md")) return `${BRIDGE}/implementation/${name}`;
     if (name.startsWith("reference/")) return `${BRIDGE}/${name}`;
-    if (name.startsWith("ponte-flow/")) return `design-system/ponte-flow/tokens/ponte-flow-tokens.css`;
     return `${BRIDGE}/source/${name}`;
   };
 

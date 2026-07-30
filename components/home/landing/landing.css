@@ -10,30 +10,32 @@
 
 .ponte-landing {
   /* ---- Surfaces (heritage light) ---- */
-  --surface: #fcfbf7;
-  --raised: #ffffff;
-  --sunken: #f2efe6;
-  --rule: #e5dfd2;
-  --rule-strong: #d5cebc;
+  --surface: var(--pf-surface);
+  --raised: var(--pf-raised);
+  --sunken: var(--pf-sunken);
+  --rule: var(--pf-rule);
+  --rule-strong: var(--pf-rule-strong);
 
   /* ---- Ink ---- */
-  --ink: #0f0f0e;
-  --ink-2: #3a3733;
-  --ink-3: #6e6a61;
-  --mute: #9a958a;
+  --ink: var(--pf-ink);
+  --ink-2: var(--pf-ink-2);
+  --ink-3: var(--pf-ink-3);
+  --mute: var(--pf-mute);
 
   /* ---- Brand signal, never a status ---- */
-  --gold: #c9973a;
-  --gold-ink: #8a6520;
-  --gold-tint: #f5ecd8;
+  --gold: var(--pf-gold);
+  --gold-ink: var(--pf-gold-ink);
+  /* Gold as a structural line or state mark. Constitution 6b. */
+  --gold-rule: var(--pf-gold-rule);
+  --gold-tint: var(--pf-gold-tint);
 
   /* ---- Semantic states (only fact colours are used here) ---- */
-  --pos: #0f6e3d;
-  --review: #4e6472;
-  --neg: #b4402a;
+  --pos: var(--pf-positive);
+  --review: var(--pf-review);
+  --neg: var(--pf-danger);
 
   /* ---- Focus ---- */
-  --focus: #1e5fa8;
+  --focus: var(--pf-focus);
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
@@ -452,7 +454,7 @@ body:has(.ponte-landing) {
     stroke var(--dur-2);
 }
 .ponte-landing .f-dot.hot {
-  stroke: var(--gold);
+  stroke: var(--gold-rule);
   fill: var(--gold-tint);
 }
 .ponte-landing .f-dotn {
@@ -467,7 +469,7 @@ body:has(.ponte-landing) {
    it leaves the first marker and out as it reaches the second, so the loop has
    no visible jump back. Pure decoration, and it never moves anything else. */
 .ponte-landing .f-run {
-  fill: var(--gold);
+  fill: var(--gold-rule);
   animation: ponte-flow-run 3.4s var(--ease) infinite;
 }
 @keyframes ponte-flow-run {
@@ -532,7 +534,7 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .rlabel:hover,
 .ponte-landing .rlabel.hot {
-  border-top-color: var(--gold);
+  border-top-color: var(--gold-rule);
 }
 .ponte-landing .rlabel__n {
   flex-shrink: 0;
@@ -608,7 +610,7 @@ body:has(.ponte-landing) {
     background var(--dur-1);
 }
 .ponte-landing .popular__i:hover {
-  border-color: var(--gold);
+  border-color: var(--gold-rule);
   background: var(--gold-tint);
 }
 .ponte-landing .popular__n {
@@ -642,7 +644,7 @@ body:has(.ponte-landing) {
   transition: border-color var(--dur-1);
 }
 .ponte-landing .lnote__a:hover {
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- header links ---- */
@@ -662,7 +664,7 @@ body:has(.ponte-landing) {
 }
 .ponte-landing .lhead__link:hover {
   color: var(--ink);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- footer ---- */
