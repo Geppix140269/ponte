@@ -164,7 +164,16 @@ export default async function VerifyPage({
             // cannot act yet should still learn what the act would be.
             <div className="vgate">
               <h2 className="vgate__t serif">{t("request.signedOut.heading")}</h2>
-              <p className="vgate__p">{t("request.signedOut.body")}</p>
+              {/* Purpose-aware, because the two acts differ commercially:
+                  verifying your own business is free, a counterparty check is
+                  paid. The generic line is used only before a choice is made. */}
+              <p className="vgate__p">
+                {mode === "member_business"
+                  ? t("request.signedOut.bodyBusiness")
+                  : mode === "counterparty_check"
+                    ? t("request.signedOut.bodyCounterparty")
+                    : t("request.signedOut.body")}
+              </p>
               <Link
                 className="fbtn"
                 href={`/login?next=/verify?for=${searchParams.for}`}
