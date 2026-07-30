@@ -122,7 +122,7 @@ function Intro() {
  * indicating demand) or a seller offer (indicating availability), the same
  * split the landing presents. `intent` is the URL parameter behind `side`, so
  * choosing a lane narrows the board to that side while keeping any search or
- * filters already in force — it is a merge over the current query, not a
+ * filters already in force: it is a merge over the current query, not a
  * replacement, so it does not discard a category or a search a member has set.
  *
  * Rendered as navigation, not selection: each lane is a real, shareable URL

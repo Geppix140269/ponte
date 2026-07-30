@@ -94,8 +94,8 @@ export default async function MarketSignalsPage({
    * A member arriving cold is asked which side of the market they are working
    * on before they are handed a list, because a buyer requirement and a seller
    * offer answer opposite questions and a blended list makes them do the
-   * sorting. Anything at all in the URL — a side, a category, a search, a sort,
-   * a page — is already a question the board answers, so it renders the board.
+   * sorting. Anything at all in the URL, a side, a category, a search, a sort,
+   * or a page, is already a question the board answers, so it renders the board.
    *
    * This read is issued INSTEAD of the four below rather than alongside them:
    * the entrance needs two counts and none of the board's filter measurements,

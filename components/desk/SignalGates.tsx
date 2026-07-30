@@ -75,7 +75,9 @@ function Door({
           {kicker}
         </span>
         <span className="sgate__n">
-          {count === null ? "—" : count.toLocaleString()}
+          {/* An unread count is stated as absent, not as a number. The slot is
+              34px tabular figures, so the placeholder stays a single mark. */}
+          {count === null ? "--" : count.toLocaleString()}
         </span>
         <span className="sgate__t">{title}</span>
         <span className="sgate__d">{blurb}</span>
@@ -84,7 +86,7 @@ function Door({
       {/*
         Searching inside one side. `intent` travels as a hidden field because a
         GET form replaces the query string wholesale, so the side the member
-        just chose would otherwise be dropped by the act of searching — the
+        just chose would otherwise be dropped by the act of searching, and the
         exact defect the board's own search carries its filters to avoid.
       */}
       <form className="sgate__f" action="/market-signals" method="get" role="search">
@@ -165,7 +167,7 @@ export default function SignalGates({ counts }: { counts: SignalSideCounts | nul
           */}
           {total === null
             ? "Or search across both sides of the market."
-            : `Or search across both — ${total.toLocaleString()} signals live on the board.`}
+            : `Or search across both. ${total.toLocaleString()} signals live on the board.`}
         </p>
         <div className="sgates__a">
           <Link className="b b--2" href={buildBoardHref({ view: "board" })}>

@@ -18,7 +18,7 @@ import "@/components/ponte/category/category.css";
  * the live inventory actually carries, measured rather than declared, so the
  * page cannot offer a category that returns nothing.
  *
- * The data half only — everything a member sees is `CategoryBrowse`, for the
+ * The data half only. Everything a member sees is `CategoryBrowse`, for the
  * same reason the board is split from its route: the markup can then be
  * rendered over fixtures without a database.
  */
@@ -31,7 +31,7 @@ export async function generateMetadata({
   params: { locale: Locale };
 }): Promise<Metadata> {
   return {
-    title: "Market Signals — markets",
+    title: "Market Signals: markets",
     description:
       "Every market carrying a live Market Signal, and how each one splits between buyer requirements and seller offers.",
     alternates: alternatesFor("/market-signals/categories", params.locale),
