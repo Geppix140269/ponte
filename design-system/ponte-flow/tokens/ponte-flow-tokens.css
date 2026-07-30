@@ -58,9 +58,16 @@
 
   /* --pf-focus keeps its value and its single meaning: keyboard focus, and
      nothing else. Constitution 6a forbids repurposing it as a general interaction
-     token, and the Stage 2 --pf-interact-* family is deliberately absent here. */
+     token, so it stays distinct from the --pf-interact-* family below. */
   --pf-focus: #1E5FA8; --pf-select: #DCE8F4;
   --pf-focus-ring: 0 0 0 2px var(--pf-surface), 0 0 0 4px var(--pf-focus);
+
+  /* Interaction blue (ADR-0015 Stage 2). Blue = act/edit (links, the per-row Add,
+     the Edit affordance, the disclosure); ink = commit; gold = signal/Bridge.
+     Distinct from --pf-focus: an active control and a focus ring are different
+     states and are never the same blue. */
+  --pf-interact: #17548C; --pf-interact-border: #2C6EAC;
+  --pf-interact-active: #0F3D6B; --pf-interact-tint: #E4EDF5;
 
   /* motion */
   --pf-dur-micro: 120ms; --pf-dur-enter: 220ms; --pf-dur-deliberate: 420ms; --pf-dur-crossing: 900ms;
@@ -76,6 +83,9 @@
   --pf-gold: #D9AC55; --pf-gold-ink: #E7C173;
   --pf-positive: #4FB07A; --pf-review: #9DB4C0; --pf-danger: #E0674C; --pf-declared: #A7A296;
   --pf-focus: #6FA8E0; --pf-select: rgba(111,168,224,.22);
+  /* Interaction blue, lifted for the dark ground (ADR-0015 Stage 2). */
+  --pf-interact: #7FB0E6; --pf-interact-border: #5C93CF;
+  --pf-interact-active: #A9CBEE; --pf-interact-tint: rgba(127,176,230,.18);
 }
 
 /* icon host — colour is inherited, never set on the SVG */
