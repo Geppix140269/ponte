@@ -18,6 +18,87 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - `20260730b_deal_room_function_acl.sql` applied; anonymous path closed, LB-008 still open
+
+### Completed
+
+- **Applied to production `cptglsmjmzcfpjndqfmc` at 07:59:45.928 UTC**, from `main`
+  at `9c91e09` with a clean worktree and `npm run verify` exit 0. One transaction,
+  exit 0, **no timeout, no HTML, no 502**. Ledger **45 to 46**, exactly one row,
+  checksum `15f488d8...542b31` matching byte for byte.
+- **Every read-only probe used `--sql`.** `--file` was used exactly once, for the
+  authorised migration - the discipline recorded after the `pre.sql` incident.
+- **A before-baseline was captured first**, so "unchanged" could be proved rather
+  than asserted: md5 fingerprints of function bodies, policy definitions, triggers,
+  indexes, constraints, columns, RLS state and `pg_default_acl`, plus
+  `service_role` counts and row counts.
+- **The anonymous execution path is closed, proved through a real client.** `anon`
+  EXECUTE on **0 of 23** (from 23); `PUBLIC` on 0; `deal_room_log_event` reachable
+  by `postgres` and `service_role` only. Anon-key RPC to the logger returns
+  `401 / 42501 permission denied for function deal_room_log_event`, where the same
+  call returned `409 / 23503` before.
+- **Nothing else moved.** All nine before/after fingerprints identical.
+  `service_role` unchanged at 23. Project-wide default privileges unchanged, 24
+  rows. 14 policies, 4 agreement documents, 0 rooms, 0 activity rows.
+- Anonymous calls to commands and helpers now fail at the grant rather than inside
+  the body, and member table reads still return `200 []` rather than erroring -
+  confirming that revoking the helpers from `anon` did not break policy
+  evaluation, because the 14 policies are scoped `to authenticated`.
+
+### Decisions
+
+- Owner, 30 July 2026: apply `20260730b` **only**. `20260729c`, Storage, the
+  negative-access fixture, a Deal Room or pilot Deal, project-wide default
+  privileges, the feature flag, deployment and the access wall all remain
+  unauthorised.
+
+### Risks / discrepancies
+
+- **LB-008 stays ACTIVE. Probe 7 failed:** `authenticated` holds EXECUTE on **22**
+  functions, not the specified 19 - the 19 intended plus `deal_room_is_writable`,
+  `deal_room_uuid_or_null` and `deal_room_events_append_only`. The migration
+  revokes `authenticated` only on the logger, and re-granting 19 cannot remove
+  grants Supabase's defaults had already created on all 23. Probe 10 fails for
+  those same three.
+- **The regression suite did not catch it, and its wording overstates its reach.**
+  `function-acl.test.ts` asserts "`authenticated` should end with execute on
+  exactly 19" and passes, because it counts grant statements in the file. A
+  file-text test cannot see a privilege the file never mentions. **LB-008 was a
+  file asserting something about itself; the test written to catch it asserts
+  something about that file.** Only the catalogue could answer it, and it was not
+  consulted until after application.
+- **Residual exposure, precisely:** all three are closed to `anon`; `is_writable`
+  is a read-only boolean predicate, `uuid_or_null` is pure text coercion with no
+  table access, `events_append_only` raises outside a trigger context. None
+  writes, and none is the forgery path - the logger is closed to both member
+  roles.
+- **Probe 6 pending.** A real authenticated direct RPC needs a member JWT; there
+  are no authorised test credentials, and production's 9 confirmed users are real
+  member accounts. Minting a session for one to satisfy a probe is not a test
+  credential and was not done. Probes 8 and 9 are catalogue-verified,
+  behaviourally pending.
+- Still outstanding from earlier passes: owner confirmation of the RLS containment
+  of 03:39 UTC, and requirements 12 and 13 (entitlement fail-closed, cross-room
+  isolation), which need Approval 3.
+
+### Next
+
+1. A follow-up migration revoking `authenticated` on the three internal functions,
+   and a corrected test that does not claim what a text scan cannot see.
+2. An authorised test account, or authorisation to create one, for probe 6.
+3. Approval 2: `deal-room-evidence` bucket and its two policies.
+4. Approval 3: a published pilot Deal, then `npm run deal-room:negative-access`.
+5. Approval 4: flag and deploy.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 11 to 16
+- `docs/codex/DATABASE-STATE.md`, Deal Room function ACL section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-008 active, narrowed
+- `public.schema_migrations`: 46 rows, one each for `20260729a`, `20260729b`, `20260730b`
+
+---
+
 ## 2026-07-30 - `20260729b_deal_room_rls.sql` applied to production; LB-008 found
 
 ### Completed

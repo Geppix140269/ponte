@@ -2,6 +2,61 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - the anonymous path is closed, and the test meant to guarantee it was measuring the wrong thing
+
+**Decision:** the owner authorised applying `20260730b_deal_room_function_acl.sql`
+only. Applied to production at **07:59:45.928 UTC**, one transaction, exit 0, no
+ambiguous transport response, ledger **45 to 46**, checksum
+`15f488d87705e5a88def6e1c25e0b006daceda9d3316747eb8bbe87b3f542b31` matching byte
+for byte.
+
+**The security objective is met and proved.** `anon` holds EXECUTE on **0 of 23**
+`deal_room_*` functions, from 23. `PUBLIC` holds 0. `deal_room_log_event` is
+reachable by `postgres` and `service_role` only. A real anon-key RPC to the logger
+returns `42501 permission denied for function deal_room_log_event` where the same
+call returned `23503` before - an FK violation, which is precisely how LB-008 was
+proved, because it meant the body had run. It no longer runs. Nothing else moved:
+nine before/after md5 fingerprints identical across function bodies, policy
+definitions, triggers, indexes, constraints, columns, RLS state and
+`pg_default_acl`.
+
+**LB-008 stays active, and the reason is the more useful half of this entry.**
+`authenticated` ended with EXECUTE on 22 functions, not the specified 19. The
+migration revokes `authenticated` only on the logger, which is what instruction
+step 2 asked; step 4 asked that `authenticated` be left with the 19 **only**, and
+re-granting 19 cannot remove grants Supabase's defaults had already written onto
+all 23.
+
+**The regression suite asserted the wrong thing, in the same shape as the defect it
+was written to catch.** `function-acl.test.ts` says "`authenticated` should end
+with execute on exactly 19 Deal Room functions" and passes - because it counts
+`grant` statements in the file. A file-text test cannot see a privilege the file
+never mentions, so three functions granted by default and named nowhere in the
+corrective migration were invisible to it.
+
+LB-008 was **a file asserting something about itself**. The test written to catch
+LB-008 asserts something about that file. One level up, same error. The lesson is
+not "write more assertions" but **know which questions a text scan cannot answer at
+all**: an ACL is a property of the database, and no amount of reading SQL will tell
+you what privileges exist. The catalogue was the only witness, and it was not
+consulted until after the migration was applied.
+
+**Residual exposure, neither dismissed nor inflated.** The three are closed to
+`anon`. `deal_room_is_writable` is a read-only boolean predicate,
+`deal_room_uuid_or_null` is pure text coercion touching no table, and
+`deal_room_events_append_only` raises if called outside a trigger because it
+dereferences `OLD`/`NEW`. None writes; none is the forgery path.
+
+**Probe 6 pending, and no substitute invented.** A real authenticated RPC needs a
+member JWT. There are no authorised test credentials. Production holds 9 confirmed
+users and they are real member accounts - minting a session for one to satisfy a
+probe is not a test credential, so it was not done.
+
+**Affected areas:** production schema `cptglsmjmzcfpjndqfmc`; `DATABASE-STATE.md`;
+`CURRENT-STATE.md`; `LAUNCH-BLOCKERS.md` (LB-008 still active, narrowed);
+`GATE-C-APPROVAL-1-2026-07-30.md` sections 11 to 16; the operations log. Gate C
+Approval 1 remains incomplete.
+
 ## 30 July 2026 - the Deal Room function ACL is stated, not inherited
 
 **Decision:** correct LB-008 in a new migration,
