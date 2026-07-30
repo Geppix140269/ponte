@@ -100,8 +100,29 @@ public.deal_room_invite(uuid, text, text, text, timestamp with time zone) does
 not exist`. The file grants execute on a signature it has itself dropped - the
 owner's final trust review took `deal_room_invite()` from five arguments to three.
 One broken grant line; all 21 declared functions were audited programmatically
-and no other arity disagrees. **LB-005.** Correcting it changes the file's
-SHA-256, so the new value must be recorded here before it is applied.
+and no other arity disagrees. **LB-005.**
+
+**Corrected on 30 July 2026** under owner authorisation, and the new checksum is
+recorded here as promised. The grant now names `(uuid, text, timestamptz)`, which
+is what the file declares. The diff is one line - one insertion, one deletion -
+and nothing else in the file changed.
+
+| File | SHA-256 to apply and record |
+|---|---|
+| `20260729b_deal_room_rls.sql` | `b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153` |
+
+The superseded value `64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7`
+appears in the Gate C preflight and Approval 1 records, where it was correct at
+the time; both now point here. `20260729a`'s and `20260729c`'s checksums are
+unaffected.
+
+`lib/deal-room/__tests__/grant-signatures.test.ts` compares every `grant execute`
+signature in the migration against the function the same file declares, and
+refuses any signature the file drops. It fails on the stale grant and passes on
+the corrected one, demonstrated in both directions rather than asserted.
+
+**The corrected file has NOT been applied.** Applying it is a separate owner
+instruction.
 
 Rollback confirmed by reading production: 0 policies, still 2 functions, no
 ledger row. The Management API runs a file as one transaction, which is also what
