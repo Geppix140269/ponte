@@ -235,6 +235,30 @@ async function run(): Promise<void> {
     assert.deepEqual(fuzzyMatches("avocado"), []);
   });
 
+  await test("3d. a single mistyped word of a MULTI-WORD product is corrected with no model call", async () => {
+    // The launch defect: "cementt" is one letter off "cement", a word the
+    // catalogue holds only inside "portland cement" / "Ordinary Portland cement
+    // 42.5". The whole-query fuzzy pass length-guards the seven-letter typo away
+    // from those long terms, so before the token-level pass a common misspelling
+    // of a correctly-handled product dead-ended unless the metered model caught
+    // it. It must now resolve deterministically and for free.
+    const matches = fuzzyMatches("cementt");
+    assert.ok(matches.length > 0, "a one-letter slip on cement found nothing");
+    assert.equal(matches[0].product.key, "portland-cement");
+
+    let called = false;
+    const outcome = await resolveThroughCascade("cementt", {
+      identify: async () => {
+        called = true;
+        return null;
+      },
+      hsLookup,
+    });
+    assert.notEqual(outcome.kind, "none", "cementt still reached the unmatched state");
+    assert.ok(keys(outcome).includes("portland-cement"));
+    assert.equal(called, false, "a bare single-word typo still spent a token");
+  });
+
   // ---- 4. an ambiguous generic term ---------------------------------------
 
   await test("4. a genuinely ambiguous term asks, and the model's question is used", async () => {

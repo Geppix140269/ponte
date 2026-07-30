@@ -318,6 +318,23 @@
   align-self: center;
 }
 
+/* ----------------------------------------------------------------------
+   Optional commercial terms, collapsed by default.
+
+   The review opens on what Ponte understood and the terms the member gave,
+   not on a wall of empty fields. One control reveals the optional groups, so
+   thirteen "Not stated" rows never expand at once and there is no bank of
+   simultaneous Add actions. Spacing tokens only; no new colour or radius.
+   ---------------------------------------------------------------------- */
+
+.ponte-find .pintake__optional {
+  margin-top: var(--s-4);
+}
+
+.ponte-find .pintake__optbody {
+  margin-top: var(--s-2);
+}
+
 .ponte-find .prev__doc {
   font-size: 13px;
   color: var(--ink-2);
