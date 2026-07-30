@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history. `scripts/check-bridge-invariance.mjs` reads the
+          # pre-Stage-1 Bridge stylesheet out of git, and a depth-1 clone does
+          # not contain that commit.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -54,16 +59,9 @@ jobs:
           fi
           echo "No stray files."
 
-      - name: Messages are complete and consistent
-        run: node scripts/check-messages.mjs
-
-      - name: No BOM, no mojibake, no em dashes
-        # A member saw a cp1252-mangled em dash on their account page on
-        # 2026-07-22. messages/ was the only tree being checked, so that is
-        # the only tree that stayed clean.
-        run: node scripts/check-encoding.mjs
-
       - name: Messages are in sync with their fragments
+        # Not part of `npm run verify`: this one regenerates and diffs, which a
+        # check that only reads cannot do.
         run: |
           node scripts/build-messages.mjs
           if ! git diff --quiet -- messages/en.json; then
@@ -72,13 +70,21 @@ jobs:
           fi
           echo "en.json matches its fragments."
 
-      - name: Unit tests
-        run: npm test
-
-      - name: Typecheck
-        run: npx tsc --noEmit --incremental false
-
-      - name: Build
-        run: npx next build
+      # The mandatory gate, in full, and the same command a contributor runs.
+      #
+      # This job was named `verify` and was not `npm run verify`. It ran the unit
+      # tests, the typecheck and the build, and eight checks in the gate ran in no
+      # CI job at all: check-deps, check-migrations, check-governance,
+      # check-launch-mode, check-contrast, check-token-adoption,
+      # check-bridge-invariance and the verification guard. A green tick therefore
+      # did not mean the gate had passed, and `check-bridge-invariance` failing on
+      # `main` went unnoticed until Gate C ran the real thing by hand (LB-006).
+      #
+      # `npm run verify` already ends with `npm test`, `tsc --noEmit` and
+      # `next build`, so the three steps this replaces are inside it rather than
+      # dropped. `check-messages` and `check-encoding` are in it too, which is why
+      # their dedicated steps are gone.
+      - name: npm run verify
+        run: npm run verify
         env:
           NEXT_PUBLIC_APP_URL: https://ponte.trade
