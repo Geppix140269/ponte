@@ -46,8 +46,26 @@ Checksums of the three files as they stand at `d184c1c`, to be recorded in
 | File | SHA-256 |
 |---|---|
 | `20260729a_deal_room_core.sql` | `24932e4a429eb4ea7b19f2a7c5423101c1bbc61a628be941f546412258a78c8a` |
-| `20260729b_deal_room_rls.sql` | `64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7` |
+| `20260729b_deal_room_rls.sql` | ~~`64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7`~~ **superseded - see below** |
 | `20260729c_deal_room_storage.sql` | `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972` |
+
+**`20260729b` has been corrected since this preflight ran, and its checksum has
+changed.** Gate C Approval 1 applied `20260729a` and then Postgres refused `b`
+outright: it granted execute on `deal_room_invite(uuid, text, text, text,
+timestamptz)`, a signature the same file drops. That is **LB-005**, and the
+correction is one line - the grant now names `(uuid, text, timestamptz)`, which
+is what the file declares.
+
+The value above is left visible because it was correct on 29 July and the
+Approval 1 record verified against it. **The value Gate C must apply and record
+from now on is:**
+
+| File | SHA-256 |
+|---|---|
+| `20260729b_deal_room_rls.sql` | `b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153` |
+
+Nothing else in the file changed: the diff is one line, one insertion, one
+deletion. `20260729a`'s and `20260729c`'s checksums are unaffected.
 
 ## 2. Finding A — the Integrity pre-flight reads a column production does not have
 

@@ -21,7 +21,7 @@ are in section 3.
 | Worktree clean | **clean** |
 | Remote `main` SHA | **`7f979e0da00a99150d3e07f63fd526aca9d53b21`**, as expected |
 | `20260729a_deal_room_core.sql` SHA-256 | `24932e4a429eb4ea7b19f2a7c5423101c1bbc61a628be941f546412258a78c8a` — **matches** the preflight audit |
-| `20260729b_deal_room_rls.sql` SHA-256 | `64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7` — **matches** |
+| `20260729b_deal_room_rls.sql` SHA-256 | `64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7` — **matched at the time.** Since corrected under LB-005; the file now hashes to `b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153` |
 | `20260729c_deal_room_storage.sql` SHA-256 | `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972` — **matches** |
 
 Each checksum was recomputed a second time immediately before that file was
@@ -221,10 +221,16 @@ because `b` must precede it.
 
 ## 5. What Gate C needs next
 
-1. **Owner decides LB-005.** The one-line correction to `20260729b`'s grant is
-   `(uuid, text, timestamptz)`. Correcting it changes the file's SHA-256, so the
-   new value must be recorded in the preflight audit before it is applied, and
-   the fix needs its own authorisation since the approved bytes change.
+1. **LB-005 is corrected and awaiting authorisation to apply.** The owner
+   authorised the correction on 30 July 2026; it is one line, the grant now
+   naming `(uuid, text, timestamptz)`. The file's new SHA-256 is
+   **`b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153`**,
+   recorded in the preflight audit's checksum table and in `DATABASE-STATE.md`.
+   `lib/deal-room/__tests__/grant-signatures.test.ts` now compares every
+   `grant execute` signature in the migration against the function the same file
+   declares; it fails on the stale signature and passes on the corrected one,
+   demonstrated in both directions. **Applying the corrected file is a separate
+   owner instruction and has not been given.**
 2. **Owner confirms or reverses the RLS containment** of section 3.1.
 3. **Owner confirms** that `20260729c` belongs to Approval 2, as the test plan
    says, and not to this approval.

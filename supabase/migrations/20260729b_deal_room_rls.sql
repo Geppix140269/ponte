@@ -1706,7 +1706,7 @@ $$;
 revoke all on function public.deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb) from public;
 
 grant execute on function public.deal_room_propose(uuid, uuid, text, text, text, text, text, text, text) to authenticated;
-grant execute on function public.deal_room_invite(uuid, text, text, text, timestamptz) to authenticated;
+grant execute on function public.deal_room_invite(uuid, text, timestamptz) to authenticated;
 grant execute on function public.deal_room_accept_invitation(text) to authenticated;
 grant execute on function public.deal_room_declare_participation(uuid, text, text, text, text, text) to authenticated;
 grant execute on function public.deal_room_accept_agreement(uuid, text) to authenticated;
