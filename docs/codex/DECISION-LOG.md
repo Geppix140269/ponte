@@ -2,6 +2,64 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - Gate C Approval 1, and a schema that stops half applied
+
+**Decision:** the owner authorised Gate C Approval 1 - applying the three Deal
+Room migrations to production, one at a time, stopping on any error.
+`20260729a_deal_room_core.sql` applied and verified. `20260729b` was refused by
+Postgres and rolled back. `20260729c` was not attempted. **Approval 1 is
+incomplete and stopped.**
+
+**Why `20260729b` cannot be applied.** It grants execute on
+`deal_room_invite(uuid, text, text, text, timestamptz)`, a signature the same file
+drops: the owner's final trust review removed `p_role` and `p_class`, taking the
+function from five arguments to three, and the grant block was never updated.
+Postgres refuses the whole file. Every one of the 21 declared functions was
+audited against its grant programmatically rather than by eye, and exactly one
+disagrees. Recorded as **LB-005**. Correcting it changes the file's SHA-256, which
+is why it needs its own authorisation rather than being quietly fixed: the
+checksum in the preflight audit is what the ledger will be checked against.
+
+**The lesson, which is about tests and not about SQL.** `rls-contract.test.ts`
+reads the migration as text and asserts that each command exists and that no
+member holds a write policy. It does not compare each `grant execute` signature
+against the function the same file declares. That check is three lines, and the
+defect it would have caught reached production DDL. It is not added here because
+no fix was authorised in this approval, but it is the second time a Deal Room
+defect has been found by a production action rather than by the suite - the first
+was LB-004, a select naming a column that does not exist.
+
+**A production change the approved files did not contain, taken deliberately.**
+Migration `a` creates the tables; `b` enables RLS on them. Between the two,
+production held 15 tables in `public` with `relrowsecurity = false` while
+Supabase's default privileges granted `anon` and `authenticated` SELECT, INSERT
+and UPDATE on all fifteen - an anonymous write path to every Deal Room table,
+including the append-only activity record. The tables were empty and nothing was
+written while the gap was open. Rather than leave it open and report it, the gap
+was closed with `alter table ... enable row level security` on the 15 tables and
+nothing else: no policy created, nothing granted, nothing revoked. RLS on with
+zero policies is fail-closed, and it is exactly a prefix of what `b` does, so it
+conflicts with nothing that follows. **It awaits owner confirmation and is
+reversible in one statement per table.**
+
+**A 502 that was not a failure, and the record it nearly cost.** The Management
+API returned an HTML 502 for `20260729a`; the transaction had committed and only
+the reply was lost. `db-query.mjs` exits before its ledger write when a call
+fails, so production briefly held 15 tables with no record that they existed -
+precisely the defect PR #106 had finished repairing hours earlier. The row was
+written explicitly, and the record states plainly that its `applied_at` is the
+write time rather than the execution time, which is unrecoverable.
+
+**Also decided:** `20260729c` belongs to Approval 2, not Approval 1. The
+instruction listed the file among those to apply while separately forbidding
+creation of the `deal-room-evidence` bucket, and that bucket plus its two policies
+is the entire content of the file. `GATE-C-TEST-PLAN.md` treats them as Approval
+2, so the file was not applied.
+
+**Affected areas:** `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`,
+`docs/codex/DATABASE-STATE.md`, `docs/codex/CURRENT-STATE.md`,
+`docs/operations/OPERATIONS_LOG.md`, `docs/launch/LAUNCH-BLOCKERS.md`.
+
 ## 29 July 2026 - Two listing migrations applied to production
 
 **Decision:** the owner accepted ADR-0014 and authorised applying `20260728c_automated_listing_publication.sql` and `20260728e_family_commercial_terms.sql` to production, one at a time and in that order, each probe-verified before the next was started. Applied at 15:42:54 and 15:44:45 UTC; hashes recorded in `public.schema_migrations` match both files byte for byte; ledger 41 to 43.
