@@ -1,4 +1,8 @@
-import { aliasGroupFor, type AliasGroup } from "./aliases";
+import {
+  aliasGroupFor,
+  LONGEST_ALIAS_WORDS,
+  type AliasGroup,
+} from "./aliases";
 
 /**
  * Free-text Market Signal search: the pure half.
@@ -56,32 +60,121 @@ export const SEARCHABLE_COLUMNS: readonly string[] = [
 /** Longest query accepted. Anything beyond is truncated, never rejected. */
 export const MAX_QUERY_LENGTH = 120;
 
+// ---------------------------------------------------------------------------
+// The bounds, and why each one exists
+// ---------------------------------------------------------------------------
 /**
- * The most phrases one query may be expanded to.
+ * The most concepts one query may be reduced to.
  *
- * Each phrase becomes one `ilike` per searchable column in a single PostgREST
- * `or=`, so the predicate grows as phrases x columns and travels in a URL.
- * Nine columns and eight phrases is roughly two kilobytes, which is
- * comfortable; removing the cap would let one unlucky query build a request
- * large enough to be refused by the gateway, and a search that fails outright
- * is worse than one that is slightly less generous.
+ * A 120-character query can hold forty two-character words. Each becomes one
+ * mandatory group of nine `ilike` filters, so an unbounded query builds a
+ * PostgREST filter of roughly ten kilobytes and is refused by the gateway. A
+ * search that fails outright is worse than one that is slightly less generous.
+ *
+ * Six rather than eight because the two expanded groups dominate the budget: at
+ * five variants across nine columns each costs about two kilobytes, so the
+ * concept count is what had to give to keep the worst case provably inside
+ * `MAX_PREDICATE_CHARS`. A six-concept query is already highly specific.
+ *
+ * Excess words are dropped from the END, which is deterministic and keeps the
+ * leading words a member actually led with. Dropping a mandatory word BROADENS
+ * the result, so it is the one degradation here that could mislead, and the
+ * surface says so when it happens (`droppedConcepts`).
  */
-export const MAX_PHRASES = 8;
+export const MAX_SLOTS = 6;
+
+/**
+ * The most alternatives one alias group may contribute.
+ *
+ * Bounds the widening rather than the query. The member's own words are always
+ * first in a slot, so this can only ever cut vocabulary terms, which narrows.
+ */
+export const MAX_GROUP_VARIANTS = 5;
+
+/**
+ * The most alias groups one query may expand.
+ *
+ * A third group would add another nine-times-five filters. Past this cap a
+ * recognised phrase is searched as itself, which is narrower than its group and
+ * therefore always safe.
+ */
+export const MAX_EXPANDED_GROUPS = 2;
+
+/**
+ * The documented safe size of the generated PostgREST filter, in characters.
+ *
+ * The filter travels in the URL. Supabase fronts PostgREST with Kong, whose
+ * default header and request-line buffers are 8 KB, and the rest of the request
+ * (the public column list, the status and expiry predicates, the order and the
+ * exact count) costs several hundred characters more. Six kilobytes leaves room
+ * for all of it with about two to spare.
+ *
+ * The number is not a guess: `scripts/verify-signal-search.ts` sends the
+ * longest query the caps permit to the real gateway, reports the byte size it
+ * built and whether PostgREST accepted it, and that evidence is recorded in the
+ * pull request. Move this only with a fresh run.
+ *
+ * This is not enforced at runtime, deliberately: the caps above make the worst
+ * case reachable by construction, and
+ * `lib/search/__tests__/signal-search.test.ts` builds the single most expensive
+ * query the caps permit and asserts the result fits. Raising a cap, or adding a
+ * searchable column, fails that test rather than shipping a request the gateway
+ * will refuse.
+ */
+export const MAX_PREDICATE_CHARS = 6144;
+
+/**
+ * One concept the member asked for, and every phrase that satisfies it.
+ *
+ * A slot is MANDATORY. The predicate ANDs the slots and ORs within them, which
+ * is the whole correction: an alias group substitutes for the concept that
+ * triggered it and leaves every other word the member typed in force.
+ *
+ * The first draft treated each expanded alias as an independent top-level OR,
+ * so `diesel cargo rotterdam` matched any record containing `gas oil` and
+ * neither qualifier. That is not a widened search, it is a different one.
+ */
+export type SearchSlot = {
+  /** The words from the query this slot stands for, accents intact. */
+  source: string;
+  /** The group this slot expanded to, or null when it is the words themselves. */
+  group: AliasGroup | null;
+  /**
+   * Every phrase that satisfies this slot, ORed at the database.
+   *
+   * Always includes the member's own words first, in both their accented and
+   * accent-folded forms where those differ. See `accentVariants` for why both.
+   */
+  variants: string[];
+};
 
 /** A parsed, normalised search. Null everywhere a query was not usable. */
 export type SignalSearch = {
   /** Exactly what the member typed, trimmed. Echoed back to them verbatim. */
   raw: string;
-  /** Lower-case, unaccented, unpunctuated, single-spaced. */
+  /** Lower-case, accent-FOLDED, unpunctuated, single-spaced. */
   normalised: string;
-  /** The normalised query split into words of two characters or more. */
+  /**
+   * Lower-case, accent-PRESERVING, unpunctuated, single-spaced.
+   *
+   * Kept because the database cannot fold accents. See the accent section on
+   * `accentVariants`.
+   */
+  accented: string;
+  /** The words actually searched, accent-folded, two characters or more. */
   terms: string[];
-  /** Every phrase the query is matched against: the query, then its aliases. */
+  /** The mandatory concepts, in the member's own order. ANDed. */
+  slots: SearchSlot[];
+  /** Every phrase searched, member's words first. Used for relevance banding. */
   phrases: string[];
+  /** The same phrases accent-folded, for comparison against a record in memory. */
+  foldedPhrases: string[];
   /** The alias groups this query was widened by. Empty when none applied. */
   groups: AliasGroup[];
   /** Digits of an HS-code-shaped query, or null. */
   hsDigits: string | null;
+  /** Words dropped by `MAX_SLOTS`. Non-zero means the search was broadened. */
+  droppedConcepts: number;
 };
 
 /**
@@ -116,15 +209,60 @@ export type SignalSearch = {
 const PUNCTUATION =
   /[!-/:-@[-`{-~ -¿ -⁯　-〿]+/g;
 
-export function normaliseSearchText(value: string): string {
+/**
+ * Lower-case, unpunctuated, single-spaced, and accents left ALONE.
+ *
+ * The form the database is actually asked about. See `accentVariants`.
+ */
+export function foldPunctuation(value: string): string {
   return value
-    .normalize("NFD")
-    // Combining marks, removed after decomposition: é -> e + U+0301 -> e.
-    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(PUNCTUATION, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+/** Remove diacritics. Decompose, then drop the combining marks. */
+export function stripAccents(value: string): string {
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+/** Both foldings at once. The form used for every comparison made in memory. */
+export function normaliseSearchText(value: string): string {
+  return stripAccents(foldPunctuation(value));
+}
+
+/**
+ * Both accent forms of a phrase, because Postgres cannot fold accents and this
+ * repository cannot make it.
+ *
+ * ---------------------------------------------------------------------------
+ * The asymmetry that made the first draft's claim untrue
+ * ---------------------------------------------------------------------------
+ * In memory, both sides are folded: `normaliseSearchText` is applied to the
+ * query AND to the record, so an accented and an unaccented spelling match
+ * either way round. That is what the JavaScript matcher and the fixture gallery
+ * do, and it is more permissive than production.
+ *
+ * The database gets no such symmetry. It receives a normalised QUERY and runs
+ * `ILIKE` against columns exactly as the sources stored them. `ILIKE` folds
+ * case; it does not fold accents. So a folded query cannot reach an accented
+ * stored value, and the first draft, which sent only the folded form, could
+ * reach neither direction: it had folded the member's accent away before asking.
+ *
+ * Sending both forms fixes the direction that matters. An accented query reaches
+ * an accented value, and a plain query reaches a plain value.
+ *
+ * The remaining gap is real and is NOT claimed to be closed: an unaccented query
+ * cannot reach an accented stored value, because generating every accented
+ * spelling of a word is combinatorial. Closing it properly needs the database to
+ * do the folding, through `unaccent` on a stored generated column or a search
+ * function, and PostgREST's filter grammar can call neither. Recorded as a
+ * follow-up rather than described as working.
+ */
+export function accentVariants(value: string): string[] {
+  const folded = stripAccents(value);
+  return folded === value ? [value] : [value, folded];
 }
 
 /** HS-shaped input: digits, dots, spaces and hyphens only, four digits or more. */
@@ -154,6 +292,92 @@ function hsVariants(digits: string): string[] {
 }
 
 /**
+ * Reduce a query to the mandatory concepts it names.
+ *
+ * Walks the words left to right, taking at each position the LONGEST run that
+ * names an alias group. That is what lets a multi-word alias keep its
+ * qualifiers: `freight forwarding morocco` becomes the freight-forwarding
+ * concept AND `morocco`, not three loose words and not a widened phrase with
+ * `morocco` made optional.
+ *
+ * Every slot returned is mandatory. Two degradations are possible and they run
+ * in opposite directions, so which is which is stated rather than left implied:
+ *
+ *   past `MAX_EXPANDED_GROUPS`  a recognised phrase is searched as itself.
+ *                              NARROWS. Always safe.
+ *   past `MAX_SLOTS`            trailing words are dropped. BROADENS, so the
+ *                              count is returned and the surface says so.
+ */
+function buildSlots(
+  accented: string,
+  hsDigits: string | null,
+): { slots: SearchSlot[]; dropped: number } {
+  // An HS code is one concept however it is punctuated. Splitting `1701.99`
+  // into `1701` AND `99` would make two mandatory words out of one number.
+  if (hsDigits) {
+    return {
+      slots: [{ source: hsDigits, group: null, variants: hsVariants(hsDigits) }],
+      dropped: 0,
+    };
+  }
+
+  const words = accented.split(" ").filter((w) => w.length > 0);
+  const folded = words.map(stripAccents);
+  const built: SearchSlot[] = [];
+  let expanded = 0;
+  let i = 0;
+
+  while (i < words.length) {
+    let span = 1;
+    let group: AliasGroup | null = null;
+    for (let len = Math.min(LONGEST_ALIAS_WORDS, words.length - i); len >= 1; len--) {
+      const hit = aliasGroupFor(folded.slice(i, i + len).join(" "));
+      if (hit) {
+        group = hit;
+        span = len;
+        break;
+      }
+    }
+
+    const source = words.slice(i, i + span).join(" ");
+    // A one-character word carries no information and would match most of the
+    // inventory, so it is not made mandatory.
+    if (folded.slice(i, i + span).join(" ").length >= 2) {
+      if (group && expanded < MAX_EXPANDED_GROUPS) {
+        expanded += 1;
+        const variants: string[] = [];
+        const add = (v: string) => {
+          if (v.length >= 2 && variants.indexOf(v) < 0 && variants.length < MAX_GROUP_VARIANTS) {
+            variants.push(v);
+          }
+        };
+        // The member's own words first, always. The vocabulary exists to widen
+        // their search, never to replace it: a cap that cut their own phrase
+        // would answer a question they did not ask.
+        for (const v of accentVariants(source)) add(v);
+        for (const term of group.terms) add(term);
+        built.push({ source, group, variants });
+      } else {
+        built.push({ source, group: null, variants: accentVariants(source) });
+      }
+    }
+    i += span;
+  }
+
+  // One concept per slot: `diesel diesel cargo` asks for two things, not three.
+  const seen = new Set<string>();
+  const unique = built.filter((slot) => {
+    const key = stripAccents(slot.source);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const kept = unique.slice(0, MAX_SLOTS);
+  return { slots: kept, dropped: unique.length - kept.length };
+}
+
+/**
  * Read a member's query into a search, or return null if there is none.
  *
  * Null is returned for an absent, blank or one-character query. A single
@@ -166,37 +390,45 @@ export function parseSignalSearch(raw: string | null | undefined): SignalSearch 
   const trimmed = raw.replace(/\s+/g, " ").trim().slice(0, MAX_QUERY_LENGTH);
   if (trimmed.length === 0) return null;
 
-  const normalised = normaliseSearchText(trimmed);
+  const accented = foldPunctuation(trimmed);
+  const normalised = stripAccents(accented);
   if (normalised.length < 2) return null;
 
-  const terms = normalised.split(" ").filter((t) => t.length >= 2);
   const hsDigits = hsDigitsOf(trimmed);
+  const { slots, dropped } = buildSlots(accented, hsDigits);
+  if (slots.length === 0) return null;
 
-  // Aliases are matched on the WHOLE query and on each of its words, so
-  // `gas oil` finds the group by its phrase and `diesel delivery rotterdam`
-  // finds it by a word. A group found either way contributes all of its terms.
   const groups: AliasGroup[] = [];
-  const seenGroup = new Set<string>();
-  for (const candidate of [normalised, ...terms]) {
-    const group = aliasGroupFor(candidate);
-    if (group && !seenGroup.has(group.key)) {
-      seenGroup.add(group.key);
-      groups.push(group);
+  const phrases: string[] = [];
+  const terms: string[] = [];
+  for (const slot of slots) {
+    if (slot.group) groups.push(slot.group);
+    for (const variant of slot.variants) {
+      if (phrases.indexOf(variant) < 0) phrases.push(variant);
+    }
+    for (const word of stripAccents(slot.source).split(" ")) {
+      if (word.length >= 2 && terms.indexOf(word) < 0) terms.push(word);
     }
   }
 
-  const phrases: string[] = [];
-  const push = (p: string) => {
-    if (p.length >= 2 && !phrases.includes(p) && phrases.length < MAX_PHRASES) phrases.push(p);
+  const foldedPhrases: string[] = [];
+  for (const phrase of phrases) {
+    const folded = stripAccents(phrase);
+    if (foldedPhrases.indexOf(folded) < 0) foldedPhrases.push(folded);
+  }
+
+  return {
+    raw: trimmed,
+    normalised,
+    accented,
+    terms,
+    slots,
+    phrases,
+    foldedPhrases,
+    groups,
+    hsDigits,
+    droppedConcepts: dropped,
   };
-
-  // The member's own words first, so their query is never crowded out of its
-  // own search by the vocabulary that was supposed to help it.
-  if (hsDigits) for (const variant of hsVariants(hsDigits)) push(variant);
-  else push(normalised);
-  for (const group of groups) for (const term of group.terms) push(term);
-
-  return { raw: trimmed, normalised, terms, phrases, groups, hsDigits };
 }
 
 /**
@@ -214,21 +446,29 @@ function quoted(value: string): string {
 /**
  * The PostgREST `or=` predicate for a search.
  *
- * Read it as: **any phrase anywhere, OR every word somewhere.**
+ * Read it as: **every concept must be satisfied, by any of its phrases.**
  *
- *     or=( product.ilike."*gas oil*", ... ,          <- phrase, incl. aliases
- *          and( or(product.ilike."*gas*", ...),      <- every word,
- *               or(product.ilike."*oil*", ...) ) )      each in some column
+ *     and( or(product.ilike."*diesel*", ... , product.ilike."*en590*", ...),
+ *          or(product.ilike."*cargo*", ...),
+ *          or(product.ilike."*rotterdam*", ...) )
  *
- * The two halves answer different questions and both are needed. The phrase
- * half is what makes an alias work: a record titled `Diesel EN590` contains
- * neither the word `gas` nor the word `oil`, so an all-words rule alone would
- * miss the exact record the alias exists to find. The all-words half is what
- * keeps a multi-word query precise: `olive oil spain` should not return every
- * record mentioning Spain.
+ * AND between slots, OR inside them. That single shape is the correction: an
+ * alias group substitutes for the concept that triggered it, and every other
+ * word the member typed stays mandatory. `diesel cargo rotterdam` therefore
+ * means
  *
- * Both halves run inside the eligibility predicate and inside every structured
- * filter, which are applied with AND. Widening never crosses that line.
+ *     (diesel OR gas oil OR gasoil OR EN590) AND cargo AND rotterdam
+ *
+ * and not
+ *
+ *     diesel OR gas oil OR gasoil OR EN590 OR (diesel AND cargo AND rotterdam)
+ *
+ * which is what the first draft built, and which returned every middle-distillate
+ * record on the board to a member asking about one cargo into one port.
+ *
+ * The string returned is the CONTENTS of `or=(...)`, because the caller passes
+ * it to `.or()`. A single concept needs no wrapper; several are wrapped in
+ * `and(...)`, which PostgREST nests inside `or=` without complaint.
  *
  * `columns` is a parameter because the Qualified lane searches `listings` and
  * the board searches `desk_radar`, and the two tables name their public text
@@ -243,18 +483,16 @@ export function searchPredicate(
   const anyColumn = (value: string) =>
     columns.map((c) => `${c}.ilike.${quoted(`*${value}*`)}`);
 
-  const clauses: string[] = [];
-  for (const phrase of search.phrases) clauses.push(...anyColumn(phrase));
+  const clauses = search.slots.map((slot) => {
+    const filters: string[] = [];
+    for (const variant of slot.variants) filters.push(...anyColumn(variant));
+    return `or(${filters.join(",")})`;
+  });
 
-  // Only when there is more than one word. With one word the phrase half above
-  // is already exactly this clause, and repeating it doubles the predicate for
-  // no additional row.
-  if (search.terms.length > 1) {
-    const perTerm = search.terms.map((t) => `or(${anyColumn(t).join(",")})`);
-    clauses.push(`and(${perTerm.join(",")})`);
-  }
-
-  return clauses.join(",");
+  if (clauses.length === 0) return "";
+  // Unwrap the lone `or(...)`: the caller supplies the outer one.
+  if (clauses.length === 1) return clauses[0].slice(3, -1);
+  return `and(${clauses.join(",")})`;
 }
 
 // ---------------------------------------------------------------------------
@@ -294,23 +532,40 @@ export type RankableSignal = {
   spottedAt: string;
 };
 
-/** Everything about a signal a member's words are compared against. */
+/** Every public fact of a signal, as one string, in a fixed order. */
+function publicFacts(signal: RankableSignal): string {
+  return [
+    signal.product,
+    signal.hsCode,
+    signal.canonicalId,
+    signal.category,
+    signal.summaryLine,
+    signal.description,
+    signal.originText,
+    signal.destinationText,
+    signal.side,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
+ * A signal's public text with its punctuation and accents INTACT, lower-cased.
+ *
+ * This is the projection the database actually searches: `ILIKE` runs against
+ * the stored value, so a phrase carrying a dot or an accent has to be looked for
+ * in text that still has them. Folding first was a real defect in the mirror -
+ * `normaliseSearchText` turns `1701.99` into `1701 99`, so an HS code could
+ * never be found as a substring of the folded text, and the fixture gallery
+ * reported no match for a record whose `hs_code` was exactly the code asked for.
+ */
+function searchableRaw(signal: RankableSignal): string {
+  return publicFacts(signal).toLowerCase();
+}
+
+/** The same text folded, for comparisons that should ignore accents. */
 function searchableText(signal: RankableSignal): string {
-  return normaliseSearchText(
-    [
-      signal.product,
-      signal.hsCode,
-      signal.canonicalId,
-      signal.category,
-      signal.summaryLine,
-      signal.description,
-      signal.originText,
-      signal.destinationText,
-      signal.side,
-    ]
-      .filter(Boolean)
-      .join(" "),
-  );
+  return normaliseSearchText(publicFacts(signal));
 }
 
 /**
@@ -335,18 +590,21 @@ export function relevanceOf(signal: RankableSignal, search: SignalSearch): numbe
     if (hs.startsWith(search.hsDigits) || search.hsDigits.startsWith(hs)) return RANK.hsPrefix;
   }
 
-  for (const phrase of search.phrases) {
+  // `foldedPhrases`, not `phrases`: the record side is folded by
+  // `normaliseSearchText`, so an accent-preserving phrase would never compare
+  // equal to it. Precomputed once per search rather than per row.
+  for (const phrase of search.foldedPhrases) {
     if (product === phrase) return RANK.productExact;
   }
-  for (const phrase of search.phrases) {
+  for (const phrase of search.foldedPhrases) {
     if (product.startsWith(`${phrase} `)) return RANK.productPrefix;
   }
-  for (const phrase of search.phrases) {
+  for (const phrase of search.foldedPhrases) {
     if (product.includes(phrase)) return RANK.productPhrase;
   }
 
   const text = searchableText(signal);
-  for (const phrase of search.phrases) {
+  for (const phrase of search.foldedPhrases) {
     if (text.includes(phrase)) return RANK.textPhrase;
   }
 
@@ -360,21 +618,34 @@ export function relevanceOf(signal: RankableSignal, search: SignalSearch): numbe
 }
 
 /**
- * Does this signal match this search at all?
+ * Does this signal satisfy every concept the member asked for?
  *
- * The in-memory statement of the rule `searchPredicate` asks the database, and
- * it has to say the same thing: **any phrase anywhere, or every word
- * somewhere.** `RANK.allTerms` is the last band either half of that predicate
- * can produce, so the threshold is the boundary between them.
+ * The in-memory mirror of `searchPredicate`: every slot must be satisfied by at
+ * least one of its phrases. It is deliberately the same shape, so the fixture
+ * gallery and the production board agree about what matches.
  *
- * `RANK.partial` sits below it deliberately. A row matching only SOME of the
- * words is not returned by the database predicate and so cannot appear in a
- * production result. The band exists so that a row which somehow arrives
- * anyway is ranked last rather than treated as a match, which is the safer of
- * the two ways to be wrong.
+ * It is NOT identical, and the two differences are stated rather than glossed:
+ *
+ *   accents   both sides are folded here, so this is accent-insensitive in both
+ *             directions. `ILIKE` at the database is not. See `accentVariants`.
+ *   columns   this searches the record's public text as one string, so a phrase
+ *             may span two fields. The database requires each phrase to sit
+ *             inside a single column. This is therefore slightly more
+ *             permissive, which is the safer direction for a mirror used only
+ *             to build evidence.
  */
 export function matchesSearch(signal: RankableSignal, search: SignalSearch): boolean {
-  return relevanceOf(signal, search) <= RANK.allTerms;
+  const raw = searchableRaw(signal);
+  const folded = searchableText(signal);
+  return search.slots.every((slot) =>
+    slot.variants.some(
+      // The raw projection is the database's behaviour; the folded one is the
+      // extra tolerance this mirror deliberately has. Both are needed: raw
+      // finds `1701.99` and an accented spelling, folded finds an unaccented
+      // query against an accented value.
+      (variant) => raw.includes(variant) || folded.includes(stripAccents(variant)),
+    ),
+  );
 }
 
 /**

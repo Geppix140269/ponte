@@ -252,3 +252,22 @@ export function aliasGroupFor(phrase: string): AliasGroup | null {
 export function allAliasTerms(): readonly string[] {
   return ALL_TERMS;
 }
+
+/**
+ * The most words any single alias term contains.
+ *
+ * The matcher walks a query looking for the longest run of words that names a
+ * group, so it has to know how far ahead to look. Derived from the table rather
+ * than written down beside it, because a hand-kept number is a number that goes
+ * stale the first time somebody adds `extra virgin olive oil`.
+ */
+export const LONGEST_ALIAS_WORDS = ALL_TERMS.reduce(
+  (most, term) => Math.max(most, term.split(" ").length),
+  1,
+);
+
+/** The most terms any single group carries. Used to bound the predicate. */
+export const LARGEST_ALIAS_GROUP = ALIAS_GROUPS.reduce(
+  (most, group) => Math.max(most, group.terms.length),
+  1,
+);

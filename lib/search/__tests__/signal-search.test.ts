@@ -16,13 +16,26 @@ import {
   searchPredicate,
   relevanceOf,
   compareByRelevance,
+  matchesSearch,
+  foldPunctuation,
+  stripAccents,
+  accentVariants,
   SEARCHABLE_COLUMNS,
   MAX_QUERY_LENGTH,
-  MAX_PHRASES,
+  MAX_SLOTS,
+  MAX_GROUP_VARIANTS,
+  MAX_EXPANDED_GROUPS,
+  MAX_PREDICATE_CHARS,
   RANK,
   type RankableSignal,
 } from "../signal-search";
-import { ALIAS_GROUPS, aliasGroupFor, allAliasTerms } from "../aliases";
+import {
+  ALIAS_GROUPS,
+  aliasGroupFor,
+  allAliasTerms,
+  LONGEST_ALIAS_WORDS,
+  LARGEST_ALIAS_GROUP,
+} from "../aliases";
 import { PUBLIC_SIGNAL_COLUMNS, INTERNAL_SIGNAL_COLUMNS } from "../../market-signals/logic";
 
 let passed = 0;
@@ -254,15 +267,6 @@ test("a bare commodity word does not drag in an unrelated group", () => {
   assert.deepEqual(must("oil").groups, []);
 });
 
-test("expansion is bounded", () => {
-  const search = must("gas oil");
-  assert.ok(
-    search.phrases.length <= MAX_PHRASES,
-    `${search.phrases.length} phrases exceeds the cap`,
-  );
-  // The member's own words are never crowded out by the vocabulary.
-  assert.equal(search.phrases[0], "gas oil");
-});
 
 // ---------------------------------------------------------------------------
 // The database predicate, and the disclosure boundary
@@ -296,24 +300,22 @@ test("no internal column is searchable, named or by accident", () => {
   }
 });
 
-test("the predicate asks any-phrase OR all-words", () => {
-  const predicate = searchPredicate(must("olive oil"));
-  // The phrase half, over every searchable column.
-  for (const column of SEARCHABLE_COLUMNS) {
-    assert.ok(
-      predicate.includes(`${column}.ilike."*olive oil*"`),
-      `the phrase is not searched in ${column}`,
-    );
-  }
-  // The all-words half, as one AND group so both words must appear somewhere.
-  assert.ok(predicate.includes("and("), "there is no all-words clause");
-  assert.ok(predicate.includes('product.ilike."*olive*"'));
-  assert.ok(predicate.includes('product.ilike."*oil*"'));
+test("the predicate ANDs the concepts and ORs inside them", () => {
+  const predicate = searchPredicate(must("diesel cargo rotterdam"));
+  assert.ok(predicate.startsWith("and("), `not an AND chain: ${predicate.slice(0, 40)}`);
+  assert.equal((predicate.match(/or\(/g) ?? []).length, 3, "expected three concept groups");
+  assert.ok(predicate.includes('product.ilike."*en590*"'), "the alias is not searched");
+  assert.ok(predicate.includes('product.ilike."*cargo*"'), "the qualifier is not searched");
+  assert.ok(predicate.includes('product.ilike."*rotterdam*"'), "the qualifier is not searched");
 });
 
-test("a single-word query carries no redundant all-words clause", () => {
+test("one concept needs no wrapper, because the caller supplies the outer or=", () => {
   const predicate = searchPredicate(must("sugar"));
-  assert.ok(!predicate.includes("and("), "a one-word query duplicated its own clause");
+  assert.ok(!predicate.startsWith("and("), "a single concept was wrapped in an AND");
+  assert.ok(!predicate.startsWith("or("), "a single concept was double-wrapped");
+  for (const column of SEARCHABLE_COLUMNS) {
+    assert.ok(predicate.includes(`${column}.ilike."*sugar*"`), `${column} is not searched`);
+  }
 });
 
 test("an alias phrase is searched even though its words are absent", () => {

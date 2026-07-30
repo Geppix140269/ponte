@@ -31,13 +31,24 @@
 -- `ilike '%gas oil%'` cannot use a btree index: a btree orders by prefix and
 -- the pattern is unanchored, so the planner falls back to a sequential scan
 -- with a filter. `desk_radar` held 6,735 rows at the 28 July reconciliation, of
--- which 3,491 were eligible for the public board. A sequential scan over that
--- is single-digit milliseconds and is not a launch problem.
+-- which 3,458 were eligible for the public board on 30 July 2026.
 --
--- It is a problem later, and the requirement is explicit that the architecture
--- must not assume 3,100 records. A sequential scan is linear: at 100,000 rows
--- the same query costs roughly fifteen times as much, and the search runs on
--- every keystroke-free submit of a public page.
+-- Measured, not estimated. `npx tsx scripts/verify-signal-search.ts` ran the
+-- real predicates against production (`cptglsmjmzcfpjndqfmc`, 3,458 eligible)
+-- on 30 July 2026, with none of these indexes applied. Wall-clock round trips
+-- from a developer machine to eu-west-1: 184 to 525 ms, the slowest being a
+-- five-variant alias group across nine columns. That figure includes network
+-- latency, TLS and PostgREST parsing and cannot be decomposed from the client,
+-- so it is an upper bound on the database work rather than a measurement of it.
+--
+-- An earlier draft of this header said single-digit milliseconds. That was the
+-- sequential-scan cost reasoned from the row count, not anything a member
+-- waits for, and it was never measured. Corrected rather than quietly dropped.
+--
+-- The point stands and is the reason this file exists: the scan is linear in
+-- the eligible row count, so whatever share of that half-second is Postgres
+-- grows with the inventory, and the requirement is explicit that the design
+-- must not assume 3,100 records.
 --
 -- pg_trgm fixes exactly this. A GIN index over trigrams answers an unanchored
 -- `ILIKE '%...%'` directly, which is the one thing a btree cannot do.

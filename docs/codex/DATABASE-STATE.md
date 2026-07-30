@@ -78,10 +78,22 @@ on `ilike` over columns that already exist (verified applied 28 July 2026 via
 applying it changes no result, no ordering, no count and no row.
 
 **Why it matters anyway.** `ilike '%...%'` is unanchored, so no btree can serve
-it and Postgres plans a sequential scan. At the 28 July counts that is 6,735
-rows filtered to 3,491 eligible, which is single-digit milliseconds. The cost is
-linear, so the same query at 100,000 rows costs roughly fifteen times as much.
-`pg_trgm` is the one thing that makes an unanchored `ILIKE` indexable.
+it and Postgres plans a sequential scan. `pg_trgm` is the one thing that makes
+an unanchored `ILIKE` indexable.
+
+**Measured with none of these indexes applied.**
+`npx tsx scripts/verify-signal-search.ts` ran the real predicates against
+production on 30 July 2026 (3,458 eligible signals). Wall-clock round trips
+from a developer machine to eu-west-1 were **184 to 525 ms**, the slowest being
+a five-variant alias group across nine columns. That includes network latency,
+TLS and PostgREST parsing, so it is an upper bound on the database work and
+cannot be decomposed client-side. Evidence:
+`docs/codex/audits/market-signals-search/2026-07-30-postgrest-verification.txt`.
+
+An earlier version of this section said single-digit milliseconds. That was
+reasoned from the row count and never measured; it is corrected here rather
+than removed. The scan is linear in the eligible row count either way, which
+is what makes the indexes worth applying before the inventory grows.
 
 Rollback is written out in the file: drop the nine indexes. `pg_trgm` is
 deliberately not dropped, because other objects may come to depend on it.

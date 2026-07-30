@@ -2,6 +2,23 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - Market Signals search corrected after acceptance audit, and executed against PostgREST
+
+**Why this entry exists.** The 29 July search shipped with 267 assertions, all of which asserted the predicate STRING. Three defects survived that, and one of them was a wrong commercial answer rather than a rough edge. Recorded because the lesson is about the shape of the evidence, not about the bug.
+
+**A widened concept must not widen the query.** Alias expansion put every sibling term at the top level of one OR, so `diesel cargo rotterdam` matched any record containing `gas oil` and neither qualifier. The predicate is now AND between concepts and OR inside them: an alias group substitutes for the concept that triggered it and every other word stays mandatory. A longest-match walk over the query words is what keeps multi-word aliases (`olive oil`, `freight forwarding`, `commercial agent`) from swallowing their qualifiers. **Proved on production data**, not reasoned about: `diesel` matches 68 eligible signals, `diesel cargo rotterdam` matches 0.
+
+**A bound on phrases is not a bound on the request.** `MAX_PHRASES` capped the expansion and not the all-terms branch, so a permitted 120-character query of two-character words built a roughly 10,000-character filter. The caps are now stated per concept, per group and per request (`MAX_SLOTS` 6, `MAX_GROUP_VARIANTS` 5, `MAX_EXPANDED_GROUPS` 2, `MAX_PREDICATE_CHARS` 6,144), and a test computes the worst case the caps permit from the constants and the column list so raising a cap or adding a column fails there. The two degradations run in opposite directions and are labelled: past the group cap a phrase is searched as itself, which NARROWS and is always safe; past the concept cap trailing words are dropped, which BROADENS, so the surface tells the member it happened.
+
+**Accent-insensitive search was true of the matcher and false of the database.** `ILIKE` folds case and never accents, and the query was folded before it was sent, so an accented value was unreachable from either direction. Both forms are now sent. The residual gap is stated rather than closed: an unaccented query still cannot reach an accented stored value, because generating every accented spelling is combinatorial and the real fix is `unaccent` at the database, which PostgREST's filter grammar cannot call (PL-019).
+
+**The decision that follows: a predicate assertion is not a database result.** `scripts/verify-signal-search.ts` executes the real predicates against production, read-only, and is the artefact that established the nested `or=(and(or(...)))` parses at all, that the largest permitted request (3,558 characters) is accepted, and that the qualifier fix holds on live records. It also corrected a claim: the documented cost of an unindexed `ilike` said single-digit milliseconds, reasoned from the row count. Measured, it is 184 to 525 ms wall clock. The estimate was never a measurement and is corrected in `DATABASE-STATE.md` and in the migration header rather than quietly dropped.
+
+**Two of the three qualifier checks are recorded as VACUOUS.** `distributor` and `freight forwarding` match zero eligible signals, so narrowing them to zero proves nothing; the script says so rather than printing a passing row. The inventory is entirely product signals today, which is the same fact PL-017 records.
+
+**LB-005 stays open.** Nothing is deployed. Executing a predicate against production is not the same as a member searching the live board.
+
+
 ## 29 July 2026 - Market Signals made searchable, and the search deliberately needs no migration
 
 **Decision:** LB-005. `/market-signals` gets a free-text search over the complete eligible inventory, relevance ordering, exposed pagination and one shared URL contract with `/find`.

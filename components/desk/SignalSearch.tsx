@@ -126,6 +126,27 @@ export default function SignalSearch({ q }: { q: FindQuery }) {
         </p>
       )}
 
+      {search && search.droppedConcepts > 0 && (
+        /*
+         * The one degradation in this search that BROADENS the result, so it is
+         * the one a member has to be told about.
+         *
+         * A very long query is cut to the first few concepts, because every word
+         * is a mandatory clause and an unbounded query builds a request the
+         * gateway refuses. Dropping a word means Ponte searched for less than
+         * was asked, which can only return MORE than it should, and a member
+         * reading those extra records has no way to know why they are there.
+         */
+        <p className="sigsearch__note">
+          This search is longer than Ponte narrows by, so only the first{" "}
+          {search.slots.length} terms were used
+          {search.droppedConcepts === 1
+            ? " and the last one was not"
+            : ` and the last ${search.droppedConcepts} were not`}
+          . The results below may be broader than the full phrase would give.
+        </p>
+      )}
+
       {search && (
         <p className="sigsearch__active">
           <span className="mono">Searching</span> <b>{search.raw}</b>
