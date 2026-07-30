@@ -101,7 +101,7 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the Deal Room internal-function ACL (LB-008 residual)
+## APPLIED to production, 30 July 2026: the Deal Room internal-function ACL (LB-008 closed)
 
 `supabase/migrations/20260730c_deal_room_internal_acl.sql`.
 
@@ -110,7 +110,7 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 | SHA-256 | `5adb34c2ef183c601b30048084121577cf65cba29ad4fb7dacb075ac8c7d1891` |
 | Size | 7,501 bytes, no BOM; raw-byte and utf8-string hashes identical |
 | Content | **3 revokes, 19 grants, one transaction. Nothing else.** |
-| Status | written and tested, **NOT applied** |
+| Status | **APPLIED 2026-07-30 08:26:17.995 UTC**, one transaction, exit 0, no ambiguous transport response. Ledger **46 to 47**, exactly one row, checksum matching byte for byte |
 
 Revokes `authenticated` EXECUTE on exactly `deal_room_is_writable(uuid)`,
 `deal_room_uuid_or_null(text)` and `deal_room_events_append_only()` — the three
@@ -144,6 +144,42 @@ so it demonstrably detects the defect it exists for, rather than being asserted 
 only what migration text can prove, and one of its 28 assertions checks that this
 script still exists and still interrogates all three roles, so the division of
 labour cannot quietly rot.
+
+### The final ACL, as production reports it
+
+`npm run deal-room:acl-verify` **exits 0** after application:
+
+```
+  anon           : 0 of 23
+  PUBLIC         : 0 of 23
+  authenticated  : 19 of 23  (expected 19)
+  service_role   : 23 of 23  (expected 23, unchanged)
+  policies       : 14, 0 non-SELECT, 0 naming anon
+
+ok   deal-room ACL in production: anon 0, PUBLIC 0, authenticated exactly 19,
+     service_role unchanged
+```
+
+All four internal functions — `deal_room_log_event`, `deal_room_is_writable`,
+`deal_room_uuid_or_null`, `deal_room_events_append_only` — now report
+`service_role` alone. The 19 `authenticated` holds are the four RLS helpers and the
+fifteen application commands, matched **by name**, so a lost helper would have
+failed the check as loudly as a surplus grant.
+
+**Nothing else moved.** All nine before/after md5 fingerprints identical: function
+bodies, policy definitions, triggers, indexes, constraints, columns, RLS state and
+`pg_default_acl` (24 rows). 14 policies, 4 agreement documents, 0 rooms, 0 activity
+rows, no `deal-room-evidence` bucket.
+
+**End-to-end confirmation with a real anonymous client**, unchanged from after
+`20260730b`: the logger, the commands and the helpers all return
+`401 / 42501 permission denied for function …`, while member table reads still
+return `200 []` rather than erroring — so revoking the three did not disturb policy
+evaluation.
+
+**LB-008 is closed on the ACL contract.** The one probe still outstanding is the
+real authenticated direct RPC (probe 6 of the previous pass), which needs a
+dedicated QA account that does not yet exist.
 
 ## APPLIED to production, 30 July 2026: the Deal Room function ACL correction (LB-008)
 

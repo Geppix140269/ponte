@@ -2,6 +2,57 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - the ACL contract now matches production, and the witness is a separate instrument
+
+**Decision:** the owner authorised Phase 1 of a controlled sequence. PR #123 merged
+(`main` `453a49c`), and `20260730c_deal_room_internal_acl.sql` applied to production
+at **08:26:17.995 UTC** - one transaction, exit 0, ledger **46 to 47**, checksum
+`5adb34c2ef183c601b30048084121577cf65cba29ad4fb7dacb075ac8c7d1891` matching the
+merged file byte for byte.
+
+**Every required verification passed.** `anon` 0 of 23, `PUBLIC` 0,
+`authenticated` **19 by name**, `service_role` 23 unchanged, the four internal
+functions reachable by `service_role` alone, all nine before/after fingerprints
+identical, ledger +1 with the right checksum.
+
+**Why this needed a second migration at all.** `20260730b` revoked
+`authenticated` on the logger and granted the 19, but Supabase's defaults had
+already granted `authenticated` on all 23, and granting cannot remove an existing
+grant. Three functions survived. The check that should have caught it -
+`function-acl.test.ts` - asserted "authenticated should end with execute on exactly
+19" and passed, because it counted `grant` statements in a file.
+
+**So the correction is two things, and the second matters more.** The SQL is three
+revokes. The instrument change is that the end state now has a dedicated witness:
+`scripts/deal-room-acl-verify.mjs` reads `pg_proc.proacl` and requires the contract
+by name, failing on surplus **and** on missing, because losing an RLS helper breaks
+member journeys rather than the contract. Run before the migration it exits 1 naming
+all three functions; run after, it exits 0. It was demonstrated in both directions
+rather than trusted.
+
+Every assertion in the test suite now states whether it is a claim about the file or
+about the world, and one of them fails if the verification script stops existing or
+stops interrogating the three roles. **The division of labour is itself asserted**,
+because an end state whose only witness can be deleted has no witness.
+
+**The durable lesson, learned twice in one day.** A Supabase `public` schema does
+not create objects private, and no amount of reading SQL reveals what privileges
+exist. LB-008 was a file asserting something about itself; the test written to catch
+it asserted something about that file. Ask the catalogue, and keep the thing that
+asks it.
+
+**LB-008 stays open on a probe, not a defect.** The real authenticated direct-RPC
+confirmation needs a dedicated QA account, which is Phase 2 and was not started. The
+catalogue proves `authenticated` cannot execute the logger and the same enforcement
+is proved at the API layer for `anon`, so the gap is narrow - but the standing
+instruction is not to claim full resolution while that client is unavailable.
+
+**Affected areas:** production schema `cptglsmjmzcfpjndqfmc`;
+`supabase/migrations/20260730c_deal_room_internal_acl.sql`;
+`scripts/deal-room-acl-verify.mjs`; `lib/deal-room/__tests__/function-acl.test.ts`;
+`DATABASE-STATE.md`; `LAUNCH-BLOCKERS.md`; the Gate C audit sections 17 to 21; the
+operations log.
+
 ## 30 July 2026 - the anonymous path is closed, and the test meant to guarantee it was measuring the wrong thing
 
 **Decision:** the owner authorised applying `20260730b_deal_room_function_acl.sql`

@@ -771,3 +771,111 @@ previous pass.
    `npm run deal-room:negative-access` — which closes probes 8 and 9 and
    requirements 12 and 13.
 6. Approval 4: flag and deploy.
+
+---
+
+# Continuation, 30 July 2026: `20260730c` applied. The ACL contract now matches production.
+
+**Authorised:** owner, Phase 1 of the controlled sequence, 30 July 2026.
+**Repository state:** merged `main` at `453a49cee4ffd877041160ef84e314bf333f2a27`
+(PR #123), clean worktree. CI `verify` **SUCCESS** on exact head `7f27ec4`.
+**Executed:** **2026-07-30 08:26:17.995 UTC**, one transaction, exit 0, no timeout,
+no HTML, no 502.
+**Outcome:** **every required check passed. The Deal Room function ACL in production
+is now exactly the intended contract.**
+
+## 17. Pre-execution
+
+| Check | Result |
+|---|---|
+| CI on exact head `7f27ec4` | run **completed success**; `verify` **SUCCESS**. `Supabase Preview` failed, the only failure, reproducing the recorded migration-bearing-PR pattern (#107, #117) and covered by the owner's waiver |
+| PR #123 merged | `main` `b8f3db5` → **`453a49c`**, merge commit, parents `2017625 7f27ec4` |
+| File present on merged `main` | `supabase/migrations/20260730c_deal_room_internal_acl.sql` |
+| Checksum of the **merged** file | `5adb34c2ef183c601b30048084121577cf65cba29ad4fb7dacb075ac8c7d1891` — matches, raw bytes and utf8 string identical, 7,501 bytes, no BOM |
+| `20260729b` / `20260730b` | byte-identical to their applied checksums |
+| Worktree | clean, from a fresh checkout of merged `main` |
+| Pre-application baseline | nine md5 fingerprints captured, plus `service_role` and row counts |
+
+## 18. The seven required verifications
+
+| Requirement | Result |
+|---|---|
+| `anon` EXECUTE = 0 | **PASS. 0 of 23** |
+| `PUBLIC` EXECUTE = 0 | **PASS. 0** |
+| `authenticated` EXECUTE = exactly the intended 19, by name | **PASS. 19 of 23**, matched by name — four RLS helpers and fifteen application commands |
+| `service_role` EXECUTE = 23 unchanged | **PASS. 23** |
+| logger and three internal functions unavailable to `authenticated` | **PASS.** All four report `service_role` alone |
+| bodies, tables, policies, triggers, indexes, constraints, RLS state, default privileges unchanged | **PASS.** All nine md5 fingerprints identical to the pre-application baseline; `pg_default_acl` 24 rows unchanged |
+| ledger +1 row with the correct checksum | **PASS. 46 → 47**, exactly one `20260730c` row, checksum matching |
+
+`npm run deal-room:acl-verify` output:
+
+```
+  anon           : 0 of 23
+  PUBLIC         : 0 of 23
+  authenticated  : 19 of 23  (expected 19)
+  service_role   : 23 of 23  (expected 23, unchanged)
+  policies       : 14, 0 non-SELECT, 0 naming anon
+
+ok   deal-room ACL in production: anon 0, PUBLIC 0, authenticated exactly 19,
+     service_role unchanged
+```
+
+**Demonstrated in both directions.** The same script, run against production
+*before* `20260730c`, exited 1 with five problems naming all three functions and
+reporting `authenticated 22 of 23, expected 19`. It detects the defect it exists
+for; it was not merely asserted to.
+
+**End-to-end with a real anonymous client**, unchanged: the logger, the commands and
+the helpers all return `401 / 42501 permission denied for function …`, and member
+table reads still return `200 []` rather than erroring — so revoking the three did
+not disturb policy evaluation. `deal_room_activity_events` holds 0 rows.
+
+## 19. What this changes about the instruments
+
+The reason LB-008 needed two migrations is that the check written to catch it
+measured the wrong thing. `function-acl.test.ts` asserted "`authenticated` should
+end with execute on exactly 19" and passed while production held 22, because it
+counted `grant` statements in a file.
+
+That is now corrected rather than papered over:
+
+- every assertion states whether it is a claim about **the file** or about **the
+  world**, and the false message is gone;
+- `scripts/deal-room-acl-verify.mjs` is the single witness to the end state, reading
+  `pg_proc.proacl`;
+- one of the suite's 28 assertions fails if that script stops existing, stops
+  reading `pg_proc`, or stops interrogating `anon`, `authenticated` and
+  `service_role`. The division of labour cannot quietly rot.
+
+**The durable lesson, twice learned:** a Supabase `public` schema does not create
+objects private, and no amount of reading SQL reveals what privileges exist. Ask the
+catalogue, and keep the thing that asks it.
+
+## 20. Production state after Phase 1
+
+| | |
+|---|---|
+| Ledger | **47 rows**; `20260729a`, `20260729b`, `20260730b`, `20260730c` |
+| `anon` / `PUBLIC` EXECUTE | **0** / **0** |
+| `authenticated` EXECUTE | **19**, exactly the allowlist |
+| `service_role` EXECUTE | 23, unchanged |
+| Internal four | `service_role` only |
+| Policies | 14, all SELECT, all `authenticated`, definitions unchanged |
+| Rooms / activity | 0 / 0 |
+| Storage | `deal-room-evidence` **absent** |
+| Flag | `NEXT_PUBLIC_DEAL_ROOM` **unset**, allowlist unchanged, nothing deployed, access wall untouched |
+
+## 21. What remains
+
+**LB-008 stays open on one probe, not on a defect.** The real authenticated
+direct-RPC confirmation needs a dedicated QA account, which is Phase 2 and was not
+started. The catalogue proves `authenticated` cannot execute the logger, and the
+identical enforcement is proved at the API layer for `anon`, so what is unproved is
+narrow — but the owner's standing instruction is not to claim full resolution while
+that client is unavailable, and it is not claimed.
+
+Then Phase 2 (QA account), Phase 3 (Approval 2: bucket and policies), Phase 4
+(Approval 3: pilot Deal and the negative-access fixture). Approval 4 — flag and
+deploy — remains unauthorised.
+
