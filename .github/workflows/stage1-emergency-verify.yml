@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - emergency/single-generation-cutover
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
