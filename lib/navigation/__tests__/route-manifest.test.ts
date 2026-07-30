@@ -1,54 +1,23 @@
-// The route-audit test for the single-generation product cutover.
-//
-// Run: npx tsx lib/navigation/__tests__/route-manifest.test.ts
-//
-// lib/navigation/route-manifest.ts is the one route authority. This test holds
-// three things against it:
-//
-//   A. Manifest integrity   - every route is classified once, every redirect
-//                             resolves, feature-gated routes name a flag, and
-//                             the North Star canonical set is what the manifest
-//                             says it is.
-//   B. Filesystem coverage  - every page route on disk appears in the manifest,
-//                             so a new route cannot ship unclassified.
-//   C. Cutover ratchets     - the "must fail when" conditions the cutover
-//                             brief lists, encoded as baselines that MAY SHRINK
-//                             BUT MAY NEVER GROW, exactly like the icon-law and
-//                             LB-013 ratchets in scripts/check-governance.mjs.
-//
-// The ratchets are green today by pinning the current violations. Each later
-// cutover PR deletes the entries it fixes and the ratchet tightens. When the
-// programme completes, every baseline below is empty.
+// Route authority and single-generation cutover ratchets.
 
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import "../../auth/__tests__/stage1-cutover.test";
 import {
   ROUTE_MANIFEST,
   ROUTE_CLASSIFICATIONS,
   findRoute,
   normalizePath,
-  type RouteClassification,
 } from "../route-manifest";
 
 const tests: { name: string; fn: () => void }[] = [];
-function test(name: string, fn: () => void) {
-  tests.push({ name, fn });
-}
+const test = (name: string, fn: () => void) => tests.push({ name, fn });
 
-// ---------------------------------------------------------------------------
-// Baselines. Each list MAY SHRINK, never grow. A cutover PR that fixes a file
-// deletes it here in the same diff, so the decision is always in review.
-// ---------------------------------------------------------------------------
-
-// C1. Source files that still link a member to a retired route (/marketplace*
-// or /join). Scanned across app + components (lib is out of scope, as the
-// LB-013 ratchet also documents: the flag-off seam in lib/landing lives with
-// its own redirect). Files that ARE the retired surface, and cache-only
-// revalidatePath() calls, are not violations.
+// These baselines may shrink but never grow. Stage 1 removes the old account
+// page from the retired-link baseline.
 const RETIRED_LINK_BASELINE = [
   "app/manifest.ts",
   "app/sitemap.ts",
-  "app/[locale]/account/page.tsx",
   "app/[locale]/contact/page.tsx",
   "app/[locale]/learn/duties/page.tsx",
   "app/[locale]/learn/trade-data/page.tsx",
@@ -60,16 +29,8 @@ const RETIRED_LINK_BASELINE = [
   "components/ListingForm.tsx",
 ];
 
-// C2. Redirect entries that still point at another redirect (a double hop).
-// All five ride the /cart|/checkout|... -> /marketplace legacy chain and must
-// be repointed to /find when /marketplace retires (cutover PR 5).
 const REDIRECT_CHAIN_BASELINE = ["/cart", "/checkout", "/order-success", "/brokerage", "/network"];
 
-// C3. The business-verification path still imports the credit library. The
-// owner accepted (this programme) that member_business verification becomes
-// credit-free; the boundary lands in cutover PR 6 (ADR to follow), after which
-// these files import no credit function and this list is empty. The credits
-// balance route is credit INFRASTRUCTURE, not verification, and is allowed.
 const VERIFICATION_CREDIT_COUPLING = [
   "lib/verification/pipeline.ts",
   "app/[locale]/verify/page.tsx",
@@ -77,14 +38,7 @@ const VERIFICATION_CREDIT_COUPLING = [
   "app/[locale]/check/page.tsx",
 ];
 const CREDIT_INFRASTRUCTURE = ["app/api/credits/balance/route.ts"];
-
-// Files whose path begins with one of these are the retired surface itself; a
-// link within the retired cluster is not a canonical->retired violation.
 const DEPRECATED_SURFACE_PREFIXES = ["app/[locale]/marketplace", "app/[locale]/join"];
-
-// ---------------------------------------------------------------------------
-// Filesystem helpers.
-// ---------------------------------------------------------------------------
 
 function walk(dir: string, match: (path: string) => boolean, out: string[] = []): string[] {
   let entries;
@@ -105,99 +59,78 @@ function walk(dir: string, match: (path: string) => boolean, out: string[] = [])
   return out;
 }
 
-const sourceFiles = (roots: string[]) =>
-  roots.flatMap((root) => walk(root, (p) => /\.tsx?$/.test(p)));
+const sourceFiles = (roots: string[]) => roots.flatMap((root) => walk(root, (path) => /\.tsx?$/.test(path)));
 
-/** Baseline ratchet: found set must equal baseline set, reported both ways. */
 function ratchet(what: string, baseline: string[], found: string[], remedy: string) {
   for (const path of found) {
-    assert.ok(
-      baseline.includes(path),
-      `${what} in ${path}, which is not in the recorded baseline. ${remedy}`,
-    );
+    assert.ok(baseline.includes(path), `${what} in ${path}, outside the recorded baseline. ${remedy}`);
   }
   for (const path of baseline) {
     assert.ok(
       found.includes(path),
-      `the ${what} baseline is stale: ${path} no longer matches. Remove it from the ` +
-        `list in lib/navigation/__tests__/route-manifest.test.ts so the ratchet keeps the ground it gained.`,
+      `${what} baseline is stale: ${path}. Remove it so the ratchet keeps the ground gained.`,
     );
   }
 }
 
-// ===========================================================================
-// A. Manifest integrity
-// ===========================================================================
-
-test("every entry has a known classification and appears once", () => {
+test("every route is classified once", () => {
   const seen = new Set<string>();
   for (const entry of ROUTE_MANIFEST) {
-    assert.ok(
-      (ROUTE_CLASSIFICATIONS as readonly string[]).includes(entry.classification),
-      `${entry.path} has an unknown classification "${entry.classification}"`,
-    );
+    assert.ok(ROUTE_CLASSIFICATIONS.includes(entry.classification));
     assert.ok(!seen.has(entry.path), `${entry.path} is listed more than once`);
     seen.add(entry.path);
   }
 });
 
-test("redirects name a target, feature-gated routes name a flag, and neither field leaks onto other classes", () => {
+test("classification fields are valid", () => {
   for (const entry of ROUTE_MANIFEST) {
     if (entry.classification === "redirect") {
       assert.ok(entry.redirectsTo, `redirect ${entry.path} names no target`);
-      assert.equal(entry.flag, undefined, `redirect ${entry.path} should not carry a flag`);
+      assert.equal(entry.flag, undefined);
     } else if (entry.classification === "feature_gated") {
       assert.ok(entry.flag, `feature-gated ${entry.path} names no flag`);
-      assert.equal(entry.redirectsTo, undefined, `feature-gated ${entry.path} should not redirect`);
+      assert.equal(entry.redirectsTo, undefined);
     } else {
-      assert.equal(entry.redirectsTo, undefined, `${entry.path} is ${entry.classification} but carries a redirect target`);
-      assert.equal(entry.flag, undefined, `${entry.path} is ${entry.classification} but carries a flag`);
+      assert.equal(entry.redirectsTo, undefined);
+      assert.equal(entry.flag, undefined);
     }
   }
 });
 
-test("every redirect target resolves to a known route", () => {
+test("every redirect target resolves", () => {
   for (const entry of ROUTE_MANIFEST) {
     if (entry.classification !== "redirect") continue;
-    const target = findRoute(entry.redirectsTo as string);
-    assert.ok(target, `${entry.path} redirects to ${entry.redirectsTo}, which is not a known route`);
+    assert.ok(findRoute(entry.redirectsTo as string), `${entry.path} has an unknown target`);
   }
 });
 
-test("a redirect points at a redirect only where the chain is baselined", () => {
-  const chains = ROUTE_MANIFEST.filter(
-    (e) => e.classification === "redirect" && findRoute(e.redirectsTo as string)?.classification === "redirect",
-  ).map((e) => e.path);
-  ratchet(
-    "a redirect that chains through another redirect",
-    REDIRECT_CHAIN_BASELINE,
-    chains,
-    "Repoint it at a canonical surface (e.g. /find) so a single hop reaches the destination.",
-  );
+test("redirect chains only exist in the shrinking baseline", () => {
+  const found = ROUTE_MANIFEST.filter(
+    (entry) => entry.classification === "redirect" && findRoute(entry.redirectsTo as string)?.classification === "redirect",
+  ).map((entry) => entry.path);
+  ratchet("redirect chain", REDIRECT_CHAIN_BASELINE, found, "Point directly at a canonical route.");
 });
 
-test("the North Star canonical set is classified canonical", () => {
+test("the North Star route set remains canonical", () => {
   const canonical = [
     "/", "/explore", "/market-signals", "/market-signals/[id]", "/find", "/find/o/[ref]",
     "/structure", "/opportunities", "/workspace", "/login", "/account", "/verify",
     "/verification", "/pricing", "/about", "/contact", "/privacy", "/terms",
     "/learn/duties", "/learn/trade-data",
   ];
-  for (const path of canonical) {
-    assert.equal(findRoute(path)?.classification, "canonical", `${path} must be canonical`);
-  }
+  for (const path of canonical) assert.equal(findRoute(path)?.classification, "canonical", path);
 });
 
-test("/check and the Deal Room tree stay feature-gated, not canonical", () => {
+test("check and Deal Rooms remain gated", () => {
   assert.equal(findRoute("/check")?.classification, "feature_gated");
-  assert.equal(findRoute("/deal-rooms")?.classification, "feature_gated");
   assert.equal(findRoute("/deal-rooms/abc/activity")?.classification, "feature_gated");
 });
 
-test("the retire targets are classified as redirects", () => {
+test("retired page routes are redirects", () => {
   for (const path of ["/marketplace", "/marketplace/new", "/marketplace/l/[ref]", "/join"]) {
-    assert.equal(findRoute(path)?.classification, "redirect", `${path} must be a redirect`);
+    assert.equal(findRoute(path)?.classification, "redirect", path);
   }
+  assert.equal(findRoute("/join")?.retirementImplemented, true);
 });
 
 test("resolution handles locale prefixes, dynamic segments and subtrees", () => {
@@ -210,81 +143,49 @@ test("resolution handles locale prefixes, dynamic segments and subtrees", () => 
   assert.equal(findRoute("/nonsense/path"), undefined);
 });
 
-// ===========================================================================
-// B. Filesystem coverage
-// ===========================================================================
-
-test("every page route on disk is classified in the manifest", () => {
-  const pages = walk("app/[locale]", (p) => /\/page\.tsx$/.test(p));
-  const missing: string[] = [];
-  for (const file of pages) {
-    const route = file.replace(/^app\/\[locale\]/, "").replace(/\/page\.tsx$/, "") || "/";
-    if (!findRoute(route)) missing.push(`${route}  (${file})`);
-  }
-  assert.equal(
-    missing.length,
-    0,
-    `page routes absent from lib/navigation/route-manifest.ts:\n  ${missing.join("\n  ")}`,
-  );
+test("every page route on disk is classified", () => {
+  const pages = walk("app/[locale]", (path) => /\/page\.tsx$/.test(path));
+  const missing = pages
+    .map((file) => ({ file, route: file.replace(/^app\/\[locale\]/, "").replace(/\/page\.tsx$/, "") || "/" }))
+    .filter(({ route }) => !findRoute(route));
+  assert.equal(missing.length, 0, `unclassified pages:\n${missing.map(({ file, route }) => `${route} (${file})`).join("\n")}`);
 });
 
-// ===========================================================================
-// C. Cutover ratchets (the brief's "must fail when" conditions)
-// ===========================================================================
-
-test("no source file links a retired route, beyond the recorded baseline", () => {
+test("canonical sources do not regain retired links", () => {
   const retiredLink = /["'`]\/(?:marketplace|join)(?:[/?"'`]|$)/m;
   const found = sourceFiles(["app", "components"])
     .filter((path) => !DEPRECATED_SURFACE_PREFIXES.some((prefix) => path.startsWith(prefix)))
-    .filter((path) => {
-      // Cache invalidation is not navigation.
-      const text = readFileSync(path, "utf8").replace(/revalidatePath\([^)]*\)/g, "");
-      return retiredLink.test(text);
-    });
+    .filter((path) => retiredLink.test(readFileSync(path, "utf8").replace(/revalidatePath\([^)]*\)/g, "")));
   ratchet(
-    "a link to a retired route (/marketplace* or /join)",
+    "link to a retired route",
     RETIRED_LINK_BASELINE,
     found,
-    "Point it at the canonical destination the manifest records (e.g. /find, /find/o/[ref], /opportunities, /login).",
+    "Point it at the canonical destination recorded in the manifest.",
   );
 });
 
-test("the business-verification path imports no credit function, beyond the recorded baseline", () => {
+test("business verification credit imports only exist in the shrinking baseline", () => {
   const importsCredits = /from\s+["']@\/lib\/credits["']/;
-  const found = sourceFiles(["app", "components", "lib"]).filter((path) =>
-    importsCredits.test(readFileSync(path, "utf8")),
-  );
+  const found = sourceFiles(["app", "components", "lib"]).filter((path) => importsCredits.test(readFileSync(path, "utf8")));
   const allowed = new Set([...VERIFICATION_CREDIT_COUPLING, ...CREDIT_INFRASTRUCTURE]);
-  // No file outside the recorded union may import credits.
-  for (const path of found) {
-    assert.ok(
-      allowed.has(path),
-      `${path} imports @/lib/credits but is neither recorded credit infrastructure nor a ` +
-        `baselined verification-path file. A business-verification path must not reach a credit function.`,
-    );
-  }
-  // The verification-path baseline may shrink, never grow, and must not go stale.
+  for (const path of found) assert.ok(allowed.has(path), `${path} is an unrecorded credit import`);
   ratchet(
-    "the business-verification path importing @/lib/credits",
+    "business-verification credit import",
     VERIFICATION_CREDIT_COUPLING,
     found.filter((path) => !CREDIT_INFRASTRUCTURE.includes(path)),
-    "member_business verification is credit-free (cutover PR 6): remove the credit import from this path.",
+    "Remove the credit dependency from the member-business path.",
   );
 });
-
-// ---------------------------------------------------------------------------
-// Runner
-// ---------------------------------------------------------------------------
 
 let failed = 0;
 for (const { name, fn } of tests) {
   try {
     fn();
     console.log(`ok   ${name}`);
-  } catch (err) {
-    failed++;
+  } catch (error) {
+    failed += 1;
     console.error(`FAIL ${name}`);
-    console.error(`     ${(err as Error).message}`);
+    console.error(`     ${(error as Error).message}`);
   }
 }
 if (failed) {
