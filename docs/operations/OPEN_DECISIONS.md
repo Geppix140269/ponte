@@ -223,3 +223,37 @@ Options 1 and 3 are not taken. Option 1 remains available if the HTML files ever
 ### Canonical record
 
 ADR-0015 section S-3 and its 29 July 2026 implementation note; ExecPlan section 12, discovery 3a; `design/authority/bridge/v1/SOURCE-MANIFEST.md`.
+
+---
+
+## OD-010 - Deal Room translation and interpretation provider, and its data posture
+
+**Status:** OPEN
+**Owner:** Giuseppe Funaro
+**Urgency:** Medium; does not block provider-independent LB-009 work, but blocks any real provider call and production activation
+
+### Decision required
+
+Confirm the AI provider for Deal Room message translation and commercial interpretation (LB-009), and
+accept its data-retention, residency and privacy terms for private, participant-authored commercial
+negotiation content, or direct an alternative.
+
+### Current evidence
+
+Anthropic is the only AI provider present and is already approved and configured (`ANTHROPIC_API_KEY`,
+`lib/ai.ts`). The canonical client `lib/ai.ts` is metered, timed with an `AbortController`, and logs only
+token counts, never content. The legacy translation path `lib/ai-vet.ts` (`translateListing`) is un-metered,
+un-timed, has no retry, and writes no audit row; it must not be used for Deal Room content. What the
+repository does not establish is Anthropic's server-side retention of the content Ponte sends and whether
+sending private Deal Room negotiation text to a US-based API is acceptable under the Deal Room's intended
+privacy and residency posture. See `docs/codex/audits/deal-room/MULTILINGUAL-PREFLIGHT-2026-07-30.md`
+sections 10, 11, 12 and 14.
+
+### Recommended decision
+
+Use the existing approved Anthropic path via `lib/ai.ts` for both translation and interpretation, with a
+server-side adapter, the supported-language allowlist, timeouts, bounded retries, safe error mapping and no
+unauthorised content in logs. Record the accepted retention/residency terms. Continue all provider-independent
+LB-009 work in the meantime with a deterministic test adapter. Provider selection, any new secret, the
+additive migration, the multilingual feature flag, deployment and activation each remain separate owner
+approvals under AGENTS.md.
