@@ -14,6 +14,14 @@ This document is the required screen/route inventory and UX interaction matrix.
 Fixes for the P0 findings are in the same PR; deferred items are in
 `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+> **Post-rebase status and the owner merge-gate checklist are in
+> [`MERGE-READINESS.md`](MERGE-READINESS.md)** (branch rebased onto `main`,
+> `npm run verify` now passes end to end, deploy-preview results, and the
+> honestly open items: live notification delivery and authenticated core
+> journeys). The blockers here are **LB-010/LB-011** and the backlog tickets
+> **PL-021..PL-024**; they were renumbered across two rebases because `main` is
+> under concurrent development and had reused the earlier IDs.
+
 ---
 
 ## 1. Headline
