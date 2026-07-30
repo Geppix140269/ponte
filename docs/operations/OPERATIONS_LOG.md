@@ -35,6 +35,12 @@ Use this structure:
 - **All eight preconditions confirmed before touching production:** one ledger
   row for `20260729a`, none for `b`, 15 tables, RLS on all 15, zero policies, no
   `deal-room-evidence` bucket.
+- **The fourteen required verifications came out 11 / 1 / 2:** eleven passed, one
+  failed (requirement 11, the event logger's grant — **LB-008**), and two remain
+  pending and unproved (requirements 12 and 13, entitlement fail-closed and
+  cross-room isolation, which need Approval 3). An earlier version of this entry
+  implied thirteen passes; the owner corrected the tally on 30 July 2026. A
+  requirement that cannot be tested yet has not passed.
 - **Verified after:** 23 `deal_room_*` functions, 21 SECURITY DEFINER, all with
   `search_path = public, pg_temp`; `deal_room_invite` on `(uuid, text, timestamptz)`
   only and the five-argument form absent; 14 policies, one SELECT per

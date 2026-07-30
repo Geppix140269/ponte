@@ -2,6 +2,20 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - Two Market Signals corrections: alias precision, and what a zero family count means
+
+**A widening term must be narrower than the thing it widens.** The gas-oil group carried bare `diesel` as an expansion term. `ilike` has no notion of a word, so a search for `gas oil` reached `Diesel Generator`, `Diesel Engine` and `Diesel Pump`: equipment, where the member asked about cargo. It was visible in the sample rows of the read-only production run and not in any assertion, because a widened search returns MORE and that looks like a search that works.
+
+The vocabulary now separates **triggering** from **expanding**. `diesel` still names the group, so a member typing it still reaches EN590 and gas oil, and their own literal word is still searched broadly because they chose it. It is no longer pushed onto a query that did not use it; the fuel-specific forms `diesel fuel`, `automotive diesel` and `diesel oil` do that instead. Measured against production: `gas oil` went from 68 matches to 59 and now reaches **zero** diesel-equipment records, while `diesel` still reaches 7. Both figures are in the evidence file, and the check is now permanent in `scripts/verify-signal-search.ts` rather than something a reader had to notice.
+
+**A zero family count means the filter is unavailable, not that the market is empty.** The count behind the family selector counts records carrying a canonical `market_family`. Zero therefore means *nothing is classified into that family*, which is a different fact from *that family has no signals*: a trade-service requirement can be live on the board right now, findable by searching for it, and still count zero. The copy said "No live trade-service signals are currently available", which is a claim Ponte had not established. It now says "Trade services filtering is not currently available." and offers the search, which does reach those records. A test drives the state with a live unclassified inventory and refuses any wording that reports it as an absent market.
+
+That distinction was then measured rather than argued. The read-only production run now executes the three counts the selector is built from, under the board's own status and public-window predicates on one shared clock: **3,458 eligible signals, 0 classified as Products, 0 as Trade services, 0 as Distribution.** Zero for all three, which is exactly the case the corrected copy was written for - the inventory is there, it is product-oriented, and none of it is reachable by a filter that reads `market_family`. An earlier backlog row had recorded Products as 3,458, inferred from what the records are rather than read from the column that decides what the filter can do; that is corrected in PL-020, which now separates classifying the existing product inventory from sourcing service and distribution inventory, because the single number was hiding two different pieces of work.
+
+That correction matters more than its size. The state existed to stop the board explaining its schema to a customer, and its first wording replaced one untrue statement with another.
+
+**Also:** this branch had duplicated the bridge-invariance gate defect as its own blocker. `main` records it as LB-006; the duplicate is removed and the Market Signals blocker is renumbered to **LB-007**. Two references in shared records that a blind renumber on this branch had reassigned from `main`'s LB-005 are restored.
+
 ## 30 July 2026 - the corrected `20260729b` applied, and a revoke that named the wrong grantee
 
 **Decision:** the owner authorised the Gate C Approval 1 continuation - apply the
@@ -13,7 +27,21 @@ ledger 44 to 45, checksum
 repository file byte for byte. **LB-005 is closed.** LB-004 is closed and moved to
 the resolved register.
 
-**Thirteen of the fourteen required verifications passed.** 23 `deal_room_*`
+**The result of the fourteen required verifications is 11 / 1 / 2: eleven passed,
+one failed, two remain pending and unproved.** The failure is requirement 11, the
+event logger's grant, recorded as LB-008. The two pending are requirements 12 and
+13 — entitlement fail-closed and cross-room isolation — which need real member
+sessions against a real room and so belong to Approval 3.
+
+An earlier version of this entry said "thirteen of the fourteen passed". The owner
+corrected it on 30 July 2026, and the correction is worth keeping visible: it
+counted requirements 12 and 13 as passes while the same records said they were not
+proved. **A requirement that cannot be tested yet has not passed**, and a tally
+that treats "encoded in the policy predicate" as equivalent to "proved against the
+database" is the exact error `GATE-C-TEST-PLAN.md` section 0 was written to
+prevent — a policy can be present, correctly named and wrong.
+
+The eleven that passed: 23 `deal_room_*`
 functions, 21 SECURITY DEFINER, every one carrying `search_path = public,
 pg_temp`. `deal_room_invite` exists on `(uuid, text, timestamptz)` and no other
 signature; the five-argument form is absent. 14 policies, one SELECT per
@@ -64,6 +92,7 @@ carrying a `returning` clause, restoring the ledger to 44. That delete bypassed
 `db-query.mjs`'s own refusal of `delete from`, deliberately and recorded as such.
 Every later probe used `--sql`. **In this repository `--file` is a write,
 whatever the SQL inside it does.**
+
 
 ## 30 July 2026 - Gate C Approval 1, and a schema that stops half applied
 
@@ -122,6 +151,42 @@ is the entire content of the file. `GATE-C-TEST-PLAN.md` treats them as Approval
 **Affected areas:** `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`,
 `docs/codex/DATABASE-STATE.md`, `docs/codex/CURRENT-STATE.md`,
 `docs/operations/OPERATIONS_LOG.md`, `docs/launch/LAUNCH-BLOCKERS.md`.
+
+## 30 July 2026 - Market Signals search corrected after acceptance audit, and executed against PostgREST
+
+**Why this entry exists.** The 29 July search shipped with 267 assertions, all of which asserted the predicate STRING. Three defects survived that, and one of them was a wrong commercial answer rather than a rough edge. Recorded because the lesson is about the shape of the evidence, not about the bug.
+
+**A widened concept must not widen the query.** Alias expansion put every sibling term at the top level of one OR, so `diesel cargo rotterdam` matched any record containing `gas oil` and neither qualifier. The predicate is now AND between concepts and OR inside them: an alias group substitutes for the concept that triggered it and every other word stays mandatory. A longest-match walk over the query words is what keeps multi-word aliases (`olive oil`, `freight forwarding`, `commercial agent`) from swallowing their qualifiers. **Proved on production data**, not reasoned about: `diesel` matches 68 eligible signals, `diesel cargo rotterdam` matches 0.
+
+**A bound on phrases is not a bound on the request.** `MAX_PHRASES` capped the expansion and not the all-terms branch, so a permitted 120-character query of two-character words built a roughly 10,000-character filter. The caps are now stated per concept, per group and per request (`MAX_SLOTS` 6, `MAX_GROUP_VARIANTS` 5, `MAX_EXPANDED_GROUPS` 2, `MAX_PREDICATE_CHARS` 6,144), and a test computes the worst case the caps permit from the constants and the column list so raising a cap or adding a column fails there. The two degradations run in opposite directions and are labelled: past the group cap a phrase is searched as itself, which NARROWS and is always safe; past the concept cap trailing words are dropped, which BROADENS, so the surface tells the member it happened.
+
+**Accent-insensitive search was true of the matcher and false of the database.** `ILIKE` folds case and never accents, and the query was folded before it was sent, so an accented value was unreachable from either direction. Both forms are now sent. The residual gap is stated rather than closed: an unaccented query still cannot reach an accented stored value, because generating every accented spelling is combinatorial and the real fix is `unaccent` at the database, which PostgREST's filter grammar cannot call (PL-019).
+
+**The decision that follows: a predicate assertion is not a database result.** `scripts/verify-signal-search.ts` executes the real predicates against production, read-only, and is the artefact that established the nested `or=(and(or(...)))` parses at all, that the largest permitted request (3,558 characters) is accepted, and that the qualifier fix holds on live records. It also corrected a claim: the documented cost of an unindexed `ilike` said single-digit milliseconds, reasoned from the row count. Measured, it is 184 to 525 ms wall clock. The estimate was never a measurement and is corrected in `DATABASE-STATE.md` and in the migration header rather than quietly dropped.
+
+**Two of the three qualifier checks are recorded as VACUOUS.** `distributor` and `freight forwarding` match zero eligible signals, so narrowing them to zero proves nothing; the script says so rather than printing a passing row. The inventory is entirely product signals today, which is the same fact PL-017 records.
+
+**LB-007 stays open.** Nothing is deployed. Executing a predicate against production is not the same as a member searching the live board.
+
+
+## 29 July 2026 - Market Signals made searchable, and the search deliberately needs no migration
+
+**Decision:** LB-007. `/market-signals` gets a free-text search over the complete eligible inventory, relevance ordering, exposed pagination and one shared URL contract with `/find`.
+
+**The decision that shaped everything else: the search must work with no SQL applied.** A merge to `main` applies no migration in this repository (the historical chain aborts on its first file), so every schema change is applied by hand with owner approval. A search built on a generated `tsvector`, a maintained search document or an RPC would therefore have shipped as a closed P0 that returned nothing in production until somebody separately ran a file. The search is built on `ilike` over columns that already exist, so it is correct on merge. `20260730a_market_signal_search.sql` adds `pg_trgm` and eight partial GIN trigram indexes, is written and **not applied**, and changes no result when it is: it changes the plan, not the answer. Recorded as PL-016.
+
+**The alias vocabulary is a vocabulary, not a classification.** `lib/search/aliases.ts` joins `gas oil`, `gasoil`, `diesel` and `EN590` into one search, along with seventeen other commercial groups and their common trade-language forms, which is how multilingual input is honoured under an English-only interface. It only ever widens the phrases a query is matched against; every record returned still had to genuinely contain one of them in a public column. So an alias can never manufacture a match, and a wrong alias costs precision rather than truth. That boundary is what keeps it out of `lib/taxonomy/`, where the family rules apply, and it is asserted by a test rather than described. The widening is also stated on the page, because a member who searched for `gas oil` and is shown `Diesel EN590` has been given a correct answer that looks like a wrong one.
+
+**Relevance is bounded, and the bound is disclosed.** Relevance is a function of the query and the row together, so there is no column to sort on and the matched set has to be read before it can be ordered. Above 1,000 matches the board stops claiming relevance, falls back to the database's own recency order, which pages correctly through everything, and says so. Ranking the first thousand and paging through them would have hidden every record past the thousandth from a member who had just been told the total.
+
+**A zero-result search is a third kind of emptiness.** `presentBoard` already separated an empty market from an empty filtered answer; it now separates both from an empty search. "No signal is currently live on the public board" is a statement about the market, and a member reads it as "this market is dead". It must never be printed because somebody's spelling was wrong, or because Ponte's vocabulary does not carry their word yet.
+
+**Also decided:** `signalFilterHref` is replaced by the shared query authority in `lib/find/query.ts`. It serialised five parameters, so every filter link silently discarded the direction, market, quantity, sort and, once it existed, the search. Two builders is how two surfaces come to disagree about what one URL means, so there is one. The six state transitions a member can make (search, filter, sort, page, clear search, clear all) are pure functions with the reset rules asserted once, rather than conventions re-implemented at each href.
+
+**Not decided, and deliberately out of scope:** classifying the existing inventory (PL-017), reconciling the approximately 160-signal batch (PL-018), applying the index migration (PL-016), and any change to `/find`'s Qualified lane beyond making it read the same `q` the same way.
+
+**Implementation boundary:** repository work only. Nothing is deployed, no SQL has been executed, and the blocker stays open in `LAUNCH-BLOCKERS.md` until the search is exercised against the real 3,491-record inventory.
+
 
 ## 29 July 2026 - Two listing migrations applied to production
 

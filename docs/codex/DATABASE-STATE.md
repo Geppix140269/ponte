@@ -53,6 +53,54 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: Market Signal search indexes
+
+`supabase/migrations/20260730a_market_signal_search.sql` (LB-007).
+
+**Not executed anywhere.** Index-only and additive: it creates the `pg_trgm`
+extension, eight partial GIN trigram indexes on `desk_radar` over the public
+columns the search reads (`product`, `summary_line`, `ai_description`,
+`category`, `origin`, `destination`, `hs_code`, `canonical_signal_id`), each
+scoped `where status = 'approved_signal'`, and one btree
+`(spotted_at desc, id desc)` for the board's paging order.
+
+**No column, constraint, policy, trigger, function or default is added or
+changed, and no row is read, written or reclassified.** RLS on `desk_radar` is
+untouched and stays deny-all. There is no backfill: an index is derived from the
+rows already present.
+
+**The search does not depend on it, deliberately.** A merge applies no SQL in
+this repository, so a search built on a new column, a generated `tsvector` or an
+RPC would have shipped as a launch-blocker fix that returned nothing in
+production until somebody separately ran a file. The search is therefore built
+on `ilike` over columns that already exist (verified applied 28 July 2026 via
+`20260728a_market_classification.sql`). This migration only changes the plan:
+applying it changes no result, no ordering, no count and no row.
+
+**Why it matters anyway.** `ilike '%...%'` is unanchored, so no btree can serve
+it and Postgres plans a sequential scan. `pg_trgm` is the one thing that makes
+an unanchored `ILIKE` indexable.
+
+**Measured with none of these indexes applied.**
+`npx tsx scripts/verify-signal-search.ts` ran the real predicates against
+production on 30 July 2026 (3,458 eligible signals). Wall-clock round trips
+from a developer machine to eu-west-1 were **198 to 1,037 ms** across two runs,
+the slowest being a five-variant alias group across nine columns on a cold
+connection. That includes network latency,
+TLS and PostgREST parsing, so it is an upper bound on the database work and
+cannot be decomposed client-side. Evidence:
+`docs/codex/audits/market-signals-search/2026-07-30-postgrest-verification.txt`.
+
+An earlier version of this section said single-digit milliseconds. That was
+reasoned from the row count and never measured; it is corrected here rather
+than removed. The scan is linear in the eligible row count either way, which
+is what makes the indexes worth applying before the inventory grows.
+
+Rollback is written out in the file: drop the nine indexes. `pg_trgm` is
+deliberately not dropped, because other objects may come to depend on it.
+
+Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
+
 ## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
 
 **Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**

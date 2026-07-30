@@ -29,16 +29,25 @@ export type SearchState = "ok" | "partial" | "coverage_unknown" | "unclassified"
  * Which emptiness a complete search found.
  *
  * `board`   nothing is live at all. A statement about the market.
- * `filters` nothing matches what was asked. A statement about the question.
+ * `filters` nothing matches the structured filters. A statement about a corner.
+ * `search`  nothing matches the member's own words.
  *
- * They are different facts and they need different words. "No signal is
- * currently live on the public board" is false the moment a filter is set and
- * simply returns nothing, and it is the more damaging of the two to get wrong:
- * a member reads it as "this market is dead" when it means "not this corner of
- * it". Returning which one it is, rather than a boolean, means a caller cannot
+ * They are three different facts and they need three different sets of words.
+ * "No signal is currently live on the public board" is false the moment
+ * anything is asked of it, and it is the most damaging of the three to get
+ * wrong: a member reads it as "this market is dead" when it means "not this
+ * corner of it", or worse, "not that spelling of it".
+ *
+ * `search` is separated from `filters` because the actions differ. A member
+ * whose filters found nothing should widen a category; a member whose words
+ * found nothing should edit or clear the words, and may well have typed a
+ * synonym Ponte's vocabulary does not carry yet. Offering "clear the filters"
+ * to someone who set no filters is an instruction they cannot follow.
+ *
+ * Returning which one it is, rather than a boolean, means a caller cannot
  * render the wrong copy without noticing.
  */
-export type EmptyKind = "board" | "filters";
+export type EmptyKind = "board" | "filters" | "search";
 
 export interface BoardPresentation {
   /** The read failed. A technical failure, never a finding. */
@@ -75,6 +84,15 @@ export function presentBoard(
      * and a surface reading a boolean would print the stronger claim for both.
      */
     filtered: boolean;
+    /**
+     * Did they narrow it with their own words?
+     *
+     * Takes precedence over `filtered` when both are true. A member who typed
+     * `EN590` and also had a category selected is far more likely to have been
+     * failed by the word than by the category, and the word is the thing they
+     * can immediately change.
+     */
+    searched?: boolean;
   },
 ): BoardPresentation {
   const base: BoardPresentation = {
@@ -97,6 +115,13 @@ export function presentBoard(
     // The whole point of the table. `state === "ok"` is not an optimisation
     // here, it is the condition: an empty result under any other state has an
     // explanation above it and must not also carry a conclusion.
-    genuineEmpty: state === "ok" && empty ? (scope.filtered ? "filters" : "board") : null,
+    genuineEmpty:
+      state === "ok" && empty
+        ? scope.searched
+          ? "search"
+          : scope.filtered
+            ? "filters"
+            : "board"
+        : null,
   };
 }

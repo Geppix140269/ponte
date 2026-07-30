@@ -354,10 +354,25 @@ test("a search is narrowed by any dimension, not only a canonical key", () => {
   assert.equal(hasActiveFilters(parseFindQuery({ serviceCategory: "banana" })), false);
 });
 
+/**
+ * The board, as source.
+ *
+ * The route and its renderer were split so that a development gallery could
+ * render the shipped markup over fixtures. "The board" is therefore two files,
+ * and a test asserting what a member is shown has to read both or it starts
+ * passing for the wrong reason.
+ */
+function boardSource(): string {
+  return (
+    readFileSync("app/[locale]/market-signals/page.tsx", "utf8") +
+    readFileSync("components/desk/SignalBoard.tsx", "utf8")
+  );
+}
+
 test("both surfaces read the same table, and the board passes its scope", () => {
   // A rule that held on one page and not the other is how this went wrong the
   // first time: the Find lanes were correct and the board was not.
-  const board = readFileSync("app/[locale]/market-signals/page.tsx", "utf8");
+  const board = boardSource();
   const find = readFileSync("app/[locale]/find/page.tsx", "utf8");
   for (const [name, src] of [["market-signals", board], ["find", find]] as const) {
     assert.ok(src.includes("presentBoard("), `${name} does not use the shared table`);

@@ -11,9 +11,23 @@ attempted.** Gate C Approval 1 is **still incomplete**, because verification of
 result that differs from the test plan.
 
 Sections 1 to 5 are the first pass, unaltered except where a value has since been
-superseded and says so. Sections 6 to 9 are the continuation of 30 July 2026:
-the application of the corrected file, the fourteen required verifications, and
-the one that failed — **LB-008**, in section 7.
+superseded and says so. Sections 6 to 10 are the continuation of 30 July 2026:
+the application of the corrected file and the fourteen required verifications.
+
+**The authoritative result of those fourteen is 11 / 1 / 2:**
+
+| | Count | Which |
+|---|---|---|
+| **Passed** | **11** | requirements 1 to 10 and 14 — sections 6 and 8 |
+| **Failed** | **1** | requirement 11, the event logger's grant — **LB-008**, section 7 |
+| **Pending, unproved** | **2** | requirements 12 and 13, entitlement fail-closed and cross-room isolation — section 8.3 |
+
+An earlier version of this record said "thirteen of the fourteen passed". That was
+wrong, and wrong in the direction that flatters the result: it counted
+requirements 12 and 13 as passing while the same document said, a page later, that
+they were not proved. **A requirement that cannot be tested yet has not passed.**
+The owner corrected the tally on 30 July 2026 and it is stated here as 11 / 1 / 2
+rather than quietly amended.
 
 Three things happened across the two passes that the owner must decide on, and
 one production action was taken that the approved files did not contain: the RLS
@@ -454,7 +468,12 @@ This is the second time in one day that Supabase default privileges have granted
 more than a migration expected; the first was section 3.1, on tables. Both times
 the migration was written as though a fresh object starts private. It does not.
 
-## 8. The other thirteen verifications, all of which passed
+## 8. The other thirteen: eleven that passed, two that are pending
+
+Sections 8.1 and 8.2 are the **eleven passes** — requirements 1 to 10 and 14.
+Section 8.3 is the **two that remain unproved**, requirements 12 and 13, and it is
+inside this section rather than appended to it precisely so that the count above
+cannot be read off a heading and get it wrong again.
 
 ### 8.1 Structural
 
