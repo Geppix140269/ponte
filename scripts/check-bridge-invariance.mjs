@@ -16,14 +16,39 @@
 // both versions into declarations and compares the non-colour ones, which is the
 // property the ADR actually constrains.
 //
-// Compares the working tree against a git ref, defaulting to the merge-base with
-// origin/main so it measures the whole branch rather than the last commit.
+// Compares the working tree against a FIXED pre-Stage-1 ref.
+//
+// It used to default to the merge-base with origin/main, and that defeated the
+// check the moment the Stage 1 edit merged. On a branch the merge-base is the
+// commit the branch left, so `before` was the un-edited stylesheet and assertion
+// 5 below found its four colour changes. On `main` the merge-base is `main`
+// itself, so `before` and `after` are the same bytes: the 479 non-colour
+// comparisons became vacuously true, and the four authorised selectors reported
+// "was NOT changed" because, relative to itself, nothing had. `npm run verify`
+// was therefore red on `main` for every task in the repository - LB-006.
+//
+// Pinning the baseline is not a weakening. Every assertion below is unchanged
+// and all of them now actually run: 479 declarations are compared against real
+// prior values instead of against themselves. The ref stays overridable as
+// argv[2] for investigating a single commit.
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
 const FILE = "design/authority/bridge/v1/source/ponte-bridge.css";
-const ref = process.argv[2] ?? execFileSync("git", ["merge-base", "HEAD", "origin/main"], { encoding: "utf8" }).trim();
+
+/**
+ * The approved stylesheet as delivered, immediately before the ADR-0015 Stage 1
+ * contrast edit in `f5a3dcd`.
+ *
+ * A commit, not a vendored copy, because the git object cannot drift and a
+ * second copy of the file in the tree could. If the Bridge package is ever
+ * re-delivered, this moves in the same change that re-delivers it, and ADR-0015
+ * section S-3 requires that change to be recorded in the ADR itself.
+ */
+const PRE_STAGE_1 = "651ad1c99ecd8fb6bc9683d06dc7f8010d7e3a83";
+
+const ref = process.argv[2] ?? PRE_STAGE_1;
 
 const before = execFileSync("git", ["show", `${ref}:${FILE}`], { encoding: "utf8", maxBuffer: 1 << 24 });
 const after = readFileSync(FILE, "utf8");
