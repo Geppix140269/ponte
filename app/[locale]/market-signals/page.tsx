@@ -3,7 +3,13 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
-import { searchSignalInventory, countSignalInventory } from "@/lib/board/inventory";
+import {
+  searchSignalInventory,
+  countSignalInventory,
+  signalFamilyAvailability,
+  countSignalsClassifiedOn,
+} from "@/lib/board/inventory";
+import { axisForFamily } from "@/lib/board/availability";
 import { railForScreen } from "@/lib/desk/journey";
 import { alternatesFor } from "@/lib/seo";
 import DeskShell from "@/components/desk/DeskShell";
@@ -65,18 +71,43 @@ export default async function MarketSignalsPage({
   // matching set rather than of the page that came back, and the page is one
   // window onto it rather than the end of it.
   const q = parseFindQuery(searchParams ?? {});
-  const [board, everything] = await Promise.all([
+  /*
+   * One clock for every read in this render.
+   *
+   * The eligibility predicate compares against a timestamp, so four reads taking
+   * four `now()` values could disagree about a signal expiring between them:
+   * the board would show a record the availability count had already dropped.
+   */
+  const nowIso = new Date().toISOString();
+  /*
+   * Which controls exist is a measurement, not a taxonomy.
+   *
+   * Issued alongside the search rather than after it, so offering a filter
+   * costs latency once and not twice. `axisClassified` is only asked when a
+   * family is selected, because it only decides whether that family's own
+   * category list is drawn.
+   */
+  const [board, everything, availability, axisClassified] = await Promise.all([
     searchSignalInventory(toInventoryQuery(q), {
       limit: PAGE_SIZE,
       offset: (q.page - 1) * PAGE_SIZE,
       sort: effectiveSort(q),
+      nowIso,
     }),
-    countSignalInventory(),
+    countSignalInventory(nowIso),
+    signalFamilyAvailability(nowIso),
+    q.family ? countSignalsClassifiedOn(axisForFamily(q.family), q.family, nowIso) : Promise.resolve(null),
   ]);
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       <DeskShell rail={rail} current="market" objective={objective}>
-        <SignalBoard q={q} board={board} everything={everything} />
+        <SignalBoard
+          q={q}
+          board={board}
+          everything={everything}
+          availability={availability}
+          axisClassified={axisClassified}
+        />
 
         <section className="sec">
           <div className="panel">

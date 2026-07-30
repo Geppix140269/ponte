@@ -44,6 +44,19 @@ const DEV_BASE = process.env.PONTE_EVIDENCE_BASE_URL ?? "http://127.0.0.1:3101";
 // `/en/...` answers 307 to `/...` and a capture would photograph a redirect.
 const FIXTURE = `${DEV_BASE}/dev/market-signals-search`;
 
+/**
+ * The family selector is drawn from a measurement of live inventory, so a
+ * capture that needs one has to say which families are available.
+ *
+ * `availability=products` is the default and is production's condition today:
+ * one family, therefore no selector. The two-family form is what a member sees
+ * once the desk classifies genuine service or distribution signals.
+ */
+const TWO_FAMILIES = "availability=products,services";
+const WITH_DISTRIBUTION = "availability=products,distribution";
+/** Draw a family's own category list, which needs something classified on it. */
+const CLASSIFIED_AXIS = "axis=classified";
+
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
 
@@ -106,11 +119,18 @@ test("the board opens with a prominent, labelled, keyboard-reachable search", as
   await expect(page.locator('label[for="signal-q"]')).toBeVisible();
   await expect(page.locator(".sigsearch__go")).toBeVisible();
 
-  // Above the results, not below them: the field must be reachable before the
-  // filters a member would otherwise have to learn the taxonomy to use.
+  /*
+   * Above the results, not below them.
+   *
+   * Measured against the results region rather than against the filter panel,
+   * because the panel is inventory-backed and does not exist on a board with one
+   * available family. The property being asserted is the one that matters: a
+   * member meets the search before they meet anything they would otherwise have
+   * to learn the taxonomy to use.
+   */
   const searchBox = await field.boundingBox();
-  const filters = await page.locator(".sigfilters").boundingBox();
-  expect(searchBox!.y).toBeLessThan(filters!.y);
+  const results = await page.locator(".sigfilters, .empty, .err, .reg, .rec").first().boundingBox();
+  expect(searchBox!.y).toBeLessThan(results!.y);
 
   // Keyboard: focusable, and the focus is visible rather than removed.
   await field.focus();
@@ -152,7 +172,9 @@ test("a search works as a plain GET, with JavaScript disabled", async ({ browser
 
 test("the search survives a filter, and the filter survives a search", async ({ page }) => {
   await page.setViewportSize(DESKTOP);
-  await open(page, `${LIVE}?q=freight+forwarding`);
+  // On the fixture surface, because a filter panel only exists where two or more
+  // families have live inventory and production has one.
+  await open(page, `${FIXTURE}?q=freight+forwarding&${TWO_FAMILIES}`);
   // Every filter link carries the query. This is the defect the shared URL
   // builder exists to prevent: choosing a category used to discard the search.
   const links = await page.locator(".sigfilters a").evaluateAll((els) =>
@@ -243,7 +265,7 @@ test("a search combines with a territory filter", async ({ page }) => {
 
 test("a search combines with the services family", async ({ page }) => {
   await page.setViewportSize(DESKTOP);
-  await open(page, `${FIXTURE}?q=freight+forwarding&family=services`);
+  await open(page, `${FIXTURE}?q=freight+forwarding&family=services&${TWO_FAMILIES}&${CLASSIFIED_AXIS}`);
   const text = await page.locator(".sec").first().innerText();
   expect(text).toContain("Freight forwarding");
   expect(text).not.toContain("Refined white sugar");
@@ -252,7 +274,7 @@ test("a search combines with the services family", async ({ page }) => {
 
 test("a search combines with the distribution family", async ({ page }) => {
   await page.setViewportSize(DESKTOP);
-  await open(page, `${FIXTURE}?q=distributor&family=distribution`);
+  await open(page, `${FIXTURE}?q=distributor&family=distribution&${WITH_DISTRIBUTION}&${CLASSIFIED_AXIS}`);
   const text = await page.locator(".sec").first().innerText();
   expect(text).toContain("Distributor sought");
   await shot(page, "07-desktop-q-distributor-distribution");
@@ -378,12 +400,114 @@ test("clearing the search keeps the filters, and clear all keeps nothing", async
   await expect(page.locator(".sigsearch__active")).toHaveCount(0);
 });
 
+test("a product-only inventory offers no family selector at all", async ({ page }) => {
+  // Production's condition. A selector with one usable option is not a filter,
+  // so the page goes from the search straight into the results.
+  await page.setViewportSize(DESKTOP);
+  await open(page, `${FIXTURE}?availability=products`);
+  await expect(page.locator(".sigfilters")).toHaveCount(0);
+  await expect(page.locator("#signal-q")).toBeVisible();
+  await expect(records(page).first()).toBeVisible();
+  const body = await page.locator(".sec").first().innerText();
+  expect(body).not.toContain("Trade services");
+  expect(body).not.toContain("Distribution and representation");
+  expect(body).not.toContain("Every market");
+  expect(body).not.toContain("All signals");
+  await shot(page, "17-desktop-product-only-no-family-panel");
+
+  await page.setViewportSize(MOBILE);
+  await expect(page.locator(".sigfilters")).toHaveCount(0);
+  await shot(page, "18-mobile-390-product-only-no-family-panel");
+});
+
+test("two available families produce an inventory-backed selector", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await open(page, `${FIXTURE}?${TWO_FAMILIES}`);
+  const panel = page.locator(".sigfilters");
+  await expect(panel).toHaveCount(1);
+  const body = await panel.innerText();
+  expect(body).toContain("Filter by opportunity type");
+  expect(body).toContain("All signals");
+  expect(body).toContain("Products");
+  expect(body).toContain("Trade services");
+  // Absent, not disabled, not "coming soon".
+  expect(body).not.toContain("Distribution and representation");
+  expect(body).not.toContain("Coming soon");
+  expect(body).not.toContain("Filter by market");
+  expect(body).not.toContain("Every market");
+  await shot(page, "19-desktop-two-families-selector");
+});
+
+test("the third family appears on its own once it has inventory", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await open(page, `${FIXTURE}?${WITH_DISTRIBUTION}`);
+  const body = await page.locator(".sigfilters").innerText();
+  expect(body).toContain("Distribution and representation");
+  expect(body).not.toContain("Trade services");
+});
+
+test("an unavailable family URL gets concise commercial copy", async ({ page }) => {
+  // A kept or shared link, since the filter itself is no longer offered. What a
+  // member reads is about the board, never about Ponte's schema.
+  await page.setViewportSize(DESKTOP);
+  const cases = [
+    {
+      family: "services",
+      heading: "No live trade-service signals are currently available",
+      action: "Post a trade-service opportunity",
+      frame: "20-desktop-services-unavailable",
+    },
+    {
+      family: "distribution",
+      heading: "No live distribution opportunities are currently available",
+      action: "Post a distribution opportunity",
+      frame: "21-desktop-distribution-unavailable",
+    },
+  ];
+  for (const { family, heading, action, frame } of cases) {
+    await open(page, `${FIXTURE}?family=${family}&availability=products`);
+    const body = await page.locator(".sec").first().innerText();
+    expect(body).toContain(heading);
+    expect(body).toContain("View all signals");
+    expect(body).toContain(action);
+    for (const forbidden of [
+      "taxonomy",
+      "classified",
+      "classification",
+      "Ponte cannot filter",
+      "gap in what Ponte has classified",
+    ]) {
+      expect(body).not.toContain(forbidden);
+    }
+    await shot(page, frame);
+  }
+});
+
+test("a zero-result search inside an available family stays a search failure", async ({ page }) => {
+  // Two statements that must not be collapsed: the family HAS records, and the
+  // query matched none of them.
+  await page.setViewportSize(DESKTOP);
+  await open(page, `${FIXTURE}?q=zzzznotarealthing&family=services&${TWO_FAMILIES}`);
+  const body = await page.locator(".sec").first().innerText();
+  expect(body).toContain("No signal matches this search");
+  expect(body).not.toContain("No live trade-service signals are currently available");
+  await shot(page, "22-desktop-empty-search-in-available-family");
+});
+
+test("leaving an unavailable family keeps the search term", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  await open(page, `${FIXTURE}?q=gas+oil&family=services&availability=products`);
+  const back = await page.locator(".empty__a a").first().getAttribute("href");
+  expect(back).toContain("q=gas+oil");
+  expect(back).not.toContain("family=");
+});
+
 test("an incomplete classification stays visible under a search", async ({ page }) => {
   // The states the board already drew carefully must survive the addition of a
   // search: a partial coverage explains its own blind spot, and it does so
   // whether or not any record came back.
   await page.setViewportSize(DESKTOP);
-  await open(page, `${FIXTURE}?q=wheat&state=partial`);
+  await open(page, `${FIXTURE}?q=wheat&state=partial&${TWO_FAMILIES}`);
   const body = await page.locator(".sec").first().innerText();
   expect(body).toContain("This filter can see");
   expect(body).not.toContain("No signal is currently live on the public board");

@@ -21,6 +21,8 @@ import {
   type SignalSearch,
 } from "@/lib/search/signal-search";
 import type { BoardSort } from "@/lib/find/query";
+import { FAMILY_KEYS, type FamilyAvailability } from "@/lib/board/availability";
+import type { MarketFamily } from "@/lib/taxonomy/market";
 
 // The query shape and the rules over it are pure and live next door, so a unit
 // test can reach them without this module's database client coming with them.
@@ -494,6 +496,104 @@ async function signalCoverage(
     return null;
   }
   return { classified: classifiedRead.count, eligible: eligibleRead.count };
+}
+
+
+/**
+ * How many live, publicly eligible, correctly classified signals each family has.
+ *
+ * The read that decides which filters a member is offered. Three counts, issued
+ * in parallel, each `head: true` so no row is fetched: this is arithmetic, not a
+ * list. At the current inventory that is three indexed counts on a partial index
+ * over `market_family`, and it runs once per board render alongside the search
+ * itself.
+ *
+ * Three deliberate properties:
+ *
+ * **It counts the whole table.** Same eligibility predicates as the board, in
+ * the query, so an expired or unapproved row cannot activate a filter. Counting
+ * the sixty records on the page would let the visible slice decide which
+ * controls exist, which is the same class of defect as filtering the page.
+ *
+ * **It counts stored classifications only.** `market_family` and nothing else.
+ * No inference from product text, source category or description: a filter
+ * offered on a guess returns a set Ponte cannot stand behind, and inferring a
+ * family here would be indistinguishable from classifying the inventory without
+ * saying so.
+ *
+ * **A failure is null, never zero.** Zero means "this market is empty", which is
+ * a finding. A failed count is not a finding, and resolving it to zero would
+ * hide every filter behind a transient error. `lib/board/availability.ts` treats
+ * null as "do not offer the filter, and do not claim the market is empty".
+ */
+export async function signalFamilyAvailability(nowIso?: string): Promise<FamilyAvailability | null> {
+  noStore();
+  if (!isSupabaseConfigured()) return null;
+  const now = nowIso ?? new Date().toISOString();
+  try {
+    const sb = createAdminClient();
+    const reads = await Promise.all(
+      FAMILY_KEYS.map((family) =>
+        sb
+          .from("desk_radar")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "approved_signal")
+          .or(publicWindowPredicate(now))
+          .eq("market_family", family),
+      ),
+    );
+    const counts = noFamilyCounts();
+    for (let i = 0; i < FAMILY_KEYS.length; i += 1) {
+      const read = reads[i];
+      // One unreadable family makes the whole picture unreliable: a selector
+      // built from a partial answer would silently omit a family that exists.
+      if (read.error || typeof read.count !== "number") return null;
+      counts[FAMILY_KEYS[i]] = read.count;
+    }
+    return counts;
+  } catch {
+    return null;
+  }
+}
+
+/** Zero for every family, as a fresh mutable object. */
+function noFamilyCounts(): FamilyAvailability {
+  return { products: 0, services: 0, distribution: 0 };
+}
+
+/**
+ * How many live eligible signals in a family carry a value on one axis.
+ *
+ * Asked before rendering a family's own category controls. A trade-service
+ * category list is a hundred and twenty options, every one of which returns
+ * nothing while no record carries a subcategory, and a control that cannot
+ * answer should not be drawn.
+ *
+ * Null on failure, for the same reason as above: unknown is not zero.
+ */
+export async function countSignalsClassifiedOn(
+  column: string,
+  family: MarketFamily | null,
+  nowIso?: string,
+): Promise<number | null> {
+  noStore();
+  if (!isSupabaseConfigured()) return null;
+  const now = nowIso ?? new Date().toISOString();
+  try {
+    const sb = createAdminClient();
+    let read = sb
+      .from("desk_radar")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "approved_signal")
+      .or(publicWindowPredicate(now))
+      .not(column, "is", null);
+    if (family) read = read.eq("market_family", family);
+    const { count, error } = await read;
+    if (error || typeof count !== "number") return null;
+    return count;
+  } catch {
+    return null;
+  }
 }
 
 /**

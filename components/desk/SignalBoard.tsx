@@ -10,6 +10,8 @@ import type { DeskRecord } from "@/lib/desk/adapter";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import type { SignalInventory } from "@/lib/board/inventory";
 import { presentBoard } from "@/lib/board/presentation";
+import { familyHasInventory, type FamilyAvailability } from "@/lib/board/availability";
+import type { MarketFamily } from "@/lib/taxonomy/market";
 import { parseSignalSearch } from "@/lib/search/signal-search";
 import {
   hasActiveFilters,
@@ -45,6 +47,37 @@ import {
  * so the two forms can never disagree about which facts a record shows.
  */
 
+/**
+ * What a member reads when they ask for a family that has nothing live.
+ *
+ * Commercial, short, and about the board rather than about Ponte's schema. The
+ * box this replaced explained the canonical category columns, which historical
+ * rows carry them and how the coverage probe works: all true, none of it a
+ * customer's business, and all of it in place of the one thing they needed,
+ * which is what to do next.
+ *
+ * The action goes to the existing composer entrance for the family. It is a
+ * route into creating the thing that is missing, which is the honest offer when
+ * the market Ponte can show is empty.
+ */
+const FAMILY_EMPTY: Record<MarketFamily, { heading: string; body: string; action: string }> = {
+  products: {
+    heading: "No live product signals are currently available",
+    body: "View all Market Signals or publish a product opportunity.",
+    action: "Post a product opportunity",
+  },
+  services: {
+    heading: "No live trade-service signals are currently available",
+    body: "View all Market Signals or publish a trade-service opportunity.",
+    action: "Post a trade-service opportunity",
+  },
+  distribution: {
+    heading: "No live distribution opportunities are currently available",
+    body: "View all Market Signals or publish a distribution opportunity.",
+    action: "Post a distribution opportunity",
+  },
+};
+
 /** Above this many records the register earns its rules. */
 const REGISTER_THRESHOLD = 6;
 
@@ -69,12 +102,28 @@ export default function SignalBoard({
   q,
   board,
   everything,
+  availability,
+  axisClassified,
 }: {
   q: FindQuery;
   board: SignalInventory;
   /** Eligible signals on the whole board, filters aside. Null when unknown. */
   everything: number | null;
+  /** Live classified signals per family. Null when the count could not be read. */
+  availability: FamilyAvailability | null;
+  /** Live signals in the selected family carrying a value on its category axis. */
+  axisClassified: number | null;
 }) {
+  /**
+   * A family the member asked for that Ponte knows has nothing live.
+   *
+   * Null when no family is selected, when the family does have inventory, and
+   * when the count could not be read. That last case matters: a failed
+   * measurement must not become a claim that a market is empty, so it falls
+   * through to the ordinary result states, which are already careful.
+   */
+  const unavailableFamily =
+    q.family !== null && !familyHasInventory(availability, q.family) ? q.family : null;
   const search = parseSignalSearch(q.q);
   // Three states carry records. Only `ok` may present an empty result as a
   // finding about the market.
@@ -105,38 +154,30 @@ export default function SignalBoard({
 
       <SignalSearch q={q} />
 
-      <SignalFilters q={q} />
+      <SignalFilters q={q} availability={availability} axisClassified={axisClassified} />
 
-      {presentation.unclassified && board.state === "unclassified" ? (
+      {unavailableFamily ? (
         /*
-         * Neither a result nor an emptiness.
+         * A family a member asked for that has no live inventory.
          *
-         * No published signal carries this classification, so filtering on
-         * it cannot answer. Printing "no signal matches" would be Ponte
-         * reporting a finding it never made, which is the same distinction
-         * this board already draws between nothing found and nothing read.
+         * This replaced a box that explained canonical category columns,
+         * historical rows and database coverage to a customer. All of that is
+         * true and none of it is theirs: what they need to know is that this
+         * board has nothing of that kind live right now, and what they can do
+         * next. The filter itself is no longer offered, so this state is only
+         * reachable through a kept or shared URL.
          */
         <div className="empty">
           <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
           <div>
-            <b>Ponte cannot filter signals by this category yet</b>
-            <p>
-              {board.reason === "columns_absent"
-                ? "The category fields are not yet live on the database, so this filter cannot be applied at all."
-                : "No signal on the board carries a category in this taxonomy, so this filter would return an empty list rather than an answer."}{" "}
-              That is a gap in what Ponte has classified, not a statement about the market.
-              Signals read from here on are classified as they are approved; the signals already
-              here have not been.
-            </p>
-            {typeof board.eligible === "number" && (
-              <p>
-                {board.eligible.toLocaleString()} signals are live on the board, and none of them
-                carries a category.
-              </p>
-            )}
+            <b>{FAMILY_EMPTY[unavailableFamily].heading}</b>
+            <p>{FAMILY_EMPTY[unavailableFamily].body}</p>
             <div className="empty__a">
               <Link className="b" href={buildBoardHref(withFilters(q, {}))}>
-                See every signal on the board
+                View all signals
+              </Link>
+              <Link className="b b--2" href={`/structure?family=${unavailableFamily}`}>
+                {FAMILY_EMPTY[unavailableFamily].action}
               </Link>
             </div>
           </div>
@@ -158,56 +199,33 @@ export default function SignalBoard({
             </div>
           </div>
         </div>
+      ) : presentation.unclassified ? (
+        /*
+         * A filter Ponte cannot answer, on an axis with no family to name.
+         *
+         * Reachable through a kept URL carrying a territory or sector nothing
+         * is classified on. Concise and commercial for the same reason as
+         * above: the internal state is real and is preserved in
+         * `SignalInventory` for tests, logs and governance, but it is not a
+         * customer's problem to read.
+         */
+        <div className="empty">
+          <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
+          <div>
+            <b>No live signals match this filter</b>
+            <p>
+              Nothing currently on the public board answers it. The board itself is not empty.
+            </p>
+            <div className="empty__a">
+              <Link className="b" href={buildBoardHref(withFilters(q, {}))}>
+                View all signals
+              </Link>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <ActiveFilters q={q} />
-          {/*
-            The size of the blind spot, printed above the results rather
-            than below them. A category filter reads only the records that
-            carry a category; while most of the board does not, a result
-            shown without this reads as a statement about the market when
-            it is a statement about the classified part of it.
-          */}
-          {presentation.coverageNotice === "unknown" && (
-            <div className="empty" style={{ marginBottom: 12 }}>
-              <PonteIcon
-                name="participation.boundary"
-                size={20}
-                label="Boundary of what is known"
-              />
-              <div>
-                <b>Ponte cannot confirm how much of the board this filter searched</b>
-                <p>
-                  The signals below are real. How many matching signals carry no category, and
-                  were therefore not searched, could not be counted, so this result cannot be
-                  treated as complete.
-                </p>
-              </div>
-            </div>
-          )}
-          {presentation.coverageNotice === "partial" && board.state === "partial" && (
-            <div className="empty" style={{ marginBottom: 12 }}>
-              <PonteIcon
-                name="participation.boundary"
-                size={20}
-                label="Boundary of what is known"
-              />
-              <div>
-                <b>
-                  This filter can see {board.coverage.classified.toLocaleString()} of{" "}
-                  {board.coverage.eligible.toLocaleString()} matching signals
-                </b>
-                <p>
-                  {(board.coverage.eligible - board.coverage.classified).toLocaleString()}{" "}
-                  signals matching the rest of this search carry no category, so they were not
-                  searched.
-                  {records.length === 0
-                    ? " Nothing matched among the ones that do, which is not the same as nothing matching."
-                    : " What is below is real; it is not everything."}
-                </p>
-              </div>
-            </div>
-          )}
           {/*
             The genuine emptiness, and the only state allowed to claim it.
             It sits AFTER the coverage notices and is gated on the table,

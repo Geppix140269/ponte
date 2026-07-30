@@ -6,6 +6,7 @@ import SignalBoard from "@/components/desk/SignalBoard";
 import { railForScreen } from "@/lib/desk/journey";
 import { rankAndPage, clampOffset, type SignalInventory } from "@/lib/board/inventory";
 import { parseFindQuery, effectiveSort, PAGE_SIZE } from "@/lib/find/query";
+import { noFamilyInventory, type FamilyAvailability } from "@/lib/board/availability";
 import { parseSignalSearch, matchesSearch } from "@/lib/search/signal-search";
 import type { MarketSignal } from "@/lib/market-signals/logic";
 import { FIXTURE_SIGNALS } from "./fixtures";
@@ -56,6 +57,47 @@ type Forced = (typeof FORCED)[number];
 
 function isForced(v: unknown): v is Forced {
   return typeof v === "string" && (FORCED as readonly string[]).includes(v);
+}
+
+
+/**
+ * Which families the gallery should claim have live inventory.
+ *
+ * Driven by `?availability=` so every state of the family selector can be
+ * photographed: `products` (the current production condition), `products,services`,
+ * `all`, `none`, or `unknown` for a failed measurement. Defaults to products
+ * alone, because that is what production actually holds.
+ *
+ * The gallery states the availability rather than deriving it, on purpose. In
+ * production the number is a database count over stored `market_family` values,
+ * and inferring a family from a fixture's category text here would model the one
+ * thing the correction forbids. What is under test is the INTERFACE's response
+ * to an availability, so the availability is an input.
+ */
+function fixtureAvailability(
+  raw: string | string[] | undefined,
+): FamilyAvailability | null {
+  const value = (Array.isArray(raw) ? raw[0] : raw) ?? "products";
+  if (value === "unknown") return null;
+  if (value === "none") return noFamilyInventory();
+  const named = value === "all" ? ["products", "services", "distribution"] : value.split(",");
+  const counts = noFamilyInventory();
+  for (const key of named) {
+    if (key === "products" || key === "services" || key === "distribution") counts[key] = 12;
+  }
+  return counts;
+}
+
+/**
+ * Whether the selected family's category axis has anything classified.
+ *
+ * `?axis=classified` draws the family's category list; anything else leaves it
+ * out, which is production's condition today: no eligible signal carries a
+ * canonical category on any axis.
+ */
+function fixtureAxis(raw: string | string[] | undefined): number | null {
+  const value = (Array.isArray(raw) ? raw[0] : raw) ?? "";
+  return value === "classified" ? 9 : 0;
 }
 
 /**
@@ -163,7 +205,13 @@ export default function DevMarketSignalsSearch({
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       <DeskShell rail={railForScreen("listing", { objectiveStated: false })} current="market">
-        <SignalBoard q={q} board={board} everything={everything} />
+        <SignalBoard
+          q={q}
+          board={board}
+          everything={everything}
+          availability={fixtureAvailability(sp.availability)}
+          axisClassified={q.family ? fixtureAxis(sp.axis) : null}
+        />
       </DeskShell>
     </div>
   );
