@@ -1,0 +1,19 @@
+{
+  "capturedAgainst": "local dev server (next dev), port 51520, branch claude/remove-legacy-ponte-routes-342bdc",
+  "capturedAt": "2026-07-30",
+  "method": "Same-origin fetch with the site-gate Basic-auth header, redirect: follow. r.url and r.redirected are the browser's own resolution and are trustworthy; loose HTML-string markers were discarded because Next dev embeds module references and shared Tailwind classes globally.",
+  "redirects": [
+    { "label": "email id=<uuid> (the LB-013 defect URL)", "from": "/en/marketplace/new?id=6f9619ff-8b86-d011-b42d-00cf4fc964ff", "resolvesTo": "/structure?edit=6f9619ff-8b86-d011-b42d-00cf4fc964ff", "redirected": true, "status": 200 },
+    { "label": "edit=<uuid>", "from": "/en/marketplace/new?edit=6f9619ff-8b86-d011-b42d-00cf4fc964ff", "resolvesTo": "/structure?edit=6f9619ff-8b86-d011-b42d-00cf4fc964ff", "redirected": true, "status": 200 },
+    { "label": "bare (no id)", "from": "/en/marketplace/new", "resolvesTo": "/structure", "redirected": true, "status": 200 },
+    { "label": "malformed id (discarded, not forwarded)", "from": "/en/marketplace/new?id=not-a-uuid", "resolvesTo": "/structure", "redirected": true, "status": 200 },
+    { "label": "legacy type= (discarded, no family fabricated)", "from": "/en/marketplace/new?type=requirement&source=pwa", "resolvesTo": "/structure", "redirected": true, "status": 200 }
+  ],
+  "destination": {
+    "title": "Start a deal | Ponte Trade",
+    "h1": "Tell Ponte what you supply, in your own words.",
+    "note": "Title-case 'Ponte Trade' wordmark and the Structure composer heading confirm the constitutional destination. The legacy new-listing page's own heading (new.heading / the obsidian ListingForm) is not served: the route is a redirect stub."
+  },
+  "buildRouteTable": "next build emits /[locale]/marketplace/new at 198 B (a redirect stub, no ListingForm bundle).",
+  "pixelFrames": "Desktop/390x844 PNG frames were NOT captured in this session: the in-app browser pane did not composite frames and Chrome blocks embedded credentials in main-frame navigation to the Basic-auth-gated local site. They are deferred to the authenticated deploy preview / production verification, where the reviewer views the page directly."
+}

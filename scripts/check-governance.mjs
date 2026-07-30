@@ -173,6 +173,25 @@ const RAW_SVG_BASELINE = [
   "components/structure/StructureComposer.tsx",
 ];
 
+/**
+ * Files that still hold a link to the retired `/marketplace/new` editor.
+ * May shrink, never grow (LB-013).
+ *
+ * That route no longer renders the legacy `ListingForm`; it redirects to the
+ * current composer at `/structure`. Every member-facing link was repointed, and
+ * every transactional email now resumes at `/structure?edit=<id>`. The one entry
+ * that remains is `components/ListingForm.tsx` itself: the legacy composer is now
+ * unreachable — nothing renders it — and its own internal sign-in redirect still
+ * names the old path. Its physical removal is logged as a follow-up in
+ * docs/launch/POST-LAUNCH-BACKLOG.md; until then it is pinned here so no NEW file
+ * can reach for the retired editor without editing this list in the diff.
+ *
+ * The landing seam in `lib/landing/routing.ts` is the flag-off fallback and is
+ * out of this scan's scope (lib is not walked); it rides the quarantine redirect
+ * and is documented there.
+ */
+const LEGACY_EDITOR_LINK_BASELINE = ["components/ListingForm.tsx"];
+
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = `${dir}/${entry.name}`;
@@ -216,6 +235,17 @@ const rawSvgCount = ratchet(
   RAW_SVG_BASELINE,
   (path) => /<svg[\s>]/.test(readFileSync(path, "utf8")),
   "Constitution section 7 prohibits ad hoc SVG interface icons. Use PonteIcon; the brand lockup is the single ruled exception and already has a shared component.",
+);
+
+// LB-013 route audit: no source file may link the retired listing editor. The
+// matcher looks for `/marketplace/new` immediately behind a quote or backtick,
+// so it catches an href, a url or a template literal but not a comment or the
+// redirect helper's prose.
+const legacyEditorLinkCount = ratchet(
+  "a link to the retired /marketplace/new editor",
+  LEGACY_EDITOR_LINK_BASELINE,
+  (path) => /["'`]\/marketplace\/new\b/.test(readFileSync(path, "utf8")),
+  "LB-013 retired that editor. Link to the current composer at /structure, resuming a saved record with ?edit=<id>.",
 );
 
 // The lockup itself: one drawing, one component. The arch path is the mark's
@@ -310,3 +340,4 @@ if (failures.length > 0) {
 
 console.log(`ok   governance contract (${requiredFiles.length} required files)`);
 console.log(`ok   icon law ratchet (${lucideCount} lucide, ${rawSvgCount} authored svg, 1 shared lockup)`);
+console.log(`ok   LB-013 route audit (${legacyEditorLinkCount} legacy editor link remaining, baseline pinned)`);

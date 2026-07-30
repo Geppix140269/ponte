@@ -684,7 +684,7 @@ export default async function DealPage({
           <p className="text-[14px] text-gray-2">
             {t.rich("detail.footer", {
               link: (chunks) => (
-                <Link href="/marketplace/new" className="text-gold hover:text-cream">
+                <Link href="/structure" className="text-gold hover:text-cream">
                   {chunks}
                 </Link>
               ),

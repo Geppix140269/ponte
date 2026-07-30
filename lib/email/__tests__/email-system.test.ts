@@ -17,7 +17,8 @@ import { renderTransactionalEmail } from "../render";
 import { TEMPLATES, TEMPLATE_NAMES, type TemplateName } from "../templates";
 import { memberIdentity, salutation, companyForOperator, nameForOperator } from "../identity";
 import { EMAIL_COLOUR } from "../tokens";
-import { BRAND_LINE } from "../shell";
+import { BRAND_LINE, route } from "../shell";
+import type { EmailBlock } from "../blocks";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -338,6 +339,95 @@ test("a caller that sends no noun keeps the historical wording exactly", () => {
   assert.equal(out.subject, "Your Ponte offer is now live");
   const meta = out.blocks.find((b) => b.kind === "metadata") as { rows: { label: string; value: string }[] };
   assert.equal(meta.rows.find((r) => r.label === "Quantity")?.value, "25,000 MT");
+});
+
+// ---------------------------------------------------------------------------
+// The resume link reaches the current composer, never the retired editor (LB-013)
+// ---------------------------------------------------------------------------
+//
+// The live defect: "Complete your listing" pointed at
+// `/marketplace/new?id=<uuid>` — the retired obsidian editor, which read
+// `edit`, not `id`, so the member arrived at a blank form inside a deprecated
+// application rather than the listing this email named. Every "Complete /
+// Improve / Open / Edit / Extend your listing" CTA now resolves to the current
+// constitutional composer at `/structure?edit=<uuid>`.
+
+/** The href behind a block with a given label, whatever its kind. */
+const hrefFor = (blocks: EmailBlock[], label: string): string | undefined =>
+  blocks
+    .map((b) => b as { label?: string; href?: string })
+    .find((b) => b.label === label)?.href;
+
+const UUID = "6f9619ff-8b86-d011-b42d-00cf4fc964ff";
+const UUID_LISTING = { ...LISTING, id: UUID };
+
+test("Complete your listing resumes the exact record in the current composer", () => {
+  const out = TEMPLATES.listing_needs_information({
+    identity: IDENTITY, listing: UUID_LISTING,
+    blockingIssues: ["State your payment terms, or that they are to be agreed."],
+  });
+  const href = hrefFor(out.blocks, "Complete your listing");
+  assert.ok(href, "the Complete your listing CTA is gone");
+  assert.match(href!, /\/structure\?edit=/, "the CTA no longer reaches the current composer");
+  assert.ok(href!.includes(UUID), "the CTA dropped the listing id it is about");
+  assert.ok(!href!.includes("/marketplace/new"), "the CTA still points at the retired editor");
+});
+
+test("no editor CTA reaches /marketplace/new, and every one carries the id", () => {
+  const editorCtas: { blocks: EmailBlock[]; label: string }[] = [
+    { blocks: TEMPLATES.listing_needs_information({
+        identity: IDENTITY, listing: UUID_LISTING, blockingIssues: ["Add a unit."],
+      }).blocks, label: "Complete your listing" },
+    { blocks: TEMPLATES.listing_published({
+        identity: IDENTITY, listing: UUID_LISTING, completenessScore: 72,
+        completenessBand: "Complete", recommendationCount: 3,
+      }).blocks, label: "Improve your listing" },
+    { blocks: TEMPLATES.listing_suspended({
+        identity: IDENTITY, listing: UUID_LISTING, reason: "Under review.",
+      }).blocks, label: "Open your listing" },
+    { blocks: TEMPLATES.listing_rejected({
+        identity: IDENTITY, listing: UUID_LISTING, note: null,
+      }).blocks, label: "Edit your listing" },
+    { blocks: TEMPLATES.listing_expiring({
+        identity: IDENTITY, listing: UUID_LISTING, daysRemaining: 3,
+      }).blocks, label: "Extend this listing" },
+  ];
+  for (const { blocks, label } of editorCtas) {
+    const href = hrefFor(blocks, label);
+    assert.ok(href, `the "${label}" CTA is gone`);
+    assert.match(href!, /\/structure\?edit=/, `"${label}" no longer resumes in the current composer`);
+    assert.ok(href!.includes(UUID), `"${label}" dropped the listing id`);
+    assert.ok(!href!.includes("/marketplace/new"), `"${label}" still reaches the retired editor`);
+  }
+});
+
+test("no rendered email anywhere contains the retired editor path", () => {
+  for (const { name, out } of renderAll()) {
+    assert.ok(!out.html.includes("/marketplace/new"), `${name} HTML links the retired editor`);
+    assert.ok(!out.text.includes("/marketplace/new"), `${name} text links the retired editor`);
+  }
+});
+
+test("a verification-only blocker still goes to verification, not the composer", () => {
+  const out = TEMPLATES.listing_needs_information({
+    identity: IDENTITY, listing: UUID_LISTING, route: "verification",
+    blockingIssues: ["Complete your business verification."],
+  });
+  // The button is verification, and there is no editor resume link at all: the
+  // record is complete, so sending the member to the composer would be a dead end.
+  assert.equal(hrefFor(out.blocks, "Verify your business"), route("/verify?for=business"));
+  assert.equal(hrefFor(out.blocks, "Complete your listing"), undefined);
+  assert.ok(!out.blocks.some((b) => JSON.stringify(b).includes("/structure?edit=")),
+    "a verification-only email must not offer to reopen a complete record");
+});
+
+test("a mixed blocker offers both the composer resume and verification", () => {
+  const out = TEMPLATES.listing_needs_information({
+    identity: IDENTITY, listing: UUID_LISTING, route: "both",
+    blockingIssues: ["Add a unit.", "Complete your business verification."],
+  });
+  assert.match(hrefFor(out.blocks, "Complete your listing")!, /\/structure\?edit=/);
+  assert.equal(hrefFor(out.blocks, "Verify your business"), route("/verify?for=business"));
 });
 
 console.log(`email/system: ${passed} passed`);

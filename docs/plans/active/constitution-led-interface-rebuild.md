@@ -178,6 +178,27 @@ production verification.
   evidence frames. `governance:check` and `verify` pass. **The migration is
   written and not applied.**
 
+- **30 Jul 2026** — LB-009: the legacy `/marketplace/new` editor is quarantined
+  ahead of the Phase-4 legacy-removal slice, because a live transactional email
+  ("Complete your listing") was routing members into it and, on an `id=`/`edit=`
+  parameter mismatch, opening a blank form instead of the saved listing. The
+  email edit CTA (`lib/email/templates.ts` `editLink`) now points at the
+  constitutional composer `/structure?edit=<id>`, which already resumes a saved
+  record family-correctly with ownership enforced and fail-closed behaviour
+  (`lib/structure/resume.ts`, unchanged). `/marketplace/new` renders nothing: it
+  redirects through the pure `lib/marketplace/legacy-redirect.ts`. Every in-app
+  editor link was repointed to `/structure`; the flag-off landing seam in
+  `lib/landing/routing.ts` is left and rides the redirect. A `check-governance.mjs`
+  ratchet fails the build on any new link to the retired editor. The `/marketplace`
+  **board** links in five emails were deliberately NOT repointed (PL-021): the
+  board has three unique functions and no approved constitutional home yet
+  (`MARKETPLACE-DEPENDENCY-FINDING.md`), which is a stop condition. The legacy
+  `ListingForm` is now unreachable dead code (PL-022). New tests pin the email
+  contract, the redirect contract and the route audit; resume integrity for all
+  three families was already covered. `verify` passes (the worktree-local
+  `node_modules` `check-deps` artefact aside). **Evidence:
+  `docs/codex/audits/constitution-rebuild/evidence/legacy-editor-quarantine/`.**
+
 ## 12. Decisions and discoveries
 
 - **Correction to the Phase 1 audit:** `.agent/PLANS.md` **is** tracked on

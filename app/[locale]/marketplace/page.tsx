@@ -338,12 +338,12 @@ export default async function MarketplacePage({
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {user ? (
-            <Link href="/marketplace/new" className="btn-gold">
+            <Link href="/structure" className="btn-gold">
               {t("hero.newListing")} <FilePlus2 className="h-4 w-4" />
             </Link>
           ) : (
             <>
-              <Link href="/login?next=/marketplace/new" className="btn-gold">
+              <Link href="/login?next=/structure" className="btn-gold">
                 {t("hero.signIn")} <ArrowRight className="h-4 w-4" />
               </Link>
             </>
@@ -609,7 +609,7 @@ export default async function MarketplacePage({
                 {listings.length > 0 ? t("mine.heading") : t("mine.headingEmpty")}
               </h2>
             </div>
-            <Link href="/marketplace/new" className="btn-ghost-light">
+            <Link href="/structure" className="btn-ghost-light">
               {t("mine.newListing")} <FilePlus2 className="h-4 w-4" />
             </Link>
           </div>
@@ -669,7 +669,7 @@ export default async function MarketplacePage({
                   )}
                   {l.status !== "closed" && (
                     <Link
-                      href={`/marketplace/new?edit=${l.id}`}
+                      href={`/structure?edit=${l.id}`}
                       className="mt-3 mr-4 inline-flex items-center gap-2 text-[11px] uppercase text-gray-2 hover:text-gold"
                       style={{ letterSpacing: "0.16em" }}
                     >
@@ -806,7 +806,7 @@ export default async function MarketplacePage({
             {t("cta.body")}
           </p>
           <div className="mt-7 flex justify-center gap-3">
-            <Link href="/marketplace/new" className="btn-gold">
+            <Link href="/structure" className="btn-gold">
               {t("cta.start")} <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/contact" className="btn-ghost-light">{t("cta.contact")}</Link>

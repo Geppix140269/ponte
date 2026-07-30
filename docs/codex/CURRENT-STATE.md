@@ -148,6 +148,15 @@ brief, none of which exists elsewhere. Escalated in
 Separately, `/api/marketplace/*` is current infrastructure: Start a Deal and Find
 both post to it.
 
+**`/marketplace/new` (the legacy `ListingForm` editor) is quarantined (LB-013).**
+It renders nothing: the page redirects through `lib/marketplace/legacy-redirect.ts`
+to the constitutional composer at `/structure` (a saved record resumes at
+`/structure?edit=<uuid>`). The transactional-email edit CTA and every in-app link
+were repointed there; a `check-governance.mjs` ratchet keeps new source from
+linking the retired editor. The legacy `ListingForm` is now unreachable dead code
+(removal logged PL-030). The five email links to the `/marketplace` **board** were
+deliberately left — the board has no approved constitutional home yet (PL-029).
+
 ## Landing visual baseline
 
 The current production landing has:
