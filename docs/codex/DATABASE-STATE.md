@@ -177,9 +177,16 @@ rows, no `deal-room-evidence` bucket.
 return `200 []` rather than erroring — so revoking the three did not disturb policy
 evaluation.
 
-**LB-008 is closed on the ACL contract.** The one probe still outstanding is the
-real authenticated direct RPC (probe 6 of the previous pass), which needs a
-dedicated QA account that does not yet exist.
+**LB-008 is RESOLVED, and the last outstanding probe has passed.** The real
+authenticated direct RPC (probe 6 of the earlier pass) was run on 30 July 2026 as
+the dedicated QA member `deals@ponte.trade` — `profiles.role = customer`, no admin
+or service-role privilege, no password, created solely for this verification.
+**19 of 19** intended functions were usable and **4 of 4** internal functions were
+denied, with `deal_room_log_event` returning the PostgreSQL
+`permission denied for function deal_room_log_event`. The catalogue had already
+proved `authenticated` lacked that privilege; this proves PostgREST enforces it
+for a real member session, which is the one thing the catalogue could not settle.
+No existing account or profile was modified by the probe.
 
 ## APPLIED to production, 30 July 2026: the Deal Room function ACL correction (LB-008)
 
@@ -221,11 +228,13 @@ itself, and the test written to catch it asserts something about that file. Only
 the catalogue could answer it. Full probe-by-probe record:
 `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 11 to 16.
 
-**Probe 6 is pending, not passed.** A real authenticated direct RPC needs a member
-JWT and there are no authorised test credentials; production's 9 confirmed users
-are real member accounts, and minting a session for one to satisfy a probe is not a
-test credential. Probes 8 and 9 are catalogue-verified and behaviourally pending
-for the same reason.
+**Probe 6 has since PASSED** — see the internal-function ACL section above. It was
+pending at the time of this pass because there were no authorised test credentials,
+and production's 9 confirmed users are real member accounts for which minting a
+session would not have been a test credential. A dedicated QA account was
+subsequently authorised and created, and the probe was run as an ordinary member.
+Probes 8 and 9 remain catalogue-verified only: their behavioural halves need a real
+room, which is Approval 3.
 
 **Why a new file rather than an edit.** `20260729b` is applied and its checksum
 `b379f869…fea3153` is in `public.schema_migrations`. An applied file is immutable;

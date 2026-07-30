@@ -18,6 +18,100 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - Dedicated QA identity created; LB-008 closed on a real authenticated probe
+
+### Completed
+
+- **One dedicated QA identity created** in production `cptglsmjmzcfpjndqfmc`, on an
+  owner-confirmed Ponte-controlled address:
+  - email `deals@ponte.trade`, user id `8263140e-4231-496b-b4c6-cfc88739995b`
+  - label and purpose `Ponte Trade Deal Room QA`, recorded in `user_metadata`
+  - `email_confirm: true`, so no mail was sent to a human
+  - **no password was ever supplied**; `app_metadata` carries provider information only
+  - auth role `authenticated` (the ordinary Postgres role); **`profiles.role` = `customer`**
+  - **no admin and no service-role privilege**
+  - user count **9 to 10**; `admin` profile count **unchanged at 1**
+- **Credential disposition: nothing reusable retained.** Zero QA sessions, zero QA
+  refresh tokens, zero live tokens. Sessions were obtained from single-use links,
+  held in memory only, and revoked at the end of the run. **No token, link or secret
+  appears in this repository, in any log or in any pull request.**
+- **The previously pending real-authenticated direct-RPC probe PASSED.** As the QA
+  member: intended functions usable **19 of 19** - four RLS helpers returning `200`,
+  fifteen commands reaching their bodies - and internal functions denied **4 of 4**,
+  with `deal_room_log_event` returning the PostgreSQL
+  `permission denied for function deal_room_log_event`. `deal_room_events_append_only`
+  returned `404 PGRST202`, because PostgREST drops functions a role cannot execute
+  from its schema cache.
+- **Catalogue state unchanged by the probe:** `anon` EXECUTE **0 of 23**, `PUBLIC`
+  **0**, `authenticated` **exactly 19 by name**, `service_role` **23 of 23**, 14
+  policies with none non-SELECT and none naming `anon`.
+  `npm run deal-room:acl-verify` exits 0.
+- **No existing account or profile was modified.** One pre-existing account's
+  `updated_at` moved during the window; it was a refresh-token rotation from that
+  account's own live browser session (token at `.287`, user row at `.297`, ten
+  milliseconds later), not a sign-in and not a creation. No operation in this pass
+  named any account other than `deals@ponte.trade`.
+- **LB-008 moved to Resolved.**
+
+### Decisions
+
+- Owner, 30 July 2026: `deals@ponte.trade` confirmed as a Ponte-controlled inbox;
+  exactly one normal-member QA account authorised; no admin role, no
+  `profiles.role` modification, no use or impersonation of the nine existing
+  members.
+
+### Risks / discrepancies
+
+- **A testing-method correction worth carrying forward.** The first probe predicate
+  treated any SQLSTATE `42501` as a missing grant and reported 0 of 15 commands
+  usable. **Ponte command bodies deliberately raise `42501` for domain
+  authorisation refusals** - the migration does so 44 times - so "Deal not found" or
+  "Only a room administrator can do this" is the function executing correctly for a
+  member with no rooms. **Only `permission denied for function <name>`, which
+  Postgres alone emits, proves missing EXECUTE.** The corrected predicate produced
+  19 of 19 usable and 4 of 4 denied. A future probe that does not make this
+  distinction will read a healthy ACL as a broken one.
+- **The `/account` browser landing was NOT demonstrated**, and the reasons are
+  findings rather than excuses. The requested `http://localhost:3000/auth/callback?next=/account`
+  continuation was **not in the project's Redirect URL allowlist, so Supabase
+  substituted the project Site URL and discarded the continuation entirely**. Second,
+  the admin-generated link returned an **implicit token fragment**
+  (`#access_token=...&refresh_token=...`) with **no `code` parameter**, while
+  `app/auth/callback/route.ts` requires `?code=` for `exchangeCodeForSession`; it
+  would have fallen through to `/login?error=auth`. Third, port 3000 was held by
+  another session's dev server and shared `.claude/launch.json` was not repointed.
+  **None of this affected the authenticated ACL result and none of it is part of
+  LB-008.** `/auth/callback` itself is correct: it honours `next`, defaults to
+  `/account`, and blocks open redirects.
+- **Unallocated observation for controller intake, no identifier assigned.**
+  `lib/email.ts` line 369: the `operator_alert` template hardcodes
+  `actionPath: "/admin"`. Combined with `app/[locale]/admin/layout.tsx` line 53,
+  which bounces an unauthenticated `/admin` hit to `/login?next=/admin`, that is a
+  route by which a session can end on `/admin`. Mitigating: the admin layout gates
+  on `profiles.role !== 'admin'` and renders a restricted notice, so landing there
+  grants nothing. **No claim is made that the QA account produced the earlier
+  `/admin` screenshot** - it did not exist at that time, and the account, the link
+  and the session in this pass all postdate it. No fix is included here.
+- Requirements 12 and 13 (entitlement fail-closed, cross-room isolation) remain
+  catalogue-only and need Approval 3.
+
+### Next
+
+1. Approval 2: `20260729c`, the `deal-room-evidence` bucket and its two policies.
+2. Approval 3: a labelled non-commercial pilot Deal using the QA account, then the
+   negative-access fixture.
+3. Approval 4 - flag and deploy - remains unauthorised.
+4. Controller intake for the `operator_alert` `/admin` observation.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, closure section
+- `docs/codex/DATABASE-STATE.md`, Deal Room internal-function ACL section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-008 resolved
+- `npm run deal-room:acl-verify`, exit 0
+
+---
+
 ## 2026-07-30 - "Ask Ponte to investigate" notification lane: real delivery demonstrated, and the send result no longer swallowed
 
 ### Completed
