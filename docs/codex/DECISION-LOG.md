@@ -2,6 +2,68 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - the Deal Room function ACL is stated, not inherited
+
+**Decision:** correct LB-008 in a new migration,
+`supabase/migrations/20260730b_deal_room_function_acl.sql`, SHA-256
+`15f488d87705e5a88def6e1c25e0b006daceda9d3316747eb8bbe87b3f542b31`. **Written and
+tested; not applied.** Applying it is a separate owner instruction.
+
+**A new file, not an edit.** `20260729b` is applied and its checksum is in the
+ledger. An applied file is immutable, because the ledger is the record that says
+what production is; editing it would make that record describe bytes that no
+longer exist. The regression suite asserts `20260729b` still hashes to its applied
+value, so this branch cannot quietly do it by accident.
+
+**The actual lesson, which is not "we forgot a revoke".** Twice in one day a
+migration assumed that a fresh object in a Supabase `public` schema starts
+private. It does not: `alter default privileges` grants to `anon`,
+`authenticated` and `service_role` **by name**, so `revoke ... from public` — the
+statement every Postgres habit reaches for — leaves all three standing. The fix
+is not a better revoke but a different posture: **state the intended ACL
+explicitly and completely, and let a test hold you to it**, rather than describing
+a delta from defaults you do not control.
+
+**The allowlist was derived, not copied, from three places.** Copying the old
+grant block would have reproduced whatever it already got wrong. The four helpers
+came from the function calls inside the 14 RLS policy expressions, because a
+function called in a policy is privilege-checked against the querying role and
+dropping one would break every member read. The fifteen commands are proved
+against **three independent sources**: what the application calls, what
+`20260729b` grants, and what `20260730b` grants.
+
+The third source is the point. Reading the grant list out of `20260729b` and
+comparing it with itself agrees even when that list is wrong - which is exactly
+the failure mode LB-005 and LB-008 both had, a file asserting something about
+itself. So the suite walks production `.ts` and `.tsx` under `app/` and `lib/`
+for `.rpc("deal_room_*")`, excluding tests, fixtures, generated output and
+non-application trees, and resolves each name to its unique declared signature.
+All three agree on the same 15. Four functions end up executable by no member role
+at all, the logger among them.
+
+**The test is a closed world, deliberately.** `grant-signatures.test.ts` could not
+have caught LB-008 and still cannot: it compares each grant against a declared
+signature, and the defect was a revoke naming the wrong grantee. So
+`function-acl.test.ts` inverts the question — it builds the inventory of all 23
+functions from the declarations and asks what the corrective migration says about
+each. **A function the migration forgets fails the suite.** That is the specific
+way LB-008 hid, and an open-world check would let it hide again. Demonstrated in
+three directions: reintroducing the exact defect fails and names it, omitting one
+function fails the completeness check, and granting the logger back later in the
+file fails with the offending index.
+
+**What a local test still cannot do.** It cannot observe a Supabase project's
+default privileges (PL-002 - there is no non-production database), so it proves
+the file complete and consistent, not the outcome. The five production probes that
+must pass are recorded in `DATABASE-STATE.md`, and the decisive one is a real
+anonymous RPC to the logger returning `42501` where it returns `23503` today.
+
+**Affected areas:** `supabase/migrations/20260730b_deal_room_function_acl.sql`
+(new), `lib/deal-room/__tests__/function-acl.test.ts` (new, wired into `npm test`),
+`DATABASE-STATE.md`, `LAUNCH-BLOCKERS.md` (LB-008). **No production change.** Gate
+C Approval 1 remains incomplete until this migration is approved, applied and
+production-verified.
+
 ## 30 July 2026 - Two Market Signals corrections: alias precision, and what a zero family count means
 
 **A widening term must be narrower than the thing it widens.** The gas-oil group carried bare `diesel` as an expansion term. `ilike` has no notion of a word, so a search for `gas oil` reached `Diesel Generator`, `Diesel Engine` and `Diesel Pump`: equipment, where the member asked about cargo. It was visible in the sample rows of the read-only production run and not in any assertion, because a widened search returns MORE and that looks like a search that works.

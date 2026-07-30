@@ -101,6 +101,82 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the Deal Room function ACL correction (LB-008)
+
+`supabase/migrations/20260730b_deal_room_function_acl.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `15f488d87705e5a88def6e1c25e0b006daceda9d3316747eb8bbe87b3f542b31` |
+| Size | 11,672 bytes, no BOM; raw-byte and utf8-string hashes identical |
+| Status | **written, tested, NOT applied.** Applying it is a separate owner instruction |
+
+**Why a new file rather than an edit.** `20260729b` is applied and its checksum
+`b379f869…fea3153` is in `public.schema_migrations`. An applied file is immutable;
+editing it would make the ledger describe bytes that no longer exist. The
+regression suite asserts that `20260729b` still hashes to its recorded value, so
+the branch cannot quietly edit it.
+
+**What it does.** Grants and revokes only — 24 revoke statements and 19 grants,
+inside one transaction. It revokes EXECUTE from `PUBLIC` and `anon` on all 23
+`deal_room_*` functions by exact signature, revokes the event logger from
+`PUBLIC`, `anon` **and** `authenticated`, and re-asserts `authenticated` EXECUTE on
+exactly the 19 that members need. **No function body, table, column, constraint,
+RLS policy, trigger, index or row is touched, no project-wide `alter default
+privileges` is issued, and no name outside `deal_room_*` appears.** `service_role`
+is left alone deliberately: it bypasses RLS by design and the negative-access
+fixture needs it, so narrowing it is a separate decision.
+
+**The `authenticated` allowlist, derived rather than copied.** Two sources, and
+they were checked against each other rather than assumed:
+
+| Kind | Count | Derived from |
+|---|---|---|
+| RLS policy helpers | **4** | the function calls inside the 14 policy expressions in `pg_policies`: `deal_room_can_administer` (11 policies), `deal_room_is_sub_room_participant` (7), `deal_room_is_master_participant` (6), `deal_room_can_read_evidence` (2). A function called in a policy expression is privilege-checked against the querying role, so without these every member read fails |
+| Member commands | **15** | the `.rpc("deal_room_*")` call sites under `app/` and `lib/`. That list and the 15 `grant ... to authenticated` lines in `20260729b` agree **exactly**, derived independently |
+
+4 + 15 = **19**. The remaining four are executable by no member role:
+`deal_room_log_event` (called only from inside SECURITY DEFINER commands, which
+run as their owner), `deal_room_is_writable` (command bodies only, in no policy),
+`deal_room_uuid_or_null` (declared in `20260729a` and called nowhere — no policy,
+constraint, index, default or generated column references it), and
+`deal_room_events_append_only` (a trigger function; Postgres checks EXECUTE at
+`create trigger`, not per row, so revoking it does not weaken the append-only
+guard).
+
+### Production probes this migration must pass before LB-008 closes
+
+Read-only, against production, immediately after it is applied. **None has been
+run: the migration is not applied.**
+
+| # | Probe | Required result |
+|---|---|---|
+| 1 | Catalogue: count `deal_room_*` functions where `has_function_privilege('anon', oid, 'execute')` | **0**, against 23 today |
+| 2 | Catalogue: `has_function_privilege('authenticated', ...)` on `deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)` | **false** |
+| 3 | Real anonymous RPC to `deal_room_log_event` with an anon-key client | **permission denied (`42501`)** — and specifically **not** the `23503` foreign-key violation it returns today, which is the proof the body ran |
+| 4 | Real authenticated direct RPC to `deal_room_log_event`, as a signed-in member | **permission denied (`42501`)** |
+| 5 | Catalogue: `has_function_privilege('authenticated', ...)` for each of the 4 RLS helpers and the 15 member commands | **true for all 19**, so the correction closes the anonymous path without breaking a member journey |
+
+Probe 3 is the one that matters. Today the same call returns `23503`, which is
+what proved LB-008; after this migration it must fail before the body runs at all.
+Probes 3 and 4 need real API clients, not catalogue inspection, for the reason
+`GATE-C-TEST-PLAN.md` section 0 gives: a privilege can be present in the catalogue
+and still not be what PostgREST enforces.
+
+Regression suite: `lib/deal-room/__tests__/function-acl.test.ts`, **22
+assertions**, which proves the file is complete and internally consistent but
+cannot observe a Supabase project's default privileges — that is what the probes
+are for.
+
+Six of those 22 check the command allowlist against a **third, independent
+source**: a recursive scan of production `.ts`/`.tsx` under `app/` and `lib/` for
+`.rpc("deal_room_*")` and the single-quoted form, excluding tests, mocks,
+fixtures, `.d.ts`, generated output, `scripts/`, `supabase/` and `docs/`. Each
+discovered name is resolved to its unique declared signature. Three sets are then
+required to be identical — **what the application calls, what `20260729b` grants,
+what `20260730b` grants** — because any two agreeing proves little when one is
+derived from the other. All three agree on the same **15** commands.
+
 ## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
 
 **Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**
@@ -577,6 +653,36 @@ real failure gets missed.
 
 Nothing here has been changed. Repairing the integration touches repository
 settings and possibly a Supabase project, and both are owner decisions.
+
+### Update, 30 July 2026: it fails on exactly the PRs that add a migration
+
+Observed while opening PR #117. The check is no longer red on every PR — it is
+**`SKIPPED` on a PR that adds no migration file and `FAILURE` on one that does**:
+
+| PR | Adds a migration | Supabase Preview |
+|---|---|---|
+| #113 | no, records only | `SKIPPED` |
+| #116 | no | `SKIPPED` |
+| #107 | yes, `20260730a` | **`FAILURE`** — and it was merged anyway |
+| #117 | yes, `20260730b` | **`FAILURE`** |
+
+So a red `Supabase Preview` on a migration PR is **the integration, not the SQL**.
+PR #107 is the control: same failure, same cause, merged on the owner's decision
+without incident.
+
+The project reference has also moved. This section recorded
+`kltuzbxnldtmdfhakphv`; the check on PR #117 links to
+**`pyplitspfeeqwzdimltf`**. Neither is production (`cptglsmjmzcfpjndqfmc`) and
+neither is reachable by the owner's access token, so the conclusion above is
+unchanged and now has a second unreachable reference behind it.
+
+**This is worse than a check that always fails, not better.** A check that is red
+on every PR is obviously noise. One that is green or skipped most of the time and
+red precisely when a migration is proposed looks exactly like a migration gate,
+and it is not one — it says nothing about whether the SQL is correct. The next
+person to open a migration PR will either be alarmed by it or, worse, reassured by
+the ones it skips. Repairing or removing it remains an owner decision and is not
+touched here.
 
 ## APPLIED to production, 29 July 2026: family commercial terms
 
