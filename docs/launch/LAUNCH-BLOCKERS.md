@@ -16,6 +16,106 @@ Discovery alone does not make an issue a blocker. The repository owner has final
 | LB-010 | The product resolver dead-ends on a common single-word misspelling | 2026-07-30 | Start a Deal: the product describe journey, and the platform-wide "no exact-spelling requirement" rule | Found by the platform UX audit (owner brief, 30 July 2026). `POST /api/products/resolve {"text":"cementt"}` returned `{kind:"none"}` with no candidate: `cementt` is one letter off `cement`, a word the catalogue holds only inside multi-word terms (`portland cement`, `Ordinary Portland cement 42.5`). The deterministic fuzzy stage compared the whole query against whole catalogue terms, so a seven-letter typo was length-guarded away and no bare `cement` term existed to match. Only the metered model could then rescue it, at a token per typo, and it dead-ended entirely if the model was unavailable. The brief names `cementt` as a term that must not simply fail. Evidence: `docs/codex/audits/2026-07-30-platform-ux-audit/README.md` §6 | Repository owner (platform UX launch-gate brief) | **Fixed on this branch.** `lib/products/fuzzy.ts` gains a token-level correction pass: each member word is also measured against the individual catalogue words, so a single mistyped word finds the word it was reaching for. Minimal and additive, no taxonomy or schema change. `cementt`, `cemnet`, `gasoill`, `sugarr` resolve deterministically and for free; `avocado` and gibberish still correctly return nothing | #115 | **Resolved on the branch, and verified in the production deploy preview.** `lib/products/__tests__/cascade.test.ts` test 3d pins the case (single-word typo of a multi-word product resolves to `portland-cement` with no model call) and was proved to fail before the fix. Verified live read-only on `deploy-preview-115` via the default cascade path the UI uses: `cementt`, `cemnet`, `portland cemant`, `gasoill`, `sugarr` all resolve. `npm run verify` exits 0 end to end after rebasing onto `main`. |
 | LB-011 | The product-entry review exposes the commercial-terms schema as its interface | 2026-07-30 | Start a Deal: the review before draft creation, for every product journey | Found by the platform UX audit. The review screen (`/dev/product-intake?only=review`, and the live journey after identifying a product) printed all thirteen `CommercialTerms` as empty "Not stated" rows, each with its own Add control, and warned that thirteen terms were "still unstated" - including contract-level fields (named counterparties, signatories, contract term) before any draft existed. This is the schema-as-interface pattern the North Star §3 forbids: ten-plus empty fields at once, repeated Save links per row, optional fields as unresolved problems, contract detail before a draft. The front-door intake had been redesigned; the review behind it had not. Evidence: `docs/codex/audits/2026-07-30-platform-ux-audit/README.md` §6, with before/after frames in that folder's `evidence/` | Repository owner (platform UX launch-gate brief) | **Fixed on this branch.** `components/products/intake/ReviewPanel.tsx` now shows the product understanding and any stated terms directly, and collapses the optional terms behind one control, grouped into three clear sections (Quantity and delivery, Pricing and payment, Contract detail), described as optional rather than as a problem. The "still unstated" warning is removed. The primary action stays "Confirm and create the draft". Only existing tokens and approved component classes; no Design Constitution exception. `middleware.ts`, taxonomy and schema untouched | #115 | **Resolved on the branch.** `components/products/intake/__tests__/intake-ui.test.tsx` (26 assertions) holds the four-provenance and every-term-reachable contracts under collapse; `e2e/product-entry-ux.spec.ts` (5) proves the collapsed default, hidden-from-AT optional fields, mouse and keyboard operability, grouped expansion, quantity/unit consistency and no 390px overflow, with rendered before/after evidence. `npm run verify` exits 0. The same component is deployed to `deploy-preview-115`; the review was not driven end-to-end there because the dev gallery is production-disabled. |
 
+### LB-012 — Ponte cannot prove its authentication or transactional email arrives, renders or comes from Ponte
+
+| Field | Record |
+|---|---|
+| **Discovered** | 2026-07-30 |
+| **Core journey or system** | ENTRY and every journey behind it. Sign-in is the only authentication Ponte has, and it is delivered entirely by email |
+| **Classification** | **Launch Blocker on the repository owner's instruction of 30 July 2026**, which directed that authentication and transactional email be treated as a launch-blocking workstream |
+| **Owner** | Repository owner |
+| **Evidence** | `docs/codex/audits/email/2026-07-30-auth-and-transactional-email.md`, with twelve captured frames in `docs/codex/audits/email/evidence/` |
+| **Authority** | ADR-0017, extending ADR-0013 |
+| **Status** | **Repository work complete and verified. Production application outstanding, and the blocker stays open for it** |
+
+**Why it blocks.** A member cannot enter Ponte at all except by receiving a
+six-digit code by email. If that message lands in spam, arrives from a sender the
+member does not recognise, or renders as a broken document, the core journey does
+not begin. Nothing else in the product is reachable behind it.
+
+**What was actually wrong.** Five things, and the first is the one that reframes
+the rest.
+
+1. `padding:24px 32border-bottom` — the fused header declaration this work was
+   opened on — **does not exist in this repository at any revision.**
+   `git log --all -S "32border"` is empty; `lib/email/shell.ts` has been modified
+   in exactly two commits and has carried the correct
+   `padding:24px 32px;border-bottom:…` since it was written; the layout it retired
+   contained no such declaration at all. The one place those bytes lived outside
+   the code was `docs/email-provider-template-configuration.md` — the Supabase
+   Auth template, **which a human pastes by hand**, and which carried its bodies
+   as fragments with `style="..."` placeholders so that every body had to be
+   reassembled from a list further up the page. That document named its own gap in
+   its last line: no automated test exists on the far side of the dashboard.
+2. Two records specified the authentication email differently: a dark
+   `#06070A`/`#CBFB5E` template in `AUTH-EMAIL-SETUP.md` §5 against the light
+   Ponte Flow palette in the newer document, plus a ten-minute against a one-hour
+   code lifetime and a `Ponte` against a `Ponte Trade` sender name.
+3. `lib/email/send.ts` sent from the **bare address** `hello@ponte.trade`, so an
+   operational email arrived from a sender the inbox list showed as `hello`.
+4. Nothing anywhere recorded the required state of Resend's open and click
+   tracking, which rewrites every link through a third-party redirector.
+5. `wrapDocument()`'s output had never been read as a document by anything. The
+   existing suite (23 assertions) checks what an email *says* — one shell, a text
+   part, no unescaped value — and passes a document whose header CSS is fused.
+
+**What the repository now proves.** `npm test`, 25 assertion groups in
+`lib/email/__tests__/auth-email.test.ts`, exit 0:
+
+- `wrapDocument()` reproduced on the exact incomplete-listing fixture (seven
+  blocking issues, no member name, a 130-character title) parses clean through
+  `lib/email/audit.ts` — tag structure, attribute well-formedness, and every
+  declaration checked for a fused neighbour. So do all thirteen templates and the
+  committed Supabase template.
+- The literals are asserted **by name**, not merely covered by the generic reader:
+  `padding:24px 32px;border-bottom:1px solid ` present, `padding:24px
+  32border-bottom` absent, both header paragraphs opened and closed, and
+  `EMAIL_SPACE.lg === 24` / `.xl === 32` pinning the literals to their tokens.
+- **The reader is proved to fail**, in three directions: reintroducing the fusion
+  is reported as `"32border-bottom:1px" … is not a CSS unit — two declarations are
+  fused`; a dropped `</p>` as `</td> closes out of order: <p> is still open`; a
+  lost attribute quote as `attribute "style" has an unquoted value`.
+- Removing the `<style>` block — what the Gmail apps do to a non-Google mailbox —
+  leaves every document still clean and every layout-critical declaration inline.
+- The Supabase template is generated, committed and checksummed
+  (`supabase/templates/`), carries `{{ .Token }}` and **no**
+  `{{ .ConfirmationURL }}`, states one duration from one constant, and every link
+  in it is an absolute `ponte.trade` URL.
+- Both sender identities parse as `Ponte Trade <…>`, and a bare address in
+  `RESEND_FROM_EMAIL` is wrapped rather than passed through.
+- No Ponte email contains an `<img>`, so no open pixel; the `resend.emails.send()`
+  call passes exactly five fields and none is a tracking flag.
+
+**What keeps it open.** All of the above is repository work, and none of it proves
+a message arrives. The production side is untouched and unverified:
+
+1. The Supabase dashboard templates, SMTP sender name and OTP expiry are **not
+   applied**. Nothing in this repository can apply them.
+2. Resend's open and click tracking state is **unverified**.
+3. Whether `ponte.trade` is verified in Resend with DKIM, SPF and DMARC published
+   is **unrecorded**. Without those records the message goes to spam in all three
+   clients however well the HTML renders.
+4. The `auth@ponte.trade` → `hello@ponte.trade` forward recommended on 22 July
+   2026 has **no record of being set up**, so a reply to a sign-in code goes
+   nowhere.
+5. **The twelve captured frames are not renders by Gmail, Yahoo or Outlook.** Each
+   is the same document with that client's documented limitations applied as an
+   explicit transformation. A real render requires delivery to a real mailbox in
+   each.
+
+**The closing condition, unchanged from the owner's instruction:** a fresh test
+send renders correctly **and arrives outside spam** in Yahoo, Gmail and Outlook,
+after the settings are applied. The checklist is in
+`docs/email-provider-template-configuration.md`; the result belongs in
+`docs/operations/OPERATIONS_LOG.md`.
+
+**Also not determinable, and recorded rather than guessed:** the
+production-deployed commit. Netlify writes no GitHub deployment
+(`gh api …/deployments` → `[]`), the operations log's last deployment note is the
+28 July hotfix of `b378ad2` with no recorded outcome, and `https://ponte.trade/`
+answers `401` behind the Basic-auth wall so no build identifier can be read.
+`main` is `23637d3`. Which commit is being served is an owner-held fact.
+
 ## Resolved blockers
 
 Move resolved items here; do not delete their history.
@@ -77,23 +177,41 @@ not yet given.
 
 ## Reserved identifiers
 
-**Next free identifier: `LB-012`.**
+**Next free identifier: `LB-013`.**
 
 | ID | Held by |
 |---|---|
 | `LB-007` | **resolved.** PR #107, Market Signals search, closed after live owner verification on 30 July 2026 |
-| `LB-008` | **in use.** The `anon` EXECUTE defect found when `20260729b` was applied |
-| `LB-009` | **in use.** PR #112, multilingual Deal Room commercial discussion and interpretation. Renumbered from `LB-007` after PR #107 merged and took `LB-007`, and after `LB-008` was taken on `main` by the `anon` EXECUTE defect; the governance branch was rebased onto current `main` and the multilingual blocker assigned the next free identifier on the owner's decision of 30 July 2026 |
-
-This was the third register collision between concurrent branches, and it is now
-closed: PR #107 had invented `LB-005` on an unmerged branch while the Gate C
-Approval 1 defect took the same number on `main`, so the owner directed PR #107 to
-renumber to `LB-007` before merging. It did.
+| `LB-008` | **in use.** The `anon` EXECUTE Deal Room defect (PR #113, on `main`) |
+| `LB-009` | **in use.** PR #112, multilingual Deal Room commercial discussion and interpretation (on `main`) |
+| `LB-010` | **in use.** PR #115, product resolver dead-ends on a single-word misspelling (on `main`) |
+| `LB-011` | **in use.** PR #115, product-entry review exposes the commercial-terms schema (on `main`) |
+| `LB-012` | **in use.** This PR (#114): authentication and transactional email, `ADR-0017`. Renumbered `LB-008` → `LB-009` → `LB-010` → `LB-012` as `main` merged #113, #112 and #115 while this branch was open |
 
 An identifier invented on an unmerged branch is not reserved until it merges, so a
 branch that sits unpushed while another lands will always risk one. The cheap
 habit that prevents it is to re-read this file against `origin/main` immediately
-before opening a pull request.
+before opening or updating a pull request. That habit caught every collision below.
+
+### The collision history, 30 July 2026
+
+The register churned repeatedly in one afternoon as concurrent branches landed. This
+PR verified the register against `origin/main` before each push and moved every time
+to avoid a duplicate:
+
+- **PR #107** invented `LB-005` on an unmerged branch while the Gate C Approval 1
+  defect took the same number on `main`; the owner directed #107 to renumber to
+  `LB-007`, and it merged.
+- **This PR (#114)** claimed `LB-008` when free, then moved three times as `main`
+  merged under it: PR #113 took `LB-008` (→ `LB-009`); PR #112 took both `LB-009`
+  and `ADR-0016` (→ `LB-010` and `ADR-0017`); PR #115 took both `LB-010` and
+  `LB-011` (→ `LB-012`). `LB-012` and `ADR-0017` were verified free on `main`
+  immediately before the final push. The lesson is the standing one: an identifier
+  is not reserved until it merges, so the only safe number is the one taken at
+  push time on a branch that then merges quickly.
+
+All collisions are now settled: #107, #112, #113 and #115 have merged, and this PR
+holds `LB-012` / `ADR-0017`, the next free values at push time.
 
 ## Required handling
 

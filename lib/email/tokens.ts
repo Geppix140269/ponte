@@ -70,6 +70,15 @@ export const EMAIL_COLOUR = {
 export const EMAIL_FONT = {
   sans: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
   serif: "Georgia,'Times New Roman',Times,serif",
+  /**
+   * For a one-time code, and for nothing else.
+   *
+   * A six-digit code has to be read once and typed correctly, so the digits
+   * need equal width and an unambiguous 0/O and 1/l. Every name in this stack
+   * is present on the platform it belongs to, and the generic `monospace` at
+   * the end is honoured by every email client that honours a font at all.
+   */
+  mono: "'SFMono-Regular',ui-monospace,Menlo,Consolas,'Liberation Mono',monospace",
 } as const;
 
 /** Spacing, from the approved scale. Email works in px only. */

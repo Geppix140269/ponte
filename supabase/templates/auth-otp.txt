@@ -1,0 +1,15 @@
+Your code is below. It expires in 10 minutes.
+
+Your sign-in code.
+==================
+
+Enter this code on the page that asked for it. It expires in 10 minutes, and it can be used once.
+
+{{ .Token }}
+
+If you did not ask to sign in, ignore this email. Nothing has changed and nobody can use this code without access to your inbox.
+
+--
+Ponte Trade will never ask you for your password, a payment detail or a verification code by email.
+You are receiving this because of activity on your Ponte Trade account.
+Ponte Trade is operated by 1402 Celsius Ltd. https://ponte.trade

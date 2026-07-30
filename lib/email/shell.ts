@@ -89,7 +89,32 @@ function header(): string {
   );
 }
 
-function footer(reason: NotificationReason, securityNote: boolean): string {
+/**
+ * Which footer links an email carries.
+ *
+ * `member` is every application-generated email: the recipient has an account, so
+ * the footer offers Privacy and Terms.
+ *
+ * It does NOT offer "Notification preferences". That link pointed at
+ * `/account/notifications`, a route that does not exist — nothing under `app/`
+ * serves it — so every application email shipped a footer link that 404s. It is
+ * removed rather than repointed: a preferences link implies a preferences page,
+ * and building one is a real feature (PL-021), not a link edit. Removing a dead
+ * link cannot change what a member consented to; there was never a page on the
+ * other side of it to change. Privacy and Terms both resolve and stay.
+ *
+ * `none` exists for authentication mail. A sign-in code is read by somebody who
+ * is by definition not signed in, so it carries no account links at all. The
+ * phishing note, the reason and the operator line stay, because those are what a
+ * sign-in email actually owes its reader.
+ */
+export type FooterLinks = "member" | "none";
+
+function footer(
+  reason: NotificationReason,
+  securityNote: boolean,
+  links: FooterLinks,
+): string {
   const link = (href: string, label: string) =>
     `<a href="${safeHref(href)}" style="color:${EMAIL_COLOUR.ink3};text-decoration:underline">${esc(label)}</a>`;
 
@@ -98,32 +123,43 @@ function footer(reason: NotificationReason, securityNote: boolean): string {
       `password, a payment detail or a verification code by email.</p>`
     : "";
 
+  const linkRow =
+    links === "member"
+      ? `<p style="margin:0 0 ${EMAIL_SPACE.sm}px">` +
+        `${link(route("/legal/privacy"), "Privacy")} &nbsp;·&nbsp; ` +
+        `${link(route("/legal/terms"), "Terms")}</p>`
+      : "";
+
   return (
     `<tr><td style="padding:${EMAIL_SPACE.lg}px ${EMAIL_SPACE.xl}px;` +
     `border-top:1px solid ${EMAIL_COLOUR.rule};font-family:${EMAIL_FONT.sans};` +
     `font-size:12px;line-height:1.6;color:${EMAIL_COLOUR.ink3}">` +
     phishing +
     `<p style="margin:0 0 ${EMAIL_SPACE.sm}px">${esc(REASON_TEXT[reason])}</p>` +
-    `<p style="margin:0 0 ${EMAIL_SPACE.sm}px">` +
-    `${link(route("/account/notifications"), "Notification preferences")} &nbsp;·&nbsp; ` +
-    `${link(route("/legal/privacy"), "Privacy")} &nbsp;·&nbsp; ` +
-    `${link(route("/legal/terms"), "Terms")}</p>` +
+    linkRow +
     `<p style="margin:0">${BRAND_NAME} is operated by 1402 Celsius Ltd. ` +
     `${link(appUrl(), "ponte.trade")}</p>` +
     `</td></tr>`
   );
 }
 
-export function footerText(reason: NotificationReason, securityNote: boolean): string {
+export function footerText(
+  reason: NotificationReason,
+  securityNote: boolean,
+  links: FooterLinks = "member",
+): string {
   const lines = [
     "--",
     ...(securityNote
       ? ["Ponte Trade will never ask you for your password, a payment detail or a verification code by email."]
       : []),
     REASON_TEXT[reason],
-    `Notification preferences: ${route("/account/notifications")}`,
-    `Privacy: ${route("/legal/privacy")}`,
-    `Terms: ${route("/legal/terms")}`,
+    ...(links === "member"
+      ? [
+          `Privacy: ${route("/legal/privacy")}`,
+          `Terms: ${route("/legal/terms")}`,
+        ]
+      : []),
     `${BRAND_NAME} is operated by 1402 Celsius Ltd. ${appUrl()}`,
   ];
   return lines.join("\n");
@@ -144,6 +180,8 @@ export function wrapDocument(opts: {
   bodyHtml: string;
   reason: NotificationReason;
   securityNote?: boolean;
+  /** Defaults to `member`. Only authentication mail passes `none`. */
+  footerLinks?: FooterLinks;
 }): string {
   const hiddenPreheader =
     `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;` +
@@ -181,7 +219,7 @@ ${hiddenPreheader}
       <tr><td class="p-inner" style="padding:${EMAIL_SPACE.xl}px">
         ${opts.bodyHtml}
       </td></tr>
-      ${footer(opts.reason, opts.securityNote === true)}
+      ${footer(opts.reason, opts.securityNote === true, opts.footerLinks ?? "member")}
     </table>
   </td></tr>
 </table>

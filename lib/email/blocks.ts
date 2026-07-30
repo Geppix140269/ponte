@@ -40,6 +40,16 @@ export type EmailBlock =
   | { kind: "link"; label: string; href: string }
   /** A confidence or limitation statement. Never decorative. */
   | { kind: "disclaimer"; text: string }
+  /**
+   * A one-time code, as the thing the reader has to act on.
+   *
+   * Its own block rather than a paragraph, because a code is read once and
+   * typed: it needs equal-width digits, room around it and enough tracking to
+   * separate the characters, and none of that is a paragraph's job. Ponte sends
+   * a code and never a sign-in link, so this block is the principal action of
+   * an authentication email in the way `button` is elsewhere.
+   */
+  | { kind: "code"; value: string }
   | { kind: "divider" };
 
 /* ------------------------------------------------------------------ */
@@ -186,6 +196,18 @@ function blockHtml(block: EmailBlock): string {
         `font-size:13px;line-height:1.6;color:${EMAIL_COLOUR.ink3}">${esc(block.text)}</p>`
       );
 
+    case "code":
+      // Table-wrapped for the same reason the button is: Outlook does not
+      // honour padding on an inline element, so the cell carries it.
+      return (
+        `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 ${EMAIL_SPACE.lg}px">` +
+        `<tr><td style="padding:${EMAIL_SPACE.md}px ${EMAIL_SPACE.lg}px;` +
+        `background:${EMAIL_COLOUR.sunken};border:1px solid ${EMAIL_COLOUR.ruleStrong};` +
+        `border-radius:${EMAIL_RADIUS.md};font-family:${EMAIL_FONT.mono};font-size:30px;` +
+        `font-weight:700;line-height:1.2;letter-spacing:.18em;color:${EMAIL_COLOUR.ink}">` +
+        `${esc(block.value)}</td></tr></table>`
+      );
+
     case "divider":
       return (
         `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 ${EMAIL_SPACE.lg}px">` +
@@ -225,6 +247,8 @@ function blockText(block: EmailBlock): string | null {
       return `${block.label}: ${block.href}`;
     case "disclaimer":
       return `--\n${block.text}`;
+    case "code":
+      return block.value;
     case "divider":
       return "----------------------------------------";
   }
