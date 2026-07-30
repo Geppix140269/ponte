@@ -82,6 +82,37 @@ const states = (page: Mounted): TestElement[] => page.all().filter((el) => el.ty
 const text = (page: Mounted): string => JSON.stringify(page.tree);
 
 /**
+ * Every term row and provenance marker the review renders, including the ones
+ * inside the collapsed optional-terms panel.
+ *
+ * The review no longer prints all thirteen terms at once: the stated ones show
+ * and the optional ones sit inside an `OptionalTerms` panel that opens on
+ * demand, which is the progressive disclosure the North Star requires. The flat
+ * renderer does not descend into that child, so the panel is mounted on its own
+ * and its rows folded in. This keeps the four-provenance and every-term-reachable
+ * contracts honest under the new layout instead of asserting a flat dump.
+ */
+function reviewRows(page: Mounted): { rows: TestElement[]; provenances: Set<string> } {
+  const rows = page.all().filter((el) => typeof el.props.onEdit === "function");
+  const provenances = new Set<string>();
+  for (const el of page.all()) {
+    if (typeof el.props.provenance === "string") provenances.add(el.props.provenance as string);
+  }
+  const optional = page
+    .all()
+    .find((el) => Array.isArray(el.props.keys) && typeof el.props.onEditShared === "function");
+  if (optional) {
+    const sub = mount(optional.type as (p: Record<string, unknown>) => unknown, optional.props);
+    for (const el of sub.all()) {
+      if (typeof el.props.onEdit === "function") rows.push(el);
+      if (typeof el.props.provenance === "string") provenances.add(el.props.provenance as string);
+    }
+  }
+  for (const row of rows) provenances.add((row.props.value as { provenance: string }).provenance);
+  return { rows, provenances };
+}
+
+/**
  * Render one child component of an already-mounted tree.
  *
  * The renderer deliberately does not render children: only the component under
@@ -268,11 +299,10 @@ test("the review shows four provenance states, each distinct in words", () => {
     onConfirm: noop,
   });
 
-  // Every provenance marker in the tree, and every one a term row would carry.
-  const marks = page.all().filter((el) => typeof el.props.provenance === "string");
-  const rows = page.all().filter((el) => typeof el.props.onEdit === "function");
-  const shown = new Set(marks.map((el) => el.props.provenance as string));
-  for (const row of rows) shown.add((row.props.value as { provenance: string }).provenance);
+  // Every provenance marker the review carries, top-level and inside the
+  // collapsed optional-terms panel: the four states must all be reachable even
+  // though they no longer all appear at once.
+  const { rows, provenances: shown } = reviewRows(page);
 
   for (const state of ["extracted", "member_confirmed", "ponte_verified", "missing"]) {
     assert.ok(shown.has(state), `the review never renders the "${state}" provenance`);
@@ -283,7 +313,8 @@ test("the review shows four provenance states, each distinct in words", () => {
   assert.match(rendered, /Not available on this journey/);
   // And nothing has been created at this point.
   assert.match(rendered, /Nothing has been created or published/);
-  // Every commercial term the decision record names has a row.
+  // Every commercial term the decision record names is still reachable, whether
+  // stated in the open or optional in the panel.
   assert.equal(rows.length, TERM_KEYS.length, "not every commercial term reached the review");
 });
 
@@ -386,15 +417,11 @@ test("each provenance carries its own marker class, so colour is not the only ca
     onToggleProduct: noop,
     onConfirm: noop,
   });
-  // Markers rendered by the panel itself, plus the ones its term rows carry.
-  // The renderer does not descend into child components, so both have to be
-  // collected or the count is of the panel's own rows only.
-  const rendered = new Set(
-    page.all().filter((el) => typeof el.props.provenance === "string").map((el) => el.props.provenance as string),
-  );
-  for (const row of page.all().filter((el) => typeof el.props.onEdit === "function")) {
-    rendered.add((row.props.value as { provenance: string }).provenance);
-  }
+  // Markers rendered by the panel itself, the ones its term rows carry, and the
+  // ones inside the collapsed optional-terms panel. The renderer does not
+  // descend into child components, so all three have to be collected or the
+  // count is of the panel's own rows only.
+  const { provenances: rendered } = reviewRows(page);
   assert.equal(rendered.size, 4, `the review rendered ${rendered.size} distinguishable provenance markers, not four`);
 
   // The stylesheet gives each one a different marker geometry, which is what

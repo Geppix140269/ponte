@@ -88,6 +88,38 @@ export interface FuzzyMatch {
 }
 
 /**
+ * Every single word the catalogue holds, mapped to the products that use it.
+ *
+ * Built once, because `PRODUCT_CATALOGUE` is a constant. It is what the
+ * token-level pass in `fuzzyMatches` reaches for: a product catalogued only
+ * under a multi-word name and multi-word synonyms ("Ordinary Portland cement
+ * 42.5", "portland cement") has no single word for the whole-query pass to
+ * correct against, so a member who types one mistyped word ("cementt") has
+ * nothing to match and dead-ends. Comparing that word against the individual
+ * words the catalogue uses is what lets "cementt" find "cement".
+ *
+ * Tokens shorter than four characters are excluded for the same reason the
+ * whole-query pass excludes them: a one-edit correction on a three-letter word
+ * ("opc" -> "opd") is a different word, not a typo.
+ */
+const CATALOGUE_TOKENS: ReadonlyMap<string, CatalogueProduct[]> = (() => {
+  const index = new Map<string, CatalogueProduct[]>();
+  for (const product of PRODUCT_CATALOGUE) {
+    const seen = new Set<string>();
+    for (const term of [product.name, ...product.synonyms, ...product.standards]) {
+      for (const token of normalise(term).tokens) {
+        if (token.length < 4 || seen.has(token)) continue;
+        seen.add(token);
+        const list = index.get(token);
+        if (list) list.push(product);
+        else index.set(token, [product]);
+      }
+    }
+  }
+  return index;
+})();
+
+/**
  * The catalogue products a misspelling probably meant.
  *
  * Returns an empty array rather than a weak guess when nothing is close, so the
@@ -119,6 +151,36 @@ export function fuzzyMatches(raw: string, limit = 4): FuzzyMatch[] {
       const existing = out.get(product.key);
       if (!existing || distance < existing.distance) {
         out.set(product.key, { product, term, distance, score: Number(score.toFixed(3)) });
+      }
+    }
+  }
+
+  // Token-level correction, for a single mistyped word.
+  //
+  // The pass above compares the member's whole phrase against a catalogue
+  // term. It reaches "portland cemant" (one edit from "portland cement") but
+  // never a bare "cementt", because a seven-letter word is length-guarded away
+  // from the fourteen-letter "portland cement" and the catalogue holds no
+  // single-word "cement" term. So each member word is also measured against the
+  // individual words the catalogue uses. A word that already is a catalogue
+  // token is left to the exact resolver in `resolve.ts`; only genuine
+  // misspellings are corrected here.
+  for (const token of query.tokens) {
+    if (token.length < 4 || CATALOGUE_TOKENS.has(token)) continue;
+    for (const [catToken, products] of Array.from(CATALOGUE_TOKENS)) {
+      const max = tolerance(Math.max(token.length, catToken.length));
+      if (max === 0) continue;
+      const distance = editDistance(token, catToken, max);
+      if (distance > max) continue;
+      // Below the whole-phrase score above: one corrected word out of a name is
+      // weaker evidence than a corrected whole term, and still never as high as
+      // an exact match.
+      const score = Math.max(0.4, 0.82 - 0.14 * distance - Math.max(0, 0.02 * (8 - catToken.length)));
+      for (const product of products) {
+        const existing = out.get(product.key);
+        if (!existing || distance < existing.distance) {
+          out.set(product.key, { product, term: catToken, distance, score: Number(score.toFixed(3)) });
+        }
       }
     }
   }

@@ -15,6 +15,41 @@ That distinction was then measured rather than argued. The read-only production 
 That correction matters more than its size. The state existed to stop the board explaining its schema to a customer, and its first wording replaced one untrue statement with another.
 
 **Also:** this branch had duplicated the bridge-invariance gate defect as its own blocker. `main` records it as LB-006; the duplicate is removed and the Market Signals blocker is renumbered to **LB-007**. Two references in shared records that a blind renumber on this branch had reassigned from `main`'s LB-005 are restored.
+## 30 July 2026 - Platform UX audit: the review schema dump and the spelling dead-end
+
+**Decision:** on the owner's platform-wide UX and interaction launch-gate brief,
+every user-facing route was opened and interacted with, and the two launch
+blockers found were fixed on branch `claude/platform-ux-audit-0094f9`.
+
+**What was wrong.** The Start a Deal front door had already been rebuilt to a
+progressive three-route intake, and Trade services and Distribution were already
+category-first, so the platform did not depend on exact spelling except in one
+place and did not expose a schema except in one place - but both remained, and
+both are what the brief targeted.
+
+- **LB-010, spelling.** The product resolver returned nothing for `cementt`, a
+  one-letter typo of `cement`. The deterministic fuzzy stage matched whole
+  queries against whole catalogue terms, so a bare single-word typo of a product
+  catalogued only under multi-word names was length-guarded out, leaving only
+  the metered model. Fixed with a token-level correction pass in
+  `lib/products/fuzzy.ts`.
+- **LB-011, schema as interface.** The review screen behind the redesign still
+  printed all thirteen commercial terms as empty rows with per-row Add controls
+  and a "thirteen terms still unstated" warning, including contract-level fields
+  before any draft existed. Fixed with progressive disclosure in
+  `components/products/intake/ReviewPanel.tsx`: stated terms shown, optional
+  terms collapsed behind one control and grouped, warning removed.
+
+**Rationale.** Both are named in the brief's forbidden-pattern and P0 lists.
+Neither fix changes taxonomy, schema, flags, hosting or the Design Constitution;
+both use existing tokens and approved components and are covered by unit and
+Playwright tests. `middleware.ts` and the private-site gate were untouched.
+
+**Affected areas.** `lib/products/fuzzy.ts`,
+`components/products/intake/ReviewPanel.tsx`, `components/products/intake/intake.css`,
+their tests, `e2e/product-entry-ux.spec.ts`, `docs/launch/LAUNCH-BLOCKERS.md`
+(LB-010, LB-011), `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-021 to PL-024) and
+`docs/codex/audits/2026-07-30-platform-ux-audit/`.
 
 ## 30 July 2026 - the corrected `20260729b` applied, and a revoke that named the wrong grantee
 

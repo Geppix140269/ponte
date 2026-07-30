@@ -5,8 +5,32 @@ import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 // From `terms`, not `extract-document`: the extraction reaches the model, which
 // reaches Supabase's admin client, and neither belongs in a browser bundle.
 import { TERM_KEYS, TERM_LABELS, type CommercialTerms } from "@/lib/products/terms";
-import { incompleteTerms, type ReviewState } from "@/lib/products/intake";
+import { type ReviewState } from "@/lib/products/intake";
 import type { Provenance, SourcedValue } from "@/lib/products/model";
+
+/**
+ * Optional commercial terms, grouped for progressive disclosure.
+ *
+ * The review screen used to print all thirteen terms as thirteen "Not stated"
+ * rows, each with its own Add control, and then warn that thirteen terms were
+ * unstated. That was the schema-as-interface pattern the North Star forbids: a
+ * member describing "cement, 10,000 tonnes" was met with a blank contract
+ * editor and told the empty rows were a problem, before any draft even existed.
+ *
+ * Stated terms show directly. The ones the member has not given are optional,
+ * grouped into these three clear sections, and collapsed behind one control
+ * rather than expanded all at once. Adding them here is an improvement to the
+ * draft, never a prerequisite for creating it, and contract-level detail
+ * (counterparties, signatories) is the last group rather than an early demand.
+ */
+const OPTIONAL_TERM_GROUPS: { label: string; keys: (keyof CommercialTerms)[] }[] = [
+  {
+    label: "Quantity and delivery",
+    keys: ["quantity", "unit", "recurrence", "origin", "destination", "incoterm", "availability"],
+  },
+  { label: "Pricing and payment", keys: ["pricingBasis", "paymentStructure"] },
+  { label: "Contract detail", keys: ["contractTerm", "validity", "counterparties", "signatories"] },
+];
 
 /**
  * The trust boundary. Nothing has been created when this renders, and nothing
@@ -156,6 +180,64 @@ function TermRow({
   );
 }
 
+/**
+ * The optional terms, collapsed by default.
+ *
+ * Every row is still rendered, so the wiring to the reducer and the four
+ * provenance states are unchanged, but the whole group is hidden until the
+ * member opts in, so the review never opens on a wall of empty fields. The
+ * `hidden` attribute rather than a conditional keeps the fields present for
+ * keyboard users who tab into the opened panel and for the state evidence.
+ */
+function OptionalTerms({
+  keys,
+  shared,
+  onEditShared,
+}: {
+  keys: (keyof CommercialTerms)[];
+  shared: CommercialTerms;
+  onEditShared: (key: keyof CommercialTerms, value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  if (keys.length === 0) return null;
+
+  return (
+    <div className="pintake__optional">
+      <button
+        type="button"
+        className="fbtn fbtn--ghost"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? "Hide optional terms" : `Add commercial terms (${keys.length} optional)`}
+      </button>
+      <div className="pintake__optbody" hidden={!open}>
+        <p className="pintake__note">
+          These are optional. Add any that help now, or create the draft and add delivery, pricing and contract detail
+          on the record when you are ready.
+        </p>
+        {OPTIONAL_TERM_GROUPS.map((group) => {
+          const groupKeys = group.keys.filter((key) => keys.includes(key));
+          if (groupKeys.length === 0) return null;
+          return (
+            <div className="prev__g" key={group.label}>
+              <div className="prev__gl">{group.label}</div>
+              {groupKeys.map((key) => (
+                <TermRow
+                  key={key}
+                  label={TERM_LABELS[key]}
+                  value={shared[key]}
+                  onEdit={(next) => onEditShared(key, next)}
+                />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export interface ReviewPanelProps {
   review: ReviewState;
   intentLabel: string;
@@ -176,9 +258,12 @@ export default function ReviewPanel({
   onConfirm,
   notes = [],
 }: ReviewPanelProps) {
-  const open = incompleteTerms(review);
   const included = review.products.filter((p) => p.included);
   const many = review.products.length > 1;
+  // Terms the member or the document actually gave, shown directly, versus the
+  // ones still open, which are optional and collapsed rather than dumped.
+  const statedShared = TERM_KEYS.filter((key) => review.shared[key].provenance !== "missing");
+  const optionalShared = TERM_KEYS.filter((key) => review.shared[key].provenance === "missing");
 
   return (
     <section className="sstep reveal">
@@ -303,23 +388,23 @@ export default function ReviewPanel({
 
         <div className="prev__g">
           <div className="prev__gl">{many ? "Terms shared by every product" : "Commercial terms"}</div>
-          {TERM_KEYS.map((key) => (
-            <TermRow
-              key={key}
-              label={TERM_LABELS[key]}
-              value={review.shared[key]}
-              onEdit={(next) => onEditShared(key, next)}
-            />
-          ))}
+          {statedShared.length > 0 ? (
+            statedShared.map((key) => (
+              <TermRow
+                key={key}
+                label={TERM_LABELS[key]}
+                value={review.shared[key]}
+                onEdit={(next) => onEditShared(key, next)}
+              />
+            ))
+          ) : (
+            <p className="pintake__note">
+              No commercial terms yet. They are optional: add any below now, or on the draft once it is created.
+            </p>
+          )}
+          <OptionalTerms keys={optionalShared} shared={review.shared} onEditShared={onEditShared} />
         </div>
       </div>
-
-      {open.length > 0 ? (
-        <p className="pintake__note">
-          {open.length} {open.length === 1 ? "term is" : "terms are"} still unstated. Ponte will not guess them. You can
-          continue and complete them on the record, or add them here.
-        </p>
-      ) : null}
 
       {notes.length > 0 ? (
         <ul className="pintake__limits">
