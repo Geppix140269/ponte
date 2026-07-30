@@ -21,8 +21,17 @@ import { MARKET_FAMILIES, type MarketFamily } from "../taxonomy/market";
  * interface is built from the measurement. When the desk classifies genuine
  * service and distribution signals, the controls appear on their own, with no
  * code change. Nothing here fabricates or infers a family: only a stored
- * canonical `market_family` counts, which is why the counts are all zero today
- * and why that is the truthful answer rather than a bug to work around.
+ * canonical `market_family` counts.
+ *
+ * All three counts are zero today, and that is measured rather than assumed:
+ * read-only against production on 30 July 2026, 3,458 eligible signals carry
+ * **no** canonical family between them - 0 Products, 0 Trade services, 0
+ * Distribution (`scripts/verify-signal-search.ts`, evidence in
+ * `docs/codex/audits/market-signals-search/`). So the selector is absent because
+ * nothing is classified, not because nothing is there: the records are live and
+ * a member reaches every one of them by searching. That is the truthful answer
+ * rather than a bug to work around, and PL-020 carries the two pieces of work it
+ * implies - classifying the product inventory, and sourcing the other two.
  *
  * Pure, so the rule is unit-tested without a database. The counting lives in
  * `lib/board/inventory.ts`; the DECISIONS live here.

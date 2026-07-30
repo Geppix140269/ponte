@@ -2,61 +2,71 @@ Market Signals search: read-only verification against PostgREST
 
 project           cptglsmjmzcfpjndqfmc
 url               https://cptglsmjmzcfpjndqfmc.supabase.co
-clock             2026-07-30T04:44:48.374Z
+clock             2026-07-30T05:43:15.746Z
 searched columns  product, hs_code, summary_line, ai_description, origin, destination, category, side, canonical_signal_id
 caps              MAX_SLOTS=6 MAX_GROUP_VARIANTS=5 MAX_EXPANDED_GROUPS=2 MAX_PREDICATE_CHARS=6144
 
 eligible public signals   3458
 
+canonical family classification (the counts behind the filters)
+  market_family = products   0 of 3458 eligible   -> filter not offered
+  market_family = services   0 of 3458 eligible   -> filter not offered
+  market_family = distribution   0 of 3458 eligible   -> filter not offered
+  0 of 3458 eligible signals carry any canonical market_family
+  The eligible records are semantically product-oriented, but none carries a
+  canonical market_family, so none is reachable by the family filter. This is a
+  classification gap (PL-020), not an absence of signals: every one of them is
+  live on the board and reachable by search.
+
 "gas oil"   (alias group, one concept; must not reach diesel equipment)
   predicate       1393 chars, 1 concept(s) [5 variants]
-  matched         59 of 3458   (520 ms)
+  matched         59 of 3458   (861 ms)
     EXT-G4WB-003308  En590 Diesel, 10 PPM
     EXT-G4WB-003210  En590 10Ppm Diesel
     EXT-G4WB-002798  Diesel Fuel En590 (Ulsd 10 Ppm), Industrial
 
 "EN590"   (sibling term reaches the same group)
   predicate       1393 chars, 1 concept(s) [5 variants]
-  matched         59 of 3458   (462 ms)
+  matched         59 of 3458   (492 ms)
     EXT-G4WB-003308  En590 Diesel, 10 PPM
     EXT-G4WB-003210  En590 10Ppm Diesel
     EXT-G4WB-002798  Diesel Fuel En590 (Ulsd 10 Ppm), Industrial
 
 "diesel cargo rotterdam"   (alias plus two mandatory qualifiers)
   predicate       1829 chars, 3 concept(s) [5+1+1 variants]
-  matched         0 of 3458   (224 ms)
+  matched         0 of 3458   (225 ms)
     (no records)
 
 "olive oil"   (multi-word alias, one concept)
   predicate       1573 chars, 1 concept(s) [5 variants]
-  matched         13 of 3458   (525 ms)
+  matched         13 of 3458   (584 ms)
     EXT-G4WB-003486  Pomace Olive Oil
     EXT-G4WB-003487  Extra Virgin Olive Oil
     EXT-G4WB-002625  Olive Oil
 
 "freight forwarding Morocco"   (multi-word alias plus a qualifier)
   predicate       1926 chars, 2 concept(s) [5+1 variants]
-  matched         0 of 3458   (221 ms)
+  matched         0 of 3458   (230 ms)
     (no records)
 
 "170199"   (HS code, both stored spellings)
   predicate       508 chars, 1 concept(s) [2 variants]
-  matched         0 of 3458   (253 ms)
+  matched         0 of 3458   (328 ms)
     (no records)
 
 "cafe"   (accent-folded form only)
   predicate       231 chars, 1 concept(s) [1 variants]
-  matched         1 of 3458   (181 ms)
+  matched         1 of 3458   (191 ms)
     EXT-G4WB-000933  Nescafe Coffee
 
 "café"   (accented query, both forms searched)
   predicate       463 chars, 1 concept(s) [2 variants]
-  matched         1 of 3458   (260 ms)
+  matched         1 of 3458   (278 ms)
     EXT-G4WB-000933  Nescafe Coffee
 
 "99999999"   (expected to match nothing)
   predicate       803 chars, 1 concept(s) [3 variants]
-  matched         0 of 3458   (341 ms)
+  matched         0 of 3458   (368 ms)
     (no records)
 
 qualifiers stay mandatory (executed, not inferred)
@@ -71,11 +81,11 @@ alias precision (the diesel-generator case)
 
 the largest permitted requests
   two longest alias groups plus filler
-    3558 chars (within bound), 3 concepts, dropped 0 -> accepted, 0 matched, 290 ms
+    3558 chars (within bound), 3 concepts, dropped 0 -> accepted, 0 matched, 284 ms
   maximum length, distinct two-letter words
-    1312 chars (within bound), 6 concepts, dropped 34 -> accepted, 0 matched, 217 ms
+    1312 chars (within bound), 6 concepts, dropped 34 -> accepted, 0 matched, 218 ms
   maximum length, single repeated word
-    1384 chars (within bound), 1 concepts, dropped 0 -> accepted, 62 matched, 488 ms
+    1384 chars (within bound), 1 concepts, dropped 0 -> accepted, 62 matched, 500 ms
 
 accent forms, as ILIKE actually resolves them
   "cafe"  searched as [cafe]  ->  1 matched
@@ -87,5 +97,5 @@ indexes
   PostgREST exposes tables, not pg_class, and this script executes no SQL by design.
 
 timings above are wall-clock round trips, not isolated query time
-writes performed  none (select only; 18 reads issued)
+writes performed  none (select only; 41 reads issued)
 RESULT            all reads succeeded

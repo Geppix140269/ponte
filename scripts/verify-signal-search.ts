@@ -46,6 +46,7 @@ import {
   MAX_EXPANDED_GROUPS,
 } from "../lib/search/signal-search";
 import { allAliasTerms } from "../lib/search/aliases";
+import { FAMILY_KEYS } from "../lib/board/availability";
 import { PUBLIC_SIGNAL_COLUMNS, publicWindowPredicate } from "../lib/market-signals/logic";
 
 /** Refuse to run if this file has grown a writing verb. */
@@ -91,6 +92,20 @@ const QUERIES: Array<{ q: string; note: string }> = [
 
 type Row = Record<string, unknown>;
 
+/**
+ * The one table this script touches, named through a counter.
+ *
+ * The closing report states how many reads were issued, and that figure is part
+ * of the evidence that this run only read. It used to be a hand-maintained
+ * arithmetic expression, which drifted the moment a check was added. Every read
+ * now names its table through here, so the tally is counted rather than claimed.
+ */
+let reads = 0;
+function radar(): "desk_radar" {
+  reads += 1;
+  return "desk_radar";
+}
+
 async function main(): Promise<void> {
   assertReadOnly();
 
@@ -129,7 +144,7 @@ async function main(): Promise<void> {
 
   /** Eligible signals, filters aside. The denominator for everything below. */
   const eligible = await sb
-    .from("desk_radar")
+    .from(radar())
     .select("id", { count: "exact", head: true })
     .eq("status", "approved_signal")
     .or(publicWindowPredicate(nowIso));
@@ -141,6 +156,61 @@ async function main(): Promise<void> {
   console.log("");
 
   let failures = 0;
+
+  // -------------------------------------------------------------------------
+  // What the family filter can actually answer, measured
+  // -------------------------------------------------------------------------
+  // The board decides which family filters to offer from these three counts.
+  // Until now this report established the total and left the per-family figures
+  // to a reconciliation done elsewhere, which meant the number driving a visible
+  // control was the one number nobody had executed here.
+  //
+  // Same predicates as the total above and as the board's own read: the status,
+  // the public window, and the one clock declared at the top of this run. The
+  // only added filter is `market_family`, which is the stored canonical column
+  // and the sole thing that may activate a filter. Nothing is inferred from
+  // product text, source category or description, so a count of zero means
+  // "nothing is classified into this family" and never "this family is empty".
+  console.log("canonical family classification (the counts behind the filters)");
+  const familyCounts: Array<[string, number | null]> = [];
+  for (const family of FAMILY_KEYS) {
+    const read = await sb
+      .from(radar())
+      .select("id", { count: "exact", head: true })
+      .eq("status", "approved_signal")
+      .or(publicWindowPredicate(nowIso))
+      .eq("market_family", family);
+    if (read.error || typeof read.count !== "number") {
+      failures += 1;
+      familyCounts.push([family, null]);
+      console.log(`  ${family}  FAILED: ${read.error?.message ?? "no count returned"}`);
+      continue;
+    }
+    familyCounts.push([family, read.count]);
+    console.log(
+      `  market_family = ${family}   ${read.count} of ${eligible.count} eligible   ` +
+        `-> filter ${read.count > 0 ? "offered" : "not offered"}`,
+    );
+  }
+  const classified = familyCounts.reduce((sum, [, n]) => sum + (n ?? 0), 0);
+  console.log(
+    `  ${classified} of ${eligible.count} eligible signals carry any canonical market_family`,
+  );
+  if (classified === 0) {
+    // Said explicitly, because the two readings differ commercially and the
+    // wrong one would be an untrue claim about Ponte's inventory.
+    console.log(
+      "  The eligible records are semantically product-oriented, but none carries a",
+    );
+    console.log(
+      "  canonical market_family, so none is reachable by the family filter. This is a",
+    );
+    console.log(
+      "  classification gap (PL-020), not an absence of signals: every one of them is",
+    );
+    console.log("  live on the board and reachable by search.");
+  }
+  console.log("");
 
   for (const { q, note } of QUERIES) {
     const search = parseSignalSearch(q);
@@ -154,7 +224,7 @@ async function main(): Promise<void> {
 
     const started = Date.now();
     const counted = await sb
-      .from("desk_radar")
+      .from(radar())
       .select("id", { count: "exact", head: true })
       .eq("status", "approved_signal")
       .or(publicWindowPredicate(nowIso))
@@ -174,7 +244,7 @@ async function main(): Promise<void> {
     // A sample, so the report carries record identities rather than only a
     // number. Public columns only, three rows, no ordering cost beyond the read.
     const sample = await sb
-      .from("desk_radar")
+      .from(radar())
       .select(PUBLIC_SIGNAL_COLUMNS)
       .eq("status", "approved_signal")
       .or(publicWindowPredicate(nowIso))
@@ -213,7 +283,7 @@ async function main(): Promise<void> {
     for (const query of [broad, narrow]) {
       const search = parseSignalSearch(query)!;
       const read = await sb
-        .from("desk_radar")
+        .from(radar())
         .select("id", { count: "exact", head: true })
         .eq("status", "approved_signal")
         .or(publicWindowPredicate(nowIso))
@@ -257,7 +327,7 @@ async function main(): Promise<void> {
       let reached = 0;
       for (const word of equipment) {
         const read = await sb
-          .from("desk_radar")
+          .from(radar())
           .select("id", { count: "exact", head: true })
           .eq("status", "approved_signal")
           .or(publicWindowPredicate(nowIso))
@@ -309,7 +379,7 @@ async function main(): Promise<void> {
     const predicate = searchPredicate(search);
     const started = Date.now();
     const read = await sb
-      .from("desk_radar")
+      .from(radar())
       .select("id", { count: "exact", head: true })
       .eq("status", "approved_signal")
       .or(publicWindowPredicate(nowIso))
@@ -339,7 +409,7 @@ async function main(): Promise<void> {
     const search = parseSignalSearch(q)!;
     const predicate = searchPredicate(search);
     const read = await sb
-      .from("desk_radar")
+      .from(radar())
       .select("id", { count: "exact", head: true })
       .eq("status", "approved_signal")
       .or(publicWindowPredicate(nowIso))
@@ -379,7 +449,7 @@ async function main(): Promise<void> {
   // milliseconds, which was the sequential-scan cost alone and not what a member
   // waits for.
   console.log("timings above are wall-clock round trips, not isolated query time");
-  console.log(`writes performed  none (select only; ${QUERIES.length + 9} reads issued)`);
+  console.log(`writes performed  none (select only; ${reads} reads issued)`);
   console.log(failures === 0 ? "RESULT            all reads succeeded" : `RESULT            ${failures} failure(s)`);
   process.exit(failures === 0 ? 0 : 1);
 }
