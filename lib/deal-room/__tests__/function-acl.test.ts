@@ -42,7 +42,8 @@
 // and parameter names are dropped.
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -121,6 +122,113 @@ function memberCommands(): Set<string> {
   const pattern = /grant execute on function public\.(deal_room_\w+)\(([^)]*)\) to authenticated/g;
   for (const m of Array.from(rlsSql.matchAll(pattern))) cmds.add(key(m[1], m[2]));
   return cmds;
+}
+
+// ---------------------------------------------------------------------------
+// The third source: what the application actually calls
+// ---------------------------------------------------------------------------
+//
+// `memberCommands()` above reads the grant list out of the migration, which makes
+// it a restatement of that file rather than an independent check: if the grant
+// list were wrong, comparing it with itself would agree. So the allowlist is also
+// derived from the other end - the `.rpc("deal_room_*")` call sites in the
+// shipped application - and the two are required to agree.
+//
+// That is what turns "these 15 are the commands" from an assertion into a
+// finding, and it is what fails when somebody adds an RPC call without a grant,
+// or deletes a call and leaves the grant behind.
+
+const SOURCE_ROOTS = ["app", "lib"];
+
+/** Production TypeScript only: no tests, fixtures, generated output or vendored code. */
+function isProductionSource(path: string): boolean {
+  const normalised = path.replace(/\\/g, "/");
+  if (!/\.tsx?$/.test(normalised)) return false;
+  if (/\.d\.ts$/.test(normalised)) return false;
+  return !/(^|\/)(__tests__|__mocks__|__fixtures__|node_modules|\.next|dist|build|coverage|generated|e2e|scripts|supabase|docs)(\/|$)/.test(
+    normalised,
+  );
+}
+
+function sourceFiles(): string[] {
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      const normalised = full.replace(/\\/g, "/");
+      if (entry.isDirectory()) {
+        if (
+          /(^|\/)(__tests__|__mocks__|__fixtures__|node_modules|\.next|dist|build|coverage|generated)(\/|$)/.test(
+            normalised,
+          )
+        ) {
+          continue;
+        }
+        walk(full);
+      } else if (isProductionSource(normalised)) {
+        out.push(normalised);
+      }
+    }
+  };
+  for (const root of SOURCE_ROOTS) walk(root);
+  return out;
+}
+
+/** Every `.rpc("deal_room_*")` / `.rpc('deal_room_*')` name, with the file it came from. */
+function applicationRpcCalls(): { name: string; file: string }[] {
+  const calls: { name: string; file: string }[] = [];
+  for (const file of sourceFiles()) {
+    const source = readFileSync(file, "utf8");
+    const pattern = /\.rpc\(\s*("deal_room_\w+"|'deal_room_\w+')/g;
+    for (const m of Array.from(source.matchAll(pattern))) {
+      calls.push({ name: m[1].slice(1, -1), file });
+    }
+  }
+  return calls;
+}
+
+/** Declared signatures grouped by bare function name, so ambiguity is visible. */
+function declaredByName(): Map<string, string[]> {
+  const byName = new Map<string, string[]>();
+  for (const sig of Array.from(declaredFunctions())) {
+    const name = sig.slice(0, sig.indexOf("("));
+    byName.set(name, (byName.get(name) ?? []).concat(sig));
+  }
+  return byName;
+}
+
+/**
+ * The commands the application calls, resolved to declared signatures.
+ *
+ * A name that resolves to zero signatures, or to more than one, is returned as a
+ * problem rather than silently dropped - an unresolvable name is exactly the
+ * case where a comparison of sets would otherwise quietly agree.
+ */
+function applicationCommands(): { commands: Set<string>; problems: string[] } {
+  const byName = declaredByName();
+  const commands = new Set<string>();
+  const problems: string[] = [];
+  for (const call of applicationRpcCalls()) {
+    const matches = byName.get(call.name) ?? [];
+    if (matches.length === 1) {
+      commands.add(matches[0]);
+    } else if (matches.length === 0) {
+      problems.push(`${call.file} calls ${call.name}(), which no Deal Room migration declares`);
+    } else {
+      problems.push(
+        `${call.file} calls ${call.name}(), which resolves to ${matches.length} declared signatures ` +
+          `(${matches.join(" / ")}). An overloaded command cannot be granted unambiguously`,
+      );
+    }
+  }
+  return { commands, problems };
+}
+
+/** Signatures `20260730b` grants to `authenticated`. */
+function correctiveAllowlist(): Set<string> {
+  return new Set(
+    aclStatements("grant").filter((s) => s.roles.includes("authenticated")).map((s) => s.sig),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -334,7 +442,108 @@ test("the four internal functions are executable by no member role", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 5. The file changes nothing but privileges
+// 5. The allowlist agrees with the application, independently derived
+// ---------------------------------------------------------------------------
+//
+// Three sets, from three different places, required to be identical:
+//
+//   1. what the application calls        - `.rpc("deal_room_*")` under app/ and lib/
+//   2. what the applied migration grants - `20260729b`, live in production
+//   3. what the corrective migration grants - `20260730b`, this branch
+//
+// Any two agreeing proves little; all three agreeing is the claim.
+
+test("the source scan reaches real production code and excludes tests and fixtures", () => {
+  const files = sourceFiles();
+  assert.ok(files.length > 50, `only ${files.length} source files scanned; the walker is not reaching the tree`);
+  assert.deepEqual(
+    files.filter((f) => /__tests__|__mocks__|__fixtures__|\.d\.ts$|node_modules|\/scripts\/|\/supabase\/|\/docs\//.test(f)),
+    [],
+    "the scan is picking up test, fixture, generated or non-application files",
+  );
+  assert.ok(
+    files.some((f) => f.includes("deal-rooms/actions.ts")),
+    "the scan does not reach app/[locale]/deal-rooms/actions.ts, which is where the Deal Room RPCs are called",
+  );
+
+  const calls = applicationRpcCalls();
+  assert.ok(calls.length >= 15, `expected at least 15 Deal Room RPC call sites, found ${calls.length}`);
+});
+
+test("every Deal Room RPC the application calls resolves to exactly one declared signature", () => {
+  // Zero matches means the application calls something no migration creates.
+  // More than one means an overload, which cannot be granted unambiguously and is
+  // the shape of the LB-005 defect.
+  assert.deepEqual(applicationCommands().problems, []);
+});
+
+test("the application calls exactly the 15 commands the applied migration grants", () => {
+  const { commands } = applicationCommands();
+  const granted = memberCommands();
+
+  const calledNotGranted = Array.from(commands)
+    .filter((sig) => !granted.has(sig))
+    .map((sig) => `${sig} is called by the application but not granted to authenticated by ${RLS}. The call would fail with 42501`);
+  const grantedNotCalled = Array.from(granted)
+    .filter((sig) => !commands.has(sig))
+    .map((sig) => `${sig} is granted to authenticated by ${RLS} but called nowhere in the application. A grant with no caller is reachable surface nobody needs`);
+
+  assert.deepEqual([...calledNotGranted, ...grantedNotCalled], []);
+  assert.equal(commands.size, 15, `expected 15 Deal Room commands, the application calls ${commands.size}`);
+});
+
+test("the corrective migration grants exactly the commands the application calls, plus the policy helpers", () => {
+  const { commands } = applicationCommands();
+  const helpers = policyHelpers();
+  const corrective = correctiveAllowlist();
+
+  const expected = new Set(Array.from(commands).concat(Array.from(helpers)));
+  const missing = Array.from(expected)
+    .filter((sig) => !corrective.has(sig))
+    .map((sig) => `${sig} is needed by the application or by an RLS policy but ${ACL} does not grant it to authenticated`);
+  const surplus = Array.from(corrective)
+    .filter((sig) => !expected.has(sig))
+    .map((sig) => `${ACL} grants ${sig} to authenticated, but it is neither called by the application nor used by a policy`);
+
+  assert.deepEqual([...missing, ...surplus], []);
+  assert.equal(corrective.size, 19, `the corrective allowlist should be 15 commands + 4 helpers = 19, got ${corrective.size}`);
+});
+
+test("the applied grant list and the corrective allowlist do not diverge", () => {
+  // 20260730b must not quietly widen or narrow what 20260729b already granted.
+  // The only intended difference between the two files, for commands, is none.
+  const applied = memberCommands();
+  const corrective = correctiveAllowlist();
+  const helpers = policyHelpers();
+
+  const correctiveCommands = new Set(Array.from(corrective).filter((sig) => !helpers.has(sig)));
+  const divergence = [
+    ...Array.from(applied)
+      .filter((sig) => !correctiveCommands.has(sig))
+      .map((sig) => `${sig} is granted by ${RLS} but dropped by ${ACL}. That is a member journey broken, not a security fix`),
+    ...Array.from(correctiveCommands)
+      .filter((sig) => !applied.has(sig))
+      .map((sig) => `${sig} is granted by ${ACL} but not by ${RLS}. The corrective migration is widening access`),
+  ];
+  assert.deepEqual(divergence, []);
+  assert.equal(correctiveCommands.size, 15);
+});
+
+test("all three sources agree, function for function", () => {
+  const fromApp = Array.from(applicationCommands().commands).sort();
+  const fromApplied = Array.from(memberCommands()).sort();
+  const helpers = policyHelpers();
+  const fromCorrective = Array.from(correctiveAllowlist())
+    .filter((sig) => !helpers.has(sig))
+    .sort();
+
+  assert.deepEqual(fromApplied, fromApp, "the applied migration and the application disagree about the command set");
+  assert.deepEqual(fromCorrective, fromApp, "the corrective migration and the application disagree about the command set");
+  assert.equal(fromApp.length, 15);
+});
+
+// ---------------------------------------------------------------------------
+// 6. The file changes nothing but privileges
 // ---------------------------------------------------------------------------
 
 test("the ACL migration contains grants and revokes only", () => {
