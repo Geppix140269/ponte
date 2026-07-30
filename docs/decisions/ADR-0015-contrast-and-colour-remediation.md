@@ -355,6 +355,29 @@ now documented beside them instead of being silently wrong.
 **This is closed.** Option 1 remains available if the HTML files ever surface, but
 nothing is waiting on them. Recorded at OD-009.
 
+#### S-3 note, 30 July 2026 — the invariance check's baseline is pinned
+
+The stylesheet is **not** amended again. This records a change to the instrument
+that proves it, because that instrument is named above as authority evidence.
+
+`scripts/check-bridge-invariance.mjs` compared the working tree against the
+merge-base with `origin/main`. On the branch that made the Stage 1 edit, that was
+the un-edited stylesheet and the check was meaningful. Once the edit merged, the
+merge-base on `main` became `main` itself: `before` and `after` were the same
+bytes, so the 479 non-colour comparisons were vacuously true and the four
+authorised selectors were reported as unchanged — because relative to themselves
+they were. `npm run verify` was red on `main` for every task in the repository,
+recorded as LB-006 and found when Gate C ran the gate by hand.
+
+The baseline is now the fixed commit `651ad1c9`, the approved stylesheet
+immediately before the Stage 1 edit. Every assertion is unchanged and all of them
+now actually run. The reported figures are the same ones cited above: **479
+non-colour declarations identical, 6 at-rules identical, 23 timings identical, 15
+colour changes enumerated.** Nothing was weakened, skipped or narrowed.
+
+If the Bridge package is ever re-delivered, that constant moves in the same
+change, which section S-3 already requires to be recorded here.
+
 ### S-4. Value-neutral token adoption in the four duplicated stylesheets — approved
 
 Alias conversion approved for `components/find/find.css`,
