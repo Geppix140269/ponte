@@ -49,6 +49,36 @@ and the display the ADR names, nothing more.
 `app/[locale]/structure/page.tsx`, and the evidence under
 `docs/codex/audits/2026-07-30-completion-bridge/`.
 
+## 30 July 2026 - single-generation product cutover authorised; route authority landed
+
+**Decision:** the owner authorised the single-generation product cutover as a
+programme running inside Launch Mode, delivered as separate reviewable PRs. Three
+decisions were recorded: (a) begin with an additive route authority (PR 1) and the
+governing ExecPlan; (b) the owner provisions the mandated staging (non-production
+Supabase, non-production email, member and admin test accounts) - the agent wires
+config and seed scripts to it and cannot provision it (PL-001/PL-002); (c)
+`member_business` verification becomes fully credit-free, with a test proving it
+cannot call any credit function, recorded as an ADR in the verification PR.
+
+**Rationale:** every canonical route already exists and the new generation is
+already flag-gated, so the programme is largely capability redistribution + flag
+flips + deletion rather than new construction. A chat brief is a proposal input
+under the SOP; this records the owner's acceptance so the next agent treats it as
+authority. The cutover also answers the escalated `/marketplace` product question
+(the dependency finding's option 2: redistribute the three unique capabilities to
+`/opportunities`, `/workspace` and `/account`, then retire).
+
+**Delivered (PR 1, additive, no behavioural change):**
+`lib/navigation/route-manifest.ts` classifies every route
+(`canonical | redirect | internal | feature_gated | development_only`);
+`lib/navigation/__tests__/route-manifest.test.ts` (wired into `npm test`) checks
+manifest integrity, filesystem coverage, and three shrink-only cutover ratchets
+(retired-route links, redirect chains, verification->credit coupling).
+
+**Affected areas:** `lib/navigation/*`; `package.json` (test chain);
+`docs/plans/active/single-generation-cutover.md`; `CURRENT-STATE.md`. No route
+retired, no flag flipped, no production action.
+
 ## 30 July 2026 - the ACL contract now matches production, and the witness is a separate instrument
 
 **Decision:** the owner authorised Phase 1 of a controlled sequence. PR #123 merged
