@@ -18,6 +18,61 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - "Ask Ponte to investigate" notification lane: real delivery demonstrated, and the send result no longer swallowed
+
+### Completed
+
+- **Real delivery demonstrated end to end.** The exact desk notification the
+  investigate CTA produces (`operator_alert`, rendered through `lib/email`) was
+  sent from the live Ponte Resend account as `Ponte Trade <hello@ponte.trade>` to
+  the real desk `deals@ponte.trade`, clearly marked `[DELIVERY TEST]` and with an
+  idempotency key. **Resend status: delivered** (id `9e7e198e-b9d8-43f0-a025-5f84abc32ee9`).
+  **Verified received in the desk inbox** (Gmail thread `19fb21f764c560ca`,
+  labels `INBOX`, `IMPORTANT` — **not** spam or trash). The email renders with the
+  merged PR #114 fixes: header `padding:24px 32px` intact, footer "Privacy · Terms".
+- **The CTA path was traced and found sound:** `market-signals/[id]/page.tsx` →
+  `components/signals/InvestigateButton.tsx` → `POST /api/market-signals/investigate`
+  → persist to `signal_investigations` (RLS, applied to production, three-part
+  unique constraint for dedup) → `sendBrokerageSubmission` → `deals@ponte.trade`.
+  Result UX is unequivocal (a "received" state on success, visible error text on
+  failure, an account gate on 401 that resumes after sign-in); duplicates are
+  prevented three ways (an in-flight guard, the post-success button state, and the
+  DB unique constraint). All already live and covered by `route-behaviour.test.ts`.
+- **One gap closed: the notification send result was discarded.** The route did a
+  bare `await sendBrokerageSubmission(...)` and returned `{ok:true}` regardless, so
+  a missing `ADMIN_ALERT_EMAIL` or a provider error meant the desk was silently
+  never alerted while the caller still saw success. `sendBrokerageSubmission` now
+  returns its `SendResult`; the route observes it, logs loudly when the desk was
+  not emailed (naming skip vs failure), and returns `{ok, notified}`. `ok` is the
+  member's truth (the request is recorded and queued); `notified` is the operator's
+  truth (the alert actually went out). The member is never shown a failure, because
+  the request is safe either way.
+
+### Decisions
+
+- No product behaviour changed; the request remains the system of record and the
+  email remains an alert. Confined to the email/notification lane.
+
+### Risks / discrepancies
+
+- **`ADMIN_ALERT_EMAIL` in production is inferred, not confirmed from the repo.**
+  The live Resend log shows desk alerts delivered to `deals@ponte.trade`, so it is
+  configured; the new `notified` flag and error log make any future
+  misconfiguration observable rather than silent.
+- The delivery demonstration used the app's rendered content sent through the same
+  Resend account the app uses; it is faithful to the produced email but is not the
+  Next.js route executing in production. The route's own path is covered by the
+  automated test.
+
+### Evidence
+
+- Resend `emails.get` `9e7e198e-...`: status delivered, from `Ponte Trade <hello@ponte.trade>`, to `deals@ponte.trade`.
+- Gmail thread `19fb21f764c560ca`: `INBOX`/`IMPORTANT`.
+- `lib/signals/__tests__/route-behaviour.test.ts`: 13 tests (was 11), incl. the recorded-but-not-notified case (skip and provider-error).
+- `app/api/market-signals/investigate/route.ts`, `lib/email.ts` (`wasDelivered`, `sendBrokerageSubmission` returns `SendResult`).
+
+---
+
 ## 2026-07-30 - Authentication and transactional email pinned; nothing applied to production (LB-012, ADR-0017)
 
 ### Completed

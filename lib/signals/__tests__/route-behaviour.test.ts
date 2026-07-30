@@ -19,7 +19,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from "node:assert/strict";
 import { __reset, callsFor } from "../../__mocks__/supabase-server";
-import { __resetEmail, sentOf } from "../../__mocks__/email";
+import { __resetEmail, sentOf, __setNextBrokerageResult } from "../../__mocks__/email";
 import { __setUser } from "../../__mocks__/auth";
 import { __setSignal } from "../../__mocks__/board-market-signals";
 import { __setEligible } from "../../__mocks__/public-filter";
@@ -70,10 +70,51 @@ test("investigation success creates one request and one desk notification", asyn
   );
 
   assert.equal(res.status, 200);
-  assert.equal((await res.json()).ok, true);
+  const okBody = await res.json();
+  assert.equal(okBody.ok, true);
+  assert.equal(okBody.notified, true, "a delivered desk alert reports notified: true");
   assert.equal(callsFor("signal_investigations", "insert").length, 1, "exactly one request row");
   assert.equal(sentOf("sendBrokerageSubmission").length, 1, "exactly one desk notification");
   assert.equal(callsFor("desk_radar", "update").length, 0, "count is trigger-maintained, not written here");
+  __setNextBrokerageResult({ ok: true, skipped: false, messageId: "mock-msg", template: "operator_alert" });
+});
+
+// 1b. The desk alert did not send (no operator address / provider error): the
+// request is STILL recorded and the member still succeeds, but the response
+// reports notified: false so an un-alerted request is observable. This is the
+// gap the old bare `await` hid — a swallowed send result meant a silently
+// un-notified desk while the caller saw plain success.
+test("a request whose desk alert did not send is still recorded, and reports notified: false", async () => {
+  __setUser({ id: "u2", email: "u2@x.com" });
+  __setSignal({ state: "visible", signal: { side: "requirement", product: "Sugar ICUMSA 45" } });
+  __reset({ responses: { "signal_investigations:insert": { error: null } } });
+  __resetEmail();
+  // Simulate the desk not being emailed: the operator address is unconfigured.
+  __setNextBrokerageResult({ ok: true, skipped: true, template: "operator_alert", reason: "no_recipient" });
+
+  const res = await investigatePOST(
+    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", phone: "+39 010 555 0101", contact_language: "Italian", goal: "who is behind it" }),
+  );
+
+  const body = await res.json();
+  assert.equal(res.status, 200, "the member still succeeds: the request is recorded");
+  assert.equal(body.ok, true, "ok is the member's truth — the request is in the queue");
+  assert.equal(body.notified, false, "notified is the operator's truth — the desk alert did not send");
+  assert.equal(callsFor("signal_investigations", "insert").length, 1, "the request was persisted regardless");
+
+  // A provider failure is treated the same way: recorded, not notified.
+  __reset({ responses: { "signal_investigations:insert": { error: null } } });
+  __resetEmail();
+  __setNextBrokerageResult({ ok: false, template: "operator_alert", category: "provider_error", detail: "503" });
+  const res2 = await investigatePOST(
+    req({ signal_id: SIGNAL_ID, business: "Harbor Trading", type: "supplier", phone: "+39 010 555 0102", contact_language: "Italian", goal: "who is behind it" }),
+  );
+  const body2 = await res2.json();
+  assert.equal(body2.ok, true, "a provider error still records the request");
+  assert.equal(body2.notified, false, "and still reports the desk was not alerted");
+  assert.equal(callsFor("signal_investigations", "insert").length, 1, "persisted despite the provider error");
+
+  __setNextBrokerageResult({ ok: true, skipped: false, messageId: "mock-msg", template: "operator_alert" });
 });
 
 // 2. Duplicate investigation: success, no notification, no count write.

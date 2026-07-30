@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getMarketSignal } from "@/lib/board/market-signals";
-import { sendBrokerageSubmission } from "@/lib/email";
+import { sendBrokerageSubmission, wasDelivered } from "@/lib/email";
 import {
   cleanInvestigation,
   investigationIsComplete,
@@ -103,7 +103,15 @@ export async function POST(req: NextRequest) {
   // Notify the desk. The desk is internal, so this carries the requester's own
   // details and the ask, and nothing about the third party (there is nothing to
   // carry: this route never read one).
-  await sendBrokerageSubmission({
+  //
+  // The request is already recorded above, so it is in the admin investigation
+  // queue whatever happens next: the email is an ALERT, not the system of record,
+  // and a member is never told it failed. But a request that the desk was not
+  // emailed about is an operational blind spot, so the send RESULT is observed
+  // rather than discarded. Previously this was a bare `await` and its result was
+  // thrown away, so a missing `ADMIN_ALERT_EMAIL` or a provider error meant the
+  // desk was silently never alerted while the caller still saw success.
+  const notify = await sendBrokerageSubmission({
     type: lookup.signal.side === "offer" ? "offer" : "requirement",
     name: user.email ?? user.id,
     company: request.requesting_business,
@@ -131,5 +139,24 @@ export async function POST(req: NextRequest) {
       .join("\n"),
   });
 
-  return NextResponse.json({ ok: true });
+  const notified = wasDelivered(notify);
+  if (!notified) {
+    // The request is safe (recorded and queued); the desk alert is not. Logged
+    // loudly so an un-alerted request is discoverable, and named precisely: a
+    // skip means the operator address or provider is unconfigured, a failure
+    // means the provider rejected the send.
+    const why = !notify.ok
+      ? `failed (${notify.category}: ${notify.detail})`
+      : notify.skipped
+        ? `skipped (${notify.reason})`
+        : "unknown";
+    console.error(
+      `[ponte] investigation ${signalId} recorded for user ${user.id} but the desk ` +
+        `was NOT emailed: ${why}. It is in the admin queue; the alert did not send.`,
+    );
+  }
+
+  // `ok` is the member's truth: the request is recorded. `notified` is the
+  // operator's truth: whether the desk alert actually went out.
+  return NextResponse.json({ ok: true, notified });
 }

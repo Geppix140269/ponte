@@ -20,8 +20,30 @@ export async function sendConnectAccepted(to: string, data: any): Promise<void> 
   sent.push({ fn: "sendConnectAccepted", to, data });
 }
 
-export async function sendBrokerageSubmission(data: any): Promise<void> {
+/**
+ * What the next `sendBrokerageSubmission` returns. Defaults to a real delivery;
+ * a test sets it to simulate the desk not being notified (no operator address,
+ * or a provider error) so the route's observability can be asserted.
+ */
+export let __nextBrokerageResult: any = {
+  ok: true,
+  skipped: false,
+  messageId: "mock-msg",
+  template: "operator_alert",
+};
+
+export function __setNextBrokerageResult(r: any): void {
+  __nextBrokerageResult = r;
+}
+
+export async function sendBrokerageSubmission(data: any): Promise<any> {
   sent.push({ fn: "sendBrokerageSubmission", data });
+  return __nextBrokerageResult;
+}
+
+/** Mirrors the real helper: a send counts as delivered only if sent, not skipped. */
+export function wasDelivered(result: any): boolean {
+  return result?.ok === true && result?.skipped === false;
 }
 
 // The listing lifecycle senders. `sendListingReceived` and

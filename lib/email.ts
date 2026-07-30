@@ -22,8 +22,23 @@
 //      notification is now visible.
 
 import { sendTemplateEmail, sendOperatorEmail, isEmailConfigured } from "./email/send";
+import type { SendResult } from "./email/send";
 import type { MemberIdentity } from "./email/identity";
 import type { ListingSummary } from "./email/templates";
+
+export type { SendResult } from "./email/send";
+
+/**
+ * True when a `SendResult` means the desk actually received the mail.
+ *
+ * A send can resolve three ways: sent, skipped (no operator address, or Resend
+ * not configured), or failed (provider error). Only the first is a real
+ * notification. A caller that needs to know whether the desk was alerted —
+ * rather than merely that the call did not throw — asks this.
+ */
+export function wasDelivered(result: SendResult): boolean {
+  return result.ok === true && result.skipped === false;
+}
 
 export { isEmailConfigured };
 export { setSendObserver } from "./email/send";
@@ -328,7 +343,7 @@ export async function sendBrokerageSubmission(data: {
   product?: string;
   volume?: string;
   details: string;
-}): Promise<void> {
+}): Promise<SendResult> {
   const heading =
     data.type === "network"
       ? "Deal Sheet access request"
@@ -346,7 +361,7 @@ export async function sendBrokerageSubmission(data: {
     data.details,
   ];
 
-  await sendOperatorEmail({
+  return sendOperatorEmail({
     template: "operator_alert",
     data: {
       subject: `${heading} from ${data.company || data.name || "an enquirer"}`,
