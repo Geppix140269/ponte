@@ -76,7 +76,7 @@
 }
 .ponte-find .excrumb a:hover {
   color: var(--gold-ink);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- search ---- */
@@ -243,7 +243,7 @@
    in words, so nothing here is carried by weight or colour alone. */
 .ponte-find .exsector--busy .exsector__disc {
   border-width: 2px;
-  border-color: var(--gold);
+  border-color: var(--gold-rule);
   background: var(--gold-tint);
 }
 .ponte-find .exsector--quiet .exsector__disc {
@@ -251,7 +251,7 @@
   color: var(--ink-3);
 }
 .ponte-find a.exsector:hover .exsector__disc {
-  border-color: var(--gold);
+  border-color: var(--gold-rule);
   transform: translateY(-2px);
 }
 /* Nothing here restyles the SVG. The handoff says to pick ONE place for the
@@ -341,7 +341,7 @@
 }
 .ponte-find .exrec__a:hover {
   color: var(--gold-ink);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--gold-rule);
 }
 
 /* ---- honest empty state: never the primary message ---- */

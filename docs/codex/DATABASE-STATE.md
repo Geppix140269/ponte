@@ -53,9 +53,11 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Deal Room launch slice: `20260729a` APPLIED, `b` and `c` NOT applied
+
 ## Written but NOT applied: Market Signal search indexes
 
-`supabase/migrations/20260730a_market_signal_search.sql` (LB-005).
+`supabase/migrations/20260730a_market_signal_search.sql` (LB-006).
 
 **Not executed anywhere.** Index-only and additive: it creates the `pg_trgm`
 extension, eight partial GIN trigram indexes on `desk_radar` over the public
@@ -102,8 +104,74 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
 ## Written but NOT applied: the Deal Room launch slice
 
-Three files, additive throughout, idempotent, and applied in this order at Gate
-C only:
+**Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`, from
+`main` at `7f979e0` with a clean worktree. It stopped part way through.** Full
+record with every probe result:
+`docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`.
+
+### `20260729a_deal_room_core.sql` — APPLIED
+
+Recorded in `public.schema_migrations` with SHA-256
+`24932e4a429eb4ea7b19f2a7c5423101c1bbc61a628be941f546412258a78c8a`, matching the
+repository file byte for byte. **Ledger 43 to 44.**
+
+The row's `applied_at` is `2026-07-30 03:39:20 UTC`, which is when the row was
+written rather than when the DDL ran. `db-query.mjs` returned an HTML **502 Bad
+gateway** from `api.supabase.com`; the transaction had committed and only the
+reply was lost, but the script exits before its ledger write on a failed call, so
+the row was written explicitly afterwards. Execution was a few minutes earlier in
+the same session and the exact instant is unrecoverable.
+
+**Verified in production:** 15 tables, 34 CHECK constraints, 52 foreign keys, 54
+indexes, 9 non-internal triggers, and 2 functions - `deal_room_uuid_or_null(text)`
+and `deal_room_events_append_only()`. Public tables 53 to 68, exactly +15. The
+`deal_room_activity_append_only` trigger is present on
+`deal_room_activity_events`. The agreement authority is seeded with all four
+documents at `v1-2026-07-29`, each `current` and carrying its checksum.
+
+**RLS is enabled on all 15 tables with zero policies, and that state was not
+created by the approved files.** Migration `a` does not enable RLS - `b` does -
+so between the two, production held 15 tables with `relrowsecurity = false` while
+Supabase's default privileges granted `anon` and `authenticated` SELECT, INSERT
+and UPDATE on every one of them. An anonymous caller could have written to all
+fifteen through PostgREST. The tables were empty and no write was attempted while
+the gap was open. It was closed with `alter table ... enable row level security`
+on the 15 tables and nothing else: no policy created, nothing granted, nothing
+revoked. RLS on with no policy is fail-closed, and it is a prefix of what `b`
+does, so it conflicts with nothing. Proved with an anon-key client: SELECT
+returns `200 []`, INSERT returns `401 / 42501`. **This is a production change
+outside the approved files and awaits owner confirmation.**
+
+### `20260729b_deal_room_rls.sql` — NOT applied, and cannot be as it stands
+
+Postgres refused it and rolled the whole file back: `ERROR: 42883: function
+public.deal_room_invite(uuid, text, text, text, timestamp with time zone) does
+not exist`. The file grants execute on a signature it has itself dropped - the
+owner's final trust review took `deal_room_invite()` from five arguments to three.
+One broken grant line; all 21 declared functions were audited programmatically
+and no other arity disagrees. **LB-006.** Correcting it changes the file's
+SHA-256, so the new value must be recorded here before it is applied.
+
+Rollback confirmed by reading production: 0 policies, still 2 functions, no
+ledger row. The Management API runs a file as one transaction, which is also what
+makes `a`'s completeness above trustworthy.
+
+### `20260729c_deal_room_storage.sql` — NOT applied, not attempted
+
+Its three executable statements create the `deal-room-evidence` bucket and its
+two `storage.objects` policies, which `GATE-C-TEST-PLAN.md` treats as Gate C
+**Approval 2**. `deal-room-evidence` does not exist; `ponte-deal-docs` still holds
+0 objects and 0 policies.
+
+### Unchanged by all of this
+
+The legacy Deal-era cluster: 8 tables, 0 rows, `is_deal_participant()` unaltered.
+`listings`: 5 rows. `NEXT_PUBLIC_DEAL_ROOM` unset, allowlist unchanged, nothing
+deployed, access wall untouched. The Deal Room is unreachable by any member.
+
+### The original plan, for reference
+
+Three files, additive throughout, idempotent, in this order:
 
 - `supabase/migrations/20260729a_deal_room_core.sql` — 14 `deal_room_*` tables, their constraints, indexes and triggers, plus `deal_room_uuid_or_null()` and the append-only guard `deal_room_events_append_only()`.
 - `supabase/migrations/20260729b_deal_room_rls.sql` — RLS on all 14, four SECURITY DEFINER helper predicates, **read-only policies for members**, and fifteen authorised command functions covering the whole loop.

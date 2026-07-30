@@ -147,9 +147,15 @@ test("completed says a stage finished, and offers no way to say verified", () =>
 });
 
 test("the active moving point is gold, and gold is used for nothing else", () => {
+  // Amended by ADR-0015 Stage 1. Constitution 6b splits gold into three tokens,
+  // because the brand fill cannot carry a line or a small mark: --pf-gold measured
+  // 2.54:1 on the page ground and this is an 8px state marker. The point is now
+  // --pf-gold-rule, which is 3.03:1 against the darkest surface it prints on. The
+  // MEANING is unchanged, and that is what this test is really guarding: gold still
+  // marks the moving point and nothing else.
   // Constitution section 6: gold is the brand signal and the moving point. It
   // is never verification, warning, approval, review or success.
-  const gold = statesWhere((body) => body.includes("var(--pf-gold)"));
+  const gold = statesWhere((body) => /var\(--pf-gold(-rule)?\)/.test(body));
   assert.deepEqual(gold, ["active", "loading"], `gold reached states it must not: ${gold.join(", ")}`);
 });
 
@@ -164,8 +170,8 @@ test("each state uses the approved semantic token, and no literal colour", () =>
     ["blocked", "--pf-danger"],
     ["error", "--pf-danger"],
     ["completed", "--pf-positive"],
-    ["active", "--pf-gold"],
-    ["loading", "--pf-gold"],
+    ["active", "--pf-gold-rule"],
+    ["loading", "--pf-gold-rule"],
   ] as const) {
     assert.ok(
       statesWhere((body) => body.includes(`var(${token})`)).includes(state),

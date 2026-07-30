@@ -75,29 +75,37 @@
   --select: var(--pf-select);
 
   /* ======================================================================
-     LOCAL EXTENSIONS, values with no approved `--pf-` counterpart.
+     PROMOTED. These eight were local extensions, declared here as literal hex
+     because the approved Flow set defined each semantic colour but not its
+     surface tint or its hairline.
 
-     Each is a wash or hairline derived from a semantic token above, used to
-     tint a row or draw a status rule at a weight the base token is too strong
-     for. The Flow set defines the semantic colour but not its surface tint,
-     so these cannot be aliased today. They are recorded in
-     design-system/ponte-flow/documentation/compatibility-aliases.md as
-     candidates for promotion into the approved token set, and they are the
-     only literal colours this file may declare.
+     ADR-0015 decided the promotion that
+     design-system/ponte-flow/documentation/compatibility-aliases.md section 3
+     had been holding for an owner ruling. All eight now exist in the approved
+     token set and are aliased here, so the Desk holds no copy of an approved
+     value and there is one place each can change.
 
-     `--gold-tint` is the one the Phase 1 audit named explicitly (section A.2).
-     It is a gold wash on the kicker and the boundary heading. It is a surface,
-     never a status: Constitution section 6 keeps gold off verification,
-     approval, warning and success, and a tint does not soften that rule.
+     The three `*-line` values are why this could not wait: each measured about
+     1.5:1 against white, against the 3:1 Constitution section 18a asks of a band
+     edge, so their values had to change. Once an approved counterpart exists,
+     token-authority.test.ts correctly refuses to let a changed value sit in a
+     local extension.
+
+     `--gold-tint` is a SURFACE, never a status. Constitution section 6 keeps gold
+     off verification, approval, warning and success, and a tint does not soften
+     that.
      ====================================================================== */
-  --gold-tint: #f5ecd8;
-  --pos-tint: #e9f1ec;
-  --pos-line: #bfd8c7;
-  --neg-tint: #f7eae6;
-  --neg-line: #e6c3b8;
-  --review-tint: #eaeff1;
-  --review-line: #c4d2d8;
-  --declared-tint: #f1eee7;
+  --gold-tint: var(--pf-gold-tint);
+  --pos-tint: var(--pf-positive-tint);
+  --pos-line: var(--pf-positive-line);
+  --neg-tint: var(--pf-danger-tint);
+  --neg-line: var(--pf-danger-line);
+  --review-tint: var(--pf-review-tint);
+  --review-line: var(--pf-review-line);
+  --declared-tint: var(--pf-declared-tint);
+
+  /* Gold as a structural line, cap, bar or state marker. Constitution 6b. */
+  --gold-rule: var(--pf-gold-rule);
 
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
@@ -275,7 +283,7 @@
 }
 .ponte-desk .rail__name {
   font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.4);
+  text-transform: uppercase; color: #979591;
   margin: 0 0 18px; text-align: center; line-height: 1.5;
 }
 .ponte-desk .rail__stations {
@@ -292,19 +300,19 @@
 .ponte-desk .st__n { position: relative; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
 .ponte-desk .st__n::after {
   content: ""; position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
-  width: 1.75px; height: 34px; background: rgba(242, 239, 232, 0.5);
+  width: 1.75px; height: 34px; background: #817F7B;
 }
 .ponte-desk .st:last-child .st__n::after { display: none; }
-.ponte-desk .st i { display: block; width: 9px; height: 9px; border-radius: 50%; background: rgba(242, 239, 232, 0.32); }
+.ponte-desk .st i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #817F7B; }
 .ponte-desk .st b {
   font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.09em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.42);
+  text-transform: uppercase; color: #7C7B77;
   text-align: center; line-height: 1.3; font-weight: 500; max-width: 84px;
 }
 /* The four route conditions, plus active. The only conditions a rail may
    express. Each is a shape and a weight as well as a colour. */
 .ponte-desk .st--done i { background: var(--surface); width: 11px; height: 11px; }
-.ponte-desk .st--done b { color: rgba(242, 239, 232, 0.8); }
+.ponte-desk .st--done b { color: #C5C2BC; }
 .ponte-desk .st--here i { background: var(--gold); width: 13px; height: 13px; box-shadow: 0 0 0 4px rgba(217, 172, 85, 0.2); }
 .ponte-desk .st--here b { color: var(--surface); font-weight: 700; }
 /* NOT ALIASED, recorded gap DS-1, same cause as the ink focus ring above.
@@ -315,11 +323,11 @@
    distinct weight, and `.st__n::after` states the condition in words. */
 .ponte-desk .st--halt i { background: #9db4c0; width: 11px; height: 11px; }
 .ponte-desk .st--halt b { color: #9db4c0; font-weight: 600; }
-.ponte-desk .st--reserved i { background: none; border: 1.5px dashed rgba(242, 239, 232, 0.3); }
-.ponte-desk .st--reserved b { color: rgba(242, 239, 232, 0.34); }
+.ponte-desk .st--reserved i { background: none; border: 1.5px dashed #605F5B; }
+.ponte-desk .st--reserved b { color: #7C7B77; }
 .ponte-desk .st--reserved .st__n::after,
 .ponte-desk .st--halt .st__n::after {
-  background: repeating-linear-gradient(180deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+  background: repeating-linear-gradient(180deg, #605F5B 0 3px, transparent 3px 8px);
 }
 .ponte-desk .st--active i { background: var(--gold); width: 13px; height: 13px; animation: dk-pt 1.9s var(--ease) infinite; }
 .ponte-desk .st--active b { color: var(--surface); font-weight: 700; }
@@ -334,10 +342,10 @@
 }
 .ponte-desk .rail__origin b {
   display: block; font-family: var(--f-mono); font-size: 8px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(242, 239, 232, 0.36); margin-bottom: 4px;
+  text-transform: uppercase; color: #7C7B77; margin-bottom: 4px;
 }
 .ponte-desk .rail__origin span {
-  font-family: var(--f-mono); font-size: 9.5px; color: rgba(242, 239, 232, 0.7);
+  font-family: var(--f-mono); font-size: 9.5px; color: #AEACA7;
   overflow-wrap: anywhere;
 }
 
@@ -357,7 +365,19 @@
 .ponte-desk .b--lg { min-height: 46px; padding: 12px 20px; font-size: 14px; }
 .ponte-desk .b--sm { min-height: 32px; padding: 6px 11px; font-size: 12px; }
 .ponte-desk .b--block { width: 100%; }
-.ponte-desk .b[aria-disabled="true"] { opacity: 0.42; pointer-events: none; }
+/* Constitution 6c and section 12. Opacity on a control containing a label drove
+   the label to 2.86:1, and an opacity states no reason. One treatment now, in
+   token colour at full opacity: a sunken ground, the control-boundary rule and
+   secondary ink. The reason belongs beside the control in copy, which the Start a
+   Deal and Workspace surfaces already print. */
+.ponte-desk .b[aria-disabled="true"],
+.ponte-desk .act[aria-disabled="true"],
+.ponte-desk .fbtn[disabled] {
+  background: var(--sunken);
+  border-color: var(--rule-strong);
+  color: var(--ink-3);
+  pointer-events: none;
+}
 
 /* The Desk action primitive: a labelled action with its own consequence line
    underneath. Part of the delivered system and unused in this slice, because
@@ -373,7 +393,7 @@
 .ponte-desk .act span { display: block; font-family: var(--f-mono); font-weight: 400; font-size: 11px; opacity: 0.72; margin-top: 4px; }
 .ponte-desk .act--2 { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
 .ponte-desk .act--2:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
-.ponte-desk .act[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+
 
 /* ======================================================================
    4. SURFACES
@@ -405,7 +425,7 @@
   text-transform: uppercase; color: var(--gold-ink);
   display: flex; align-items: center; gap: 9px;
 }
-.ponte-desk .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold); flex: none; }
+.ponte-desk .kicker::before { content: ""; width: 22px; height: 1px; background: var(--gold-rule); flex: none; }
 
 /* The classification token, before every record title. A word, never a
    colour alone, and never an icon alone. */
@@ -419,7 +439,7 @@
   border-radius: 50%; flex: none;
 }
 .ponte-desk .cls--opp { color: var(--ink); }
-.ponte-desk .cls--opp::before { border: 0; background: var(--gold); width: 7px; height: 7px; }
+.ponte-desk .cls--opp::before { border: 0; background: var(--gold-rule); width: 7px; height: 7px; }
 
 /* ======================================================================
    5. FACT REGISTER, the Ledger borrowing, dense listings only
@@ -446,7 +466,10 @@
 }
 .ponte-desk .reg__row { border-bottom: 1px solid var(--rule); align-items: start; transition: background var(--dur-1); }
 .ponte-desk .reg__row:last-child { border-bottom: 0; }
-.ponte-desk .reg__row:hover { background: color-mix(in srgb, var(--sunken) 55%, transparent); }
+/* Constitution section 6: colour was the only carrier here, and at 1.08:1 it was
+   barely a carrier at all. The row now gains an inset edge at the control-boundary
+   token as well as the wash, so the affordance survives greyscale. */
+.ponte-desk .reg__row:hover { background: var(--sunken); box-shadow: inset 3px 0 0 var(--rule-strong); }
 .ponte-desk .reg__row > * { padding: 13px 14px; min-width: 0; }
 .ponte-desk .reg__cls { border-left: 3px dashed var(--review-line); }
 .ponte-desk .reg__row--opp .reg__cls { border-left: 3px solid var(--ink); }
@@ -610,7 +633,7 @@
 .ponte-desk .fbtn--secondary { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
 .ponte-desk .fbtn--secondary:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
 .ponte-desk .fbtn--block { width: 100%; }
-.ponte-desk .fbtn[disabled] { opacity: 0.42; pointer-events: none; }
+
 .ponte-desk .sigsheet__done {
   display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
   border-radius: var(--dk-radius); background: var(--pos-tint);
@@ -700,9 +723,12 @@
    8. STATES: loading, empty, error
    ====================================================================== */
 .ponte-desk .sk {
+  /* Was a 1.15:1 base with a 1.06:1 sweep, so loading and empty looked the same.
+     The base is now the sunken well against a raised panel and the sweep runs to
+     the hairline rule, which is a visible band rather than a suggestion. */
   background: linear-gradient(
     90deg, var(--sunken) 25%,
-    color-mix(in srgb, var(--sunken) 55%, var(--rule)) 50%, var(--sunken) 75%);
+    var(--rule) 50%, var(--sunken) 75%);
   background-size: 200% 100%;
   animation: dk-sh 1.4s ease infinite;
   border-radius: 3px; display: block;
@@ -1176,7 +1202,7 @@
   }
   .ponte-desk .st--reserved .st__n::after,
   .ponte-desk .st--halt .st__n::after {
-    background: repeating-linear-gradient(90deg, rgba(242, 239, 232, 0.34) 0 3px, transparent 3px 8px);
+    background: repeating-linear-gradient(90deg, #605F5B 0 3px, transparent 3px 8px);
   }
   .ponte-desk .rail__origin {
     margin-top: 0; width: auto; padding: 0 0 0 14px; text-align: left;
@@ -1258,7 +1284,9 @@
     padding: 10px 0 0; border-left: 0; border-top: 1px solid rgba(242, 239, 232, 0.14);
   }
   .ponte-desk .rail__origin b { margin: 0; }
-  .ponte-desk .st b { font-size: 8px; }
+  /* Superseded by the section 18b caption floor at the foot of this file.
+     Kept as a comment rather than deleted so the change is visible where the
+     old value used to be. */
 }
 
 /* Motion is restrained and always optional. The rail pulse is the only
@@ -1273,4 +1301,76 @@
     scroll-behavior: auto !important;
   }
   .ponte-desk .st--active i { box-shadow: 0 0 0 3px rgba(217, 172, 85, 0.28); }
+}
+
+/* ======================================================================
+   11. THE MOBILE STRUCTURAL CAPTION FLOOR
+
+   Constitution section 18b, via ADR-0015 Stage 1. Below 860px, mono text that
+   carries structural or factual information is set at no less than 11px.
+
+   Contrast is a multiplier on legibility, not a substitute for size. The audit
+   found nine of its fifteen components printing structural information in mono
+   between 8 and 10.5px, and a two-letter country code at 8px on a phone in
+   daylight is not rescued by any ratio.
+
+   This is a FLOOR on enumerated roles, not a licence to enlarge all mono text.
+   The roles are the ones the ExecPlan names: the fact register, the journey rail,
+   crumb trails, classification tokens, field labels and reference lines. Decorative
+   and non-structural mono is deliberately untouched, and so is every label inside
+   the approved Bridge package, which ADR-0015 section S-3 restricts to contrast
+   alone.
+   ====================================================================== */
+@media (max-width: 860px) {
+  /* The fact register: column heads, references, field labels, source lines. */
+  .ponte-desk .reg__head > span,
+  .ponte-desk .reg__cls u,
+  .ponte-desk .reg__f dt,
+  .ponte-desk .reg__src,
+  .ponte-desk .reg__band,
+  .ponte-desk .factgrid dt,
+  /* Record surfaces: the reference and the age line either side of a title. */
+  .ponte-desk .rec__top .r,
+  .ponte-desk .rec__top .a,
+  .ponte-desk .rec__f dt,
+  /* The classification token. A Market Signal must not be harder to read than a
+     Member Opportunity, which is half of why the audit flagged it. */
+  .ponte-desk .cls,
+  /* Crumb trails. */
+  .ponte-desk .crumbs,
+  /* Field labels on the request sheet. */
+  .ponte-desk .sigsheet__l,
+  /* Panel and section captions that carry a count or a state. */
+  .ponte-desk .panel__h b,
+  .ponte-desk .panel__h span {
+    font-size: 11px;
+  }
+
+  /* The journey rail. Its labels were the worst in the audit at 8.5px, and they
+     name the position a member is at. `white-space: nowrap` is kept from the
+     existing breakpoint so a station name still never breaks mid-word. */
+  .ponte-desk .rail__name,
+  .ponte-desk .st b,
+  .ponte-desk .rail__origin b,
+  .ponte-desk .rail__origin span {
+    font-size: 11px;
+  }
+}
+
+/* Below 520px the rail already wraps to two rows, and four station names at 11px
+   no longer fit one line. The existing rule dropped them to 8px to force the fit,
+   which is the trade the floor exists to refuse. Instead the labels keep 11px and
+   the rail is allowed to wrap: a legible name on two lines beats an illegible one
+   on one. */
+@media (max-width: 520px) {
+  .ponte-desk .st b {
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+  .ponte-desk .rail__stations {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
 }

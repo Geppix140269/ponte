@@ -17,13 +17,48 @@
   /* nodes + line law */
   --pf-node-origin: 1.9; --pf-node-open: 1.7; --pf-node-evidence: 1.2; --pf-node-stem: 2.4;
   --pf-dash-unconfirmed: 2 2.6; --pf-dash-unavailable: 1 3; --pf-dash-reserved: 3 5;
-  --pf-opacity-unavailable: .45; --pf-opacity-track: .16; --pf-opacity-secondary: .6;
+  --pf-opacity-unavailable: .45; --pf-opacity-secondary: .6;
+  /* --pf-opacity-track is withdrawn by ADR-0015 Stage 1. The Bridge deck drew its
+     passive track as --pf-ink at .16, which composited to 1.42:1 against the page
+     ground. It now strokes --pf-rule-strong at full opacity, so no selector reads
+     this and a token nothing reads is a trap for the next author. The frozen
+     handoff snapshot under design/authority/bridge/v1/source/ keeps it, because
+     that file records the delivery as approved and must not change. */
 
-  /* colour */
-  --pf-ink: #0F0F0E; --pf-ink-2: #3A3733; --pf-ink-3: #6E6A61; --pf-mute: #9A958A;
-  --pf-surface: #FCFBF7; --pf-raised: #FFFFFF; --pf-sunken: #F2EFE6; --pf-rule: #E5DFD2; --pf-rule-strong: #D5CEBC;
-  --pf-gold: #C9973A; --pf-gold-ink: #8A6520;
-  --pf-positive: #0F6E3D; --pf-review: #4E6472; --pf-danger: #B4402A; --pf-declared: #6F695E;
+  /* colour
+     Stage 1 of ADR-0015. Every value below is measured against the DARKEST
+     surface it is ever drawn on, which is --pf-sunken, not against white. A value
+     solved against white and then used in the well fails there, and that was the
+     specific defect the 29 July audit found repeatedly. Constitution section 18a
+     now states the targets numerically.
+     Ratios in the comments are white / page ground / sunken well. */
+  --pf-ink: #0F0F0E; --pf-ink-2: #38352F; --pf-ink-3: #5D5950; --pf-mute: #656055;
+  --pf-surface: #F2EEE2; --pf-raised: #FFFFFF; --pf-sunken: #E2DBC4; --pf-rule: #B9B3A6; --pf-rule-strong: #827B69;
+
+  /* Gold has three roles and they are three tokens, per Constitution 6b.
+     --pf-gold is the brand fill, for large marks and full control fills only,
+     where the contrast that matters is the label against the fill. It is not a
+     rule: at 2.63:1 on white it cannot carry one.
+     --pf-gold-ink is gold as TEXT.  --pf-gold-rule is gold as a structural line,
+     cap, bar or state marker. */
+  --pf-gold: #C9973A; --pf-gold-ink: #7E5914; --pf-gold-rule: #A47215;
+
+  --pf-positive: #0E5F35; --pf-review: #455966; --pf-danger: #A2381F; --pf-declared: #5F5A50;
+
+  /* Semantic bands. Promoted from the eight local extensions that
+     components/desk/desk.css used to declare as literal hex, recorded in
+     design-system/ponte-flow/documentation/compatibility-aliases.md and decided by
+     ADR-0015. A *-tint is the band fill; a *-line is its edge and owes 3:1,
+     because a band edge is a state indicator. */
+  --pf-gold-tint: #E4DBC7;
+  --pf-positive-tint: #D6DED9; --pf-positive-line: #698271;
+  --pf-review-tint: #D8DDDF;   --pf-review-line: #707E84;
+  --pf-danger-tint: #E6D9D5;   --pf-danger-line: #977469;
+  --pf-declared-tint: #DFDCD5;
+
+  /* --pf-focus keeps its value and its single meaning: keyboard focus, and
+     nothing else. Constitution 6a forbids repurposing it as a general interaction
+     token, and the Stage 2 --pf-interact-* family is deliberately absent here. */
   --pf-focus: #1E5FA8; --pf-select: #DCE8F4;
   --pf-focus-ring: 0 0 0 2px var(--pf-surface), 0 0 0 4px var(--pf-focus);
 

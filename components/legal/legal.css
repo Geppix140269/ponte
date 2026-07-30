@@ -2,12 +2,12 @@
    heritage light. Box-free: structure comes from typography, whitespace and
    fine rules between sections, never from cards or rounded containers. */
 .ponte-legal {
-  --lg-surface: #fcfbf7;
-  --lg-rule: #e5dfd2;
-  --lg-ink: #0f0f0e;
-  --lg-ink-2: #3a3733;
-  --lg-ink-3: #6e6a61;
-  --lg-gold-ink: #8a6520;
+  --lg-surface: var(--pf-surface);
+  --lg-rule: var(--pf-rule);
+  --lg-ink: var(--pf-ink);
+  --lg-ink-2: var(--pf-ink-2);
+  --lg-ink-3: var(--pf-ink-3);
+  --lg-gold-ink: var(--pf-gold-ink);
   --lg-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
   --lg-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
   --lg-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;

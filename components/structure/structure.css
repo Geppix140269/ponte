@@ -48,12 +48,16 @@
 .ponte-find .tapopt__t { display: block; font-family: var(--f-serif); font-size: 25px; color: var(--ink); }
 .ponte-find .tapopt__d { display: block; font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
 .ponte-find .tapopt[aria-pressed="true"]::before {
-  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--gold);
+  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--gold-rule);
 }
 .ponte-find .tapopt[aria-pressed="true"] .tapopt__t { color: var(--gold-ink); }
 
-.ponte-find .prodblock { opacity: 0.35; pointer-events: none; transition: opacity var(--dur-2) var(--ease); }
-.ponte-find .prodblock.on { opacity: 1; pointer-events: auto; }
+/* Constitution 6c: container opacity over a subtree containing text multiplies
+   every descendant's contrast, and this block held labels at 1.61:1. Recession is
+   expressed in token colour at full opacity instead. */
+.ponte-find .prodblock { color: var(--ink-3); pointer-events: none; transition: color var(--dur-2) var(--ease); }
+.ponte-find .prodblock:not(.on) .tapopt__t, .ponte-find .prodblock:not(.on) .hsrow__n { color: var(--ink-3); }
+.ponte-find .prodblock.on { color: var(--ink-2); pointer-events: auto; }
 
 /* Voice capture */
 .ponte-find .capture { display: flex; align-items: center; gap: var(--s-4); margin: var(--s-5) 0; }
@@ -61,7 +65,7 @@
   flex: none; width: 64px; height: 64px; border-radius: 50%;
   display: grid; place-items: center;
   background: var(--gold-tint); color: var(--gold-ink);
-  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--rule-strong));
+  border: 1px solid var(--gold-rule);
   cursor: pointer;
 }
 .ponte-find .mic-lg.is-listening { background: var(--gold); color: var(--ink); }
@@ -102,7 +106,7 @@
 .ponte-find .hsrow:hover { color: var(--gold-ink); }
 .ponte-find .hsrow__code { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
 .ponte-find .hsrow.leaf.is-picked { color: var(--gold-ink); }
-.ponte-find .hsrow.leaf.is-picked .hsrow__code::before { content: "\2022 "; color: var(--gold); }
+.ponte-find .hsrow.leaf.is-picked .hsrow__code::before { content: "\2022 "; color: var(--gold-ink); }
 /* A code row that leads with what the code is. The number is the smallest
    thing on the row, because it is the least useful thing on it. */
 .ponte-find .hsrow--desc { align-items: flex-start; padding: 14px 4px; }
@@ -162,7 +166,7 @@
 .ponte-find .sfact__k { font-size: 13.5px; color: var(--ink-2); }
 .ponte-find .sval { font-family: var(--f-mono); font-size: 11.5px; padding: 3px 10px; border-radius: var(--r-pill); border: 1px solid transparent; display: inline-flex; align-items: center; gap: 5px; }
 .ponte-find .sval--ok { color: var(--pos); background: var(--pos-tint); border-color: var(--pos-line); }
-.ponte-find .sval--add { color: var(--gold-ink); background: transparent; border: 1px dashed color-mix(in srgb, var(--gold) 50%, var(--rule-strong)); cursor: pointer; }
+.ponte-find .sval--add { color: var(--gold-ink); background: transparent; border: 1px dashed var(--gold-rule); cursor: pointer; }
 .ponte-find .sval--ev { color: var(--review); background: var(--review-tint); border-color: var(--review-line); }
 .ponte-find .sval--priv { color: var(--ink-3); background: var(--sunken); }
 .ponte-find .reveal-stagger { opacity: 0; transform: translateY(8px); animation: freveal var(--dur-3) var(--ease-out) forwards; }
@@ -192,7 +196,7 @@
   color: var(--gold-ink); background: none; border: 0; border-bottom: 1px solid var(--rule-strong);
   padding: 0 0 1px; cursor: pointer;
 }
-.ponte-find .lrow__e:hover { border-bottom-color: var(--gold); }
+.ponte-find .lrow__e:hover { border-bottom-color: var(--gold-rule); }
 .ponte-find .lrow__v { flex: 1 1 auto; }
 .ponte-find .rev { border-top: 1px solid var(--ink); }
 .ponte-find .rev__v { font-family: var(--f-sans); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill); border: 1px solid transparent; }
@@ -233,3 +237,18 @@
 
 /* Parse-error */
 .ponte-find .err-badge { display: inline-block; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neg); }
+
+/* ======================================================================
+   The mobile structural caption floor. Constitution section 18b, ADR-0015
+   Stage 1. Enumerated roles only: field labels, ledger keys, the HS code under a
+   drill tile, and the parse-error badge. Start a Deal is where LB-002 and LB-003
+   are closed, so its labels are the ones that must not be too small to read.
+   ====================================================================== */
+@media (max-width: 860px) {
+  .ponte-find .hstile__n,
+  .ponte-find .tapgroup__l,
+  .ponte-find .lrow__k,
+  .ponte-find .err-badge {
+    font-size: 11px;
+  }
+}
