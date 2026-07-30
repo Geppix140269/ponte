@@ -145,7 +145,7 @@ export default async function AccountPage({ params }: { params: { locale: string
             }}
           >
             <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <PonteIcon name="evidence.evreview" size={20} label="Business status" />
+              <PonteIcon name="evidence.evreview" size={20} />
               <div style={{ minWidth: 0 }}>
                 <h3 className="serif" style={{ fontSize: 22 }}>Member-business status</h3>
                 {businessCheck ? (
