@@ -1,0 +1,507 @@
+<meta charset="utf-8">
+<title>Ponte — Mobile Action Hierarchy — Directions A/B/C</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ------------------------------------------------------------------ *
+   PONTE — STRUCTURE / REVIEW — MOBILE ACTION HIERARCHY PROTOTYPES
+   Design-decision session. Not production. Renders at 390x844.
+
+   Every colour below is a REAL Stage-1 (merged, ADR-0015) token value,
+   transcribed from design-system/ponte-flow/tokens/ponte-flow-tokens.css
+   and the find.css heritage-light alias block. The four --int-* tokens
+   are the PROPOSED ADR-0015 Stage 2 interaction-blue family (values from
+   ADR-0015 itself). Fonts fall back to system stand-ins because the
+   licensed Playfair/Inter/JetBrains webfonts cannot be embedded here;
+   the hierarchy decisions do not depend on the exact typeface.
+ * ------------------------------------------------------------------ */
+:root{
+  --surface:#F2EEE2;   /* page ground            */
+  --raised:#FFFFFF;    /* working surface        */
+  --sunken:#E2DBC4;    /* well                   */
+  --rule:#B9B3A6;      /* intra-module divider  1.5:1 */
+  --rule-strong:#827B69;/* module/control boundary 3:1 */
+  --ink:#0F0F0E;
+  --ink-2:#38352F;
+  --ink-3:#5D5950;
+  --mute:#656055;
+  --gold:#C9973A;      /* brand fill            */
+  --gold-ink:#7E5914;  /* gold as text          */
+  --gold-rule:#A47215; /* gold as line/marker   */
+  --gold-tint:#E4DBC7;
+  --review:#455966; --review-tint:#D8DDDF; --review-line:#707E84;
+  --pos:#0E5F35; --pos-tint:#D6DED9; --pos-line:#698271;
+  --neg:#A2381F;
+  --declared:#5F5A50;
+  --focus:#1E5FA8; --select:#DCE8F4;
+  /* PROPOSED Stage 2 interaction family (ADR-0015) */
+  --int:#17548C; --int-border:#2C6EAC; --int-active:#0F3D6B; --int-tint:#E4EDF5;
+  --r-sm:5px; --r-md:9px; --r-lg:14px; --r-pill:999px;
+  --f-serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --f-sans:-apple-system,system-ui,"Segoe UI","Helvetica Neue",sans-serif;
+  --f-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:#3a3732; color:var(--ink); font-family:var(--f-sans);
+  -webkit-font-smoothing:antialiased; padding:28px 16px 80px;
+}
+.sheet{max-width:1240px;margin:0 auto}
+.sheet > header{color:#efeae0;max-width:80ch;margin:0 auto 30px}
+.sheet > header h1{font-family:var(--f-serif);font-weight:600;font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+.sheet > header p{color:#c9c3b6;font-size:14px;line-height:1.6;margin:6px 0}
+.sheet > header .k{color:#efeae0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:16px 0 0;font-family:var(--f-mono);font-size:11px;color:#c9c3b6}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+
+/* deck of directions */
+.deck{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start;justify-content:center}
+.col{width:390px;flex:0 0 auto}
+.col > h2{color:#efeae0;font-family:var(--f-serif);font-size:20px;font-weight:600;margin:0 0 3px}
+.col > .tag{color:#b9b2a3;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;margin:0 0 12px}
+.col > .gov{color:#cdb98a;font-size:11.5px;line-height:1.5;margin:0 0 14px;border-left:2px solid #6b5f43;padding-left:10px}
+
+/* the phone */
+.phone{width:390px;height:844px;overflow-y:auto;overflow-x:hidden;background:var(--surface);
+  border-radius:26px;border:1px solid #000;box-shadow:0 10px 40px rgba(0,0,0,.45);
+  scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+.phone::-webkit-scrollbar{width:7px}
+.phone::-webkit-scrollbar-thumb{background:var(--rule);border-radius:4px}
+.vp{padding:20px 18px 40px}
+.statebar{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--rule);
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:7px 18px}
+
+/* state caption between blocks */
+.sc{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--gold-ink);background:var(--gold-tint);display:inline-block;padding:3px 8px;border-radius:3px;margin:26px 0 12px}
+.sc.first{margin-top:4px}
+
+/* ---- shared editorial header ---- */
+.eb{display:inline-flex;align-items:center;gap:9px;margin-bottom:11px}
+.eb i{width:22px;height:1px;background:var(--gold-rule);display:block}
+.eb span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.lead{font-family:var(--f-serif);font-size:24px;line-height:1.22;letter-spacing:-.012em;color:var(--ink);margin:0 0 10px;font-weight:500}
+.lead em{font-style:italic;color:var(--gold-ink);font-weight:500}
+.sub{font-size:13.5px;line-height:1.5;color:var(--ink-2);margin:0 0 18px}
+.mono{font-family:var(--f-mono)}
+
+/* =======================================================
+   BASELINE (current production) — faithful reproduction
+   ======================================================= */
+.b .prev{border-top:1px solid var(--ink);margin-top:16px}
+.b .prev__gl{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--ink);margin-top:24px}
+.b .prow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.b .prow__k{flex:1 0 100%;font-size:13px;color:var(--ink-3)}
+.b .prow__v{flex:1 1 auto;font-size:14px;color:var(--ink)}
+.b .prow__v.ns{color:var(--ink-3)}
+.b .pprov{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.b .pprov::before{content:"";width:8px;height:8px;flex:none;border:1px solid currentColor}
+.b .pprov.miss::before{height:0;border-width:0 0 1px;align-self:center}
+.b .pprov.rev{color:var(--review)} .b .pprov.rev::before{transform:rotate(45deg)}
+.b .prow__e{flex:none;font-family:var(--f-mono);font-size:11px;color:var(--gold-ink);background:none;border:0;border-bottom:1px solid var(--rule-strong);padding:0 0 1px;cursor:pointer}
+.b .warn{font-size:13px;color:var(--ink-3);margin:14px 0 0}
+.b .cta{margin-top:22px}
+.btnink{display:flex;width:100%;justify-content:center;align-items:center;font-family:var(--f-sans);font-size:15px;font-weight:500;padding:13px 22px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);border-radius:4px;cursor:pointer}
+
+/* annotation flags */
+.flag{font-family:var(--f-mono);font-size:10px;color:var(--neg);background:#f0dcd5;border-left:2px solid var(--neg);padding:3px 7px;margin:4px 0 0;display:block;line-height:1.4}
+
+/* =======================================================
+   SHARED REDESIGN PRIMITIVES (A/B/C build on these)
+   ======================================================= */
+/* working surface: white panel inset on cream, drawn boundary (15a) */
+.panel{background:var(--raised);border:1px solid var(--rule-strong);border-radius:var(--r-md);padding:15px 15px 4px;margin:12px 0}
+.panel + .panel{margin-top:14px}
+.gl{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.gl.mt{margin-top:8px}
+
+/* fact row: name over value, one line of state, subordinate */
+.fact{padding:11px 0;border-bottom:1px solid var(--rule)}
+.fact:last-child{border-bottom:0}
+.fact .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:0 0 3px}
+.fact .v{font-size:15.5px;line-height:1.35;color:var(--ink)}
+.fact .v.serif{font-family:var(--f-serif);font-size:17px}
+/* provenance: LEVEL 4 — marker + concise human label, subordinate */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-3);margin-top:4px}
+.st i{width:9px;height:9px;flex:none;border:1px solid currentColor;display:inline-block}
+.st.member{color:var(--ink-2)} .st.member i{border-radius:50%;background:currentColor}
+.st.ident{color:var(--review)} .st.ident i{transform:rotate(45deg)}
+.st.extr i{border-style:dashed}
+.st.conf{color:var(--pos)} .st.conf i{border-radius:50%;background:currentColor}
+.st.na{color:var(--ink-3)} .st.na i{border-radius:50%;border-style:dotted}
+.q{font-size:12px;font-style:italic;color:var(--ink-3);border-left:1px solid var(--rule-strong);padding-left:10px;margin-top:6px}
+
+/* a "needs" item = one clear state + one clear action */
+.need{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.need:last-child{border-bottom:0}
+.need .nk{flex:1 1 auto}
+.need .nk b{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.need .nk small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+
+/* required-summary band */
+.needs-h{display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 8px}
+.needs-h b{font-family:var(--f-serif);font-size:16px;color:var(--ink);font-weight:600}
+.needs-h span{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+
+/* disclosure for optional/contract terms */
+.disc{width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--rule);
+  padding:13px 2px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+.disc .chev{margin-left:auto;font-size:14px}
+
+/* ACTION PRIMITIVES ------------------------------------ */
+/* A: ink action */
+.act{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;
+  font-family:var(--f-sans);font-size:13.5px;font-weight:600;padding:8px 15px;border-radius:var(--r-sm);cursor:pointer;white-space:nowrap}
+.act .plus{font-size:15px;line-height:1}
+.act--ink{background:var(--ink);color:var(--surface);border:1px solid var(--ink)}
+.act--inkout{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+/* B: interaction blue */
+.act--blue{background:var(--int);color:#fff;border:1px solid var(--int)}
+.act--blueout{background:transparent;color:var(--int);border:1px solid var(--int-border)}
+/* C: used inside ink band, cream/gold */
+.act--onink{background:var(--surface);color:var(--ink);border:1px solid var(--surface)}
+.act--oninkout{background:transparent;color:var(--surface);border:1px solid #6f6a5f}
+
+.primary{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;min-height:52px;
+  font-family:var(--f-sans);font-size:15.5px;font-weight:600;border-radius:var(--r-sm);cursor:pointer;border:1px solid transparent}
+.primary--ink{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.primary--blue{background:var(--int);color:#fff;border-color:var(--int)}
+
+/* editing input */
+.edit{width:100%;font-family:var(--f-sans);font-size:15px;padding:11px 12px;border-radius:var(--r-sm);
+  background:var(--raised);color:var(--ink);margin-top:4px}
+.edit.a{border:1.5px solid var(--ink)}
+.edit.b{border:1.5px solid var(--int-border)}
+.editrow{display:flex;gap:8px;margin-top:8px}
+.editrow .act{flex:0 0 auto}
+
+/* ink band (Direction C) */
+.band{background:var(--ink);border-radius:var(--r-md);padding:16px 15px;margin:14px 0;color:var(--surface)}
+.band .bh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.band .bh b{font-family:var(--f-serif);font-size:16px;color:#fff;font-weight:600}
+.band .bh span{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#b7b1a4}
+.band .bneed{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(242,238,226,.14)}
+.band .bneed:last-child{border-bottom:0}
+.band .bneed .bk{flex:1 1 auto;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#e7e1d3}
+.band .bneed .bk small{display:block;font-family:var(--f-sans);letter-spacing:0;text-transform:none;font-size:11px;color:#a9a396;margin-top:2px}
+.finalband{background:var(--ink);border-radius:var(--r-md);padding:18px 16px;margin-top:16px;color:var(--surface)}
+.finalband p{font-size:12.5px;color:#b7b1a4;margin:0 0 12px;line-height:1.5}
+
+.confirmzone{margin-top:16px}
+.confirmzone .why{font-size:12px;color:var(--ink-3);margin:9px 2px 0;line-height:1.5}
+
+/* interaction-state strip */
+.istrip{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 0}
+.ichip{background:var(--raised);border:1px solid var(--rule);border-radius:var(--r-md);padding:10px;width:118px}
+.ichip .il{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.mini{min-height:34px;font-size:12px;padding:6px 11px;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:6px;font-weight:600;font-family:var(--f-sans)}
+.foc{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--focus)}
+.press{transform:translateY(1px);filter:brightness(.92)}
+.dis{background:var(--sunken);color:var(--ink-3);border:1px solid var(--rule-strong);cursor:not-allowed}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
+.done{color:var(--pos);font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.done i{width:9px;height:9px;border-radius:50%;background:var(--pos);display:inline-block}
+
+.note{color:#c9c3b6;font-size:12px;max-width:80ch;margin:22px auto 0;line-height:1.6;text-align:center}
+h3.band-t{color:#efeae0;font-family:var(--f-serif);font-size:22px;text-align:center;margin:54px 0 6px}
+.sub-t{color:#b9b2a3;text-align:center;font-size:13px;margin:0 auto 26px;max-width:70ch;line-height:1.6}
+</style>
+
+<div class="sheet">
+<header>
+  <h1>Structure / Review — mobile action hierarchy</h1>
+  <p>Design-decision session. Three controlled directions for the mobile Review journey, at <span class="k">390&#215;844</span>, on the merged ADR-0015 Stage&#160;1 tokens. <span class="k">Prototype only — no production change.</span> Content: the brief&#8217;s Fresh&#160;coconuts intake.</p>
+  <p>The leftmost frame is a faithful reproduction of the <span class="k">current production</span> Review screen. The three that follow are the proposals. Read each phone top-to-bottom: it is the real scrolling order — introduction &#8594; stated facts &#8594; missing facts &#38; actions &#8594; an expanded edit &#8594; a confirmed fact &#8594; the confirmation zone.</p>
+  <div class="legend">
+    <span><i style="background:#F2EEE2;border:1px solid #827B69"></i>page ground</span>
+    <span><i style="background:#fff;border:1px solid #827B69"></i>working surface</span>
+    <span><i style="background:#0F0F0E"></i>ink action zone</span>
+    <span><i style="background:#7E5914"></i>gold = signal/editorial</span>
+    <span><i style="background:#17548C"></i>blue = interaction (Stage&#160;2)</span>
+    <span><i style="background:#455966"></i>review state</span>
+    <span><i style="background:#0E5F35"></i>confirmed</span>
+  </div>
+</header>
+
+<div class="deck">
+
+  <!-- ============ BASELINE ============ -->
+  <div class="col">
+    <h2>Current</h2>
+    <div class="tag">Production &#183; the problem</div>
+    <div class="gov" style="color:#d8a99a;border-color:#7a4436">What the owner is seeing. Everything sits on one cream sheet; every element is near the same weight; the action is a 11px gold underline; missing shows twice; all 13 terms including contract fields appear at once.</div>
+    <div class="phone b">
+      <div class="statebar">Current production &#183; scroll</div>
+      <div class="vp">
+        <div class="eb"><i></i><span>Review before anything is created</span></div>
+        <div class="lead">Check what Ponte understood, <em>then confirm it.</em></div>
+        <div class="sub">Nothing has been created or published. Ponte has structured what you gave it and marked where each fact came from.</div>
+
+        <div class="prev">
+          <div class="prow"><span class="prow__k">Your words</span><span class="prow__v">fresh coconuts, 2 containers a month to Rotterdam</span><span class="pprov member" style="color:var(--ink-2)"></span></div>
+          <div class="prev__gl">Product</div>
+          <div class="prow"><span class="prow__k">Ponte product</span><span class="prow__v">Coconuts, fresh (in shell)</span></div>
+          <div class="prow"><span class="prow__k">Category</span><span class="prow__v">Agriculture / Fruit and nuts / Coconuts</span></div>
+          <div class="prow"><span class="prow__k">Customs classification</span><span class="prow__v">HS 0801.12, suggested. You confirm it later.</span></div>
+          <div class="prow"><span class="prow__k">Verified by Ponte</span><span class="prow__v ns">Not available on this journey</span><span class="pprov na" style="color:var(--ink-3)">Verified by Ponte</span></div>
+
+          <div class="prev__gl">Commercial terms</div>
+          <div class="prow"><span class="prow__k">Quantity</span><span class="prow__v">2</span><span class="pprov member" style="color:var(--ink-2)">Confirmed by you</span><button class="prow__e">Change</button></div>
+          <div class="prow"><span class="prow__k">Unit</span><span class="prow__v">Containers (FCL)</span><span class="pprov member" style="color:var(--ink-2)">Confirmed by you</span><button class="prow__e">Change</button></div>
+          <div class="prow"><span class="prow__k">Recurrence or schedule</span><span class="prow__v">Monthly</span><span class="pprov member" style="color:var(--ink-2)">Confirmed by you</span><button class="prow__e">Change</button></div>
+          <div class="prow"><span class="prow__k">Origin</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <span class="flag">&#215; &#8220;Not stated&#8221; printed twice + &#8220;Add&#8221; as a 11px gold underline &#8212; three low-weight tokens for one idea</span>
+          <div class="prow"><span class="prow__k">Destination</span><span class="prow__v">Rotterdam, Netherlands</span><span class="pprov member" style="color:var(--ink-2)">Confirmed by you</span><button class="prow__e">Change</button></div>
+          <div class="prow"><span class="prow__k">Incoterm</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Pricing basis</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Payment structure</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Contract term</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <span class="flag">&#215; Contract-level fields (term, counterparties, signatories) shown before any draft exists</span>
+          <div class="prow"><span class="prow__k">Availability</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Validity dates</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Named counterparties</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+          <div class="prow"><span class="prow__k">Signatories</span><span class="prow__v ns">Not stated</span><span class="pprov miss">Not stated</span><button class="prow__e">Add</button></div>
+        </div>
+        <div class="warn">9 terms are still unstated. Ponte will not guess them. You can continue and complete them on the record, or add them here.</div>
+        <div class="cta"><button class="btnink">Confirm and create the draft</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DIRECTION A ============ -->
+  <div class="col">
+    <h2>Direction A</h2>
+    <div class="tag">Editorial contrast &#183; ink actions</div>
+    <div class="gov">Ships under a new component ADR. <b>No new colour token.</b> Warm paper kept; hierarchy from white working surfaces, drawn boundaries, ink action buttons, subordinated provenance, progressive disclosure.</div>
+    <div class="phone">
+      <div class="statebar">Direction A &#183; scroll</div>
+      <div class="vp">
+        <span class="sc first">1 &#183; Review introduction</span>
+        <div class="eb"><i></i><span>Review before anything is created</span></div>
+        <div class="lead">Check what Ponte understood, <em>then confirm it.</em></div>
+        <div class="sub">Nothing has been created yet. Here is what Ponte matched and what you gave it. Fix anything wrong, then confirm.</div>
+
+        <div class="panel">
+          <div class="gl">The product Ponte matched</div>
+          <div class="fact"><div class="k">Your words</div><div class="v serif">fresh coconuts, 2 containers a month to Rotterdam</div><span class="st member"><i></i>Your words</span></div>
+          <div class="fact"><div class="k">Ponte product</div><div class="v serif">Coconuts, fresh (in shell)</div><div class="q">Agriculture / Fruit and nuts / Coconuts &#183; HS&#160;0801.12 suggested</div></div>
+          <div class="fact"><div class="k">Verified by Ponte</div><div class="v" style="color:var(--ink-3)">Not available on this journey</div><span class="st na"><i></i>Ponte does not verify product claims here</span></div>
+        </div>
+
+        <span class="sc">2 &#183; Completed facts</span>
+        <div class="panel">
+          <div class="gl">What you&#8217;ve given</div>
+          <div class="fact"><div class="k">Quantity</div><div class="v">2 containers (FCL), monthly</div><span class="st member"><i></i>Your words</span></div>
+          <div class="fact"><div class="k">Destination</div><div class="v">Rotterdam, Netherlands</div><span class="st member"><i></i>Your words</span></div>
+        </div>
+
+        <span class="sc">3 &#183; Missing facts, each with one action</span>
+        <div class="panel">
+          <div class="needs-h"><b>4 details Ponte still needs</b><span>required</span></div>
+          <div class="need"><div class="nk"><b>Origin</b><small>Where the coconuts ship from</small></div><button class="act act--ink"><span class="plus">+</span>Add origin</button></div>
+          <div class="need"><div class="nk"><b>Incoterm</b><small>Who carries cost and risk, and to where</small></div><button class="act act--ink"><span class="plus">+</span>Add Incoterm</button></div>
+          <div class="need"><div class="nk"><b>Pricing basis</b><small>Per container, per kg, or on request</small></div><button class="act act--ink"><span class="plus">+</span>Add pricing</button></div>
+          <div class="need"><div class="nk"><b>Payment structure</b><small>How settlement works</small></div><button class="act act--ink"><span class="plus">+</span>Add payment</button></div>
+        </div>
+        <button class="disc">Add more detail &#183; 5 optional, incl. contract terms<span class="chev">&#43;</span></button>
+
+        <span class="sc">4 &#183; One expanded editing state</span>
+        <div class="panel">
+          <div class="gl">Origin</div>
+          <div class="fact" style="border:0;padding-bottom:2px">
+            <div class="k">Where do the coconuts ship from?</div>
+            <input class="edit a" value="Tamil Nadu, India" aria-label="Origin">
+            <div class="editrow"><button class="act act--ink">Save origin</button><button class="act act--inkout">Cancel</button></div>
+          </div>
+        </div>
+
+        <span class="sc">5 &#183; A confirmed state</span>
+        <div class="panel">
+          <div class="fact" style="border:0"><div class="k">Origin</div><div class="v">Tamil Nadu, India</div><span class="st conf"><i></i>Confirmed by you &#183; just now</span></div>
+        </div>
+
+        <span class="sc">6 &#183; Final confirmation zone</span>
+        <div class="confirmzone">
+          <button class="primary primary--ink">Confirm and create the draft</button>
+          <p class="why">2 required details still open. You can add them now or complete them on the record after the draft exists.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DIRECTION B ============ -->
+  <div class="col">
+    <h2>Direction B &#183; recommended</h2>
+    <div class="tag">Paper + interaction blue</div>
+    <div class="gov">Colour ships as <b>ADR-0015 Stage&#160;2</b> (Start a Deal is journey&#160;1, already owner-approved in concept). Structure ships under the same new component ADR as A. Blue = act/edit; gold = signal/editorial; ink = commit.</div>
+    <div class="phone">
+      <div class="statebar">Direction B &#183; scroll</div>
+      <div class="vp">
+        <span class="sc first">1 &#183; Review introduction</span>
+        <div class="eb"><i></i><span>Review before anything is created</span></div>
+        <div class="lead">Check what Ponte understood, <em>then confirm it.</em></div>
+        <div class="sub">Nothing has been created yet. Here is what Ponte matched and what you gave it. <span style="color:var(--int)">Blue is where you can act.</span></div>
+
+        <div class="panel">
+          <div class="gl">The product Ponte matched</div>
+          <div class="fact"><div class="k">Your words</div><div class="v serif">fresh coconuts, 2 containers a month to Rotterdam</div><span class="st member"><i></i>Your words</span></div>
+          <div class="fact"><div class="k">Ponte product</div><div class="v serif">Coconuts, fresh (in shell)</div><div class="q">Agriculture / Fruit and nuts / Coconuts &#183; HS&#160;0801.12 suggested</div></div>
+          <div class="fact"><div class="k">Verified by Ponte</div><div class="v" style="color:var(--ink-3)">Not available on this journey</div><span class="st na"><i></i>Ponte does not verify product claims here</span></div>
+        </div>
+
+        <span class="sc">2 &#183; Completed facts</span>
+        <div class="panel">
+          <div class="gl">What you&#8217;ve given</div>
+          <div class="fact"><div class="k">Quantity</div><div class="v">2 containers (FCL), monthly</div><span class="st member"><i></i>Your words</span> &#183; <a style="color:var(--int);font-size:11px;text-decoration:underline;text-underline-offset:2px">Edit</a></div>
+          <div class="fact"><div class="k">Destination</div><div class="v">Rotterdam, Netherlands</div><span class="st member"><i></i>Your words</span> &#183; <a style="color:var(--int);font-size:11px;text-decoration:underline;text-underline-offset:2px">Edit</a></div>
+        </div>
+
+        <span class="sc">3 &#183; Missing facts, each with one action</span>
+        <div class="panel">
+          <div class="needs-h"><b>4 details Ponte still needs</b><span>required</span></div>
+          <div class="need"><div class="nk"><b>Origin</b><small>Where the coconuts ship from</small></div><button class="act act--blue"><span class="plus">+</span>Add origin</button></div>
+          <div class="need"><div class="nk"><b>Incoterm</b><small>Who carries cost and risk, and to where</small></div><button class="act act--blue"><span class="plus">+</span>Add Incoterm</button></div>
+          <div class="need"><div class="nk"><b>Pricing basis</b><small>Per container, per kg, or on request</small></div><button class="act act--blue"><span class="plus">+</span>Add pricing</button></div>
+          <div class="need"><div class="nk"><b>Payment structure</b><small>How settlement works</small></div><button class="act act--blue"><span class="plus">+</span>Add payment</button></div>
+        </div>
+        <button class="disc" style="color:var(--int)">Add more detail &#183; 5 optional, incl. contract terms<span class="chev">&#43;</span></button>
+
+        <span class="sc">4 &#183; One expanded editing state</span>
+        <div class="panel">
+          <div class="gl" style="color:var(--int)">Origin &#183; editing</div>
+          <div class="fact" style="border:0;padding-bottom:2px">
+            <div class="k">Where do the coconuts ship from?</div>
+            <input class="edit b" value="Tamil Nadu, India" aria-label="Origin">
+            <div class="editrow"><button class="act act--blue">Save origin</button><button class="act act--blueout">Cancel</button></div>
+          </div>
+        </div>
+
+        <span class="sc">5 &#183; A confirmed state</span>
+        <div class="panel">
+          <div class="fact" style="border:0"><div class="k">Origin</div><div class="v">Tamil Nadu, India</div><span class="st conf"><i></i>Confirmed by you &#183; just now</span></div>
+        </div>
+
+        <span class="sc">6 &#183; Final confirmation zone</span>
+        <div class="confirmzone">
+          <button class="primary primary--ink">Confirm and create the draft</button>
+          <p class="why">2 required details still open. Add them now, or complete them on the record after the draft exists. <span style="color:var(--int)">Commit stays ink; blue never commits.</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DIRECTION C ============ -->
+  <div class="col">
+    <h2>Direction C</h2>
+    <div class="tag">Ink action band</div>
+    <div class="gov">Ships under the new component ADR. <b>No new colour token.</b> Facts on white; the missing-work summary and the commit zone are restrained dark-ink bands, giving the long page rhythm and a clear &#8220;work here&#8221; zone.</div>
+    <div class="phone">
+      <div class="statebar">Direction C &#183; scroll</div>
+      <div class="vp">
+        <span class="sc first">1 &#183; Review introduction</span>
+        <div class="eb"><i></i><span>Review before anything is created</span></div>
+        <div class="lead">Check what Ponte understood, <em>then confirm it.</em></div>
+        <div class="sub">Nothing has been created yet. Here is what Ponte matched and what you gave it.</div>
+
+        <div class="panel">
+          <div class="gl">The product Ponte matched</div>
+          <div class="fact"><div class="k">Your words</div><div class="v serif">fresh coconuts, 2 containers a month to Rotterdam</div><span class="st member"><i></i>Your words</span></div>
+          <div class="fact"><div class="k">Ponte product</div><div class="v serif">Coconuts, fresh (in shell)</div><div class="q">Agriculture / Fruit and nuts / Coconuts &#183; HS&#160;0801.12 suggested</div></div>
+          <div class="fact"><div class="k">Verified by Ponte</div><div class="v" style="color:var(--ink-3)">Not available on this journey</div><span class="st na"><i></i>Ponte does not verify product claims here</span></div>
+        </div>
+
+        <span class="sc">2 &#183; Completed facts</span>
+        <div class="panel">
+          <div class="gl">What you&#8217;ve given</div>
+          <div class="fact"><div class="k">Quantity</div><div class="v">2 containers (FCL), monthly</div><span class="st member"><i></i>Your words</span></div>
+          <div class="fact"><div class="k">Destination</div><div class="v">Rotterdam, Netherlands</div><span class="st member"><i></i>Your words</span></div>
+        </div>
+
+        <span class="sc">3 &#183; Missing facts, in an ink work-band</span>
+        <div class="band">
+          <div class="bh"><b>4 details Ponte still needs</b><span>required</span></div>
+          <div class="bneed"><div class="bk">Origin<small>Where the coconuts ship from</small></div><button class="act act--onink">Add origin</button></div>
+          <div class="bneed"><div class="bk">Incoterm<small>Cost and risk, and to where</small></div><button class="act act--onink">Add Incoterm</button></div>
+          <div class="bneed"><div class="bk">Pricing basis<small>Per container, per kg, or on request</small></div><button class="act act--onink">Add pricing</button></div>
+          <div class="bneed"><div class="bk">Payment structure<small>How settlement works</small></div><button class="act act--onink">Add payment</button></div>
+        </div>
+        <button class="disc">Add more detail &#183; 5 optional, incl. contract terms<span class="chev">&#43;</span></button>
+
+        <span class="sc">4 &#183; One expanded editing state</span>
+        <div class="panel">
+          <div class="gl">Origin</div>
+          <div class="fact" style="border:0;padding-bottom:2px">
+            <div class="k">Where do the coconuts ship from?</div>
+            <input class="edit a" value="Tamil Nadu, India" aria-label="Origin">
+            <div class="editrow"><button class="act act--ink">Save origin</button><button class="act act--inkout">Cancel</button></div>
+          </div>
+        </div>
+
+        <span class="sc">5 &#183; A confirmed state</span>
+        <div class="panel">
+          <div class="fact" style="border:0"><div class="k">Origin</div><div class="v">Tamil Nadu, India</div><span class="st conf"><i></i>Confirmed by you &#183; just now</span></div>
+        </div>
+
+        <span class="sc">6 &#183; Final confirmation band</span>
+        <div class="finalband">
+          <p>Nothing is created until you confirm. 2 required details are still open &#8212; add them now, or complete them on the record after the draft exists.</p>
+          <button class="primary primary--ink" style="background:var(--surface);color:var(--ink);border-color:var(--surface)">Confirm and create the draft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<h3 class="band-t">Action component &#183; interaction states</h3>
+<p class="sub-t">Every state distinguished by shape, position, text and fill weight &#8212; never colour alone (&#167;18). The row action, across the recommended Direction&#160;B, plus the shared disabled/loading/completed forms.</p>
+<div class="deck">
+  <div style="width:100%;max-width:900px">
+    <div class="istrip" style="justify-content:center">
+      <div class="ichip"><div class="il">Neutral</div><button class="mini act--blue"><span>+</span>Add origin</button></div>
+      <div class="ichip"><div class="il">Hover</div><button class="mini act--blue" style="background:var(--int-active);border-color:var(--int-active)"><span>+</span>Add origin</button></div>
+      <div class="ichip"><div class="il">Focus</div><button class="mini act--blue foc"><span>+</span>Add origin</button></div>
+      <div class="ichip"><div class="il">Pressed</div><button class="mini act--blue press"><span>+</span>Add origin</button></div>
+      <div class="ichip"><div class="il">Disabled</div><button class="mini dis">Add origin</button><div style="font-size:9.5px;color:var(--ink-3);margin-top:6px;line-height:1.3">Reason shown on why</div></div>
+      <div class="ichip"><div class="il">Loading</div><button class="mini act--blue"><span class="spin"></span>Saving</button></div>
+      <div class="ichip"><div class="il">Completed</div><span class="done"><i></i>Confirmed by you</span></div>
+    </div>
+    <p class="note">Disabled is not colour-only: it changes fill (sunken), border (rule-strong), cursor, and carries a reason. Loading swaps the glyph for a spinner and the verb for &#8220;Saving&#8221;. Completed removes the action entirely and replaces it with the member-confirmed state marker &#8212; the action is gone because the work is done.</p>
+  </div>
+</div>
+
+<h3 class="band-t">One desktop adaptation &#183; Direction&#160;B</h3>
+<p class="sub-t">Mobile is the approval authority. On desktop the same system widens: the register becomes two columns of white working surface, the field name returns to a left key column, actions stay right-aligned and blue. No new pattern &#8212; the mobile system, given room.</p>
+<div class="deck">
+  <div style="width:900px;max-width:100%">
+    <div style="background:var(--surface);border-radius:14px;border:1px solid #000;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:30px 34px">
+      <div class="eb"><i></i><span>Review before anything is created</span></div>
+      <div class="lead" style="font-size:30px">Check what Ponte understood, <em>then confirm it.</em></div>
+      <div class="sub" style="max-width:60ch">Nothing has been created yet. Blue is where you can act; ink commits.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">
+        <div class="panel" style="margin:0">
+          <div class="gl">The product Ponte matched</div>
+          <div class="fact" style="display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline"><div class="k" style="margin:0">Ponte product</div><div><div class="v serif">Coconuts, fresh (in shell)</div><div class="q">HS&#160;0801.12 suggested &#183; you confirm later</div></div></div>
+          <div class="fact" style="display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline"><div class="k" style="margin:0">Quantity</div><div><div class="v">2 containers (FCL), monthly</div><span class="st member"><i></i>Your words</span></div></div>
+          <div class="fact" style="display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline"><div class="k" style="margin:0">Destination</div><div><div class="v">Rotterdam, Netherlands</div><span class="st member"><i></i>Your words</span></div></div>
+        </div>
+        <div class="panel" style="margin:0">
+          <div class="needs-h"><b>4 details Ponte still needs</b><span>required</span></div>
+          <div class="need"><div class="nk"><b>Origin</b><small>Where the coconuts ship from</small></div><button class="act act--blue"><span class="plus">+</span>Add origin</button></div>
+          <div class="need"><div class="nk"><b>Incoterm</b><small>Cost and risk, and to where</small></div><button class="act act--blue"><span class="plus">+</span>Add Incoterm</button></div>
+          <div class="need"><div class="nk"><b>Pricing basis</b><small>Per container, per kg, on request</small></div><button class="act act--blue"><span class="plus">+</span>Add pricing</button></div>
+          <div class="need" style="border:0"><div class="nk"><b>Payment structure</b><small>How settlement works</small></div><button class="act act--blue"><span class="plus">+</span>Add payment</button></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:18px">
+        <button class="primary primary--ink" style="width:auto;padding:0 26px">Confirm and create the draft</button>
+        <span style="font-size:12.5px;color:var(--ink-3)">2 required details still open &#183; 5 optional collapsed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note" style="margin-top:40px">Fonts are system stand-ins for Playfair / Inter / JetBrains, which cannot be embedded under the artifact content policy. Colour, surface, rule, spacing and radius values are the real merged Stage&#160;1 tokens; the four blue interaction values are the ADR-0015 Stage&#160;2 proposals.</p>
+</div>

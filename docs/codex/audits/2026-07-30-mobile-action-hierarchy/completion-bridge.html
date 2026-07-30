@@ -1,0 +1,346 @@
+<meta charset="utf-8">
+<title>Ponte — Task Completion Bridge — three families</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --surface:#F2EEE2;--raised:#FFFFFF;--sunken:#E2DBC4;--rule:#B9B3A6;--rule-strong:#827B69;
+  --ink:#0F0F0E;--ink-2:#38352F;--ink-3:#5D5950;--mute:#656055;
+  --gold:#C9973A;--gold-ink:#7E5914;--gold-rule:#A47215;--gold-tint:#E4DBC7;
+  --pos:#0E5F35;--review:#455966;--int:#17548C;--int-border:#2C6EAC;--int-active:#0F3D6B;--int-tint:#E4EDF5;
+  --r-sm:5px;--r-md:9px;
+  --f-serif:"Iowan Old Style",Georgia,"Times New Roman",serif;
+  --f-sans:-apple-system,system-ui,"Segoe UI",sans-serif;--f-mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:#3a3732;color:var(--ink);font-family:var(--f-sans);-webkit-font-smoothing:antialiased;padding:28px 16px 80px}
+.sheet{max-width:1280px;margin:0 auto}
+header.top{color:#efeae0;max-width:82ch;margin:0 auto 26px}
+header.top h1{font-family:var(--f-serif);font-weight:600;font-size:29px;margin:0 0 6px}
+header.top p{color:#c9c3b6;font-size:13.5px;line-height:1.6;margin:6px 0}
+header.top .k{color:#efeae0}
+.deck{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;justify-content:center}
+.col{width:390px;flex:0 0 auto}
+.col h2{color:#efeae0;font-family:var(--f-serif);font-size:19px;font-weight:600;margin:0 0 2px}
+.col .tag{color:#b9b2a3;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px}
+.phone{width:390px;background:var(--surface);border-radius:24px;border:1px solid #000;box-shadow:0 10px 40px rgba(0,0,0,.45);overflow:hidden}
+.vp{padding:16px 16px 22px}
+.jh{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:4px}
+.sc{font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-ink);background:var(--gold-tint);display:inline-block;padding:3px 7px;border-radius:3px;margin:16px 0 8px}
+.sc.first{margin-top:6px}
+
+/* ---- Task Completion Bridge (compact header form) ---- */
+.tcb{background:var(--raised);border:1px solid var(--rule-strong);border-radius:var(--r-md);padding:12px 13px 11px}
+.tcb .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px}
+.tcb .pct{font-family:var(--f-serif);font-size:22px;font-weight:600;color:var(--ink);line-height:1}
+.tcb .pct .n{font-size:13px;color:var(--ink-3);font-family:var(--f-mono);font-weight:400;margin-left:6px}
+.tcb .band{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+/* the deck: a shallow arch with a travelled gold segment and a gold signal node */
+.arc{position:relative;height:34px;margin:2px 2px 0}
+.arc svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.cap{position:absolute;top:50%;width:1px;height:11px;background:var(--rule-strong);transform:translateY(-50%)}
+.cap.l{left:0}.cap.r{right:0}
+.node{position:absolute;top:50%;width:11px;height:11px;border-radius:50%;background:var(--gold);border:1.5px solid var(--gold-rule);transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(201,151,58,.18)}
+.abut{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.next{display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid var(--rule)}
+.next .lab{font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);flex:1}
+.next .lab b{display:block;font-family:var(--f-sans);letter-spacing:0;text-transform:none;font-size:12.5px;color:var(--ink-2);margin-top:2px;font-weight:600}
+.blue{display:inline-flex;align-items:center;gap:6px;min-height:34px;font-family:var(--f-sans);font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:var(--r-sm);background:var(--int);color:#fff;border:1px solid var(--int);white-space:nowrap}
+.blue.out{background:transparent;color:var(--int);border-color:var(--int-border)}
+.neutral{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);padding:6px 2px;display:flex;align-items:center;gap:8px}
+.neutral .dot{width:9px;height:9px;border-radius:50%;border:1px dashed var(--rule-strong)}
+.strength{display:flex;align-items:center;gap:8px;margin-top:9px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;color:var(--pos)}
+.strength .bar{flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--pos) 60%,var(--rule) 60%)}
+.done{display:inline-flex;align-items:center;gap:6px;color:var(--pos);font-weight:600;font-size:12px;font-family:var(--f-sans)}
+.done i{width:9px;height:9px;border-radius:50%;background:var(--pos)}
+.addflash{outline:2px solid var(--int);outline-offset:2px;border-radius:var(--r-sm)}
+
+.wmap{background:#2c2925;border-radius:10px;padding:14px 16px;color:#e7e1d3;font-size:12px;line-height:1.5;margin-top:4px}
+.wmap h3{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#c9b98a;margin:0 0 8px}
+.wmap table{width:100%;border-collapse:collapse;font-family:var(--f-mono);font-size:11px}
+.wmap td{padding:3px 0;border-bottom:1px solid #423d37;color:#d7d1c4}
+.wmap td:last-child{text-align:right;color:#efeae0}
+.wmap .line{margin-top:9px;color:#b9b2a3;font-size:11px;font-family:var(--f-mono);line-height:1.5}
+.wmap .line b{color:#e3c583}
+
+.band-t{color:#efeae0;font-family:var(--f-serif);font-size:22px;text-align:center;margin:52px 0 6px}
+.sub-t{color:#b9b2a3;text-align:center;font-size:13px;margin:0 auto 24px;max-width:74ch;line-height:1.6}
+.note{color:#c9c3b6;font-size:12px;max-width:82ch;margin:26px auto 0;line-height:1.6;text-align:center}
+/* desktop lead bridge */
+.dband{width:940px;max-width:100%;background:var(--surface);border-radius:14px;border:1px solid #000;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:24px 28px}
+.dband .arc{height:56px}
+.dtop{display:flex;align-items:center;gap:22px;margin-bottom:6px}
+.dtop .pct{font-family:var(--f-serif);font-size:34px;font-weight:600}
+.dtop .pct .n{font-size:15px}
+.dtop .meta{flex:1}
+.dtop .meta .band{font-size:10px}
+.dtop .meta .nx{font-size:13px;color:var(--ink-2);margin-top:3px}
+</style>
+<script>
+// draw a shallow arch and place the gold node + travelled segment at fraction p (0..1)
+function arc(el){
+  const p = parseFloat(el.dataset.p);
+  const w = el.clientWidth || 320, h = el.clientHeight || 34;
+  const pad = 6, bow = h*0.42;
+  const x0 = pad, x1 = w-pad, mid=(x0+x1)/2;
+  const y = (x)=>{ const t=(x-x0)/(x1-x0); return (h/2)+bow - 4*bow*t*(1-t) - bow + bow; };
+  // simpler parabola: y = base - bow*4*t*(1-t)
+  const base = h/2 + bow/2;
+  const yy = (x)=>{ const t=(x-x0)/(x1-x0); return base - 4*bow*t*(1-t); };
+  const path=[]; for(let i=0;i<=40;i++){const x=x0+(x1-x0)*i/40; path.push((i?'L':'M')+x.toFixed(1)+','+yy(x).toFixed(1));}
+  const nodeX = x0+(x1-x0)*p, nodeY=yy(nodeX);
+  const trav=[]; for(let i=0;i<=40;i++){const t=i/40; if(t>p)break; const x=x0+(x1-x0)*t; trav.push((i?'L':'M')+x.toFixed(1)+','+yy(x).toFixed(1));}
+  el.querySelector('.deckpath').setAttribute('d',path.join(' '));
+  el.querySelector('.travpath').setAttribute('d',trav.join(' '));
+  const n=el.querySelector('.node'); n.style.left=nodeX+'px'; n.style.top=nodeY+'px';
+}
+window.addEventListener('load',()=>{document.querySelectorAll('.arc').forEach(arc);});
+window.addEventListener('resize',()=>{document.querySelectorAll('.arc').forEach(arc);});
+</script>
+
+<div class="sheet">
+<header class="top">
+  <h1>The universal Task Completion Bridge</h1>
+  <p>The approved Task Completion Bridge (Bridge System v1, component&#160;3) applied to Start a Deal, bound to <span class="k">lib/ponte/progress.ts</span>. A gold signal travels the deck as the record fills in &#8212; gold in its lawful meaning: <span class="k">movement across a Bridge and arrival</span>. Blue stays on the actions. Percentage appears only after the first meaningful act; before that the Bridge is the neutral null state. <span class="k">100% = all required applicable details complete</span> &#8212; never verified, trustworthy, low-risk or likely to close.</p>
+  <p>Three families, both sides supported, each with its own applicable field set and weight map. Seven states each, at 390&#215;844. One desktop lead-Bridge below. <span class="k">Weights sum to 100, are irregular by law, and required &#62; optional.</span></p>
+</header>
+
+<div class="deck">
+
+  <!-- ============ PRODUCTS ============ -->
+  <div class="col">
+    <h2>Products</h2>
+    <div class="tag">Fresh coconuts &#183; sourcing requirement</div>
+    <div class="phone"><div class="vp">
+      <div class="jh">Start a deal &#183; review</div>
+
+      <span class="sc first">1 &#183; Neutral, before the first act</span>
+      <div class="tcb"><div class="neutral"><span class="dot"></span>Progress appears once Ponte has identified your product.</div></div>
+
+      <span class="sc">2 &#183; First visible completion &#183; ~20%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">22<span class="n">%</span></div><div class="band">Deal started</div></div>
+        <div class="arc" data-p="0.22"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add quantity</b></div><span class="blue">+ Add quantity</span></div>
+      </div>
+
+      <span class="sc">3 &#183; Partially complete &#183; 57%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">57<span class="n">%</span></div><div class="band">Core information added</div></div>
+        <div class="arc" data-p="0.57"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add destination</b></div><span class="blue">+ Add destination</span></div>
+      </div>
+
+      <span class="sc">4 &#183; A required field being added</span>
+      <div class="tcb addflash">
+        <div class="top"><div class="pct">57<span class="n">%</span></div><div class="band">Adding destination&#8230;</div></div>
+        <div class="arc" data-p="0.57"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab" style="flex:1">Destination</div><input value="Rotterdam, Netherlands" style="flex:2;font-family:var(--f-sans);font-size:13px;padding:8px 10px;border:1.5px solid var(--int-border);border-radius:var(--r-sm)"><span class="blue">Save</span></div>
+      </div>
+
+      <span class="sc">5 &#183; Progress advances after the addition</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">73<span class="n">%</span></div><div class="band">Good commercial detail</div></div>
+        <div class="arc" data-p="0.73"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add payment structure</b></div><span class="blue">+ Add payment</span></div>
+      </div>
+
+      <span class="sc">6 &#183; Task complete &#183; 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="arc" data-p="1"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Every required detail is in<b>Confirm and create the draft</b></div><span class="blue" style="background:var(--ink);border-color:var(--ink)">Confirm</span></div>
+      </div>
+
+      <span class="sc">7 &#183; Optional enrichment, after 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="strength"><span>Record strength</span><span class="bar"></span><span>Strong</span></div>
+        <div class="next"><div class="lab">Strengthen the record, optional<b>Add product specification, documents</b></div><span class="blue out">Add detail</span></div>
+      </div>
+
+    </div></div>
+    <div class="wmap">
+      <h3>Products &#183; sourcing weight map</h3>
+      <table>
+        <tr><td>product identified</td><td>2</td></tr>
+        <tr><td>quantity</td><td>24</td></tr>
+        <tr><td>destination</td><td>22</td></tr>
+        <tr><td>payment</td><td>20</td></tr>
+        <tr><td>incoterm</td><td>18</td></tr>
+        <tr><td>validity</td><td>14</td></tr>
+      </table>
+      <div class="line">Sourcing excludes <b>origin</b> (a buyer does not state where it ships from) and includes <b>destination</b> &#8212; the side-specific rule already in the code.</div>
+      <div class="line">Line: 22 &#8594; <b>41</b> &#8594; <b>57</b> &#8594; <b>73</b> &#8594; <b>87</b> &#8594; <b>100</b>. Increments +19,+16,+16,+14,+13 &#8212; irregular, no equal ladder, required-heavy.</div>
+    </div>
+  </div>
+
+  <!-- ============ TRADE SERVICES ============ -->
+  <div class="col">
+    <h2>Trade services</h2>
+    <div class="tag">Freight forwarding &#183; Spain &#8594; United Kingdom</div>
+    <div class="phone"><div class="vp">
+      <div class="jh">Start a deal &#183; review</div>
+
+      <span class="sc first">1 &#183; Neutral, before the first act</span>
+      <div class="tcb"><div class="neutral"><span class="dot"></span>Progress appears once the service is identified.</div></div>
+
+      <span class="sc">2 &#183; First visible completion &#183; ~20%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">22<span class="n">%</span></div><div class="band">Deal started</div></div>
+        <div class="arc" data-p="0.22"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add the trade lane</b></div><span class="blue">+ Add coverage</span></div>
+      </div>
+
+      <span class="sc">3 &#183; Partially complete &#183; 55%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">55<span class="n">%</span></div><div class="band">Core information added</div></div>
+        <div class="arc" data-p="0.55"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add scope of work</b></div><span class="blue">+ Add scope</span></div>
+      </div>
+
+      <span class="sc">4 &#183; A required field being added</span>
+      <div class="tcb addflash">
+        <div class="top"><div class="pct">55<span class="n">%</span></div><div class="band">Adding scope&#8230;</div></div>
+        <div class="arc" data-p="0.55"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab" style="flex:1">Scope</div><input value="FCL, customs, door-to-door" style="flex:2;font-family:var(--f-sans);font-size:13px;padding:8px 10px;border:1.5px solid var(--int-border);border-radius:var(--r-sm)"><span class="blue">Save</span></div>
+      </div>
+
+      <span class="sc">5 &#183; Progress advances after the addition</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">73<span class="n">%</span></div><div class="band">Good commercial detail</div></div>
+        <div class="arc" data-p="0.73"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add pricing model</b></div><span class="blue">+ Add pricing</span></div>
+      </div>
+
+      <span class="sc">6 &#183; Task complete &#183; 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="arc" data-p="1"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Every required detail is in<b>Confirm and create the draft</b></div><span class="blue" style="background:var(--ink);border-color:var(--ink)">Confirm</span></div>
+      </div>
+
+      <span class="sc">7 &#183; Optional enrichment, after 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="strength"><span>Record strength</span><span class="bar"></span><span>Strong</span></div>
+        <div class="next"><div class="lab">Strengthen the record, optional<b>Add licences, accreditation, capacity</b></div><span class="blue out">Add detail</span></div>
+      </div>
+
+    </div></div>
+    <div class="wmap">
+      <h3>Trade services &#183; weight map</h3>
+      <table>
+        <tr><td>service identified</td><td>2</td></tr>
+        <tr><td>serviceCoverage (lane)</td><td>24</td></tr>
+        <tr><td>serviceScope</td><td>22</td></tr>
+        <tr><td>servicePricingBasis</td><td>18</td></tr>
+        <tr><td>serviceEngagement</td><td>16</td></tr>
+        <tr><td>serviceAvailability</td><td>10</td></tr>
+        <tr><td>serviceCapability</td><td>8</td></tr>
+      </table>
+      <div class="line">No <b>HS, quantity or Incoterm</b> &#8212; those are product-only and are absent from the table. Coverage (the Spain&#8594;UK lane) is heaviest because it is what makes the requirement actionable.</div>
+    </div>
+  </div>
+
+  <!-- ============ DISTRIBUTION ============ -->
+  <div class="col">
+    <h2>Distribution</h2>
+    <div class="tag">Seeking a distributor &#183; food brand in Spain</div>
+    <div class="phone"><div class="vp">
+      <div class="jh">Start a deal &#183; review</div>
+
+      <span class="sc first">1 &#183; Neutral, before the first act</span>
+      <div class="tcb"><div class="neutral"><span class="dot"></span>Progress appears once the brand or category is identified.</div></div>
+
+      <span class="sc">2 &#183; First visible completion &#183; ~20%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">22<span class="n">%</span></div><div class="band">Deal started</div></div>
+        <div class="arc" data-p="0.22"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add product scope</b></div><span class="blue">+ Add scope</span></div>
+      </div>
+
+      <span class="sc">3 &#183; Partially complete &#183; 54%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">54<span class="n">%</span></div><div class="band">Core information added</div></div>
+        <div class="arc" data-p="0.54"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add target channels &#183; Spain</b></div><span class="blue">+ Add channels</span></div>
+      </div>
+
+      <span class="sc">4 &#183; A required field being added</span>
+      <div class="tcb addflash">
+        <div class="top"><div class="pct">54<span class="n">%</span></div><div class="band">Adding channels&#8230;</div></div>
+        <div class="arc" data-p="0.54"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab" style="flex:1">Channels</div><input value="Retail grocery, HORECA" style="flex:2;font-family:var(--f-sans);font-size:13px;padding:8px 10px;border:1.5px solid var(--int-border);border-radius:var(--r-sm)"><span class="blue">Save</span></div>
+      </div>
+
+      <span class="sc">5 &#183; Progress advances after the addition</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">72<span class="n">%</span></div><div class="band">Good commercial detail</div></div>
+        <div class="arc" data-p="0.72"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Next, highest value<b>Add expectations</b></div><span class="blue">+ Add expectations</span></div>
+      </div>
+
+      <span class="sc">6 &#183; Task complete &#183; 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="arc" data-p="1"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="2.5"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node"></span></div>
+        <div class="abut"><span>Started</span><span>Ready to confirm</span></div>
+        <div class="next"><div class="lab">Every required detail is in<b>Confirm and create the draft</b></div><span class="blue" style="background:var(--ink);border-color:var(--ink)">Confirm</span></div>
+      </div>
+
+      <span class="sc">7 &#183; Optional enrichment, after 100%</span>
+      <div class="tcb">
+        <div class="top"><div class="pct">100<span class="n">%</span></div><div class="band">Draft complete</div></div>
+        <div class="strength"><span>Record strength</span><span class="bar"></span><span>Strong</span></div>
+        <div class="next"><div class="lab">Strengthen the record, optional<b>Add commission model, targets, support</b></div><span class="blue out">Add detail</span></div>
+      </div>
+
+    </div></div>
+    <div class="wmap">
+      <h3>Distribution &#183; seeking-partner weight map</h3>
+      <table>
+        <tr><td>brand / category identified</td><td>2</td></tr>
+        <tr><td>distributionProductScope</td><td>22</td></tr>
+        <tr><td>distributionChannels (Spain)</td><td>22</td></tr>
+        <tr><td>distributionObjective</td><td>20</td></tr>
+        <tr><td>distributionExpectations</td><td>16</td></tr>
+        <tr><td>distributionCapabilities</td><td>12</td></tr>
+        <tr><td>distributionTiming</td><td>6</td></tr>
+      </table>
+      <div class="line">No <b>Incoterm, quantity or route</b> &#8212; product-shipment fields are absent entirely. A distribution opportunity is never asked a shipped quantity.</div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<h3 class="band-t">Desktop lead-Bridge &#183; Products at 57%</h3>
+<p class="sub-t">On desktop the full Task Completion Bridge leads the review register, spanning its width: the value, the gold signal on the deck, the band label, and the highest-value next action, with an optional expanded breakdown. Same component, same engine, given room.</p>
+<div class="deck">
+  <div class="dband">
+    <div class="dtop">
+      <div class="pct">57<span class="n">%</span></div>
+      <div class="meta"><div class="band" style="font-family:var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)">Core information added &#183; sourcing a product</div><div class="nx">Next, highest value &#8212; <b>Add destination</b></div></div>
+      <span class="blue">+ Add destination</span>
+      <span class="blue out">Show breakdown</span>
+    </div>
+    <div class="arc" data-p="0.57" style="height:56px"><svg><path class="deckpath" fill="none" stroke="#B9B3A6" stroke-width="1.5"/><path class="travpath" fill="none" stroke="#A47215" stroke-width="3"/></svg><span class="cap l"></span><span class="cap r"></span><span class="node" style="width:14px;height:14px"></span></div>
+    <div class="abut" style="font-size:10px"><span>Started</span><span>Ready to confirm</span></div>
+  </div>
+</div>
+
+<p class="note">Gold is the signal and its movement; blue is every Add/Edit/Expand; ink is the single commit. The percentage is bound to <span style="color:#e3c583">lib/ponte/progress.ts</span> &#8212; irregular by law, deterministic, null before the first act, 100 only when every required applicable detail is in. Fonts are system stand-ins for the licensed faces.</p>
+</div>
