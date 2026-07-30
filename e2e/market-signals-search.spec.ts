@@ -507,10 +507,24 @@ test("an incomplete classification stays visible under a search", async ({ page 
   // search: a partial coverage explains its own blind spot, and it does so
   // whether or not any record came back.
   await page.setViewportSize(DESKTOP);
+  /*
+   * This asserted the board PRINTED its coverage measurement. It no longer does,
+   * and that is the decision rather than a regression: a sentence counting how
+   * many records carry a classification is Ponte's implementation, not a
+   * customer's business.
+   *
+   * What must still hold is everything that measurement protected. The records
+   * are real and are shown; the whole-board claim is absent; and no version of
+   * the technical explanation survives.
+   */
   await open(page, `${FIXTURE}?q=wheat&state=partial&${TWO_FAMILIES}`);
   const body = await page.locator(".sec").first().innerText();
-  expect(body).toContain("This filter can see");
+  await expect(records(page).first()).toBeVisible();
   expect(body).not.toContain("No signal is currently live on the public board");
+  expect(body).not.toContain("This filter can see");
+  expect(body).not.toContain("Ponte cannot confirm how much");
+  expect(body).not.toContain("taxonomy");
+  expect(body).not.toContain("classified");
   await shot(page, "15-desktop-partial-coverage-with-search");
 
   await open(page, `${FIXTURE}?q=99999999&state=unavailable`);
