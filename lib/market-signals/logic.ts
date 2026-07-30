@@ -51,6 +51,16 @@ export type MarketSignal = {
   /** The paraphrase written by the desk in our words. Never the source prose. */
   description: string | null;
   summaryLine: string | null;
+  /**
+   * The canonical source category, e.g. "Petroleum products".
+   *
+   * Public: it is in PUBLIC_SIGNAL_COLUMNS and in the import's public
+   * allow-list, and it names a market rather than a party. It was selected and
+   * then dropped on the floor until free-text search needed it, because a
+   * record found on its category and ranked as if it had matched nothing would
+   * sit below every weaker match on the page.
+   */
+  category: string | null;
 };
 
 /**
@@ -173,5 +183,6 @@ export function mapSignalRow(r: SignalRow): MarketSignal {
     status: r.status as MarketSignalStatus,
     description: r.ai_description,
     summaryLine: r.summary_line,
+    category: r.category ?? null,
   };
 }

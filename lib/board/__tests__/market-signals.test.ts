@@ -436,5 +436,106 @@ test("a failed classification probe is not read as nothing classified", () => {
   );
 });
 
+// ---------------------------------------------------------------------------
+// Free-text search over the complete inventory
+// ---------------------------------------------------------------------------
+
+test("the text search runs inside the eligibility predicate, not beside it", () => {
+  // The whole disclosure and truthfulness argument depends on the search being
+  // one more AND on the same query that already carries approval and the public
+  // window. A search applied to a separately-read set would return records that
+  // are not publishable, or count records nobody may see.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const base = src.slice(src.indexOf("const base = () =>"), src.indexOf("const dbOrdered"));
+  assert.ok(base.includes('.eq("status", "approved_signal")'), "approval left the search query");
+  assert.ok(base.includes("publicWindowPredicate(nowIso)"), "expiry left the search query");
+  assert.ok(base.includes('count: "exact"'), "the count is not exact");
+  assert.ok(base.includes("search"), "the search is not part of the base query");
+
+  // And the predicate itself is applied by the one filter function, so the
+  // search, the page read and both coverage counts cannot drift apart.
+  const filters = src.slice(src.indexOf("function applySignalFilters"));
+  assert.ok(
+    /if \(search\) q = q\.or\(searchPredicate\(search\)\)/.test(filters),
+    "the search is not applied through the shared filter function",
+  );
+});
+
+test("the search is never dropped from the coverage counts", () => {
+  // Coverage answers "of the signals matching the rest of this search, how many
+  // carry a value on this axis?". Omitting the search would compare a handful
+  // of matches against the whole family and print a denominator that is not the
+  // member's question.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const coverage = src.slice(src.indexOf("async function signalCoverage"));
+  assert.ok(coverage.includes("search,"), "the coverage slice drops the text search");
+  const call = src.slice(src.indexOf("const coverage = await signalCoverage"));
+  assert.ok(call.slice(0, 120).includes("search"), "the caller does not pass the search");
+});
+
+test("the order is total, and the page is cut after it", () => {
+  // `spotted_at` alone is not a total order: the import stamps whole dates, so
+  // hundreds of rows share one value, and an offset over a non-total order can
+  // show a record twice or never.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  const ordered = src.slice(src.indexOf("const dbOrdered ="), src.indexOf("let signals"));
+  assert.ok(ordered.includes('.order("spotted_at"'), "the date is not the primary order");
+  assert.ok(ordered.includes('.order("id"'), "there is no deterministic tie-break");
+});
+
+test("relevance is bounded, and the bound is disclosed rather than hidden", () => {
+  // Ranking happens in memory, so the matched set has to be bounded, so there
+  // has to be an answer above the bound. Silently ranking the first thousand
+  // and paging through them would hide every record past the thousandth from a
+  // member who had just been told the total.
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  assert.ok(/RELEVANCE_CEILING = \d+/.test(src), "the ranked read is unbounded");
+  const branch = src.slice(src.indexOf('if (wanted === "relevance"'), src.indexOf("} else {\n      const oldest"));
+  assert.ok(branch.includes("total <= RELEVANCE_CEILING"), "the bound is not tested");
+  assert.ok(branch.includes("rankedFully = false"), "exceeding the bound is not reported");
+  assert.ok(branch.includes('ordering = "newest"'), "an unrankable set keeps claiming relevance");
+  // And the board says so.
+  const rendered = readFileSync("components/desk/SignalBoard.tsx", "utf8");
+  assert.ok(rendered.includes("board.rankedFully"), "the board never tells a member the order changed");
+});
+
+test("an empty page is never reached over a non-empty total", () => {
+  const src = readFileSync("lib/board/inventory.ts", "utf8");
+  // Both ordering branches clamp. The database-ordered branch calls it
+  // directly; the ranked branch clamps inside `rankAndPage`, which is the only
+  // way it cuts a page at all. A branch that did not would answer a stale link
+  // with an empty list under a count saying records are there.
+  assert.ok(src.includes("clampOffset(requestedOffset, total, limit)"), "the paged read does not clamp");
+  const ranking = src.slice(src.indexOf("export function rankAndPage"));
+  assert.ok(
+    ranking.slice(0, 500).includes("clampOffset(offset, ordered.length, limit)"),
+    "the ranked branch cuts a page without clamping",
+  );
+  const relevance = src.slice(src.indexOf('if (wanted === "relevance"'));
+  assert.ok(relevance.slice(0, 600).includes("rankAndPage("), "the ranked branch pages some other way");
+});
+
+test("the Qualified lane searches only its own public columns", () => {
+  // `/find` renders both lanes from one query. A `q` that narrowed one lane and
+  // was ignored by the other would put a filtered list beside an unfiltered one
+  // under a single heading.
+  const src = readFileSync("lib/board/live-deals.ts", "utf8");
+  const publicColumns = (src.match(/const LISTING_COLUMNS\s*=\s*\n?\s*"([^"]+)"/) ?? [])[1];
+  assert.ok(publicColumns, "LISTING_COLUMNS could not be read");
+  const allowed = publicColumns.split(",").map((c) => c.trim());
+
+  const searchBlock = (src.match(/const LISTING_SEARCH_COLUMNS[^=]*=\s*\[([^\]]+)\]/) ?? [])[1];
+  assert.ok(searchBlock, "the lane declares no search column list");
+  const searched = searchBlock.match(/"([^"]+)"/g)!.map((s) => s.slice(1, -1));
+  assert.ok(searched.length > 0);
+  for (const column of searched) {
+    assert.ok(allowed.includes(column), `"${column}" is searched but is not publicly readable`);
+  }
+  for (const forbidden of ["user_id", "notes", "contact", "email", "phone"]) {
+    assert.ok(!searched.includes(forbidden), `"${forbidden}" must never be searched`);
+  }
+  assert.ok(src.includes("parseSignalSearch(query.text)"), "the lane ignores the shared search");
+});
+
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);
 else console.log(`ok   ${passed} market-signals tests passed`);

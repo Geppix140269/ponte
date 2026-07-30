@@ -263,8 +263,22 @@ test("Find walks a distribution partner type", async ({ page }) => {
 });
 
 test("Market Signals carries structured filters over the whole board", async ({ page }) => {
+  /*
+   * This asserted four options, drawn from the taxonomy. It now asserts the rule
+   * that replaced it: a family filter exists only where the live eligible
+   * inventory carries classified signals for it, and a selector with one usable
+   * option is not a filter.
+   *
+   * Against production today that means NO panel, because every eligible signal
+   * is a product signal. The panel returns on its own when the desk classifies
+   * genuine service or distribution inventory. The two- and three-family shapes
+   * are captured over fixtures in e2e/market-signals-search.spec.ts, because a
+   * live board cannot be made to hold inventory it does not have.
+   */
   await page.goto("/market-signals", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".sigfilters .pcat__opt")).toHaveCount(4);
+  const options = await page.locator(".sigfilters .pcat__opt").count();
+  expect(options === 0 || options >= 3).toBeTruthy();
+  await expect(page.locator("#signal-q")).toBeVisible();
   await shot(page, "desktop-18-market-signals-filters");
 });
 
@@ -278,10 +292,29 @@ test("a filter that cannot be answered never claims the board is empty", async (
    * currently live" copy. That copy is a claim about the whole public board and
    * it was, until this fix, what an unanswerable filter printed.
    */
+  /*
+   * This asserted the technical box was VISIBLE, which was right for the
+   * previous decision and is wrong now.
+   *
+   * A member holding this URL still has to be answered, and the answer is about
+   * the board: nothing of that kind is live, here is everything else, here is
+   * how to publish one. The box explaining canonical category columns and
+   * historical rows is gone from the public journey.
+   *
+   * The claim about the whole board must still not appear, which was the point
+   * of the original test and is preserved.
+   */
   await page.goto("/market-signals?family=services", { waitUntil: "domcontentloaded" });
-  await expect(page.getByText("Ponte cannot filter signals by this category yet")).toBeVisible();
-  await expect(page.getByText("No signal is currently live on the public board")).toHaveCount(0);
-  await shot(page, "desktop-21-market-signals-unanswerable-filter");
+  const body = await page.locator(".sec").first().innerText();
+  expect(body).toContain("Trade services filtering is not currently available.");
+  // Never that the family is empty. The count behind this state counts records
+  // carrying a canonical family, so zero means nothing is classified.
+  expect(body).not.toContain("No live");
+  expect(body).not.toContain("Ponte cannot filter signals by this category yet");
+  expect(body).not.toContain("No signal is currently live on the public board");
+  expect(body).not.toContain("taxonomy");
+  expect(body).not.toContain("classified");
+  await shot(page, "desktop-21-market-signals-unavailable-family");
 });
 
 test("a filtered result that matches nothing does not claim the board is empty", async ({
@@ -313,7 +346,11 @@ test("the unfiltered board still reports its records and its reach", async ({ pa
   // allowed to say what it found, and to say what cannot be reached.
   await page.goto("/market-signals", { waitUntil: "domcontentloaded" });
   await expect(page.getByText(/[\d,]+ signals/).first()).toBeVisible();
-  await expect(page.getByText(/are counted but not yet reachable/)).toBeVisible();
+  // The board used to say the rest of the inventory was unreachable. It is
+  // reachable now, through the pager, so the sentence is gone and the pager is
+  // the assertion in its place.
+  await expect(page.getByText(/are counted but not yet reachable/)).toHaveCount(0);
+  await expect(page.locator(".pager")).toBeVisible();
   await expect(page.getByText("Ponte cannot filter signals by this category yet")).toHaveCount(0);
 });
 

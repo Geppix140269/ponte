@@ -224,6 +224,7 @@ test("a signal in the Explore list links to its own public detail", () => {
         status: "approved_signal",
         description: null,
         summaryLine: null,
+        category: null,
       })],
       NOW,
       LABELS,

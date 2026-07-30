@@ -3,7 +3,17 @@ import CategoryLinks, { type CategoryLink } from "@/components/ponte/category/Ca
 import { MARKET_FAMILIES, PRODUCT_SECTORS } from "@/lib/taxonomy/market";
 import { TRADE_SERVICE_CATEGORIES, serviceCategory } from "@/lib/taxonomy/services";
 import { DISTRIBUTION_PARTNER_TYPES, partnerType } from "@/lib/taxonomy/distribution";
-import type { FindQuery } from "@/lib/find/query";
+import {
+  buildBoardHref,
+  clearedAll,
+  withFilters,
+  type FindQuery,
+} from "@/lib/find/query";
+import {
+  availableFamilies,
+  showFamilySelector,
+  type FamilyAvailability,
+} from "@/lib/board/availability";
 
 /**
  * Structured filters over the Market Signals board.
@@ -19,49 +29,109 @@ import type { FindQuery } from "@/lib/find/query";
  * filters at the database over the complete table rather than over the page.
  * The same keys the composer stores are the keys this filters on, which is the
  * whole contract.
+ *
+ * ---------------------------------------------------------------------------
+ * A taxonomy is not a filter
+ * ---------------------------------------------------------------------------
+ * This panel was built from `MARKET_FAMILIES`, which lists all three families
+ * because all three are accepted product authority. The public inventory
+ * carries product signals and nothing else, so the page offered Trade services
+ * and Distribution and a member who chose either was handed a box explaining
+ * canonical category columns and historical rows. That is Ponte showing a
+ * customer its own implementation, over a control that could never answer.
+ *
+ * Every control here is now drawn from a measurement of the live eligible
+ * inventory:
+ *
+ *   families    rendered only when TWO or more have classified signals, because
+ *               a selector with one usable option is not a filter. Only the
+ *               families that have inventory appear; a missing one is absent
+ *               rather than disabled, greyed or labelled "coming soon".
+ *   categories  a family's own category list is rendered only when some live
+ *               record in that family carries a value on that axis. A hundred
+ *               and twenty subcategories that all return nothing is not a
+ *               narrowing control.
+ *
+ * When the desk classifies genuine service and distribution signals the
+ * controls appear on their own, with no code change here. See
+ * `lib/board/availability.ts` for the rules and why an unmeasurable count is
+ * treated as "do not offer" rather than as zero.
  */
 
-const FILTER_PARAMS = ["family", "serviceCategory", "partnerType", "sector", "territory"] as const;
-
-/** The board URL for a query, keeping only the filters that are set. */
-export function signalFilterHref(q: Partial<FindQuery>): string {
-  const params = new URLSearchParams();
-  for (const key of FILTER_PARAMS) {
-    const value = q[key];
-    if (value) params.set(key, String(value));
-  }
-  const qs = params.toString();
-  return qs ? `/market-signals?${qs}` : "/market-signals";
+/**
+ * The board URL for a change of filters.
+ *
+ * This used to be a builder of its own, listing five parameters. That was the
+ * defect: it did not know about the direction, the market, the quantity, the
+ * sort or, once the search shipped, the member's own words, so every filter
+ * link silently discarded them. Choosing a category threw away the search that
+ * had just been typed.
+ *
+ * It is now one call into the shared query authority, which preserves the
+ * search and the sort, replaces the structured filters with exactly the set
+ * passed here, and returns to page one because a different filter is a
+ * different result set.
+ */
+export function signalFilterHref(q: FindQuery, filters: Partial<FindQuery>): string {
+  return buildBoardHref(withFilters(q, filters));
 }
 
-export default function SignalFilters({ q }: { q: FindQuery }) {
-  const families: CategoryLink[] = MARKET_FAMILIES.map((family) => ({
-    key: family.key,
-    label: family.label,
-    icon: family.icon,
-    current: q.family === family.key,
-    // Changing family clears the family-specific filters below it. Keeping a
-    // freight category on a distribution search would be a filter nobody set.
-    href: signalFilterHref({ family: family.key, territory: q.territory }),
-  }));
+export default function SignalFilters({
+  q,
+  availability,
+  axisClassified,
+}: {
+  q: FindQuery;
+  /** Live classified signals per family. Null when the count could not be read. */
+  availability: FamilyAvailability | null;
+  /**
+   * Live signals in the SELECTED family carrying a value on its category axis.
+   *
+   * Null when unknown or when no family is selected, and a null is treated as
+   * "do not draw the list": a control Ponte cannot vouch for is not offered.
+   */
+  axisClassified: number | null;
+}) {
+  const offered = availableFamilies(availability);
+
+  // A selector with one usable option is not a filter. With products alone the
+  // page goes straight from the search into the results.
+  const families: CategoryLink[] = showFamilySelector(availability)
+    ? MARKET_FAMILIES.filter((family) => offered.indexOf(family.key) >= 0).map((family) => ({
+        key: family.key,
+        label: family.label,
+        icon: family.icon,
+        current: q.family === family.key,
+        // Changing family clears the family-specific filters below it. Keeping a
+        // freight category on a distribution search would be a filter nobody set.
+        href: signalFilterHref(q, { family: family.key, territory: q.territory }),
+      }))
+    : [];
+
+  // The category axis is only a filter where something is classified on it.
+  const axisUsable = q.family !== null && axisClassified !== null && axisClassified > 0;
+
+  if (families.length === 0 && !axisUsable) return null;
 
   return (
     <div className="sigfilters">
-      <CategoryLinks
-        dense
-        items={families.concat([
-          {
-            key: "__all",
-            label: "Every market",
-            current: q.family === null,
-            href: signalFilterHref({ territory: q.territory }),
-          },
-        ])}
-        legend="Filter by market"
-        currentLabel="Filtering"
-      />
+      {families.length > 0 && (
+        <CategoryLinks
+          dense
+          items={families.concat([
+            {
+              key: "__all",
+              label: "All signals",
+              current: q.family === null,
+              href: signalFilterHref(q, { territory: q.territory }),
+            },
+          ])}
+          legend="Filter by opportunity type"
+          currentLabel="Filtering"
+        />
+      )}
 
-      {q.family === "services" && (
+      {axisUsable && q.family === "services" && (
         <CategoryLinks
           dense
           items={TRADE_SERVICE_CATEGORIES.map((category) => ({
@@ -70,7 +140,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             icon: category.icon,
             isOther: category.isOther,
             current: q.serviceCategory === category.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "services",
               serviceCategory: category.key,
               territory: q.territory,
@@ -81,7 +151,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
         />
       )}
 
-      {q.family === "distribution" && (
+      {axisUsable && q.family === "distribution" && (
         <CategoryLinks
           dense
           items={DISTRIBUTION_PARTNER_TYPES.map((type) => ({
@@ -90,7 +160,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             icon: type.icon,
             isOther: type.isOther,
             current: q.partnerType === type.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "distribution",
               partnerType: type.key,
               territory: q.territory,
@@ -101,7 +171,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
         />
       )}
 
-      {q.family === "products" && (
+      {axisUsable && q.family === "products" && (
         <CategoryLinks
           dense
           items={PRODUCT_SECTORS.map((sector) => ({
@@ -109,7 +179,7 @@ export default function SignalFilters({ q }: { q: FindQuery }) {
             label: sector.label,
             icon: sector.icon,
             current: q.sector === sector.key,
-            href: signalFilterHref({
+            href: signalFilterHref(q, {
               family: "products",
               sector: sector.key,
               territory: q.territory,
@@ -138,9 +208,24 @@ export function ActiveFilters({ q }: { q: FindQuery }) {
   return (
     <p className="mono" style={{ fontSize: 11, color: "var(--ink-3)", paddingBottom: 10 }}>
       {parts.join(" · ")}{" "}
-      <Link href="/market-signals" style={{ color: "var(--gold-ink)" }}>
-        Clear
+      {/*
+        Clears the FILTERS and keeps the search. It used to point at a bare
+        `/market-signals`, which cleared everything: a member narrowing a search
+        by category and then removing the category lost the words as well, and
+        got the whole board back under a control labelled as if it had removed
+        one thing.
+      */}
+      <Link href={buildBoardHref(withFilters(q, {}))} style={{ color: "var(--gold-ink)" }}>
+        Clear filters
       </Link>
+      {q.q && (
+        <>
+          {" · "}
+          <Link href={buildBoardHref(clearedAll(q))} style={{ color: "var(--gold-ink)" }}>
+            Clear all
+          </Link>
+        </>
+      )}
     </p>
   );
 }
