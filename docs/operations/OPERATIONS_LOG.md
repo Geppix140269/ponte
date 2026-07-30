@@ -116,6 +116,80 @@ Use this structure:
 - `npx tsc --noEmit --incremental false` - clean. `npm test` - all suites pass.
 - `docs/codex/audits/email/evidence/` - 12 frames, with `README.md` stating what they are and are not.
 
+---
+
+## 2026-07-30 - `20260730c_deal_room_internal_acl.sql` applied; Deal Room ACL matches its contract
+
+### Completed
+
+- **PR #123 merged** after CI `verify` **SUCCESS** on exact head `7f27ec4`. `main`
+  `b8f3db5` to **`453a49c`**. `Supabase Preview` failed, the only failure,
+  reproducing the recorded migration-bearing-PR pattern and covered by the owner's
+  waiver.
+- **Applied to production at 08:26:17.995 UTC** from a clean checkout of merged
+  `main`. One transaction, exit 0, no timeout, no HTML, no 502. Ledger **46 to 47**,
+  exactly one row, checksum
+  `5adb34c2ef183c601b30048084121577cf65cba29ad4fb7dacb075ac8c7d1891` verified
+  against the **merged** file before execution.
+- **All seven required verifications passed:** `anon` 0 of 23; `PUBLIC` 0;
+  `authenticated` **19 by name** (four RLS helpers, fifteen commands);
+  `service_role` 23 unchanged; the logger and the three internal functions reachable
+  by `service_role` alone; all nine before/after md5 fingerprints identical
+  (bodies, policies, triggers, indexes, constraints, columns, RLS state,
+  `pg_default_acl` at 24 rows); ledger +1 with the correct checksum.
+- **`npm run deal-room:acl-verify` exits 0** and is now the standing witness to the
+  ACL. Demonstrated in both directions: run before the migration it exits 1 with
+  five problems, naming all three functions and reporting `authenticated 22 of 23,
+  expected 19`.
+- **A real anonymous client confirms it end to end:** logger, commands and helpers
+  all `401 / 42501 permission denied for function ...`; member table reads still
+  `200 []` rather than erroring, so revoking the three did not disturb policy
+  evaluation.
+- **The instrument defect is fixed too.** `function-acl.test.ts` had asserted
+  "authenticated should end with execute on exactly 19" and passed while production
+  held 22. Every assertion now says whether it is about the file or about the world,
+  and one of the 28 fails if the verification script stops existing or stops
+  interrogating all three roles.
+
+### Decisions
+
+- Owner, 30 July 2026: Phase 1 only. No test account, no `20260729c`, no Storage
+  bucket, no pilot Deal, no `NEXT_PUBLIC_DEAL_ROOM`, no deployment or public
+  exposure.
+
+### Risks / discrepancies
+
+- **LB-008 stays open on one probe, not on a defect.** The real authenticated
+  direct-RPC confirmation needs a dedicated QA account (Phase 2, not started). The
+  catalogue proves `authenticated` cannot execute the logger, and the identical
+  enforcement is proved at the API layer for `anon`, so the gap is narrow - but the
+  standing instruction is not to claim full resolution while that client is
+  unavailable.
+- Still outstanding from earlier passes: owner confirmation of the RLS containment
+  of 03:39 UTC, and requirements 12 and 13 (entitlement fail-closed, cross-room
+  isolation), which need Approval 3.
+- **The durable lesson:** a Supabase `public` schema does not create objects
+  private, and no text scan reveals what privileges exist. Twice in one day a
+  migration or a test asserted something about a file rather than about the
+  database.
+
+### Next
+
+1. Phase 2: a dedicated QA account, on an owner-confirmed Ponte-controlled address.
+2. Phase 3 (Approval 2): `20260729c`, the `deal-room-evidence` bucket and its two
+   policies.
+3. Phase 4 (Approval 3): a labelled non-commercial pilot Deal and the negative-access
+   fixture.
+4. Approval 4 - flag and deploy - remains unauthorised.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 17 to 21
+- `docs/codex/DATABASE-STATE.md`, Deal Room internal-function ACL section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-008 narrowed to one probe
+- `public.schema_migrations`: 47 rows
+- `npm run deal-room:acl-verify`, exit 0
+
 ## 2026-07-30 - `20260730b_deal_room_function_acl.sql` applied; anonymous path closed, LB-008 still open
 
 ### Completed
