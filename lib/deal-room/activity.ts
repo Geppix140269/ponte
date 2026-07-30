@@ -46,6 +46,15 @@ export const ACTIVITY_EVENT_TYPES = [
   "room_resumed",
   "room_read_only",
   "room_closed",
+  // LB-009 multilingual: participant-attributed message and interpretation
+  // events. A message's content is NOT stored here (it lives in
+  // deal_room_messages); the event only records that a message occurred. AI
+  // proposals are deliberately absent: a proposal is system output, not a
+  // participant act, so only its human confirmation or rejection is recorded.
+  "message_posted",
+  "message_corrected",
+  "interpretation_confirmed",
+  "interpretation_rejected",
 ] as const;
 
 export type ActivityEventType = (typeof ACTIVITY_EVENT_TYPES)[number];
@@ -88,6 +97,10 @@ export const ACTIVITY_EVENT_LABEL: Record<ActivityEventType, string> = {
   room_resumed: "Room resumed",
   room_read_only: "Room moved to read-only",
   room_closed: "Room closed",
+  message_posted: "Message posted",
+  message_corrected: "Message correction added",
+  interpretation_confirmed: "Interpretation confirmed",
+  interpretation_rejected: "Interpretation rejected",
 };
 
 export interface ActivityEvent {

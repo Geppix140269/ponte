@@ -109,6 +109,15 @@ closure packs; analytics; refactoring of listing, verification, email, landing
 or marketplace code; **removal or alteration of any legacy database object**;
 multilingual work; design-system expansion.
 
+> **Amended 30 July 2026 by ADR-0016 (LB-009).** "Multilingual work" was excluded
+> from this slice, but the owner has since decided that multilingual Deal Room
+> participation is a launch requirement, tracked as `LB-009` and planned in
+> `docs/plans/active/multilingual-deal-room-launch.md`. It is an additive
+> extension of this accepted `deal_room_*` domain, not a change to the slice
+> delivered here. This exclusion is superseded for multilingual message
+> translation and interpretation only; every other exclusion above stands. The
+> original wording is kept rather than rewritten, so the amendment is legible.
+
 ## 5. Product rules
 
 1. A public Market Signal, search result or casual interest never creates a room. Entry requires a typed credible-interest event on an eligible structured Deal.

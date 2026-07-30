@@ -101,6 +101,43 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: multilingual Deal Room (LB-009)
+
+`supabase/migrations/20260730b_deal_room_multilingual.sql`.
+
+**Not executed anywhere.** Additive throughout: one nullable-defaulted column
+(`deal_room_participants.preferred_language`, default `'en'`, CHECK to the five
+supported languages) and six new tables - `deal_room_messages` (immutable,
+append-only), `deal_room_message_corrections` (append-only), `deal_room_message_translations`
+(derived, RLS-scoped to the source sub-room), `deal_room_interpretation_proposals`
+(advisory, must cite a source), `deal_room_terms` (canonical English confirmed
+facts, one current row per field with history) and `deal_room_term_decisions`
+(append-only confirm/reject record). RLS is enabled on all six; every member
+policy is SELECT-only and scoped through the existing `deal_room_is_sub_room_participant`
+predicate; there are no member write policies. Seven SECURITY DEFINER commands
+carry the writes; each is **revoked from `anon` and `authenticated` by name** and
+granted only to its intended role (member commands to `authenticated`, the two
+worker commands to `service_role`), which is the explicit guard against the
+LB-008 defect class.
+
+**Nothing existing is touched.** No existing table, column, constraint, index,
+policy, function or trigger is altered. The legacy Deal-era cluster is untouched.
+Backfill: none; all six tables begin empty and the new column defaults to `'en'`.
+
+**Hard prerequisite: LB-008.** This migration must not be applied until the LB-008
+`anon` EXECUTE defect is fixed, because it is applied only when a live room is
+about to exist, and LB-008 must be closed before any room is created.
+
+**Rollback and safe-disable** are written into the file: the primary safe-disable
+is the multilingual capability flag (derived presentation off, originals and
+confirmed terms intact); schema withdrawal is a reverse-order drop, clean only
+while the tables are empty. Once a message is posted or a term is confirmed,
+withdrawal is a retention decision, not a rollback step.
+
+Authority and full pre-migration report:
+`docs/codex/audits/deal-room/MULTILINGUAL-PREFLIGHT-2026-07-30.md` (sections 16,
+18a, 18b); ADR-0016; `docs/plans/active/multilingual-deal-room-launch.md`.
+
 ## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
 
 **Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**

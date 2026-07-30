@@ -257,3 +257,13 @@ unauthorised content in logs. Record the accepted retention/residency terms. Con
 LB-009 work in the meantime with a deterministic test adapter. Provider selection, any new secret, the
 additive migration, the multilingual feature flag, deployment and activation each remain separate owner
 approvals under AGENTS.md.
+
+### Decision paper
+
+`docs/codex/audits/deal-room/OD-010-TRANSLATION-PROVIDER-DECISION-2026-07-30.md`
+covers the data sent, retention, training use, regions, subprocessors, deletion
+controls, contractual protections, latency and quality, cost controls, failure and
+safe-disable behaviour, and zero-data-retention availability. It recommends
+Anthropic via `lib/ai.ts` subject to the owner confirming and accepting the data
+terms, and records that no real Deal Room content is sent while the boundary is
+closed. It accepts no terms on the owner's behalf.

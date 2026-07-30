@@ -218,6 +218,21 @@ Minimum evidence before LB-009 can close:
 
 **Reconciliation after PR #107 and the `LB-008` `anon` EXECUTE defect.** This governance branch was created before PR #107 merged. PR #107 then merged and canonically took `LB-007` for Market Signals search, and a separate merged Gate C defect took `LB-008` on `main`, so the launch register's next free identifier became `LB-009`. This branch was rebased onto current `main` and the multilingual Deal Room blocker was renumbered from its original `LB-007` to `LB-009` on the owner's decision of 30 July 2026. The Market Signals `LB-007` and the `anon` EXECUTE `LB-008` entries and their history are preserved unchanged.
 
+### Stage A complete (30 July 2026)
+
+- Read-only preflight recorded at `docs/codex/audits/deal-room/MULTILINGUAL-PREFLIGHT-2026-07-30.md`.
+- Established: the applied Deal Room schema (`20260729a`/`b` applied, `c` not), the absent message domain and participant-language field, the public-scoped listing-translation cache, the Anthropic-only provider reality, the absent outbox, and the Gate C / LB-008 dependency.
+- OD-010 opened for the provider and data posture.
+
+### Stage B in progress (30 July 2026)
+
+- Owner approved `preferred_language` as a column on `deal_room_participants` (Deal-Room-scoped, not a global profile-language and not the site interface locale).
+- Delivered, provider-independent: the supported-language contract (`lib/deal-room/language.ts`); the message, correction, translation and provenance contracts (`lib/deal-room/messages.ts`); the interpretation, decision, canonical-term and disagreement contracts (`lib/deal-room/interpretation.ts`); the trade glossary contract (`lib/deal-room/glossary.ts`, native review outstanding); the provider interface and failure-safe orchestrator (`lib/deal-room/translation/provider.ts`); the deterministic test adapter (`lib/deal-room/translation/test-adapter.ts`); and the real Anthropic adapter behind an inactive boundary that sends no content (`lib/deal-room/translation/anthropic-adapter.ts`, `index.ts`).
+- Proposed additive migration `supabase/migrations/20260730b_deal_room_multilingual.sql`, written and NOT applied: one column and six tables, RLS on every table, SELECT-only member policies scoped by the existing sub-room predicate, append-only messages/corrections/decisions, member and worker commands, and grants that revoke from `anon` and `authenticated` by name to avoid the LB-008 class.
+- Tests (all passing): `language` (10), `multilingual-domain` (18), `translation-adapter` (9), `multilingual-rls` (14), `multilingual-grants` (7). `tsc --noEmit` clean; all 16 Deal Room suites green.
+- OD-010 remains open. No real content sent to any provider; no secret, flag, migration, deployment or merge.
+- LB-008 recorded as a hard prerequisite for a live room, applying this migration, production negative-access fixtures and any activation. This branch is not widened into the LB-008 repair.
+
 ## 12. Decisions and discoveries
 
 - **Owner decision:** the Deal Room must support cross-language participation from day one.
