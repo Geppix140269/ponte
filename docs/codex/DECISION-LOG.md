@@ -24,15 +24,22 @@ is not a better revoke but a different posture: **state the intended ACL
 explicitly and completely, and let a test hold you to it**, rather than describing
 a delta from defaults you do not control.
 
-**The allowlist was derived, not copied.** Copying the old grant block would have
-reproduced whatever it already got wrong. Instead: the four helpers came from the
-function calls inside the 14 RLS policy expressions, because a function called in
-a policy is privilege-checked against the querying role and dropping one would
-break every member read; the fifteen commands came from the `.rpc()` call sites in
-the application. Those fifteen and the fifteen granted by `20260729b` agree
-exactly, derived independently, which is what makes the allowlist evidence rather
-than restatement. Four functions end up executable by no member role at all, the
-logger among them.
+**The allowlist was derived, not copied, from three places.** Copying the old
+grant block would have reproduced whatever it already got wrong. The four helpers
+came from the function calls inside the 14 RLS policy expressions, because a
+function called in a policy is privilege-checked against the querying role and
+dropping one would break every member read. The fifteen commands are proved
+against **three independent sources**: what the application calls, what
+`20260729b` grants, and what `20260730b` grants.
+
+The third source is the point. Reading the grant list out of `20260729b` and
+comparing it with itself agrees even when that list is wrong - which is exactly
+the failure mode LB-005 and LB-008 both had, a file asserting something about
+itself. So the suite walks production `.ts` and `.tsx` under `app/` and `lib/`
+for `.rpc("deal_room_*")`, excluding tests, fixtures, generated output and
+non-application trees, and resolves each name to its unique declared signature.
+All three agree on the same 15. Four functions end up executable by no member role
+at all, the logger among them.
 
 **The test is a closed world, deliberately.** `grant-signatures.test.ts` could not
 have caught LB-008 and still cannot: it compares each grant against a declared

@@ -163,9 +163,19 @@ Probes 3 and 4 need real API clients, not catalogue inspection, for the reason
 `GATE-C-TEST-PLAN.md` section 0 gives: a privilege can be present in the catalogue
 and still not be what PostgREST enforces.
 
-Regression suite: `lib/deal-room/__tests__/function-acl.test.ts`, 16 assertions,
-which proves the file is complete and internally consistent but cannot observe a
-Supabase project's default privileges — that is what the probes are for.
+Regression suite: `lib/deal-room/__tests__/function-acl.test.ts`, **22
+assertions**, which proves the file is complete and internally consistent but
+cannot observe a Supabase project's default privileges — that is what the probes
+are for.
+
+Six of those 22 check the command allowlist against a **third, independent
+source**: a recursive scan of production `.ts`/`.tsx` under `app/` and `lib/` for
+`.rpc("deal_room_*")` and the single-quoted form, excluding tests, mocks,
+fixtures, `.d.ts`, generated output, `scripts/`, `supabase/` and `docs/`. Each
+discovered name is resolved to its unique declared signature. Three sets are then
+required to be identical — **what the application calls, what `20260729b` grants,
+what `20260730b` grants** — because any two agreeing proves little when one is
+derived from the other. All three agree on the same **15** commands.
 
 ## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
 
