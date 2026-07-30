@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/account";
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/account";
+  // The generic destination is /opportunities, the member's own records. A
+  // journey-specific `next` still wins so a resumed action returns to itself.
+  const rawNext = searchParams.get("next") ?? "/opportunities";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/opportunities";
 
   if (code && isSupabaseConfigured()) {
     try {

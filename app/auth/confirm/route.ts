@@ -28,8 +28,10 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") ?? "";
   const redirectTo = searchParams.get("redirect_to") ?? "";
 
-  // Destination after verification: only same-site targets are honored.
-  let next = "/account";
+  // Destination after verification: only same-site targets are honored. The
+  // generic destination is /opportunities, the member's own records; a
+  // same-site `redirect_to` still wins so a resumed action returns to itself.
+  let next = "/opportunities";
   try {
     if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
       next = redirectTo;

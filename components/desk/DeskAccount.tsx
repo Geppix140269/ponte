@@ -23,10 +23,11 @@ import { useSearchParams } from "next/navigation";
  * generic landing.
  *
  * Signed in it stops being a door and becomes a route to the member's own
- * records, which is the only personal surface the Desk has. It deliberately
- * does not link to `/account`: that page still renders the legacy chrome the
- * Desk replaces, and sending a signed-in member there from the Desk header
- * would reopen the seam this system exists to close.
+ * records at `/opportunities`, which is where a signed-in member has reason to
+ * land. It points there rather than at `/account` on purpose: `/account` is the
+ * settings surface (profile, company, business status, sign-out), now rebuilt
+ * on the Desk shell, and the header's job is to reach the member's work, not
+ * their settings.
  */
 export default function DeskAccount({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();

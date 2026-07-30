@@ -159,8 +159,8 @@ const CUTOVER_REDIRECTS: RouteEntry[] = [
     path: "/join",
     classification: "redirect",
     redirectsTo: "/login",
-    retirementImplemented: false,
-    note: "Referral capture then /login (cutover PR 2).",
+    retirementImplemented: true,
+    note: "Referral capture then /login, implemented in middleware.ts (cutover PR 2). Renders no UI.",
   },
 ];
 

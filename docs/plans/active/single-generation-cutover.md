@@ -189,6 +189,33 @@ cannot relink a retired route, the business path cannot regain a credit import).
   changed. Ratchet baselines recorded from verified current state: 12 files link
   a retired route; 5 redirect chains via `/marketplace`; 4 verification-path
   files import `@/lib/credits`. Remaining: PRs 2-8.
+- **2026-07-30** — PR 2 (authentication and account) implemented on branch
+  `claude/ponte-issue-130-stage-1-77ca3b` (Issue #130 Stage 1). Not merged, no
+  production action. Changes:
+  - Generic login fallback `/account` -> `/opportunities` in the three sign-in
+    exits (`components/desk/DeskLoginForm.tsx` `safeNext`,
+    `app/auth/callback/route.ts`, `app/auth/confirm/route.ts`); a journey-specific
+    same-site `next`/`redirect_to` is preserved and still wins.
+  - `/account` rebuilt on `DeskShell` (`app/[locale]/account/page.tsx`):
+    profile, company, member-business status and sign-out only. The
+    marketplace/listings block and its `/marketplace` link are removed;
+    `lucide-react` icons replaced with `PonteIcon`; status uses the review/positive
+    semantic tokens, not gold. `ClaimReferral` is still mounted (attribution
+    integrity), and the page writes no attribution during render.
+  - `/join` renders no UI: capture + redirect moved into `middleware.ts`
+    (first-touch `ponte_ref` cookie, 307 to `/login`). The legacy
+    `app/[locale]/join/page.tsx` and `components/founding/CaptureReferral.tsx`
+    are deleted; the manifest's `/join` is now `retirementImplemented: true`.
+  - AccountGate (`components/AccountGate.tsx`) reads a credit balance and prints
+    cost copy only in the paid counterparty context (`context === "verify"`,
+    i.e. `/check`); sign-up/publish/interest show no credit/cost language. The
+    pending action still runs exactly once (`ran` guard, unchanged).
+  - Ratchets tightened (shrink-only): `RETIRED_LINK_BASELINE`
+    (`lib/navigation/__tests__/route-manifest.test.ts`) and `LUCIDE_BASELINE`
+    (`scripts/check-governance.mjs`) drop `app/[locale]/account/page.tsx`.
+  - `npm run verify` green. Deferred to PR 6 (unchanged): the `member_business`
+    verify-page/pipeline credit decoupling (the `VERIFICATION_CREDIT_COUPLING`
+    baseline is untouched) and its ADR. Remaining: PRs 3-8.
 
 ## 12. Decisions and discoveries
 

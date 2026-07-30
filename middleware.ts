@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { locales, defaultLocale, routing } from "@/i18n/routing";
 import { stripRemovedLocale } from "@/lib/i18n/removed-locales";
 import { updateSession, applySession } from "@/lib/supabase/middleware";
+import {
+  FOUNDING_CODE,
+  REFERRAL_COOKIE,
+  REFERRAL_MAX_AGE_DAYS,
+  normalizeReferral,
+} from "@/lib/founding/referral";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -165,6 +171,33 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `${prefix}${target}`;
     return NextResponse.redirect(url, 308);
+  }
+
+  // /join is the single general Founding Network invitation URL. It renders no
+  // UI of its own (cutover PR 2): it captures the referral attribution, once,
+  // and forwards to the sign-in door. The capture is a first-party cookie
+  // carrying an allowlisted code and the moment of capture, `<code>.<issuedAt>`,
+  // which the account page later persists to the profile exactly once and only
+  // for a genuinely new signup. First touch wins, so an existing cookie is left
+  // untouched and a later /join visit cannot overwrite an earlier capture. A
+  // non-allowlisted or absent `?ref` falls back to the general founding code
+  // rather than storing an arbitrary value. The code is attribution only and
+  // never grants anything. This is a temporary (307) forward, not a permanent
+  // move: the destination is the same for every visitor and the `ref` varies.
+  if (rest === "/join") {
+    const url = request.nextUrl.clone();
+    url.pathname = `${prefix}/login`;
+    url.search = "";
+    const response = NextResponse.redirect(url);
+    if (!request.cookies.get(REFERRAL_COOKIE)) {
+      const code = normalizeReferral(request.nextUrl.searchParams.get("ref")) ?? FOUNDING_CODE;
+      response.cookies.set(REFERRAL_COOKIE, `${code}.${Date.now()}`, {
+        path: "/",
+        maxAge: REFERRAL_MAX_AGE_DAYS * 24 * 60 * 60,
+        sameSite: "lax",
+      });
+    }
+    return response;
   }
 
   // next-intl decides the locale and owns the response, then the Supabase

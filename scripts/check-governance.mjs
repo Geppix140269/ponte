@@ -109,7 +109,8 @@ if (existsSync("docs/schemas/market-record.schema.json")) {
 
 /** Files that still import a third-party icon set. May shrink, never grow. */
 const LUCIDE_BASELINE = [
-  "app/[locale]/account/page.tsx",
+  // app/[locale]/account/page.tsx dropped lucide-react in cutover PR 2: the
+  // account page was rebuilt on the Desk shell and now renders PonteIcon keys.
   "app/[locale]/contact/page.tsx",
   "app/[locale]/marketplace/l/[ref]/page.tsx",
   "app/[locale]/marketplace/page.tsx",

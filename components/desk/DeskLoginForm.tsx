@@ -11,11 +11,20 @@ import { Icon } from "@/components/icons";
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-/** Where to go after sign-in. Only same-site paths are honoured. */
+/**
+ * Where to go after sign-in. Only same-site paths are honoured.
+ *
+ * The generic destination is `/opportunities`, the member's own records, which
+ * is the first thing a signed-in member has reason to see. A journey-specific
+ * `next` (set by the account gate, the desk header or a deep link) still wins,
+ * so a member who came to do something is returned to exactly that, not to a
+ * generic landing. The old default was `/account`, the settings surface, which
+ * is not where a sign-in should land when nothing more specific was asked for.
+ */
 function safeNext(): string {
-  if (typeof window === "undefined") return "/account";
-  const raw = new URLSearchParams(window.location.search).get("next") || "/account";
-  return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/account";
+  if (typeof window === "undefined") return "/opportunities";
+  const raw = new URLSearchParams(window.location.search).get("next") || "/opportunities";
+  return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/opportunities";
 }
 
 async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {

@@ -48,7 +48,8 @@ function test(name: string, fn: () => void) {
 const RETIRED_LINK_BASELINE = [
   "app/manifest.ts",
   "app/sitemap.ts",
-  "app/[locale]/account/page.tsx",
+  // app/[locale]/account/page.tsx was retired-link-free by cutover PR 2: the
+  // account page was rebuilt on the Desk shell with no marketplace link.
   "app/[locale]/contact/page.tsx",
   "app/[locale]/learn/duties/page.tsx",
   "app/[locale]/learn/trade-data/page.tsx",
