@@ -78,8 +78,8 @@ function deal(over: Record<string, unknown> = {}) {
 const Q = (over: Partial<FindQuery> = {}): FindQuery => ({
   family: null, serviceCategory: null, serviceSubcategory: null, partnerType: null,
   sector: null, territory: null,
-  product: null, intent: null, market: null, origin: null, minQty: null, lane: null,
-  q: null, sort: null, page: 1, ...over,
+  product: null, category: null, intent: null, market: null, origin: null, minQty: null, lane: null,
+  q: null, sort: null, view: null, page: 1, ...over,
 });
 
 test("product matches product text or HS code", () => {

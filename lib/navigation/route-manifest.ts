@@ -61,7 +61,8 @@ export interface RouteEntry {
 const CANONICAL: RouteEntry[] = [
   { path: "/", classification: "canonical", note: "Landing / entry." },
   { path: "/explore", classification: "canonical", subtree: true, note: "Explore the market, migrated into the Desk shell." },
-  { path: "/market-signals", classification: "canonical", note: "Public Market Signals board." },
+  { path: "/market-signals", classification: "canonical", note: "Public Market Signals entrance: the two sides of the market, then the board." },
+  { path: "/market-signals/categories", classification: "canonical", note: "Market Signal category browse, measured from the live inventory." },
   { path: "/market-signals/[id]", classification: "canonical", note: "Market Signal detail." },
   { path: "/find", classification: "canonical", note: "Public opportunity board (Journey 1)." },
   { path: "/find/o/[ref]", classification: "canonical", note: "Public Member Opportunity detail. The one public record surface." },

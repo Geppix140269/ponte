@@ -8,13 +8,21 @@ import {
   countSignalInventory,
   signalFamilyAvailability,
   countSignalsClassifiedOn,
+  signalSideCounts,
 } from "@/lib/board/inventory";
 import { axisForFamily } from "@/lib/board/availability";
 import { railForScreen } from "@/lib/desk/journey";
 import { alternatesFor } from "@/lib/seo";
 import DeskShell from "@/components/desk/DeskShell";
 import SignalBoard from "@/components/desk/SignalBoard";
-import { parseFindQuery, toInventoryQuery, effectiveSort, PAGE_SIZE } from "@/lib/find/query";
+import SignalGates from "@/components/desk/SignalGates";
+import {
+  parseFindQuery,
+  toInventoryQuery,
+  effectiveSort,
+  showsBoard,
+  PAGE_SIZE,
+} from "@/lib/find/query";
 import "@/components/desk/desk.css";
 import "@/components/ponte/category/category.css";
 
@@ -79,6 +87,31 @@ export default async function MarketSignalsPage({
    * the board would show a record the availability count had already dropped.
    */
   const nowIso = new Date().toISOString();
+
+  /*
+   * The entrance, when the URL has asked nothing.
+   *
+   * A member arriving cold is asked which side of the market they are working
+   * on before they are handed a list, because a buyer requirement and a seller
+   * offer answer opposite questions and a blended list makes them do the
+   * sorting. Anything at all in the URL — a side, a category, a search, a sort,
+   * a page — is already a question the board answers, so it renders the board.
+   *
+   * This read is issued INSTEAD of the four below rather than alongside them:
+   * the entrance needs two counts and none of the board's filter measurements,
+   * so rendering it costs one round trip rather than five.
+   */
+  if (!showsBoard(q)) {
+    const counts = await signalSideCounts(nowIso);
+    return (
+      <div className={`ponte-desk ${landingFontVars}`}>
+        <DeskShell rail={rail} current="market" objective={objective}>
+          <SignalGates counts={counts} />
+        </DeskShell>
+      </div>
+    );
+  }
+
   /*
    * Which controls exist is a measurement, not a taxonomy.
    *

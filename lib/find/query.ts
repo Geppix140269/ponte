@@ -87,6 +87,8 @@ export type FindQuery = {
   territory: string | null;
   /** The product to find. Decisive for the products family. */
   product: string | null;
+  /** The source category label, exactly as stored (e.g. "Rice & Grains"). */
+  category: string | null;
   /** Direction filter, or null for any. */
   intent: FindIntent | null;
   /** Destination market, free text (a country name or region). */
@@ -108,6 +110,17 @@ export type FindQuery = {
   q: string | null;
   /** An explicit ordering, or null to take the default for this query. */
   sort: BoardSort | null;
+  /**
+   * Ask for the full result list rather than the entrance.
+   *
+   * `/market-signals` with nothing set is a CHOICE — buyer requirements or
+   * seller offers — because the two are different questions and the counts are
+   * the useful thing to see first. `?view=board` is how a member says "show me
+   * everything anyway", and it is what the entrance's own "All signals" link
+   * carries. Any search or filter implies the board on its own, so this is only
+   * ever needed for the unfiltered case.
+   */
+  view: "board" | null;
   /** 1-based page. Always a number; 1 when the URL says nothing. */
   page: number;
 };
@@ -152,6 +165,7 @@ export function hasActiveFilters(q: FindQuery): boolean {
       q.sector ||
       q.territory ||
       q.product ||
+      q.category ||
       q.intent ||
       q.market ||
       q.origin ||
@@ -235,6 +249,7 @@ export function parseFindQuery(
     sector: canonicalKey(sp.sector, (k) => PRODUCT_SECTORS.some((s) => s.key === k)),
     territory: territoryCode(sp.territory),
     product: clean(sp.product, 120),
+    category: clean(sp.category, 80),
     intent: isFindIntent(rawIntent) ? rawIntent : null,
     market: clean(sp.market, 120),
     origin: clean(sp.origin, 120),
@@ -242,8 +257,24 @@ export function parseFindQuery(
     lane: isFindLane(rawLane) ? rawLane : null,
     q: clean(sp.q, MAX_QUERY_LENGTH),
     sort: isBoardSort(rawSort) ? rawSort : null,
+    view: first(sp.view) === "board" ? "board" : null,
     page: pageNumber(sp.page),
   };
+}
+
+/**
+ * Does this URL ask for the result list, rather than for the entrance?
+ *
+ * True as soon as the member has said anything at all — a side, a category, a
+ * search, a sort, or a page past the first — because every one of those is a
+ * question the list answers and the entrance does not. `view=board` is the
+ * explicit form, for the one case where nothing else has been said.
+ *
+ * Kept here rather than in the route so the entrance and the board cannot come
+ * to disagree about which one a given URL means.
+ */
+export function showsBoard(q: FindQuery): boolean {
+  return q.view === "board" || hasActiveFilters(q) || q.sort !== null || q.page > 1;
 }
 
 /**
@@ -292,12 +323,18 @@ function boardParams(q: Partial<FindQuery>): URLSearchParams {
   if (q.sector) params.set("sector", q.sector);
   if (q.territory) params.set("territory", q.territory);
   if (q.product) params.set("product", q.product);
+  if (q.category) params.set("category", q.category);
   if (q.intent) params.set("intent", q.intent);
   if (q.market) params.set("market", q.market);
   if (q.origin) params.set("origin", q.origin);
   if (q.minQty && q.minQty > 0) params.set("minQty", String(q.minQty));
   if (q.lane) params.set("lane", q.lane);
   if (q.sort) params.set("sort", q.sort);
+  // Only meaningful while nothing else is set: any filter already implies the
+  // board, and carrying a redundant `view=board` would make two URLs for one
+  // view and neither shareable link the canonical one. `params` is the set
+  // already written, so this asks exactly that without re-deriving it.
+  if (q.view === "board" && params.toString() === "") params.set("view", "board");
   // Page one is the absence of a page, so the first page of a search shares as
   // the same URL whether it was arrived at by searching or by paging back.
   if (q.page && q.page > 1) params.set("page", String(q.page));
@@ -342,6 +379,7 @@ const FILTER_KEYS = [
   "sector",
   "territory",
   "product",
+  "category",
   "intent",
   "market",
   "origin",
@@ -412,6 +450,7 @@ export function toInventoryQuery(q: FindQuery): InventoryQuery {
     sector: q.sector,
     territory: q.territory,
     product: q.product,
+    category: q.category,
     side: q.intent === "offer" ? "offer" : q.intent === "requirement" ? "requirement" : null,
     text: q.q,
   };

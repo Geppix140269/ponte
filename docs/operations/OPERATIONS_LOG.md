@@ -18,6 +18,148 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - Supplier signals cleaned, category vocabulary merged, Market Signals entrance built
+
+### Completed
+
+- **Editorial cleanup applied in place to all 4,945 rows** of batch
+  `g4wb_suppliers_2026-07-30` (`scripts/clean-go4world-signals.mjs`, upsert on
+  `canonical_signal_id`, re-runnable):
+  - **Titles canonicalised.** Seller marketing stripped ("Premium", "Export
+    Quality", "Kualitas terbaik", trailing `, Grade A` clauses, everything after
+    a `|`), real variety words kept (Sella, Golden, Steam, 1121, Arabica).
+  - **Quantity re-extracted WITH its unit** from `quantity` and the source prose,
+    canonicalised to MT / kg / litres / containers / bags / pieces. The first
+    import had stored bare numbers, which is why a `qty = 1` Palm Oil card with
+    no unit reached the public board.
+  - **Origin normalised** to `Region, Country`, dropping city-level noise.
+- **Publication gate: a stated quantity WITH a unit, plus a specific product
+  name.** 1,310 published (`approved_signal`), 3,635 held `private`. Held rows
+  are retained and re-enrichable; nothing was deleted.
+- **The duplicate category vocabulary was merged — this was a real defect.** The
+  first import invented its own casing, so production carried `"Rice & grains"`
+  (250 live) beside the board's existing `"Rice & Grains"` (275 live), and the
+  same for four more food markets. Every affected market appeared twice and
+  neither entry was the whole of it. All rows were rewritten to the labels the
+  inventory already used; the five lowercase labels now return **0**.
+
+### Live board after the work
+
+| | |
+|---|---|
+| Total live | **4,768** |
+| Seller offers | **2,270** |
+| Buyer requirements | **2,498** |
+| Distinct categories | **22**, no duplicates |
+
+### Decisions
+
+- **Owner decision (2026-07-30): the Market Signals route opens on a CHOICE, not
+  a list.** A buyer requirement and a seller offer answer opposite questions, and
+  a blended newest-sixty list made the member do the sorting. `/market-signals`
+  now renders two doors carrying their own live counts and their own search
+  field; any filter, search, sort or page renders the board exactly as before,
+  and `?view=board` is the explicit "show me everything" URL.
+
+### Interface shipped (code, deploys with the branch)
+
+- `components/desk/SignalGates.tsx` — the entrance.
+- `components/desk/CategoryBrowse.tsx` + `/market-signals/categories` — every
+  live market with its offers/requirements split, measured from the inventory
+  rather than declared, so a market with nothing live is absent rather than
+  listed-and-empty.
+- `SignalBoard` gains a Buyer requirements / Seller offers / All lane selector.
+- New `category` filter (`FindQuery` → `InventoryQuery` → `eq("category", …)`)
+  and a `view` parameter. `showsBoard()` is the single authority for which of the
+  two surfaces a URL means.
+- **The two sides are NOT colour-coded**, deliberately: the approved palette
+  reserves its status colours and keeps gold off status entirely (Constitution
+  section 6), and direction is not a state. `token-authority.test.ts` passes,
+  which is what proves no colour was invented.
+
+### Risks / discrepancies
+
+- **The interface is unverified in a browser.** `next build` compiles both routes
+  and typecheck and the affected suites pass, but no frame was captured: the site
+  is behind the Basic-auth gate and the shared password is not held by the agent.
+  The gate was NOT weakened to get evidence. `/en/dev/market-signals-entrance`
+  renders both surfaces over fixtures (dev-only, 404s in production) for whoever
+  has the password.
+- Published signals still carry **no written description**; cards show structured
+  facts only. The desk write-up pass is not run.
+- Signals carry no `public_expires_at`, so they do not auto-expire.
+
+### Next
+
+- Capture desktop and 390×844 evidence via the dev gallery, with the site password.
+- Consider the write-up pass so cards carry a Ponte-voice line.
+
+### Evidence
+
+- `scripts/clean-go4world-signals.mjs`, `scripts/import-go4world-suppliers.mjs`.
+- Counts above read from production with the service role via PostgREST, using
+  the board's own eligibility predicates.
+- **Rollback:** `delete from desk_radar where import_batch = 'g4wb_suppliers_2026-07-30';`
+
+---
+
+## 2026-07-30 - Go4WorldBusiness supplier signals imported and published live (batch g4wb_suppliers_2026-07-30)
+
+### Completed
+
+- **4,945 supplier offers imported into production `desk_radar`** (`cptglsmjmzcfpjndqfmc`)
+  from the Go4WorldBusiness supplier export
+  `go4world_suppliers_liquid_categories.csv` (4,945 data rows; 0 skipped, 0 duplicates —
+  every `deal_id` unique). Upserted via PostgREST with the service-role key, in batches
+  of 500, `on_conflict=canonical_signal_id` (idempotent; re-runnable).
+- **Categorised.** All rows are product supplier offers → `side = offer`,
+  `market_family = products`. Six source slugs mapped to a readable public `category`,
+  a `product_sector_key` and an HS chapter (`hs_code`) for the board's chapter chips:
+  rice-grains→"Rice & grains"/agri/10 (1,086), edible-oils→"Edible oils"/food/15 (1,231),
+  nuts-dryfruit→"Nuts & dried fruit"/agri/08 (1,079), coffee-tea→"Coffee & tea"/agri/09 (596),
+  spices→"Spices"/agri/09 (491), pulses→"Pulses"/agri/07 (462).
+- **Ordered** by category, then newest spotted first.
+- **Privacy preserved.** Supplier/contact fields land only in internal columns
+  (`counterparty_*`, `import_meta`); none is in `PUBLIC_SIGNAL_COLUMNS`. (The export's
+  contact email/phone/buyer_name were empty anyway; `buyer_company`/`buyer_country`
+  are the only counterparty data and stay internal.)
+- **Importer added:** `scripts/import-go4world-suppliers.mjs` (dependency-free; reads the
+  CSV, categorises, orders, upserts via `fetch`; `--dry [--out file]` prepares without
+  writing). Sibling of `scripts/import-desk-radar.mjs`, tailored to the supplier export
+  (that older script maps `type==="sell"` and requires a quantity, so it would mislabel
+  all 4,945 as `requirement` and drop 63%).
+
+### Decisions
+
+- **Owner decision (2026-07-30): publish the whole set LIVE**, not the usual
+  private-on-import + per-row admin approval. All 4,945 written `status = approved_signal`,
+  `published_at = now`, **`public_expires_at = null`** — deliberately not `spotted_at + 90d`,
+  because the scrape carries historical spotted dates back to 2003 and a spotted-based
+  window would immediately hide most of the inventory.
+
+### Risks / discrepancies
+
+- These are **unconfirmed external signals** (the record type's premise) published without
+  the individual desk review the import convention normally applies. ~1,486 rows share a
+  product name with another (different supplier/date); all retained as distinct listings.
+- Signals carry no `public_expires_at`, so they will **not auto-expire**; removal is a
+  deliberate action.
+
+### Next
+
+- If any subset should not be public, withdraw by canonical id or category.
+- **Rollback (one statement):** `delete from desk_radar where import_batch = 'g4wb_suppliers_2026-07-30';`
+
+### Evidence
+
+- Production verification (service-role, exact public read contract
+  `status=approved_signal` + `public_expires_at is null or > now`): batch board-visible
+  **4,945 / 4,945**; whole-board live inventory **~3,458 → 8,403**; per-category counts
+  match the import summary; a public-columns read exposes no internal field.
+- Script: `scripts/import-go4world-suppliers.mjs`.
+
+---
+
 ## 2026-07-30 - Dedicated QA identity created; LB-008 closed on a real authenticated probe
 
 ### Completed

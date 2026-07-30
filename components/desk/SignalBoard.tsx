@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation";
+import CategoryLinks, { type CategoryLink } from "@/components/ponte/category/CategoryLinks";
 import FactRegister from "@/components/desk/FactRegister";
 import RecordCard from "@/components/desk/RecordCard";
 import SignalFilters, { ActiveFilters } from "@/components/desk/SignalFilters";
@@ -114,6 +115,51 @@ function Intro() {
   );
 }
 
+/**
+ * The two sides a signal can have, as top-level lanes.
+ *
+ * A Market Signal is either a buyer requirement (someone in the open market
+ * indicating demand) or a seller offer (indicating availability), the same
+ * split the landing presents. `intent` is the URL parameter behind `side`, so
+ * choosing a lane narrows the board to that side while keeping any search or
+ * filters already in force — it is a merge over the current query, not a
+ * replacement, so it does not discard a category or a search a member has set.
+ *
+ * Rendered as navigation, not selection: each lane is a real, shareable URL
+ * (`/market-signals?intent=requirement` and `?intent=offer`), and "All signals"
+ * is the absence of the parameter.
+ */
+function SignalLanes({ q }: { q: FindQuery }) {
+  const lanes: CategoryLink[] = [
+    {
+      key: "__all",
+      label: "All signals",
+      current: q.intent !== "offer" && q.intent !== "requirement",
+      href: buildBoardHref({ ...q, intent: null, page: 1 }),
+    },
+    {
+      key: "requirement",
+      label: "Buyer requirements",
+      current: q.intent === "requirement",
+      href: buildBoardHref({ ...q, intent: "requirement", page: 1 }),
+    },
+    {
+      key: "offer",
+      label: "Seller offers",
+      current: q.intent === "offer",
+      href: buildBoardHref({ ...q, intent: "offer", page: 1 }),
+    },
+  ];
+  return (
+    <CategoryLinks
+      dense
+      items={lanes}
+      legend="Buyer requirements or seller offers"
+      currentLabel="Viewing"
+    />
+  );
+}
+
 export default function SignalBoard({
   q,
   board,
@@ -167,6 +213,8 @@ export default function SignalBoard({
   return (
     <section className="sec">
       <Intro />
+
+      <SignalLanes q={q} />
 
       <SignalSearch q={q} />
 
