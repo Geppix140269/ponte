@@ -644,6 +644,36 @@ real failure gets missed.
 Nothing here has been changed. Repairing the integration touches repository
 settings and possibly a Supabase project, and both are owner decisions.
 
+### Update, 30 July 2026: it fails on exactly the PRs that add a migration
+
+Observed while opening PR #117. The check is no longer red on every PR — it is
+**`SKIPPED` on a PR that adds no migration file and `FAILURE` on one that does**:
+
+| PR | Adds a migration | Supabase Preview |
+|---|---|---|
+| #113 | no, records only | `SKIPPED` |
+| #116 | no | `SKIPPED` |
+| #107 | yes, `20260730a` | **`FAILURE`** — and it was merged anyway |
+| #117 | yes, `20260730b` | **`FAILURE`** |
+
+So a red `Supabase Preview` on a migration PR is **the integration, not the SQL**.
+PR #107 is the control: same failure, same cause, merged on the owner's decision
+without incident.
+
+The project reference has also moved. This section recorded
+`kltuzbxnldtmdfhakphv`; the check on PR #117 links to
+**`pyplitspfeeqwzdimltf`**. Neither is production (`cptglsmjmzcfpjndqfmc`) and
+neither is reachable by the owner's access token, so the conclusion above is
+unchanged and now has a second unreachable reference behind it.
+
+**This is worse than a check that always fails, not better.** A check that is red
+on every PR is obviously noise. One that is green or skipped most of the time and
+red precisely when a migration is proposed looks exactly like a migration gate,
+and it is not one — it says nothing about whether the SQL is correct. The next
+person to open a migration PR will either be alarmed by it or, worse, reassured by
+the ones it skips. Repairing or removing it remains an owner decision and is not
+touched here.
+
 ## APPLIED to production, 29 July 2026: family commercial terms
 
 `supabase/migrations/20260728e_family_commercial_terms.sql` (ADR-0014, accepted
