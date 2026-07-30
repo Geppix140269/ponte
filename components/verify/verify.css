@@ -125,6 +125,17 @@
   color: var(--ink-2);
 }
 
+/* The free member-business statement, standing where the balance line stands on
+   the paid path. It states a commercial fact, so it is plain ink on the rule,
+   not a status colour and not gold. */
+.ponte-find .vfree {
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
 .ponte-find .vshort {
   display: flex;
   flex-wrap: wrap;
