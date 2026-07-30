@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
+import { safeRedirectTo } from "@/lib/auth/next-destination";
 
 export const dynamic = "force-dynamic";
 
@@ -26,22 +27,13 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") ?? "";
-  const redirectTo = searchParams.get("redirect_to") ?? "";
 
-  // Destination after verification: only same-site targets are honored. The
-  // generic destination is /opportunities, the member's own records; a
-  // same-site `redirect_to` still wins so a resumed action returns to itself.
-  let next = "/opportunities";
-  try {
-    if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
-      next = redirectTo;
-    } else if (redirectTo) {
-      const u = new URL(redirectTo);
-      if (u.origin === origin) next = u.pathname + u.search;
-    }
-  } catch {
-    // keep default
-  }
+  // Destination after verification: the generic destination is /opportunities;
+  // a same-site `redirect_to` still wins. Confirmation is the one flow that may
+  // arrive with a same-ORIGIN absolute URL, which the shared helper reduces to
+  // its path; everything foreign or malformed falls back to the default.
+  // Sanitisation is unit tested in lib/auth/__tests__/next-destination.test.ts.
+  const next = safeRedirectTo(searchParams.get("redirect_to"), origin);
 
   if (tokenHash && TYPES.has(type) && isSupabaseConfigured()) {
     try {

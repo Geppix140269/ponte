@@ -22,12 +22,12 @@ import { useSearchParams } from "next/navigation";
  * objective comes back to that board with the objective intact, not to a
  * generic landing.
  *
- * Signed in it stops being a door and becomes a route to the member's own
- * records at `/opportunities`, which is where a signed-in member has reason to
- * land. It points there rather than at `/account` on purpose: `/account` is the
- * settings surface (profile, company, business status, sign-out), now rebuilt
- * on the Desk shell, and the header's job is to reach the member's work, not
- * their settings.
+ * Signed in it stops being a door and becomes the route to the member's own
+ * account: `/account`, the settings surface (profile, company, business status,
+ * sign-out), now rebuilt on the Desk shell. It is the account control, so it
+ * opens the account. `/opportunities` remains the generic post-sign-in landing
+ * and the member's work surface, reached by that landing and by the records
+ * links inside the product, not by this control.
  */
 export default function DeskAccount({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
@@ -40,8 +40,8 @@ export default function DeskAccount({ signedIn }: { signedIn: boolean }) {
 
   if (signedIn) {
     return (
-      <Link className="cmd__acct" href="/opportunities">
-        Your records
+      <Link className="cmd__acct" href="/account">
+        Account
       </Link>
     );
   }

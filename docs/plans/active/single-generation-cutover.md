@@ -216,6 +216,23 @@ cannot relink a retired route, the business path cannot regain a credit import).
   - `npm run verify` green. Deferred to PR 6 (unchanged): the `member_business`
     verify-page/pipeline credit decoupling (the `VERIFICATION_CREDIT_COUPLING`
     baseline is untouched) and its ADR. Remaining: PRs 3-8.
+- **2026-07-30** — PR 2 controller amendment (PR #133 review; PR #132 closed as
+  the duplicate, its broad rewrites not imported). Focused corrections only:
+  - The signed-in Desk account control (`components/desk/DeskAccount.tsx`) now
+    opens `/account`, a discoverable route to the rebuilt settings surface;
+    `/opportunities` remains the generic post-sign-in destination.
+  - Auth destination sanitisation centralised into one tested helper,
+    `lib/auth/next-destination.ts` (`safeNextPath`, `safeRedirectTo`), used by
+    `DeskLoginForm`, `app/auth/callback` and `app/auth/confirm`. It defaults to
+    `/opportunities`, preserves a valid same-site path/query/hash, rejects
+    protocol-relative / backslash / external / scheme / control-character
+    targets, and accepts a same-origin absolute `redirect_to` only for confirm.
+  - Regression tests `lib/auth/__tests__/next-destination.test.ts` (registered
+    in `npm test`) cover the helper and pin the Stage 1 contracts by source. The
+    route manifest and its tests are not rewritten.
+  - The paid-counterparty separation in AccountGate is unchanged; the
+    `member_business` verification pipeline is NOT made credit-free here (that
+    remains PR 6). `npm run verify` green.
 
 ## 12. Decisions and discoveries
 

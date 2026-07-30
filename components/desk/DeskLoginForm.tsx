@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useOtp } from "@/lib/auth/use-otp";
+import { DEFAULT_DESTINATION, safeNextPath } from "@/lib/auth/next-destination";
 import OtpInput from "@/components/OtpInput";
 import { Icon } from "@/components/icons";
 
@@ -12,19 +13,16 @@ const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 /**
- * Where to go after sign-in. Only same-site paths are honoured.
- *
- * The generic destination is `/opportunities`, the member's own records, which
- * is the first thing a signed-in member has reason to see. A journey-specific
- * `next` (set by the account gate, the desk header or a deep link) still wins,
- * so a member who came to do something is returned to exactly that, not to a
- * generic landing. The old default was `/account`, the settings surface, which
- * is not where a sign-in should land when nothing more specific was asked for.
+ * Where to go after sign-in. The sanitisation rule lives in one place,
+ * `lib/auth/next-destination`, shared with the two auth route handlers and unit
+ * tested there; this reads the `?next=` value and defers to it. The generic
+ * destination is `/opportunities`, the member's own records; a journey-specific
+ * same-site `next` still wins so a member who came to do something is returned
+ * to exactly that.
  */
 function safeNext(): string {
-  if (typeof window === "undefined") return "/opportunities";
-  const raw = new URLSearchParams(window.location.search).get("next") || "/opportunities";
-  return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/opportunities";
+  if (typeof window === "undefined") return DEFAULT_DESTINATION;
+  return safeNextPath(new URLSearchParams(window.location.search).get("next"));
 }
 
 async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
