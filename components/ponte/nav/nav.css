@@ -1,0 +1,208 @@
+/* ======================================================================
+   Shared journey navigation: the labelled Back control and the
+   unsaved-changes dialog.
+
+   These are the two cross-journey primitives the persistent-navigation
+   brief asked for. They live outside any one journey's scope class
+   because they render in both the Brand v5 cream world (.ponte-find) and
+   the obsidian chrome. Every value comes from the global `--pf-*` token
+   authority declared on :root, so the controls read the same wherever
+   they mount and move only when the central tokens move.
+
+   No hand-authored SVG: the Ponte Flow registry has no back/arrow key,
+   and the Constitution treats a missing icon as a gap to escalate, not a
+   licence to draw one. The Back control is therefore text, which is also
+   exactly what the brief requires (a visible label, never an icon alone).
+   ====================================================================== */
+
+/* -- Labelled Back control ------------------------------------------- */
+
+.pjb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* 44px min touch target (Constitution section 9 / brief section 9). */
+  min-height: 44px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--pf-ink-2, #3a3733);
+  text-decoration: none;
+}
+.pjb:hover {
+  color: var(--pf-gold-ink, #8a6520);
+}
+.pjb:focus-visible {
+  outline: 2px solid var(--pf-focus, #1e5fa8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* The optional leading chevron, drawn in pure CSS (a rotated border),
+   so it needs no icon-registry key and never stands alone. */
+.pjb__mark {
+  width: 7px;
+  height: 7px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  flex: none;
+}
+
+/* -- Unsaved-changes dialog ------------------------------------------ */
+
+.pux__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--pf-ink, #0f0f0e) 55%, transparent);
+}
+.pux {
+  width: 100%;
+  max-width: 440px;
+  padding: 22px 22px 18px;
+  background: var(--pf-raised, #ffffff);
+  border: 1px solid var(--pf-rule, #e5dfd2);
+  border-radius: var(--pf-r-lg, 16px);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--pf-ink, #0f0f0e) 28%, transparent);
+}
+.pux__h {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--pf-ink, #0f0f0e);
+}
+.pux__d {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pf-ink-3, #6e6a61);
+}
+.pux__note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pf-ink-3, #6e6a61);
+}
+.pux__a {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.pux-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--pf-r-md, 12px);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.pux-btn:focus-visible {
+  outline: 2px solid var(--pf-focus, #1e5fa8);
+  outline-offset: 2px;
+}
+/* The safe action, most prominent, and focused on open. */
+.pux-btn--safe {
+  background: var(--pf-ink, #0f0f0e);
+  color: var(--pf-raised, #ffffff);
+}
+.pux-btn--safe:hover {
+  background: var(--pf-ink-2, #3a3733);
+}
+/* Save as draft / Sign in and save: present but secondary. */
+.pux-btn--draft {
+  background: var(--pf-raised, #ffffff);
+  border-color: var(--pf-rule-strong, #d5cebc);
+  color: var(--pf-ink, #0f0f0e);
+}
+.pux-btn--draft:hover {
+  background: var(--pf-sunken, #f2efe6);
+}
+/* The destructive action: reachable, never the default, never loud. */
+.pux-btn--leave {
+  background: none;
+  color: var(--pf-danger, #b4402a);
+}
+.pux-btn--leave:hover {
+  background: var(--pf-danger-tint, #f7eae6);
+}
+
+@media (min-width: 480px) {
+  .pux__a {
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .pux-btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pux {
+    animation: pux-in 140ms ease-out;
+  }
+  @keyframes pux-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* -- Segment error page ---------------------------------------------- */
+
+.pux-errpage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+.pux-errpage__card {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 24px;
+  text-align: center;
+  background: var(--pf-raised, #ffffff);
+  border: 1px solid var(--pf-rule, #e5dfd2);
+  border-radius: var(--pf-r-lg, 16px);
+}
+.pux-errpage__h {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--pf-ink, #0f0f0e);
+}
+.pux-errpage__d {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pf-ink-3, #6e6a61);
+}
+.pux-errpage__a {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+}

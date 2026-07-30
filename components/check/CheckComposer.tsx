@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
 import CountryPicker from "@/components/CountryPicker";
+import JourneyBack from "@/components/ponte/nav/JourneyBack";
 import type { EvidenceReceipt, CheckResult } from "@/lib/check/receipt";
 
 type Purpose = "member_business" | "counterparty_check";
@@ -51,6 +53,7 @@ const RESULT_PILL: Record<CheckResult, string> = {
 
 export default function CheckComposer({ cost }: { cost: number }) {
   const router = useRouter();
+  const tj = useTranslations("journey");
 
   const [company, setCompany] = useState("");
   const [country, setCountry] = useState(""); // ISO alpha-2
@@ -291,11 +294,7 @@ export default function CheckComposer({ cost }: { cost: number }) {
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <div className="vbar">
         {stack.length > 1 && step !== "running" ? (
-          <button className="vbar__back" onClick={back} aria-label="Back">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <JourneyBack onClick={back} label={tj("back")} />
         ) : (
           <span className="vbar__title">Check &amp; Verify</span>
         )}

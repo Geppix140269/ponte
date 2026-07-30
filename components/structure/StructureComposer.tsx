@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
 import CountryPicker from "@/components/CountryPicker";
 import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
@@ -60,6 +60,10 @@ import {
 } from "@/lib/taxonomy/distribution-terms";
 import { journeyFor } from "@/lib/taxonomy/journey";
 import ClassifyStep from "./ClassifyStep";
+import JourneyBack from "@/components/ponte/nav/JourneyBack";
+import UnsavedChangesDialog from "@/components/ponte/nav/UnsavedChangesDialog";
+import { useUnsavedGuard } from "@/components/ponte/nav/useUnsavedGuard";
+import { structureDirty } from "@/lib/nav/dirty";
 // The stylesheet is imported by the route, not here, matching find.css and
 // structure.css: a component that pulls CSS cannot be mounted by the unit
 // tests, which run under tsx and have no CSS loader.
@@ -160,6 +164,7 @@ export default function StructureComposer({
   icons?: CategoryIconMap;
 } = {}) {
   const t = useTranslations("structure");
+  const tj = useTranslations("journey");
   const router = useRouter();
   const [draft, setDraft] = useState<StructureDraft>(() => {
     // A resumed draft wins. It already carries its family, its classification
@@ -194,6 +199,13 @@ export default function StructureComposer({
   const go = (s: Step) => setStack((st) => [...st, s]);
   const replace = (s: Step) => setStack((st) => [...st.slice(0, -1), s]);
   const back = () => setStack((st) => (st.length > 1 ? st.slice(0, -1) : st));
+
+  // Leaving the composer for the home page must not silently discard a part-
+  // built record. The draft is "dirty" only once the member has entered
+  // something beyond the family/intent they picked on the way in, and never
+  // after a successful submit (received) or on the error acknowledgement.
+  const dirty = step !== "received" && step !== "error" && structureDirty(draft);
+  const { guard, promptOpen, onContinueEditing, leaveNow } = useUnsavedGuard(dirty);
 
   /**
    * Editing one fact, rather than walking the whole record.
@@ -296,16 +308,22 @@ export default function StructureComposer({
     <div className="ponte-find" style={{ minHeight: "100dvh" }}>
       <div className="sbar">
         {stack.length > 1 && step !== "received" ? (
-          <button className="sbar__back" onClick={back} aria-label={t("bar.back")}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
+          // A labelled control, not a bare arrow: the previous step in words.
+          // Back within the composer never loses work, so it is not guarded.
+          <JourneyBack onClick={back} label={t("bar.back")} />
         ) : (
-          // A link, not a label. Until now the composer's first step showed the
-          // wordmark as plain text and every later step replaced it with Back,
-          // so there was no way out of Start a Deal to the home page at all.
-          <Link className="sbar__title serif" href="/" aria-label={t("bar.home")}>
+          // The wordmark is the way home. It is a button, not a raw link, so a
+          // member who has started building a record is asked before it is lost
+          // rather than dropped onto the landing with an empty hand.
+          <button
+            type="button"
+            className="sbar__title serif"
+            aria-label={t("bar.home")}
+            onClick={() => guard(() => router.push("/"))}
+            style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}
+          >
             Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span>
-          </Link>
+          </button>
         )}
         {STEP_MARK[step] && <span className="sbar__step">{STEP_MARK[step]}</span>}
       </div>
@@ -356,6 +374,13 @@ export default function StructureComposer({
       <footer className="ffoot">{t("trust")}</footer>
 
       <AccountGate open={gateOpen} context="publish" onClose={() => setGateOpen(false)} onComplete={onGateComplete} />
+
+      <UnsavedChangesDialog
+        open={promptOpen}
+        onContinueEditing={onContinueEditing}
+        onLeave={leaveNow}
+        t={tj}
+      />
     </div>
   );
 }
