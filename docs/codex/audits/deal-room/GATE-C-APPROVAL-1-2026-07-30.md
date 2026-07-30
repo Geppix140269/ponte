@@ -879,3 +879,129 @@ Then Phase 2 (QA account), Phase 3 (Approval 2: bucket and policies), Phase 4
 (Approval 3: pilot Deal and the negative-access fixture). Approval 4 — flag and
 deploy — remains unauthorised.
 
+---
+
+# Closure, 30 July 2026: LB-008 resolved on a real authenticated probe
+
+**Authorised:** owner, Phase 2 corrected authorisation, 30 July 2026.
+**Production change:** one auth identity created. **No schema, SQL, policy, flag or
+configuration change.**
+
+## 22. The dedicated QA identity
+
+| | |
+|---|---|
+| Email | `deals@ponte.trade` — owner-confirmed as a Ponte-controlled inbox |
+| User id | `8263140e-4231-496b-b4c6-cfc88739995b` |
+| Label and purpose | `Ponte Trade Deal Room QA`, recorded in `user_metadata` |
+| `email_confirm` | **true** — no mail sent to a human |
+| Password | **none supplied**, at any point |
+| Auth role | `authenticated` — the ordinary Postgres role |
+| `profiles.role` | **`customer`** — a normal member |
+| Admin / service-role | **neither** |
+| User count | **9 → 10** |
+| `admin` profiles | **unchanged at 1** |
+
+**Credential disposition.** Zero QA sessions, zero refresh tokens, zero live tokens.
+Sessions came from single-use links, were held in memory only, and were revoked at
+the end of the run. **No token, magic link or secret appears in this repository, in
+any log, or in any pull request.**
+
+The nine pre-existing members were neither used nor impersonated. Every operation in
+this pass named `deals@ponte.trade` and nothing else.
+
+## 23. The probe that was pending, now passed
+
+Run as the QA member through PostgREST with that member's own JWT.
+
+| Group | Requirement | Result |
+|---|---|---|
+| Internal four | must be denied | **4 of 4.** `deal_room_log_event`, `deal_room_is_writable`, `deal_room_uuid_or_null` all returned `permission denied for function <name>`; `deal_room_events_append_only` returned `404 PGRST202`, because PostgREST drops functions a role cannot execute from its schema cache — invisibility is the privilege manifesting |
+| RLS helpers | must be usable | **4 of 4**, all `200` |
+| Member commands | must be usable | **15 of 15**, each reaching its body |
+| **Intended total** | **19** | **19 of 19** |
+
+**Why this probe mattered and the catalogue did not suffice.** `pg_proc.proacl`
+proved `authenticated` did not hold EXECUTE on the logger. It could not prove that
+PostgREST *enforces* that for a real member session. This does:
+`deal_room_log_event` refused a genuine authenticated member with the PostgreSQL
+`permission denied for function deal_room_log_event`.
+
+Catalogue state, re-read after the probe and unchanged by it: `anon` **0 of 23**,
+`PUBLIC` **0**, `authenticated` **exactly 19 by name**, `service_role` **23 of 23**,
+14 policies with none non-SELECT and none naming `anon`. Member table reads returned
+`200 []`. `deal_room_activity_events` holds 0 rows.
+
+**No existing account or profile was modified.** One pre-existing account's
+`updated_at` moved inside the window. It was a refresh-token rotation from that
+account's own live browser session — refresh token at `.287`, user row at `.297`,
+ten milliseconds later — neither a sign-in nor a creation.
+
+## 24. A testing-method correction, recorded because it nearly inverted the result
+
+The first predicate treated any SQLSTATE `42501` as a missing grant, and reported
+**0 of 15** commands usable. That was wrong about the method, not about the ACL.
+
+**Ponte command bodies deliberately raise `42501` for domain authorisation
+refusals** — `20260729b` does so **44 times**. So `Deal not found`,
+`Workspace not found` and `Only a room administrator can do this` are the functions
+executing correctly for a member who owns no rooms. **Only
+`permission denied for function <name>`, which Postgres alone emits, proves missing
+EXECUTE.**
+
+Corrected predicate: **19 of 19 usable, 4 of 4 denied.**
+
+This belongs in the permanent record because the failure mode is asymmetric and
+seductive: a probe that does not make this distinction reports a healthy permission
+boundary as a broken one, and the natural response — loosening grants — would
+reopen exactly what LB-008 closed.
+
+## 25. The browser-landing finding, stated without mischaracterisation
+
+**The `/account` browser landing was not demonstrated.** Three reasons, all
+evidenced:
+
+1. **The requested continuation was silently discarded.**
+   `http://localhost:3000/auth/callback?next=/account` is not in the project's
+   Redirect URL allowlist, so Supabase substituted the project **Site URL** and the
+   `?next=/account` continuation was dropped before any browser was involved.
+2. **The admin-generated link uses the implicit flow.** Following it yields
+   `303 → <site>/#access_token=…&refresh_token=…` — tokens in the fragment, **no
+   `code` parameter**. `app/auth/callback/route.ts` requires `?code=` for
+   `exchangeCodeForSession`, so it would have fallen through to `/login?error=auth`.
+   An admin-generated link cannot drive that route.
+3. Port 3000 was held by another session's dev server, and shared
+   `.claude/launch.json` was not repointed to take it.
+
+**This did not affect the authenticated ACL result and is not part of LB-008.** The
+probe used a member JWT directly and never needed a browser. `/auth/callback` itself
+is correct: it reads `next`, defaults to `/account`, and rejects anything that is not
+a same-site relative path.
+
+## 26. Unallocated observation, for controller intake
+
+**`lib/email.ts` line 369** — the `operator_alert` template hardcodes
+`actionPath: "/admin"` with label "Open in Ponte". It is the only hardcoded
+`actionPath` in the file. With `app/[locale]/admin/layout.tsx` line 53, which
+bounces an unauthenticated `/admin` hit to `/login?next=/admin`, that is a route by
+which a session can end on `/admin`.
+
+Mitigating: the admin layout selects `profiles.role` and renders a restricted notice
+unless `role = 'admin'`, so landing there grants nothing.
+
+**No claim is made that the QA account produced the earlier `/admin` screenshot.**
+That account did not exist at the time, and the account, the link and the session in
+this pass all postdate it. **No identifier is allocated and no fix is included
+here** — the finding is handed to the controller.
+
+## 27. LB-008 is resolved
+
+The ACL production contract is fully evidenced: the catalogue reports exactly the
+intended contract, a real anonymous client is refused at the grant, and a real
+authenticated member is refused on the four internal functions while retaining all
+19 it needs.
+
+Still open, and not part of LB-008: requirements 12 and 13 (entitlement fail-closed,
+cross-room isolation), which need Approval 3; Approval 2 (bucket and policies); and
+Approval 4 (flag and deploy).
+
