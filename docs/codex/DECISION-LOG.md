@@ -16,6 +16,84 @@ That correction matters more than its size. The state existed to stop the board 
 
 **Also:** this branch had duplicated the bridge-invariance gate defect as its own blocker. `main` records it as LB-006; the duplicate is removed and the Market Signals blocker is renumbered to **LB-007**. Two references in shared records that a blind renumber on this branch had reassigned from `main`'s LB-005 are restored.
 
+## 30 July 2026 - the corrected `20260729b` applied, and a revoke that named the wrong grantee
+
+**Decision:** the owner authorised the Gate C Approval 1 continuation - apply the
+corrected `20260729b_deal_room_rls.sql` only, from `main` at `23637d3`, with
+per-migration checksum verification and the full section 4.1 to 4.4 probe set.
+**It applied cleanly**: one transaction, exit 0, no ambiguous transport response,
+ledger 44 to 45, checksum
+`b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153` matching the
+repository file byte for byte. **LB-005 is closed.** LB-004 is closed and moved to
+the resolved register.
+
+**The result of the fourteen required verifications is 11 / 1 / 2: eleven passed,
+one failed, two remain pending and unproved.** The failure is requirement 11, the
+event logger's grant, recorded as LB-008. The two pending are requirements 12 and
+13 — entitlement fail-closed and cross-room isolation — which need real member
+sessions against a real room and so belong to Approval 3.
+
+An earlier version of this entry said "thirteen of the fourteen passed". The owner
+corrected it on 30 July 2026, and the correction is worth keeping visible: it
+counted requirements 12 and 13 as passes while the same records said they were not
+proved. **A requirement that cannot be tested yet has not passed**, and a tally
+that treats "encoded in the policy predicate" as equivalent to "proved against the
+database" is the exact error `GATE-C-TEST-PLAN.md` section 0 was written to
+prevent — a policy can be present, correctly named and wrong.
+
+The eleven that passed: 23 `deal_room_*`
+functions, 21 SECURITY DEFINER, every one carrying `search_path = public,
+pg_temp`. `deal_room_invite` exists on `(uuid, text, timestamptz)` and no other
+signature; the five-argument form is absent. 14 policies, one SELECT per
+member-facing table, all scoped to `authenticated`, **zero INSERT, UPDATE or
+DELETE policies anywhere** and none naming `anon`. The agreement authority is
+revoked outright from both member roles - an anon read returns `401 / 42501`. The
+append-only trigger fires `BEFORE DELETE OR UPDATE`, binding `service_role` too.
+The legacy cluster and `is_deal_participant()` are untouched.
+
+**The one that failed is LB-008, and it is the same mistake as the RLS gap eight
+hours earlier.** `anon` holds EXECUTE on all 23 functions. The file says "`anon`
+is granted execute on nothing" and performs `revoke all on function
+public.deal_room_log_event(...) from public`. That revoke works - PUBLIC is gone
+from the ACL - but PUBLIC was the wrong grantee. Supabase's `alter default
+privileges` grants EXECUTE **explicitly by name** to `anon`, `authenticated` and
+`service_role` on every new function in `public`, and revoking from PUBLIC does
+not touch an explicit grant. The morning's defect was the same premise on tables;
+this one is on functions. **A fresh object in a Supabase `public` schema does not
+start private, and a migration that assumes it does will keep producing this
+class of defect.**
+
+It matters because `deal_room_log_event()` is deliberately unauthorised
+internally - the other twenty commands call it on the member's behalf - so the
+grant was its only protection. Proved through the public API rather than the
+catalogue: an anon-key RPC returned `409 / 23503`, an FK violation naming the
+`room_id` passed in, which means the body executed. Nothing was written, because
+`room_id` references `deal_rooms` and production has zero rooms - which is also
+why production is fail-closed today and why the probe could prove callability
+without forging anything.
+
+**Why it must be fixed before Approval 3 rather than before deploy.** The
+exposure begins the moment a room exists, and the activity record is append-only,
+so a forged row could never afterwards be removed by anyone. No fix was applied:
+none was authorised, and unlike the RLS gap there was no live hole to contain.
+That distinction is the reason acting was right in the morning and wrong now.
+
+**Affected areas:** production schema `cptglsmjmzcfpjndqfmc`; `DATABASE-STATE.md`;
+`CURRENT-STATE.md`; `LAUNCH-BLOCKERS.md` (LB-004 and LB-005 resolved, LB-008
+opened); `GATE-C-APPROVAL-1-2026-07-30.md` sections 6 to 10; the operations log.
+
+**Also recorded, because it was an unintended production write.**
+`scripts/db-query.mjs --file` inserts a `schema_migrations` row for *any* file it
+is given, keyed on the basename - including a read-only probe. A precondition
+query passed with `--file` therefore added a ledger row named `pre.sql`, taking
+the ledger to 45 before the migration ran. It was caught in the output of the
+query that caused it and removed the same minute with a primary-key-scoped delete
+carrying a `returning` clause, restoring the ledger to 44. That delete bypassed
+`db-query.mjs`'s own refusal of `delete from`, deliberately and recorded as such.
+Every later probe used `--sql`. **In this repository `--file` is a write,
+whatever the SQL inside it does.**
+
+
 ## 30 July 2026 - Gate C Approval 1, and a schema that stops half applied
 
 **Decision:** the owner authorised Gate C Approval 1 - applying the three Deal

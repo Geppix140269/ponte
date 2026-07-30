@@ -53,8 +53,6 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
-## Deal Room launch slice: `20260729a` APPLIED, `b` and `c` NOT applied
-
 ## Written but NOT applied: Market Signal search indexes
 
 `supabase/migrations/20260730a_market_signal_search.sql` (LB-007).
@@ -103,12 +101,19 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the Deal Room launch slice
+## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
 
-**Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`, from
-`main` at `7f979e0` with a clean worktree. It stopped part way through.** Full
+**Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**
+`20260729a` applied from `main` at `7f979e0`; the corrected `20260729b` applied
+from `main` at `23637d3` under the Approval 1 continuation of 30 July 2026. Full
 record with every probe result:
 `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`.
+
+**Verification did not fully pass.** `anon` holds EXECUTE on all 23
+`deal_room_*` functions, including `deal_room_log_event()`, which has no
+authorisation check of its own. That is **LB-008**, and it contradicts both the
+migration's own stated intent and `GATE-C-TEST-PLAN.md` section 4.2. Details
+below and in the audit.
 
 ### `20260729a_deal_room_core.sql` — APPLIED
 
@@ -143,40 +148,72 @@ does, so it conflicts with nothing. Proved with an anon-key client: SELECT
 returns `200 []`, INSERT returns `401 / 42501`. **This is a production change
 outside the approved files and awaits owner confirmation.**
 
-### `20260729b_deal_room_rls.sql` — NOT applied, and cannot be as it stands
+### `20260729b_deal_room_rls.sql` — APPLIED, with one defect found on verification
 
-Postgres refused it and rolled the whole file back: `ERROR: 42883: function
-public.deal_room_invite(uuid, text, text, text, timestamp with time zone) does
-not exist`. The file grants execute on a signature it has itself dropped - the
-owner's final trust review took `deal_room_invite()` from five arguments to three.
-One broken grant line; all 21 declared functions were audited programmatically
-and no other arity disagrees. **LB-005.**
+First attempt, 30 July 2026: Postgres refused it and rolled the whole file back —
+`ERROR: 42883: function public.deal_room_invite(uuid, text, text, text, timestamp
+with time zone) does not exist`. The file granted execute on a signature it had
+itself dropped, because the owner's final trust review took `deal_room_invite()`
+from five arguments to three. One broken grant line; all 21 declared functions
+were audited programmatically and no other arity disagreed. That was **LB-005**,
+now resolved.
 
-**Corrected on 30 July 2026** under owner authorisation, and the new checksum is
-recorded here as promised. The grant now names `(uuid, text, timestamptz)`, which
-is what the file declares. The diff is one line - one insertion, one deletion -
-and nothing else in the file changed.
+**Applied 30 July 2026 at `05:59:43 UTC`**, cleanly and in one transaction, with
+no ambiguous transport response. Recorded in `public.schema_migrations`, **ledger
+44 to 45**, with the checksum below matching the repository file byte for byte —
+verified both as raw bytes and as the utf8 string `db-query.mjs` hashes, which are
+identical for this file.
 
-| File | SHA-256 to apply and record |
+| File | SHA-256 applied and recorded |
 |---|---|
 | `20260729b_deal_room_rls.sql` | `b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153` |
 
 The superseded value `64f4686091d4c7fed14c0223956164402bab9dc56cd2bdd52f67fdb8a52d75f7`
 appears in the Gate C preflight and Approval 1 records, where it was correct at
-the time; both now point here. `20260729a`'s and `20260729c`'s checksums are
+the time; both point here. `20260729a`'s and `20260729c`'s checksums are
 unaffected.
 
-`lib/deal-room/__tests__/grant-signatures.test.ts` compares every `grant execute`
-signature in the migration against the function the same file declares, and
-refuses any signature the file drops. It fails on the stale grant and passes on
-the corrected one, demonstrated in both directions rather than asserted.
+**Verified in production.** 23 `deal_room_*` functions, 21 of them SECURITY
+DEFINER, every one carrying `search_path = public, pg_temp`. `deal_room_invite`
+exists on `(uuid, text, timestamp with time zone)` and only that; the
+five-argument form that took `p_role` and `p_class` does not exist. 14 policies,
+exactly one per member-facing table, **every one SELECT, every one scoped to
+`authenticated`** — zero INSERT, UPDATE or DELETE policies anywhere, and no policy
+names `anon`. `deal_room_agreement_documents` carries no policy at all and is
+revoked outright from both member roles: an anon-key read returns `401 / 42501
+permission denied`. The `deal_room_activity_append_only` trigger fires `BEFORE
+DELETE OR UPDATE`, so no role — including `service_role` — can rewrite history.
 
-**The corrected file has NOT been applied.** Applying it is a separate owner
-instruction.
+**One verification failed, and it is LB-008.** `anon` holds EXECUTE on all 23
+`deal_room_*` functions. The file intends the opposite and says so at its grant
+block: "`anon` is granted execute on nothing. The event logger is revoked from
+everyone." The revoke it performs is
+`revoke all on function public.deal_room_log_event(...) from public`, which
+removes the PUBLIC grant — and PUBLIC's grant is indeed gone from that function's
+ACL. But Supabase's `alter default privileges` grants EXECUTE **explicitly to
+`anon`, `authenticated` and `service_role`** on every new function in `public`,
+and revoking from PUBLIC does not touch an explicit role grant. So the ACL reads
+`postgres=X | anon=X | authenticated=X | service_role=X`.
 
-Rollback confirmed by reading production: 0 policies, still 2 functions, no
-ledger row. The Management API runs a file as one transaction, which is also what
-makes `a`'s completeness above trustworthy.
+That matters most for `deal_room_log_event()`, because it is the one function in
+the file with no authorisation check of its own — by design, since the other
+commands call it on the member's behalf. Its only intended protection was the
+grant. Proved through the public API rather than inferred from the catalogue: an
+anon-key RPC call returned `409 / 23503`, a foreign-key violation naming the
+`room_id` passed in, which means the function body **executed**. Nothing was
+written, because `room_id` references `deal_rooms` and production has zero rooms.
+
+**Production is fail-closed today and is not exposed.** The FK to `deal_rooms`
+blocks every forged activity row while no room exists, member reads return zero
+rows, the flag is unset and nothing is deployed. The exposure becomes real the
+moment a room exists, which is Gate C Approval 3 or 4 — and because the activity
+record is append-only, a forged row could never afterwards be removed by anyone.
+**LB-008 must therefore be fixed before any Deal Room is created.** No fix was
+applied here: none was authorised, and there is no live hole to contain.
+
+This is the same defect class as the RLS gap recorded above: Supabase's default
+privileges grant more than the migration expects, and a `revoke ... from public`
+does not undo them.
 
 ### `20260729c_deal_room_storage.sql` — NOT applied, not attempted
 
@@ -187,7 +224,21 @@ two `storage.objects` policies, which `GATE-C-TEST-PLAN.md` treats as Gate C
 
 ### Unchanged by all of this
 
-The legacy Deal-era cluster: 8 tables, 0 rows, `is_deal_participant()` unaltered.
+The legacy Deal-era cluster, re-measured after `20260729b`: **4 tables** —
+`deals`, `deal_documents`, `deal_events`, `deal_status_history` — RLS enabled on
+all four, policies intact (3 on `deals`, 1 on each of the others), `deals` holding
+0 rows. `is_deal_participant()` is unaltered; `20260729b` references it exactly
+once, in a comment saying it is not touched.
+
+The Approval 1 record of earlier the same day reported **8** tables for this
+cluster. Re-measuring with `relname like 'deal%' and relname not like
+'deal_room%'` returns 4, and a broader search including `%offer%` and
+`%negotiation%` returns the same 4. The earlier figure cannot be reproduced and is
+recorded here as unreconciled rather than restated. Nothing was dropped: the
+migration contains no statement that could remove a table, and the Management API
+ran it as one transaction that either committed whole or not at all.
+
+`ponte-deal-docs`: 0 objects, 0 policies. `deal-room-evidence`: does not exist.
 `listings`: 5 rows. `NEXT_PUBLIC_DEAL_ROOM` unset, allowlist unchanged, nothing
 deployed, access wall untouched. The Deal Room is unreachable by any member.
 

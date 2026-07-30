@@ -18,6 +18,99 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - `20260729b_deal_room_rls.sql` applied to production; LB-008 found
+
+### Completed
+
+- **The corrected `20260729b_deal_room_rls.sql` was applied to production project
+  `cptglsmjmzcfpjndqfmc`** under the owner's Gate C Approval 1 continuation, from
+  `main` at `23637d342bf526252c740b9e53c042668d0f8d2f` with a clean worktree and
+  `npm run verify` at exit 0. Applied with `node scripts/db-query.mjs --file`,
+  one transaction, **exit 0 at 05:59:43 UTC**, no timeout, no HTML and no 502 -
+  so none of the inspect-before-retry procedure was needed.
+- **Checksum verified immediately before execution and again after**, as raw
+  bytes and as the utf8 string `db-query.mjs` hashes, which are identical for this
+  file: `b379f869f320e6ea36bdb00e07555079adf6373ff14848d20633afb6cfea3153`,
+  76,684 bytes, no BOM. Recorded as exactly one ledger row, **44 to 45**.
+- **All eight preconditions confirmed before touching production:** one ledger
+  row for `20260729a`, none for `b`, 15 tables, RLS on all 15, zero policies, no
+  `deal-room-evidence` bucket.
+- **The fourteen required verifications came out 11 / 1 / 2:** eleven passed, one
+  failed (requirement 11, the event logger's grant — **LB-008**), and two remain
+  pending and unproved (requirements 12 and 13, entitlement fail-closed and
+  cross-room isolation, which need Approval 3). An earlier version of this entry
+  implied thirteen passes; the owner corrected the tally on 30 July 2026. A
+  requirement that cannot be tested yet has not passed.
+- **Verified after:** 23 `deal_room_*` functions, 21 SECURITY DEFINER, all with
+  `search_path = public, pg_temp`; `deal_room_invite` on `(uuid, text, timestamptz)`
+  only and the five-argument form absent; 14 policies, one SELECT per
+  member-facing table, all `authenticated`, zero non-SELECT, none naming `anon`;
+  `deal_room_agreement_documents` revoked from both member roles (anon read
+  returns `401 / 42501`); the append-only trigger firing `BEFORE DELETE OR
+  UPDATE`; the legacy cluster and `is_deal_participant()` untouched.
+- **LB-005 closed. LB-004 closed** and moved to the resolved register.
+
+### Decisions
+
+- Owner, 30 July 2026: apply the corrected `20260729b` **only**. `20260729c`, the
+  Storage bucket, the negative-access fixture, the feature flag, the allowlist and
+  deployment all remain unauthorised.
+
+### Risks / discrepancies
+
+- **LB-008, a new Launch Blocker.** `anon` holds EXECUTE on all 23
+  `deal_room_*` functions. `20260729b` intends the opposite and performs `revoke
+  all on function public.deal_room_log_event(...) from public`; that removes the
+  PUBLIC grant but not Supabase's explicit `alter default privileges` grants to
+  `anon`, `authenticated` and `service_role`. It matters for
+  `deal_room_log_event()`, which has no authorisation check of its own by design,
+  so the grant was its only protection. Proved with an anon-key RPC returning
+  `409 / 23503` - an FK violation naming the `room_id` passed in, so the body
+  executed - without writing anything.
+  **Fail-closed today** (zero rooms, so the FK rejects every forged row; member
+  reads return zero rows; flag unset; nothing deployed) but **exploitable as soon
+  as a room exists**, and the activity record is append-only so a forged row could
+  never be removed. **Must be fixed before Approval 3, not before deploy.** No fix
+  applied: none authorised, and unlike the RLS gap of 03:39 UTC there was no live
+  hole to contain.
+- **Same defect class, twice in one day.** A fresh object in a Supabase `public`
+  schema does not start private. `20260729a` assumed it on tables; `20260729b`
+  assumed it on functions.
+- **One unintended production write, made and reversed.** `db-query.mjs --file`
+  inserts a `schema_migrations` row for any file given to it, keyed on the
+  basename. A read-only precondition probe passed with `--file` added a row named
+  `pre.sql`, taking the ledger to 45 before the migration ran. Caught in the
+  output of the query that caused it and removed the same minute with a
+  primary-key-scoped `delete ... returning`, restoring the ledger to 44. That
+  delete **bypassed `db-query.mjs`'s own refusal of `delete from`**, deliberately
+  and recorded here as such. Every later probe used `--sql`.
+- Still outstanding from the first pass: owner confirmation or reversal of the RLS
+  containment applied at 03:39 UTC, and confirmation that `20260729c` belongs to
+  Approval 2.
+- Requirements 12 and 13 - entitlement fail-closed and cross-room isolation -
+  **are not recorded as proved.** They need real member sessions against a real
+  room, which is `npm run deal-room:negative-access` (Approval 3) and a published
+  pilot Deal. The policy predicates encode room and sub-room scoping; that is not
+  the same as proof.
+
+### Next
+
+1. Fix LB-008 in a new migration: revoke EXECUTE by name from `anon` on all 23
+   functions and from `authenticated` on `deal_room_log_event`, with a text-scan
+   regression test beside `grant-signatures.test.ts`.
+2. Owner decision on the RLS containment and on `20260729c`'s approval boundary.
+3. Approval 2: `deal-room-evidence` bucket and its two policies.
+4. Approval 3: a published family-classified pilot Deal, then
+   `npm run deal-room:negative-access`.
+5. Approval 4: `NEXT_PUBLIC_DEAL_ROOM`, allowlist, deploy.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 6 to 10
+- `docs/codex/DATABASE-STATE.md`, Deal Room launch slice section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-008 active; LB-004 and LB-005 resolved
+- `public.schema_migrations`: 45 rows, one each for `20260729a` and `20260729b`
+
 ## 2026-07-29 - Two listing migrations applied to production (ADR-0013, ADR-0014)
 
 ### Completed
