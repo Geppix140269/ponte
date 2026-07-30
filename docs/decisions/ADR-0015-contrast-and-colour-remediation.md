@@ -333,9 +333,27 @@ prototype page to produce them was rejected: presenting invented markup as an
 owner-approved reference render would corrupt the authority this ADR exists to
 protect.
 
-**This is a live gap, not a closed item.** It needs the two HTML files; their
-SHA-256 rows are already in the manifest, so a supplied copy is verifiable as
-genuine before use, and the re-take is then mechanical.
+#### S-3 amended by owner decision, 30 July 2026 — OD-009 option 2
+
+The requirement above, that the reference renders "must be re-taken rather than left
+describing the old contrast", is **amended**. The owner decided:
+
+- the eight PNGs are **preserved unchanged as historical approval evidence** of the
+  27 July 2026 delivery, and are not renders that track the live palette;
+- the **stylesheet invariance proof and the rendered geometry comparison are the
+  authority evidence** for this contrast-only amendment;
+- the missing prototype HTML is **not to be reconstructed or fabricated**;
+- it is recorded that ADR-0015 Stage 1 **changes contrast only**.
+
+That last point is what makes the decision coherent rather than a concession. Because
+the amendment moves colour and nothing else — proved by 479 identical non-colour
+declarations and 1208 identical measured values — everything the PNGs attest to
+(geometry, composition, station positions, node sizes, labels, motion) is still
+accurate. The single thing they no longer show is the current contrast, and that is
+now documented beside them instead of being silently wrong.
+
+**This is closed.** Option 1 remains available if the HTML files ever surface, but
+nothing is waiting on them. Recorded at OD-009.
 
 ### S-4. Value-neutral token adoption in the four duplicated stylesheets — approved
 

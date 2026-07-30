@@ -176,9 +176,10 @@ ADR-0015 section S-1; ExecPlan sections 3, 4 and 6.5.
 
 ## OD-009 — The approved Bridge reference renders cannot be re-taken
 
-**Status:** OPEN
+**Status:** DECIDED
 **Owner:** Giuseppe Funaro
 **Raised:** 29 July 2026
+**Decided:** 30 July 2026
 
 ### Decision required
 
@@ -207,6 +208,17 @@ Equivalent Stage 1 Bridge frames, rendered from the product and framed to the pr
 1. **Supply the two HTML files.** Their SHA-256 rows are already in the manifest, so any copy can be verified as the genuine approved delivery before use. The re-take is then mechanical and this closes.
 2. **Re-scope S-3** to accept the two programmatic invariance proofs as the verification, and record the reference PNGs as historical approval evidence frozen at the 27 July 2026 delivery rather than as renders that track the live palette.
 3. **Re-approve a new reference set** rendered from the product, framed to the product, as a fresh design approval. This is a new approval, not an implementation of S-3, and would need the owner's visual sign-off in its own right.
+
+### Decision taken
+
+**Option 2, approved by the owner on 30 July 2026.**
+
+- The eight Bridge reference PNGs are **preserved unchanged as historical approval evidence**. They record the original visual approval of 27 July 2026 and are not renders that track the live palette.
+- The **stylesheet invariance proof and the rendered geometry comparison are accepted as the authority evidence** for this contrast-only amendment: `scripts/check-bridge-invariance.mjs` (479 non-colour declarations, 6 at-rules and 23 timings identical, all 15 colour changes enumerated) and `scripts/check-bridge-geometry.mjs` (8 rendered views, 1208 measured values identical to 0.05px).
+- The missing prototype HTML is **not to be reconstructed or fabricated**.
+- It is recorded that ADR-0015 Stage 1 **changes contrast only**, so the geometry, composition, station positions, node sizes, labels and motion the PNGs show remain accurate; what they no longer show is the current contrast.
+
+Options 1 and 3 are not taken. Option 1 remains available if the HTML files ever surface, but nothing is now waiting on them. Option 3 would have been a new design approval rather than an implementation of S-3.
 
 ### Canonical record
 

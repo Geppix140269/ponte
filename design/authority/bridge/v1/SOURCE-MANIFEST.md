@@ -60,11 +60,28 @@ Reference PNGs are approval evidence rather than production assets. The implemen
 |---|---|---|---|
 | 29 July 2026 | `ponte-bridge.css` | ADR-0015 section S-3 | Structural contrast only. The passive deck track, the passive station pier, the receded passive pier and the Deal Room passive pier moved from `--pf-ink` at an opacity to the approved structural rule tokens. Geometry, station fractions, node sizes, labels, copy, motion, durations, easing, the gold signal, the selected destination and every semantic state are byte-for-byte unchanged. Verified two ways: `scripts/check-bridge-invariance.mjs` (479 non-colour declarations, 6 at-rules and 23 timings identical, 15 colour changes enumerated) and `scripts/check-bridge-geometry.mjs` (8 rendered views, 1208 measured values identical to 0.05px). **The eight `reference/` PNGs still show pre-Stage-1 contrast and their hashes are unchanged**; see the note below. |
 
-## The reference renders have not been re-taken
+## The reference renders are historical approval evidence, by owner decision
 
-ADR-0015 section S-3 requires the authoritative reference renders to be re-taken,
-and they have not been. This records why, because the reason is a gap in the
-approved package rather than a choice.
+**Decided 30 July 2026, OD-009 option 2.** The eight PNGs under `reference/` are
+preserved **unchanged** as the record of the original visual approval of 27 July
+2026. They are not renders that track the live palette, and they are not to be
+re-taken from a reconstruction.
+
+They remain accurate about everything except contrast. ADR-0015 Stage 1 changes
+**contrast only** — proved by 479 identical non-colour declarations, 6 identical
+at-rules, 23 identical timings and 1208 identical measured geometry values — so the
+composition, station positions, node sizes, labels and motion they show are still
+what the Bridge does. The one thing they no longer show is the current contrast, and
+this note is where that is written down.
+
+The authority evidence for the amendment is therefore the two programmatic proofs,
+not a re-taken image. A pixel diff was never the right instrument: the colours are
+meant to differ, so an image comparison would report a difference on every changed
+pixel and prove nothing about shape.
+
+### Why a re-take was not possible
+
+Recorded because the reason is a gap in the approved package rather than a choice.
 
 The eight PNGs were rendered from `Ponte Landing - Bridge.html` — the reference
 composition, at 60% and 70% scale for desktop and 390 x 844 rescaled from 62% for
@@ -90,10 +107,10 @@ alternatives were both rejected:
   result as an owner-approved reference render. Fabricating an authority artefact
   is worse than leaving a stale one in place and saying so.
 
-**What is needed:** the two HTML files. Their SHA-256 rows are already in this
-manifest, so any copy supplied can be verified as the genuine approved delivery
-before it is used. With them the re-take is mechanical, and the geometry proof
-above already stands independently of it.
+**If the two HTML files ever surface**, their SHA-256 rows are already in this
+manifest, so a supplied copy can be verified as the genuine approved delivery before
+it is used, and a re-take would then be mechanical. Nothing is waiting on that: the
+owner's decision of 30 July 2026 settles the authority question without it.
 
 Equivalent Stage 1 Bridge frames, rendered from the product and framed to the
 product, exist at `e2e/evidence/stage1/after/bridge-*.png` for the same eight

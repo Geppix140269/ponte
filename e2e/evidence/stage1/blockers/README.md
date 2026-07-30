@@ -1,8 +1,14 @@
 # LB-002 and LB-003 — rendered closure evidence
 
 **Captured:** 29 July 2026, against a local production build with live Supabase data
-**Reproduce:** `PONTE_EVIDENCE_BASE_URL=http://127.0.0.1:3100 npx playwright test e2e/stage1-blockers.spec.ts`
+**Reproduce:** `PONTE_EVIDENCE_BASE_URL=<served build> npx playwright test e2e/stage1-blockers.spec.ts`
 **Suite:** `e2e/stage1-blockers.spec.ts` · **Measurements:** `blocker-evidence.md`
+
+The suite itself is retained and needs nothing special. Getting a served build to
+point it at does: the private-access gate stands in front of every route, and the
+tooling that skipped it locally was removed on 30 July 2026 at the owner's
+instruction. Supply the gate credential at run time, or run against a tree where the
+gate has been retired.
 
 ADR-0015 section S-5 forbids closing either blocker from token calculations alone.
 The first closure attempt failed for a reason worth recording: it reused

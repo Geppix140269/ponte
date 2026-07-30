@@ -1,9 +1,19 @@
 # Stage 1 contrast remediation, visual evidence
 
-Captured 29 July 2026 against two local production builds, with the private-site
-gate bypassed by `scripts/evidence-build.mjs`. The gate itself is never modified in
-the repository: that script patches `middleware.ts` for the build and restores it,
-asserting byte-identity by sha256.
+Captured 29 July 2026 against two local production builds, served behind the
+private-site gate.
+
+The tooling that produced these frames has since been **removed at the owner's
+instruction**: `scripts/evidence-build.mjs` patched `middleware.ts` for the
+duration of a local build and restored it, asserting byte-identity by sha256. It
+never weakened the deployed gate and the bypass was never committed, but a
+committed script whose job is to skip the gate is a thing that can be misused, and
+the owner's judgement is that it should not exist in the repository.
+
+The frames and measurements are retained: they are the record of what was
+rendered. Re-capturing them now requires the gate credential supplied at run time,
+or a tree where the gate has been retired. Nothing in this directory depends on the
+removed script.
 
 - `before/` was built from `origin/main` at `d184c1c`.
 - `after/` was built from this branch.
