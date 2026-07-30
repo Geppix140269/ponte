@@ -25,15 +25,28 @@
 // say about it? A function the corrective migration forgets is a failure here, not
 // a silent omission - which is the specific way LB-008 hid.
 //
-// ## Why a text scan and not a database probe
+// ## What this file can prove, and what it cannot
 //
-// There is no non-production database (PL-002), and the defect only exists in a
-// project whose default privileges grant to `anon`. A local check cannot observe
-// that. What it CAN do is prove the corrective migration is complete and internally
-// consistent before anybody applies it. The five production probes are listed in
-// `docs/codex/DATABASE-STATE.md`, and the decisive one is a real anonymous RPC to
-// the logger returning `42501` where today it returns `23503`. Those are Gate C's
-// job, not this file's.
+// **Everything here is a claim about migration TEXT.** That boundary is not a
+// caveat, it is the lesson, and it was learned the expensive way twice.
+//
+// LB-008 was `20260729b` asserting something about itself: it said "`anon` is
+// granted execute on nothing" and revoked from `PUBLIC`, which does not touch the
+// grants Supabase's `alter default privileges` writes to `anon`, `authenticated`
+// and `service_role` by name. All 23 functions stayed anon-executable.
+//
+// This suite was then written to catch that, and made the same mistake one level
+// up. It asserted "authenticated should end with execute on exactly 19" by counting
+// `grant` statements - and passed, while production held 22, because `20260730b`
+// granted 19 and never mentioned the other three. **A text scan cannot see a
+// privilege the file never mentions.** That wording is now corrected everywhere
+// below: each assertion says whether it is about the file or about the world.
+//
+// The end state has exactly one witness: `scripts/deal-room-acl-verify.mjs`, which
+// reads `pg_proc.proacl` from production. A test here asserts that script still
+// exists and still interrogates the three roles, so the division of labour cannot
+// quietly rot. There is no non-production database (PL-002), so this file cannot do
+// that job locally and does not pretend to.
 //
 // ## What "the same function" means here
 //
@@ -59,6 +72,7 @@ function test(name: string, fn: () => void): void {
 const CORE = "supabase/migrations/20260729a_deal_room_core.sql";
 const RLS = "supabase/migrations/20260729b_deal_room_rls.sql";
 const ACL = "supabase/migrations/20260730b_deal_room_function_acl.sql";
+const ACL_C = "supabase/migrations/20260730c_deal_room_internal_acl.sql";
 
 const coreSql = readFileSync(CORE, "utf8");
 const rlsSql = readFileSync(RLS, "utf8");
@@ -66,6 +80,16 @@ const aclSql = readFileSync(ACL, "utf8");
 
 /** `20260730b` with comments stripped, so a name in prose is never mistaken for a grant. */
 const aclCode = aclSql.replace(/--[^\n]*/g, "");
+
+const aclCSql = readFileSync(ACL_C, "utf8");
+const aclCCode = aclCSql.replace(/--[^\n]*/g, "");
+
+/** The three that `20260730b` left with `authenticated`, and `20260730c` removes. */
+const RESIDUAL = [
+  "deal_room_events_append_only()",
+  "deal_room_is_writable(uuid)",
+  "deal_room_uuid_or_null(text)",
+];
 
 /** An ordered list of argument types, as Postgres would identify the function. */
 function typeList(args: string): string {
@@ -237,13 +261,13 @@ function correctiveAllowlist(): Set<string> {
 
 type Statement = { sig: string; roles: string[]; index: number };
 
-function aclStatements(verb: "revoke" | "grant"): Statement[] {
+function aclStatements(verb: "revoke" | "grant", code: string = aclCode): Statement[] {
   const preposition = verb === "revoke" ? "from" : "to";
   const pattern = new RegExp(
     `${verb} execute on function public\\.(deal_room_\\w+)\\(([^)]*)\\) ${preposition} ([^;]+);`,
     "g",
   );
-  return Array.from(aclCode.matchAll(pattern)).map((m) => ({
+  return Array.from(code.matchAll(pattern)).map((m) => ({
     sig: key(m[1], m[2]),
     roles: m[3].split(",").map((r) => r.trim()).filter(Boolean),
     index: m.index ?? 0,
@@ -404,7 +428,16 @@ test("every intended member command is granted to authenticated exactly once", (
   assert.deepEqual(problems, []);
 });
 
-test("authenticated is granted nothing beyond the helpers and the commands", () => {
+test("the migration text GRANTS authenticated nothing beyond the helpers and the commands", () => {
+  // The wording matters. An earlier version of this test asserted that
+  // "authenticated should end with execute on exactly 19 Deal Room functions".
+  // That claim was false in production and unprovable here: `20260730b` grants 19
+  // and Supabase's default privileges had already granted all 23, so the real
+  // figure was 22. A text scan cannot see a privilege the file never mentions.
+  //
+  // What follows is therefore scoped to what the file SAYS. The end state is
+  // proved by `scripts/deal-room-acl-verify.mjs` against `pg_proc.proacl`, and
+  // nothing in this suite may be read as a substitute for it.
   const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
   assert.equal(allowed.size, 19, `the allowlist should be 4 helpers + 15 commands = 19, got ${allowed.size}`);
 
@@ -416,11 +449,11 @@ test("authenticated is granted nothing beyond the helpers and the commands", () 
   assert.equal(
     new Set(grantedToAuth.map((s) => s.sig)).size,
     19,
-    "authenticated should end with execute on exactly 19 Deal Room functions",
+    `${ACL} should contain grant statements for exactly the 19 allowlisted functions. This is a claim about the file, not about the resulting ACL`,
   );
 });
 
-test("the four internal functions are executable by no member role", () => {
+test("the migration text never GRANTS a member role an internal function", () => {
   const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
   const internal = Array.from(declaredFunctions()).filter((sig) => !allowed.has(sig));
   assert.deepEqual(
@@ -543,7 +576,129 @@ test("all three sources agree, function for function", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. The file changes nothing but privileges
+// 6. `20260730c`: the residual three, and the limits of a text scan
+// ---------------------------------------------------------------------------
+//
+// `20260730b` closed the anonymous path but left `authenticated` holding EXECUTE on
+// 22 functions rather than 19, because granting 19 cannot remove grants Supabase's
+// defaults had already written onto all 23. `20260730c` revokes those three.
+//
+// Everything below is a claim about migration TEXT. The end state is a property of
+// the database and is proved by `scripts/deal-room-acl-verify.mjs`.
+
+test("20260730c revokes authenticated on exactly the three residual functions", () => {
+  const revokes = aclStatements("revoke", aclCCode);
+  const fromAuth = revokes.filter((s) => s.roles.includes("authenticated"));
+  assert.deepEqual(
+    Array.from(new Set(fromAuth.map((s) => s.sig))).sort(),
+    RESIDUAL,
+    "20260730c must revoke authenticated on exactly deal_room_is_writable, deal_room_uuid_or_null and deal_room_events_append_only",
+  );
+  assert.equal(revokes.length, 3, `20260730c should contain exactly 3 revoke statements, found ${revokes.length}`);
+});
+
+test("20260730c re-asserts authenticated on exactly the 19, and revokes none of them", () => {
+  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const granted = aclStatements("grant", aclCCode).filter((s) => s.roles.includes("authenticated"));
+  const sigs = new Set(granted.map((s) => s.sig));
+
+  const surplus = Array.from(sigs)
+    .filter((sig) => !allowed.has(sig))
+    .map((sig) => `${ACL_C} grants ${sig} to authenticated, which is not on the allowlist`);
+  const missing = Array.from(allowed)
+    .filter((sig) => !sigs.has(sig))
+    .map((sig) => `${ACL_C} does not re-assert ${sig}; the contract it states would be incomplete`);
+  assert.deepEqual([...surplus, ...missing], []);
+  assert.equal(sigs.size, 19);
+
+  // A file that both revokes and grants the same signature would be ambiguous to
+  // read even though Postgres would resolve it by order.
+  const revoked = new Set(aclStatements("revoke", aclCCode).map((s) => s.sig));
+  const both = Array.from(sigs).filter((sig) => revoked.has(sig));
+  assert.deepEqual(both, [], "20260730c both revokes and grants the same function");
+});
+
+test("20260730c leaves the residual three granted to nobody, and never mentions the logger in a grant", () => {
+  const granted = new Set(aclStatements("grant", aclCCode).map((s) => s.sig));
+  const leaked = RESIDUAL.filter((sig) => granted.has(sig)).map((sig) => `${sig} is granted back by ${ACL_C}`);
+  assert.deepEqual(leaked, []);
+
+  assert.ok(!granted.has(LOGGER), `${ACL_C} grants the event logger`);
+  const looseGrant = /grant[^;]*deal_room_log_event[^;]*;/i.exec(aclCCode);
+  assert.equal(looseGrant, null, `a grant statement in ${ACL_C} mentions the event logger: ${looseGrant?.[0]}`);
+});
+
+test("20260730c is grants and revokes only, touches no default privileges and names no other object", () => {
+  const statements = aclCCode
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const offending = statements
+    .filter((s) => !/^(revoke|grant|begin|commit)\b/i.test(s))
+    .map((s) => `unexpected statement: ${s.slice(0, 90).replace(/\s+/g, " ")}`);
+  assert.deepEqual(offending, []);
+
+  assert.equal(/alter\s+default\s+privileges/i.test(aclCCode), false, `${ACL_C} changes project-wide default privileges`);
+  assert.equal(
+    /\bservice_role\b/.test(aclCCode),
+    false,
+    `${ACL_C} names service_role. It bypasses RLS by design and the negative-access fixture needs it; narrowing it is a separate owner decision`,
+  );
+
+  const names = Array.from(aclCCode.matchAll(/on function public\.(\w+)\(/g)).map((m) => m[1]);
+  assert.deepEqual(names.filter((n) => !n.startsWith("deal_room_")), [], `${ACL_C} names a function outside deal_room_*`);
+  assert.ok(names.length > 0, "no function names parsed from 20260730c; the parser has drifted");
+});
+
+test("the two ACL migrations together account for every declared function exactly once", () => {
+  // A closed world across both files: each of the 23 is either allowlisted to
+  // authenticated, or revoked from authenticated by one of the two files.
+  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const revokedFromAuth = new Set(
+    aclStatements("revoke", aclCode)
+      .concat(aclStatements("revoke", aclCCode))
+      .filter((s) => s.roles.includes("authenticated"))
+      .map((s) => s.sig),
+  );
+
+  const unaccounted = Array.from(declaredFunctions())
+    .filter((sig) => !allowed.has(sig) && !revokedFromAuth.has(sig))
+    .map((sig) => `${sig} is neither allowlisted to authenticated nor revoked from it by either ACL migration`);
+  assert.deepEqual(unaccounted, []);
+
+  const contradictory = Array.from(allowed)
+    .filter((sig) => revokedFromAuth.has(sig))
+    .map((sig) => `${sig} is both allowlisted and revoked from authenticated across the two files`);
+  assert.deepEqual(contradictory, []);
+
+  assert.equal(revokedFromAuth.size, 4, "exactly four functions should be revoked from authenticated: the logger and the three internal helpers");
+  assert.equal(allowed.size + revokedFromAuth.size, declaredFunctions().size);
+});
+
+test("the catalogue verification procedure exists and checks what this suite cannot", () => {
+  // The honest division of labour, asserted so it cannot quietly rot: this suite
+  // reads migration text, and only the catalogue can report privileges. If the
+  // script disappears or stops checking the roles, the end state has no witness.
+  const script = "scripts/deal-room-acl-verify.mjs";
+  const source = readFileSync(script, "utf8");
+  for (const needle of [
+    "pg_proc",
+    "proacl",
+    "has_function_privilege",
+    "'anon'",
+    "'authenticated'",
+    "'service_role'",
+  ]) {
+    assert.ok(source.includes(needle), `${script} no longer references ${needle}; it cannot prove the ACL state`);
+  }
+  assert.ok(
+    /select|SELECT/.test(source) && !/\b(insert|update|delete|drop|alter|grant|revoke)\s/i.test(source.replace(/\/\/[^\n]*/g, "")),
+    `${script} must be read-only`,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// 7. The file changes nothing but privileges
 // ---------------------------------------------------------------------------
 
 test("the ACL migration contains grants and revokes only", () => {

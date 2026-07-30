@@ -101,6 +101,50 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the Deal Room internal-function ACL (LB-008 residual)
+
+`supabase/migrations/20260730c_deal_room_internal_acl.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `5adb34c2ef183c601b30048084121577cf65cba29ad4fb7dacb075ac8c7d1891` |
+| Size | 7,501 bytes, no BOM; raw-byte and utf8-string hashes identical |
+| Content | **3 revokes, 19 grants, one transaction. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+
+Revokes `authenticated` EXECUTE on exactly `deal_room_is_writable(uuid)`,
+`deal_room_uuid_or_null(text)` and `deal_room_events_append_only()` — the three
+`20260730b` left behind, because granting the 19 cannot remove grants Supabase's
+defaults had already written onto all 23. The 19 are then re-asserted, idempotently,
+so the intended contract is stated once and completely in one file rather than being
+the residue of two migrations plus platform defaults.
+
+`deal_room_log_event` appears nowhere in it. `service_role` is not named. No
+function body, table, column, constraint, policy, trigger or index is touched, and
+no `alter default privileges` is issued — each asserted by the regression suite
+against the comment-stripped text, not claimed.
+
+### The verification procedure, and why it is a separate instrument
+
+**`npm run deal-room:acl-verify`** (`scripts/deal-room-acl-verify.mjs`) reads
+`pg_proc.proacl` from production and requires: `anon` **0 of 23**, `PUBLIC` **0**,
+`authenticated` **exactly the 19** by name, `service_role` **23 unchanged**, the
+four internal functions unreachable by either member role, 21 SECURITY DEFINER
+functions all with a pinned `search_path`, and 14 policies with none non-SELECT and
+none naming `anon`. Read-only.
+
+It exists because **a text scan cannot see a privilege the file never mentions.**
+LB-008 was a migration asserting something about itself; the test written to catch
+LB-008 asserted something about that file, claiming "authenticated ends with exactly
+19" while production held 22. Run against production **before** `20260730c` was
+applied, this script fails with exactly five problems naming all three functions —
+so it demonstrably detects the defect it exists for, rather than being asserted to.
+
+`lib/deal-room/__tests__/function-acl.test.ts` is now scoped and worded to claim
+only what migration text can prove, and one of its 28 assertions checks that this
+script still exists and still interrogates all three roles, so the division of
+labour cannot quietly rot.
+
 ## APPLIED to production, 30 July 2026: the Deal Room function ACL correction (LB-008)
 
 `supabase/migrations/20260730b_deal_room_function_acl.sql`.

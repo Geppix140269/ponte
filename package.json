@@ -40,7 +40,8 @@
     "deps:check": "node scripts/check-deps.mjs",
     "level:guard": "node lib/verification/__tests__/guard.mjs",
     "evidence:deal-room": "playwright test e2e/deal-room-bridge.spec.ts",
-    "deal-room:negative-access": "node scripts/deal-room-negative-access.mjs"
+    "deal-room:negative-access": "node scripts/deal-room-negative-access.mjs",
+    "deal-room:acl-verify": "node scripts/deal-room-acl-verify.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",
