@@ -18,6 +18,81 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Approval 2 stopped before application: the Storage upload policy needs two helpers `20260730c` revoked
+
+### Completed
+
+- **Nothing applied to production.** Ledger unchanged at 47, 6 buckets, no
+  `deal-room-evidence`, 12 storage policies, 0 rooms. Every probe was read-only.
+- **Approval 2 preconditions confirmed first:** Phase 1 complete (`anon` 0,
+  `authenticated` 19) and the QA account present.
+- **Reading `20260729c` before applying it surfaced a blocker.** Its
+  `deal room evidence upload` policy calls `deal_room_uuid_or_null(text)` and
+  `deal_room_is_writable(uuid)`. `20260730c` revoked `authenticated` EXECUTE on
+  both. A function invoked inside a policy expression is privilege-checked against
+  the querying role, so applying `20260729c` as-is would have failed **every member
+  evidence upload** with `42501`. Confirmed in the catalogue:
+  `has_function_privilege('authenticated', ...)` is false for both and true for the
+  other two functions those policies use.
+- **Correction prepared, not applied:**
+  `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`, SHA-256
+  `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9`, 4,040 bytes.
+  Two grants, one transaction, nothing else. **Must be applied before, or with,
+  `20260729c` — never after.**
+- **The instruments were corrected, not just the SQL.** The test now derives
+  policy helpers from **both** `20260729b` and `20260729c`, and models the end
+  state as Postgres does: all 23 start granted by Supabase's default privileges,
+  then each ACL migration's revokes and grants apply in file order. 29 assertions.
+  Demonstrated in both directions — removing one grant from `20260731a` fails with
+  "called by a policy expression but authenticated does not end with EXECUTE on it".
+- **`deal-room:acl-verify` now separates permitted from required.** The two Storage
+  helpers are permitted always and required only once the `storage.objects` policies
+  exist; the script queries `pg_policies` to decide which regime it is in. It reports
+  `authenticated 19 (required 19, permitted 21)` and **exits 0** against production
+  today, instead of going red for a window that is not a defect.
+
+### Decisions
+
+- Owner, 31 July 2026: prepare the corrective migration and contract updates first,
+  PR them, and apply `20260729c` together with the grant as Approval 2. Chosen over
+  applying `20260729c` as-is, because a broken policy in production invites the
+  "loosen the grants" reflex that reopens LB-008.
+
+### Risks / discrepancies
+
+- **The root cause is a derivation blind spot, and it is worth stating plainly.**
+  The `authenticated` allowlist was derived from `pg_policies where tablename like
+  'deal_room%'`, which cannot see `storage.objects` policies and cannot see policies
+  that do not exist yet. `20260730c` recorded "appears in no policy expression" and
+  "called nowhere": **true of the applied database, false of the repository.** The
+  catalogue is the only witness to what production holds; it is not a witness to
+  what production will need.
+- **This is not a rollback of LB-008.** `deal_room_log_event` and
+  `deal_room_events_append_only` remain executable by neither member role, so the
+  forgery path stays closed. Both restored helpers are read-only.
+- **No identifier minted.** This defect is recorded here, in `DATABASE-STATE.md` and
+  in the Gate C audit without an LB or PL number, per the standing instruction to
+  hand findings to the controller for allocation. It may warrant one: it is a
+  production-state defect that blocks Approval 2.
+- Requirements 12 and 13 remain catalogue-only, needing Approval 3.
+
+### Next
+
+1. Review and merge the correction PR.
+2. Approval 2, as one step: apply `20260731a`, then `20260729c`, then
+   `npm run deal-room:acl-verify` (which will then require 21) and the pre/post
+   bucket and storage-policy capture.
+3. Approval 3: pilot Deal and the negative-access fixture.
+4. Approval 4 - flag and deploy - remains unauthorised.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, Storage policy helpers section
+- `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`
+- `lib/deal-room/__tests__/function-acl.test.ts`, 29 assertions
+- `npm run deal-room:acl-verify`, exit 0, `authenticated 19 (required 19, permitted 21)`
+
+
 ## 2026-07-30 - Dedicated QA identity created; LB-008 closed on a real authenticated probe
 
 ### Completed
