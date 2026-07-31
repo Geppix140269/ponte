@@ -1,11 +1,9 @@
 # ADR-0021 — Deal Room entry: either principal may open, verification gates admission, and the room is within three steps
 
-- **Status:** **Proposed.** Drafted by Claude Code on 31 July 2026 from rulings the
-  owner gave verbally in session. **Not accepted.** Under
-  `docs/codex/SOURCE-OF-TRUTH-SOP.md` a verbal instruction and an AI draft are
-  proposal inputs only; this becomes authority when the owner accepts it and it
-  merges to `main`.
-- **Decision date:** pending owner acceptance
+- **Status:** **Accepted by the product owner; effective when merged.** Drafted by
+  Claude Code on 31 July 2026 from rulings the owner gave verbally in session,
+  then accepted by the owner on 31 July 2026 on review of this draft.
+- **Decision date:** 31 July 2026
 - **Owner:** Giuseppe Funaro
 - **Drafted by:** Claude Code, at the owner's instruction ("draft both")
 - **Implementation status:** **Nothing is implemented.** No migration, no route,

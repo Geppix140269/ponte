@@ -59,11 +59,11 @@ Flow remains the semantic icon and motion implementation.
 
 ## Amendment, 31 July 2026: the conversion layer, and the landing composition
 
-> **Status: PROPOSED, not accepted.** Drafted by Claude Code on 31 July 2026 from
-> rulings the owner gave verbally in session, and recorded in **ADR-0021**. Under
-> `docs/codex/SOURCE-OF-TRUTH-SOP.md` a verbal instruction and an AI draft are
-> proposal inputs only. Until the owner accepts this and it merges, the document
-> below this banner governs unchanged.
+> **Status: ACCEPTED by the product owner, 31 July 2026; effective when merged.**
+> Drafted by Claude Code from rulings the owner gave verbally in session, recorded
+> in **ADR-0021**, and accepted by the owner on review of that draft. This
+> amendment governs from its merge, and the rest of this document is read subject
+> to it.
 
 ### Why this document needed amending
 
