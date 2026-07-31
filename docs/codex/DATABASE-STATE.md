@@ -144,6 +144,38 @@ display correction and not a second gate defect.
 No table, constraint, policy, trigger, index, grant or row is altered, and nothing is
 backfilled: there are no rooms in production.
 
+## Gate C Approval 3, fifth run, 31 July 2026: 97 passed, 0 failed
+
+The gap the fourth run recorded is closed. `scripts/deal-room-negative-access.mjs`
+now asserts what a member may **see about another member**, not only what they may
+**do** - the omission that let two defects reach production on 31 July and be found
+by reading rather than by running.
+
+Three assertions, which interlock:
+
+| | |
+|---|---|
+| another person's master-level participant row is not readable by a counterparty | **ok** |
+| one approval per person, not per participant row | **ok** - exactly 2 rows for 2 people |
+| the counterparty can read the participant every approval names | **ok** |
+
+The first and third together make the `20260731d` defect impossible to reintroduce
+silently: if the seed ever prefers a master-level row again, the third fails, because
+the first proves that row cannot be read. The second does the same for `20260731c`:
+seeding per participant row would give 3 rows for 2 people and fail immediately.
+
+Neither could pass vacuously. The first is a plain refusal, so it fails if the
+policy is ever widened; the third would pass trivially only if there were no approval
+rows, which the second forbids.
+
+The service role is used only to look up the master-level row's id. The read under
+test is the counterparty's own, under their own session and RLS - the rule this
+fixture has kept from the beginning.
+
+**2 -> 92 -> 94 -> 94 -> 97 passed.** Teardown clean; production unchanged at 10
+users, 7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
+append-only trigger enabled, ledger 52.
+
 ## APPLIED to production, 31 July 2026: the approver row a counterparty can read
 
 `20260731d_deal_room_approver_row_visibility.sql`, checksum
@@ -185,9 +217,10 @@ to a room administrator - together with the new ordering, confirmed present in
 
 **The assertion that would close this** is that, for every row in
 `deal_room_procedure_approvals` on a procedure a member can read, that member can also
-read the `deal_room_participants` row it names. It does not exist yet. Until it does,
-"the counterparty can see who they are waiting for" is a reasoned conclusion, not a
-proved one.
+read the `deal_room_participants` row it names.
+
+**Added the same day and run: see the fifth run above, 97 passed, 0 failed.** "The
+counterparty can see who they are waiting for" is now proved rather than reasoned.
 
 ## APPLIED to production, 31 July 2026: the procedure approver gate
 

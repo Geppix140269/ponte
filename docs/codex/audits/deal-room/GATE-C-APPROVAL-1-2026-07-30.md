@@ -1550,3 +1550,73 @@ Approval 3 remains 94 of 94. Requirement 12 remains only partly proved. Approval
 `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains unauthorised, and the
 surfaces have still never been rendered against a live room by a human being.
 
+---
+
+# The fixture learns to see, 31 July 2026: Approval 3 at 97 of 97
+
+**Authorised:** owner, 31 July 2026 - merge PR #158, then add the missing assertion.
+
+## 57. What was missing, and why it mattered
+
+Every assertion in `scripts/deal-room-negative-access.mjs` asked what a member may and
+may not **do**. None asked what a member may **see about another member**. Two defects
+went through that gap on 31 July 2026 and were caught by reading, not by running:
+
+- `deal_room_propose_procedure` seeded one approval per participant **row**. The
+  initiator holds two rows in their own room, so they were issued two obligations for
+  themselves and no procedure could ever be approved (LB-001, `20260731c`).
+- The fix then made the initiator's **master-level** row canonical, and
+  `participant read` allows another person's row only through
+  `sub_room_id is not null and deal_room_is_sub_room_participant(...)`, or to a room
+  administrator. The counterparty could read the approval but not the participant it
+  named, so the procedure page showed them an unnamed "A required approver"
+  (`20260731d`).
+
+The fourth run passed 94 of 94 with the second defect still latent. That is what a
+blind spot looks like from inside.
+
+## 58. Three assertions that interlock
+
+| | |
+|---|---|
+| another person's master-level participant row is not readable by a counterparty | **ok** |
+| one approval per person, not per participant row | **ok** - 2 rows for 2 people |
+| the counterparty can read the participant every approval names | **ok** |
+
+Neither of the two defects can return silently:
+
+- prefer a master-level row again and the **third** fails, because the **first**
+  proves that row cannot be read;
+- seed per participant row again and the **second** fails at once - 3 rows for 2
+  people.
+
+And neither can pass vacuously. The first is a plain refusal, so widening the policy
+breaks it. The third would pass trivially only with no approval rows at all, which the
+second forbids.
+
+The service role looks up the master-level row's id and does nothing else; the read
+under test runs as the counterparty, under their own session and RLS.
+
+## 59. The count, run by run
+
+| Run | Passed | Failed | What it established |
+|---|---|---|---|
+| 1 | 2 | 1 | the loop could not start - no room could be created |
+| 2 | 92 | 2 | the loop runs; no procedure can be approved |
+| 3 | 94 | 0 | the procedure gate opens |
+| 4 | 94 | 0 | `20260731d` applied; **nothing regressed, nothing proved** |
+| 5 | **97** | **0** | the approver a member waits for is one they can name |
+
+Teardown clean. Production unchanged: 10 users, 7 listings with 2 approved, every
+`deal_room_*` table at 0, 0 Storage objects, append-only trigger enabled, ledger 52.
+
+## 60. Still open
+
+- **Requirement 12 in its stronger sense**: an entitlement cannot be forged or
+  self-extended, but nothing asserts that a room lacking one refuses to progress.
+- The vocabulary guard in `rls-contract.test.ts` remains **one-directional** and
+  cannot catch a state the database allows and no surface renders.
+- **The surfaces have never been rendered against a live room by a person.**
+- Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains
+  unauthorised.
+
