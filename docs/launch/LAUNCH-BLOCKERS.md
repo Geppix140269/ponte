@@ -93,14 +93,16 @@ owner decides.**
 
 1. **The owner has never classified it.** It was recorded as *proposed*, and
    that has not changed. Classification is the owner's under `AGENTS.md`.
-2. **The Design Constitution evidence does not exist.** `AGENTS.md` and the
-   Constitution require desktop and 390 × 844 evidence, reduced motion, and
-   recorded owner design approval. `middleware.ts` gates the site behind Basic
-   auth and only the SHA-256 verifier is committed, so the password cannot be
-   recovered from the repository and the page could not be rendered. The gate
-   was **not** weakened to work around this. **The owner authorised proceeding
-   without the evidence on 31 July 2026**, with it marked outstanding rather
-   than skipped.
+2. ~~**The Design Constitution evidence does not exist.**~~ **Captured in CI,
+   31 July 2026.** It could not be captured on a workstation — `middleware.ts`
+   gates the site behind Basic auth and only the SHA-256 verifier is committed —
+   and the gate was **not** weakened to work around that. The `landing evidence`
+   CI job already held the answer: it carries `PONTE_SITE_PASSWORD` as a
+   repository secret and passes it to Playwright as `httpCredentials`. So
+   `e2e/pricing-fees.spec.ts` captures **desktop, 390 × 844 and reduced motion**
+   there, uploaded as the `fees-evidence` artifact, and the password stays
+   where it already lived rather than moving to where the evidence was wanted.
+   **Owner design approval on those frames is still outstanding.**
 3. **The `/about` legal-entity paragraph is deliberately unchanged.** It states
    that the operating companies are "remunerated by success fee on closed
    deals" — a statement about two incorporated entities' commercial basis, not

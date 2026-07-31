@@ -122,9 +122,25 @@ const FORMULA_LINE: CSSProperties = {
   margin: "0 0 6px",
 };
 
-function Section({ heading, children }: { heading: string; children: ReactNode }) {
+function Section({
+  heading,
+  children,
+  testId,
+}: {
+  heading: string;
+  children: ReactNode;
+  /**
+   * Only the "what Ponte does not charge for" section carries one.
+   *
+   * That section legitimately names success fees, credit packs, subscriptions
+   * and commissions: it is authority section 15's own list, stated to the
+   * member. The evidence spec asserts those words appear **nowhere else** on the
+   * page, which needs a way to tell a disclaimer from an offer.
+   */
+  testId?: string;
+}) {
   return (
-    <section className="sec">
+    <section className="sec" data-testid={testId}>
       <h2 className="serif" style={SUBHEAD}>
         {heading}
       </h2>
@@ -209,7 +225,7 @@ export default async function PricingPage({
           </Link>
         </Section>
 
-        <Section heading={t("never.heading")}>
+        <Section heading={t("never.heading")} testId="never-charged">
           <p style={PROSE}>{t("never.body")}</p>
         </Section>
 

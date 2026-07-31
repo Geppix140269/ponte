@@ -190,6 +190,22 @@ jobs:
           PONTE_EVIDENCE_BASE_URL: http://127.0.0.1:3100
           PONTE_SITE_PASSWORD: ${{ secrets.PONTE_SITE_PASSWORD }}
 
+      # The Fees page, added 31 July 2026 for LB-014.
+      #
+      # The job's own rule for what may be added is that a spec must not need a
+      # database or a feature flag, because a job that is red for reasons nobody
+      # can act on is worse than no job. `/pricing` is translations and static
+      # markup: it reads no table and is behind no flag, so it meets that rule.
+      #
+      # It is a separate step rather than a widened glob so that a failure names
+      # which surface failed, and so that adding a third spec later is a
+      # deliberate act with its own justification.
+      - name: Fees page evidence
+        run: npx playwright test e2e/pricing-fees.spec.ts
+        env:
+          PONTE_EVIDENCE_BASE_URL: http://127.0.0.1:3100
+          PONTE_SITE_PASSWORD: ${{ secrets.PONTE_SITE_PASSWORD }}
+
       # Uploaded rather than committed. The frames are regenerated on every run
       # and two of them are bistable between runs on identical source, so a
       # committed diff would be noise; an artifact a reviewer opens beside the
@@ -200,4 +216,16 @@ jobs:
         with:
           name: landing-bridge-evidence
           path: docs/codex/audits/constitution-rebuild/evidence/landing-bridges/*.png
+          retention-days: 14
+
+      # A second artifact rather than a second path on the first, so the name a
+      # reviewer downloads says which surface it holds. Without this the Fees
+      # frames are captured and then thrown away with the runner, which is the
+      # same "evidence that nobody saw" failure PL-041 records.
+      - name: Upload the Fees frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fees-evidence
+          path: docs/codex/audits/deal-room-pricing/evidence/*.png
           retention-days: 14
