@@ -118,9 +118,7 @@ const LUCIDE_BASELINE = [
   "app/[locale]/pricing/page.tsx",
   "components/InstallPrompt.tsx",
   "components/LanguageSwitcher.tsx",
-  "components/ListingForm.tsx",
   "components/NetworkForm.tsx",
-  "components/tradeCategories.ts",
 ];
 
 /**
@@ -185,22 +183,21 @@ const RAW_SVG_BASELINE = [
 
 /**
  * Files that still hold a link to the retired `/marketplace/new` editor.
- * May shrink, never grow (LB-013).
+ * May shrink, never grow (LB-013). Now empty (PL-030).
  *
  * That route no longer renders the legacy `ListingForm`; it redirects to the
  * current composer at `/structure`. Every member-facing link was repointed, and
  * every transactional email now resumes at `/structure?edit=<id>`. The one entry
- * that remains is `components/ListingForm.tsx` itself: the legacy composer is now
- * unreachable — nothing renders it — and its own internal sign-in redirect still
- * names the old path. Its physical removal is logged as a follow-up in
- * docs/launch/POST-LAUNCH-BACKLOG.md; until then it is pinned here so no NEW file
- * can reach for the retired editor without editing this list in the diff.
+ * that remained was `components/ListingForm.tsx`, unreachable but still naming the
+ * old path in its own sign-in redirect. PL-030 deleted that component (and its
+ * orphaned `tradeCategories.ts`), so the baseline is empty: NO source file under
+ * app/ or components/ may link the retired editor at all.
  *
  * The landing seam in `lib/landing/routing.ts` is the flag-off fallback and is
  * out of this scan's scope (lib is not walked); it rides the quarantine redirect
  * and is documented there.
  */
-const LEGACY_EDITOR_LINK_BASELINE = ["components/ListingForm.tsx"];
+const LEGACY_EDITOR_LINK_BASELINE = [];
 
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -350,4 +347,4 @@ if (failures.length > 0) {
 
 console.log(`ok   governance contract (${requiredFiles.length} required files)`);
 console.log(`ok   icon law ratchet (${lucideCount} lucide, ${rawSvgCount} authored svg, 1 shared lockup)`);
-console.log(`ok   LB-013 route audit (${legacyEditorLinkCount} legacy editor link remaining, baseline pinned)`);
+console.log(`ok   LB-013 route audit (${legacyEditorLinkCount} legacy editor links; retired editor fully removed, PL-030)`);
