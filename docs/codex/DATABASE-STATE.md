@@ -101,6 +101,48 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Gate C Approval 3, 31 July 2026: the loop cannot start
+
+`deal_room_propose` fails in production for **every** member:
+
+```
+new row for relation "deal_room_participants"
+violates check constraint "deal_room_participants_identity_when_admitted"
+```
+
+The constraint, from `20260729a`:
+
+```sql
+CHECK (state <> ALL (ARRAY['admitted','active'])
+       OR org_id IS NOT NULL
+       OR (declared_capacity IS NOT NULL AND length(btrim(declared_capacity)) > 0))
+```
+
+`deal_room_propose` admits the initiator immediately — two rows, master level and
+first workspace, `state = 'admitted'` — supplying `org_id = v_org` and **no
+`declared_capacity`**. `v_org` is `profiles.organization_id`, and **all 10
+production profiles have none; `organizations` holds zero rows.** All three
+disjuncts are false, so the insert is rejected and no room is ever created.
+
+**The counterparty path is sound**, which is what isolates the defect.
+`deal_room_accept_invitation` inserts at `prerequisites_pending`, outside the
+constraint; `deal_room_declare_participation` sets `declared_capacity`; and
+`deal_room_admit_participant` refuses admission while both `org_id` and
+`declared_capacity` are empty. The counterparty is *made* to declare a capacity.
+The initiator is admitted with neither.
+
+**The constraint is right; the command does not satisfy it.** The correction is a
+product decision and was not made here: set the initiator's `declared_capacity`
+inside `deal_room_propose` — the row already carries `transaction_role = 'Deal
+owner'` and `participation_authority = 'Owner of the published Deal'` — or require
+an organisation before proposing, or narrow the constraint. Each says something
+different about what Ponte asserts a room initiator has declared.
+
+**No production change.** The fixture creates its own `@example.invalid` accounts
+and a listing marked fictional, and tears everything down: after the run, users
+were back to 10 with an identical id fingerprint, listings 7 identical, and rooms,
+participants, activity and entitlements all 0. Ledger unchanged at 49.
+
 ## APPLIED to production, 31 July 2026: the Storage policy helpers
 
 `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`.
