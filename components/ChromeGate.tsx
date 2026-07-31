@@ -60,11 +60,28 @@ function rendersOwnChrome(path: string): boolean {
     // its own Desk shell and must not be wrapped by the legacy chrome.
     path === "/admin" ||
     path.startsWith("/admin/") ||
+    // The member's account. It was rebuilt on the Desk shell in Stage 1 but was
+    // never added here, so it drew its own Desk command bar INSIDE the legacy
+    // obsidian chrome: two headers stacked on the one settings surface a member
+    // visits deliberately.
+    path === "/account" ||
+    path.startsWith("/account/") ||
     // Verification is the last step of a deal. It rendered in the obsidian
     // chrome, so a member who reached the final blocker in Start a Deal left
     // the cream product mid-task and arrived in the old one.
     path === "/verify" ||
-    path === "/verification"
+    path === "/verification" ||
+    // Stage 3: the last member-facing routes that were still drawn by the
+    // retired obsidian chrome. Fees and Contact are the two commercial pages a
+    // member reads before committing, the two Learn articles are the public
+    // entrances search brings people to, and /offline is what the service
+    // worker shows when the network is gone. Each now renders its own Desk
+    // shell, so none of them may be wrapped again here.
+    path === "/pricing" ||
+    path === "/contact" ||
+    path === "/learn/duties" ||
+    path === "/learn/trade-data" ||
+    path === "/offline"
   );
 }
 export default function ChromeGate({

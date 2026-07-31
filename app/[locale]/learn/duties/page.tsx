@@ -1,5 +1,23 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Link } from "@/i18n/navigation";
+import { landingFontVars } from "@/components/home/landing/fonts";
+import DeskShell from "@/components/desk/DeskShell";
+import "@/components/desk/desk.css";
+
+/**
+ * Learn: import duties, on the Desk (Issue #130 Stage 3).
+ *
+ * This is one of the two public entrances search brings people to, and it was
+ * still drawn by the retired obsidian chrome, so a reader who arrived from a
+ * search result and then clicked anything landed in a different product. It now
+ * renders the Desk shell, and it also stops nesting a second <main>: ChromeGate
+ * drops the shared wrapper on a bared route, and DeskShell supplies the one
+ * landmark.
+ *
+ * Every word, every figure, every worked example, both structured-data blocks
+ * and both outgoing links are unchanged. This is a shell and a styling change.
+ */
 
 export const metadata: Metadata = {
   title: "Import Duties and Tariffs Explained: HS Codes, MFN Rates, FTAs",
@@ -135,6 +153,123 @@ const FTAS = [
   { name: "UK-EU TCA", members: "UK and EU", note: "Zero tariffs on qualifying goods with UK or EU origin. Rules of origin require substantial transformation within the TCA area." },
 ];
 
+const INPUTS = [
+  { n: "01", label: "HS Code", body: "The Harmonised System code classifies your product and determines which duty rate applies. An incorrect classification can mean paying the wrong rate, higher or lower than the legal obligation." },
+  { n: "02", label: "Customs value", body: "Usually the CIF value: cost of goods plus insurance plus freight to the port of destination. If you trade on FOB terms, the importer adds insurance and freight to derive CIF." },
+  { n: "03", label: "Duty rate", body: "The applicable rate from the destination country's tariff schedule. May be MFN (standard), preferential (FTA), or a combination with ADD, CVD or safeguard duties on top." },
+];
+
+const LANDED = [
+  { label: "VAT / GST on import", body: "Applied on the duty-inclusive customs value. UK: 20%. EU standard: varies 17-27%. Australia: 10% GST. US: no federal VAT." },
+  { label: "Customs processing fee", body: "US: Merchandise Processing Fee (MPF) at 0.3464% of value, min $31.67. EU: no equivalent but broker fees apply." },
+  { label: "Harbor Maintenance Fee (US)", body: "0.125% of cargo value on sea freight imports into US. Paid by importer." },
+  { label: "Excise duties", body: "Additional consumption taxes on alcohol, tobacco, fuel, and certain goods. Applied at import by many countries." },
+];
+
+const EXAMPLE_ROWS = [
+  { label: "MFN duty rate", value: "0% (laptops are duty-free under ITA)" },
+  { label: "Section 301 tariff (China-specific)", value: "25% → $250" },
+  { label: "Merchandise Processing Fee", value: "0.3464% → $3.46" },
+];
+
+// ---------------------------------------------------------------------------
+// Presentation. Every value below is either a layout measure or a Desk token;
+// no literal colour appears in this file.
+// ---------------------------------------------------------------------------
+
+const RULED: CSSProperties = { borderTop: "1px solid var(--rule)", paddingTop: 26 };
+
+const H1: CSSProperties = {
+  fontSize: "clamp(30px, 4.6vw, 46px)",
+  lineHeight: 1.08,
+  letterSpacing: "-0.022em",
+  fontWeight: 500,
+  margin: "14px 0 14px",
+  maxWidth: "22ch",
+};
+
+const LEAD: CSSProperties = { fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", maxWidth: "66ch" };
+
+const PROSE: CSSProperties = { fontSize: 14, lineHeight: 1.7, color: "var(--ink-2)", maxWidth: "74ch" };
+
+const GRID: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+  gap: 12,
+  alignItems: "stretch",
+};
+
+const PANEL_BODY: CSSProperties = { padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 };
+
+const SUB: CSSProperties = { fontSize: 14, fontWeight: 600, lineHeight: 1.35 };
+
+const COPY: CSSProperties = { fontSize: 13, lineHeight: 1.6, color: "var(--ink-2)" };
+
+const FINE: CSSProperties = { fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" };
+
+const CHIP: CSSProperties = {
+  background: "var(--sunken)",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius-in)",
+  padding: "7px 10px",
+  fontSize: 11.5,
+  color: "var(--ink)",
+};
+
+const ROW: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 18,
+  padding: "9px 0",
+  borderBottom: "1px solid var(--rule)",
+  fontSize: 13,
+  color: "var(--ink-2)",
+};
+
+const ROW_TOTAL: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 18,
+  padding: "10px 0 0",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "var(--ink)",
+};
+
+const TABLE_WRAP: CSSProperties = {
+  overflowX: "auto",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  background: "var(--raised)",
+};
+
+const TABLE: CSSProperties = { width: "100%", borderCollapse: "collapse", minWidth: 620 };
+
+const TH: CSSProperties = {
+  textAlign: "left",
+  padding: "10px 16px",
+  fontSize: 11,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  color: "var(--ink-3)",
+  background: "var(--sunken)",
+  borderBottom: "1px solid var(--rule-strong)",
+};
+
+const TD: CSSProperties = {
+  padding: "11px 16px",
+  fontSize: 13,
+  lineHeight: 1.6,
+  color: "var(--ink-2)",
+  borderBottom: "1px solid var(--rule)",
+  verticalAlign: "top",
+};
+
+const TD_NAME: CSSProperties = { ...TD, color: "var(--ink)", fontWeight: 600, whiteSpace: "nowrap" };
+
+const ACTS: CSSProperties = { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 };
+
 export default function LearnDutiesPage() {
   return (
     <>
@@ -142,223 +277,252 @@ export default function LearnDutiesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([faqJsonLd, breadcrumbJsonLd]) }}
       />
-      {/* A div, not a <main>: ChromeGate already supplies the page's single
-          <main> landmark on this non-bared route, and two would nest. */}
-      <div className="pb-24">
-        {/* Hero */}
-        <section className="container-px pt-16 pb-12">
-          <nav className="mb-6 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted">
-            <Link href="/" className="hover:text-gold transition-colors">Home</Link>
-            <span className="text-white/20">/</span>
-            <span>Learn</span>
-            <span className="text-white/20">/</span>
-            <span className="text-cream">Import Duties Explained</span>
-          </nav>
-          <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-gold">
-            Trade intelligence fundamentals
-          </p>
-          <h1 className="heading-xl mb-6 max-w-3xl">
-            Import duties and tariffs explained, from HS codes to landed cost.
-          </h1>
-          <p className="body-lg max-w-2xl text-muted">
-            Every import is subject to duty. Understanding how that duty is calculated,
-            and how to legally minimise it, can determine whether a trade corridor is
-            profitable. This guide covers everything from the basics to FTA optimisation.
-          </p>
-        </section>
-
-        {/* The calculation */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">How import duty is calculated</h2>
-          <p className="body-md text-muted max-w-2xl mb-8">
-            Every import duty calculation requires exactly three inputs:
-            the HS code, the customs value, and the applicable rate.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mb-10">
-            {[
-              { n: "01", label: "HS Code", body: "The Harmonised System code classifies your product and determines which duty rate applies. An incorrect classification can mean paying the wrong rate, higher or lower than the legal obligation." },
-              { n: "02", label: "Customs value", body: "Usually the CIF value: cost of goods plus insurance plus freight to the port of destination. If you trade on FOB terms, the importer adds insurance and freight to derive CIF." },
-              { n: "03", label: "Duty rate", body: "The applicable rate from the destination country's tariff schedule. May be MFN (standard), preferential (FTA), or a combination with ADD, CVD or safeguard duties on top." },
-            ].map((item) => (
-              <div key={item.n} className="rounded-xl border border-white/10 bg-navy/40 p-5 space-y-2">
-                <span className="font-mono text-2xl font-bold text-gold/40">{item.n}</span>
-                <h3 className="text-sm font-semibold text-cream">{item.label}</h3>
-                <p className="text-xs leading-relaxed text-muted">{item.body}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Worked example */}
-          <div className="rounded-xl border border-gold/40 bg-gold/5 p-6 max-w-3xl">
-            <p className="text-[11px] uppercase tracking-widest text-gold mb-3">Worked example</p>
-            <p className="text-cream text-lg font-medium leading-snug mb-4">
-              Laptop (HS 8471.30), customs value $1,000, imported China → US
+      <div className={`ponte-desk ${landingFontVars}`}>
+        <DeskShell rail={null} objective={null}>
+          {/* Hero */}
+          <section className="sec">
+            <nav className="crumbs" aria-label="Breadcrumb">
+              <Link href="/">Home</Link>
+              <span aria-hidden="true">/</span>
+              <span>Learn</span>
+              <span aria-hidden="true">/</span>
+              <span style={{ color: "var(--ink)" }}>Import Duties Explained</span>
+            </nav>
+            <p className="kicker">Trade intelligence fundamentals</p>
+            <h1 className="serif" style={H1}>
+              Import duties and tariffs explained, from HS codes to landed cost.
+            </h1>
+            <p style={LEAD}>
+              Every import is subject to duty. Understanding how that duty is calculated,
+              and how to legally minimise it, can determine whether a trade corridor is
+              profitable. This guide covers everything from the basics to FTA optimisation.
             </p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-muted">MFN duty rate</span>
-                <span className="text-cream">0% (laptops are duty-free under ITA)</span>
-              </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-muted">Section 301 tariff (China-specific)</span>
-                <span className="text-cream">25% → $250</span>
-              </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-muted">Merchandise Processing Fee</span>
-                <span className="text-cream">0.3464% → $3.46</span>
-              </div>
-              <div className="flex justify-between pt-1">
-                <span className="font-semibold text-cream">Total duty + fees on $1,000 shipment</span>
-                <span className="font-semibold text-gold">$253.46</span>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        {/* MFN */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">MFN rates: the WTO baseline</h2>
-          <p className="body-md text-muted max-w-2xl">
-            The Most Favoured Nation (MFN) rate is the standard duty applied to imports
-            from any WTO member country in the absence of a preferential trade agreement.
-            With 164 WTO members, MFN rates cover the vast majority of global trade.
-            Every country&apos;s MFN schedule is published and legally binding, so
-            you can look up any rate for any HS code in any country. MFN is the
-            starting point. Everything else, whether FTA preferences, anti-dumping or safeguards,
-            is a modification of the MFN baseline.
-          </p>
-        </section>
-
-        {/* Six duty types */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">The six types of import duty</h2>
-          <p className="body-md text-muted max-w-2xl mb-8">
-            Not all duties work the same way. The type of duty determines how it
-            is calculated and what triggers it.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 max-w-4xl">
-            {DUTY_TYPES.map((dt) => (
-              <div key={dt.type} className="rounded-xl border border-white/10 bg-navy/40 p-5 space-y-2">
-                <h3 className="text-sm font-semibold text-cream">{dt.type}</h3>
-                <p className="text-xs text-muted leading-relaxed">{dt.definition}</p>
-                <div className="rounded bg-white/5 px-3 py-2">
-                  <p className="text-xs font-mono text-gold">{dt.example}</p>
-                </div>
-                <p className="text-[11px] text-muted">
-                  <span className="text-cream/60">Common on: </span>{dt.where}
+          {/* The calculation */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>How import duty is calculated</h2>
+                <p className="d">
+                  Every import duty calculation requires exactly three inputs:
+                  the HS code, the customs value, and the applicable rate.
                 </p>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
-        {/* FTAs */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">Free trade agreements and preferential rates</h2>
-          <p className="body-md text-muted max-w-2xl mb-4">
-            An FTA creates a preferential tariff rate, often 0%, between member countries.
-            To benefit, your goods must satisfy the &ldquo;rules of origin&rdquo; requirement:
-            a minimum level of production or transformation must occur within an FTA member country.
-          </p>
-          <div className="rounded-xl border border-gold/30 bg-gold/5 p-6 max-w-3xl mb-8">
-            <p className="text-[11px] uppercase tracking-widest text-gold mb-2">FTA in practice</p>
-            <p className="text-cream text-sm font-medium mb-1">
-              Brake pads (HS 8708.30) imported into the US
-            </p>
-            <div className="flex gap-8 text-sm mt-3">
-              <div>
-                <p className="text-muted text-xs mb-1">From Mexico (USMCA qualifying)</p>
-                <p className="text-cream font-semibold text-xl">0%</p>
+            <div style={GRID}>
+              {INPUTS.map((item) => (
+                <div key={item.n} className="panel">
+                  <div className="panel__h">
+                    <b>{item.n}</b>
+                  </div>
+                  <div style={PANEL_BODY}>
+                    <h3 style={SUB}>{item.label}</h3>
+                    <p style={COPY}>{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Worked example */}
+            <div className="panel" style={{ marginTop: 12, maxWidth: 720 }}>
+              <div className="panel__h">
+                <b>Worked example</b>
               </div>
-              <div>
-                <p className="text-muted text-xs mb-1">From China (MFN)</p>
-                <p className="text-cream font-semibold text-xl">2.5%</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs mb-1">From China (+ Section 301)</p>
-                <p className="text-gold font-semibold text-xl">27.5%</p>
+              <div style={{ padding: "14px 16px" }}>
+                <p style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.4, marginBottom: 8 }}>
+                  Laptop (HS 8471.30), customs value $1,000, imported China → US
+                </p>
+                {EXAMPLE_ROWS.map((row) => (
+                  <div key={row.label} style={ROW}>
+                    <span>{row.label}</span>
+                    <span className="mono" style={{ color: "var(--ink)", textAlign: "right" }}>
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+                <div style={ROW_TOTAL}>
+                  <span>Total duty + fees on $1,000 shipment</span>
+                  <span className="mono">$253.46</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="overflow-x-auto max-w-4xl">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 pr-6 text-[11px] uppercase tracking-wider text-muted font-medium">Agreement</th>
-                  <th className="text-left py-3 pr-6 text-[11px] uppercase tracking-wider text-muted font-medium">Members</th>
-                  <th className="text-left py-3 text-[11px] uppercase tracking-wider text-muted font-medium">Key notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {FTAS.map((fta) => (
-                  <tr key={fta.name} className="border-b border-white/[0.06]">
-                    <td className="py-3 pr-6 text-cream font-semibold">{fta.name}</td>
-                    <td className="py-3 pr-6 text-muted text-xs">{fta.members}</td>
-                    <td className="py-3 text-muted text-xs leading-relaxed">{fta.note}</td>
+          </section>
+
+          {/* MFN */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>MFN rates: the WTO baseline</h2>
+              </div>
+            </div>
+            <p style={PROSE}>
+              The Most Favoured Nation (MFN) rate is the standard duty applied to imports
+              from any WTO member country in the absence of a preferential trade agreement.
+              With 164 WTO members, MFN rates cover the vast majority of global trade.
+              Every country&apos;s MFN schedule is published and legally binding, so
+              you can look up any rate for any HS code in any country. MFN is the
+              starting point. Everything else, whether FTA preferences, anti-dumping or safeguards,
+              is a modification of the MFN baseline.
+            </p>
+          </section>
+
+          {/* Six duty types */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>The six types of import duty</h2>
+                <p className="d">
+                  Not all duties work the same way. The type of duty determines how it
+                  is calculated and what triggers it.
+                </p>
+              </div>
+            </div>
+            <div style={GRID}>
+              {DUTY_TYPES.map((dt) => (
+                <div key={dt.type} className="panel">
+                  <div className="panel__h">
+                    <b>{dt.type}</b>
+                  </div>
+                  <div style={PANEL_BODY}>
+                    <p style={COPY}>{dt.definition}</p>
+                    <p className="mono" style={CHIP}>
+                      {dt.example}
+                    </p>
+                    <p style={FINE}>
+                      <span style={{ color: "var(--ink-2)" }}>Common on: </span>
+                      {dt.where}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* FTAs */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Free trade agreements and preferential rates</h2>
+                <p className="d">
+                  An FTA creates a preferential tariff rate, often 0%, between member countries.
+                  To benefit, your goods must satisfy the &ldquo;rules of origin&rdquo; requirement:
+                  a minimum level of production or transformation must occur within an FTA member country.
+                </p>
+              </div>
+            </div>
+
+            <div className="panel" style={{ maxWidth: 720, marginBottom: 12 }}>
+              <div className="panel__h">
+                <b>FTA in practice</b>
+              </div>
+              <div style={{ padding: "14px 16px 16px" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.4 }}>
+                  Brake pads (HS 8708.30) imported into the US
+                </p>
+                <dl className="factgrid">
+                  <div>
+                    <dt>From Mexico (USMCA qualifying)</dt>
+                    <dd>0%</dd>
+                  </div>
+                  <div>
+                    <dt>From China (MFN)</dt>
+                    <dd>2.5%</dd>
+                  </div>
+                  <div>
+                    <dt>From China (+ Section 301)</dt>
+                    <dd>27.5%</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <div style={TABLE_WRAP}>
+              <table style={TABLE}>
+                <thead>
+                  <tr>
+                    <th className="mono" style={TH} scope="col">Agreement</th>
+                    <th className="mono" style={TH} scope="col">Members</th>
+                    <th className="mono" style={TH} scope="col">Key notes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {FTAS.map((fta) => (
+                    <tr key={fta.name}>
+                      <td style={TD_NAME}>{fta.name}</td>
+                      <td style={TD}>{fta.members}</td>
+                      <td style={TD}>{fta.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-        {/* Beyond duties */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">Beyond duties: the full landed cost</h2>
-          <p className="body-md text-muted max-w-2xl mb-6">
-            Import duty is only part of the landed cost. A complete landed cost calculation
-            must also include:
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-4xl">
-            {[
-              { label: "VAT / GST on import", body: "Applied on the duty-inclusive customs value. UK: 20%. EU standard: varies 17-27%. Australia: 10% GST. US: no federal VAT." },
-              { label: "Customs processing fee", body: "US: Merchandise Processing Fee (MPF) at 0.3464% of value, min $31.67. EU: no equivalent but broker fees apply." },
-              { label: "Harbor Maintenance Fee (US)", body: "0.125% of cargo value on sea freight imports into US. Paid by importer." },
-              { label: "Excise duties", body: "Additional consumption taxes on alcohol, tobacco, fuel, and certain goods. Applied at import by many countries." },
-            ].map((item) => (
-              <div key={item.label} className="space-y-2">
-                <h3 className="text-sm font-semibold text-cream">{item.label}</h3>
-                <p className="text-xs leading-relaxed text-muted">{item.body}</p>
+          {/* Beyond duties */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Beyond duties: the full landed cost</h2>
+                <p className="d">
+                  Import duty is only part of the landed cost. A complete landed cost calculation
+                  must also include:
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+            <div style={GRID}>
+              {LANDED.map((item) => (
+                <div key={item.label} className="panel">
+                  <div style={PANEL_BODY}>
+                    <h3 style={SUB}>{item.label}</h3>
+                    <p style={COPY}>{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* FAQ */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-8 max-w-2xl">Frequently asked questions</h2>
-          <div className="max-w-3xl space-y-8">
-            {faqJsonLd.mainEntity.map((item) => (
-              <div key={item.name} className="space-y-2">
-                <h3 className="text-sm font-semibold text-cream">{item.name}</h3>
-                <p className="text-sm text-muted leading-relaxed">{item.acceptedAnswer.text}</p>
+          {/* FAQ */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Frequently asked questions</h2>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: "74ch" }}>
+              {faqJsonLd.mainEntity.map((item) => (
+                <div key={item.name}>
+                  <h3 style={{ ...SUB, marginBottom: 6 }}>{item.name}</h3>
+                  <p style={PROSE}>{item.acceptedAnswer.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* CTA. This used to point at a duty calculator that was never built
-            and a $299 report SKU from the retired shop: one 404 and one
-            redirect. It now offers the two things that exist. */}
-        <section className="container-px py-12 border-t border-white/10">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Put it to work</p>
-          <h2 className="heading-lg mb-4 max-w-xl">
-            Know your landed cost before you commit.
-          </h2>
-          <p className="text-sm text-muted max-w-lg mb-6">
-            The desk works duty and landed-cost questions as part of any engagement, and the
-            marketplace is where the counterparties are. Both start from the same place: tell us
-            the product and the route.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/contact" className="btn-primary">
-              Ask the desk
-            </Link>
-            <Link href="/marketplace" className="btn-ghost text-sm">
-              See the board
-            </Link>
-          </div>
-        </section>
+          {/* CTA. This used to point at a duty calculator that was never built
+              and a $299 report SKU from the retired shop: one 404 and one
+              redirect. It now offers the two things that exist. */}
+          <section className="sec" style={RULED}>
+            <p className="kicker">Put it to work</p>
+            <h2 className="serif" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.016em", margin: "12px 0 10px", maxWidth: "24ch" }}>
+              Know your landed cost before you commit.
+            </h2>
+            <p style={{ ...COPY, maxWidth: "58ch" }}>
+              The desk works duty and landed-cost questions as part of any engagement, and the
+              marketplace is where the counterparties are. Both start from the same place: tell us
+              the product and the route.
+            </p>
+            <div style={ACTS}>
+              <Link href="/contact" className="b b--lg">
+                Ask the desk
+              </Link>
+              <Link href="/marketplace" className="b b--2 b--lg">
+                See the board
+              </Link>
+            </div>
+          </section>
+        </DeskShell>
       </div>
     </>
   );
