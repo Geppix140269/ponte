@@ -290,9 +290,35 @@
 
    The elevation needs none of this: `.br--v` renders `.br__rows` instead, and
    the approved `.br--v .brst` is already `position: relative`.
+
+   ## Why every selector also excludes `.brd`
+
+   `.br__stage` is not this component's alone. `DealRoomBridge` draws the
+   Multi-party Deal Room Bridge on a stage with the same class, under a root of
+   `["br", "brd", ...]`, and it measures itself in its own layout effect. It
+   does not set `data-measured` and has no reason to: `:not([data-measured])` is
+   a statement about `BridgeRoute`'s stations, and the Deal Room bridge has none
+   - its blocks are `.brdp` participants and a `.brd__ms` milestone.
+
+   Without the `:not(.brd)` guard the container rule below therefore matched the
+   Deal Room stage permanently, at every width, measured or not. Its
+   participants held their positions, because an absolutely positioned child
+   resolves against the padding box and padding does not move that edge - but
+   the stage itself silently took `display: flex`, 32px of vertical padding and
+   a 92px floor it was never designed with. Measured against this stylesheet:
+   `display: flex`, `padding-top: 16px`, `min-height: 92px`.
+
+   That is a change to an owner-approved component made by a rule written for a
+   different one, and it was invisible because the Deal Room is behind
+   `NEXT_PUBLIC_DEAL_ROOM` and reaches nobody. The guard is on every selector
+   rather than only the container one, so a later addition here cannot
+   reintroduce the leak by matching a Deal Room child instead.
+
+   If the Deal Room bridge ever wants a fallback it needs its own, in its own
+   vocabulary. It does not want this one.
    ---------------------------------------------------------------------- */
 
-.br .br__stage:not([data-measured]) {
+.br:not(.brd) .br__stage:not([data-measured]) {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -306,7 +332,7 @@
   padding-bottom: 16px;
 }
 
-.br .br__stage:not([data-measured]) > .brst {
+.br:not(.brd) .br__stage:not([data-measured]) > .brst {
   position: relative;
   left: auto;
   top: auto;
@@ -322,7 +348,7 @@
    positioned they are placed by coordinate and source order does not matter.
    In flow it does: both would sit before the crossing. `order` puts them back
    at the two ends, which is the whole of what an abutment says. */
-.br .br__stage:not([data-measured]) > .br__ab {
+.br:not(.brd) .br__stage:not([data-measured]) > .br__ab {
   position: relative;
   left: auto;
   right: auto;
@@ -330,11 +356,11 @@
   flex: 0 0 auto;
 }
 
-.br .br__stage:not([data-measured]) > .br__ab--l {
+.br:not(.brd) .br__stage:not([data-measured]) > .br__ab--l {
   order: -1;
 }
 
-.br .br__stage:not([data-measured]) > .br__ab--r {
+.br:not(.brd) .br__stage:not([data-measured]) > .br__ab--r {
   order: 1;
 }
 
@@ -347,8 +373,8 @@
    others. A column is both readable and the reading order the approved
    elevation uses at the same width. */
 @media (max-width: 459px) {
-  .br .br__stage:not([data-measured]) > .brst,
-  .br .br__stage:not([data-measured]) > .br__ab {
+  .br:not(.brd) .br__stage:not([data-measured]) > .brst,
+  .br:not(.brd) .br__stage:not([data-measured]) > .br__ab {
     flex: 1 0 100%;
     max-width: none;
   }
