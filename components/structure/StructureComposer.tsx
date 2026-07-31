@@ -364,7 +364,7 @@ export default function StructureComposer({
             resultRef={resultRef}
             outcome={outcome}
             onWorkspace={() => router.push("/workspace")}
-            onListing={() => router.push(`/marketplace/l/${resultRef}`)}
+            onListing={() => router.push(`/find/o/${resultRef}`)}
             onEdit={() => router.push("/marketplace")}
             onVerify={() => router.push("/verify?for=business")}
             t={t}

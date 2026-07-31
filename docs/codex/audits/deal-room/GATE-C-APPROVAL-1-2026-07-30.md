@@ -1715,3 +1715,96 @@ whether the reduced-motion path is right - none of it is established by any of t
 above. The data is right. The rendering is unexamined, and stays unexamined until
 the password is supplied.
 
+---
+
+# Requirement 12 proved, 31 July 2026: Approval 3 at 109 of 109
+
+**Authorised:** owner, 31 July 2026 - do requirement 12.
+
+## 66. What requirement 12 says, and what was actually established
+
+"Rooms without an entitlement fail closed."
+
+What the fixture proved before today was that an entitlement cannot be **forged**:
+section 2 shows a room administrator can neither issue themselves a second one nor
+extend their own. That is a different claim, and the records said so rather than
+letting 94 or 97 of the same imply the stronger one.
+
+## 67. The mechanism, and why an argument about it was not enough
+
+`deal_room_is_writable` inner-joins the entitlement:
+
+```sql
+  select exists (
+    select 1
+    from public.deal_rooms r
+    join public.deal_room_entitlements e on e.room_id = r.id
+    where r.id = p_room_id
+      and r.state in (...)
+      and e.state in ('reserved','active','grace','restored')
+  );
+```
+
+A room with no entitlement row cannot satisfy a join, so the property is structural
+rather than a check somebody has to remember to write in each command. That is a good
+argument, and this file exists because arguments about SQL are how the fail-open paths
+got in.
+
+## 68. Twelve assertions, in section 8
+
+Two cases, because they fail for different reasons, and one control.
+
+| | |
+|---|---|
+| the room is in a writable state, so only the entitlement is in question | **ok** |
+| **an expired entitlement** - no blocker, no evidence, no invitation, no new procedure version | **ok x4** |
+| an expired entitlement still leaves the history readable to the admitted | **ok** |
+| the room now has no entitlement row at all | **ok** |
+| **no entitlement row at all** - no blocker, no evidence, no invitation, no new procedure version | **ok x4** |
+| **restoring the entitlement makes the very same command succeed** | **ok** |
+
+The last one is what makes the other eleven mean anything. Every refusal above would
+also have been recorded if the commands were failing for some entirely unrelated
+reason by that point in the run - a room in the wrong state, a participant removed, a
+procedure already superseded. Running the same command again after restoring the
+entitlement, and watching it succeed, is what attributes the refusals to the
+entitlement and nothing else.
+
+The room stays in a writable **state** throughout: only the entitlement moves. That
+separates this from section 9, where `deal_room_set_read_only` changes the room state
+and expires the entitlement together and could not tell you which one did the work.
+
+The service role changes the entitlement. That is arranging the world, not checking a
+permission - every assertion runs as a member, under their own session and RLS.
+
+## 69. The continuity half
+
+An expired entitlement stops mutation and **does not** take the record away: the
+admitted counterparty can still read the room's history. Losing access to a room must
+not lose you the evidence that you were in it. That is the same continuity section 9
+asserts against the room state, checked here against the entitlement.
+
+## 70. The count
+
+| Run | Passed | Failed | Added |
+|---|---|---|---|
+| 1 | 2 | 1 | - |
+| 2 | 92 | 2 | - |
+| 3 | 94 | 0 | - |
+| 4 | 94 | 0 | - |
+| 5 | 97 | 0 | approver-row visibility |
+| **6** | **109** | **0** | **requirement 12** |
+
+Teardown clean. Production unchanged: 10 users, 7 listings with 2 approved, every
+`deal_room_*` table at 0, append-only trigger enabled, ledger 52.
+
+## 71. Where Gate C stands
+
+**Requirements 12 and 13 are both proved.** Of the fourteen, the position is no longer
+11 / 1 / 2: the one failure (requirement 11, LB-008) was resolved on 30 July, and the
+two pending are now established.
+
+**Still not established, and the last of it:** nobody has rendered these pages. The
+capture is written and needs only `PONTE_SITE_PASSWORD`. Approval 4 -
+`NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains unauthorised.
+

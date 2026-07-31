@@ -273,6 +273,27 @@ export default function BridgeRoute({
     }
 
     /*
+      The measurement has run, so the CSS-only fallback layout stops applying.
+
+      Until this line, `bridge-integration.css` section 5 lays the stage out as
+      a wrapping flex row and gives it a minimum height. It has to, because the
+      approved stylesheet gives `.brst` `position: absolute` and no
+      coordinates: with nothing to place them, every station lands on the same
+      static position and the stage, whose children are all out of flow,
+      keeps zero height, so the section below rides straight over the pile.
+      That is what the landing looked like in Chrome on 31 July 2026 after the
+      deploy of `f26718a`, when a client chunk did not arrive.
+
+      Set here rather than at the top of the effect, so a measurement that
+      throws leaves the readable fallback standing rather than the pile. Set
+      imperatively rather than through React state, so it lands inside this
+      layout effect and the swap is complete before the browser paints. And set
+      BEFORE `fit()`, because `fit()` reads `offsetTop` and `offsetHeight`,
+      which would otherwise report the fallback's flow layout.
+    */
+    stage.setAttribute("data-measured", "");
+
+    /*
       The stage carries absolutely positioned children, so it has no height of
       its own. The engine's `fit` sets it from the lowest child, and `fitLater`
       repeats that once fonts have settled, because a label that reflows after

@@ -6,7 +6,6 @@ import { ArrowRight, Share2, ShieldCheck } from "lucide-react";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import InterestButton from "@/components/InterestButton";
-import { translateListing } from "@/lib/ai-vet";
 import { alternatesFor } from "@/lib/seo";
 import {
   corridorEnd,
@@ -27,23 +26,13 @@ import { isPubliclyEligibleVerification } from "@/lib/listings/publication-gate"
 import { truthfulLabels } from "@/lib/listings/public-labels";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
+import {
+  LISTING_LANGS,
+  cachedListingTranslation,
+  getListingTranslation,
+} from "@/lib/listings/translation";
 import type { Locale } from "@/i18n/routing";
 import { levelRank } from "@/lib/verification/level";
-
-// Languages a reader can flip the listing into. Each listing/language pair
-// is translated once by AI and cached in listing_translations.
-const LANGS: { code: string; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "zh", label: "中文" },
-  { code: "es", label: "Español" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "pt", label: "Português" },
-  { code: "ru", label: "Русский" },
-  { code: "de", label: "Deutsch" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "it", label: "Italiano" },
-];
 
 export const dynamic = "force-dynamic";
 
@@ -245,45 +234,6 @@ export async function generateMetadata({
   };
 }
 
-// Read an already cached translation. Nothing is generated here, so this is
-// safe to call on a page load the reader did not ask for.
-async function cachedTranslation(
-  listingId: string,
-  lang: string,
-): Promise<{ product: string; details: string } | null> {
-  const adminSb = createAdminClient();
-  const { data } = await adminSb
-    .from("listing_translations")
-    .select("product, details")
-    .eq("listing_id", listingId)
-    .eq("lang", lang)
-    .maybeSingle();
-  return data ?? null;
-}
-
-// Serve a cached translation, or translate once and cache it.
-async function getTranslation(
-  deal: Deal,
-  lang: string,
-): Promise<{ product: string; details: string } | null> {
-  const adminSb = createAdminClient();
-  const cached = await cachedTranslation(deal.id, lang);
-  if (cached) return cached;
-
-  const fresh = await translateListing(
-    { product: deal.product, details: deal.details },
-    lang,
-  );
-  if (!fresh) return null;
-  await adminSb.from("listing_translations").insert({
-    listing_id: deal.id,
-    lang,
-    product: fresh.product.slice(0, 300),
-    details: fresh.details.slice(0, 4000),
-  });
-  return fresh;
-}
-
 export default async function DealPage({
   params,
   searchParams,
@@ -307,13 +257,13 @@ export default async function DealPage({
   // An explicit ?lang always wins. With no choice made, open the listing in
   // the current interface language when it has already been translated into
   // it; otherwise the original. ?lang=original pins the source wording.
-  const requested = LANGS.some((l) => l.code === searchParams.lang)
+  const requested = LISTING_LANGS.some((l) => l.code === searchParams.lang)
     ? (searchParams.lang as string)
     : null;
   let lang = requested;
-  let translation = requested ? await getTranslation(deal, requested) : null;
-  if (!searchParams.lang && LANGS.some((l) => l.code === locale)) {
-    const cached = await cachedTranslation(deal.id, locale);
+  let translation = requested ? await getListingTranslation(deal, requested) : null;
+  if (!searchParams.lang && LISTING_LANGS.some((l) => l.code === locale)) {
+    const cached = await cachedListingTranslation(deal.id, locale);
     if (cached) {
       lang = locale;
       translation = cached;
@@ -642,7 +592,7 @@ export default async function DealPage({
             >
               {t("detail.original")}
             </Link>
-            {LANGS.map((l) => (
+            {LISTING_LANGS.map((l) => (
               <Link
                 key={l.code}
                 href={`/marketplace/l/${deal.ref}?lang=${l.code}`}

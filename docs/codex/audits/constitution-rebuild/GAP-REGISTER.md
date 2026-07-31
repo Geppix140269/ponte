@@ -27,6 +27,7 @@ implementer deciding the gap did not matter.
 | **DS-5** | The approved Bridge engine and reference renders were missing | **Recovered.** The owner-approved package was located, and all 13 vendored files now match `SOURCE-MANIFEST.md`. `check-governance.mjs` verifies every checksum on each run |
 | **DS-6** | No icon slot on a Bridge station | **Answered by the reference:** the approved station carries no icon. The icons added while the reference was missing are removed |
 | **DS-7** | No abutment copy for the Family Bridge | **Recovered:** Intent, The market, Structured journey, from the approved reference |
+| **DS-10** | The Family Bridge had no CSS-only layout, so it rendered as overlapping text whenever the JS positioning did not run | Fixed in `bridge-integration.css` section 5: until the measurement runs the stage lays its stations out in flow and takes `DECK_HEIGHT` as a minimum height. Every rule is guarded by `:not([data-measured])`, which `BridgeRoute` sets inside the same layout effect that positions the stations, so the settled rendering is unchanged (0 computed-style differences at 1280 and 390). Evidence README section 7 |
 | **G7** | Route-level state components | `components/ponte/state/LifecycleState.tsx`, seven states, 16 tests |
 
 Rows above are closed by PR #62 (foundation) and PR #63 (landing bridges).

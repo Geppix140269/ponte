@@ -701,6 +701,157 @@ test("without JavaScript every destination is still a link", async ({ browser })
 });
 
 // ---------------------------------------------------------------------------
+// The bridge is readable when the JS positioning has not run
+// ---------------------------------------------------------------------------
+
+/**
+ * Measure a bridge that has not been positioned.
+ *
+ * The horizontal bridge is placed entirely by a layout effect: an inline
+ * `left`, `top` and `width` on every station, then the stage's height from its
+ * lowest child. The approved stylesheet gives `.brst` `position: absolute` and
+ * no coordinates, correctly, because the coordinates come from the measured
+ * curve. So without that effect every station lands on the same static
+ * position and the stage keeps zero height. The result is a pile of overprinted
+ * text with the next section drawn over it, which is what the landing looked
+ * like in Chrome on 31 July 2026 after the deploy of `f26718a`.
+ *
+ * `javaScriptEnabled: false` is the honest way to reproduce it: it is exactly
+ * the DOM and CSS a browser has while a client chunk is still in flight, or
+ * after one has failed to arrive.
+ */
+async function unpositioned(page: Page) {
+  return page.evaluate(() => {
+    const rects = (nodes: Element[]) => nodes.map((n) => n.getBoundingClientRect());
+    const overlapping = (boxes: DOMRect[]) => {
+      const pairs: string[] = [];
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i];
+          const b = boxes[j];
+          // A half-pixel of tolerance: sub-pixel layout must not read as an
+          // overlap, but the failure this guards against is total, not marginal.
+          const hit = a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+          if (hit) pairs.push(`${i}/${j}`);
+        }
+      }
+      return pairs;
+    };
+
+    const de = document.documentElement;
+    const stages = Array.from(document.querySelectorAll<HTMLElement>(".pbridge .br__stage"));
+    const family = Array.from(document.querySelectorAll(".pbridge > .br .brst"));
+    const familyBoxes = rects(family);
+    const below = document.querySelector("section.sec");
+    const lowest = [...familyBoxes].sort((a, b) => b.bottom - a.bottom)[0];
+
+    return {
+      stages: stages.length,
+      // If any stage carries this, the measurement DID run and the test would
+      // be asserting the measured layout rather than the fallback.
+      measured: stages.filter((s) => s.hasAttribute("data-measured")).length,
+      stageHeights: stages.map((s) => Math.round(s.getBoundingClientRect().height)),
+      stations: family.length,
+      // Every station must have a box of its own, and no two of them may
+      // occupy the same one.
+      empty: familyBoxes.filter((b) => b.width < 1 || b.height < 1).length,
+      overlaps: overlapping(familyBoxes),
+      // In the fallback the stations wrap, so the lowest one is not always the
+      // last in the document.
+      gapToSectionBelow: below && lowest ? Math.round(below.getBoundingClientRect().top - lowest.bottom) : null,
+      // Every action destination is still a link, and each of those bridges has
+      // an unmeasured stage of its own.
+      actionLinks: document.querySelectorAll(".pbridge .brx a").length,
+      actionOverlaps: Array.from(document.querySelectorAll(".pbridge .brx")).map((section) =>
+        overlapping(rects(Array.from(section.querySelectorAll(".brst")))).length,
+      ),
+      scrolls: de.scrollWidth > de.clientWidth,
+      scrollWidth: de.scrollWidth,
+      clientWidth: de.clientWidth,
+    };
+  });
+}
+
+for (const viewport of [
+  { width: 1280, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`the bridge is readable without the JS positioning at ${viewport.width}px`, async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport });
+    const page = await context.newPage();
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".pbridge .br__stage").first()).toBeVisible();
+
+    const state = await unpositioned(page);
+
+    // The premise: this really is the unmeasured state.
+    expect(state.measured, "a stage was measured, so this is not the fallback").toBe(0);
+    expect(state.stations, "the family bridge did not server-render its stations").toBe(3);
+
+    // The stage has a height, so whatever follows the bridge starts below it.
+    for (const height of state.stageHeights) {
+      expect(height, `an unmeasured stage collapsed to ${height}px`).toBeGreaterThan(0);
+    }
+
+    // And the stations are three separate blocks rather than one overprinted
+    // one. This is the assertion that would have failed on 31 July.
+    expect(state.empty, "a station has no box of its own").toBe(0);
+    expect(state.overlaps, `family stations overlap each other: ${state.overlaps.join(", ")}`).toEqual([]);
+    expect(state.actionOverlaps, "action stations overlap each other").toEqual([0, 0, 0]);
+
+    // The section beneath the bridge is not drawn over it.
+    expect(state.gapToSectionBelow, "no section was found below the bridge").not.toBeNull();
+    expect(
+      state.gapToSectionBelow!,
+      "the section below the bridge overlaps the unpositioned stations",
+    ).toBeGreaterThan(0);
+
+    // The fallback must not trade one failure for another.
+    expect(state.scrolls, `page scrolls horizontally: ${state.scrollWidth} > ${state.clientWidth}`).toBe(false);
+
+    // The existing no-JS contract is unchanged: the noscript rule still unhides
+    // all three action bridges, so every destination is present as a link.
+    expect(state.actionLinks, "the noscript fallback stopped revealing the action bridges").toBe(8);
+
+    await page.screenshot({
+      path: `${EVIDENCE}/fallback-no-positioning-${viewport.width}x${viewport.height}.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
+    await context.close();
+  });
+}
+
+test("the measurement retires the fallback, and the settled bridge is the measured one", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+  await settled(page);
+
+  // The other half of the contract. If the attribute were never set, the
+  // fallback's flex row would still be laying out the settled bridge and every
+  // approved reference frame would be wrong.
+  const measured = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".pbridge > .br .br__stage");
+    const station = stage?.querySelector<HTMLElement>(".brst");
+    if (!stage || !station) return null;
+    return {
+      attribute: stage.hasAttribute("data-measured"),
+      stagePosition: getComputedStyle(stage).display,
+      stationPosition: getComputedStyle(station).position,
+      inlineLeft: station.style.left,
+      inlineHeight: stage.style.height,
+    };
+  });
+
+  expect(measured, "the measured stage was not found").not.toBeNull();
+  expect(measured!.attribute, "the measurement never retired the fallback").toBe(true);
+  expect(measured!.stagePosition, "the fallback flex layout survived the measurement").toBe("block");
+  expect(measured!.stationPosition, "a measured station is not absolutely positioned").toBe("absolute");
+  expect(measured!.inlineLeft, "a measured station carries no measured left").not.toBe("");
+  expect(measured!.inlineHeight, "the stage was never sized from its lowest child").not.toBe("");
+});
+
+// ---------------------------------------------------------------------------
 // Layout: no horizontal overflow at the widths the Bridge notes name
 // ---------------------------------------------------------------------------
 

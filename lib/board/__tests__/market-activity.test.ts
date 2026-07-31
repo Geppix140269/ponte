@@ -60,7 +60,7 @@ function deal(over: Partial<LiveDeal> = {}): LiveDeal {
     destinationCode: "AE",
     postedAt: "2026-07-20T10:00:00Z",
     verificationLevel: null,
-    href: "/marketplace/l/PT-0001",
+    href: "/find/o/PT-0001",
     ...over,
   };
 }
@@ -145,7 +145,7 @@ test("geography that was not posted stays null rather than becoming a guess", ()
 
 test("a member record without a ref gets no detail link rather than a broken one", () => {
   assert.equal(fromDeal(deal({ ref: null })).href, null);
-  assert.equal(fromDeal(deal()).href, "/marketplace/l/PT-0001");
+  assert.equal(fromDeal(deal()).href, "/find/o/PT-0001");
 });
 
 test("a signal links to its own public detail, not to a listing", () => {
