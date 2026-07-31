@@ -83,7 +83,7 @@ export default function LiveDealsGrid({
       </div>
 
       <div className="mt-7">
-        <Link href="/marketplace" className="btn-primary">
+        <Link href="/find" className="btn-primary">
           {seeAllLabel}
           <Icon name="chevron" size={16} />
         </Link>

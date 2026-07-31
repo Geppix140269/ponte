@@ -244,7 +244,7 @@ const listing_published: Builder<"listing_published"> = (d) => ({
           { kind: "link", label: "Improve your listing", href: editLink(d.listing.id) },
         ] as EmailBlock[])
       : []),
-    { kind: "link", label: "Manage or withdraw this listing", href: route("/marketplace") },
+    { kind: "link", label: "Manage or withdraw this listing", href: route("/opportunities") },
     { kind: "disclaimer", text: PUBLICATION_DISCLAIMER },
   ],
 });
@@ -375,7 +375,7 @@ const listing_flagged_member: Builder<"listing_flagged_member"> = (d) => ({
       ],
     },
     { kind: "panel", body: d.reason },
-    { kind: "button", label: "Open your listing", href: route("/marketplace") },
+    { kind: "button", label: "Open your listing", href: route("/opportunities") },
     {
       kind: "disclaimer",
       text: "This is not a finding against you. An automated check cannot tell a legitimate trade from a problem one, which is why a person looks.",
@@ -461,7 +461,7 @@ const listing_expiring: Builder<"listing_expiring"> = (d) => ({
       ],
     },
     { kind: "button", label: "Extend this listing", href: editLink(d.listing.id) },
-    { kind: "link", label: "Let it expire", href: route("/marketplace") },
+    { kind: "link", label: "Let it expire", href: route("/opportunities") },
   ],
 });
 
@@ -510,7 +510,7 @@ const connection_requested: Builder<"connection_requested"> = (d) => ({
         { label: "Reference", value: d.listing.ref },
       ],
     },
-    { kind: "button", label: "Review the request", href: route("/marketplace") },
+    { kind: "button", label: "Review the request", href: route("/workspace") },
     {
       kind: "disclaimer",
       text: "Respond through Ponte so the introduction stays recorded and controlled.",
@@ -539,7 +539,7 @@ const connection_accepted: Builder<"connection_accepted"> = (d) => ({
         { label: "Contact", value: d.counterpartyEmail },
       ],
     },
-    { kind: "button", label: "Open in Ponte", href: route("/marketplace") },
+    { kind: "button", label: "Open in Ponte", href: route("/workspace") },
     {
       kind: "disclaimer",
       text: "Ponte records every introduction. Continuing in Ponte keeps the deal documented.",

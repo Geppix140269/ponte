@@ -75,7 +75,10 @@ test("the destination is never restated: it is exactly destinationFor's", () => 
 
 test("with the journey flags off, each route opens its fallback destination", () => {
   withFlags(FLAGS_OFF, () => {
-    assert.equal(directRouteNavigation("find").destination, "/marketplace");
+    // Find has no fallback left to open. Its seam was the obsidian
+    // `/marketplace` board, retired in cutover PR 5, so the route opens /find
+    // in both flag states and NEXT_PUBLIC_FIND_JOURNEY governs no destination.
+    assert.equal(directRouteNavigation("find").destination, "/find");
     assert.equal(directRouteNavigation("structure").destination, "/marketplace/new?type=requirement");
     assert.equal(directRouteNavigation("check").destination, "/verify?for=counterparty");
     assert.equal(directRouteNavigation("investigate").destination, "/market-signals");

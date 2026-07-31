@@ -82,8 +82,8 @@ export default async function InvitationPreviewPage({
    * The Gate C production preflight found it (LB-004).
    *
    * The column is `purpose`, which is what every other reader of this table
-   * uses: `admin/listings/actions.ts`, `marketplace/actions.ts`,
-   * `marketplace/l/[ref]/page.tsx` and `opportunities/page.tsx`.
+   * uses: `admin/listings/actions.ts`, `_actions/listings.ts`,
+   * `lib/board/qualified-opportunity.ts` and `opportunities/page.tsx`.
    *
    * `lib/deal-room/__tests__/integrity.test.ts` now asserts this select list
    * against the real column set, because neither error was reachable by any

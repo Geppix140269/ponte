@@ -145,7 +145,8 @@ test("facts are extracted only when present", () => {
 
 test("each route maps to its production destination, carrying context", () => {
   const facts = { raw: "check acme", company: "Acme" };
-  assert.ok(destinationFor("find", { raw: "" }).startsWith("/marketplace"));
+  // Find is unconditional since cutover PR 5 retired the /marketplace board.
+  assert.ok(destinationFor("find", { raw: "" }).startsWith("/find"));
   assert.ok(
     destinationFor("structure", { raw: "" }).startsWith("/marketplace/new?type=requirement"),
   );
@@ -158,7 +159,7 @@ test("each route maps to its production destination, carrying context", () => {
 });
 
 test("destination with no facts has no trailing query noise", () => {
-  assert.equal(destinationFor("find", { raw: "" }), "/marketplace");
+  assert.equal(destinationFor("find", { raw: "" }), "/find");
   assert.equal(destinationFor("investigate"), "/market-signals");
 });
 

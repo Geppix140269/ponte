@@ -237,7 +237,9 @@ export async function decideListingAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath(QUEUE);
-  revalidatePath("/marketplace");
+  // The public board a decision changes. This was the obsidian marketplace
+  // path until cutover PR 5 retired it; invalidating a redirect caches nothing.
+  revalidatePath("/find");
   finish(decision, mail && mail !== "sent" ? mail : undefined);
 }
 

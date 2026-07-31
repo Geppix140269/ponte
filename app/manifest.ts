@@ -53,7 +53,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Open the board",
         short_name: "Board",
-        url: "/marketplace?source=pwa",
+        url: "/find?source=pwa",
       },
       {
         name: "Post a listing",
