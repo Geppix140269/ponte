@@ -60,6 +60,14 @@ export default function SignalCrossing({
       stations={[
         {
           key: "requirement",
+          // `deal.destination` against `deal.origin` below, and not a pair of
+          // family marks. The pairing is the record shape: a buyer requirement
+          // states where goods are wanted and carries a destination, a seller
+          // offer states where they come from and carries an origin. The slot
+          // is the one ADR-0019 added to a station; before it existed this
+          // distinction had nothing to lean on but words, and colour was not
+          // available for it because a direction is not a status.
+          icon: "deal.destination",
           index: "Demand",
           title: demand === null ? "Buyer requirements" : `${demand.toLocaleString()} buyer requirements`,
           description: "Someone in the open market is looking to buy. Find who is asking for what you sell.",
@@ -67,6 +75,7 @@ export default function SignalCrossing({
         },
         {
           key: "offer",
+          icon: "deal.origin",
           index: "Supply",
           title: supply === null ? "Seller offers" : `${supply.toLocaleString()} seller offers`,
           description: "Someone is offering goods for sale. Find a source for what you need to buy.",
