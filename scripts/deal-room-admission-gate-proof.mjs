@@ -49,7 +49,8 @@
  *
  * ## The proofs, in order
  *
- *   0. the database carries the production-equivalent schema
+ *   0. the database carries the production-equivalent schema, column for column,
+ *      including every conflict target this proof's fixture relies on
  *   1. the migration applies cleanly
  *   2. exact function signatures and grants after application
  *   3. a synthetic fixture exists, isolated from any existing data
@@ -101,6 +102,58 @@ const REQUIRED_FUNCTIONS = [
   ["public", "deal_room_declare_participation"],
   ["public", "deal_room_is_writable"],
   ["public", "deal_room_log_event"],
+];
+
+/**
+ * Every column this proof writes, per table, and the conflict target it uses.
+ *
+ * The preflight checks three things against the live catalogue for each entry,
+ * so a fixture insert can never fail for a schema reason dressed up as a
+ * boundary failure:
+ *
+ *   - every column named here exists (catches a rename);
+ *   - every NOT NULL column WITHOUT a default is named here (catches a column
+ *     added since, which would otherwise fail the insert);
+ *   - the `onConflict` target really is backed by a unique index on exactly
+ *     those columns.
+ *
+ * That last one is why this table exists at all. `ON CONFLICT (kind)` on
+ * `deal_room_agreement_documents` is only valid if `kind` carries a unique or
+ * primary-key index; the repository schema declares it `text primary key`, but
+ * the proof must not take the repository's word for what the database in front
+ * of it actually has.
+ */
+const WRITES = [
+  { table: "auth.users", columns: ["id", "email", "email_confirmed_at"] },
+  { table: "public.profiles", columns: ["id", "company", "country"], onConflict: ["id"] },
+  {
+    table: "public.listings",
+    columns: [
+      "user_id",
+      "type",
+      "product",
+      "details",
+      "status",
+      "market_family",
+      "market_intent",
+      "quantity",
+      "unit",
+      "origin_country",
+    ],
+  },
+  {
+    table: "public.deal_room_agreement_documents",
+    columns: ["kind", "version", "title", "sha256", "current"],
+    onConflict: ["kind"],
+  },
+  {
+    table: "public.deal_room_participants",
+    columns: ["room_id", "profile_id", "participant_class", "transaction_role", "declared_capacity", "state"],
+  },
+  {
+    table: "public.deal_room_agreement_acceptances",
+    columns: ["participant_id", "agreement_kind", "document_version", "document_sha256"],
+  },
 ];
 
 /** The four agreement kinds the admission gate requires, at known identities. */
@@ -170,6 +223,82 @@ async function preflight(client) {
   `);
   if (cols[0].n === 0) missing.push("column auth.users.email_confirmed_at");
 
+  // Nothing below can run if a table above is absent; the reads would error
+  // rather than report, which is the opposite of a precise message.
+  if (missing.length > 0) return missing;
+
+  for (const { table, columns, onConflict } of WRITES) {
+    const [schema, name] = table.split(".");
+
+    const { rows: actual } = await client.query(
+      `select column_name, is_nullable, column_default, is_identity, identity_generation
+         from information_schema.columns
+        where table_schema = $1 and table_name = $2`,
+      [schema, name],
+    );
+    const byName = new Map(actual.map((c) => [c.column_name, c]));
+
+    // 1. Every column this proof writes still exists under that name.
+    for (const column of columns) {
+      if (!byName.has(column)) missing.push(`column ${table}.${column}, which this proof writes`);
+    }
+
+    /*
+     * 2. Every column the table REQUIRES is one this proof supplies.
+     *
+     * `not null` with no default and no identity generation means the insert
+     * fails without a value. A column added to `listings` or `auth.users` after
+     * this script was written would otherwise surface as a fixture error in the
+     * middle of a proof run, and read like the migration's fault.
+     */
+    const supplied = new Set(columns);
+    for (const c of actual) {
+      const generated = c.is_identity === "YES" || c.identity_generation !== null;
+      const required = c.is_nullable === "NO" && c.column_default === null && !generated;
+      if (required && !supplied.has(c.column_name)) {
+        missing.push(
+          `column ${table}.${c.column_name} is NOT NULL with no default, and this proof does not supply it`,
+        );
+      }
+    }
+
+    /*
+     * 3. The conflict target is real.
+     *
+     * `on conflict (kind)` is a syntax error at runtime - "there is no unique or
+     * exclusion constraint matching the ON CONFLICT specification" - unless a
+     * unique or primary-key index covers exactly those columns. The repository
+     * declares `deal_room_agreement_documents.kind` as `text primary key`, but
+     * this proof must not take the repository's word for what the database in
+     * front of it has.
+     */
+    if (onConflict) {
+      const { rows: idx } = await client.query(
+        `select 1
+           from pg_index i
+           join pg_class t on t.oid = i.indrelid
+           join pg_namespace n on n.oid = t.relnamespace
+          where n.nspname = $1 and t.relname = $2
+            and (i.indisunique or i.indisprimary)
+            and i.indnatts = i.indnkeyatts
+            and (
+              select array_agg(a.attname order by a.attname)
+                from unnest(i.indkey) as k(attnum)
+                join pg_attribute a on a.attrelid = t.oid and a.attnum = k.attnum
+            ) = (select array_agg(c order by c) from unnest($3::text[]) as c)
+          limit 1`,
+        [schema, name, onConflict],
+      );
+      if (idx.length === 0) {
+        missing.push(
+          `a unique or primary-key index on ${table}(${onConflict.join(", ")}), which this proof uses as an ` +
+            `ON CONFLICT target. Without it the fixture insert fails with "no unique or exclusion constraint ` +
+            `matching the ON CONFLICT specification"`,
+        );
+      }
+    }
+  }
+
   return missing;
 }
 
@@ -209,7 +338,13 @@ async function main() {
     await client.end();
     process.exit(3);
   }
-  record("0. the database carries the production-equivalent schema", true, `${REQUIRED_TABLES.length} tables, ${REQUIRED_FUNCTIONS.length} functions`);
+  record(
+    "0. the database carries the production-equivalent schema",
+    true,
+    `${REQUIRED_TABLES.length} tables, ${REQUIRED_FUNCTIONS.length} functions, ` +
+      `${WRITES.length} fixture tables checked column-for-column, ` +
+      `${WRITES.filter((w) => w.onConflict).length} conflict targets proved`,
+  );
 
   const ids = {};
   await client.query("begin");

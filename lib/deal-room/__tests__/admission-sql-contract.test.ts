@@ -492,6 +492,54 @@ test("the proof fails precisely when the schema is not production-equivalent", (
   assert.ok(preflightAt > 0 && beginAt > preflightAt, "the preflight must run before the transaction opens");
 });
 
+test("the proof assumes nothing about the fixture tables it writes", () => {
+  /*
+   * The controller's instruction of 31 July 2026: "Do not assume ON CONFLICT
+   * (kind) is valid unless the schema proves it", and preflight the writable
+   * columns rather than trusting them.
+   *
+   * A fixture insert that fails for a schema reason reads exactly like a
+   * boundary failure, which is the one thing this proof exists to distinguish.
+   */
+  assert.ok(proofCode.includes("const WRITES = ["), "every fixture write is declared");
+  assert.ok(
+    proofCode.includes("i.indisunique or i.indisprimary"),
+    "the ON CONFLICT target must be proved against pg_index, not assumed from the repository",
+  );
+  assert.ok(
+    proofCode.includes("no unique or exclusion constraint"),
+    "a missing conflict target must name the runtime error it would otherwise cause",
+  );
+  assert.ok(
+    proofCode.includes("is NOT NULL with no default, and this proof does not supply it"),
+    "a required column the proof does not supply must be caught in the preflight",
+  );
+  assert.ok(
+    proofCode.includes("which this proof writes"),
+    "a renamed or absent column must be caught in the preflight",
+  );
+
+  // Every ON CONFLICT the script writes must be declared in WRITES, or it is an
+  // assumption again by another route.
+  const targets = Array.from(proofCode.matchAll(/on conflict \(([^)]+)\)/g)).map((m) =>
+    m[1].split(",").map((c) => c.trim()).sort().join(","),
+  );
+  assert.ok(targets.length > 0, "the scan found no ON CONFLICT clauses; it has drifted from the script");
+  const declared = Array.from(proofCode.matchAll(/onConflict: \[([^\]]+)\]/g)).map((m) =>
+    m[1]
+      .split(",")
+      .map((c) => c.trim().replace(/^["']|["']$/g, ""))
+      .sort()
+      .join(","),
+  );
+  for (const target of targets) {
+    assert.ok(
+      declared.includes(target),
+      `ON CONFLICT (${target}) is used but never declared in WRITES, so the preflight does not prove it exists`,
+    );
+  }
+});
+
 test("the proof never commits, and verifies its own rollback", () => {
   assert.ok(proofCode.includes('await client.query("rollback")'));
   assert.ok(!/client\.query\("commit"\)/.test(proofCode), "nothing may ever be committed");

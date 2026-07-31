@@ -6,10 +6,13 @@
 --
 -- =======================================================================
 -- WRITTEN AND NOT APPLIED. Applying this file is a separate owner approval
--- under AGENTS.md. It replaces two SECURITY DEFINER functions that are granted
--- to `authenticated` in three applied migrations, so it is a real event even
--- though it creates no table and alters no row. Nothing has been run against
--- production, staging or any other database.
+-- under AGENTS.md, and it is a substantial one. It creates a table with its own
+-- constraints, Row Level Security and a policy; adds four nullable columns
+-- across two existing tables; creates three functions, one of them granted to
+-- `authenticated`; replaces two SECURITY DEFINER functions that are granted to
+-- `authenticated` in three applied migrations; and drops and recreates a third
+-- at a wider signature. Nothing has been run against production, staging or any
+-- other database.
 -- =======================================================================
 --
 -- ## Why the application layer is not enough
@@ -53,13 +56,28 @@
 --    transaction, so no overload survives; see section 2 for why this is a drop
 --    and not a `create or replace`, and what it costs.
 -- 4. `deal_room_propose`, replaced with 20260731b's body verbatim plus a call to
---    the helper, plus the two new columns seeded on the initiator rows.
+--    the helper, on the same nine-argument signature. It also reads the opener's
+--    own declarations and copies them onto BOTH of the initiator's participant
+--    rows: `transaction_role`, `participation_authority` and
+--    `business_relationship` from that member's row in
+--    `deal_room_opener_declarations` for this Deal - no literal for any of the
+--    three, and `listings.submitter_role` not read at all - plus
+--    `represented_legal_name` from `profiles.legal_or_trading_name` falling back
+--    to `profiles.company`, and `declared_capacity` from
+--    `profiles.declared_capacity` falling back to the 'Deal owner' literal that
+--    exists only to satisfy `deal_room_participants_identity_when_admitted`.
 -- 5. `deal_room_admit_participant`, replaced with 20260731f's body verbatim plus
 --    the same call.
 --
 -- `deal_room_propose` and `deal_room_admit_participant` are `create or replace`
 -- on their EXISTING signatures, so no overload is created and no grant is
--- invalidated. No constraint, policy, trigger, index or row is altered.
+-- invalidated.
+--
+-- No EXISTING constraint, policy, trigger or index is altered, no existing row
+-- is changed, and nothing is backfilled. The unique constraint, the three
+-- non-blank checks, the two foreign keys, the RLS switch and the select-own
+-- policy introduced below all belong to `deal_room_opener_declarations`, which
+-- did not exist before this file.
 --
 -- ## Four properties this mirrors from the application module
 --

@@ -56,15 +56,32 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
 ## Written but NOT applied: the Deal Room admission verification gate
 
 `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
-SHA-256 `4489d61cc1848c58cb8b6ad45043f60689d2f7bbc27268f0547184931fdbeedf`, 58338 bytes.
+SHA-256 `68ce6a8d32bc7a3c88e57b964a2a42ef8f95c8b45e59a05cd47cf110c08acb0b`, 59497 bytes.
 
 **Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
 threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
 the same day, and **amended the same day** on controller review. **Applying it is
-a separate owner approval.** It adds two nullable columns, replaces two
-`security definer` functions granted to `authenticated` in three applied
-migrations, and drops and recreates a third at a wider signature. No constraint,
-policy, trigger, index or row is altered, and nothing is backfilled.
+a separate owner approval.** What it changes, in full:
+
+- **four additive nullable columns** — two on `deal_room_participants`, two on
+  `profiles`;
+- **one new table**, `deal_room_opener_declarations`, which brings with it a
+  primary key, a unique constraint on `(profile_id, listing_id)`, three
+  non-blank `check` constraints, two foreign keys with `on delete cascade`,
+  **Row Level Security enabled**, and **one `select`-own policy**;
+- **two new internal functions**, `deal_room_room_prerequisite_state` and
+  `deal_room_admission_minimum_missing`, both revoked from every member role;
+- **one new member command**, `deal_room_declare_opening_intent`, granted to
+  `authenticated`;
+- **two `security definer` functions replaced in place** at their exact existing
+  signatures, `deal_room_propose` and `deal_room_admit_participant`, each
+  granted to `authenticated` in three applied migrations;
+- **one `security definer` function dropped and recreated** at a wider
+  signature, `deal_room_declare_participation`, with its ACL re-issued.
+
+No **existing** constraint, policy, trigger or index is altered, no existing row
+is changed, and nothing is backfilled. The constraints and the policy listed
+above belong to the new table and did not exist before it.
 
 ### What it does
 
@@ -128,11 +145,21 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    `grant-signatures.test.ts`, which also scans every later migration to be sure
    nothing recreates the old form.
 7. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
-   to the gate, on the same nine-argument signature. The initiator's two
-   participant rows now also carry `represented_legal_name` from
-   `profiles.company` and `business_relationship` from `listings.submitter_role`
-   — separate stored columns, so the opener supplies the same two facts an
-   invitee does.
+   to the gate, on the same nine-argument signature. It now also reads the
+   opener's own declarations and copies them onto **both** of the initiator's
+   participant rows:
+   - `transaction_role`, `participation_authority` and `business_relationship`
+     from that member's row in **`deal_room_opener_declarations` for this Deal**.
+     No literal is written for any of the three, and `listings.submitter_role`
+     is not read: the two seats carry what the member stated, exactly as an
+     invitee's seat carries what they stated.
+   - `represented_legal_name` from `profiles.legal_or_trading_name`, falling
+     back to `profiles.company`.
+   - `declared_capacity` from `profiles.declared_capacity`, falling back to the
+     `'Deal owner'` literal `20260731b` introduced. That fallback exists solely
+     to satisfy `deal_room_participants_identity_when_admitted`, the constraint
+     that closed LB-001, and the gate never reads that column as evidence for
+     the opener.
 8. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
    plus the same call, on the same one-argument signature.
 
@@ -169,9 +196,15 @@ approved products Deal and the four current agreement documents, and reads
 nothing it did not create. It therefore needs a production-equivalent **schema**
 and no business or user data at all, which is what a Supabase preview branch
 is. Everything runs inside one transaction that is always rolled back, and the
-rollback is verified by re-reading the catalogue and the fixture ids. A database
-missing a prerequisite fails immediately with the object named and exit code 3,
-before the transaction opens.
+rollback is verified by re-reading the catalogue and the fixture ids.
+
+The preflight assumes nothing about the tables it writes. For each one it
+checks, against the live catalogue, that every column it writes still exists,
+that every NOT NULL column without a default is one it supplies, and that each
+`ON CONFLICT` target really is backed by a unique or primary-key index on
+exactly those columns. A database missing any of that fails immediately with the
+object named and exit code 3, **before the transaction opens** - so a fixture
+that cannot be built is never mistaken for a boundary that does not hold.
 
 It has **never been executed.** There is no PostgreSQL, no container runtime and
 no Supabase CLI on the machine this branch was written on, so there is nowhere
@@ -184,20 +217,47 @@ be read as saying otherwise.
 
 ### Reversal
 
-Re-apply `20260731b` and `20260731f` in that order, then re-apply the
-`deal_room_declare_participation` block of `20260729b` to restore the
-six-parameter form, then:
+**Step 1 — restore the three replaced functions.** Re-apply `20260731b` and
+`20260731f` in that order, then re-apply the `deal_room_declare_participation`
+block of `20260729b` to restore the six-parameter form.
+
+**Step 2 — remove everything this migration created.** Every object, named:
 
 ```sql
+-- the two internal helpers
 drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);
 drop function if exists public.deal_room_room_prerequisite_state(uuid);
+
+-- the new member command, and the eight-parameter form step 1 superseded
+drop function if exists public.deal_room_declare_opening_intent(uuid, text, text, text);
 drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
 ```
 
-The four columns — two on `deal_room_participants`, two on `profiles` — may be
-left in place: they are nullable and nothing reads them once the functions above
-are back. Drop them only if the reversal is permanent, and note that dropping
-them **discards member declarations**. The whole file is one transaction, so a
+**Step 3 — decide about the data.** Nothing below is required for the reversal
+to work, and each item discards something a member wrote:
+
+| Object | May remain? | What dropping it discards |
+|---|---|---|
+| `deal_room_opener_declarations` (table, its unique and check constraints, its RLS policy) | **Yes.** Nothing reads it once the functions above are restored | Every opener's relationship, transaction role and authority, for every Deal |
+| `profiles.declared_capacity` | Yes, nullable | Each member's stated professional capacity |
+| `profiles.legal_or_trading_name` | Yes, nullable | Each member's stated trading name |
+| `deal_room_participants.represented_legal_name` | Yes, nullable | The name each participant acts under, per room |
+| `deal_room_participants.business_relationship` | Yes, nullable | How each participant stands to their business, per room |
+
+```sql
+-- ONLY if the reversal is permanent. This is destructive.
+drop table if exists public.deal_room_opener_declarations;
+alter table public.profiles
+  drop column if exists declared_capacity,
+  drop column if exists legal_or_trading_name;
+alter table public.deal_room_participants
+  drop column if exists represented_legal_name,
+  drop column if exists business_relationship;
+```
+
+Dropping the table takes its RLS policy, its unique constraint and its three
+check constraints with it; no separate statement is needed. The whole file is
+one transaction, so a
 failure part-way leaves the database exactly as it was.
 
 ## Written but NOT applied: Deal Room paid room periods and billing events
