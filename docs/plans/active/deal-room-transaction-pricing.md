@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stages 1, 2, 3 and 4a delivered. Stage 4b and Stages 5–9 not started and not authorised.
+**Status:** Stages 1, 2, 3, 4a and 5 delivered. Stage 4b and Stages 6–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -180,7 +180,7 @@ being opened**, not before.
 
 **Owner gates:** Stripe catalogue, secrets, webhook endpoint configuration.
 
-### Stage 5 — Expiry, reactivation and the commercial ratchet
+### Stage 5 — Expiry, reactivation and the commercial ratchet ✅ **delivered 31 July 2026**
 
 - Expiry → read-only, nothing deleted, participants retained.
 - Reactivation as a new paid 30-day period priced from the branches selected to remain active.
@@ -450,6 +450,49 @@ type-checked and would have passed a careless test. Rewritten to the rule above.
 `chargingEnabled()` was also duplicating the gate's four conditions beside
 `chargingUnavailableReason()`; it now derives from it, so the gate and its
 explanation cannot drift into disagreeing.
+
+**31 July 2026 — Stage 5 delivered, on the owner's instruction.**
+
+`lib/deal-room/period-lifecycle.ts`, pure, with **30 assertions** in
+`lib/deal-room/__tests__/period-lifecycle.test.ts`, registered in `npm test`.
+Nothing imports it; Stage 6 renders these states.
+
+The module exists to enforce one sentence from authority §12:
+
+> The commercial record must never be held hostage behind a continuing
+> subscription.
+
+- **`RoomAccess.readable` has no `false` case**, and that is the design rather
+  than an oversight. The first test walks **every** room-period state against
+  five instants either side of the window, plus the no-period case, and asserts
+  readability every time. Expiry removes the ability to *change* a room, never
+  the ability to *read* it.
+- **`roomAccessAt` requires both the state and the window.** A row left `active`
+  past its end does not keep a room writable: a sweep that has not run yet is
+  not a commercial entitlement. That matters because PL-012 already records that
+  nothing currently moves an invitation to `expired` without somebody arriving.
+- **`PRESERVED_ON_EXPIRY`** lists §12's nine survivals as data, asserted item by
+  item. **`CHANGED_ON_EXPIRY`** has exactly one entry and a test pinning the
+  length, so growing it is a decision somebody has to make on purpose.
+- **`RENEWAL_POLICY = "manual_only_no_silent_auto_renewal"`** — a named constant
+  rather than an absence, because "we did not build renewal" and "renewal is
+  deliberately manual" look identical in a codebase and only one is a decision.
+- **`reactivationQuote` prices what is resumed**, not what the old period
+  carried (§12). A room that ran eight branches and resumes two pays the base
+  price. **Resuming zero costs nothing** and returns `payable: false` — §12's
+  "a room with no branch selected for resumption remains readable without
+  payment", which is neither an error nor $79 for nothing.
+- **`branchActivationNeedsPayment` counts concurrently, never cumulatively**
+  (§7). A room that paid for eight, closed three and opens three more pays
+  nothing; the released slot is reusable inside the paid period.
+- A test asserts the module exports **no** `delete`, `remove`, `revoke`, `purge`,
+  `destroy` or `erase` function, so the guarantee is structural: no caller can
+  be handed a way to take something away.
+
+**Proved to fail in four directions:** making an expired room unreadable (2
+failures), dropping the window check so a stale `active` row keeps writing (2),
+turning a zero-branch resumption into a $79 charge (1), and charging for a
+released slot (3).
 
 ## 12. Decisions and discoveries
 
