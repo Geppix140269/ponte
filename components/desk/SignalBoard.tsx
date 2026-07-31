@@ -98,7 +98,19 @@ const FAMILY_UNAVAILABLE: Record<
 /** Above this many records the register earns its rules. */
 const REGISTER_THRESHOLD = 6;
 
-function Intro() {
+/**
+ * The board's own heading.
+ *
+ * Suppressed when the entrance is above it, because the entrance already
+ * carries "Market Signals" and its caveat. Printing both put the same heading
+ * and nearly the same sentence on screen twice, eighty pixels apart, which
+ * reads as a rendering fault rather than as two sections.
+ *
+ * When the board stands alone, which is every filtered and searched view, it
+ * keeps the heading it has always had.
+ */
+function Intro({ withEntrance }: { withEntrance: boolean }) {
+  if (withEntrance) return null;
   return (
     <div className="sech">
       <div>
@@ -166,6 +178,7 @@ export default function SignalBoard({
   everything,
   availability,
   axisClassified,
+  withEntrance = false,
 }: {
   q: FindQuery;
   board: SignalInventory;
@@ -175,6 +188,8 @@ export default function SignalBoard({
   availability: FamilyAvailability | null;
   /** Live signals in the selected family carrying a value on its category axis. */
   axisClassified: number | null;
+  /** True when the entrance band is rendered above this board. */
+  withEntrance?: boolean;
 }) {
   /**
    * A family the member asked for that Ponte knows has nothing live.
@@ -212,9 +227,9 @@ export default function SignalBoard({
 
   return (
     <section className="sec">
-      <Intro />
+      <Intro withEntrance={withEntrance} />
 
-      <SignalLanes q={q} />
+      {!withEntrance && <SignalLanes q={q} />}
 
       <SignalSearch q={q} />
 

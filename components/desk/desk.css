@@ -1378,56 +1378,28 @@
 /* ======================================================================
    MARKET SIGNALS ENTRANCE, and the category browse.
 
-   Two surfaces, one rule between them: the two sides of the market are
-   distinguished by structure and by their counts, never by colour. The
-   approved set reserves --pos, --review and --declared for semantic states
-   and keeps --gold off status entirely (Constitution section 6), and supply
-   versus demand is a direction, not a state. Spending two reserved status
-   colours on it would say something false in the palette's own vocabulary.
+   The two sides of the market are now drawn by the approved Bridge primitive
+   (components/ponte/bridge/SignalCrossing.tsx), so the raised cards that used
+   to carry them are gone and nothing below draws a panel around the crossing:
+   boxing a bridge would put back the box the change exists to remove.
 
-   No literal colour appears below. Every value is an alias already declared
-   in the compatibility block at the top of this file.
+   What is left of the entrance is the two search fields and the closing line.
+   Neither is distinguished by colour. The approved set reserves --pos, --review
+   and --declared for semantic states and keeps --gold off status entirely
+   (Constitution section 6), and supply versus demand is a direction, not a
+   state.
+
+   No literal colour appears below. Every value is an alias already declared in
+   the compatibility block at the top of this file.
    ====================================================================== */
 
+/* The two side searches, sitting under the crossing. No card, no border. */
 .ponte-desk .sgates {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px; margin-top: 4px;
 }
 
-.ponte-desk .sgate {
-  background: var(--raised); border: 1px solid var(--rule);
-  border-radius: var(--dk-radius); box-shadow: var(--e-1);
-  display: flex; flex-direction: column; overflow: hidden;
-}
-
-/* The whole head of the card is the link into that side. */
-.ponte-desk .sgate__open {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 18px 20px 14px; text-decoration: none; color: inherit;
-  transition: background var(--dur-1);
-}
-.ponte-desk .sgate__open:hover { background: var(--sunken); }
-.ponte-desk .sgate__open:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
-
-.ponte-desk .sgate__k {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.13em;
-  text-transform: uppercase; color: var(--ink-3);
-}
-.ponte-desk .sgate__n {
-  font-family: var(--f-mono); font-size: 34px; font-weight: 600;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1.05;
-  margin-top: 4px;
-}
-.ponte-desk .sgate__t {
-  font-family: var(--f-serif); font-size: 20px; line-height: 1.2; margin-top: 1px;
-}
-.ponte-desk .sgate__d {
-  font-size: 12.5px; color: var(--ink-3); line-height: 1.5; margin-top: 4px; max-width: 44ch;
-}
-
-.ponte-desk .sgate__f {
-  display: flex; gap: 8px; padding: 0 20px 18px; margin-top: auto;
-}
+.ponte-desk .sgate__f { display: flex; gap: 8px; }
 .ponte-desk .sgate__i {
   flex: 1 1 auto; min-width: 0;
   background: var(--surface); border: 1px solid var(--rule-strong);
@@ -1445,9 +1417,7 @@
 .ponte-desk .sgate__b:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 
 .ponte-desk .sgates__all {
-  margin-top: 12px; padding: 13px 16px;
-  background: var(--raised); border: 1px solid var(--rule);
-  border-radius: var(--dk-radius);
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule);
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
 .ponte-desk .sgates__all p { font-size: 13px; color: var(--ink-2); margin: 0; }

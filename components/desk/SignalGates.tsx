@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
-import { buildBoardHref, type FindQuery } from "@/lib/find/query";
+import SignalCrossing from "@/components/ponte/bridge/SignalCrossing";
 import type { SignalSideCounts } from "@/lib/board/inventory";
 
 /**
@@ -29,91 +29,65 @@ import type { SignalSideCounts } from "@/lib/board/inventory";
  * `showsEntrance`.
  *
  * ---------------------------------------------------------------------------
- * Two doors, one treatment
+ * A crossing, not two boxes
  * ---------------------------------------------------------------------------
- * The sides are distinguished by their icon, their words and their count, and
- * deliberately NOT by colour. The approved palette carries `--pos`, `--review`
- * and `--declared` as reserved semantic states, and `--gold` is a brand signal
- * that Constitution section 6 keeps off status entirely; colouring supply green
- * and demand amber would spend two reserved status colours on a distinction
- * that is not a status. Structure carries it instead, which is also what makes
- * the pair read as one control rather than as two unrelated banners.
+ * The two sides were two raised cards, each with a count, a sentence and a
+ * search. On owner direction they are now `SignalCrossing`: the approved Bridge
+ * primitive, demand at one abutment and supply at the other, with the counts on
+ * the deck. Ponte is the bridge between a buyer and a seller, and this is the
+ * one place the sentence is drawn rather than written.
  *
- * Each door is a GET form, for the same reasons `SignalSearch` is: Enter
- * submits, the state is the URL, and it works with no JavaScript at all. The
- * hidden `intent` is what makes the field search inside that side.
+ * Only the search survives as its own control, because a station on a deck
+ * cannot hold a text input and drawing a panel round the bridge to make room
+ * would have put back the box the change exists to remove.
+ *
+ * Nothing here is distinguished by colour. The approved palette reserves its
+ * status colours for verification, approval, warning and success, and
+ * Constitution section 6 keeps gold off status entirely; supply and demand are
+ * a direction, not a state.
  */
 
-function Door({
+/**
+ * The search for one side of the market.
+ *
+ * All that is left of the boxed door: the crossing above now carries the side,
+ * its size and its sentence, so repeating them here would say everything twice.
+ * No card, no border, no count. A label and a field.
+ *
+ * Still a plain GET form, for the reasons `SignalSearch` gives: Enter submits,
+ * the state is the URL, and it works with no JavaScript. The hidden `intent` is
+ * what keeps the search inside this side, because a GET form replaces the query
+ * string wholesale and would otherwise drop it.
+ */
+function SideSearch({
   intent,
-  icon,
-  kicker,
   title,
-  blurb,
   placeholder,
-  count,
 }: {
   intent: "requirement" | "offer";
-  /**
-   * `deal.origin` and `deal.destination`, and not the family icons.
-   *
-   * The pairing is the record shape rather than a decoration: a seller offer
-   * states where the goods come FROM and carries an origin, a buyer requirement
-   * states where they are wanted and carries a destination. Reusing
-   * `market.family.*` here would have put a taxonomy mark on a direction and
-   * said nothing true about either side.
-   */
-  icon: "deal.origin" | "deal.destination";
-  kicker: string;
   title: string;
-  blurb: string;
   placeholder: string;
-  count: number | null;
 }) {
-  const href = buildBoardHref({ intent, page: 1 });
   return (
-    <div className="sgate">
-      <Link className="sgate__open" href={href}>
-        <span className="sgate__k">
-          <PonteIcon name={icon} size={16} />
-          {kicker}
-        </span>
-        <span className="sgate__n">
-          {/* An unread count is stated as absent, not as a number. The slot is
-              34px tabular figures, so the placeholder stays a single mark. */}
-          {count === null ? "--" : count.toLocaleString()}
-        </span>
-        <span className="sgate__t">{title}</span>
-        <span className="sgate__d">{blurb}</span>
-      </Link>
-
+    <form className="sgate__f" action="/market-signals" method="get" role="search">
+      <input type="hidden" name="intent" value={intent} />
       {/*
-        Searching inside one side. `intent` travels as a hidden field because a
-        GET form replaces the query string wholesale, so the side the member
-        just chose would otherwise be dropped by the act of searching, and the
-        exact defect the board's own search carries its filters to avoid.
+        Labelled by `aria-label`: the crossing names this side two lines above,
+        and the placeholder is not relied on for the accessible name because a
+        placeholder disappears the moment anybody types.
       */}
-      <form className="sgate__f" action="/market-signals" method="get" role="search">
-        <input type="hidden" name="intent" value={intent} />
-        {/*
-          Labelled by `aria-label` rather than a visible <label>: the door's own
-          heading is two lines above the field and a repeated visible label
-          would be noise. The placeholder is not relied on for the accessible
-          name, because a placeholder disappears the moment anybody types.
-        */}
-        <input
-          className="sgate__i"
-          type="search"
-          name="q"
-          aria-label={`Search ${title.toLowerCase()}`}
-          placeholder={placeholder}
-          autoComplete="off"
-        />
-        <button className="sgate__b" type="submit">
-          Search
-        </button>
-      </form>
-    </div>
+      <input
+        className="sgate__i"
+        type="search"
+        name="q"
+        aria-label={`Search ${title.toLowerCase()}`}
+        placeholder={placeholder}
+        autoComplete="off"
+      />
+      <button className="sgate__b" type="submit">
+        Search
+      </button>
+    </form>
   );
 }
 
@@ -135,24 +109,26 @@ export default function SignalGates({ counts }: { counts: SignalSideCounts | nul
         </div>
       </div>
 
+      {/*
+        The crossing carries the two sides and their sizes; the two search
+        fields below carry the action. They were one boxed card each until the
+        owner asked for the bridge, and splitting them this way is what let the
+        box go: a station on a deck cannot hold a text input, and drawing a
+        panel round the bridge to make room would have put back the box the
+        change exists to remove.
+      */}
+      <SignalCrossing counts={counts} />
+
       <div className="sgates">
-        <Door
+        <SideSearch
           intent="requirement"
-          icon="deal.destination"
-          kicker="Demand"
           title="Buyer requirements"
-          blurb="Someone in the open market is looking to buy. Search these to find who is asking for what you sell."
           placeholder="Search buyer requirements…"
-          count={counts?.requirement ?? null}
         />
-        <Door
+        <SideSearch
           intent="offer"
-          icon="deal.origin"
-          kicker="Supply"
           title="Seller offers"
-          blurb="Someone is offering goods for sale. Search these to find a source for what you need to buy."
           placeholder="Search seller offers…"
-          count={counts?.offer ?? null}
         />
       </div>
 
