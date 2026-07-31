@@ -9,6 +9,31 @@
 | `NEXT_PUBLIC_CHECK_JOURNEY` | `on` routes a Check intent to `/check`; otherwise to `/verify?for=counterparty` | Off | Unknown — must be checked in the deployment host | Set to anything other than `on` and redeploy; the counterparty handoff returns to `/verify`. |
 | `NEXT_PUBLIC_DEAL_ROOM` | `on` exposes the `/deal-rooms` routes; anything else and every one of them answers 404 | Off | **Not set. The slice has never been activated in production.** | Unset it and redeploy. Nothing else changes: see below. |
 | `DEAL_ROOM_ALLOWLIST` | Server-only. Comma-separated organisation or profile ids permitted to reach the Deal Room. Empty or absent means **nobody** | Nobody | Not set | Clear it and redeploy. |
+| `DEAL_ROOM_BILLING` | Server-only. `on` is one of **four** conditions `chargingEnabled()` requires before Ponte may create a Deal Room charge; see below | **Off** | **Not set. Ponte has never taken a Deal Room payment** | Unset it. No charge can be created, and nothing else changes: no surface reads it. |
+
+## The charging gate needs four things, and has none of them
+
+`lib/deal-room/charging.ts` will not create a charge unless **all four** hold:
+
+1. `DEAL_ROOM_BILLING === "on"` — the charging switch;
+2. `NEXT_PUBLIC_DEAL_ROOM === "on"` — billing for a product nobody can reach is a
+   contradiction, so this makes it an impossible one;
+3. `STRIPE_SECRET_KEY` present;
+4. `STRIPE_WEBHOOK_SECRET` present.
+
+The fourth gates **checkout**, not only fulfilment, and that is deliberate: a
+charge that could not be verifiably confirmed must never be started. Gating
+checkout on the secret key alone would trade a member's money for a log line.
+
+`DEAL_ROOM_BILLING` has **no** `NEXT_PUBLIC_` prefix, so unlike the Deal Room
+routing flag it is never inlined into the browser bundle and cannot be read or
+set by a client. Anything other than exactly `on` is off.
+
+Setting any of these is an owner action under authority §20 and Stage 9 of
+`docs/plans/active/deal-room-transaction-pricing.md`. Note that turning all four
+on would still charge nobody today: the tables the billing records need are in
+`20260731e`, which is **written and not applied**, and no route calls the
+charging module at all.
 
 ## The Deal Room flag is a routing control, not a security boundary
 
