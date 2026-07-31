@@ -969,6 +969,69 @@ async function main() {
     .from("deal_room_procedures").select("state").eq("id", procedureId).maybeSingle();
   check("the procedure does not govern before approval", beforeApproval.data?.state === "proposed");
 
+  /*
+   * Who the room is waiting for must be a person the waiting party can NAME.
+   *
+   * Everything else in this file asks what a member may and may not DO. This
+   * asks what a member may SEE ABOUT ANOTHER MEMBER, and its absence is why two
+   * defects reached production on 31 July 2026 and were found by reading rather
+   * than by running:
+   *
+   * - `deal_room_propose_procedure` seeded one approval per participant ROW.
+   *   The initiator holds two rows in their own room, so they were issued two
+   *   obligations for themselves and no procedure could ever be approved
+   *   (LB-001, fixed by `20260731c`).
+   * - the fix then chose the initiator's MASTER-LEVEL row as canonical, and
+   *   `participant read` allows another person's row only through
+   *   `sub_room_id is not null and deal_room_is_sub_room_participant(...)`, or
+   *   to a room administrator. The counterparty could read the approval but not
+   *   the participant it named, so the procedure page showed them an unnamed
+   *   "A required approver" (fixed by `20260731d`).
+   *
+   * Both are invisible to a test that only checks refusals. This one fails on
+   * either.
+   */
+  /*
+   * First, the invisibility itself, so the assertion below cannot pass vacuously.
+   *
+   * The service role is used only to LOOK UP the id; the read under test is the
+   * counterparty's own, under their own session and RLS.
+   */
+  const { data: masterRow } = await admin
+    .from("deal_room_participants")
+    .select("id")
+    .eq("room_id", roomId)
+    .eq("profile_id", owner.id)
+    .is("sub_room_id", null)
+    .maybeSingle();
+
+  refused(
+    await counterparty.client.from("deal_room_participants").select("id").eq("id", masterRow?.id ?? ""),
+    "another person's master-level participant row is not readable by a counterparty",
+  );
+
+  const approvalRows = await counterparty.client
+    .from("deal_room_procedure_approvals")
+    .select("participant_id")
+    .eq("procedure_id", procedureId);
+
+  check(
+    "one approval per person, not per participant row",
+    !approvalRows.error && (approvalRows.data ?? []).length === 2,
+    approvalRows.error ? approvalRows.error.message : `saw ${(approvalRows.data ?? []).length} approval rows, expected 2`,
+  );
+
+  const namedIds = Array.from(new Set((approvalRows.data ?? []).map((row) => row.participant_id)));
+  const namedRows = await counterparty.client.from("deal_room_participants").select("id").in("id", namedIds);
+
+  check(
+    "the counterparty can read the participant every approval names",
+    !namedRows.error && (namedRows.data ?? []).length === namedIds.length,
+    namedRows.error
+      ? namedRows.error.message
+      : `${namedIds.length} approvers, ${(namedRows.data ?? []).length} readable - the procedure page cannot name the rest`,
+  );
+
   await owner.client.rpc("deal_room_approve_procedure", { p_procedure_id: procedureId });
   const afterOne = await owner.client.from("deal_room_procedures").select("state").eq("id", procedureId).maybeSingle();
   check("one approver is not enough while another is outstanding", afterOne.data?.state === "proposed");
