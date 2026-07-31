@@ -174,22 +174,24 @@ export const BILLABLE_SUB_ROOM_KINDS: readonly SubRoomKind[] = ["counterparty"];
  * The participant classes that make a counterparty branch a *principal*
  * counterparty branch.
  *
- * **This mapping needs owner confirmation (OD-012), and here is the tension.**
- * Authority section 7 condition 1 says the branch must be a "principal-
- * counterparty Deal Branch", which reads like `participant_class = 'principal'`
- * alone. But section 4, listing what a Master Deal Room may contain, gives as
- * one of its examples "a broker acting for a disclosed or controlled principal"
- * - and a broker is an `intermediary` in this schema, not a `principal`.
+ * **Settled by the owner on 31 July 2026 (OD-012, Amendment 1 to the
+ * authority): a broker's branch counts.**
  *
- * Counting intermediaries follows section 4's own example and matches the
- * commercial substance: a broker fronting a real principal is a live
- * counterparty negotiation consuming the same controlled-progression product.
- * Reading section 7 literally instead would make every brokered negotiation
- * free, which is the larger commercial surprise of the two.
+ * The question was real. Authority section 7 condition 1 said "principal-
+ * counterparty Deal Branch", which reads as `participant_class = 'principal'`
+ * alone; section 4, listing what a Master Deal Room may contain, gives "a broker
+ * acting for a disclosed or controlled principal" as one of its own examples,
+ * and a broker is an `intermediary` in this schema. The two sections pointed
+ * different ways and the difference decided what a member is charged.
  *
- * So this is the reading implemented, and it is named rather than buried,
- * because it decides what a member is charged. `provider`, `adviser`,
- * `ponte_facilitator` and `observer` are excluded on both readings.
+ * The owner resolved it toward section 4, and amended section 7 to say so, so
+ * the authority no longer contradicts itself. The reasoning: a broker fronting a
+ * real principal is a live counterparty negotiation consuming the same
+ * controlled-progression product, and the alternative would make every brokered
+ * negotiation free — an obvious incentive to route through an intermediary.
+ *
+ * `provider`, `adviser`, `ponte_facilitator` and `observer` never make a branch
+ * billable, which was never in question.
  */
 export const BILLABLE_PARTICIPANT_CLASSES: readonly ParticipantClass[] = [
   "principal",

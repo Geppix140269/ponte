@@ -266,6 +266,67 @@ fixture has kept from the beginning.
 users, 7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
 append-only trigger enabled, ledger 52.
 
+## Written but NOT applied: naming a participant to the people they deal with
+
+`supabase/migrations/20260731f_deal_room_participant_label.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `3e8bbf6b80fe974e632636871e0f567896d01f4d632e5caf6726cf37a38a5bc2` |
+| Content | one `alter table ... add column`, one new function, three `create or replace function` |
+| Status | written and tested, **NOT applied** |
+
+Owner decision of 31 July 2026, option 1 of two, after the surfaces were rendered
+and the counterparty's procedure page read:
+
+```
+A participant                            approved
+Diego Alonso - Iberia Importaciones SL   approved
+```
+
+`profiles` carries one SELECT policy - `id = auth.uid() OR is_admin()` - so a member
+can never read another member's `full_name`. Every counterparty is "A participant" to
+everyone but themselves, on every surface.
+
+**Option 1: denormalise the label onto the participant row**, rather than widening
+`profiles`. Not a new pattern - `deal_room_activity_events` already carries
+`actor_label`, written by `deal_room_log_event()` from inside a SECURITY DEFINER
+command, which is why the activity feed named people correctly the whole time the
+participant list could not.
+
+| | |
+|---|---|
+| `deal_room_participants.display_label` | new column, nullable |
+| `deal_room_display_label(uuid)` | SECURITY DEFINER, reads `profiles`, **granted to nobody** - a member who could call it directly could enumerate names |
+| `deal_room_propose` | writes it for both initiator rows (extracted from `20260731b`, so the `declared_capacity` fix carries forward) |
+| `deal_room_accept_invitation` | writes it for the counterparty row |
+| `deal_room_admit_participant` | refreshes it (extracted from `20260731c`, so the required-approver promotion carries forward) |
+
+`lib/deal-room/queries.ts` reads the column and **no longer embeds `profiles` at
+all**, so the two-foreign-key ambiguity that broke `listParticipants()` cannot return.
+
+No policy, trigger, index or grant is altered and **no row is backfilled**: production
+holds no rooms.
+
+### The guards this forced open
+
+Adding a function exposed three scans that were narrower than they read:
+
+- `function-acl.test.ts` `declaredFunctions()` read two fixed files, so a function
+  introduced by any later migration was invisible. Now discovered from every
+  migration - which immediately surfaced the pricing lane's
+  `deal_room_billing_append_only` as well, now classified.
+- Its revoke scan matched `revoke execute` only. `20260731e` writes `revoke all`,
+  which is the same privilege on a function, so a correctly-locked function read as
+  "never revoked at all". Both forms now match.
+- The two "is it revoked anywhere" assertions read `20260730b` alone. They now read
+  every migration; the assertions that are deliberately *about* `20260730b` still
+  read only it, and say so.
+
+Declared `deal_room_*` functions: **25** (23 applied, plus this one and the pricing
+lane's, neither applied). `deal-room:acl-verify` expects **24** in production once
+this is applied.
+
 ## APPLIED to production, 31 July 2026: the approver row a counterparty can read
 
 `20260731d_deal_room_approver_row_visibility.sql`, checksum

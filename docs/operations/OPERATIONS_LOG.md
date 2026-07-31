@@ -18,6 +18,113 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - The surfaces were rendered. Three defects, and the flag stays off.
+
+### Completed
+
+- **The twelve Deal Room surfaces were rendered against a live room, as both
+  parties, at 1280x900 and 390x844.** 28 frames in
+  `docs/codex/audits/deal-room/evidence/live/`. The owner supplied the site
+  password; the gate was not weakened.
+- **`listParticipants()` had never returned a row.** `deal_room_participants` has two
+  foreign keys to `profiles`, so PostgREST refused the ambiguous
+  `profiles(full_name)` embed and failed the whole query. Every surface that names a
+  participant showed a fallback: two rows reading "A required approver" on the
+  procedure page for **both** parties, an empty Bridge, "0 of 2 external organisations
+  admitted" on a room with one. **Fixed** by naming the relationship.
+- **Every heading was invisible.** `app/globals.css` sets `h1..h4 { color: var(--ink) }`
+  for the obsidian canvas and `--ink` is near-white; `.dr-page` paints the paper
+  surface and `.dr__title` set no colour. The primary heading of every Deal Room page
+  rendered near-white on near-white. **Fixed**, scoped to `.dr-page`.
+
+### Risks / discrepancies
+
+- **A participant can be named only to themselves.** `profiles` carries one SELECT
+  policy, `id = auth.uid() OR is_admin()`, so the counterparty renders as "A
+  participant" to everyone but themselves. **Product decision, not made here:**
+  denormalise a display label onto `deal_room_participants` at admission, as
+  `deal_room_activity_events` already does with `actor_label`; or widen `profiles`
+  SELECT for co-participants. The first moves no boundary. **This is in the way of
+  Approval 4.**
+- **109 database assertions passed against this same loop and none of the three could
+  fail one.** The embed defect is not reachable from SQL; the heading defect is not a
+  fact about a token pair, so `check-contrast` passed; the naming defect is a policy
+  interacting with a page.
+- `20260731d` remains correct and necessary but was **not sufficient**, and the
+  assertion added with it passes while the page still cannot print a name. The
+  assertion tests the row; the page needs the name.
+
+### Production changes
+
+- **None.** The flag was never turned on, nothing was deployed, no environment
+  variable was set. The capture room was built and removed: 10 users, 7 listings with
+  2 approved, every `deal_room_*` table at 0, ledger 52.
+
+### Next
+
+1. **Owner decision on how a participant is named to the other party.**
+2. Then Approval 4: allowlist, environment variables, deploy.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 77 to 82
+- `docs/codex/audits/deal-room/evidence/live/` - 28 frames
+
+---
+
+## 2026-07-31 - Approval 4 preflight: the off switch did not work. Flag NOT flipped.
+
+### Completed
+
+- **Approval 4 was authorised and is not complete.** It is flag + allowlist +
+  deploy; the first did not do what the records said, so nothing was switched on.
+- **`lib/deal-room/flags.ts` claimed the allowlist was "checked in every server route
+  and command handler". Eleven of fifteen server actions never called it.**
+- **Not a security hole**, and not to be recorded as one: the flag is routing, Row
+  Level Security is the boundary, and every one of the eleven reaches the database
+  through a SECURITY DEFINER command that re-proves participation.
+- **What it broke is the off switch.** With the flag off the routes 404, but a server
+  action is an endpoint, not a page - it stays in the bundle and stays invokable. So
+  turning the flag off did not stop seven of the fifteen ways to change a room, and
+  removing somebody from the allowlist did not either. Acceptance criterion 16, the
+  reason it is safe to turn the flag on, was untrue.
+- **Four actions are exempt on purpose** - the admission path, because an invited
+  counterparty is not necessarily allowlisted. That reasoning is now written where
+  they are; it was written nowhere before, which is why it could not be told apart
+  from an oversight. **The other seven are now gated.**
+- **`__tests__/action-gate.test.ts`** discovers every action from the file and
+  requires each to gate or be a named exception. **Run against the pre-fix file it
+  names all seven.** It also requires a gated action to `fail()` rather than continue.
+- **`__tests__/flags.test.ts`** covers `dealRoomAvailableTo`, which had no test at
+  all. Nine assertions; the one that matters most is that an absent or empty
+  allowlist means **nobody**.
+
+### Risks / discrepancies
+
+- **Nobody has rendered these pages.** Turning the Deal Room on for a pilot member
+  would put surfaces in front of them that no person has ever looked at. The capture
+  needs only `PONTE_SITE_PASSWORD`.
+- Approval 4 cannot be completed from here: the environment variables are Netlify's,
+  `NEXT_PUBLIC_DEAL_ROOM` is inlined at build time so it needs a rebuild, and **no
+  one has said who goes on the allowlist**. The private access wall is untouched.
+
+### Production changes
+
+- **None.** No flag, no environment variable, no deployment, no database change.
+
+### Next
+
+1. Owner decides the allowlist, sets the two environment variables and deploys.
+2. Owner supplies `PONTE_SITE_PASSWORD` so the surfaces are seen before a member
+   sees them.
+3. The private access wall is a separate decision and remains untouched.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 72 to 76
+
+---
+
 ## 2026-07-31 - Requirement 12 proved; Approval 3 at 109 of 109
 
 ### Completed

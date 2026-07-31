@@ -123,6 +123,15 @@ const STORAGE_POLICY_HELPERS = ["deal_room_is_writable(uuid)", "deal_room_uuid_o
 const PERMANENTLY_INTERNAL = [
   "deal_room_events_append_only()",
   "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
+  // Reads a name out of `profiles`, which is readable only to its owner. A
+  // member who could call it directly could enumerate names - which is exactly
+  // what option 1 avoided by not widening the policy. (20260731f)
+  "deal_room_display_label(uuid)",
+  // The pricing lane's append-only trigger guard for `deal_room_billing_events`,
+  // 20260731e. Written, NOT applied. It is here because this file discovers
+  // functions from every migration rather than a list, so a lane cannot add one
+  // that nothing classifies - which is the property that made it worth widening.
+  "deal_room_billing_append_only()",
 ];
 
 /** An ordered list of argument types, as Postgres would identify the function. */
@@ -151,7 +160,17 @@ function key(name: string, args: string): string {
 
 function declaredFunctions(): Set<string> {
   const found = new Set<string>();
-  for (const sql of [coreSql, rlsSql]) {
+  // Every migration, discovered - not a list. Reading only a fixed pair is the
+  // same blindness that produced the 20260731a defect one level down: a function
+  // introduced by a later migration was invisible, so it could not be classified
+  // and its ACL could not be checked. `20260731f` added `deal_room_display_label`
+  // and this was the test that noticed, which is the behaviour worth keeping.
+  // A replacement declares the same name and argument types, so the Set dedupes.
+  const migrations = readdirSync("supabase/migrations")
+    .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+    .sort()
+    .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8"));
+  for (const sql of migrations) {
     const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(sql.matchAll(pattern))) found.add(key(m[1], m[2]));
   }
@@ -296,6 +315,11 @@ function applicationCommands(): { commands: Set<string>; problems: string[] } {
 
 /** Signatures `20260730b` grants to `authenticated`. */
 function correctiveAllowlist(): Set<string> {
+  // `aclCode` explicitly, NOT the every-migration default. This is a claim about
+  // what one file - `20260730b` - says, and the test that uses it is scoped to
+  // what that file could know when it was written. Letting it drift to every
+  // migration made `20260731a`'s two storage-helper grants look like surplus in
+  // a file that never mentioned them.
   return new Set(
     aclStatements("grant").filter((s) => s.roles.includes("authenticated")).map((s) => s.sig),
   );
@@ -307,10 +331,30 @@ function correctiveAllowlist(): Set<string> {
 
 type Statement = { sig: string; roles: string[]; index: number };
 
+/**
+ * Every ACL migration, concatenated, in date order.
+ *
+ * The default used to be `20260730b` alone. A revoke written in any later
+ * migration was invisible to the two assertions that use the default, so a
+ * correctly-locked function read as "never revoked at all" - a false finding,
+ * and a false finding in this file is expensive, because this file is what says
+ * whether LB-008 has come back.
+ */
+const allAclCode = readdirSync("supabase/migrations")
+  .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+  .sort()
+  .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8").replace(/--[^\n]*/g, ""))
+  .join("\n");
+
 function aclStatements(verb: "revoke" | "grant", code: string = aclCode): Statement[] {
   const preposition = verb === "revoke" ? "from" : "to";
+  // `execute` OR `all`. On a function the two are the same privilege, and both
+  // forms are in the tree: `20260730b` and `20260730c` write `revoke execute`,
+  // `20260731e` writes `revoke all`. Matching only one made a correctly-locked
+  // function read as "never revoked at all" - a false finding in the file whose
+  // job is to say whether LB-008 has come back.
   const pattern = new RegExp(
-    `${verb} execute on function public\\.(deal_room_\\w+)\\(([^)]*)\\) ${preposition} ([^;]+);`,
+    `${verb} (?:execute|all) on function public\\.(deal_room_\\w+)\\(([^)]*)\\) ${preposition} ([^;]+);`,
     "g",
   );
   return Array.from(code.matchAll(pattern)).map((m) => ({
@@ -328,7 +372,12 @@ const LOGGER = "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)";
 
 test("the inventory, the policy helpers and the commands are all found", () => {
   const declared = declaredFunctions();
-  assert.equal(declared.size, 23, `expected 23 declared deal_room_* functions, found ${declared.size}`);
+  // 25: the original 23, plus `deal_room_display_label` (20260731f) and the
+  // pricing lane's `deal_room_billing_append_only` (20260731e). Neither is
+  // applied yet. The number is asserted rather than derived so that a function
+  // appearing or vanishing is a failure somebody has to look at - which is how
+  // both of these were noticed at all.
+  assert.equal(declared.size, 25, `expected 25 declared deal_room_* functions, found ${declared.size}`);
   assert.ok(declared.has(LOGGER), "the event logger is not in the declared inventory; the parser has drifted");
 
   const helpers = policyHelpers();
@@ -356,7 +405,10 @@ test("the inventory, the policy helpers and the commands are all found", () => {
 
 test("every declared function is explicitly revoked from PUBLIC and from anon", () => {
   const revoked = new Map<string, Set<string>>();
-  for (const s of aclStatements("revoke")) {
+  // Every migration: the question is whether the function is revoked ANYWHERE,
+  // not whether one file did it. `20260731f` revokes `deal_room_display_label`,
+  // and reading `20260730b` alone would have reported it as never revoked.
+  for (const s of aclStatements("revoke", allAclCode)) {
     if (!revoked.has(s.sig)) revoked.set(s.sig, new Set());
     for (const r of s.roles) revoked.get(s.sig)!.add(r);
   }
@@ -376,7 +428,7 @@ test("every declared function is explicitly revoked from PUBLIC and from anon", 
 
 test("no function is revoked that the schema does not declare, and none is omitted", () => {
   const declared = declaredFunctions();
-  const revokedSigs = new Set(aclStatements("revoke").map((s) => s.sig));
+  const revokedSigs = new Set(aclStatements("revoke", allAclCode).map((s) => s.sig));
 
   const unexpected = Array.from(revokedSigs)
     .filter((sig) => !declared.has(sig))
@@ -464,8 +516,16 @@ test("a member calling the logger has no path: it is in neither allowlist", () =
  * already-executed file to have known the future.
  */
 function effectiveAuthenticatedGrants(): Set<string> {
-  const effective = new Set(Array.from(declaredFunctions())); // Supabase default: all 23
-  for (const code of [rlsCode, aclCode, aclCCode, aclDCode]) {
+  const effective = new Set(Array.from(declaredFunctions())); // Supabase default: all of them
+  // Every migration in date order, discovered rather than listed, for the same
+  // reason `declaredFunctions()` is. A revoke written in a migration this list
+  // did not name would be invisible, and the function would look member-callable
+  // when it is not - a false finding, which erodes the value of a true one.
+  const allCode = readdirSync("supabase/migrations")
+    .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+    .sort()
+    .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8").replace(/--[^\n]*/g, ""));
+  for (const code of allCode) {
     for (const s of aclStatements("revoke", code)) {
       if (s.roles.includes("authenticated")) effective.delete(s.sig);
     }
@@ -540,6 +600,8 @@ test("the migration text GRANTS authenticated nothing beyond the helpers and the
     `the allowlist should be 4 RLS helpers + 2 Storage policy helpers + 15 commands = 21, got ${allowed.size}`,
   );
 
+  // `aclCode`, not the every-migration default: the two assertions below are
+  // claims about what `20260730b` contains, and the message says so.
   const grantedToAuth = aclStatements("grant").filter((s) => s.roles.includes("authenticated"));
   const surplus = grantedToAuth
     .filter((s) => !allowed.has(s.sig))

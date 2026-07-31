@@ -208,6 +208,14 @@ const LATER_MIGRATIONS = readdirSync("supabase/migrations")
  * on a name that is neither declared by `20260729b` nor classified here.
  */
 const NEW_SINCE_20260729B: Record<string, string> = {
+  deal_room_display_label:
+    "20260731f (WRITTEN, NOT APPLIED): reads a member's name out of `profiles` " +
+    "for the participant row, because `profiles` is readable only to its owner " +
+    "and the counterparty was otherwise always \"A participant\". Called only " +
+    "from inside other SECURITY DEFINER commands, and the file revokes it from " +
+    "public, anon and authenticated - a member who could call it directly could " +
+    "enumerate names, which is exactly what option 1 avoided by not widening the " +
+    "policy.",
   deal_room_billing_append_only:
     "20260731e (WRITTEN, NOT APPLIED): the append-only trigger guard for " +
     "deal_room_billing_events, mirroring deal_room_events_append_only. It has no " +

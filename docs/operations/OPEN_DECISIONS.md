@@ -381,10 +381,32 @@ paid verification). Does **not** block LB-014, LB-001 or LB-009.
 
 ## OD-012 — Does a broker's Deal Branch count toward the branch price?
 
-**Status:** OPEN
+**Status:** **DECIDED — 31 July 2026. Yes: a broker's branch counts.**
 **Owner:** Giuseppe Funaro
-**Urgency:** Medium — it does not block launch, and it decides what members are charged, so it must be settled before Stage 6 puts a price on a screen
 **Raised:** 31 July 2026, by Stage 2 of the Deal Room transaction pricing programme
+**Decided:** 31 July 2026, same day
+
+### The decision
+
+The owner decided that a branch whose admitted counterparty is an
+**intermediary acting for a disclosed or controlled principal** is a billable
+principal-counterparty branch, and directed that the authority be amended so it
+stops contradicting itself.
+
+**Canonical record:** `PT-COMMERCIAL-2026-07-31-01`, **Amendment 1**, which
+rewrites section 7 condition 1 to say so explicitly. Implementation:
+`BILLABLE_PARTICIPANT_CLASSES` in `lib/deal-room/pricing.ts`, pinned by the named
+test *"a broker fronting a principal counts - settled by the owner, OD-012"*.
+
+**No behaviour changed.** The constant already held
+`["principal", "intermediary"]` pending this decision, so the amendment confirms
+the reading rather than altering what anyone would be charged.
+
+**Unblocks:** Stage 6 of `docs/plans/active/deal-room-transaction-pricing.md`.
+
+The original question and both readings are preserved below.
+
+---
 
 ### Decision required
 
@@ -435,5 +457,7 @@ answer is the opposite, say so and the constant loses `intermediary`.
 
 ### Blocks
 
-Stage 6 of `docs/plans/active/deal-room-transaction-pricing.md` — a price cannot
-go on a screen while it is undecided. Does not block Stages 3 to 5.
+~~Stage 6 of `docs/plans/active/deal-room-transaction-pricing.md` — a price cannot
+go on a screen while it is undecided. Does not block Stages 3 to 5.~~
+**Resolved 31 July 2026. Stage 6 is unblocked by this decision** (it still needs
+the Design Constitution work and LB-014's classification).
