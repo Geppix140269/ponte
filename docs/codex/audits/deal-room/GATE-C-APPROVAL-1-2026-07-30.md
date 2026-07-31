@@ -1620,3 +1620,98 @@ Teardown clean. Production unchanged: 10 users, 7 listings with 2 approved, ever
 - Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains
   unauthorised.
 
+---
+
+# Rendering the surfaces against a live room, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - render the surfaces against a live room.
+**Outcome:** **a live room was built, its data proved, and taken down. The pages
+were NOT rendered.** One blocker, and it is not ours to remove.
+
+## 61. The blocker: the site access wall
+
+`middleware.ts` gates every request behind Basic auth, unconditionally - it is the
+first statement of `middleware()`, with no exemption for `NODE_ENV`, for localhost
+or for any path. Only the password's SHA-256 is committed; the plaintext is in
+neither the repository nor `.env.local`. **Without it no page can be rendered
+anywhere, locally or otherwise.**
+
+The recorded rule is explicit: *never remove or weaken the gate to capture
+evidence*. It was not weakened, and no attempt was made to guess the password.
+
+The capture needs one thing from the owner:
+
+```
+PONTE_SITE_PASSWORD=... npx playwright test e2e/deal-room-surfaces.spec.ts
+```
+
+## 62. Everything that does not depend on it was done
+
+**`scripts/deal-room-live-room.mjs`** stands a real room up and takes it down: two
+members, a published Deal, an invitation, the four-agreement admission gate, an
+agreed procedure, an evidence item carried through clarification and acceptance,
+and an open blocker. It writes the ids and each member's session cookies to a
+gitignored manifest - the cookies produced by `@supabase/ssr` itself rather than
+hand-assembled, so the encoding is whatever the installed version uses.
+
+Three things it does deliberately:
+
+- **The listing is published, then archived a few milliseconds later.**
+  `deal_room_propose` refuses anything but a published Deal, and correctly so, but
+  `lib/board/live-deals.ts` selects the live board on that same status. On 31 July a
+  fixture listing left `approved` put two fictional Deals in front of members for
+  the length of a run. The room keeps its own `deal_snapshot` and no Deal Room
+  surface reads the listing back.
+- **A failed build removes what it had already created**, and says whether that
+  succeeded. Three builds failed while it was being written - an unpublished Deal, an
+  unknown interest route, an unknown blocker category - and each left nothing behind.
+  The proof fixture's original teardown was never exercised, and the run that finally
+  exercised it put four accounts and two rooms into production permanently.
+- **`remove` and the failure path are one function**, so they cannot drift.
+
+**`e2e/deal-room-surfaces.spec.ts`** captures the twelve surfaces at 1280x900 and
+390x844, as **both parties**. That last point is the lesson of the surface review:
+capturing only the initiator would have photographed a procedure page that looked
+perfectly correct while the counterparty's said "A required approver". It asserts
+each page actually rendered - a 401, a 404 from the flag being off, an allowlist miss
+and an error boundary all photograph beautifully.
+
+`e2e/deal-room-bridge.spec.ts` keeps its job and its rationale is corrected: a single
+room is in one state at a time, and blocked, paused, read-only and ready-to-proceed
+cannot be reached on demand. The two are complements.
+
+## 63. What the live room proved, without a browser
+
+The room was built, queried as each member through RLS exactly as a browser would,
+and removed. This proves the derivations the surfaces render, though not their
+layout:
+
+| | initiator | counterparty |
+|---|---|---|
+| participant rows visible | **3** | **2** |
+| people | **2** | **2** |
+| Bridge entries drawn | **2** | **2** |
+| approvers the procedure page can name | **2 of 2** | **2 of 2** |
+| `invitationSent` | true, from the workspace leaving `draft` | true |
+
+Read against the defects the review found: the old code would have drawn the
+initiator **three** Bridge entries and told them "3 participants", and before
+`20260731d` the counterparty could have named **1 of 2** approvers. The invitation
+page's count is 2 where it would have been 3.
+
+## 64. No production change
+
+The room was removed through the same Management-API path as the proof fixture's
+teardown. After it: 10 users, 7 listings with 2 approved and 0 archived, every
+`deal_room_*` table at 0, 0 Storage objects,
+`deal_room_activity_append_only` at `tgenabled = 'O'`, ledger 52. The manifest,
+and the session tokens in it, are gone.
+
+## 65. What remains unproved, and is the point
+
+**Nobody has seen these pages.** Layout, contrast, wrapping at 390px, the Bridge's
+geometry against real names, whether the copy reads sensibly beside real values,
+whether the reduced-motion path is right - none of it is established by any of the
+above. The data is right. The rendering is unexamined, and stays unexamined until
+the password is supplied.
+
