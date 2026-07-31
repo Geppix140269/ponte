@@ -196,7 +196,7 @@ being opened**, not before.
 - Footer blurb and the two `/about` paragraphs corrected. The `/about` legal-entity paragraph names the operating companies and their remuneration basis — **treat it as a legal text, not copy**, and get it confirmed.
 - Design Constitution applies in full: approved tokens and components only, desktop and 390 × 844 evidence, reduced motion, owner design approval.
 
-### Stage 7 — Multilingual billing notices
+### Stage 7 — Multilingual billing notices ✅ **delivered 31 July 2026 (rendering only; sending is Stage 4b)**
 
 Activation, additional-branch, expiry and reactivation notices in English,
 Spanish, Russian, Simplified Chinese and Modern Standard Arabic. Money stays
@@ -542,6 +542,58 @@ page that never had a purchase button.
 activation offer, the additional-branch charge and the administrator-only
 breakdown. They render state from `charging.ts` and `period-lifecycle.ts` against
 tables that do not exist in production, and they belong with Stage 4b.
+
+### Stage 7 — multilingual billing notices, 31 July 2026
+
+**Delivered.** `lib/deal-room/billing-notices.ts` renders the four period events
+— activation, additional branch, expiry, reactivation — in all five languages of
+authority §13, proved by `lib/deal-room/__tests__/billing-notices.test.ts`
+(29 assertions).
+
+**The design decision worth recording.** Authority §13 requires Arabic to
+present right-to-left while preserving left-to-right trade identifiers. A bare
+`$79 USD` dropped into Arabic prose does not survive the Unicode bidi algorithm:
+`$` is directionally neutral and migrates to the wrong end of the amount. The
+fix is isolates (U+2066 / U+2069), and the decision was to make forgetting them
+impossible rather than to document them as a rule. Every caller-supplied value
+reaches a notice through one `substitute` function that isolates when the target
+language is RTL, so **no code path can emit an un-isolated value**. The single
+literal Latin token in the Arabic templates, the company name, is wrapped where
+it is defined.
+
+The test states this as a property rather than a checklist: walk every Arabic
+rendering and assert no Latin letter appears at isolate depth zero. That covers
+the room reference, the amount, the currency code and the company name at once,
+and it fails the moment anyone adds an un-isolated Latin word. Bare Western
+digits are deliberately left alone: European numbers resolve correctly inside an
+RTL run, so isolating them would add bytes and change no glyph.
+
+**Dates are ISO `YYYY-MM-DD`, not `Intl`-formatted.** A period boundary is a
+contractual fact. `2026-08-30` is unambiguous in all five languages where
+`08/30/2026` is not, and locale formatting would make the wording depend on the
+ICU data compiled into whichever runtime sent the notice, so two participants
+could be told the same period ended on two different-looking days.
+
+**Non-disclosure is enforced by the type, not the wording.** §10 forbids
+disclosing branch identity or count. The notice fact types carry no branch
+identifier, counterparty name or branch count — there is no field to put one in
+— and a test reads the source to assert none has been added.
+
+**Mutation-tested rather than trusted.** All 29 assertions passed on the first
+run, which is not evidence. Three mutations were applied and each was caught:
+removing the RTL isolation in `substitute` (caught by the Arabic property),
+un-isolating the company name in the Arabic templates (same test), and
+hard-coding the base price instead of formatting the given amount (caught by
+three separate assertions).
+
+**Scope held.** Rendering only. Nothing sends these notices: delivery is the
+webhook in Stage 4b and stays behind the Stripe owner gates. A stage-boundary
+test asserts nothing under `app/` or `components/` imports the module, so wiring
+it later has to be a deliberate act.
+
+**Not attempted:** the notice *delivery* path, any email template, any provider
+call, and the per-participant language preference lookup, which reads a table
+`20260731e` has not created in production.
 
 ## 12. Decisions and discoveries
 
