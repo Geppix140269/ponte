@@ -1,6 +1,26 @@
 # ADR-0004 — The master Deal Room is Ponte's primary monetisation boundary
 
-- **Status:** Accepted by the product owner; effective when merged
+> ## ⚠ Partly superseded by ADR-0020 — 31 July 2026
+>
+> **The core decision stands and is strengthened:** the master Deal Room is
+> Ponte's monetisation boundary, and publishing a complete eligible structured
+> Deal is free. ADR-0020 goes further — the Deal Room is now Ponte's *only* paid
+> product.
+>
+> **Superseded within scope:** the entitlement-source list (Portfolio
+> subscription, Ponte Credits, Starter access); the Consequences paragraph making
+> paid verification, investigation and Ponte Desk services attachable to a room;
+> the Relationship-to-Ponte-Desk section as a *commercial* layer; the
+> five-subscription-slots framing; and the Rejected-alternatives entry "One paid
+> room per counterparty branch", which ADR-0020 partly reverses — five
+> concurrently active principal-counterparty branches are included and each
+> further concurrent branch costs $15 USD to a $199 USD cap, while provider,
+> adviser and internal workspaces remain unlimited and free.
+>
+> The price is **$79 USD for 30 active days**, USD only. See
+> `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** **Partly superseded on 31 July 2026** by ADR-0020 / `PT-COMMERCIAL-2026-07-31-01`. Originally accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Source issue:** #52

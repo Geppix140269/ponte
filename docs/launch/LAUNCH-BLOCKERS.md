@@ -16,6 +16,67 @@ Discovery alone does not make an issue a blocker. The repository owner has final
 | LB-011 | The product-entry review exposes the commercial-terms schema as its interface | 2026-07-30 | Start a Deal: the review before draft creation, for every product journey | Found by the platform UX audit. The review screen (`/dev/product-intake?only=review`, and the live journey after identifying a product) printed all thirteen `CommercialTerms` as empty "Not stated" rows, each with its own Add control, and warned that thirteen terms were "still unstated" - including contract-level fields (named counterparties, signatories, contract term) before any draft existed. This is the schema-as-interface pattern the North Star §3 forbids: ten-plus empty fields at once, repeated Save links per row, optional fields as unresolved problems, contract detail before a draft. The front-door intake had been redesigned; the review behind it had not. Evidence: `docs/codex/audits/2026-07-30-platform-ux-audit/README.md` §6, with before/after frames in that folder's `evidence/` | Repository owner (platform UX launch-gate brief) | **Fixed on this branch.** `components/products/intake/ReviewPanel.tsx` now shows the product understanding and any stated terms directly, and collapses the optional terms behind one control, grouped into three clear sections (Quantity and delivery, Pricing and payment, Contract detail), described as optional rather than as a problem. The "still unstated" warning is removed. The primary action stays "Confirm and create the draft". Only existing tokens and approved component classes; no Design Constitution exception. `middleware.ts`, taxonomy and schema untouched | #115 | **Resolved on the branch.** `components/products/intake/__tests__/intake-ui.test.tsx` (26 assertions) holds the four-provenance and every-term-reachable contracts under collapse; `e2e/product-entry-ux.spec.ts` (5) proves the collapsed default, hidden-from-AT optional fields, mouse and keyboard operability, grouped expansion, quantity/unit consistency and no 390px overflow, with rendered before/after evidence. `npm run verify` exits 0. The same component is deployed to `deploy-preview-115`; the review was not driven end-to-end there because the dev gallery is production-disabled. |
 | LB-013 | A live transactional email routed members into the retired obsidian listing editor, and opened a blank form rather than their saved listing | 2026-07-30 | PUBLISH: the "Complete your listing" email and every listing edit/resume CTA | Verified on `main` at `b730084`. `lib/email/templates.ts` built `editLink` as `/marketplace/new?id=${id}`; that page rendered the legacy `ListingForm` inside the obsidian chrome and read `searchParams.edit`, **not** `id`, so the "Complete your listing" CTA opened a **blank new form** rather than the saved listing the email names. Five member CTAs across five templates resolved through the same helper. `components/ChromeGate.tsx` bars `/structure` but not `/marketplace/new`, so the destination also carried the retired lowercase identity and the dark `ListingForm`. The current family-specific Structure composer at `/structure?edit=<uuid>` already resumes a saved record (ownership enforced by query and RLS, family reconstructed, unreadable record failing closed), so no data-contract change was required | Giuseppe Funaro | **Fixed on this branch; production verification outstanding.** `editLink` now points at `/structure?edit=<id>`, the canonical constitutional resume destination, a real route in every deployment. `/marketplace/new` renders nothing: it is quarantined to a redirect through the pure `legacyNewListingTarget` - a valid `id` or `edit` uuid resumes at `/structure?edit=<uuid>`, everything else opens `/structure` fresh, and a malformed or repeated identifier is discarded. Every in-app link to the retired editor was repointed to `/structure`. The legacy `ListingForm` is now unreachable and its physical removal is logged as PL-030 | #119 | **Repository fix verified; production end-to-end outstanding.** `lib/email/__tests__/email-system.test.ts` pins that every editor CTA resolves to `/structure?edit=<id>` and that no rendered email contains `/marketplace/new`; `lib/marketplace/__tests__/legacy-redirect.test.ts` pins the quarantine contract (id, edit, none, malformed, repeated, empty); `lib/structure/__tests__/resume.test.ts` pins family-correct resume. A `check-governance.mjs` ratchet fails the build if any new source file links the retired editor. **Outstanding:** production deployment and a real email-to-composer run on the live site, and the rendered desktop/390×844 evidence under `docs/codex/audits/constitution-rebuild/evidence/legacy-editor-quarantine/` |
 
+### LB-014 — PROPOSED — The public fee page sells a commercial model the owner has retired, and never names the only paid product
+
+| Field | Record |
+|---|---|
+| **Discovered** | 2026-07-31 |
+| **Core journey or system** | The public commercial surface: `/pricing`, the site-wide footer on every page, and `/about` |
+| **Classification** | **PROPOSED. Recommended as a Launch Blocker; the owner has not classified it.** Recorded here rather than in the backlog because a public misstatement of commercial terms is a legal and commercial-representation risk rather than an engineering defect, and `AGENTS.md` reserves the call to the owner |
+| **Owner** | Giuseppe Funaro |
+| **Evidence** | `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md` §1 and §8 |
+| **Authority** | `PT-COMMERCIAL-2026-07-31-01` §15 and §19; ADR-0020 |
+| **Status** | **Open, unclassified. Deliberately not fixed by the PR that recorded it**, which is authority reconciliation only and is explicitly forbidden from changing `/pricing` |
+
+**What is wrong.** `app/[locale]/pricing/page.tsx` renders four engagements from
+the `pricing` message namespace:
+
+| Panel | Published as | Authority §15 |
+|---|---|---|
+| The Marketplace | Free | Consistent |
+| **Credits** | **2 credits · per counterparty check** | Prohibited: credit packs / usage currency, **and** paid verification |
+| **The Desk, per deal** | **Success fee · % agreed in writing · paid on closing** | Prohibited: success fee, percentage of transaction value |
+| **The Desk, on your side** | **Retainer · monthly · scoped to the mandate** | Prohibited: retainer, public Ponte Desk package |
+
+Three of four panels publish monetisation the binding authority forbids. **The
+Deal Room — Ponte's only paid product — is not mentioned on the page at all**, so
+the required public statement in authority §19 is absent and the page is exactly
+the multi-plan comparison grid §19 forbids.
+
+It is not confined to one page. `messages/_fragments/footer.json` `blurb` carries
+*"on a success fee or retainer"* into the footer of **every page on the site**,
+and `messages/_fragments/about.json` repeats credits and success fees three
+times — including in the legal-entity paragraph, which states that the desk *"is
+remunerated by success fee on closed deals"*. That paragraph names two
+incorporated companies and their remuneration basis, so it is a legal text and
+not a copy edit.
+
+`components/VerifyForm.tsx:413` also sends a member short of credits to
+`/pricing` to top up, and `lib/navigation/route-manifest.ts:183` describes
+`/advisory` as redirecting to *"the success-fee option on /pricing"* — the route
+authority itself names a retired engagement.
+
+**Why it is proposed as a blocker.** Launching the paid Deal Room while the
+public fee page offers a success fee and a retainer means publishing commercial
+terms the owner has decided Ponte does not offer, and omitting the one it does.
+A member could reasonably rely on either. That is the "material legal or
+compliance barrier" limb of the blocker test rather than the broken-journey limb:
+nothing crashes, and every route still works.
+
+**Why it might not be.** The site sits behind a Basic-auth wall, no member can
+reach it today, and the Deal Room is behind an unset flag, so nobody can yet buy
+the product the page fails to describe. On that reading the page is wrong but not
+yet harmful, and the fix belongs with Stage 6 of the pricing programme. **The
+owner decides.**
+
+**What closing it requires.** Stage 6 of
+`docs/plans/active/deal-room-transaction-pricing.md`: `/pricing` rebuilt to one
+product and one formula carrying authority §19's statement; the footer blurb
+corrected; the three `/about` paragraphs corrected with the legal-entity sentence
+confirmed rather than edited; the `VerifyForm` top-up path resolved alongside
+OD-011; and the route-manifest note updated. Design Constitution applies in full,
+with desktop and 390 × 844 evidence and owner design approval.
+
 ### LB-012 — Ponte cannot prove its authentication or transactional email arrives, renders or comes from Ponte
 
 | Field | Record |
@@ -178,10 +239,11 @@ not yet given.
 
 ## Reserved identifiers
 
-**Next free identifier: `LB-014`.**
+**Next free identifier: `LB-015`.**
 
 | ID | Held by |
 |---|---|
+| `LB-014` | **in use.** The ADR-0020 authority-reconciliation PR: `/pricing`, the footer blurb and `/about` publish a retired commercial model. **Proposed, awaiting owner classification** — an entry recorded as proposed still holds its identifier, because renumbering it later would break every citation |
 | `LB-007` | **resolved.** PR #107, Market Signals search, closed after live owner verification on 30 July 2026 |
 | `LB-008` | **in use.** The `anon` EXECUTE Deal Room defect (PR #113, on `main`) |
 | `LB-009` | **in use.** PR #112, multilingual Deal Room commercial discussion and interpretation (on `main`) |

@@ -1,0 +1,306 @@
+# ExecPlan — Deal Room transaction infrastructure pricing
+
+**Status:** Stage 1 delivered (this PR). Stages 2–9 not started and not authorised.
+**Opened:** 31 July 2026
+**Owner:** Giuseppe Funaro
+**Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
+**Decision record:** `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`
+**Inventory:** `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md`
+
+> **Nothing in this plan is approval to perform a production action.** Migrations,
+> Stripe configuration, secrets, environment values, feature flags, deployments,
+> charging and merges each require separate explicit owner approval, per
+> `AGENTS.md` stop conditions and authority §20–§21.
+
+---
+
+## 1. Purpose and user outcome
+
+A member with a real commercial opportunity can pay **$79 USD** to open a Master
+Deal Room for 30 active days, run up to five confidential principal-counterparty
+negotiations inside it, add further concurrent branches at **$15 USD** each to a
+**$199 USD** ceiling, work in any of five languages, and keep a permanent
+read-only record afterwards — without a membership, a credit balance, a
+subscription, a commission or a percentage of their trade.
+
+Ponte, in turn, has exactly one thing to sell, one formula to explain and one
+number to forecast.
+
+**What is true today:** none of it. The Deal Room progression loop exists and is
+proved against production (LB-001, 94/94 at Approval 3), but it is behind an
+unset flag, and the commercial layer described above does not exist in any form.
+
+---
+
+## 2. Authority consulted
+
+- `PT-COMMERCIAL-2026-07-31-01` — the governing commercial decision, read in full
+- ADR-0020 — this programme's decision record and supersession map
+- `PT-PRODUCT-2026-07-27-01` Deal Room Product Contract v1; `PT-PRODUCT-2026-07-27-02` Deal-to-Room Branching Model
+- ADR-0003, ADR-0004, ADR-0005, ADR-0006 (the last three superseded within their commercial scope by ADR-0020)
+- ADR-0009 (Deal Room technical architecture), ADR-0016 (multilingual), ADR-0018 (member-business verification is free)
+- `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` v1.1 with ADR-0002, ADR-0010, ADR-0015
+- `AGENTS.md`, `docs/codex/SOURCE-OF-TRUTH-SOP.md`, `docs/codex/00-START-HERE.md`
+- `docs/codex/CURRENT-STATE.md`, `DATABASE-STATE.md`, `FEATURE-FLAGS.md`
+- `docs/launch/LAUNCH-BLOCKERS.md`, `docs/launch/POST-LAUNCH-BACKLOG.md`, `docs/operations/OPERATIONS_LOG.md`, `docs/operations/OPEN_DECISIONS.md`
+
+---
+
+## 3. Current implementation discovered
+
+The full record is the inventory. In one paragraph: `/pricing` sells Credits, a
+success fee and a retainer and never mentions the Deal Room; the only Stripe
+checkout in the repository sells credit packs with inline `price_data` and
+references no Stripe Product or Price; the webhook is signature-verified,
+server-side and idempotent but fulfils credits; `credit_ledger` /
+`credit_purchases` / `spend_credits` / `credit_balance` and a 3-credit signup
+trigger are live with real production rows; `counterparty_check` still charges 2
+credits while `member_business` is free under ADR-0018;
+`deal_room_entitlements.kind` admits only `starter`, `sponsored` and `waived` and
+carries no money at all; `deal_room_sub_rooms.kind` and
+`deal_room_participants.participant_class` contain the distinctions a
+billable-branch predicate needs, but no such predicate exists; and the five
+supported Deal Room languages already match the five in the price exactly.
+
+**Reusable seams**, so later stages do not reinvent them:
+
+- the webhook's idempotency pattern (pending row before the session, unique
+  `stripe_session_id`, status-guarded fulfilment, 500-to-retry);
+- `isStripeConfigured()` / `getStripe()`, which keep Stripe out of the build;
+- `deal_room_entitlements`' separation of entitlement state from room lifecycle
+  state, which is already what read-only continuity needs;
+- `lib/ponte/progress.ts`-style pure-module discipline for the pricing engine;
+- `lib/deal-room/language.ts` for billing-notice language resolution.
+
+---
+
+## 4. Scope
+
+**In scope across the programme:** the pricing engine, the branch-counting
+contract, billing records and entitlements, Stripe checkout and webhook, expiry
+and reactivation, the public pricing page and Deal Room billing surfaces,
+multilingual billing notices, retirement of credits and paid verification, and
+the production preflight and rollout gates.
+
+**Explicitly excluded, permanently:** memberships, plans, Starter rooms,
+Portfolio subscriptions, credit packs, paid verification badges, public Ponte
+Desk packages, retainers, commissions, success fees, percentage-of-transaction
+charges, per-seat / per-document / per-message / per-gigabyte / translation
+charges, euro-denominated Deal Room prices, and automatic currency conversion.
+
+**Excluded from this PR (Stage 1):** every runtime change, `/pricing`, credit
+removal, verification behaviour, migrations, RLS, Stripe objects, secrets,
+environment values, charging, production data and deployment.
+
+---
+
+## 5. Product rules the implementation must not get wrong
+
+1. **The client never determines an amount.** Price is computed server-side from
+   server-held state and re-verified at fulfilment.
+2. **A browser return is not a payment.** Write-enablement follows a verified,
+   idempotent, server-side confirmation only (authority §9).
+3. **A bill must not disclose branch structure.** No amount, line item,
+   notification, receipt or error may let a branch participant infer that other
+   branches exist, how many, or who is in them (authority §4, §10). This
+   constrains the *wording* of every billing surface, not only its permissions.
+4. **Only authorised Master Deal Room administrators** may see the active-branch
+   count, purchased capacity and total room billing breakdown (authority §11).
+5. **Payment grants no authority.** The billing sponsor gains no commercial,
+   procedural, ownership, disclosure or approval right (authority §11).
+6. **A pre-activation invitation never charges.** Unanswered, declined and
+   expired invitations are free, always (authority §8).
+7. **Expiry is read-only, never deletion**, and a room with no branch selected
+   for resumption stays readable without payment (authority §12).
+8. **Integer cents, USD only.** No floats, no conversion, no second currency.
+   Write `USD` where `$` alone could be ambiguous.
+9. **Closing a branch releases a slot and refunds nothing**; the slot may be
+   reused inside the paid period at no further charge (authority §7).
+10. **Above $199 in a period, further activations are free** in that period
+    (authority §10).
+
+---
+
+## 6. Staged programme
+
+Each stage is one reviewable PR unless stated. **Stages 2 onward are not
+authorised by this plan.**
+
+### Stage 1 — Authority reconciliation, inventory and plan *(this PR)*
+
+Deliver ADR-0020 with the supersession map; mark the four superseded commercial
+authorities and ADR-0004/0005/0006 without deleting them; update the ADR index,
+Authority Manifest, Start Here, Current State, Decision Log, Open Decisions and
+launch records; publish the verified inventory; open this plan.
+**No runtime, schema, Stripe, production or deployment change.**
+
+**Exit:** `npm run verify` green; owner review.
+
+### Stage 2 — Domain model, branch-counting contract and pure pricing engine
+
+The first substantive design task, and the one most likely to be got wrong.
+
+- A **pure** `lib/deal-room/pricing.ts`: the constants, `roomPeriodPriceCents(activeBranchCount)`, the cap, and the additional-branch delta. No I/O, no database, no clock.
+- A **billable-branch predicate** derived from authority §7's five conditions and mapped explicitly onto `deal_room_sub_rooms.kind`, `deal_room_sub_rooms.state`, `deal_room_participants.participant_class`, `deal_room_participants.state` and the agreement-acceptance join. Every inclusion and exclusion in §7 gets a named test.
+- The exclusion of provider, adviser and internal workspaces asserted directly.
+- The published price table (1–5 → $79 … 13+ → $199) pinned as a fixture.
+
+**Exit:** tests only. No schema, no route, no UI, no charge.
+
+### Stage 3 — Billing records and entitlements
+
+- Migration **written, not applied**: a `paid` entitlement kind, room-period rows carrying currency, period price in cents, purchased branch capacity, period start and end, and a payment reference; a billing-event record.
+- Idempotency and replay safety designed in, not added later.
+- `STARTER_LIMITS_PROPOSED` retired behind the new model; `activeDays: 30` retained as the room period.
+- `docs/codex/DATABASE-STATE.md` updated with the written-not-applied state.
+
+**Owner gate:** applying the migration is a separate approval.
+
+### Stage 4 — Stripe checkout and webhook
+
+- A room-period checkout and an additional-branch checkout, both server-priced.
+- Webhook fulfilment reusing the existing idempotency pattern; cap-aware, so a period already at $199 accepts no further branch charge.
+- Failure, retry, duplicate-session and out-of-order-event behaviour specified and tested.
+- No Stripe object created. Catalogue creation is Stage 9.
+
+**Owner gates:** Stripe catalogue, secrets, webhook endpoint configuration.
+
+### Stage 5 — Expiry, reactivation and the commercial ratchet
+
+- Expiry → read-only, nothing deleted, participants retained.
+- Reactivation as a new paid 30-day period priced from the branches selected to remain active.
+- A room with no branch selected for resumption stays readable, free.
+- No silent auto-renewal.
+
+### Stage 6 — Public pricing and Deal Room billing surfaces
+
+- `/pricing` rebuilt to **one product and one formula**, carrying authority §19's required statement verbatim in substance. **No multi-plan comparison grid.**
+- Activation offer wording from authority §9.
+- Additional-branch charge shown exactly and in advance (§10), worded so it discloses no branch identity or count.
+- The administrator-only billing breakdown (§11).
+- Footer blurb and the two `/about` paragraphs corrected. The `/about` legal-entity paragraph names the operating companies and their remuneration basis — **treat it as a legal text, not copy**, and get it confirmed.
+- Design Constitution applies in full: approved tokens and components only, desktop and 390 × 844 evidence, reduced motion, owner design approval.
+
+### Stage 7 — Multilingual billing notices
+
+Activation, additional-branch, expiry and reactivation notices in English,
+Spanish, Russian, Simplified Chinese and Modern Standard Arabic. Money stays
+`USD`; Arabic preserves LTR trade identifiers and amounts inside RTL text
+(authority §13). Depends on Stages 4–6.
+
+### Stage 8 — Retire credits and paid verification
+
+Staged and reversible, in this order: stop new grants (the signup trigger), stop
+new purchases (checkout and packs), remove member-facing balance/cost/top-up
+surfaces, then decide the ledger's fate. **`credit_ledger` records money real
+members paid and must be preserved or migrated, never dropped.** The
+`counterparty_check` half is blocked on **OD-011**.
+
+### Stage 9 — Production preflight and rollout gates
+
+Read-only production preflight; migration application; Stripe catalogue and
+webhook configuration; environment and secrets; tax and legal-entity
+confirmation; customer terms and refund policy; a rollback runbook; then, and
+only then, charging. Every item is its own owner approval.
+
+---
+
+## 7. Migration plan
+
+No migration is written or applied by Stage 1. From Stage 3 onward every
+migration must be additive, idempotent where practical, based on the recorded
+production state in `DATABASE-STATE.md`, inspected against the live schema before
+proposal, and recorded in the ledger with its SHA-256. The existing
+`deal_room_*` cluster is extended, never rewritten: it has been applied to
+production and carries proved ACL and RLS contracts.
+
+`credit_ledger` and `credit_purchases` are **retention-first**. No plan step
+deletes a financial record.
+
+---
+
+## 8. Experience states
+
+Every billing surface must answer: not yet payable; payable with the exact
+amount; payment in progress; payment failed; paid and write-enabled; at the cap;
+additional branch required with its exact cost; period expiring; expired and
+read-only; reactivating; waived; and loading, error, blocked, resumed and
+reduced-motion for each. Mobile at 390 × 844 is reviewed before desktop
+approval.
+
+---
+
+## 9. Validation
+
+`npm run verify` at every stage, with any environment failure recorded separately
+from a repository failure. Pure-unit tests for the engine and the branch
+predicate; replay and idempotency tests for the webhook; access-control tests
+proving no billing surface leaks branch count across an isolation boundary;
+five-language fixtures with Arabic RTL evidence; desktop and 390 × 844 evidence
+for every surface; and production acceptance only after separately authorised
+activation.
+
+**A test that proves a price is correct is not a test that proves a bill is
+safe.** The disclosure tests in Stage 2 and Stage 6 are the ones that matter
+most.
+
+---
+
+## 10. Rollout and safe-disable
+
+Charging is introduced behind an explicit gate, off by default, with the
+`waived` entitlement kind remaining available throughout so the Deal Room loop
+can be exercised without a charge. Safe disable at every stage means: no new
+charge is created, existing paid periods run to their end, and nothing becomes
+read-only earlier than it would have.
+
+---
+
+## 11. Progress log
+
+**31 July 2026 — Stage 1 delivered.** ADR-0020 created with the fifteen-row
+supersession map. Four commercial authorities and three ADRs marked superseded
+within scope, none deleted. ADR index, Authority Manifest, Start Here, Current
+State, Decision Log, Open Decisions and both launch registers updated. Inventory
+published. LB-014 proposed; PL-032 to PL-038 opened; OD-011 opened.
+`npm run verify` exits 0. No runtime, schema, Stripe, production or deployment
+change.
+
+---
+
+## 12. Decisions and discoveries
+
+1. **The authority is not yet on `main`.** PR #155 was open when this plan was
+   written, so every citation of `PT-COMMERCIAL-2026-07-31-01` points forward.
+   **This PR must merge after #155.** No competing copy of the authority was
+   created.
+2. **The public site was selling something no accepted authority described.**
+   Credits, a success fee and a retainer are on `/pricing` today; the four
+   accepted commercial authorities described a Starter room, a Portfolio
+   subscription and credit packs. Neither set matches the other, and now neither
+   matches the owner's decision. This is the single largest gap the inventory
+   found.
+3. **`counterparty_check` is a genuine ambiguity, not an oversight.** Authority
+   §15 forbids "paid verification" flatly; ADR-0018 spent its length arguing that
+   checking someone else's company is a different act from verifying your own.
+   Both readings are defensible and an agent must not pick. **OD-011.**
+4. **The branch vocabulary was already right.** `sub_rooms.kind` and
+   `participants.participant_class` carry the exact distinctions the price needs
+   and predate the authority by two days. Verify against §7 rather than assume.
+5. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
+   ADR-0008, ADR-0009, ADR-0016, both ADR-0018 files and ADR-0019 have no row.
+   Recorded as an observation; back-filling accepted decisions is an owner
+   action and was not done.
+
+---
+
+## 13. Final evidence
+
+Stage 1 only. Baseline `origin/main` `57389826ca8f3acec703f3a5553a5694ae05f8d1`,
+clean worktree, `npm run verify` exit 0 before and after the change.
+Documentation only: no application file, schema file, migration, script or
+message fragment is modified by this PR.
+
+**Limitations, stated plainly.** Nothing in this plan is implemented. The pricing
+model is recorded, not built and not live. No production system was inspected,
+changed or charged.

@@ -1,6 +1,30 @@
 # ADR-0005 — Free structured Deals, paid master Deal Rooms and private sub-rooms
 
-- **Status:** Accepted by the product owner; effective when merged
+> ## ⚠ Partly superseded by ADR-0020 — 31 July 2026
+>
+> **Almost all of this ADR stands, and the branching hierarchy it defines is the
+> foundation the new pricing model is built on.** Free structured Deals, the
+> master-room/sub-room hierarchy, the role separation, the sponsored-guest
+> principle, the privacy and competition boundary, the duplicate-master-room rule
+> and the parent-Deal lifecycle are all unchanged and binding.
+>
+> **One rule is superseded:** *"Private sub-rooms do **not** consume additional
+> master Deal Room slots"*, and the Commercial-consequence section built on it.
+> Under ADR-0020 a Master Deal Room includes **five** concurrently active private
+> **principal-counterparty** Deal Branches, and each further concurrent branch
+> costs **$15 USD** for the current room period, capped at **$199 USD** per room
+> per 30-day period. **Provider, adviser and internal workspaces remain unlimited
+> and carry no charge**, so the old rule survives intact for them.
+>
+> Also superseded: the subscription-slot and credit framing throughout
+> (five subscription slots, credit-funded activation, guest-organisation charges).
+> A room period is bought directly, in **USD**, for 30 days, at **$79 USD**.
+>
+> The privacy boundary now has a commercial edge: **a billing total must never
+> reveal branch count** to a participant not authorised to see the branch
+> structure. See `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** **Partly superseded on 31 July 2026** by ADR-0020 / `PT-COMMERCIAL-2026-07-31-01`. Originally accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Source:** Dedicated Deal Room product-definition conversation

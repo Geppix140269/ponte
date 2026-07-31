@@ -2,6 +2,78 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 31 July 2026 - ADR-0020: the Deal Room is Ponte's only paid product, at $79 USD per 30 active days
+
+**Decision:** the owner replaced the entire 27 July commercial ladder with one
+product and one formula, recorded in
+`docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md`
+and reconciled into the repository by **ADR-0020**.
+
+> **Ponte Deal Room — $79 USD for 30 active days**, including five concurrently
+> active private principal-counterparty Deal Branches. Each additional
+> concurrently active branch costs **$15 USD** for the current room period, and
+> the total is capped at **$199 USD** per Master Deal Room per 30-day period.
+> USD only. English, Spanish, Russian, Simplified Chinese and Modern Standard
+> Arabic included.
+
+Everything upstream of protected Deal Room progression is free, and the free
+journey now runs all the way to activation: browsing, publishing, preparing a
+Master Deal Room, creating draft branches, inviting counterparties, accepting
+invitations and preparing for activation all cost nothing, with no entitlement
+and no organisation limit.
+
+**Retired outright**, and each mapped to its source document in ADR-0020's
+fifteen-row supersession map: Starter Deal Room access; Portfolio subscriptions;
+Ponte Credits; credit-funded rooms; paid verification; paid verification
+certificates and badges; public Ponte Desk packages; retainers; success fees;
+commissions; percentage-of-transaction pricing; euro-denominated Deal Room
+prices; unlimited commercially active principal-counterparty branches under one
+flat fee; multilingual surcharges and quotas; and the rule that every private
+sub-room is free regardless of principal-counterparty branch use.
+
+**What survives, and matters.** The branching hierarchy itself is untouched: one
+opportunity, one Master Deal Room, several isolated private negotiations beneath
+it. Provider, adviser and internal workspaces remain unlimited and free — the old
+"sub-rooms are free" rule is narrowed only for principal-counterparty branches.
+Payment still confers no commercial, procedural, ownership, disclosure or
+approval authority. Expiry is still read-only continuity and never deletion.
+ADR-0018 (member-business verification is free) and ADR-0016 (the multilingual
+product contract) both stand, and the authority now makes the five languages a
+commercial commitment as well as a product one.
+
+**Rationale.** The repository held four mutually incompatible commercial
+authorities, three commercial ADRs and a live public page selling a fourth thing
+none of them described. A contributor could reach at least four answers to "what
+does Ponte charge for?", and the one the public site gave — Credits, a success
+fee and a retainer — was not among the accepted authorities at all. The owner
+resolved it by deciding rather than by reconciling: one product, one formula, one
+currency.
+
+The price shape follows the product. A flat per-room fee cannot express that a
+room running thirty concurrent principal negotiations consumes materially more
+controlled-progression product than one running two; a per-branch fee with no
+allowance penalises exactly the behaviour the Deal Room exists to support. Five
+included branches and a $199 cap sit between those failures.
+
+**Affected areas.** ADR-0004 and ADR-0005 partly superseded; ADR-0006
+superseded. Four `PT-COMMERCIAL-2026-07-27-*` authorities marked superseded and
+preserved. Authority Manifest, Start Here, Current State, Open Decisions and both
+launch registers updated. Programme:
+`docs/plans/active/deal-room-transaction-pricing.md`. Inventory:
+`docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md`.
+
+**Status, stated plainly: nothing is implemented.** There is no pricing engine,
+no branch-counting predicate, no billing record, no `paid` entitlement kind, no
+Stripe object for a Deal Room and no charge. `/pricing` still publishes the
+retired model — recorded as proposed **LB-014** for owner classification. The
+paid `counterparty_check` conflicts with the authority's flat prohibition on paid
+verification and is **OD-011**, owner decision required. Seven post-launch
+tickets, **PL-032** to **PL-038**, index the build.
+
+**Sequencing note.** The authority file is delivered by **PR #155**, which was
+open when ADR-0020 was written, so no competing copy was created and the
+reconciliation PR must merge **after** #155.
+
 ## 30 July 2026 - ADR-0016 / ADR-0015 Stage 2 production handoff: the Task Completion Bridge and interaction tokens
 
 **Decision:** implemented the approved ADR-0016 (mobile action hierarchy and the

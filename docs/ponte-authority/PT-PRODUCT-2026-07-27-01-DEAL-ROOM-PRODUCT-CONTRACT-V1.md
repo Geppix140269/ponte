@@ -19,6 +19,15 @@ Structured Deal
 
 One master Deal Room consumes one commercial entitlement or subscription slot. Its private counterparty, provider, adviser and internal sub-rooms do not consume additional master-room slots. External guest organisations may consume included guest capacity or credits.
 
+> **Commercially superseded, 31 July 2026 (ADR-0020).** The product hierarchy
+> above stands; its *pricing* does not. There is no subscription slot, guest
+> capacity or credit. A Master Deal Room costs **$79 USD for 30 active days** and
+> includes **five concurrently active private principal-counterparty branches**;
+> each further concurrent branch costs **$15 USD** for the current period, capped
+> at **$199 USD** per room per 30 days. **Provider, adviser and internal
+> sub-rooms remain unlimited and free**, so the sentence above survives intact
+> for them. See `PT-COMMERCIAL-2026-07-31-01` and ADR-0020.
+
 This amendment is governed in detail by ADR-0005 and `PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`. Where the remainder of this first-issued contract uses “Deal Room” without distinguishing the hierarchy, interpret it as the master Deal Room and its authorised sub-rooms under those later records.
 
 ## 1. Purpose and authority
@@ -353,6 +362,13 @@ The first release excludes:
 - automatic external invitations or disclosures.
 
 Commercial entitlement for master Deal Room activation is required conceptually under ADR-0004 and ADR-0005. Exact prices and production charging remain separately unapproved.
+
+> **Updated 31 July 2026 (ADR-0020).** The prices are now decided:
+> `PT-COMMERCIAL-2026-07-31-01` sets $79 USD per 30 active days, five included
+> concurrently active principal-counterparty branches, $15 USD each thereafter,
+> capped at $199 USD, USD only. **Production charging remains unapproved and
+> unimplemented**, and every gate in authority §20 still requires separate owner
+> approval.
 
 ## 15. MVP acceptance standard
 

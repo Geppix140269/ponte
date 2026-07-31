@@ -1,6 +1,31 @@
 # Ponte Trade Deal Room Launch Pricing and Entitlement Model v1
 
-- **Status:** Proposed for product-owner approval
+> ## ⚠ Superseded — 31 July 2026. Never approved.
+>
+> This document was **never accepted**. It was a proposal, and the owner has now
+> decided a different model: the **Deal Room-Only Pricing Authority**
+> (`PT-COMMERCIAL-2026-07-31-01`, recorded by **ADR-0020**).
+>
+> **Every number in this file is superseded**, including the €149/month and
+> €1,490/year Portfolio subscription (§3), the €100–€400 Ponte Credit packs (§4),
+> the 60-credit 90-day master-room activation and 20-credit extension (§5), the
+> 5-credit guest-organisation charge (§5, §6), and the euro denomination
+> throughout.
+>
+> Ponte's only paid product is the Deal Room, at **$79 USD for 30 active days**,
+> including five concurrently active private principal-counterparty Deal
+> Branches, **$15 USD** per additional concurrent branch, capped at **$199 USD**
+> per Master Deal Room per 30-day period, in **USD only**. There are no
+> subscriptions, plans, credits or credit-funded rooms.
+>
+> The **sponsored-guest principle** (§1, §8, §13) survives: an invited
+> counterparty never buys anything to participate. So does the rule that an
+> invitation is free until admission (§6).
+>
+> Preserved as the historical record. Do not implement from it. See
+> `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** **Superseded on 31 July 2026** by `PT-COMMERCIAL-2026-07-31-01` / ADR-0020, having never been approved. Originally proposed for product-owner approval
 - **Proposal date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Repository:** `Geppix140269/ponte`
