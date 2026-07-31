@@ -943,6 +943,78 @@ test("the measurement retires the fallback, and the settled bridge is the measur
   expect(measured!.inlineHeight, "the stage was never sized from its lowest child").not.toBe("");
 });
 
+test("an unmeasurable deck keeps the fallback rather than collapsing onto one point", async ({ page }) => {
+  /*
+    The third way the positioning can fail, and the only one that is silent.
+
+    `BridgeRoute` measures the deck with `getTotalLength()` and multiplies that
+    length by each station's fraction of the curve. A length of 0 or NaN returns
+    the same point for every station - so all three would be written to one
+    coordinate, `data-measured` would still be set, and the readable fallback
+    would be retired in favour of the exact pile it exists to prevent. Worse
+    than not measuring at all, because the fallback would have handled it.
+
+    No supported engine returns 0 here: Firefox 153 and Chromium 151 both agree
+    with each other to three decimal places on the same deck. So the failure is
+    injected rather than waited for. `addInitScript` runs before any page script,
+    which is the only way to have the stub in place before the layout effect.
+  */
+  await page.addInitScript(() => {
+    // Only the length. `getPointAtLength` is left alone deliberately: the guard
+    // must key on the measurement it actually uses, not on a wholesale removal
+    // of SVG geometry that would fail for a dozen other reasons.
+    Object.defineProperty(SVGPathElement.prototype, "getTotalLength", {
+      configurable: true,
+      value: () => 0,
+    });
+  });
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".pbridge > .br .br__stage")).toBeVisible();
+  // Hydration has to have happened, or this proves nothing: the assertions
+  // below would pass on a page whose client never ran at all.
+  await expect(page.locator(".pbridge > .br .brst").first()).toHaveAttribute("tabindex", "0");
+
+  const state = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".pbridge > .br .br__stage");
+    const stations = Array.from(document.querySelectorAll<HTMLElement>(".pbridge > .br .brst"));
+    if (!stage || stations.length !== 3) return null;
+    const boxes = stations.map((s) => s.getBoundingClientRect());
+    const overlaps: string[] = [];
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i];
+        const b = boxes[j];
+        if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) {
+          overlaps.push(`${i}/${j}`);
+        }
+      }
+    }
+    const below = document.querySelector("section.sec");
+    return {
+      measured: stage.hasAttribute("data-measured"),
+      // No station may carry a written coordinate: the effect must have stopped
+      // before it positioned anything, not after positioning against zero.
+      written: stations.filter((s) => s.style.left !== "").length,
+      overlaps,
+      stageHeight: Math.round(stage.getBoundingClientRect().height),
+      gapToSectionBelow: below
+        ? Math.round(below.getBoundingClientRect().top - Math.max(...boxes.map((b) => b.bottom)))
+        : null,
+      titles: stations.map((s) => s.querySelector(".brst__t")?.textContent ?? ""),
+    };
+  });
+
+  expect(state, "the family bridge did not render").not.toBeNull();
+  expect(state!.measured, "the fallback was retired against an unmeasurable deck").toBe(false);
+  expect(state!.written, "a station was positioned against a zero-length deck").toBe(0);
+  expect(state!.overlaps, "stations collapsed onto one point").toEqual([]);
+  expect(state!.stageHeight, "the stage has no height").toBeGreaterThan(0);
+  expect(state!.gapToSectionBelow!, "the bridge overlaps the section below it").toBeGreaterThan(0);
+  expect(state!.titles).toEqual(["Products", "Trade services", "Distribution and representation"]);
+});
+
 // ---------------------------------------------------------------------------
 // Layout: no horizontal overflow at the widths the Bridge notes name
 // ---------------------------------------------------------------------------

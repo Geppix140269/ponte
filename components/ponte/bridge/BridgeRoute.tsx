@@ -205,16 +205,40 @@ export default function BridgeRoute({
     const y0 = deckBaseline(H);
     const d = deckPath(W, H);
 
+    // A detached path is enough for getPointAtLength in every browser that
+    // supports it, and avoids the engine's temporary document-body insert.
+    // Checked 31 July 2026 in Firefox 153 and Chromium 151: both return the
+    // same length for the same deck, to three decimal places.
+    const probe = document.createElementNS(SVG_NS, "path");
+    probe.setAttribute("d", d);
+    const L = probe.getTotalLength();
+
+    /*
+      A deck whose length cannot be measured places every station on one point.
+
+      `at()` below multiplies `L` by each station's fraction, so an `L` of 0 or
+      NaN returns the same point - or `NaN, NaN` - for all of them. Every
+      station would then be written to the same coordinates, `data-measured`
+      would still be set, and the readable fallback would be retired in favour
+      of the exact pile it exists to prevent. That is worse than not measuring
+      at all, because the fallback would have handled it.
+
+      So the effect stops here instead, before the deck is touched and before
+      the fallback is retired, and the bridge stays in its unmeasured layout.
+      The measurement is retried on the next resize, selection or station
+      change like any other run of this effect.
+
+      This is not a workaround for a browser that is known to fail: no supported
+      engine does. It is the guard for the case where the drawing cannot be
+      trusted, whatever the cause.
+    */
+    if (!Number.isFinite(L) || L <= 0) return;
+
     deck.setAttribute("viewBox", `0 0 ${W} ${H}`);
     deck.setAttribute("width", String(W));
     deck.setAttribute("height", String(H));
     deck.textContent = "";
 
-    // A detached path is enough for getPointAtLength in every browser that
-    // supports it, and avoids the engine's temporary document-body insert.
-    const probe = document.createElementNS(SVG_NS, "path");
-    probe.setAttribute("d", d);
-    const L = probe.getTotalLength();
     const at = (t: number) => {
       const point = probe.getPointAtLength(L * Math.max(0, Math.min(1, t)));
       return { x: point.x, y: point.y };
