@@ -1374,3 +1374,138 @@
     row-gap: 10px;
   }
 }
+
+/* ======================================================================
+   MARKET SIGNALS ENTRANCE, and the category browse.
+
+   Two surfaces, one rule between them: the two sides of the market are
+   distinguished by structure and by their counts, never by colour. The
+   approved set reserves --pos, --review and --declared for semantic states
+   and keeps --gold off status entirely (Constitution section 6), and supply
+   versus demand is a direction, not a state. Spending two reserved status
+   colours on it would say something false in the palette's own vocabulary.
+
+   No literal colour appears below. Every value is an alias already declared
+   in the compatibility block at the top of this file.
+   ====================================================================== */
+
+.ponte-desk .sgates {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+}
+
+.ponte-desk .sgate {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); box-shadow: var(--e-1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* The whole head of the card is the link into that side. */
+.ponte-desk .sgate__open {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 18px 20px 14px; text-decoration: none; color: inherit;
+  transition: background var(--dur-1);
+}
+.ponte-desk .sgate__open:hover { background: var(--sunken); }
+.ponte-desk .sgate__open:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+
+.ponte-desk .sgate__k {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ponte-desk .sgate__n {
+  font-family: var(--f-mono); font-size: 34px; font-weight: 600;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1.05;
+  margin-top: 4px;
+}
+.ponte-desk .sgate__t {
+  font-family: var(--f-serif); font-size: 20px; line-height: 1.2; margin-top: 1px;
+}
+.ponte-desk .sgate__d {
+  font-size: 12.5px; color: var(--ink-3); line-height: 1.5; margin-top: 4px; max-width: 44ch;
+}
+
+.ponte-desk .sgate__f {
+  display: flex; gap: 8px; padding: 0 20px 18px; margin-top: auto;
+}
+.ponte-desk .sgate__i {
+  flex: 1 1 auto; min-width: 0;
+  background: var(--surface); border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius-in); padding: 8px 11px;
+  font-size: 13px; color: var(--ink);
+}
+.ponte-desk .sgate__i::placeholder { color: var(--mute); }
+.ponte-desk .sgate__i:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.ponte-desk .sgate__b {
+  flex: none; border-radius: var(--dk-radius-in); padding: 8px 13px;
+  font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--rule-strong); background: var(--raised); color: var(--ink);
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
+}
+.ponte-desk .sgate__b:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+.ponte-desk .sgates__all {
+  margin-top: 12px; padding: 13px 16px;
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.ponte-desk .sgates__all p { font-size: 13px; color: var(--ink-2); margin: 0; }
+.ponte-desk .sgates__a { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+/* ---- category browse ---- */
+.ponte-desk .cbrowse {
+  background: var(--raised); border: 1px solid var(--rule);
+  border-radius: var(--dk-radius); overflow: hidden;
+}
+.ponte-desk .cbrowse__head,
+.ponte-desk .cbrowse__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) 76px 108px minmax(90px, 0.8fr);
+  gap: 14px; align-items: center; padding: 10px 16px;
+}
+.ponte-desk .cbrowse__head {
+  background: var(--sunken); border-bottom: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ponte-desk .cbrowse__row { border-bottom: 1px solid var(--rule); }
+.ponte-desk .cbrowse__row:last-child { border-bottom: 0; }
+.ponte-desk .cbrowse__row:hover { background: var(--sunken); }
+
+.ponte-desk .cbrowse__nm {
+  font-size: 14px; color: var(--ink); text-decoration: none;
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.ponte-desk .cbrowse__nm:hover { color: var(--gold-ink); }
+.ponte-desk .cbrowse__tot {
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.ponte-desk .cbrowse__v {
+  font-family: var(--f-mono); font-size: 13px; font-variant-numeric: tabular-nums;
+  text-align: right; text-decoration: none; color: var(--ink);
+}
+.ponte-desk .cbrowse__head .cbrowse__v { text-align: right; }
+.ponte-desk .cbrowse__v--l:hover { color: var(--gold-ink); text-decoration: underline; }
+.ponte-desk .cbrowse__v--0 { color: var(--mute); }
+
+/* Filled share is offers, the remaining rule is requirements. One rule, two
+   readings, and no status colour on either. */
+.ponte-desk .cbrowse__bar {
+  display: block; height: 6px; background: var(--sunken);
+  border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+}
+.ponte-desk .cbrowse__bar-s { display: block; height: 100%; background: var(--ink-3); }
+
+@media (max-width: 860px) {
+  .ponte-desk .sgates { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .ponte-desk .cbrowse__head { display: none; }
+  .ponte-desk .cbrowse__row {
+    grid-template-columns: minmax(0, 1fr) 62px 62px; row-gap: 8px;
+  }
+  .ponte-desk .cbrowse__bar { grid-column: 1 / -1; }
+  .ponte-desk .sgates__a { margin-left: 0; }
+}

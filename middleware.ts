@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { locales, defaultLocale, routing } from "@/i18n/routing";
 import { stripRemovedLocale } from "@/lib/i18n/removed-locales";
 import { updateSession, applySession } from "@/lib/supabase/middleware";
+import {
+  FOUNDING_CODE,
+  REFERRAL_COOKIE,
+  REFERRAL_MAX_AGE_DAYS,
+  normalizeReferral,
+} from "@/lib/founding/referral";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -75,8 +81,34 @@ function siteGateChallenge(): NextResponse {
 // Routes that must never be locale routed: auth callbacks carry one-time
 // tokens and API routes are consumed by code, not people. They keep exactly
 // the session-refresh behaviour they had before i18n.
+/**
+ * Paths that must reach their route with no locale prefix.
+ *
+ * `/robots.txt` and `/sitemap.xml` are here because both were **404 in
+ * production**, and silently so. They are generated App Router routes at the
+ * origin root, but they are not pages: the locale middleware rewrote them to
+ * `/en/robots.txt` and `/en/sitemap.xml`, which no route serves.
+ *
+ * This is the same fault the matcher comment below describes for
+ * `manifest.webmanifest`, and it was reasoned about there and then left
+ * unfixed — correctly refusing to exclude `xml` from the matcher (that would
+ * break every future generated XML route to fix a static file), but not
+ * following through to the other half, which is that a generated root route
+ * still has to be exempted from LOCALE ROUTING somewhere. That somewhere is
+ * here, by exact path, so nothing else is affected.
+ *
+ * Both must keep passing through the site gate above: exempting them from
+ * locale routing is not exempting them from authentication.
+ *
+ * A crawler cannot discover anything without these two. Every other piece of
+ * SEO work on this site is downstream of them answering 200.
+ */
+const ROOT_ROUTES = new Set(["/robots.txt", "/sitemap.xml"]);
+
 function isUnlocalized(pathname: string): boolean {
   return (
+    ROOT_ROUTES.has(pathname) ||
+    pathname.startsWith("/sitemap/") || // split sitemaps, if generateSitemaps is used
     pathname.startsWith("/api") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
@@ -165,6 +197,33 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `${prefix}${target}`;
     return NextResponse.redirect(url, 308);
+  }
+
+  // /join is the single general Founding Network invitation URL. It renders no
+  // UI of its own (cutover PR 2): it captures the referral attribution, once,
+  // and forwards to the sign-in door. The capture is a first-party cookie
+  // carrying an allowlisted code and the moment of capture, `<code>.<issuedAt>`,
+  // which the account page later persists to the profile exactly once and only
+  // for a genuinely new signup. First touch wins, so an existing cookie is left
+  // untouched and a later /join visit cannot overwrite an earlier capture. A
+  // non-allowlisted or absent `?ref` falls back to the general founding code
+  // rather than storing an arbitrary value. The code is attribution only and
+  // never grants anything. This is a temporary (307) forward, not a permanent
+  // move: the destination is the same for every visitor and the `ref` varies.
+  if (rest === "/join") {
+    const url = request.nextUrl.clone();
+    url.pathname = `${prefix}/login`;
+    url.search = "";
+    const response = NextResponse.redirect(url);
+    if (!request.cookies.get(REFERRAL_COOKIE)) {
+      const code = normalizeReferral(request.nextUrl.searchParams.get("ref")) ?? FOUNDING_CODE;
+      response.cookies.set(REFERRAL_COOKIE, `${code}.${Date.now()}`, {
+        path: "/",
+        maxAge: REFERRAL_MAX_AGE_DAYS * 24 * 60 * 60,
+        sameSite: "lax",
+      });
+    }
+    return response;
   }
 
   // next-intl decides the locale and owns the response, then the Supabase

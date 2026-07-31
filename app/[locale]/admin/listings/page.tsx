@@ -1,5 +1,6 @@
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { createAdminClient } from "@/lib/supabase/server";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import {
   decideListingAction,
   runAiVetAction,
@@ -27,6 +28,69 @@ import { presentRecord, statedFacts, type FactsRow } from "@/lib/listings/record
 import { meetsMemberBusinessFloor } from "@/lib/verification/level";
 
 export const dynamic = "force-dynamic";
+
+const card: React.CSSProperties = {
+  background: "var(--raised)",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  boxShadow: "var(--e-1)",
+  padding: "18px 20px",
+};
+
+const tag: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 10,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  color: "var(--ink-2)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: 4,
+  padding: "2px 7px",
+};
+
+const fieldStyle: React.CSSProperties = {
+  width: "100%",
+  font: "inherit",
+  fontSize: 13.5,
+  color: "var(--ink)",
+  background: "var(--raised)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: "var(--dk-radius-in)",
+  padding: "9px 11px",
+  resize: "vertical",
+};
+
+const capLabel: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 10,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: "var(--ink-3)",
+};
+
+const box: React.CSSProperties = {
+  background: "var(--sunken)",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  padding: 16,
+};
+
+// An understated form-submit affordance, on-system: mono, uppercase, with a
+// rule underline rather than a filled control, for the run/generate/return
+// actions that are not primary decisions.
+const linkBtn: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 11,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  color: "var(--ink-2)",
+  background: "none",
+  border: 0,
+  padding: 0,
+  cursor: "pointer",
+  borderBottom: "1px solid var(--rule-strong)",
+};
 
 /* What the last click did. See the same map on the verifications queue. */
 const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
@@ -59,19 +123,43 @@ const DETAIL: Record<string, string> = {
 function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
   if (!r) return null;
   const known = OUTCOME[r];
-  const tone = known?.tone ?? "bad";
+  const good = (known?.tone ?? "bad") === "good";
   const detail = m ? (DETAIL[m] ?? m) : null;
   return (
-    <div
-      className={`mb-6 rounded-xl border p-4 text-[13px] leading-relaxed ${
-        tone === "good"
-          ? "border-positive/40 bg-positive/10 text-cream"
-          : "border-negative/40 bg-negative/10 text-cream"
-      }`}
-    >
-      <p>{known?.text ?? `Outcome: ${r}`}</p>
-      {detail && <p className="mono mt-2 text-[12px] text-gray-2">{detail}</p>}
-    </div>
+    <section className="sec" style={{ paddingBottom: 0 }}>
+      {good ? (
+        <div
+          style={{
+            background: "var(--pos-tint)",
+            border: "1px solid var(--pos-line)",
+            borderRadius: "var(--dk-radius)",
+            padding: "14px 16px",
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--ink-2)",
+          }}
+        >
+          <p style={{ color: "var(--pos)", fontWeight: 600 }}>{known?.text ?? `Outcome: ${r}`}</p>
+          {detail && (
+            <p className="mono" style={{ marginTop: 8, fontSize: 12, color: "var(--ink-3)" }}>
+              {detail}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="err">
+          <PonteIcon name="evidence.evreview" size={22} />
+          <div>
+            <b>{known?.text ?? `Outcome: ${r}`}</b>
+            {detail && (
+              <p className="mono" style={{ marginTop: 6 }}>
+                {detail}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -164,72 +252,87 @@ type VerRow = {
 type Doc = { id: string; listing_id: string; filename: string; path: string };
 type Media = { id: string; listing_id: string; path: string; kind: string };
 
-const FIELD =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
-
 /** The filter bar. A GET form, so every view is a shareable URL. */
 function FilterBar({ sp, types }: { sp: Record<string, string | undefined>; types: string[] }) {
-  const S =
-    "rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-cream focus:border-gold focus:outline-none";
+  const S: React.CSSProperties = {
+    width: "100%",
+    font: "inherit",
+    fontSize: 13,
+    color: "var(--ink)",
+    background: "var(--raised)",
+    border: "1px solid var(--rule-strong)",
+    borderRadius: "var(--dk-radius-in)",
+    padding: "9px 11px",
+    minHeight: 40,
+  };
+  const L: React.CSSProperties = { display: "grid", gap: 4 };
   const opt = (v: string, label: string) => <option key={v} value={v}>{label}</option>;
   return (
     <form
       method="GET"
-      className="mb-8 grid gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-2 lg:grid-cols-4"
+      style={{
+        marginBottom: 24,
+        display: "grid",
+        gap: 12,
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        borderRadius: "var(--dk-radius)",
+        border: "1px solid var(--rule)",
+        background: "var(--raised)",
+        boxShadow: "var(--e-1)",
+        padding: 16,
+      }}
     >
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Status</span>
-        <select name="status" defaultValue={sp.status ?? ""} className={S}>
+      <label style={L}>
+        <span style={capLabel}>Status</span>
+        <select name="status" defaultValue={sp.status ?? ""} style={S}>
           {opt("", "Any status")}
           {["flagged", "suspended", "needs_information", "submitted", "approved", "rejected", "expired", "withdrawn"].map((s) =>
             opt(s, statusLabel(s)),
           )}
         </select>
       </label>
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Reason</span>
-        <select name="reason" defaultValue={sp.reason ?? ""} className={S}>
+      <label style={L}>
+        <span style={capLabel}>Reason</span>
+        <select name="reason" defaultValue={sp.reason ?? ""} style={S}>
           {opt("", "Any reason")}
           {(Object.keys(REASON_LABEL) as (keyof typeof REASON_LABEL)[]).map((r) => opt(r, r))}
         </select>
       </label>
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Severity</span>
-        <select name="severity" defaultValue={sp.severity ?? ""} className={S}>
+      <label style={L}>
+        <span style={capLabel}>Severity</span>
+        <select name="severity" defaultValue={sp.severity ?? ""} style={S}>
           {opt("", "Any severity")}
           {["high", "medium", "low"].map((s) => opt(s, s))}
         </select>
       </label>
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Listing type</span>
-        <select name="type" defaultValue={sp.type ?? ""} className={S}>
+      <label style={L}>
+        <span style={capLabel}>Listing type</span>
+        <select name="type" defaultValue={sp.type ?? ""} style={S}>
           {opt("", "Any type")}
           {types.map((t) => opt(t, t))}
         </select>
       </label>
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Created from</span>
-        <input type="date" name="from" defaultValue={sp.from ?? ""} className={S} />
+      <label style={L}>
+        <span style={capLabel}>Created from</span>
+        <input type="date" name="from" defaultValue={sp.from ?? ""} style={S} />
       </label>
-      <label className="grid gap-1">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>Created to</span>
-        <input type="date" name="to" defaultValue={sp.to ?? ""} className={S} />
+      <label style={L}>
+        <span style={capLabel}>Created to</span>
+        <input type="date" name="to" defaultValue={sp.to ?? ""} style={S} />
       </label>
-      <label className="grid gap-1 sm:col-span-2">
-        <span className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-          Member, business or reference
-        </span>
+      <label style={{ ...L, gridColumn: "1 / -1" }}>
+        <span style={capLabel}>Member, business or reference</span>
         <input
           type="search"
           name="q"
           defaultValue={sp.q ?? ""}
           placeholder="email, company name, or PT-0102"
-          className={S}
+          style={S}
         />
       </label>
-      <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-4">
-        <button className="btn-gold">Apply filters</button>
-        <a href="/admin/listings" className="text-[12px] uppercase text-gray-2 hover:text-gold" style={{ letterSpacing: "0.14em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, gridColumn: "1 / -1" }}>
+        <button className="b b--sm">Apply filters</button>
+        <a href="/admin/listings" className="mono" style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}>
           Clear
         </a>
       </div>
@@ -463,16 +566,19 @@ export default async function AdminListingsPage({
         : "");
 
     return (
-      <div className="glass p-6">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="mono text-[12px] text-gold">{l.ref}</span>
+      <div style={card}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>{l.ref}</span>
           {/* The canonical intent, not the legacy `type`. A reviewer could not
               tell a distribution opportunity from a product requirement:
               `listings.type` stores both as "requirement". */}
-          <span className="badge">{presentRecord(l as FactsRow).kindLabel}</span>
-          <span className="flex-1 text-[15px] text-cream">{l.product}</span>
-          <span className="text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.14em" }}>
-            {l.status} · {new Date(l.created_at).toLocaleDateString("en-GB")}
+          <span style={tag}>{presentRecord(l as FactsRow).kindLabel}</span>
+          <span style={{ flex: 1, fontSize: 15, color: "var(--ink)" }}>{l.product}</span>
+          <span
+            className="mono"
+            style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}
+          >
+            {l.status} &middot; {new Date(l.created_at).toLocaleDateString("en-GB")}
           </span>
         </div>
 
@@ -486,35 +592,39 @@ export default async function AdminListingsPage({
           if (!row || !reason) return null;
           const sev = rowSeverity(row);
           const flags = row.safety_flags ?? [];
-          const tone =
-            sev === "high" ? "border-negative/50 bg-negative/10"
-            : sev === "medium" ? "border-gold/40 bg-gold/10"
-            : "border-white/15 bg-white/[0.03]";
+          // Severity in the desk's semantic tokens: danger, review (slate) and
+          // a plain rule. Gold is never a status here.
+          const edge =
+            sev === "high"
+              ? { border: "1px solid var(--neg-line)", background: "var(--neg-tint)" }
+              : sev === "medium"
+                ? { border: "1px solid var(--review-line)", background: "var(--review-tint)" }
+                : { border: "1px solid var(--rule)", background: "var(--sunken)" };
           return (
-            <div className={`mt-3 rounded-xl border p-4 ${tone}`}>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="mono text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+            <div style={{ marginTop: 12, borderRadius: "var(--dk-radius)", padding: 16, ...edge }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+                <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink)", fontWeight: 600 }}>
                   {reasonCode(row)}
                 </span>
                 {sev && (
-                  <span className="mono text-[11px] uppercase text-cream" style={{ letterSpacing: "0.14em" }}>
+                  <span className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-2)" }}>
                     severity: {sev}
                   </span>
                 )}
                 {row.completeness_score !== null && (
-                  <span className="mono text-[11px] text-gray-2">
+                  <span className="mono" style={{ fontSize: 11, color: "var(--ink-3)" }}>
                     completeness {row.completeness_score}%
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-[13px] leading-relaxed text-cream">{REASON_LABEL[reason]}</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-gray-2">{REASON_ACTION[reason]}</p>
+              <p style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>{REASON_LABEL[reason]}</p>
+              <p style={{ marginTop: 4, fontSize: 12, lineHeight: 1.6, color: "var(--ink-2)" }}>{REASON_ACTION[reason]}</p>
               {flags.length > 0 && (
-                <ul className="mt-3 space-y-1">
+                <ul style={{ marginTop: 12, listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                   {flags.map((f, i) => (
-                    <li key={`${f.code}-${i}`} className="text-[12px] leading-relaxed text-gray-2">
-                      <span className="mono text-gold">{f.code}</span>
-                      <span className="mono"> [{f.severity}]</span>: {f.detail}
+                    <li key={`${f.code}-${i}`} className="mono" style={{ fontSize: 12, lineHeight: 1.6, color: "var(--ink-2)" }}>
+                      <span style={{ color: "var(--ink)", fontWeight: 600 }}>{f.code}</span>
+                      <span> [{f.severity}]</span>: {f.detail}
                     </li>
                   ))}
                 </ul>
@@ -524,7 +634,7 @@ export default async function AdminListingsPage({
         })()}
 
         {awaitingReconfirmation && (
-          <p className="mt-2 text-[12px] text-gold">
+          <p style={{ marginTop: 8, fontSize: 12, color: "var(--review)" }}>
             Awaiting reconfirmation, hidden from public surfaces
             {reconfirmationLapsed(l.reconfirmed_at)
               ? " (90-day reconfirmation lapsed)."
@@ -539,11 +649,21 @@ export default async function AdminListingsPage({
             its prose, and none of the eight service terms the member had
             actually stated - the very facts a review turns on. `statedFacts`
             returns whatever THIS record has and nothing it does not. */}
-        <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
+        <div
+          className="mono"
+          style={{
+            marginTop: 12,
+            display: "grid",
+            gap: "4px 24px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            fontSize: 12,
+            color: "var(--ink-2)",
+          }}
+        >
           <span>From: {emailById.get(l.user_id) ?? l.user_id.slice(0, 8)}</span>
-          {l.chain_depth && <span className="text-gold">Chain: {l.chain_depth}</span>}
+          {l.chain_depth && <span style={{ color: "var(--ink)" }}>Chain: {l.chain_depth}</span>}
           {statedFacts(l as FactsRow).map((f) => (
-            <span key={f.key} className={f.key === "role" ? "text-gold" : undefined}>
+            <span key={f.key} style={f.key === "role" ? { color: "var(--ink)" } : undefined}>
               {f.label}: {f.value}
             </span>
           ))}
@@ -555,13 +675,14 @@ export default async function AdminListingsPage({
 
         {/* The submitter's own business verification and the publication gate,
             resolved here so the desk sees exactly what blocks approval. */}
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-          <p className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
-            Publication gate
-          </p>
+        <div style={{ ...box, marginTop: 16 }}>
+          <p style={capLabel}>Publication gate</p>
           {ver ? (
-            <div className="mt-2 grid gap-x-6 gap-y-1 text-[12.5px] text-gray-2 sm:grid-cols-2">
-              <span className="text-cream">
+            <div
+              className="mono"
+              style={{ marginTop: 8, display: "grid", gap: "4px 24px", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", fontSize: 12.5, color: "var(--ink-2)" }}
+            >
+              <span style={{ color: "var(--ink)" }}>
                 Business: {ver.subject_name ?? "-"}
                 {ver.subject_country ? ` (${ver.subject_country})` : ""}
               </span>
@@ -572,7 +693,7 @@ export default async function AdminListingsPage({
               {ver.subject_reg_number && <span>Reg: {ver.subject_reg_number}</span>}
               {ver.subject_vat && <span>VAT: {ver.subject_vat}</span>}
               {ver.subject_lei && <span>LEI: {ver.subject_lei}</span>}
-              <span className={sanctionsClean ? "text-positive" : "text-red-400"}>
+              <span style={{ color: sanctionsClean ? "var(--pos)" : "var(--neg)" }}>
                 Sanctions: {sanctionsClean ? "clean" : `${sanctions?.strongCount ?? "?"} candidate(s)`}
               </span>
               {ver.decided_at && (
@@ -580,28 +701,28 @@ export default async function AdminListingsPage({
               )}
             </div>
           ) : (
-            <p className="mt-2 text-[12.5px] text-red-400">
+            <p style={{ marginTop: 8, fontSize: 12.5, color: "var(--neg)" }}>
               No verified member-business record is bound to this submitter.
             </p>
           )}
-          <p className="mt-3 text-[11px] uppercase" style={{ letterSpacing: "0.14em" }}>
-            <span className="text-gray-2">Authority evidence: </span>
-            <span className={l.mandate_sighted ? "text-positive" : "text-gray-2"}>
+          <p className="mono" style={{ marginTop: 12, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+            <span style={{ color: "var(--ink-3)" }}>Authority evidence: </span>
+            <span style={{ color: l.mandate_sighted ? "var(--pos)" : "var(--ink-3)" }}>
               {l.mandate_sighted ? "sighted" : "not sighted"}
             </span>
           </p>
           {gate.ok ? (
-            <p className="mt-3 text-[12.5px] text-positive">
+            <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--pos)" }}>
               Ready to approve: every publication condition is met.
             </p>
           ) : (
-            <div className="mt-3">
-              <p className="text-[11px] uppercase text-red-400" style={{ letterSpacing: "0.14em" }}>
+            <div style={{ marginTop: 12 }}>
+              <p className="mono" style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--neg)" }}>
                 Cannot approve yet
               </p>
-              <ul className="mt-1 space-y-0.5">
+              <ul style={{ marginTop: 4, listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 2 }}>
                 {gate.failures.map((f) => (
-                  <li key={f} className="text-[12.5px] text-gray-2">
+                  <li key={f} style={{ fontSize: 12.5, color: "var(--ink-2)" }}>
                     - {gateFailureLabel(f)}
                   </li>
                 ))}
@@ -610,12 +731,22 @@ export default async function AdminListingsPage({
           )}
         </div>
 
-        <p className="mt-3 whitespace-pre-wrap border-l-2 border-white/10 pl-3 text-[13px] leading-relaxed text-gray-2">
+        <p
+          style={{
+            marginTop: 12,
+            whiteSpace: "pre-wrap",
+            borderLeft: "2px solid var(--rule)",
+            paddingLeft: 12,
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--ink-2)",
+          }}
+        >
           {l.details}
         </p>
 
         {lmedia.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
             {lmedia.map((m) =>
               m.kind === "image" ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -623,7 +754,7 @@ export default async function AdminListingsPage({
                   <img
                     src={`${SUPA}/storage/v1/object/public/listing-media/${m.path}`}
                     alt="listing media"
-                    className="h-20 w-28 rounded-md object-cover"
+                    style={{ height: 80, width: 112, borderRadius: "var(--dk-radius-in)", objectFit: "cover" }}
                   />
                 </a>
               ) : (
@@ -632,7 +763,7 @@ export default async function AdminListingsPage({
                   href={`${SUPA}/storage/v1/object/public/listing-media/${m.path}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="badge-gold text-[11px] hover:opacity-80"
+                  className="b b--2 b--sm"
                 >
                   video
                 </a>
@@ -642,14 +773,14 @@ export default async function AdminListingsPage({
         )}
 
         {ldocs.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
             {ldocs.map((d) => (
               <a
                 key={d.id}
                 href={signedByDocId.get(d.id) ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="badge-gold text-[11px] hover:opacity-80"
+                className="b b--2 b--sm"
               >
                 {d.filename}
               </a>
@@ -658,51 +789,53 @@ export default async function AdminListingsPage({
         )}
 
         {l.ai_review && (
-          <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-[10px] uppercase text-gold" style={{ letterSpacing: "0.18em" }}>
+          <div style={{ ...box, marginTop: 16, borderLeft: "3px solid var(--review)" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+              <span className="mono" style={{ ...capLabel, letterSpacing: "0.18em", color: "var(--review)" }}>
                 AI co-pilot
               </span>
-              <span className={`text-[12px] font-bold ${
-                l.ai_review.verdict === "looks_solid" ? "text-positive"
-                : l.ai_review.verdict === "caution" ? "text-red-400" : "text-gold"
-              }`}>
+              <span style={{
+                fontSize: 12, fontWeight: 700,
+                color:
+                  l.ai_review.verdict === "looks_solid" ? "var(--pos)"
+                  : l.ai_review.verdict === "caution" ? "var(--neg)" : "var(--review)",
+              }}>
                 {l.ai_review.verdict.replace("_", " ")} · {l.ai_review.score}/100
               </span>
             </div>
-            <p className="mt-2 text-[13px] leading-relaxed text-cream">{l.ai_review.summary}</p>
+            <p style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>{l.ai_review.summary}</p>
             {l.ai_review.language && l.ai_review.language !== "en" && l.ai_review.english_details && (
-              <details className="mt-2">
-                <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+              <details style={{ marginTop: 8 }}>
+                <summary className="mono" style={{ cursor: "pointer", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}>
                   English translation · original in {l.ai_review.language}
                 </summary>
                 {l.ai_review.english_product && (
-                  <p className="mt-2 text-[12px] text-cream">{l.ai_review.english_product}</p>
+                  <p style={{ marginTop: 8, fontSize: 12, color: "var(--ink)" }}>{l.ai_review.english_product}</p>
                 )}
-                <p className="mt-1 whitespace-pre-wrap text-[12px] text-gray-2">{l.ai_review.english_details}</p>
+                <p style={{ marginTop: 4, whiteSpace: "pre-wrap", fontSize: 12, color: "var(--ink-2)" }}>{l.ai_review.english_details}</p>
               </details>
             )}
             {l.ai_review.red_flags?.length > 0 && (
-              <p className="mt-2 text-[12px] text-red-400">Flags: {l.ai_review.red_flags.join(" · ")}</p>
+              <p style={{ marginTop: 8, fontSize: 12, color: "var(--neg)" }}>Flags: {l.ai_review.red_flags.join(" · ")}</p>
             )}
             {l.ai_review.compliance_notes?.length > 0 && (
-              <p className="mt-1 text-[12px] text-red-400">Compliance: {l.ai_review.compliance_notes.join(" · ")}</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--neg)" }}>Compliance: {l.ai_review.compliance_notes.join(" · ")}</p>
             )}
             {l.ai_review.missing_info?.length > 0 && (
-              <p className="mt-1 text-[12px] text-gray-2">Missing: {l.ai_review.missing_info.join(" · ")}</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--ink-2)" }}>Missing: {l.ai_review.missing_info.join(" · ")}</p>
             )}
-            <details className="mt-2">
-              <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+            <details style={{ marginTop: 8 }}>
+              <summary className="mono" style={{ cursor: "pointer", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}>
                 Drafts (questions email · decision note)
               </summary>
-              <p className="mt-2 whitespace-pre-wrap text-[12px] text-gray-2">{l.ai_review.questions_email_draft}</p>
-              <p className="mt-2 whitespace-pre-wrap border-t border-white/10 pt-2 text-[12px] text-gray-2">{l.ai_review.decision_note_draft}</p>
+              <p style={{ marginTop: 8, whiteSpace: "pre-wrap", fontSize: 12, color: "var(--ink-2)" }}>{l.ai_review.questions_email_draft}</p>
+              <p style={{ marginTop: 8, whiteSpace: "pre-wrap", borderTop: "1px solid var(--rule)", paddingTop: 8, fontSize: 12, color: "var(--ink-2)" }}>{l.ai_review.decision_note_draft}</p>
             </details>
           </div>
         )}
-        <form action={runAiVetAction} className="mt-3">
+        <form action={runAiVetAction} style={{ marginTop: 12 }}>
           <input type="hidden" name="id" value={l.id} />
-          <button className="text-[11px] uppercase text-gold hover:text-cream" style={{ letterSpacing: "0.14em" }}>
+          <button style={linkBtn}>
             {l.ai_review ? "Re-run AI vetting" : "Run AI vetting"}
           </button>
         </form>
@@ -710,29 +843,27 @@ export default async function AdminListingsPage({
         {/* The fact-only deal write-up: the desk's draft from the STORED facts.
             Its wording seeds the public text below; it is never published raw. */}
         {wu && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-            <p className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.18em" }}>
-              Fact-only draft
-            </p>
-            <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed text-cream">
+          <div style={{ ...box, marginTop: 16 }}>
+            <p style={capLabel}>Fact-only draft</p>
+            <p style={{ marginTop: 8, whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>
               {wu.description}
             </p>
             {wu.strengths?.length > 0 && (
-              <p className="mt-2 text-[12px] text-gray-2">Strengths: {wu.strengths.join(" · ")}</p>
+              <p style={{ marginTop: 8, fontSize: 12, color: "var(--ink-2)" }}>Strengths: {wu.strengths.join(" · ")}</p>
             )}
             {wu.open_points?.length > 0 && (
-              <p className="mt-1 text-[12px] text-gray-2">
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--ink-2)" }}>
                 Open points: {wu.open_points.map((p) => p.text).join(" · ")}
               </p>
             )}
             {wu.non_negotiables && (
-              <p className="mt-1 text-[12px] text-gray-2">{wu.non_negotiables}</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: "var(--ink-2)" }}>{wu.non_negotiables}</p>
             )}
           </div>
         )}
-        <form action={generateWriteupAction} className="mt-3">
+        <form action={generateWriteupAction} style={{ marginTop: 12 }}>
           <input type="hidden" name="id" value={l.id} />
-          <button className="text-[11px] uppercase text-gold hover:text-cream" style={{ letterSpacing: "0.14em" }}>
+          <button style={linkBtn}>
             {wu ? "Regenerate fact-only write-up" : "Generate fact-only write-up"}
           </button>
         </form>
@@ -743,47 +874,50 @@ export default async function AdminListingsPage({
             default value: type over it, or empty it, and that is what the
             member reads. A note already saved on the row wins over the draft,
             since somebody wrote it on purpose. */}
-        <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-2">
-          <form action={decideListingAction} className="grid gap-2">
+        <div
+          style={{
+            marginTop: 20,
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            borderTop: "1px solid var(--rule)",
+            paddingTop: 20,
+          }}
+        >
+          <form action={decideListingAction} style={{ display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="approved" />
-            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              Public qualification summary
-            </label>
+            <label style={capLabel}>Public qualification summary</label>
             <textarea
               name="qualification"
               rows={3}
               maxLength={900}
               defaultValue={suggestedQual}
               placeholder="What Ponte qualified, shown publicly. Desk-approved, not raw AI."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              Public limitations statement
-            </label>
+            <label style={capLabel}>Public limitations statement</label>
             <textarea
               name="limitations"
               rows={3}
               maxLength={900}
               defaultValue={suggestedLim}
               placeholder="What remains unverified or open, shown publicly."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <label className="text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.16em" }}>
-              Note to the member
-            </label>
+            <label style={capLabel}>Note to the member</label>
             <textarea
               name="decisionNote"
               rows={4}
               maxLength={1500}
               defaultValue={l.decision_note ?? drafts.approve}
               placeholder="Sent with the approval."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <button className="btn-gold justify-center">Approve</button>
+            <button className="b b--block">Approve</button>
           </form>
 
-          <form action={decideListingAction} className="grid gap-2">
+          <form action={decideListingAction} style={{ display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="rejected" />
             <textarea
@@ -792,9 +926,9 @@ export default async function AdminListingsPage({
               maxLength={1500}
               defaultValue={l.decision_note ?? drafts.reject}
               placeholder="Reason for the rejection. Sent to the member."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <button className="btn-ghost-light justify-center">Reject</button>
+            <button className="b b--2 b--block">Reject</button>
           </form>
         </div>
 
@@ -802,7 +936,7 @@ export default async function AdminListingsPage({
             emails nobody. It used to ride along inside the single decision
             form, which now means it would only be saved if you happened to
             press the button it shared a form with. */}
-        <form action={saveListingNotesAction} className="mt-4 grid gap-2">
+        <form action={saveListingNotesAction} style={{ marginTop: 16, display: "grid", gap: 8 }}>
           <input type="hidden" name="id" value={l.id} />
           <textarea
             name="adminNotes"
@@ -810,15 +944,10 @@ export default async function AdminListingsPage({
             maxLength={2000}
             defaultValue={l.admin_notes ?? ""}
             placeholder="Internal note, never shown to the member."
-            className={FIELD}
+            style={fieldStyle}
           />
           <div>
-            <button
-              className="text-[11px] uppercase text-gold hover:text-cream"
-              style={{ letterSpacing: "0.14em" }}
-            >
-              Save internal note
-            </button>
+            <button style={linkBtn}>Save internal note</button>
           </div>
         </form>
 
@@ -827,7 +956,7 @@ export default async function AdminListingsPage({
             those words. The reason is required because a member who is told
             only that publication stopped has been told nothing actionable. */}
         {l.status === "approved" && (
-          <form action={decideListingAction} className="mt-4 grid gap-2">
+          <form action={decideListingAction} style={{ marginTop: 16, display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="suspended" />
             <textarea
@@ -835,48 +964,42 @@ export default async function AdminListingsPage({
               rows={2}
               maxLength={1500}
               placeholder="Why publication is being paused. Sent to the member, so write it for them."
-              className={FIELD}
+              style={fieldStyle}
               required
             />
-            <div className="flex flex-wrap gap-3">
-              <button className="btn-ghost-light">Suspend, take off the market</button>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <button className="b b--2 b--sm">Suspend, take off the market</button>
             </div>
           </form>
         )}
 
         {l.status === "suspended" && (
-          <form action={decideListingAction} className="mt-4">
+          <form action={decideListingAction} style={{ marginTop: 16 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="approved" />
             <input type="hidden" name="qualification" value={l.desk_version?.qualification ?? ""} />
             <input type="hidden" name="limitations" value={l.desk_version?.limitations ?? ""} />
-            <button className="btn-gold">Reinstate, put back on the market</button>
+            <button className="b b--sm">Reinstate, put back on the market</button>
           </form>
         )}
 
         {/* Handing a listing back to its member. Not a rejection either: it
             says the record needs work, and the member does that work. */}
         {["flagged", "submitted", "suspended"].includes(l.status) && (
-          <form action={decideListingAction} className="mt-3">
+          <form action={decideListingAction} style={{ marginTop: 12 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="needs_information" />
-            <button
-              className="text-[11px] uppercase text-gray-2 hover:text-gold"
-              style={{ letterSpacing: "0.14em" }}
-            >
+            <button style={linkBtn}>
               Return to the member for more information
             </button>
           </form>
         )}
 
         {l.status === "approved" && (
-          <form action={decideListingAction} className="mt-3">
+          <form action={decideListingAction} style={{ marginTop: 12 }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="decision" value="closed" />
-            <button
-              className="text-[11px] uppercase text-gray-2 hover:text-gold"
-              style={{ letterSpacing: "0.14em" }}
-            >
+            <button style={linkBtn}>
               Close this listing
             </button>
           </form>
@@ -889,81 +1012,94 @@ export default async function AdminListingsPage({
 
   return (
     <UnsavedFormGuard>
-      <div>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
-      <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
-        Listing exceptions
-      </h1>
-      {/* The subtitle says what this screen IS. It is not the publication
-          queue: a valid listing from a verified member publishes without
-          appearing here at all. */}
-      <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-gray-2">
-        Listings publish automatically. This console holds only the cases the
-        validator could not resolve. {counts.total} open
-        {counts.highSeverity > 0 && (
-          <span className="text-cream"> · {counts.highSeverity} high severity</span>
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <h2>
+              <PonteIcon name="primitive.stack" size={18} />
+              Listing exceptions
+            </h2>
+            {/* The subtitle says what this screen IS. It is not the publication
+                queue: a valid listing from a verified member publishes without
+                appearing here at all. */}
+            <p className="d">
+              Listings publish automatically. This console holds only the cases the
+              validator could not resolve. {counts.total} open
+              {counts.highSeverity > 0 && (
+                <span style={{ color: "var(--neg)" }}> · {counts.highSeverity} high severity</span>
+              )}
+              {" · "}{all.length} listings in total.
+            </p>
+          </div>
+        </div>
+
+        {counts.total > 0 && (
+          <div style={{ marginBottom: 24, display: "flex", flexWrap: "wrap", gap: "8px 20px" }}>
+            {(Object.entries(counts.byReason) as [keyof typeof REASON_LABEL, number][])
+              .filter(([, n]) => n > 0)
+              .map(([reason, n]) => (
+                <a
+                  key={reason}
+                  href={`/admin/listings?reason=${reason}`}
+                  className="mono"
+                  style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}
+                >
+                  {reason} · {n}
+                </a>
+              ))}
+          </div>
         )}
-        {" · "}{all.length} listings in total.
-      </p>
 
-      {counts.total > 0 && (
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-          {(Object.entries(counts.byReason) as [keyof typeof REASON_LABEL, number][])
-            .filter(([, n]) => n > 0)
-            .map(([reason, n]) => (
-              <a
-                key={reason}
-                href={`/admin/listings?reason=${reason}`}
-                className="mono text-[11px] uppercase text-gray-2 hover:text-gold"
-                style={{ letterSpacing: "0.14em" }}
-              >
-                {reason} · {n}
-              </a>
-            ))}
-        </div>
-      )}
-
-      <div className="mt-6">
         <FilterBar sp={searchParams as Record<string, string | undefined>} types={listingTypes} />
-      </div>
 
-      <h2 className="serif text-white mt-8 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-        Needs a person ({exceptions.length})
-      </h2>
-      {exceptions.length === 0 ? (
-        <div className="glass p-6 text-[14px] text-gray-2">
-          {filtered
-            ? "No exception matches these filters."
-            : "Nothing needs a decision. Automated publication resolved everything."}
-        </div>
-      ) : (
-        <div className="space-y-4">{exceptions.map((l) => <Card key={l.id} l={l} />)}</div>
-      )}
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 24, marginBottom: 12 }}>
+          Needs a person ({exceptions.length})
+        </h3>
+        {exceptions.length === 0 ? (
+          <div className="empty">
+            <PonteIcon name="evidence.infocomplete" size={24} />
+            <div>
+              <b>
+                {filtered
+                  ? "No exception matches these filters"
+                  : "Nothing needs a decision"}
+              </b>
+              <p>
+                {filtered
+                  ? "Adjust or clear the filters above to widen the view."
+                  : "Automated publication resolved everything."}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{exceptions.map((l) => <Card key={l.id} l={l} />)}</div>
+        )}
 
-      {published.length > 0 && (
-        <>
-          <h2 className="serif text-white mt-10 mb-2" style={{ fontSize: 20, fontWeight: 500 }}>
-            Published ({published.length})
-          </h2>
-          {/* Stated explicitly, because the screen this replaces listed these
-              under a heading that implied they were waiting for something. */}
-          <p className="mb-4 text-[13px] text-gray-2">
-            Live on the market. Not awaiting approval, and no action is required
-            here. Suspend one only if there is a reason to take it off.
-          </p>
-          <div className="space-y-4">{published.map((l) => <Card key={l.id} l={l} />)}</div>
-        </>
-      )}
+        {published.length > 0 && (
+          <>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 32, marginBottom: 8 }}>
+              Published ({published.length})
+            </h3>
+            {/* Stated explicitly, because the screen this replaces listed these
+                under a heading that implied they were waiting for something. */}
+            <p className="d" style={{ marginBottom: 16 }}>
+              Live on the market. Not awaiting approval, and no action is required
+              here. Suspend one only if there is a reason to take it off.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{published.map((l) => <Card key={l.id} l={l} />)}</div>
+          </>
+        )}
 
-      {settled.length > 0 && (
-        <>
-          <h2 className="serif text-white mt-10 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-            Closed, rejected, expired and withdrawn ({settled.length})
-          </h2>
-          <div className="space-y-4">{settled.map((l) => <Card key={l.id} l={l} />)}</div>
-        </>
-      )}
-      </div>
+        {settled.length > 0 && (
+          <>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 32, marginBottom: 12 }}>
+              Closed, rejected, expired and withdrawn ({settled.length})
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{settled.map((l) => <Card key={l.id} l={l} />)}</div>
+          </>
+        )}
+      </section>
     </UnsavedFormGuard>
   );
 }

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import CategoryPicker from "./CategoryPicker";
+import BridgeRoute from "@/components/ponte/bridge/BridgeRoute";
 import type { CategoryIconMap } from "./CategoryIcons";
 import { TRADE_SERVICE_CATEGORIES, subcategoriesFor, serviceCategory } from "@/lib/taxonomy/services";
 import {
@@ -103,13 +104,68 @@ export function DistributionRelationshipPicker({
   return <CategoryPicker mode="multiple" options={options} value={value} onChange={onChange} dense {...rest} />;
 }
 
-export function DistributionCoveragePicker({
+/*
+ * `DistributionCoveragePicker` used to sit here, binding the shared list
+ * control to the seven coverage scopes. It is gone rather than kept beside its
+ * replacement: leaving a boxed selector for the same question in the same
+ * module is how a Bridge ends up followed by an unrelated list again.
+ */
+
+/**
+ * Coverage, as a crossing rather than a list.
+ *
+ * Issue #130 Stage 2. Territory scope is a single categorical choice over seven
+ * canonical options, which is inside the geometry the Bridge engine is built
+ * for, so this question is asked with the Bridge: horizontal and staged on a
+ * desktop, the approved vertical elevation below 460px, the full node and label
+ * one click target, and the travelled segment showing where the member has got
+ * to. Every other coverage-adjacent list in the journey is longer than the deck
+ * can carry and stays an unboxed row list.
+ *
+ * The props are deliberately the picker's props: `value` and `onChange`, one
+ * key in and one key out. The caller cannot tell which control it got, so the
+ * composer's data flow, its discard confirmation and its territory field are
+ * untouched. The station carries no marker: a coverage scope has no icon in the
+ * canonical taxonomy, and ADR-0019 says a station with no sensible registry key
+ * renders without one rather than borrowing a substitute.
+ *
+ * Descriptions are not passed. The seven labels are complete sentences of their
+ * own ("Several countries", "Online only"), and a mono description column at
+ * the width seven stations leave would wrap to eight lines.
+ */
+export function DistributionCoverageBridge({
   value,
   onChange,
-  ...rest
+  legend,
+  hint,
+  selectedLabel,
+  children,
 }: Shared & { value: string | null; onChange: (key: string) => void }) {
   return (
-    <CategoryPicker mode="single" options={DISTRIBUTION_COVERAGE_SCOPES} value={value} onChange={onChange} dense {...rest} />
+    <div className="pcat">
+      <div className="pcat__head">
+        <p className="pcat__legend">{legend}</p>
+        {hint && <p className="pcat__hint">{hint}</p>}
+      </div>
+      {/* The elevation at every width. Seven scopes across the composer column
+          leave under 100px a station, and the captured evidence showed
+          "Worldwide" running into "Online only" and the last two labels
+          overlapping. The elevation stacks them, so every scope stays legible
+          and the crossing still reads as one bridge. */}
+      <BridgeRoute
+        mode="select"
+        ariaLabel={legend}
+        selected={value}
+        onSelect={onChange}
+        alwaysVertical
+        stations={DISTRIBUTION_COVERAGE_SCOPES.map((scope) => ({
+          key: scope.key,
+          title: scope.label,
+          mark: selectedLabel,
+        }))}
+      />
+      {children}
+    </div>
   );
 }
 

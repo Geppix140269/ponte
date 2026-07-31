@@ -879,3 +879,347 @@ Then Phase 2 (QA account), Phase 3 (Approval 2: bucket and policies), Phase 4
 (Approval 3: pilot Deal and the negative-access fixture). Approval 4 — flag and
 deploy — remains unauthorised.
 
+---
+
+# Closure, 30 July 2026: LB-008 resolved on a real authenticated probe
+
+**Authorised:** owner, Phase 2 corrected authorisation, 30 July 2026.
+**Production change:** one auth identity created. **No schema, SQL, policy, flag or
+configuration change.**
+
+## 22. The dedicated QA identity
+
+| | |
+|---|---|
+| Email | `deals@ponte.trade` — owner-confirmed as a Ponte-controlled inbox |
+| User id | `8263140e-4231-496b-b4c6-cfc88739995b` |
+| Label and purpose | `Ponte Trade Deal Room QA`, recorded in `user_metadata` |
+| `email_confirm` | **true** — no mail sent to a human |
+| Password | **none supplied**, at any point |
+| Auth role | `authenticated` — the ordinary Postgres role |
+| `profiles.role` | **`customer`** — a normal member |
+| Admin / service-role | **neither** |
+| User count | **9 → 10** |
+| `admin` profiles | **unchanged at 1** |
+
+**Credential disposition.** Zero QA sessions, zero refresh tokens, zero live tokens.
+Sessions came from single-use links, were held in memory only, and were revoked at
+the end of the run. **No token, magic link or secret appears in this repository, in
+any log, or in any pull request.**
+
+The nine pre-existing members were neither used nor impersonated. Every operation in
+this pass named `deals@ponte.trade` and nothing else.
+
+## 23. The probe that was pending, now passed
+
+Run as the QA member through PostgREST with that member's own JWT.
+
+| Group | Requirement | Result |
+|---|---|---|
+| Internal four | must be denied | **4 of 4.** `deal_room_log_event`, `deal_room_is_writable`, `deal_room_uuid_or_null` all returned `permission denied for function <name>`; `deal_room_events_append_only` returned `404 PGRST202`, because PostgREST drops functions a role cannot execute from its schema cache — invisibility is the privilege manifesting |
+| RLS helpers | must be usable | **4 of 4**, all `200` |
+| Member commands | must be usable | **15 of 15**, each reaching its body |
+| **Intended total** | **19** | **19 of 19** |
+
+**Why this probe mattered and the catalogue did not suffice.** `pg_proc.proacl`
+proved `authenticated` did not hold EXECUTE on the logger. It could not prove that
+PostgREST *enforces* that for a real member session. This does:
+`deal_room_log_event` refused a genuine authenticated member with the PostgreSQL
+`permission denied for function deal_room_log_event`.
+
+Catalogue state, re-read after the probe and unchanged by it: `anon` **0 of 23**,
+`PUBLIC` **0**, `authenticated` **exactly 19 by name**, `service_role` **23 of 23**,
+14 policies with none non-SELECT and none naming `anon`. Member table reads returned
+`200 []`. `deal_room_activity_events` holds 0 rows.
+
+**No existing account or profile was modified.** One pre-existing account's
+`updated_at` moved inside the window. It was a refresh-token rotation from that
+account's own live browser session — refresh token at `.287`, user row at `.297`,
+ten milliseconds later — neither a sign-in nor a creation.
+
+## 24. A testing-method correction, recorded because it nearly inverted the result
+
+The first predicate treated any SQLSTATE `42501` as a missing grant, and reported
+**0 of 15** commands usable. That was wrong about the method, not about the ACL.
+
+**Ponte command bodies deliberately raise `42501` for domain authorisation
+refusals** — `20260729b` does so **44 times**. So `Deal not found`,
+`Workspace not found` and `Only a room administrator can do this` are the functions
+executing correctly for a member who owns no rooms. **Only
+`permission denied for function <name>`, which Postgres alone emits, proves missing
+EXECUTE.**
+
+Corrected predicate: **19 of 19 usable, 4 of 4 denied.**
+
+This belongs in the permanent record because the failure mode is asymmetric and
+seductive: a probe that does not make this distinction reports a healthy permission
+boundary as a broken one, and the natural response — loosening grants — would
+reopen exactly what LB-008 closed.
+
+## 25. The browser-landing finding, stated without mischaracterisation
+
+**The `/account` browser landing was not demonstrated.** Three reasons, all
+evidenced:
+
+1. **The requested continuation was silently discarded.**
+   `http://localhost:3000/auth/callback?next=/account` is not in the project's
+   Redirect URL allowlist, so Supabase substituted the project **Site URL** and the
+   `?next=/account` continuation was dropped before any browser was involved.
+2. **The admin-generated link uses the implicit flow.** Following it yields
+   `303 → <site>/#access_token=…&refresh_token=…` — tokens in the fragment, **no
+   `code` parameter**. `app/auth/callback/route.ts` requires `?code=` for
+   `exchangeCodeForSession`, so it would have fallen through to `/login?error=auth`.
+   An admin-generated link cannot drive that route.
+3. Port 3000 was held by another session's dev server, and shared
+   `.claude/launch.json` was not repointed to take it.
+
+**This did not affect the authenticated ACL result and is not part of LB-008.** The
+probe used a member JWT directly and never needed a browser. `/auth/callback` itself
+is correct: it reads `next`, defaults to `/account`, and rejects anything that is not
+a same-site relative path.
+
+## 26. Unallocated observation, for controller intake
+
+**`lib/email.ts` line 369** — the `operator_alert` template hardcodes
+`actionPath: "/admin"` with label "Open in Ponte". It is the only hardcoded
+`actionPath` in the file. With `app/[locale]/admin/layout.tsx` line 53, which
+bounces an unauthenticated `/admin` hit to `/login?next=/admin`, that is a route by
+which a session can end on `/admin`.
+
+Mitigating: the admin layout selects `profiles.role` and renders a restricted notice
+unless `role = 'admin'`, so landing there grants nothing.
+
+**No claim is made that the QA account produced the earlier `/admin` screenshot.**
+That account did not exist at the time, and the account, the link and the session in
+this pass all postdate it. **No identifier is allocated and no fix is included
+here** — the finding is handed to the controller.
+
+## 27. LB-008 is resolved
+
+The ACL production contract is fully evidenced: the catalogue reports exactly the
+intended contract, a real anonymous client is refused at the grant, and a real
+authenticated member is refused on the four internal functions while retaining all
+19 it needs.
+
+Still open, and not part of LB-008: requirements 12 and 13 (entitlement fail-closed,
+cross-room isolation), which need Approval 3; Approval 2 (bucket and policies); and
+Approval 4 (flag and deploy).
+
+---
+
+# Gate C Approval 2, 31 July 2026: evidence Storage applied and verified
+
+**Authorised:** owner, 31 July 2026 — merge PR #142, then proceed with Approval 2.
+**Repository state:** merged `main` at `647436b539dc307bb16c6c53e8c2dcfa63face08`,
+clean worktree, CI `verify` SUCCESS.
+**Outcome:** **both migrations applied. Every check passed. No discrepancy.**
+
+## 28. What Approval 2 nearly broke, and how it was caught
+
+Reading `20260729c` before applying it found that its `deal room evidence upload`
+policy calls `deal_room_uuid_or_null(text)` and `deal_room_is_writable(uuid)` —
+both of which `20260730c` had revoked from `authenticated` on the ground that they
+appeared in no policy expression.
+
+That ground was true of the database **as applied** and false of the repository,
+where `20260729c` had been sitting since 29 July. The allowlist had been derived
+from `pg_policies where tablename like 'deal_room%'`, which cannot see
+`storage.objects` policies and cannot see policies that do not yet exist.
+
+Applying `20260729c` alone would have created an upload policy that failed **every
+member evidence upload** with `42501`. `20260731a` was prepared, reviewed and
+merged first, and applied first.
+
+## 29. Application
+
+| | Time (UTC) | Ledger | Checksum |
+|---|---|---|---|
+| `20260731a_deal_room_storage_policy_helpers.sql` | **04:26:11.008** | 47 → 48 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
+| `20260729c_deal_room_storage.sql` | **04:26:35.893** | 48 → 49 | `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972` |
+
+Both one transaction, exit 0, no timeout, no HTML, no 502. Checksums verified
+against the **merged** files before execution, not branch copies. `20260729b`,
+`20260730b` and `20260730c` remained byte-identical to their applied checksums
+throughout.
+
+## 30. Pre and post state, captured in full
+
+| | Before | After | Delta |
+|---|---|---|---|
+| Buckets | 6 | 7 | **only `deal-room-evidence`** |
+| Storage policies | 12 | 14 | **only the two Deal Room policies** |
+| `authenticated` EXECUTE | 19 | 21 | the two Storage helpers |
+| `anon` / `PUBLIC` EXECUTE | 0 / 0 | **0 / 0** | none |
+| `service_role` EXECUTE | 23 | **23** | none |
+
+`deal-room-evidence`: `public = false`, 25 MiB limit, restricted to
+`application/pdf`, `image/png`, `image/jpeg`, `image/webp`, **0 objects**.
+
+The two policies are `deal room evidence read` (SELECT) and `deal room evidence
+upload` (INSERT), both scoped `to authenticated`. **No UPDATE and no DELETE
+policy**, deliberately: an evidence version is immutable, and removal is a
+retention action for the service role.
+
+**Nothing unrelated changed.** Every bucket and every storage policy was listed
+before and after; the other six buckets and twelve policies are identical,
+fingerprints `84b3fdf5b6f33e833e9ba91cb9f0708d` and
+`b75af4ee476edb76c957e701a95aa8ee`. `ponte-deal-docs` is untouched and still holds
+0 objects.
+
+## 31. The witness, and the probe that mattered
+
+`npm run deal-room:acl-verify` **detected that the policies are now live**,
+switched itself from the required-19 regime to required-21, and exited 0:
+
+```
+  authenticated  : 21 of 23  (required 21, permitted 21)
+  note: storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are
+        required (expected 21)
+```
+
+That switch is the permitted-versus-required design working: the same script was
+green before Approval 2 with 19 and is green after with 21, without either state
+being a false alarm.
+
+**The upload policy was proved to evaluate, not merely to exist.** Two outcomes
+look similar and mean opposite things:
+
+| Response | Meaning |
+|---|---|
+| `permission denied for function …` | the grant is missing; the policy never reached its own decision |
+| a row-level-security refusal | **the policy evaluated and correctly denied** |
+
+A real QA member (`deals@ponte.trade`, `profiles.role = customer`) attempting an
+upload into a sub-room they do not participate in received:
+
+```
+403 Unauthorized: new row violates row-level security policy
+```
+
+That is the pass. Anonymous upload is refused identically. Anonymous and member
+listings of the private bucket both return `200 []`. **Nothing was uploaded**, and
+`deal-room-evidence` still holds 0 objects.
+
+## 32. What remains
+
+**Approval 3.** The read policy has so far been exercised only against an empty
+bucket, and requirements 12 and 13 — entitlement fail-closed, cross-room and
+cross-sub-room isolation — are still catalogue-only. All three need a labelled
+non-commercial pilot Deal and `npm run deal-room:negative-access`.
+
+**Approval 4** — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised.
+
+---
+
+# Gate C Approval 3, 31 July 2026: the fixture ran, and the loop cannot start
+
+**Authorised:** owner, 31 July 2026 — merge PR #143, then proceed with Approval 3.
+**Repository state:** merged `main` at `b4d4907a5791c944391d03208a68f09aa60b49bb`.
+**Outcome:** **the fixture stopped at the first positive-path step. Two refusals
+proved, then `deal_room_propose` failed for the Deal owner.** Requirements 12 and
+13 remain unproved. No production change.
+
+## 33. What the fixture proved before it stopped
+
+| Assertion | Result |
+|---|---|
+| a non-owner cannot create a room for another member's Deal | **ok** |
+| no direct INSERT into `deal_rooms` is possible at all | **ok** |
+| **the Deal owner can create the room** | **FAIL** |
+
+```
+new row for relation "deal_room_participants"
+violates check constraint "deal_room_participants_identity_when_admitted"
+```
+
+The run halted there — deliberately, because every remaining assertion needs a
+room. **2 passed, 1 failed.**
+
+## 34. The defect
+
+The constraint, from `20260729a`:
+
+```sql
+CHECK (state <> ALL (ARRAY['admitted','active'])
+       OR org_id IS NOT NULL
+       OR (declared_capacity IS NOT NULL AND length(btrim(declared_capacity)) > 0))
+```
+
+`deal_room_propose` admits the initiator immediately — two rows, master level and
+first workspace — with `state = 'admitted'`, `org_id = v_org`, and **no
+`declared_capacity` in the insert at all**.
+
+`v_org` is `select organization_id into v_org from public.profiles where id =
+auth.uid()`. In production **all 10 profiles have no organisation and
+`organizations` holds zero rows**, so `v_org` is always NULL. All three disjuncts
+are false and the row is rejected.
+
+**This is not an edge case. It is every member, on step one.**
+
+The function itself anticipates the org-less member elsewhere — its entitlement
+check reads `(v_org is null and r.initiator_profile_id = auth.uid())` — so the
+design does contemplate members without an organisation. The participant insert
+simply does not carry that through.
+
+## 35. Why the counterparty path is sound, and what that isolates
+
+| Path | State on insert | Constraint applies? | Capacity |
+|---|---|---|---|
+| Initiator, via `deal_room_propose` | `admitted` | **yes** | **never set** |
+| Counterparty, via `deal_room_accept_invitation` | `prerequisites_pending` | no | set later |
+| Counterparty, via `deal_room_declare_participation` | — | — | **sets `declared_capacity`** |
+| Counterparty, via `deal_room_admit_participant` | `admitted` | yes | **refuses while org and capacity are both empty** |
+
+The counterparty is *made* to declare a capacity before admission, and admission is
+explicitly gated on it. The initiator is admitted with neither. **The constraint is
+right; `deal_room_propose` does not satisfy it.**
+
+## 36. The correction is a product decision, and was not made
+
+Three options, and they assert different things:
+
+1. **Set the initiator's `declared_capacity` inside `deal_room_propose`.** The row
+   already carries `transaction_role = 'Deal owner'` and `participation_authority =
+   'Owner of the published Deal'`; either could seed it. Smallest change, and it
+   makes the initiator's claim explicit rather than implied by Deal ownership.
+2. **Require an organisation before proposing.** Truest to the constraint's intent —
+   an admitted party has a stated identity — but it adds a gate to the journey and
+   no member has one today.
+3. **Narrow the constraint** so it does not bind the initiator. Cheapest and the
+   weakest: it drops the guarantee for exactly the party with the most authority.
+
+Each says something different about what Ponte asserts a room initiator has
+declared, which is why it is the owner's call and not an agent's.
+
+## 37. No production change
+
+The fixture creates its own three accounts on `@example.invalid` and one listing
+whose details read "Negative-access fixture. Fictional." It tears down rooms,
+listings and users in a `finally`, and it did:
+
+| | Before | After |
+|---|---|---|
+| `auth.users` | 10 | **10**, identical id fingerprint |
+| `listings` | 7 | **7**, identical id fingerprint |
+| rooms / participants / activity / entitlements | 0 | **0 / 0 / 0 / 0** |
+| `deal-room-evidence` objects | 0 | **0** |
+| ledger | 49 | **49** |
+
+No real member account and no real commercial data was used. The service role was
+used only for setup and teardown, never to check a permission.
+
+## 38. What Approval 3 has and has not established
+
+**Established:** a non-owner cannot open a room against another member's Deal, and
+no member can INSERT into `deal_rooms` directly.
+
+**Not established, and not to be claimed:** requirements 12 and 13 — entitlement
+fail-closed, cross-room and cross-sub-room isolation — and the Storage read policy
+against real evidence rows. Also untested against a real room: invitation,
+admission, proposal, counterproposal, acceptance, blockers, evidence, and the
+status and next-action behaviour. All of it waits on a room existing.
+
+Approval 4 — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised, and would be premature: the loop does not start.
+

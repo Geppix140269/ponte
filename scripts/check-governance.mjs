@@ -109,7 +109,8 @@ if (existsSync("docs/schemas/market-record.schema.json")) {
 
 /** Files that still import a third-party icon set. May shrink, never grow. */
 const LUCIDE_BASELINE = [
-  "app/[locale]/account/page.tsx",
+  // app/[locale]/account/page.tsx dropped lucide-react in cutover PR 2: the
+  // account page was rebuilt on the Desk shell and now renders PonteIcon keys.
   "app/[locale]/contact/page.tsx",
   "app/[locale]/marketplace/l/[ref]/page.tsx",
   "app/[locale]/marketplace/page.tsx",
@@ -117,9 +118,7 @@ const LUCIDE_BASELINE = [
   "app/[locale]/pricing/page.tsx",
   "components/InstallPrompt.tsx",
   "components/LanguageSwitcher.tsx",
-  "components/ListingForm.tsx",
   "components/NetworkForm.tsx",
-  "components/tradeCategories.ts",
 ];
 
 /**
@@ -147,7 +146,15 @@ const LUCIDE_BASELINE = [
  *   every class it emits is either declared in an approved stylesheet or
  *   created by the approved engine.
  *
- * All three are listed rather than exempted, so the number of hand-authored
+ * - `components/ponte/bridge/TaskCompletionBridge.tsx` draws the completion deck
+ *   for the universal Task Completion Bridge (ADR-0016, Bridge System v1
+ *   component #3). Same argument as the two above: section 8 makes the Bridge
+ *   System authoritative, a shallow deck with a travelled gold segment is
+ *   structural crossing geometry rather than an ad hoc icon, and no Flow
+ *   registry key expresses a progress deck. The signal node is a `<circle>` on
+ *   that deck, not an icon.
+ *
+ * All four are listed rather than exempted, so the number of hand-authored
  * drawings in the product stays visible in one place and each new one has to be
  * argued for here. This is the ratchet working as intended: the entry above was
  * written because the check refused the file, not to get past it.
@@ -169,28 +176,28 @@ const RAW_SVG_BASELINE = [
   "components/ponte/brand/PonteLockup.tsx",
   "components/ponte/bridge/BridgeRoute.tsx",
   "components/ponte/bridge/DealRoomBridge.tsx",
+  "components/ponte/bridge/TaskCompletionBridge.tsx",
   "components/signals/SignalCard.tsx",
   "components/structure/StructureComposer.tsx",
 ];
 
 /**
  * Files that still hold a link to the retired `/marketplace/new` editor.
- * May shrink, never grow (LB-013).
+ * May shrink, never grow (LB-013). Now empty (PL-030).
  *
  * That route no longer renders the legacy `ListingForm`; it redirects to the
  * current composer at `/structure`. Every member-facing link was repointed, and
  * every transactional email now resumes at `/structure?edit=<id>`. The one entry
- * that remains is `components/ListingForm.tsx` itself: the legacy composer is now
- * unreachable — nothing renders it — and its own internal sign-in redirect still
- * names the old path. Its physical removal is logged as a follow-up in
- * docs/launch/POST-LAUNCH-BACKLOG.md; until then it is pinned here so no NEW file
- * can reach for the retired editor without editing this list in the diff.
+ * that remained was `components/ListingForm.tsx`, unreachable but still naming the
+ * old path in its own sign-in redirect. PL-030 deleted that component (and its
+ * orphaned `tradeCategories.ts`), so the baseline is empty: NO source file under
+ * app/ or components/ may link the retired editor at all.
  *
  * The landing seam in `lib/landing/routing.ts` is the flag-off fallback and is
  * out of this scan's scope (lib is not walked); it rides the quarantine redirect
  * and is documented there.
  */
-const LEGACY_EDITOR_LINK_BASELINE = ["components/ListingForm.tsx"];
+const LEGACY_EDITOR_LINK_BASELINE = [];
 
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -340,4 +347,4 @@ if (failures.length > 0) {
 
 console.log(`ok   governance contract (${requiredFiles.length} required files)`);
 console.log(`ok   icon law ratchet (${lucideCount} lucide, ${rawSvgCount} authored svg, 1 shared lockup)`);
-console.log(`ok   LB-013 route audit (${legacyEditorLinkCount} legacy editor link remaining, baseline pinned)`);
+console.log(`ok   LB-013 route audit (${legacyEditorLinkCount} legacy editor links; retired editor fully removed, PL-030)`);

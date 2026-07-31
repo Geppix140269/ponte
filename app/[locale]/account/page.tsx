@@ -1,10 +1,30 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
-import { ArrowRight, BadgeCheck, ShieldAlert, UserCircle2 } from "lucide-react";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { COUNTRIES } from "@/lib/countries";
+import { landingFontVars } from "@/components/home/landing/fonts";
+import DeskShell from "@/components/desk/DeskShell";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import ClaimReferral from "@/components/founding/ClaimReferral";
+import "@/components/desk/desk.css";
+
+/**
+ * The member's account, rebuilt on the Desk shell (single-generation cutover,
+ * PR 2). It is the one personal settings surface and it carries exactly four
+ * things: who the member is (profile), the business they represent (company),
+ * whether that business is verified (member-business status), and the way out
+ * (sign out).
+ *
+ * What it deliberately does NOT carry any more: the member's listings, a link
+ * to a marketplace, and any credit, balance, cost or top-up language. Records
+ * live at /opportunities, which is where a signed-in member now lands; the
+ * marketplace pages are retiring; and member-business verification is a status,
+ * not a purchase. Account is settings, not operations.
+ */
 
 export const metadata: Metadata = {
   title: "Account",
@@ -13,49 +33,51 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AccountPage() {
+/** The Desk chrome around whatever the account page needs to say. */
+function AccountShell({ children }: { children: ReactNode }) {
+  return (
+    <div className={`ponte-desk ${landingFontVars}`}>
+      <DeskShell rail={null} objective={null}>
+        {children}
+      </DeskShell>
+    </div>
+  );
+}
+
+export default async function AccountPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+
   if (!isSupabaseConfigured()) {
     return (
-      <section className="container-px py-20">
-        <div className="glass p-12 max-w-xl mx-auto text-center">
-          <UserCircle2 className="mx-auto h-10 w-10 text-gold" />
-          <h1
-            className="serif text-white mt-5"
-            style={{ fontSize: 32, fontWeight: 500 }}
-          >
-            Your account
-          </h1>
-          <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">
-            Sign-in activates once Supabase Auth is connected. Add your
-            Supabase keys to enable accounts.
-          </p>
-          <Link href="/pricing" className="btn-gold mt-8">
-            See what the desk offers
-          </Link>
-        </div>
-      </section>
+      <AccountShell>
+        <section className="sec">
+          <div className="empty">
+            <PonteIcon name="profile.account" size={24} />
+            <div>
+              <b>Accounts activate once sign-in is connected</b>
+              <p>
+                Sign-in becomes available when the authentication service is configured for this
+                deployment. Nothing here can load until then.
+              </p>
+            </div>
+          </div>
+        </section>
+      </AccountShell>
     );
   }
 
   const user = await getUser();
   if (!user) redirect("/login");
 
-  const supabase = createClient();
-  const { data: myListings } = await supabase
-    .from("listings")
-    .select("id, ref, type, product, status")
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  // Business status (Block B). The badge is only real when it rests on the
+  // One read, with the service role, scoped to this member. The profile fields
+  // are the member's own; the business badge is only real when it rests on the
   // member's own business verification, so it is read from
-  // business_verification_id, not from the level alone: a level with no bound
-  // member-business case is not a Business checked badge. Read with the service
-  // role, scoped to this member, so RLS on verifications cannot blank it.
+  // business_verification_id, not from the level alone, and read past RLS so a
+  // policy on verifications cannot blank a member's own status.
   const adminSb = createAdminClient();
   const { data: profile } = await adminSb
     .from("profiles")
-    .select("verification_level, verified_at, business_verification_id")
+    .select("full_name, company, country, verification_level, verified_at, business_verification_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -76,118 +98,115 @@ export default async function AccountPage() {
       };
     }
   }
-  const businessVerified = Boolean(businessCheck);
+  const businessChecked = Boolean(businessCheck);
 
-  // The report-era "delivered files" section is gone with the shop. The
-  // orders table was checked before deletion: zero rows, so there is no
-  // account anywhere with a file this section could have shown.
+  const countryName =
+    (profile?.country && COUNTRIES.find((c) => c.code === profile.country)?.name) || null;
 
   return (
-    <section className="container-px py-14 lg:py-20">
+    <AccountShell>
       {/* Founding attribution (Block F): records once, for a genuinely new
           signup, via a route that can clear the cookie. Renders nothing. */}
       <ClaimReferral />
-      <header className="flex items-center justify-between mb-10 flex-wrap gap-4">
-        <div>
-          <span className="pill">Account</span>
-          <h1
-            className="serif text-white mt-5"
-            style={{
-              fontSize: "clamp(32px, 4vw, 48px)",
-              fontWeight: 400,
-              lineHeight: 1.04,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Your account
-          </h1>
-          <p className="mono text-[12px] text-gray-2 mt-2">{user.email}</p>
-        </div>
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="btn-ghost-light">
-            Sign out
-          </button>
-        </form>
-      </header>
 
-      {/* Business status (Block B). Prompts an unverified founding member to
-          verify their own business, which is what a Business checked badge
-          means and what unlocks publishing and introductions. */}
-      <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6">
-        <div className="num-italic">01 / Business</div>
-        <h2 className="serif text-white" style={{ fontSize: 28, fontWeight: 500 }}>
-          Business status
-        </h2>
-      </div>
-      {businessVerified ? (
-        <div className="glass p-6 mb-4">
-          <p className="flex items-center gap-2 text-[11px] uppercase text-positive" style={{ letterSpacing: "0.16em" }}>
-            <BadgeCheck className="h-4 w-4" /> Business checked
-          </p>
-          <p className="mt-3 text-[15px] text-cream">{businessCheck!.subject}</p>
-          <p className="mt-1 text-[13px] text-gray-2">
-            {businessCheck!.country ? `${businessCheck!.country} · ` : ""}
-            {businessCheck!.decidedAt
-              ? `Checked ${new Date(businessCheck!.decidedAt).toLocaleDateString("en-GB")}`
-              : "Checked"}
-          </p>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-gray-2">
-            This badge rests on the verification of your own business. Checking another
-            company does not change it.
-          </p>
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <p className="kicker">Account</p>
+            <h2>
+              <PonteIcon name="profile.account" size={18} />
+              Your account
+            </h2>
+            <p className="d mono">{user.email}</p>
+          </div>
+          <form action="/auth/signout" method="post">
+            <button type="submit" className="b b--2">
+              Sign out
+            </button>
+          </form>
         </div>
-      ) : (
-        <div
-          className="mb-4 rounded-2xl border p-6"
-          style={{ background: "rgba(232,160,32,0.08)", borderColor: "rgba(232,160,32,0.35)" }}
-        >
-          <p className="flex items-center gap-2 text-[11px] uppercase text-gold" style={{ letterSpacing: "0.16em" }}>
-            <ShieldAlert className="h-4 w-4" /> Not verified yet
-          </p>
-          <p className="mt-3 text-[14px] leading-relaxed text-cream">
-            Your business is not verified yet. Verifying the business you represent is what
-            earns your Business checked badge and lets you publish an opportunity and
-            receive an introduction. Checking another company does not verify you.
-          </p>
-          <Link href="/verify?for=business" className="btn-gold mt-5 inline-flex">
-            Verify my business <ArrowRight className="h-4 w-4" />
-          </Link>
+
+        {/* Profile and company: who the member is and the business they act for.
+            Only stated facts are shown; a blank field reads "Not stated" rather
+            than an inferred or empty value. */}
+        <dl className="factgrid">
+          <div>
+            <dt>Name</dt>
+            <dd className={profile?.full_name ? "" : "na"}>
+              {profile?.full_name || "Not stated"}
+            </dd>
+          </div>
+          <div>
+            <dt>Company</dt>
+            <dd className={profile?.company ? "" : "na"}>
+              {profile?.company || "Not stated"}
+            </dd>
+          </div>
+          <div>
+            <dt>Country</dt>
+            <dd className={countryName ? "" : "na"}>{countryName || "Not stated"}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{user.email}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <h2>
+              <PonteIcon name="evidence.evreview" size={18} />
+              Member business
+            </h2>
+            <p className="d">
+              Verifying the business you represent is what lets you publish an opportunity and
+              receive an introduction. Checking another company does not verify you.
+            </p>
+          </div>
         </div>
-      )}
 
-      {/* Marketplace listings */}
-      <div className="grid md:grid-cols-[240px_1fr] gap-8 md:gap-14 items-baseline mb-6 mt-12">
-        <div className="num-italic">02 / Marketplace</div>
-        <h2
-          className="serif text-white"
-          style={{ fontSize: 28, fontWeight: 500 }}
-        >
-          Your listings
-        </h2>
-      </div>
-      {(myListings ?? []).length === 0 ? (
-        <p className="text-[13px] text-gray-2 mb-4">
-          Nothing submitted yet. Offers and requirements you submit are
-          reviewed by the Ponte desk before they are published.
-        </p>
-      ) : (
-        <ul className="glass divide-y divide-white/10 mb-4">
-          {(myListings ?? []).map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 text-[14px]">
-              <span className="mono text-[12px] text-gold">{l.ref}</span>
-              <span className="badge uppercase">{l.type}</span>
-              <span className="flex-1 text-cream">{l.product}</span>
-              <span className="text-[11px] uppercase text-gray-2" style={{ letterSpacing: "0.14em" }}>
-                {l.status === "submitted" ? "in vetting" : l.status}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <Link href="/marketplace" className="btn-gold mb-12 inline-flex">
-        Go to the marketplace
-      </Link>
-
-    </section>
+        {businessChecked ? (
+          <div className="panel">
+            <div className="panel__h">
+              <PonteIcon name="evidence.infocomplete" size={16} />
+              <b>Business checked</b>
+              {businessCheck!.decidedAt ? (
+                <span>
+                  Checked {new Date(businessCheck!.decidedAt).toLocaleDateString("en-GB")}
+                </span>
+              ) : null}
+            </div>
+            <div style={{ padding: "14px 16px" }}>
+              <p style={{ fontSize: 14, fontWeight: 600 }}>{businessCheck!.subject}</p>
+              {businessCheck!.country ? (
+                <p className="d" style={{ marginTop: 4 }}>
+                  {businessCheck!.country}
+                </p>
+              ) : null}
+              <p className="d" style={{ marginTop: 10 }}>
+                This status rests on the verification of your own business. Checking another company
+                does not change it.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="notice">
+            <PonteIcon name="evidence.evreview" size={18} />
+            <div>
+              <b>Your business is not checked yet</b>
+              Verify the business you represent to publish an opportunity and receive an
+              introduction. This is separate from checking another company.
+              <div style={{ marginTop: 12 }}>
+                <Link className="b" href="/verify?for=business">
+                  Verify my business
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+    </AccountShell>
   );
 }

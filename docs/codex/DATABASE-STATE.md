@@ -101,6 +101,212 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the room initiator's declared capacity (option 1)
+
+`supabase/migrations/20260731b_deal_room_propose_initiator_capacity.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `0de3c6e0e74f814746fe511b39165247163918d539f300ca8dc7ba9ac926ef13` |
+| Size | 13,354 bytes, no BOM |
+| Content | **one `create or replace function`. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+
+Owner decision of 31 July 2026, option 1 of the three the Approval 3 record set
+out: seed the initiator's `declared_capacity` inside `deal_room_propose` rather
+than requiring an organisation or narrowing the constraint.
+
+**The change is three lines.** `declared_capacity` is added to the shared column
+list of the two initiator inserts, and `'Deal owner'` to each value list. The value
+matches the `transaction_role` the same insert already sets and sits beside a
+`participation_authority` of `'Owner of the published Deal'`.
+
+**It states a fact this function has just proved, not a claim made on the member's
+behalf.** Execution only reaches that insert after `v_l.user_id <> auth.uid()` has
+been checked and the Deal confirmed published and family-classified. That
+distinction is the reason option 1 is defensible at all:
+`deal_room_declare_participation` exists so a counterparty states their own
+capacity, and nothing here weakens it — the counterparty still declares, and
+`deal_room_admit_participant` still refuses admission while both `org_id` and
+`declared_capacity` are empty.
+
+Members who do have an organisation are unaffected in presentation: a participant
+row is read as `coalesce(o.name, v_p.declared_capacity, 'Declared capacity not
+stated')`, so an organisation name still wins.
+
+### How the file was produced, and why that matters
+
+The body was **extracted verbatim** from `20260729b` and patched
+programmatically, not retyped. A diff of the two confirms exactly ten changed
+lines — the two column lists and the two value lists — and nothing else.
+
+**The signature is unchanged**, which is the LB-005 risk this carries: `create or
+replace function` keyed on a different argument list does not replace anything, it
+creates an **overload**, silently, while every existing grant keeps pointing at the
+old function. The symptom would surface later as a member permission error rather
+than as a 42883 at apply time.
+
+`lib/deal-room/__tests__/grant-signatures.test.ts` now guards it generally: it
+**discovers** every migration later than `20260729b`, compares each
+`deal_room_*` redefinition against the signature `20260729b` declared, and fails
+on drift. The file set is discovered rather than listed, so a future migration
+cannot opt out by not being named. It also asserts this file supplies
+`declared_capacity` in both inserts, still admits at `'admitted'`, differs from
+`20260729b` by only the intended substitutions, and contains no policy, table,
+trigger, index, grant or revoke. Demonstrated in three directions — a widened
+signature, the fix removed, and a stray grant added — each failing with a specific
+diagnosis. 8 assertions.
+
+### Verification after applying
+
+```
+npm run deal-room:acl-verify        # ACL unchanged: anon 0, authenticated 21
+npm run deal-room:negative-access   # must now get past step one
+```
+
+## Gate C Approval 3, 31 July 2026: the loop cannot start
+
+`deal_room_propose` fails in production for **every** member:
+
+```
+new row for relation "deal_room_participants"
+violates check constraint "deal_room_participants_identity_when_admitted"
+```
+
+The constraint, from `20260729a`:
+
+```sql
+CHECK (state <> ALL (ARRAY['admitted','active'])
+       OR org_id IS NOT NULL
+       OR (declared_capacity IS NOT NULL AND length(btrim(declared_capacity)) > 0))
+```
+
+`deal_room_propose` admits the initiator immediately — two rows, master level and
+first workspace, `state = 'admitted'` — supplying `org_id = v_org` and **no
+`declared_capacity`**. `v_org` is `profiles.organization_id`, and **all 10
+production profiles have none; `organizations` holds zero rows.** All three
+disjuncts are false, so the insert is rejected and no room is ever created.
+
+**The counterparty path is sound**, which is what isolates the defect.
+`deal_room_accept_invitation` inserts at `prerequisites_pending`, outside the
+constraint; `deal_room_declare_participation` sets `declared_capacity`; and
+`deal_room_admit_participant` refuses admission while both `org_id` and
+`declared_capacity` are empty. The counterparty is *made* to declare a capacity.
+The initiator is admitted with neither.
+
+**The constraint is right; the command does not satisfy it.** The correction is a
+product decision and was not made here: set the initiator's `declared_capacity`
+inside `deal_room_propose` — the row already carries `transaction_role = 'Deal
+owner'` and `participation_authority = 'Owner of the published Deal'` — or require
+an organisation before proposing, or narrow the constraint. Each says something
+different about what Ponte asserts a room initiator has declared.
+
+**No production change.** The fixture creates its own `@example.invalid` accounts
+and a listing marked fictional, and tears everything down: after the run, users
+were back to 10 with an identical id fingerprint, listings 7 identical, and rooms,
+participants, activity and entitlements all 0. Ledger unchanged at 49.
+
+## APPLIED to production, 31 July 2026: the Storage policy helpers
+
+`supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
+| Size | 4,040 bytes, no BOM; raw-byte and utf8-string hashes identical |
+| Content | **2 grants, one transaction. Nothing else.** |
+| Status | **APPLIED 2026-07-31 04:26:11 UTC**, one transaction, exit 0. Ledger **47 to 48**, checksum verified |
+| Ordering | applied **before** `20260729c`, as required. `20260729c` followed at 04:26:35 UTC |
+
+**Approval 2 could not proceed without it, and the reason is a defect in
+`20260731a`'s predecessor.** `20260730c` revoked `authenticated` EXECUTE on four
+functions, on the ground that none was reachable by a member. For
+`deal_room_log_event` and `deal_room_events_append_only` that is permanently true.
+For `deal_room_is_writable(uuid)` and `deal_room_uuid_or_null(text)` it was true
+only of the schema **as applied at that moment**.
+
+`20260729c_deal_room_storage.sql` had been in the repository, unapplied, since 29
+July. Its `deal room evidence upload` policy calls both:
+
+```sql
+and public.deal_room_is_sub_room_participant(
+      public.deal_room_uuid_or_null((storage.foldername(name))[2]))
+and exists (select 1 from public.deal_room_sub_rooms s
+             where s.id = public.deal_room_uuid_or_null((storage.foldername(name))[2])
+               and public.deal_room_is_writable(s.room_id))
+```
+
+A function invoked inside a policy expression is privilege-checked against the
+**querying** role. Applying `20260729c` against the current ACL would therefore
+have produced an upload policy that fails **every member evidence upload** with
+`42501`. Caught before application, by reading the migration rather than trusting
+the earlier derivation.
+
+**Why the allowlist missed it.** It was derived from live production with
+`pg_policies where tablename like 'deal_room%'`. That query has two blind spots
+and this defect sat in both: it matches Deal Room tables in `public`, not
+`storage.objects`; and it can only see policies that **exist**, not ones in an
+unapplied migration. So `20260730c` recorded "appears in no policy expression" and
+"called nowhere" — **both true of the applied database, both false of the
+repository.**
+
+That is LB-008's shape one turn further out. The catalogue is the only witness to
+what production *holds*; it is not a witness to what production will *need*.
+
+**This is not a rollback of LB-008.** `deal_room_log_event` stays executable by
+neither member role, and so does `deal_room_events_append_only`; the forgery path
+remains closed. Only the two helpers a real policy demonstrably needs come back,
+and both are read-only — `deal_room_is_writable(uuid)` returns a boolean from
+entitlement and room state, `deal_room_uuid_or_null(text)` is pure text coercion
+touching no table.
+
+### The contract is now permitted-versus-required
+
+`npm run deal-room:acl-verify` no longer asserts a single number. It separates
+what `authenticated` **may** hold (21: four RLS helpers, two Storage policy
+helpers, fifteen commands) from what it **must** hold, which depends on the world:
+the two Storage helpers become required only once the `storage.objects` policies
+exist. The script queries `pg_policies` for those policies and says which regime
+it is in.
+
+That keeps the witness honest across the window between merging `20260731a` and
+applying it — it reports **`authenticated 19 (required 19, permitted 21)`** and
+exits 0 today, and will require 21 the moment `20260729c` lands.
+
+`lib/deal-room/__tests__/function-acl.test.ts` now derives policy helpers from
+**both** `20260729b` and `20260729c`, and models the end state the way Postgres
+does: every declared function starts granted by Supabase's default privileges,
+then each ACL migration's revokes and grants apply in file order. A file-by-file
+assertion could not express this, because `20260730b` and `20260730c` are applied
+and immutable and cannot be asked retrospectively to have known about a pending
+migration. 29 assertions.
+
+### Confirmed in production after both were applied
+
+`npm run deal-room:acl-verify` detected the policies are live, switched itself to
+the required-21 regime and **exited 0**:
+
+```
+  authenticated  : 21 of 23  (required 21, permitted 21)
+  note: storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are
+        required (expected 21)
+```
+
+`anon` 0, `PUBLIC` 0, `service_role` 23 unchanged, `deal_room_log_event` still
+executable by neither member role.
+
+**The upload policy was proved to evaluate, not merely to exist.** A real QA member
+attempting an upload into a sub-room they do not participate in received:
+
+```
+403 Unauthorized: new row violates row-level security policy
+```
+
+That is the pass. Had `20260731a` not been applied first, the same request would
+have returned `permission denied for function deal_room_uuid_or_null` — the policy
+would have failed before reaching its own decision. Anonymous upload is refused
+identically, and both anonymous and member listings return `200 []`.
+
 ## APPLIED to production, 30 July 2026: the Deal Room internal-function ACL (LB-008 closed)
 
 `supabase/migrations/20260730c_deal_room_internal_acl.sql`.
@@ -177,9 +383,16 @@ rows, no `deal-room-evidence` bucket.
 return `200 []` rather than erroring — so revoking the three did not disturb policy
 evaluation.
 
-**LB-008 is closed on the ACL contract.** The one probe still outstanding is the
-real authenticated direct RPC (probe 6 of the previous pass), which needs a
-dedicated QA account that does not yet exist.
+**LB-008 is RESOLVED, and the last outstanding probe has passed.** The real
+authenticated direct RPC (probe 6 of the earlier pass) was run on 30 July 2026 as
+the dedicated QA member `deals@ponte.trade` — `profiles.role = customer`, no admin
+or service-role privilege, no password, created solely for this verification.
+**19 of 19** intended functions were usable and **4 of 4** internal functions were
+denied, with `deal_room_log_event` returning the PostgreSQL
+`permission denied for function deal_room_log_event`. The catalogue had already
+proved `authenticated` lacked that privilege; this proves PostgREST enforces it
+for a real member session, which is the one thing the catalogue could not settle.
+No existing account or profile was modified by the probe.
 
 ## APPLIED to production, 30 July 2026: the Deal Room function ACL correction (LB-008)
 
@@ -221,11 +434,13 @@ itself, and the test written to catch it asserts something about that file. Only
 the catalogue could answer it. Full probe-by-probe record:
 `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md` sections 11 to 16.
 
-**Probe 6 is pending, not passed.** A real authenticated direct RPC needs a member
-JWT and there are no authorised test credentials; production's 9 confirmed users
-are real member accounts, and minting a session for one to satisfy a probe is not a
-test credential. Probes 8 and 9 are catalogue-verified and behaviourally pending
-for the same reason.
+**Probe 6 has since PASSED** — see the internal-function ACL section above. It was
+pending at the time of this pass because there were no authorised test credentials,
+and production's 9 confirmed users are real member accounts for which minting a
+session would not have been a test credential. A dedicated QA account was
+subsequently authorised and created, and the probe was run as an ordinary member.
+Probes 8 and 9 remain catalogue-verified only: their behavioural halves need a real
+room, which is Approval 3.
 
 **Why a new file rather than an edit.** `20260729b` is applied and its checksum
 `b379f869…fea3153` is in `public.schema_migrations`. An applied file is immutable;
@@ -293,7 +508,7 @@ required to be identical — **what the application calls, what `20260729b` gran
 what `20260730b` grants** — because any two agreeing proves little when one is
 derived from the other. All three agree on the same **15** commands.
 
-## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
+## Deal Room launch slice: `20260729a`, `20260729b` and `20260729c` all APPLIED
 
 **Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**
 `20260729a` applied from `main` at `7f979e0`; the corrected `20260729b` applied
@@ -407,12 +622,24 @@ This is the same defect class as the RLS gap recorded above: Supabase's default
 privileges grant more than the migration expects, and a `revoke ... from public`
 does not undo them.
 
-### `20260729c_deal_room_storage.sql` — NOT applied, not attempted
+### `20260729c_deal_room_storage.sql` — APPLIED 31 July 2026 (Approval 2)
 
-Its three executable statements create the `deal-room-evidence` bucket and its
-two `storage.objects` policies, which `GATE-C-TEST-PLAN.md` treats as Gate C
-**Approval 2**. `deal-room-evidence` does not exist; `ponte-deal-docs` still holds
-0 objects and 0 policies.
+Applied at **2026-07-31 04:26:35.893 UTC**, one transaction, exit 0, immediately
+after `20260731a` supplied the two helpers its upload policy needs. Ledger **48 to
+49**, checksum `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972`
+— the value recorded in the Gate C preflight, unchanged since.
+
+**Exactly the intended delta, and nothing else.** Buckets **6 to 7**: only
+`deal-room-evidence`, `public = false`, 25 MiB limit, restricted to
+`application/pdf`, `image/png`, `image/jpeg`, `image/webp`. Storage policies **12
+to 14**: only `deal room evidence read` (SELECT) and `deal room evidence upload`
+(INSERT), both scoped `to authenticated`. **No UPDATE and no DELETE policy**, by
+design — an evidence version is immutable and removal is a retention action.
+
+The other six buckets and twelve storage policies were captured before and after
+and are unchanged, fingerprints `84b3fdf5b6f33e833e9ba91cb9f0708d` and
+`b75af4ee476edb76c957e701a95aa8ee`. `ponte-deal-docs` is untouched and still holds
+**0 objects**; `deal-room-evidence` holds **0 objects**.
 
 ### Unchanged by all of this
 

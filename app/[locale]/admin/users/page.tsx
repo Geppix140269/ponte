@@ -1,6 +1,29 @@
 import { createClient } from "@/lib/supabase/server";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 
 export const dynamic = "force-dynamic";
+
+const th: React.CSSProperties = {
+  padding: "10px 14px",
+  textAlign: "left",
+  fontFamily: "var(--f-mono)",
+  fontSize: 9.5,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "var(--ink-3)",
+  fontWeight: 600,
+  borderBottom: "1px solid var(--rule-strong)",
+  background: "var(--sunken)",
+};
+
+const td: React.CSSProperties = {
+  padding: "11px 14px",
+  fontFamily: "var(--f-mono)",
+  fontSize: 12.5,
+  color: "var(--ink)",
+  borderTop: "1px solid var(--rule)",
+  verticalAlign: "top",
+};
 
 export default async function AdminUsers() {
   const supabase = createClient();
@@ -10,51 +33,66 @@ export default async function AdminUsers() {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  return (
-    <div>
-      <h1
-        className="serif text-white"
-        style={{ fontSize: 32, fontWeight: 500 }}
-      >
-        Users
-      </h1>
-      <p className="mt-2 text-[13px] text-gray-2">
-        {(users ?? []).length} registered users.
-      </p>
+  const rows = users ?? [];
 
-      {(users ?? []).length === 0 ? (
-        <div className="mt-7 glass p-6 text-[13px] text-gray-2">
-          No users yet. Profiles are created automatically on first sign-in.
+  return (
+    <section className="sec">
+      <div className="sech">
+        <div>
+          <h2>
+            <PonteIcon name="profile.account" size={18} />
+            Users
+          </h2>
+          <p className="d">{rows.length} registered users.</p>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="empty">
+          <PonteIcon name="profile.account" size={24} />
+          <div>
+            <b>No users yet</b>
+            <p>Profiles are created automatically on first sign-in.</p>
+          </div>
         </div>
       ) : (
-        <div className="mt-7 glass overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead
-              className="border-b border-white/10 text-left text-[10px] uppercase text-gray-2"
-              style={{ letterSpacing: "0.22em" }}
-            >
-              <tr>
-                <th className="px-4 py-4">Name</th>
-                <th className="px-4 py-4">Company</th>
-                <th className="px-4 py-4">Country</th>
-                <th className="px-4 py-4">Role</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {(users ?? []).map((u: any) => (
-                <tr key={u.id}>
-                  <td className="px-4 py-3 text-cream">{u.full_name ?? "not given"}</td>
-                  <td className="px-4 py-3 text-gray-2">{u.company ?? "not given"}</td>
-                  <td className="px-4 py-3 text-gray-2">{u.country ?? "not given"}</td>
-                  <td className="px-4 py-3 capitalize text-gold">
-                    {u.role ?? "customer"}
-                  </td>
+        <div className="panel">
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={th}>Name</th>
+                  <th style={th}>Company</th>
+                  <th style={th}>Country</th>
+                  <th style={th}>Role</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((u: any) => (
+                  <tr key={u.id}>
+                    <td style={td}>{u.full_name ?? "not given"}</td>
+                    <td style={{ ...td, color: "var(--ink-2)" }}>
+                      {u.company ?? "not given"}
+                    </td>
+                    <td style={{ ...td, color: "var(--ink-2)" }}>
+                      {u.country ?? "not given"}
+                    </td>
+                    <td
+                      style={{
+                        ...td,
+                        textTransform: "capitalize",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {u.role ?? "customer"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

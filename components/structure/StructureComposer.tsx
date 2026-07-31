@@ -8,6 +8,8 @@ import CountryPicker from "@/components/CountryPicker";
 import { COUNTRIES as ISO_COUNTRIES } from "@/lib/countries";
 import { HsCategoryGrid, chapterInCategory, type HsCategory } from "@/components/hs/hsCategories";
 import ProductIntake from "@/components/products/intake/ProductIntake";
+import TaskCompletionBridge from "@/components/ponte/bridge/TaskCompletionBridge";
+import { completionValue, completionBandLabel } from "@/lib/structure/completion";
 import type { CommercialTerms } from "@/lib/products/terms";
 import type { ResolvedProduct } from "@/lib/products/model";
 import {
@@ -658,7 +660,9 @@ function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<St
               setChosen((prev) => ({ category: prev.category, chapter: c }));
               fetch(`/api/hs/search?chapter=${c.chapter}`).then((r) => r.json()).then((d) => { setHeadings(d?.headings ?? []); setLevel("headings"); }).catch(() => {});
             }}>
-              {c.chapter_title}<span className="hstile__n">{c.chapter}</span>
+              {/* Wrapped so the row is two flex items rather than an anonymous
+                  text item and a span: Issue #130 Stage 2 made this a row. */}
+              <span>{c.chapter_title}</span><span className="hstile__n">{c.chapter}</span>
             </button>
           ))}
         </div>
@@ -727,12 +731,34 @@ function Structuring({ onDone, t }: { onDone: () => void; t: T }) {
 }
 
 // ---- S02 facts & gaps ------------------------------------------------------
+/**
+ * The Task Completion Bridge for the record being built (ADR-0016), bound to the
+ * pure completion binder. It is a read-only signal of how complete the record
+ * is; it renders the neutral null state until the first required field is filled,
+ * and advances as applicable commercial detail is added. Same component and
+ * value on every step that shows it, so the percentage never disagrees with
+ * itself across the journey.
+ */
+function CompletionBridge({ draft }: { draft: StructureDraft }) {
+  const value = completionValue(draft);
+  return (
+    <TaskCompletionBridge
+      value={value}
+      band={value === null ? "" : completionBandLabel(value)}
+      abutments={{ left: "Started", right: "Ready to submit" }}
+      neutralLabel="Progress appears once you add the first commercial detail."
+      ariaLabel="How complete this record is"
+    />
+  );
+}
+
 function FactsStep({ draft, onComplete, onAdd, t }: { draft: StructureDraft; onComplete: () => void; onAdd: (f: CompletionField) => void; t: T }) {
   const b = bucketize(draft);
   return (
     <section className="sstep reveal">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("facts.eyebrow")}</span></div>
       <h1 className="fphead__h serif">{t("facts.reward", { facts: b.commercial.length, gaps: b.missing.length })}</h1>
+      <CompletionBridge draft={draft} />
 
       <Bucket label={t("facts.commercial")}>
         {b.commercial.map((k) => (
@@ -796,6 +822,7 @@ function CompleteStep({ draft, set, fields, onDone, t }: { draft: StructureDraft
   return (
     <section className="sstep">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{editing ? t("complete.editEyebrow") : t("complete.eyebrow")}</span></div>
+      {!editing && <CompletionBridge draft={draft} />}
       {!editing && (
         <div className="readiness" style={{ margin: "12px 0 20px" }}>
           <div className="readiness__track"><div className="readiness__fill" style={{ width: `${(i / total) * 100}%` }} /></div>
@@ -1312,6 +1339,7 @@ function PreviewStep({ draft, onNext, onEdit, t }: { draft: StructureDraft; onNe
     <section className="sstep reveal">
       <div className="fphead__eb"><span className="fphead__rule" aria-hidden="true" /><span className="eyebrow">{t("preview.eyebrow")}</span></div>
       <h1 className="fphead__h serif">{t(`review.${model.titleKey}`)}</h1>
+      <CompletionBridge draft={draft} />
       <div className="tabs2" role="tablist">
         {(["public", "private", "reviewer"] as const).map((x) => (
           <button key={x} className="tab2" role="tab" aria-selected={tab === x} onClick={() => setTab(x)}>{t(`preview.${x}`)}</button>

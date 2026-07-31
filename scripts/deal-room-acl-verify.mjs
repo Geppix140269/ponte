@@ -82,15 +82,42 @@ const MEMBER_COMMANDS = [
   "deal_room_submit_evidence",
 ];
 
-/** Reachable by no member role. The logger is the one that could forge history. */
-const INTERNAL = [
-  "deal_room_log_event",
-  "deal_room_is_writable",
-  "deal_room_uuid_or_null",
-  "deal_room_events_append_only",
-];
+/**
+ * Called by the `storage.objects` policies in `20260729c`, so `authenticated`
+ * MUST hold EXECUTE once that migration is applied.
+ *
+ * These two were revoked by `20260730c` and restored by `20260731a`. The revoke
+ * was derived from `pg_policies where tablename like 'deal_room%'`, which cannot
+ * see policies on `storage.objects` and cannot see policies that do not exist
+ * yet. Both blind spots applied. They are listed separately here so that the
+ * reason they are member-executable is stated, not inherited.
+ *
+ * Both are read-only: `deal_room_is_writable` returns a boolean from entitlement
+ * and room state; `deal_room_uuid_or_null` is pure text coercion touching no
+ * table. Neither can forge history.
+ */
+const STORAGE_POLICY_HELPERS = ["deal_room_uuid_or_null", "deal_room_is_writable"];
 
-const ALLOWED = new Set([...RLS_HELPERS, ...MEMBER_COMMANDS]);
+/**
+ * Reachable by no member role, permanently.
+ *
+ * `deal_room_log_event` is the forgery path LB-008 was about: it has no
+ * authorisation check of its own, because the commands call it on the member's
+ * behalf. `deal_room_events_append_only` is a trigger function; Postgres checks
+ * EXECUTE at `create trigger`, not per row.
+ */
+const INTERNAL = ["deal_room_log_event", "deal_room_events_append_only"];
+
+// PERMITTED is what authenticated may hold. REQUIRED is what it must hold, and
+// that depends on the world: the two Storage helpers are only needed once the
+// storage.objects policies exist. Before 20260729c is applied they are harmless
+// either way - both are read-only and neither can forge history - so holding them
+// early is not a finding, and lacking them early is not a break.
+//
+// Separating the two is what lets this witness stay honest across the window
+// between merging 20260731a and applying it, instead of going red for a reason
+// that is not a defect.
+const PERMITTED = new Set([...RLS_HELPERS, ...STORAGE_POLICY_HELPERS, ...MEMBER_COMMANDS]);
 
 const failures = [];
 const notes = [];
@@ -119,12 +146,12 @@ console.log(`project ${ref}: ${rows.length} deal_room_* functions\n`);
 //    lists above, and silently passing the rest would be worse than failing here.
 require_(rows.length === 23, `expected 23 deal_room_* functions, found ${rows.length}`);
 const found = new Set(rows.map((r) => r.name));
-for (const name of [...ALLOWED, ...INTERNAL]) {
+for (const name of [...PERMITTED, ...INTERNAL]) {
   require_(found.has(name), `${name} is named in this contract but does not exist in production`);
 }
 for (const r of rows) {
   require_(
-    ALLOWED.has(r.name) || INTERNAL.includes(r.name),
+    PERMITTED.has(r.name) || INTERNAL.includes(r.name),
     `${r.name} exists in production but this contract does not classify it. Classify it deliberately`,
   );
 }
@@ -141,16 +168,35 @@ require_(
   `PUBLIC holds EXECUTE on ${publicHolders.length}: ${publicHolders.map((r) => r.name).join(", ")}`,
 );
 
-// 4. authenticated holds exactly the 19.
+// 4. authenticated holds only what is permitted, and everything that is required.
+//    Surplus AND missing both fail - losing a helper breaks member journeys,
+//    which is worse than a contract drift.
+const storagePolicies = await query(`
+  select count(*)::int as n
+  from pg_policies
+  where schemaname = 'storage' and tablename = 'objects'
+    and policyname in ('deal room evidence read', 'deal room evidence upload')
+`);
+const storageLive = storagePolicies[0].n > 0;
+const REQUIRED = new Set([
+  ...RLS_HELPERS,
+  ...MEMBER_COMMANDS,
+  ...(storageLive ? STORAGE_POLICY_HELPERS : []),
+]);
+
 const authHolders = rows.filter((r) => r.authenticated).map((r) => r.name);
-const surplus = authHolders.filter((n) => !ALLOWED.has(n));
-const missing = Array.from(ALLOWED).filter((n) => !authHolders.includes(n));
+const surplus = authHolders.filter((n) => !PERMITTED.has(n));
+const missing = Array.from(REQUIRED).filter((n) => !authHolders.includes(n));
 require_(surplus.length === 0, `authenticated holds EXECUTE it should not: ${surplus.join(", ")}`);
 require_(
   missing.length === 0,
   `authenticated has LOST EXECUTE it needs: ${missing.join(", ")} - this breaks member journeys, not just the contract`,
 );
-require_(authHolders.length === 19, `authenticated holds EXECUTE on ${authHolders.length}, expected exactly 19`);
+notes.push(
+  storageLive
+    ? `storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are required (expected ${REQUIRED.size})`
+    : `storage.objects Deal Room policies are not applied yet, so the 2 Storage helpers are permitted but not required (required ${REQUIRED.size}, permitted ${PERMITTED.size})`,
+);
 
 // 5. The four internal functions are reachable by neither member role.
 for (const name of INTERNAL) {
@@ -193,7 +239,13 @@ require_(pol[0].naming_anon === 0, `${pol[0].naming_anon} Deal Room policies nam
 
 const width = Math.max(...rows.map((r) => r.name.length));
 for (const r of rows) {
-  const role = ALLOWED.has(r.name) ? (RLS_HELPERS.includes(r.name) ? "rls helper" : "command") : "internal";
+  const role = INTERNAL.includes(r.name)
+    ? "internal"
+    : RLS_HELPERS.includes(r.name)
+      ? "rls helper"
+      : STORAGE_POLICY_HELPERS.includes(r.name)
+        ? "storage helper"
+        : "command";
   const holders = [r.anon && "anon", r.authenticated && "authenticated", r.service_role && "service_role"]
     .filter(Boolean)
     .join(" ");
@@ -203,7 +255,7 @@ for (const r of rows) {
 console.log("");
 console.log(`  anon           : ${anonHolders.length} of ${rows.length}`);
 console.log(`  PUBLIC         : ${publicHolders.length} of ${rows.length}`);
-console.log(`  authenticated  : ${authHolders.length} of ${rows.length}  (expected 19)`);
+console.log(`  authenticated  : ${authHolders.length} of ${rows.length}  (required ${REQUIRED.size}, permitted ${PERMITTED.size})`);
 console.log(`  service_role   : ${svc} of ${rows.length}  (expected 23, unchanged)`);
 console.log(`  policies       : ${pol[0].total}, ${pol[0].non_select} non-SELECT, ${pol[0].naming_anon} naming anon`);
 for (const n of notes) console.log(`  note: ${n}`);
@@ -214,4 +266,7 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`\nok   deal-room ACL in production: anon 0, PUBLIC 0, authenticated exactly 19, service_role unchanged`);
+console.log(
+  `\nok   deal-room ACL in production: anon 0, PUBLIC 0, authenticated ${authHolders.length} ` +
+    `(required ${REQUIRED.size}, permitted ${PERMITTED.size}), service_role unchanged`,
+);

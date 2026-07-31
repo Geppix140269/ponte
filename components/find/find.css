@@ -51,6 +51,12 @@
   /* ---- Focus ---- */
   --focus: var(--pf-focus);
 
+  /* ---- Interaction blue (ADR-0015 Stage 2): act/edit, never a status ---- */
+  --interact: var(--pf-interact);
+  --interact-border: var(--pf-interact-border);
+  --interact-active: var(--pf-interact-active);
+  --interact-tint: var(--pf-interact-tint);
+
   /* ---- Type ---- */
   --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
   --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
@@ -389,21 +395,23 @@
 .ponte-find .fpick__crumb button { background: none; border: none; cursor: pointer; color: var(--gold-ink); padding: 0; font: inherit; }
 .ponte-find .fpick__crumbcur { color: var(--ink-2); }
 
-/* ---- HS category tiles (Tier 1 of the product drill) ----
-   Verbatim from the approved design extract (Ponte_HS_Category_Icons_
-   Extract_2026-07-25.html). Box-free by construction: tiles have border:0;
-   the grid lines are a 1px background gap, never a rounded card. Shared by
-   both the Find picker and the Structure composer. */
-/* Hairlines on the tiles, not a container showing through 1px gaps. The
-   category level is shared by the composer and the Find journey, and any row
-   that does not fill all three tracks would otherwise show a block of --rule
-   that reads as a phantom tile. */
-.ponte-find .hs__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--surface); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
-.ponte-find .hs__tile { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; background: var(--surface); padding: 16px 13px 14px; min-height: 98px; text-align: left; border: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--rule); }
+/* ---- HS sectors, Tier 1 of the product drill ----
+   The approved drawings are unchanged and still come from the design extract
+   (Ponte_HS_Category_Icons_Extract_2026-07-25.html). What changed, in Issue
+   #130 Stage 2, is the arrangement: fifteen sectors were a three-column grid of
+   98px tiles, each ringed in its own hairline, which is the boxed category grid
+   the owner ruled out for a categorical choice. Fifteen is well past the deck
+   the Bridge can carry, so they are an unboxed row list instead: one column at
+   every width, the marker beside the name, the HS range at the end, a single
+   hairline between rows and the whole row as the target. */
+.ponte-find .hs__grid { display: grid; grid-template-columns: 1fr; gap: 0; background: var(--surface); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.ponte-find .hs__tile { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 14px; width: 100%; background: var(--surface); padding: 13px 14px 13px 0; text-align: left; border: 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.ponte-find .hs__grid > .hs__tile:last-child { border-bottom: 0; }
 .ponte-find .hs__tile:hover { background: var(--sunken); }
+.ponte-find .hs__tile:hover .t { color: var(--gold-ink); }
 .ponte-find .hs__tile svg { width: 26px; height: 26px; color: var(--ink); stroke-width: 1.5; fill: none; }
-.ponte-find .hs__tile .t { font-size: 12.5px; font-weight: 500; color: var(--ink); line-height: 1.22; }
-.ponte-find .hs__tile .n { font-family: var(--f-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 0.04em; margin-top: auto; }
+.ponte-find .hs__tile .t { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.ponte-find .hs__tile .n { font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em; white-space: nowrap; }
 
 /* ======================================================================
    F02 detail

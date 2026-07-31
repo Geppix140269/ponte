@@ -18,6 +18,501 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Gate C Approval 3: the fixture ran and the Deal Room loop cannot start
+
+### Completed
+
+- **PR #143 merged** (`main` `b4d4907`) after CI `verify` SUCCESS, `Supabase
+  Preview` SKIPPED.
+- **`npm run deal-room:negative-access` run against production** with
+  `PONTE_ALLOW_PRODUCTION_DB=i-understand`, after capturing a full pre-state
+  baseline including id fingerprints for `auth.users` and `listings`.
+- **It proved two refusals and then stopped**: a non-owner cannot create a room for
+  another member's Deal, and no direct INSERT into `deal_rooms` is possible at all.
+  **2 passed, 1 failed.**
+
+### Risks / discrepancies
+
+- **The Deal Room cannot be opened by anyone in production.**
+  `deal_room_propose` fails with `new row for relation "deal_room_participants"
+  violates check constraint "deal_room_participants_identity_when_admitted"`.
+  The constraint requires an `admitted` or `active` participant to carry either an
+  `org_id` or a non-empty `declared_capacity`. `deal_room_propose` admits the
+  initiator immediately with `org_id = v_org` and **no `declared_capacity`**, and
+  `v_org` is NULL for **all 10 production profiles** - `organizations` holds zero
+  rows. Every member, on step one.
+- **The counterparty path is sound**, which isolates the defect to the initiator.
+  `deal_room_accept_invitation` inserts at `prerequisites_pending` where the
+  constraint does not apply, `deal_room_declare_participation` sets
+  `declared_capacity`, and `deal_room_admit_participant` refuses admission while
+  both are empty. The counterparty is made to declare; the initiator is not.
+- **The constraint is right and the command does not satisfy it.** The correction is
+  a product decision - seed the initiator's `declared_capacity` in
+  `deal_room_propose`, require an organisation before proposing, or narrow the
+  constraint - and each asserts something different about what Ponte claims a room
+  initiator has declared. **No fix was made and no identifier was minted**; this is
+  recorded as production evidence for LB-001, which stays open.
+- **Requirements 12 and 13 remain unproved**, along with the Storage read policy
+  against real evidence rows and the whole invitation-to-closure behaviour. All of
+  it waits on a room existing.
+
+### Production changes
+
+- **None.** The fixture uses its own `@example.invalid` accounts and a listing
+  marked fictional, and tore down completely: users back to 10 with an identical id
+  fingerprint, listings 7 identical, rooms, participants, activity and entitlements
+  all 0, ledger unchanged at 49. No real member account or commercial data was used.
+
+### Next
+
+1. Owner decision on how `deal_room_propose` should satisfy the identity
+   constraint.
+2. Re-run Approval 3 once a room can be created.
+3. Approval 4 - flag and deploy - remains unauthorised and would be premature.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, Approval 3 section
+- `docs/codex/DATABASE-STATE.md`, Gate C Approval 3 section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-001 updated with the production evidence
+
+---
+
+## 2026-07-31 - Gate C Approval 2 applied: evidence Storage is live and fail-closed
+
+### Completed
+
+- **PR #142 merged** (`main` `647436b`) after CI `verify` SUCCESS. `Supabase
+  Preview` failed, the only failure, reproducing the recorded migration-bearing-PR
+  pattern.
+- **Applied in the required order, from a clean checkout of merged `main`**, with
+  both checksums verified against the **merged** files first:
+  - `20260731a_deal_room_storage_policy_helpers.sql` at **04:26:11.008 UTC**,
+    ledger **47 to 48**, checksum `bbd49851...caadf9`
+  - `20260729c_deal_room_storage.sql` at **04:26:35.893 UTC**, ledger **48 to 49**,
+    checksum `94629e5d...29972` — the value recorded in the Gate C preflight
+  - Both one transaction, exit 0, no timeout, no HTML, no 502.
+- **Exactly the intended delta.** Buckets 6 to 7: only `deal-room-evidence`,
+  private, 25 MiB, four MIME types. Storage policies 12 to 14: only `deal room
+  evidence read` (SELECT) and `deal room evidence upload` (INSERT), both
+  `authenticated`, no UPDATE and no DELETE. **Pre and post state captured for every
+  bucket and every storage policy; the other six buckets and twelve policies are
+  unchanged.** `ponte-deal-docs` untouched at 0 objects.
+- **`npm run deal-room:acl-verify` detected the policies are live**, switched itself
+  from the required-19 regime to required-21, and **exited 0**: `anon` 0, `PUBLIC`
+  0, `authenticated` 21 of 23, `service_role` 23 unchanged, the event logger still
+  executable by neither member role.
+- **The upload policy was proved to evaluate, not merely to exist.** A real QA
+  member uploading into a sub-room they do not participate in received `403
+  Unauthorized: new row violates row-level security policy`. Had `20260731a` not
+  been applied first, the same request would have returned `permission denied for
+  function deal_room_uuid_or_null` — the policy would have failed before reaching
+  its own decision. Anonymous upload is refused identically; anonymous and member
+  listings both return `200 []`. Nothing was uploaded.
+
+### Decisions
+
+- Owner, 31 July 2026: merge PR #142, then proceed with Approval 2.
+
+### Risks / discrepancies
+
+- **None found.** Every Approval 2 check passed and no discrepancy arose.
+- Approval 3 remains outstanding: a labelled non-commercial pilot Deal and the
+  negative-access fixture, which is what finally proves requirements 12 and 13
+  (entitlement fail-closed, cross-room isolation) and the read policy against real
+  evidence rows. The read policy has been exercised only against an empty bucket.
+- Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deploy, access wall - remains unauthorised.
+
+### Next
+
+1. Approval 3: pilot Deal using the QA account, then `npm run deal-room:negative-access`.
+2. Approval 4: flag and deploy.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, Storage policy helpers and Deal Room slice sections
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, Approval 2 section
+- `public.schema_migrations`: 49 rows
+- `npm run deal-room:acl-verify`, exit 0, `authenticated 21 (required 21, permitted 21)`
+
+---
+
+## 2026-07-31 - Approval 2 stopped before application: the Storage upload policy needs two helpers `20260730c` revoked
+
+### Completed
+
+- **Nothing applied to production.** Ledger unchanged at 47, 6 buckets, no
+  `deal-room-evidence`, 12 storage policies, 0 rooms. Every probe was read-only.
+- **Approval 2 preconditions confirmed first:** Phase 1 complete (`anon` 0,
+  `authenticated` 19) and the QA account present.
+- **Reading `20260729c` before applying it surfaced a blocker.** Its
+  `deal room evidence upload` policy calls `deal_room_uuid_or_null(text)` and
+  `deal_room_is_writable(uuid)`. `20260730c` revoked `authenticated` EXECUTE on
+  both. A function invoked inside a policy expression is privilege-checked against
+  the querying role, so applying `20260729c` as-is would have failed **every member
+  evidence upload** with `42501`. Confirmed in the catalogue:
+  `has_function_privilege('authenticated', ...)` is false for both and true for the
+  other two functions those policies use.
+- **Correction prepared, not applied:**
+  `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`, SHA-256
+  `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9`, 4,040 bytes.
+  Two grants, one transaction, nothing else. **Must be applied before, or with,
+  `20260729c` — never after.**
+- **The instruments were corrected, not just the SQL.** The test now derives
+  policy helpers from **both** `20260729b` and `20260729c`, and models the end
+  state as Postgres does: all 23 start granted by Supabase's default privileges,
+  then each ACL migration's revokes and grants apply in file order. 29 assertions.
+  Demonstrated in both directions — removing one grant from `20260731a` fails with
+  "called by a policy expression but authenticated does not end with EXECUTE on it".
+- **`deal-room:acl-verify` now separates permitted from required.** The two Storage
+  helpers are permitted always and required only once the `storage.objects` policies
+  exist; the script queries `pg_policies` to decide which regime it is in. It reports
+  `authenticated 19 (required 19, permitted 21)` and **exits 0** against production
+  today, instead of going red for a window that is not a defect.
+
+### Decisions
+
+- Owner, 31 July 2026: prepare the corrective migration and contract updates first,
+  PR them, and apply `20260729c` together with the grant as Approval 2. Chosen over
+  applying `20260729c` as-is, because a broken policy in production invites the
+  "loosen the grants" reflex that reopens LB-008.
+
+### Risks / discrepancies
+
+- **The root cause is a derivation blind spot, and it is worth stating plainly.**
+  The `authenticated` allowlist was derived from `pg_policies where tablename like
+  'deal_room%'`, which cannot see `storage.objects` policies and cannot see policies
+  that do not exist yet. `20260730c` recorded "appears in no policy expression" and
+  "called nowhere": **true of the applied database, false of the repository.** The
+  catalogue is the only witness to what production holds; it is not a witness to
+  what production will need.
+- **This is not a rollback of LB-008.** `deal_room_log_event` and
+  `deal_room_events_append_only` remain executable by neither member role, so the
+  forgery path stays closed. Both restored helpers are read-only.
+- **No identifier minted.** This defect is recorded here, in `DATABASE-STATE.md` and
+  in the Gate C audit without an LB or PL number, per the standing instruction to
+  hand findings to the controller for allocation. It may warrant one: it is a
+  production-state defect that blocks Approval 2.
+- Requirements 12 and 13 remain catalogue-only, needing Approval 3.
+
+### Next
+
+1. Review and merge the correction PR.
+2. Approval 2, as one step: apply `20260731a`, then `20260729c`, then
+   `npm run deal-room:acl-verify` (which will then require 21) and the pre/post
+   bucket and storage-policy capture.
+3. Approval 3: pilot Deal and the negative-access fixture.
+4. Approval 4 - flag and deploy - remains unauthorised.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, Storage policy helpers section
+- `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`
+- `lib/deal-room/__tests__/function-acl.test.ts`, 29 assertions
+- `npm run deal-room:acl-verify`, exit 0, `authenticated 19 (required 19, permitted 21)`
+
+## 2026-07-30 - Market Signals made crawlable, and the private-site gate deliberately kept up
+
+### Completed
+
+- **`robots.txt` and `sitemap.xml` were 404 in production, silently.** Both are
+  generated App Router routes at the origin root, but neither is a page, so the
+  locale middleware rewrote them to `/en/robots.txt` and `/en/sitemap.xml`,
+  which no route serves. Fixed in `middleware.ts` by exempting the two exact
+  paths from LOCALE routing only. **They still pass through the site gate.**
+  Every other piece of SEO is downstream of these answering 200.
+- **Signal detail pages are no longer blanket `noindex`.** They returned
+  `title: "Market Signal", robots: { index: false }` for several thousand pages.
+  The stated reason (a dated indication becoming a stale search result) is
+  answered rather than dropped: only an approved, in-window, `indexable`,
+  product-bearing signal is offered, and every offered page carries the
+  source-read date in its title, description and structured data.
+- **schema.org JSON-LD** added: a seller offer is an `Offer`, a buyer
+  requirement is a `Demand`. No counterparty node is emitted, and a test asserts
+  no `INTERNAL_SIGNAL_COLUMNS` name reaches the serialised output. Emitted under
+  exactly the same predicate as the index directive.
+- **`robots.txt` names the AI agents explicitly**, including `Google-Extended`
+  and `Applebot-Extended`, which are consent tokens rather than crawlers.
+  `/dev`, `/workspace`, `/auth` and `/api` are now disallowed; previously only
+  `/account` and `/admin` were.
+- **Sitemap** gains the two Market Signals hubs and the individual signals via
+  `lib/board/indexable-signals.ts`, applying the same three predicates the
+  page's robots directive applies.
+- **Data:** `indexable` was `false` on every imported row. Now **true on 4,764**
+  live signals; **0** private rows are indexable.
+
+### Decisions
+
+- **Owner decision (2026-07-30): the private-site gate STAYS UP.** Offered three
+  options - lift it, open only the public signal surfaces, or leave it - the
+  owner chose to leave it. **All SEO work above is therefore correct and inert.**
+- Consequence, recorded so it is not rediscovered: `https://ponte.trade/` and
+  every path under it, including `/robots.txt` and `/sitemap.xml`, answer
+  **401** with `WWW-Authenticate: Basic`. No search engine or AI crawler can
+  read anything. A sustained 401 also causes search engines to drop pages they
+  already hold, so this is not a neutral state, it is an actively de-indexing
+  one. That is understood and accepted.
+
+### Risks / discrepancies
+
+- The two conditions for the SEO to function are independent: the gate must
+  lift **and** the middleware fix must ship. Neither alone is sufficient. The
+  fix is in PR #139; the gate is an owner action with no ticket.
+- The 1,310 cleaned signals carry no `public_expires_at`, so once indexed their
+  URLs would never age out. `indexRisk()` reports this per row.
+- Published signals still carry no written description, so meta descriptions are
+  assembled from structured facts only.
+
+### Next
+
+- Nothing, while the gate is up. When it lifts: verify `robots.txt` and
+  `sitemap.xml` answer 200, submit the sitemap, then decide the expiry window.
+
+### Evidence
+
+- PR #139. `lib/market-signals/seo.ts` and its 13 tests;
+  `lib/board/indexable-signals.ts`; `app/robots.ts`; `app/sitemap.ts`.
+- Production 401 confirmed by request on 30 July 2026 for `/`, `/robots.txt`,
+  `/sitemap.xml` and `/market-signals`.
+
+---
+
+## 2026-07-30 - Supplier signals cleaned, category vocabulary merged, Market Signals entrance built
+
+### Completed
+
+- **Editorial cleanup applied in place to all 4,945 rows** of batch
+  `g4wb_suppliers_2026-07-30` (`scripts/clean-go4world-signals.mjs`, upsert on
+  `canonical_signal_id`, re-runnable):
+  - **Titles canonicalised.** Seller marketing stripped ("Premium", "Export
+    Quality", "Kualitas terbaik", trailing `, Grade A` clauses, everything after
+    a `|`), real variety words kept (Sella, Golden, Steam, 1121, Arabica).
+  - **Quantity re-extracted WITH its unit** from `quantity` and the source prose,
+    canonicalised to MT / kg / litres / containers / bags / pieces. The first
+    import had stored bare numbers, which is why a `qty = 1` Palm Oil card with
+    no unit reached the public board.
+  - **Origin normalised** to `Region, Country`, dropping city-level noise.
+- **Publication gate: a stated quantity WITH a unit, plus a specific product
+  name.** 1,310 published (`approved_signal`), 3,635 held `private`. Held rows
+  are retained and re-enrichable; nothing was deleted.
+- **The duplicate category vocabulary was merged — this was a real defect.** The
+  first import invented its own casing, so production carried `"Rice & grains"`
+  (250 live) beside the board's existing `"Rice & Grains"` (275 live), and the
+  same for four more food markets. Every affected market appeared twice and
+  neither entry was the whole of it. All rows were rewritten to the labels the
+  inventory already used; the five lowercase labels now return **0**.
+
+### Live board after the work
+
+| | |
+|---|---|
+| Total live | **4,768** |
+| Seller offers | **2,270** |
+| Buyer requirements | **2,498** |
+| Distinct categories | **22**, no duplicates |
+
+### Decisions
+
+- **Owner decision (2026-07-30): the Market Signals route opens on a CHOICE, not
+  a list.** A buyer requirement and a seller offer answer opposite questions, and
+  a blended newest-sixty list made the member do the sorting. `/market-signals`
+  now renders two doors carrying their own live counts and their own search
+  field; any filter, search, sort or page renders the board exactly as before,
+  and `?view=board` is the explicit "show me everything" URL.
+
+### Interface shipped (code, deploys with the branch)
+
+- `components/desk/SignalGates.tsx` — the entrance.
+- `components/desk/CategoryBrowse.tsx` + `/market-signals/categories` — every
+  live market with its offers/requirements split, measured from the inventory
+  rather than declared, so a market with nothing live is absent rather than
+  listed-and-empty.
+- `SignalBoard` gains a Buyer requirements / Seller offers / All lane selector.
+- New `category` filter (`FindQuery` → `InventoryQuery` → `eq("category", …)`)
+  and a `view` parameter. `showsBoard()` is the single authority for which of the
+  two surfaces a URL means.
+- **The two sides are NOT colour-coded**, deliberately: the approved palette
+  reserves its status colours and keeps gold off status entirely (Constitution
+  section 6), and direction is not a state. `token-authority.test.ts` passes,
+  which is what proves no colour was invented.
+
+### Risks / discrepancies
+
+- **The interface is unverified in a browser.** `next build` compiles both routes
+  and typecheck and the affected suites pass, but no frame was captured: the site
+  is behind the Basic-auth gate and the shared password is not held by the agent.
+  The gate was NOT weakened to get evidence. `/en/dev/market-signals-entrance`
+  renders both surfaces over fixtures (dev-only, 404s in production) for whoever
+  has the password.
+- Published signals still carry **no written description**; cards show structured
+  facts only. The desk write-up pass is not run.
+- Signals carry no `public_expires_at`, so they do not auto-expire.
+
+### Next
+
+- Capture desktop and 390×844 evidence via the dev gallery, with the site password.
+- Consider the write-up pass so cards carry a Ponte-voice line.
+
+### Evidence
+
+- `scripts/clean-go4world-signals.mjs`, `scripts/import-go4world-suppliers.mjs`.
+- Counts above read from production with the service role via PostgREST, using
+  the board's own eligibility predicates.
+- **Rollback:** `delete from desk_radar where import_batch = 'g4wb_suppliers_2026-07-30';`
+
+---
+
+## 2026-07-30 - Go4WorldBusiness supplier signals imported and published live (batch g4wb_suppliers_2026-07-30)
+
+### Completed
+
+- **4,945 supplier offers imported into production `desk_radar`** (`cptglsmjmzcfpjndqfmc`)
+  from the Go4WorldBusiness supplier export
+  `go4world_suppliers_liquid_categories.csv` (4,945 data rows; 0 skipped, 0 duplicates —
+  every `deal_id` unique). Upserted via PostgREST with the service-role key, in batches
+  of 500, `on_conflict=canonical_signal_id` (idempotent; re-runnable).
+- **Categorised.** All rows are product supplier offers → `side = offer`,
+  `market_family = products`. Six source slugs mapped to a readable public `category`,
+  a `product_sector_key` and an HS chapter (`hs_code`) for the board's chapter chips:
+  rice-grains→"Rice & grains"/agri/10 (1,086), edible-oils→"Edible oils"/food/15 (1,231),
+  nuts-dryfruit→"Nuts & dried fruit"/agri/08 (1,079), coffee-tea→"Coffee & tea"/agri/09 (596),
+  spices→"Spices"/agri/09 (491), pulses→"Pulses"/agri/07 (462).
+- **Ordered** by category, then newest spotted first.
+- **Privacy preserved.** Supplier/contact fields land only in internal columns
+  (`counterparty_*`, `import_meta`); none is in `PUBLIC_SIGNAL_COLUMNS`. (The export's
+  contact email/phone/buyer_name were empty anyway; `buyer_company`/`buyer_country`
+  are the only counterparty data and stay internal.)
+- **Importer added:** `scripts/import-go4world-suppliers.mjs` (dependency-free; reads the
+  CSV, categorises, orders, upserts via `fetch`; `--dry [--out file]` prepares without
+  writing). Sibling of `scripts/import-desk-radar.mjs`, tailored to the supplier export
+  (that older script maps `type==="sell"` and requires a quantity, so it would mislabel
+  all 4,945 as `requirement` and drop 63%).
+
+### Decisions
+
+- **Owner decision (2026-07-30): publish the whole set LIVE**, not the usual
+  private-on-import + per-row admin approval. All 4,945 written `status = approved_signal`,
+  `published_at = now`, **`public_expires_at = null`** — deliberately not `spotted_at + 90d`,
+  because the scrape carries historical spotted dates back to 2003 and a spotted-based
+  window would immediately hide most of the inventory.
+
+### Risks / discrepancies
+
+- These are **unconfirmed external signals** (the record type's premise) published without
+  the individual desk review the import convention normally applies. ~1,486 rows share a
+  product name with another (different supplier/date); all retained as distinct listings.
+- Signals carry no `public_expires_at`, so they will **not auto-expire**; removal is a
+  deliberate action.
+
+### Next
+
+- If any subset should not be public, withdraw by canonical id or category.
+- **Rollback (one statement):** `delete from desk_radar where import_batch = 'g4wb_suppliers_2026-07-30';`
+
+### Evidence
+
+- Production verification (service-role, exact public read contract
+  `status=approved_signal` + `public_expires_at is null or > now`): batch board-visible
+  **4,945 / 4,945**; whole-board live inventory **~3,458 → 8,403**; per-category counts
+  match the import summary; a public-columns read exposes no internal field.
+- Script: `scripts/import-go4world-suppliers.mjs`.
+
+---
+
+## 2026-07-30 - Dedicated QA identity created; LB-008 closed on a real authenticated probe
+
+### Completed
+
+- **One dedicated QA identity created** in production `cptglsmjmzcfpjndqfmc`, on an
+  owner-confirmed Ponte-controlled address:
+  - email `deals@ponte.trade`, user id `8263140e-4231-496b-b4c6-cfc88739995b`
+  - label and purpose `Ponte Trade Deal Room QA`, recorded in `user_metadata`
+  - `email_confirm: true`, so no mail was sent to a human
+  - **no password was ever supplied**; `app_metadata` carries provider information only
+  - auth role `authenticated` (the ordinary Postgres role); **`profiles.role` = `customer`**
+  - **no admin and no service-role privilege**
+  - user count **9 to 10**; `admin` profile count **unchanged at 1**
+- **Credential disposition: nothing reusable retained.** Zero QA sessions, zero QA
+  refresh tokens, zero live tokens. Sessions were obtained from single-use links,
+  held in memory only, and revoked at the end of the run. **No token, link or secret
+  appears in this repository, in any log or in any pull request.**
+- **The previously pending real-authenticated direct-RPC probe PASSED.** As the QA
+  member: intended functions usable **19 of 19** - four RLS helpers returning `200`,
+  fifteen commands reaching their bodies - and internal functions denied **4 of 4**,
+  with `deal_room_log_event` returning the PostgreSQL
+  `permission denied for function deal_room_log_event`. `deal_room_events_append_only`
+  returned `404 PGRST202`, because PostgREST drops functions a role cannot execute
+  from its schema cache.
+- **Catalogue state unchanged by the probe:** `anon` EXECUTE **0 of 23**, `PUBLIC`
+  **0**, `authenticated` **exactly 19 by name**, `service_role` **23 of 23**, 14
+  policies with none non-SELECT and none naming `anon`.
+  `npm run deal-room:acl-verify` exits 0.
+- **No existing account or profile was modified.** One pre-existing account's
+  `updated_at` moved during the window; it was a refresh-token rotation from that
+  account's own live browser session (token at `.287`, user row at `.297`, ten
+  milliseconds later), not a sign-in and not a creation. No operation in this pass
+  named any account other than `deals@ponte.trade`.
+- **LB-008 moved to Resolved.**
+
+### Decisions
+
+- Owner, 30 July 2026: `deals@ponte.trade` confirmed as a Ponte-controlled inbox;
+  exactly one normal-member QA account authorised; no admin role, no
+  `profiles.role` modification, no use or impersonation of the nine existing
+  members.
+
+### Risks / discrepancies
+
+- **A testing-method correction worth carrying forward.** The first probe predicate
+  treated any SQLSTATE `42501` as a missing grant and reported 0 of 15 commands
+  usable. **Ponte command bodies deliberately raise `42501` for domain
+  authorisation refusals** - the migration does so 44 times - so "Deal not found" or
+  "Only a room administrator can do this" is the function executing correctly for a
+  member with no rooms. **Only `permission denied for function <name>`, which
+  Postgres alone emits, proves missing EXECUTE.** The corrected predicate produced
+  19 of 19 usable and 4 of 4 denied. A future probe that does not make this
+  distinction will read a healthy ACL as a broken one.
+- **The `/account` browser landing was NOT demonstrated**, and the reasons are
+  findings rather than excuses. The requested `http://localhost:3000/auth/callback?next=/account`
+  continuation was **not in the project's Redirect URL allowlist, so Supabase
+  substituted the project Site URL and discarded the continuation entirely**. Second,
+  the admin-generated link returned an **implicit token fragment**
+  (`#access_token=...&refresh_token=...`) with **no `code` parameter**, while
+  `app/auth/callback/route.ts` requires `?code=` for `exchangeCodeForSession`; it
+  would have fallen through to `/login?error=auth`. Third, port 3000 was held by
+  another session's dev server and shared `.claude/launch.json` was not repointed.
+  **None of this affected the authenticated ACL result and none of it is part of
+  LB-008.** `/auth/callback` itself is correct: it honours `next`, defaults to
+  `/account`, and blocks open redirects.
+- **Unallocated observation for controller intake, no identifier assigned.**
+  `lib/email.ts` line 369: the `operator_alert` template hardcodes
+  `actionPath: "/admin"`. Combined with `app/[locale]/admin/layout.tsx` line 53,
+  which bounces an unauthenticated `/admin` hit to `/login?next=/admin`, that is a
+  route by which a session can end on `/admin`. Mitigating: the admin layout gates
+  on `profiles.role !== 'admin'` and renders a restricted notice, so landing there
+  grants nothing. **No claim is made that the QA account produced the earlier
+  `/admin` screenshot** - it did not exist at that time, and the account, the link
+  and the session in this pass all postdate it. No fix is included here.
+- Requirements 12 and 13 (entitlement fail-closed, cross-room isolation) remain
+  catalogue-only and need Approval 3.
+
+### Next
+
+1. Approval 2: `20260729c`, the `deal-room-evidence` bucket and its two policies.
+2. Approval 3: a labelled non-commercial pilot Deal using the QA account, then the
+   negative-access fixture.
+3. Approval 4 - flag and deploy - remains unauthorised.
+4. Controller intake for the `operator_alert` `/admin` observation.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, closure section
+- `docs/codex/DATABASE-STATE.md`, Deal Room internal-function ACL section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-008 resolved
+- `npm run deal-room:acl-verify`, exit 0
+
+---
+
 ## 2026-07-30 - "Ask Ponte to investigate" notification lane: real delivery demonstrated, and the send result no longer swallowed
 
 ### Completed

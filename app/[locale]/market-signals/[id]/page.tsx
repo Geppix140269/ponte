@@ -4,6 +4,14 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { getMarketSignal, type MarketSignal } from "@/lib/board/market-signals";
+import {
+  isIndexableSignal,
+  signalDescription,
+  signalJsonLd,
+  signalTitle,
+} from "@/lib/market-signals/seo";
+import { alternatesFor, localeUrl } from "@/lib/seo";
+import type { Locale } from "@/i18n/routing";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import { factsFor } from "@/lib/desk/facts";
 import { railForScreen } from "@/lib/desk/journey";
@@ -43,11 +51,50 @@ import "@/components/desk/desk.css";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
-  // The root layout template already appends the brand; no suffix here, so the
-  // title never carries it twice. Not indexed: a signal is a dated indication,
-  // and a stale search result is a claim about a market that has moved.
-  return { title: "Market Signal", robots: { index: false } };
+/**
+ * Metadata, and the decision about whether a crawler may have this page.
+ *
+ * Every signal used to return `title: "Market Signal", robots: { index: false }`
+ * with one title for several thousand pages, and none of them reachable. The
+ * stated reason for the noindex was real and is answered rather than dropped:
+ * only an approved, unexpired, `indexable`, product-bearing signal is offered,
+ * and every page that IS offered carries the date the source was read in its
+ * title, its description and its structured data. See `lib/market-signals/seo.ts`.
+ *
+ * A signal that fails any of those predicates keeps the old behaviour exactly:
+ * `noindex, nofollow`, and no structured data is emitted for it either.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: Locale; id: string };
+}): Promise<Metadata> {
+  const lookup = await getMarketSignal(params.id);
+  if (lookup.state !== "visible") {
+    return { title: "Market Signal", robots: { index: false, follow: false } };
+  }
+
+  const signal = lookup.signal;
+  const indexable = isIndexableSignal(signal);
+  const canonical = localeUrl(`/market-signals/${params.id}`, params.locale);
+  const description = signalDescription(signal);
+
+  return {
+    // The root layout template already appends the brand; no suffix here, so
+    // the title never carries it twice.
+    title: signalTitle(signal),
+    description,
+    alternates: alternatesFor(`/market-signals/${params.id}`, params.locale),
+    robots: indexable
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+    openGraph: {
+      type: "website",
+      url: canonical,
+      title: signalTitle(signal),
+      description,
+    },
+  };
 }
 
 /**
@@ -89,6 +136,30 @@ function boundaryFor(signal: MarketSignal): BoundaryItem[] {
   }
 
   return items;
+}
+
+/**
+ * The schema.org description of this signal, for search engines and for the AI
+ * crawlers that read JSON-LD in preference to prose.
+ *
+ * Emitted under exactly the same predicate as the `index` directive, so a page
+ * that tells a crawler not to index it never also hands it structured data to
+ * harvest. A seller offer is an `Offer` and a buyer requirement is a `Demand`;
+ * no counterparty is named in either, because Ponte does not publish one.
+ */
+function SignalJsonLd({ signal, url }: { signal: MarketSignal; url: string }) {
+  if (!isIndexableSignal(signal)) return null;
+  return (
+    <script
+      type="application/ld+json"
+      // The payload is built from our own columns and serialised with
+      // JSON.stringify, so it cannot carry markup; `<` is escaped anyway so a
+      // product name containing one can never close the script element.
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(signalJsonLd(signal, url)).replace(/</g, "\\u003c"),
+      }}
+    />
+  );
 }
 
 function Detail({ signal, objective }: { signal: MarketSignal; objective: string | null }) {
@@ -354,7 +425,13 @@ export default async function MarketSignalPage({
         {result.state === "gone" ? (
           <Invalid id={params.id} />
         ) : (
-          <Detail signal={result.signal} objective={objective} />
+          <>
+            <SignalJsonLd
+              signal={result.signal}
+              url={localeUrl(`/market-signals/${params.id}`, params.locale as Locale)}
+            />
+            <Detail signal={result.signal} objective={objective} />
+          </>
         )}
       </DeskShell>
     </div>

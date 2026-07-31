@@ -8,13 +8,21 @@ import {
   countSignalInventory,
   signalFamilyAvailability,
   countSignalsClassifiedOn,
+  signalSideCounts,
 } from "@/lib/board/inventory";
 import { axisForFamily } from "@/lib/board/availability";
 import { railForScreen } from "@/lib/desk/journey";
 import { alternatesFor } from "@/lib/seo";
 import DeskShell from "@/components/desk/DeskShell";
 import SignalBoard from "@/components/desk/SignalBoard";
-import { parseFindQuery, toInventoryQuery, effectiveSort, PAGE_SIZE } from "@/lib/find/query";
+import SignalGates from "@/components/desk/SignalGates";
+import {
+  parseFindQuery,
+  toInventoryQuery,
+  effectiveSort,
+  showsEntrance,
+  PAGE_SIZE,
+} from "@/lib/find/query";
 import "@/components/desk/desk.css";
 import "@/components/ponte/category/category.css";
 
@@ -79,6 +87,22 @@ export default async function MarketSignalsPage({
    * the board would show a record the availability count had already dropped.
    */
   const nowIso = new Date().toISOString();
+
+  /*
+   * The entrance sits ABOVE the board on a bare arrival, never instead of it.
+   *
+   * A buyer requirement and a seller offer answer opposite questions, so the
+   * two sides are offered as the first thing a member sees, each with its own
+   * live count and its own search. But the records stay on the page: putting a
+   * click between somebody and the inventory they came for is a cost with no
+   * return, and a hub page carrying no records is a thin page to every crawler
+   * that reads it.
+   *
+   * Once anything is narrowed, `showsEntrance` is false and the compact lane
+   * selector inside the board carries the same choice instead.
+   */
+  const entrance = showsEntrance(q);
+
   /*
    * Which controls exist is a measurement, not a taxonomy.
    *
@@ -87,7 +111,7 @@ export default async function MarketSignalsPage({
    * family is selected, because it only decides whether that family's own
    * category list is drawn.
    */
-  const [board, everything, availability, axisClassified] = await Promise.all([
+  const [board, everything, availability, axisClassified, sideCounts] = await Promise.all([
     searchSignalInventory(toInventoryQuery(q), {
       limit: PAGE_SIZE,
       offset: (q.page - 1) * PAGE_SIZE,
@@ -97,10 +121,14 @@ export default async function MarketSignalsPage({
     countSignalInventory(nowIso),
     signalFamilyAvailability(nowIso),
     q.family ? countSignalsClassifiedOn(axisForFamily(q.family), q.family, nowIso) : Promise.resolve(null),
+    // Only asked for when the entrance is drawn. Issued alongside the rest so a
+    // bare arrival costs the same one round trip as a filtered one.
+    entrance ? signalSideCounts(nowIso) : Promise.resolve(null),
   ]);
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       <DeskShell rail={rail} current="market" objective={objective}>
+        {entrance && <SignalGates counts={sideCounts} />}
         <SignalBoard
           q={q}
           board={board}

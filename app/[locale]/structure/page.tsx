@@ -18,6 +18,7 @@ import "@/components/ponte/category/category.css";
 // intake (ADR-0012) uses the same approved primitive rather than a local variant.
 import "@/design/authority/bridge/v1/source/ponte-bridge.css";
 import "@/components/ponte/bridge/bridge-integration.css";
+import "@/components/ponte/bridge/completion-bridge.css";
 import "@/components/ponte/state/state.css";
 import "@/components/products/intake/intake.css";
 

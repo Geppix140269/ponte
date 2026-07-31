@@ -245,16 +245,25 @@
   border-left: 1px solid var(--rule-strong);
 }
 
+/* The per-row Add / Change affordance is an ACTION, so it is interaction blue,
+   not gold (ADR-0016 §4: blue = act/edit, gold = signal/Bridge, ink = commit).
+   Text-and-underline rather than filled: it edits a fact, it does not commit the
+   record. The commit ("Confirm and create the draft") stays the ink fbtn. */
 .ponte-find .prow__e {
   flex: none;
   font-family: var(--f-mono);
   font-size: 11px;
-  color: var(--gold-ink);
+  color: var(--interact);
   background: none;
   border: 0;
-  border-bottom: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--interact-border);
   padding: 0 0 1px;
   cursor: pointer;
+}
+
+.ponte-find .prow__e:hover {
+  color: var(--interact-active);
+  border-bottom-color: var(--interact-active);
 }
 
 /* The provenance marker: shape first, then colour. Greyscale-safe. */

@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth";
+import { safeNextPath } from "@/lib/auth/next-destination";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/account";
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/account";
+  // The generic destination is /opportunities; a journey-specific same-site
+  // `next` still wins. Sanitisation is the shared helper, unit tested in
+  // lib/auth/__tests__/next-destination.test.ts.
+  const next = safeNextPath(searchParams.get("next"));
 
   if (code && isSupabaseConfigured()) {
     try {

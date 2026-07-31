@@ -2,6 +2,83 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 30 July 2026 - ADR-0016 / ADR-0015 Stage 2 production handoff: the Task Completion Bridge and interaction tokens
+
+**Decision:** implemented the approved ADR-0016 (mobile action hierarchy and the
+universal Task Completion Bridge) and ADR-0015 Stage 2 (the `--pf-interact-*`
+tokens) into the Start a Deal journey. No new ADR or design review; this is the
+production handoff of decisions already accepted.
+
+**What landed.**
+
+- **Interaction tokens.** `--pf-interact` (#17548C), `--pf-interact-border`
+  (#2C6EAC), `--pf-interact-active` (#0F3D6B) and `--pf-interact-tint` (#E4EDF5),
+  with dark-ground variants, added to `ponte-flow-tokens.css` and aliased as
+  `--interact*` in the `.ponte-find` scope. Distinct from `--pf-focus`: an active
+  control and a focus ring are never the same blue. Blue = act/edit, ink =
+  commit, gold = signal/Bridge.
+- **The completion binder.** `lib/structure/completion.ts` is a pure function of
+  the draft: it turns `procedureFor(draft).completionFields` + `isFilled` into a
+  `progressValue` step table and done set, per family, and derives the percentage
+  rather than storing it. 100% = all required applicable fields (interpretation
+  A); `note` is enrichment and never enters the denominator (record-strength is a
+  separate subordinate signal). Per-family relative weight maps are irregular and
+  apportioned to 100 for whatever subset is applicable, so `assertWeights` always
+  accepts the table. 16 assertions in `completion.test.ts` pin sum-100, the
+  null-then-rise-to-100 behaviour, the route-end-per-intent rule and that
+  enrichment never moves the value.
+- **The Task Completion Bridge.** `components/ponte/bridge/TaskCompletionBridge.tsx`
+  (Bridge System v1 component #3) renders the neutral null state before the first
+  act, then a gold signal travelling a deck as the record fills. Bound to the
+  binder; it derives nothing. Wired into Start a Deal at the facts, completion
+  and preview steps, so the percentage advances live as applicable commercial
+  detail is entered and reads the same on every step.
+- **Review action system.** The per-row Add/Change affordance is now interaction
+  blue rather than gold (`intake.css .prow__e`), so an action no longer reads as
+  a gold label; the commit stays the ink button.
+
+**Rationale.** The engine (`lib/ponte/progress.ts`) is unchanged: the floor,
+the never-round-an-incomplete-record-to-100 rule and the 100-only-when-complete
+rule stay where they were tested. The binder and the bridge are the derivation
+and the display the ADR names, nothing more.
+
+**Affected areas.** `design-system/ponte-flow/tokens/ponte-flow-tokens.css`,
+`components/find/find.css`, `lib/structure/completion.ts` (+ test),
+`components/ponte/bridge/TaskCompletionBridge.tsx` and `completion-bridge.css`,
+`components/structure/StructureComposer.tsx`, `components/products/intake/intake.css`,
+`app/[locale]/structure/page.tsx`, and the evidence under
+`docs/codex/audits/2026-07-30-completion-bridge/`.
+
+## 30 July 2026 - single-generation product cutover authorised; route authority landed
+
+**Decision:** the owner authorised the single-generation product cutover as a
+programme running inside Launch Mode, delivered as separate reviewable PRs. Three
+decisions were recorded: (a) begin with an additive route authority (PR 1) and the
+governing ExecPlan; (b) the owner provisions the mandated staging (non-production
+Supabase, non-production email, member and admin test accounts) - the agent wires
+config and seed scripts to it and cannot provision it (PL-001/PL-002); (c)
+`member_business` verification becomes fully credit-free, with a test proving it
+cannot call any credit function, recorded as an ADR in the verification PR.
+
+**Rationale:** every canonical route already exists and the new generation is
+already flag-gated, so the programme is largely capability redistribution + flag
+flips + deletion rather than new construction. A chat brief is a proposal input
+under the SOP; this records the owner's acceptance so the next agent treats it as
+authority. The cutover also answers the escalated `/marketplace` product question
+(the dependency finding's option 2: redistribute the three unique capabilities to
+`/opportunities`, `/workspace` and `/account`, then retire).
+
+**Delivered (PR 1, additive, no behavioural change):**
+`lib/navigation/route-manifest.ts` classifies every route
+(`canonical | redirect | internal | feature_gated | development_only`);
+`lib/navigation/__tests__/route-manifest.test.ts` (wired into `npm test`) checks
+manifest integrity, filesystem coverage, and three shrink-only cutover ratchets
+(retired-route links, redirect chains, verification->credit coupling).
+
+**Affected areas:** `lib/navigation/*`; `package.json` (test chain);
+`docs/plans/active/single-generation-cutover.md`; `CURRENT-STATE.md`. No route
+retired, no flag flipped, no production action.
+
 ## 30 July 2026 - the ACL contract now matches production, and the witness is a separate instrument
 
 **Decision:** the owner authorised Phase 1 of a controlled sequence. PR #123 merged

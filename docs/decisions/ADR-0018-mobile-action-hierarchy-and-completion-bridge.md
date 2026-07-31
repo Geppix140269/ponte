@@ -1,8 +1,11 @@
-# ADR-0016 — Mobile action hierarchy, review structure, and the universal Task Completion Bridge
+# ADR-0018 — Mobile action hierarchy, review structure, and the universal Task Completion Bridge
 
 - **Status:** Proposed for owner review; effective when merged. **Do not merge without owner approval.**
 - **Decision date:** drafted 30 July 2026
 - **Owner:** Giuseppe Funaro
+- **Identifier note:** renumbered from ADR-0016 to **ADR-0018** on 30 July 2026 to resolve a
+  collision — `ADR-0016` is `ADR-0016-multilingual-deal-room-interpretation.md` on `main`, and
+  `ADR-0017` is reserved by PR #114 (authentication and operational email). Content unchanged.
 - **Depends on:** ADR-0015 Stage 2 (the `--pf-interact-*` tokens) for its colour; the two are
   reviewed together and Stage 2 merges first or with it.
 - **Amends:** the Constitution's component-facing sections — §12 (buttons/actions), §13 (forms),

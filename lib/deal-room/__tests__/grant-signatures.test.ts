@@ -32,7 +32,7 @@
 // clause is dropped - a defaulted argument is still part of the identity.
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -173,6 +173,97 @@ test("every command is granted to authenticated and nothing is granted to anon",
     grants.every((grant) => grant.role === "authenticated"),
     "a command is granted to a role other than authenticated",
   );
+});
+
+// ---------------------------------------------------------------------------
+// A later migration may REDEFINE a function. It must not change its signature.
+// ---------------------------------------------------------------------------
+//
+// `create or replace function` keyed on a different argument list does not
+// replace anything - it creates an OVERLOAD, silently, and every existing grant
+// still points at the old one. That is LB-005 with the failure deferred: instead
+// of a 42883 at apply time you get two functions, one of them ungranted, and the
+// symptom surfaces as a permission error for a member later.
+//
+// So every `deal_room_*` redefinition in any later migration is compared against
+// the signature `20260729b` declared. The set of files is discovered rather than
+// listed, so a new migration cannot opt out by not being mentioned here.
+
+const LATER_MIGRATIONS = readdirSync("supabase/migrations")
+  .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+  .filter((f) => f > "20260729b_deal_room_rls.sql")
+  .sort();
+
+test("every later migration redefining a deal_room function keeps the declared signature", () => {
+  const original = declaredSignatures();
+  const problems: string[] = [];
+  let redefinitions = 0;
+
+  for (const file of LATER_MIGRATIONS) {
+    const text = readFileSync(`supabase/migrations/${file}`, "utf8");
+    const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
+    for (const m of Array.from(text.matchAll(pattern))) {
+      redefinitions++;
+      const name = m[1];
+      const types = typeList(m[2]);
+      if (!original.has(name)) {
+        problems.push(`${file} declares ${name}, which 20260729b never declared. Classify it deliberately`);
+        continue;
+      }
+      if (original.get(name) !== types) {
+        problems.push(
+          `${file} redefines ${name}(${types}) but 20260729b declares ${name}(${original.get(name)}). ` +
+            `This creates an overload rather than replacing it, and every existing grant keeps pointing at the old one`,
+        );
+      }
+    }
+  }
+  assert.deepEqual(problems, []);
+  // The check is worthless if it silently scanned nothing.
+  assert.ok(redefinitions > 0, "no redefinitions found in later migrations; the scan has drifted from the tree");
+});
+
+test("20260731b fixes the initiator identity constraint and changes nothing else", () => {
+  const FILE = "supabase/migrations/20260731b_deal_room_propose_initiator_capacity.sql";
+  const patched = readFileSync(FILE, "utf8");
+
+  // The defect Approval 3 found: the initiator was admitted with neither an
+  // org_id nor a declared_capacity, so the identity CHECK rejected every room.
+  const inserts = Array.from(
+    patched.matchAll(/insert into public\.deal_room_participants[\s\S]*?;/g),
+  ).map((m) => m[0]);
+  assert.equal(inserts.length, 2, `expected the two initiator inserts, found ${inserts.length}`);
+  for (const stmt of inserts) {
+    assert.ok(stmt.includes("declared_capacity"), "an initiator insert still omits declared_capacity");
+    assert.ok(/'Deal owner'[\s\S]*'Deal owner'/.test(stmt), "the initiator insert does not supply a declared capacity value");
+    assert.ok(stmt.includes("'admitted'"), "the initiator insert no longer admits at 'admitted'; that changes the journey");
+  }
+
+  // Nothing else drifted: the body must equal 20260729b's with only those edits.
+  const originalFn = sql.slice(
+    sql.indexOf("create or replace function public.deal_room_propose("),
+    sql.indexOf("\n$$;\n", sql.indexOf("create or replace function public.deal_room_propose(")) + 5,
+  );
+  const patchedFn = patched.slice(
+    patched.indexOf("create or replace function public.deal_room_propose("),
+    patched.indexOf("\n$$;\n", patched.indexOf("create or replace function public.deal_room_propose(")) + 5,
+  );
+  const normalise = (s: string) =>
+    s
+      .replace(/participation_authority, declared_capacity, is_required_approver, is_room_administrator,\s*\n\s*state, admitted_at\)/g,
+        "participation_authority, is_required_approver, is_room_administrator, state, admitted_at)")
+      .replace(/'Owner of the published Deal', 'Deal owner',/g, "'Owner of the published Deal',");
+  assert.equal(
+    normalise(patchedFn),
+    originalFn,
+    "20260731b differs from 20260729b's deal_room_propose by more than the declared_capacity fix",
+  );
+
+  // It must not touch anything but that one function.
+  const code = patched.replace(/--[^\n]*/g, "");
+  for (const forbidden of [/create policy/i, /drop policy/i, /alter table/i, /create table/i, /create trigger/i, /create index/i, /alter default privileges/i, /\bgrant\s/i, /\brevoke\s/i]) {
+    assert.equal(forbidden.test(code), false, `20260731b contains ${forbidden} - it must only replace one function`);
+  }
 });
 
 console.log(`ok   deal-room grant signatures: ${passed} assertions passed`);

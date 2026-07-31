@@ -1,5 +1,6 @@
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { createAdminClient } from "@/lib/supabase/server";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import {
   draftVerificationNotes,
   type RegistryJson,
@@ -31,6 +32,53 @@ export const dynamic = "force-dynamic";
 // never rendered or logged.
 const DOCS_BUCKET = "verification-docs";
 const DOC_URL_TTL_SECONDS = 3600;
+
+const card: React.CSSProperties = {
+  background: "var(--raised)",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  boxShadow: "var(--e-1)",
+  padding: "18px 20px",
+};
+
+const fieldStyle: React.CSSProperties = {
+  width: "100%",
+  font: "inherit",
+  fontSize: 13.5,
+  color: "var(--ink)",
+  background: "var(--raised)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: "var(--dk-radius-in)",
+  padding: "9px 11px",
+  resize: "vertical",
+};
+
+const tag: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 10,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  color: "var(--ink-2)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: 4,
+  padding: "2px 7px",
+};
+
+const box: React.CSSProperties = {
+  background: "var(--sunken)",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  padding: 16,
+};
+
+const capLabel: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 10,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: "var(--ink-3)",
+};
 
 type ReconcileCheck = {
   check?: string;
@@ -76,19 +124,19 @@ type DocRow = {
   doc_type: string;
 };
 
-const FIELD =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cream placeholder:text-gray-2/60 focus:border-gold focus:outline-none";
-
-const STATUS_TONE: Record<string, string> = {
-  review: "text-gold",
-  pending: "text-gray-2",
+// Status shown in the desk's semantic tokens: review is the slate review token,
+// a pass is positive, a refusal is danger, and a paused case is muted ink. Gold
+// is never a status.
+const STATUS_COLOR: Record<string, string> = {
+  review: "var(--review)",
+  pending: "var(--ink-3)",
   // Not with the desk: several companies matched the name and the case is
   // paused on the member choosing which one they meant. Nothing to decide here.
-  needs_selection: "text-gray-2",
-  auto_verified: "text-positive",
-  verified: "text-positive",
-  rejected: "text-negative",
-  failed: "text-negative",
+  needs_selection: "var(--ink-3)",
+  auto_verified: "var(--pos)",
+  verified: "var(--pos)",
+  rejected: "var(--neg)",
+  failed: "var(--neg)",
 };
 
 function fmt(iso: string | null): string {
@@ -113,14 +161,30 @@ function str(value: unknown): string | null {
 /** Raw source data, exactly as it was stored. Nothing summarised away. */
 function Raw({ label, value }: { label: string; value: unknown }) {
   return (
-    <details className="border-t border-white/10 pt-3 first:border-t-0 first:pt-0">
+    <details style={{ borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
       <summary
-        className="cursor-pointer text-[10px] uppercase text-gold"
-        style={{ letterSpacing: "0.18em" }}
+        className="mono"
+        style={{ cursor: "pointer", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-3)" }}
       >
         {label}
       </summary>
-      <pre className="mono mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-black/25 p-3 text-[11px] leading-relaxed text-gray-2">
+      <pre
+        className="mono"
+        style={{
+          marginTop: 8,
+          maxHeight: 288,
+          overflow: "auto",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          borderRadius: "var(--dk-radius-in)",
+          background: "var(--raised)",
+          border: "1px solid var(--rule)",
+          padding: 12,
+          fontSize: 11,
+          lineHeight: 1.6,
+          color: "var(--ink-2)",
+        }}
+      >
         {value === null || value === undefined
           ? "not stored"
           : JSON.stringify(value, null, 2)}
@@ -132,9 +196,9 @@ function Raw({ label, value }: { label: string; value: unknown }) {
 function Fact({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
   return (
-    <span className="text-[12.5px] text-gray-2">
-      <span className="text-gray-2/70">{label}: </span>
-      <span className="text-cream">{value}</span>
+    <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>
+      <span style={{ color: "var(--ink-3)" }}>{label}: </span>
+      <span style={{ color: "var(--ink)" }}>{value}</span>
     </span>
   );
 }
@@ -166,19 +230,43 @@ const DETAIL: Record<string, string> = {
 function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
   if (!r) return null;
   const known = OUTCOME[r];
-  const tone = known?.tone ?? "bad";
+  const good = (known?.tone ?? "bad") === "good";
   const detail = m ? (DETAIL[m] ?? m) : null;
   return (
-    <div
-      className={`mb-6 rounded-xl border p-4 text-[13px] leading-relaxed ${
-        tone === "good"
-          ? "border-positive/40 bg-positive/10 text-cream"
-          : "border-negative/40 bg-negative/10 text-cream"
-      }`}
-    >
-      <p>{known?.text ?? `Outcome: ${r}`}</p>
-      {detail && <p className="mono mt-2 text-[12px] text-gray-2">{detail}</p>}
-    </div>
+    <section className="sec" style={{ paddingBottom: 0 }}>
+      {good ? (
+        <div
+          style={{
+            background: "var(--pos-tint)",
+            border: "1px solid var(--pos-line)",
+            borderRadius: "var(--dk-radius)",
+            padding: "14px 16px",
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--ink-2)",
+          }}
+        >
+          <p style={{ color: "var(--pos)", fontWeight: 600 }}>{known?.text ?? `Outcome: ${r}`}</p>
+          {detail && (
+            <p className="mono" style={{ marginTop: 8, fontSize: 12, color: "var(--ink-3)" }}>
+              {detail}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="err">
+          <PonteIcon name="evidence.evreview" size={22} />
+          <div>
+            <b>{known?.text ?? `Outcome: ${r}`}</b>
+            {detail && (
+              <p className="mono" style={{ marginTop: 6 }}>
+                {detail}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -243,22 +331,22 @@ export default async function AdminVerificationsPage({
     const drafts = draftVerificationNotes(v);
 
     return (
-      <div className="glass p-6">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="mono text-[12px] text-gold">
+      <div style={card}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+          <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
             #{v.id.slice(0, 8)}
           </span>
-          <span className="badge uppercase">Level {v.level_requested}</span>
-          <span className="flex-1 text-[15px] text-cream">{v.subject_name}</span>
+          <span style={tag}>Level {v.level_requested}</span>
+          <span style={{ flex: 1, fontSize: 15, color: "var(--ink)" }}>{v.subject_name}</span>
           <span
-            className={`text-[11px] uppercase ${STATUS_TONE[v.status] ?? "text-gray-2"}`}
-            style={{ letterSpacing: "0.2em" }}
+            className="mono"
+            style={{ fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: STATUS_COLOR[v.status] ?? "var(--ink-3)" }}
           >
             {v.status.replace("_", " ")}
           </span>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+        <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: "4px 24px" }}>
           <Fact label="Requested by" value={requester} />
           <Fact label="Country" value={v.subject_country} />
           <Fact label="Reg number" value={v.subject_reg_number} />
@@ -273,79 +361,109 @@ export default async function AdminVerificationsPage({
         </div>
 
         {v.verdict_reason && (
-          <p className="mt-3 border-l-2 border-white/10 pl-3 text-[13px] leading-relaxed text-gray-2">
+          <p
+            style={{
+              marginTop: 12,
+              borderLeft: "2px solid var(--rule)",
+              paddingLeft: 12,
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: "var(--ink-2)",
+            }}
+          >
             {v.verdict_reason}
           </p>
         )}
 
         {/* AI pre-read on the left, raw sources on the right, side by side so
             a claim in the summary can be checked against what was stored. */}
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className="text-[10px] uppercase text-gold"
-                style={{ letterSpacing: "0.18em" }}
-              >
+        <div
+          style={{
+            marginTop: 20,
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          }}
+        >
+          <div style={{ ...box, borderLeft: "3px solid var(--review)" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+              <span className="mono" style={{ ...capLabel, letterSpacing: "0.18em", color: "var(--review)" }}>
                 AI pre-read
               </span>
               {ai?.verdict_suggestion && (
-                <span className="text-[12px] font-bold text-cream">
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>
                   suggests: {ai.verdict_suggestion.replace("_", " ")}
                 </span>
               )}
-              <span className="text-[11px] text-gray-2">
+              <span style={{ fontSize: 11, color: "var(--ink-3)" }}>
                 A suggestion, not a decision.
               </span>
             </div>
 
             {ai?.summary_text ? (
-              <p className="mt-3 text-[13px] leading-relaxed text-cream">
+              <p style={{ marginTop: 12, fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>
                 {ai.summary_text}
               </p>
             ) : (
-              <p className="mt-3 text-[13px] text-gray-2">
+              <p style={{ marginTop: 12, fontSize: 13, color: "var(--ink-3)" }}>
                 No summary was stored for this case. Read the sources.
               </p>
             )}
 
             {Array.isArray(ai?.flags) && ai!.flags!.length > 0 && (
-              <p className="mt-3 text-[12.5px] leading-relaxed text-red-400">
+              <p style={{ marginTop: 12, fontSize: 12.5, lineHeight: 1.6, color: "var(--neg)" }}>
                 Flags: {ai!.flags!.join(" · ")}
               </p>
             )}
 
             {Array.isArray(ai?.checks) && ai!.checks!.length > 0 && (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-[12px]">
-                  <thead
-                    className="border-b border-white/10 text-[9.5px] uppercase text-gray-2"
-                    style={{ letterSpacing: "0.18em" }}
-                  >
+              <div style={{ marginTop: 16, overflowX: "auto" }}>
+                <table className="mono" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12 }}>
+                  <thead>
                     <tr>
-                      <th className="py-2 pr-3">Check</th>
-                      <th className="py-2 pr-3">Result</th>
-                      <th className="py-2 pr-3">Source</th>
-                      <th className="py-2">Note</th>
+                      {["Check", "Result", "Source", "Note"].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            padding: "6px 8px 6px 0",
+                            fontSize: 9.5,
+                            letterSpacing: "0.18em",
+                            textTransform: "uppercase",
+                            color: "var(--ink-3)",
+                            borderBottom: "1px solid var(--rule)",
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody>
                     {ai!.checks!.map((c, i) => (
                       <tr key={`${v.id}-check-${i}`}>
-                        <td className="py-2 pr-3 text-cream">{c.check ?? "-"}</td>
+                        <td style={{ padding: "6px 8px 6px 0", color: "var(--ink)", borderTop: "1px solid var(--rule)" }}>
+                          {c.check ?? "-"}
+                        </td>
                         <td
-                          className={`py-2 pr-3 ${
-                            c.result === "pass"
-                              ? "text-positive"
-                              : c.result === "fail"
-                                ? "text-negative"
-                                : "text-gold"
-                          }`}
+                          style={{
+                            padding: "6px 8px 6px 0",
+                            borderTop: "1px solid var(--rule)",
+                            color:
+                              c.result === "pass"
+                                ? "var(--pos)"
+                                : c.result === "fail"
+                                  ? "var(--neg)"
+                                  : "var(--review)",
+                          }}
                         >
                           {c.result ?? "-"}
                         </td>
-                        <td className="py-2 pr-3 text-gray-2">{c.source ?? "-"}</td>
-                        <td className="py-2 text-gray-2">{c.note ?? "-"}</td>
+                        <td style={{ padding: "6px 8px 6px 0", color: "var(--ink-2)", borderTop: "1px solid var(--rule)" }}>
+                          {c.source ?? "-"}
+                        </td>
+                        <td style={{ padding: "6px 0", color: "var(--ink-2)", borderTop: "1px solid var(--rule)" }}>
+                          {c.note ?? "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -354,15 +472,12 @@ export default async function AdminVerificationsPage({
             )}
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <span
-              className="text-[10px] uppercase text-gray-2"
-              style={{ letterSpacing: "0.18em" }}
-            >
+          <div style={box}>
+            <span className="mono" style={capLabel}>
               Source data as stored
             </span>
 
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+            <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: "4px 24px" }}>
               <Fact label="Registry" value={str(registry.source)} />
               <Fact
                 label="Available"
@@ -395,7 +510,7 @@ export default async function AdminVerificationsPage({
               />
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
               <Raw label="registry" value={v.registry} />
               <Raw label="vies" value={v.vies} />
               <Raw label="gleif" value={v.gleif} />
@@ -405,11 +520,8 @@ export default async function AdminVerificationsPage({
         </div>
 
         {docs.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span
-              className="text-[10px] uppercase text-gray-2"
-              style={{ letterSpacing: "0.18em" }}
-            >
+          <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+            <span className="mono" style={capLabel}>
               Documents
             </span>
             {docs.map((d) => (
@@ -418,12 +530,12 @@ export default async function AdminVerificationsPage({
                 href={d.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="badge-gold text-[11px] hover:opacity-80"
+                className="b b--2 b--sm"
               >
                 {d.docType.replace(/_/g, " ")}
               </a>
             ))}
-            <span className="text-[11px] text-gray-2">
+            <span style={{ fontSize: 11, color: "var(--ink-3)" }}>
               Links are signed and expire within the hour.
             </span>
           </div>
@@ -437,8 +549,17 @@ export default async function AdminVerificationsPage({
             nothing more: it is the box's default value, so typing over it or
             emptying it works exactly as it did before, and whatever is left in
             the box at the moment of the click is what the member reads. */}
-        <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 md:grid-cols-3">
-          <form action={approveVerificationAction} className="grid gap-2">
+        <div
+          style={{
+            marginTop: 20,
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            borderTop: "1px solid var(--rule)",
+            paddingTop: 20,
+          }}
+        >
+          <form action={approveVerificationAction} style={{ display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
@@ -446,14 +567,14 @@ export default async function AdminVerificationsPage({
               maxLength={1500}
               defaultValue={open ? drafts.approve : ""}
               placeholder="Note to the member, optional. Sent with the approval."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <button className="btn-gold justify-center" disabled={!open}>
+            <button className="b b--block" disabled={!open} aria-disabled={!open ? "true" : undefined}>
               Approve
             </button>
           </form>
 
-          <form action={rejectVerificationAction} className="grid gap-2">
+          <form action={rejectVerificationAction} style={{ display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
@@ -461,14 +582,14 @@ export default async function AdminVerificationsPage({
               maxLength={1500}
               defaultValue={open ? drafts.reject : ""}
               placeholder="Reason for the rejection. Sent to the member."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <button className="btn-ghost-light justify-center" disabled={!open}>
+            <button className="b b--2 b--block" disabled={!open} aria-disabled={!open ? "true" : undefined}>
               Reject
             </button>
           </form>
 
-          <form action={requestDocumentsAction} className="grid gap-2">
+          <form action={requestDocumentsAction} style={{ display: "grid", gap: 8 }}>
             <input type="hidden" name="id" value={v.id} />
             <textarea
               name="note"
@@ -476,15 +597,15 @@ export default async function AdminVerificationsPage({
               maxLength={1500}
               defaultValue={open ? drafts.documents : ""}
               placeholder="What is missing. Sent to the member, the case stays open."
-              className={FIELD}
+              style={fieldStyle}
             />
-            <button className="btn-ghost-light justify-center" disabled={!open}>
+            <button className="b b--2 b--block" disabled={!open} aria-disabled={!open ? "true" : undefined}>
               Request documents
             </button>
           </form>
         </div>
         {!open && (
-          <p className="mt-3 text-[11.5px] text-gray-2">
+          <p style={{ marginTop: 12, fontSize: 11.5, color: "var(--ink-3)" }}>
             This case is not open for review. Only a case in review can be
             decided here.
           </p>
@@ -495,31 +616,42 @@ export default async function AdminVerificationsPage({
 
   return (
     <UnsavedFormGuard>
-      <div>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
-      <h1 className="serif text-white mb-2" style={{ fontSize: 32, fontWeight: 500 }}>
-        Verifications
-      </h1>
-      <p className="max-w-3xl text-[13px] leading-relaxed text-gray-2">
-        {queue.length} case{queue.length === 1 ? "" : "s"} waiting for review,{" "}
-        {rest.length} other{rest.length === 1 ? "" : "s"} shown below them. Read
-        the pre-read against the source data before deciding. An approval and a
-        rejection are always your decision, never the model&apos;s.
-      </p>
+      <section className="sec">
+      <div className="sech">
+        <div>
+          <h2>
+            <PonteIcon name="evidence.evreview" size={18} />
+            Verifications
+          </h2>
+          <p className="d">
+            {queue.length} case{queue.length === 1 ? "" : "s"} waiting for review,{" "}
+            {rest.length} other{rest.length === 1 ? "" : "s"} shown below them. Read
+            the pre-read against the source data before deciding. An approval and a
+            rejection are always your decision, never the model&apos;s.
+          </p>
+        </div>
+      </div>
 
-      <h2
-        className="mt-9 text-[11px] uppercase text-gold"
-        style={{ letterSpacing: "0.22em" }}
+      <h3
+        className="mono"
+        style={{ marginTop: 12, marginBottom: 12, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ink-2)" }}
       >
         Waiting for review
-      </h2>
+      </h3>
       {queue.length === 0 ? (
-        <div className="mt-4 glass p-6 text-[13px] text-gray-2">
-          Nothing is waiting. Cases arrive here when a check cannot be settled
-          against the sources on its own.
+        <div className="empty">
+          <PonteIcon name="evidence.infocomplete" size={24} />
+          <div>
+            <b>Nothing is waiting</b>
+            <p>
+              Cases arrive here when a check cannot be settled against the sources
+              on its own.
+            </p>
+          </div>
         </div>
       ) : (
-        <ul className="mt-4 space-y-4">
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 16 }}>
           {queue.map((v) => (
             <li key={v.id}>
               <Card v={v} />
@@ -528,18 +660,22 @@ export default async function AdminVerificationsPage({
         </ul>
       )}
 
-      <h2
-        className="mt-12 text-[11px] uppercase text-gray-2"
-        style={{ letterSpacing: "0.22em" }}
+      <h3
+        className="mono"
+        style={{ marginTop: 32, marginBottom: 12, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ink-3)" }}
       >
         Everything else
-      </h2>
+      </h3>
       {rest.length === 0 ? (
-        <div className="mt-4 glass p-6 text-[13px] text-gray-2">
-          No other verifications yet.
+        <div className="empty">
+          <PonteIcon name="primitive.span" size={24} />
+          <div>
+            <b>No other verifications yet</b>
+            <p>Decided and paused cases will appear here.</p>
+          </div>
         </div>
       ) : (
-        <ul className="mt-4 space-y-4">
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 16 }}>
           {rest.map((v) => (
             <li key={v.id}>
               <Card v={v} />
@@ -547,7 +683,7 @@ export default async function AdminVerificationsPage({
           ))}
         </ul>
       )}
-      </div>
+      </section>
     </UnsavedFormGuard>
   );
 }

@@ -121,19 +121,26 @@ export default function AccountGate({
     setActionError(null);
     setOutcome("running");
 
-    // Real numbers or no numbers. If the balance cannot be read the line is
+    // Credit reads and cost copy belong only to a paid counterparty context.
+    // Ordinary sign-up, publishing and expressing interest are free, and a free
+    // action must never end on a balance line: it would read as a charge where
+    // there is none. Only the counterparty check (`verify`) is a paid path, so
+    // only it looks up the balance to show the fee it is about to spend.
+    // Real numbers or no numbers: if the balance cannot be read the line is
     // omitted rather than guessed at, because "You have 3 credits" is a claim
     // about somebody's account.
-    try {
-      const res = await fetch("/api/credits/balance");
-      if (res.ok) {
-        const json = await res.json();
-        if (typeof json.balance === "number") {
-          setBalance({ credits: json.balance, cost: json.prices?.verification ?? 2 });
+    if (context === "verify") {
+      try {
+        const res = await fetch("/api/credits/balance");
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof json.balance === "number") {
+            setBalance({ credits: json.balance, cost: json.prices?.verification ?? 2 });
+          }
         }
+      } catch {
+        /* the line is optional, the action is not */
       }
-    } catch {
-      /* the line is optional, the action is not */
     }
 
     try {
@@ -143,7 +150,7 @@ export default function AccountGate({
       setOutcome("failed");
       setActionError(e instanceof Error ? e.message : t("actionFailed"));
     }
-  }, [onComplete, t]);
+  }, [onComplete, t, context]);
 
   /** OTP verified. A returning member with a profile skips the profile step. */
   const afterVerified = useCallback(async () => {
@@ -531,9 +538,12 @@ export default function AccountGate({
                 </p>
               )}
 
-              {/* The account exists either way, so the balance is still true
-                  and still worth saying even when the action itself failed. */}
-              {balance && (
+              {/* The balance line is a paid-context affordance only, and
+                  `balance` is only ever read in that context. The account
+                  exists either way, so when it IS a counterparty check the
+                  balance is still true and worth saying even when the action
+                  itself failed. */}
+              {context === "verify" && balance && (
                 <p className="rounded-field border border-hairline bg-white/[0.04] px-4 py-3 text-[13px] text-slate">
                   {t("credits", {
                     balance: balance.credits,

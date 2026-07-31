@@ -229,6 +229,7 @@ function applySignalFilters<T>(
   // records the search itself reached, and print a denominator that is not the
   // member's question.
   if (query.side) q = q.eq("side", query.side);
+  if (query.category && omit !== "category") q = q.eq("category", query.category);
   if (query.product) q = q.ilike("product", `%${query.product}%`);
   if (search) q = q.or(searchPredicate(search));
   return q as unknown as T;
@@ -591,6 +592,123 @@ export async function countSignalsClassifiedOn(
     const { count, error } = await read;
     if (error || typeof count !== "number") return null;
     return count;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Live signals on each side of the market, and the total.
+ *
+ * The read behind the Market Signals entrance. A buyer requirement and a seller
+ * offer are two different questions — "who wants what I sell" and "who sells
+ * what I want" — so the entrance offers them as two doors, and a door with no
+ * count on it asks a member to guess whether it is worth opening.
+ *
+ * Same eligibility predicates as the board, in the query, so the numbers on the
+ * doors are the numbers behind them. `head: true` fetches no rows.
+ *
+ * Null on failure, never zero: zero is the claim that a side of the market is
+ * empty, and a failed count has established nothing of the kind.
+ */
+export type SignalSideCounts = { offer: number; requirement: number; total: number };
+
+export async function signalSideCounts(nowIso?: string): Promise<SignalSideCounts | null> {
+  noStore();
+  if (!isSupabaseConfigured()) return null;
+  const now = nowIso ?? new Date().toISOString();
+  try {
+    const sb = createAdminClient();
+    const live = () =>
+      sb
+        .from("desk_radar")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "approved_signal")
+        .or(publicWindowPredicate(now));
+    const [offer, requirement, total] = await Promise.all([
+      live().eq("side", "offer"),
+      live().eq("side", "requirement"),
+      live(),
+    ]);
+    for (const read of [offer, requirement, total]) {
+      if (read.error || typeof read.count !== "number") return null;
+    }
+    return {
+      offer: offer.count as number,
+      requirement: requirement.count as number,
+      total: total.count as number,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Every live category, with how it splits between the two sides.
+ *
+ * The read behind the category browse. The split is not decoration: it is the
+ * most useful thing on the page. Coffee is almost entirely offers and consumer
+ * goods almost entirely requirements, so "how big is this market" and "which
+ * side of it is crowded" are answered by the same row.
+ *
+ * ---------------------------------------------------------------------------
+ * Why this pages rather than counting
+ * ---------------------------------------------------------------------------
+ * PostgREST has no GROUP BY, so the alternatives were one indexed count per
+ * category per side — two dozen categories is fifty round trips — or reading
+ * the two columns for the eligible set and counting here. The second is one
+ * round trip per thousand rows over two short text columns, and it discovers
+ * the categories rather than being told them, so a category that appears in the
+ * inventory tomorrow appears on this page tomorrow with no code change.
+ *
+ * The page size is Supabase's own default ceiling. `MAX_PAGES` bounds the loop
+ * so an unexpectedly large inventory degrades to an incomplete count instead of
+ * an unbounded read; it is a safety rail, not an expected path.
+ */
+export type CategorySplit = { category: string; offers: number; requirements: number; total: number };
+
+const CATEGORY_PAGE = 1000;
+const MAX_PAGES = 20;
+
+export async function signalCategorySplits(nowIso?: string): Promise<CategorySplit[] | null> {
+  noStore();
+  if (!isSupabaseConfigured()) return null;
+  const now = nowIso ?? new Date().toISOString();
+  try {
+    const sb = createAdminClient();
+    const tally = new Map<string, CategorySplit>();
+
+    for (let page = 0; page < MAX_PAGES; page += 1) {
+      const from = page * CATEGORY_PAGE;
+      const { data, error } = await sb
+        .from("desk_radar")
+        .select("category, side")
+        .eq("status", "approved_signal")
+        .or(publicWindowPredicate(now))
+        .not("category", "is", null)
+        .order("id", { ascending: true })
+        .range(from, from + CATEGORY_PAGE - 1);
+      if (error) throw error;
+      const rows = (data ?? []) as { category: string | null; side: string | null }[];
+
+      for (const row of rows) {
+        const key = row.category?.trim();
+        if (!key) continue;
+        const entry = tally.get(key) ?? { category: key, offers: 0, requirements: 0, total: 0 };
+        if (row.side === "offer") entry.offers += 1;
+        else if (row.side === "requirement") entry.requirements += 1;
+        entry.total += 1;
+        tally.set(key, entry);
+      }
+
+      if (rows.length < CATEGORY_PAGE) break;
+    }
+
+    // Biggest market first; ties by name so the order is total and the page
+    // does not reshuffle between two renders that read the same inventory.
+    return Array.from(tally.values()).sort(
+      (a, b) => b.total - a.total || a.category.localeCompare(b.category),
+    );
   } catch {
     return null;
   }
