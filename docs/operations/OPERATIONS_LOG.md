@@ -70,6 +70,103 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - The Deal Room-Only Pricing Authority is merged and binding; nothing is implemented
+
+### Completed
+
+- **`PT-COMMERCIAL-2026-07-31-01`, the Deal Room Transaction Infrastructure
+  Pricing Authority, is on `main`.** PR #155 merged at `7aba8ed`, 06:39:10 UTC.
+  It had been opened as a **draft**; it was marked ready for review on the
+  owner's merge instruction and then merged. One file, 467 lines, no code.
+- **ADR-0020 reconciled it into the repository.** PR #160 merged at `5e029ef`,
+  06:41:51 UTC, deliberately **after** #155 so its citations resolved on landing.
+  20 files, all under `docs/`. `origin/main` is now `5e029ef`; the CI `verify`
+  run on that commit succeeded.
+- **No competing copy of the authority was created.** #160 was authored while
+  #155 was still open and cited the path forward rather than duplicating the
+  owner decision, which is why the merge order mattered.
+- **Seven records now carry superseded banners**, none deleted or rewritten: the
+  four `PT-COMMERCIAL-2026-07-27-*` authorities and ADR-0004, ADR-0005 and
+  ADR-0006. The two `PT-PRODUCT` Deal Room authorities were amended in commercial
+  scope only; the branching hierarchy in them is untouched.
+- **Eight canonical records updated:** ADR index, Authority Manifest, Start Here,
+  Current State, Decision Log, Open Decisions, Launch Blockers, Post-Launch
+  Backlog.
+
+### Decisions
+
+- **The owner decided the commercial model outright** on 31 July 2026: the Deal
+  Room is Ponte's only paid product, at **$79 USD for 30 active days** including
+  five concurrently active private principal-counterparty Deal Branches, **$15
+  USD** per additional concurrent branch, capped at **$199 USD** per Master Deal
+  Room per 30-day period, **USD only**, five languages included.
+- **Retired:** Starter access, Portfolio subscriptions, Ponte Credits,
+  credit-funded rooms, paid verification, verification certificates and badges,
+  public Ponte Desk packages, retainers, success fees, commissions,
+  percentage-of-transaction pricing, euro-denominated Deal Room prices, unlimited
+  free principal-counterparty branches, and multilingual surcharges. Full
+  fifteen-row supersession map in ADR-0020.
+- **The owner authorised both merges explicitly**, in that order.
+
+### Risks / discrepancies
+
+- **The deployed product now contradicts binding repository authority.**
+  `/pricing` publishes Credits at 2 per counterparty check, a Desk success fee
+  and a Desk retainer, and never names the Deal Room. The site-wide footer blurb
+  carries "success fee or retainer" onto every page and `/about` repeats credits
+  and success fees three times, including in the legal-entity paragraph.
+  Recorded as **LB-014, proposed and not yet classified** - `AGENTS.md` reserves
+  that call to the owner.
+- **Merging `main` triggers the Netlify deploy, and both changes were
+  documentation only.** No application file, schema, migration, message fragment
+  or script was touched, so no runtime behaviour shipped. Which commit Netlify is
+  serving remains unrecorded (see `CURRENT-STATE.md`, "The deployed commit is not
+  recorded anywhere").
+- **Nothing in the pricing model is implemented.** There is no pricing engine, no
+  billable-branch predicate, no billing record, no `paid` entitlement kind
+  (`deal_room_entitlements.kind` still admits only `starter`, `sponsored` and
+  `waived`, and the table holds no price, currency or payment reference), no
+  Stripe object for a Deal Room and no charge. Recording an authority is not
+  implementing it, and no production charge can be made.
+- **`counterparty_check` still charges 2 credits** while authority §15 prohibits
+  "paid verification" without qualification. ADR-0018 argued these are two
+  different commercial acts. Both readings are defensible; **OD-011** is open and
+  an agent must not narrow an owner's prohibition by inference.
+- **The Ponte Credits subsystem remains live** - `credit_ledger`,
+  `credit_purchases`, `spend_credits`, `credit_balance` and the 3-credit signup
+  trigger - with real production rows. Its retirement is Stage 8 and is
+  **retention-first**: the ledger records money members paid.
+- **No Stripe state was inspected.** Whether any Product, Price or webhook
+  endpoint exists in the dashboard is **unknown, not zero**. The repository
+  references none.
+
+### Next
+
+1. Owner classifies **LB-014**.
+2. Owner decides **OD-011**, which blocks Stage 8.
+3. Owner authorises **Stage 2** of the programme when the build should start: a
+   pure pricing engine and the billable-branch predicate, tests only, no schema
+   and no Stripe.
+4. No migration, Stripe object, secret, environment value, feature flag,
+   deployment or charge without the separate approval each requires under
+   authority §20-§21 and the `AGENTS.md` stop conditions.
+
+### Evidence
+
+- PR #155 (`7aba8ed`), PR #160 (`5e029ef`); `origin/main` at `5e029ef`, CI
+  `verify` success
+- `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md`
+- `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`
+- `docs/plans/active/deal-room-transaction-pricing.md`
+- `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md`
+- `docs/launch/LAUNCH-BLOCKERS.md` (LB-014, proposed);
+  `docs/launch/POST-LAUNCH-BACKLOG.md` (PL-032 to PL-038);
+  `docs/operations/OPEN_DECISIONS.md` (OD-011)
+- `npm run verify` exit 0 on the `5738982` baseline and on the reconciliation
+  branch
+
+---
+
 ## 2026-07-31 - A live Deal Room was built and proved; the pages were not rendered
 
 ### Completed
