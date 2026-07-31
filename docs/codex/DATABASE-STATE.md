@@ -101,6 +101,69 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the room initiator's declared capacity (option 1)
+
+`supabase/migrations/20260731b_deal_room_propose_initiator_capacity.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `0de3c6e0e74f814746fe511b39165247163918d539f300ca8dc7ba9ac926ef13` |
+| Size | 13,354 bytes, no BOM |
+| Content | **one `create or replace function`. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+
+Owner decision of 31 July 2026, option 1 of the three the Approval 3 record set
+out: seed the initiator's `declared_capacity` inside `deal_room_propose` rather
+than requiring an organisation or narrowing the constraint.
+
+**The change is three lines.** `declared_capacity` is added to the shared column
+list of the two initiator inserts, and `'Deal owner'` to each value list. The value
+matches the `transaction_role` the same insert already sets and sits beside a
+`participation_authority` of `'Owner of the published Deal'`.
+
+**It states a fact this function has just proved, not a claim made on the member's
+behalf.** Execution only reaches that insert after `v_l.user_id <> auth.uid()` has
+been checked and the Deal confirmed published and family-classified. That
+distinction is the reason option 1 is defensible at all:
+`deal_room_declare_participation` exists so a counterparty states their own
+capacity, and nothing here weakens it — the counterparty still declares, and
+`deal_room_admit_participant` still refuses admission while both `org_id` and
+`declared_capacity` are empty.
+
+Members who do have an organisation are unaffected in presentation: a participant
+row is read as `coalesce(o.name, v_p.declared_capacity, 'Declared capacity not
+stated')`, so an organisation name still wins.
+
+### How the file was produced, and why that matters
+
+The body was **extracted verbatim** from `20260729b` and patched
+programmatically, not retyped. A diff of the two confirms exactly ten changed
+lines — the two column lists and the two value lists — and nothing else.
+
+**The signature is unchanged**, which is the LB-005 risk this carries: `create or
+replace function` keyed on a different argument list does not replace anything, it
+creates an **overload**, silently, while every existing grant keeps pointing at the
+old function. The symptom would surface later as a member permission error rather
+than as a 42883 at apply time.
+
+`lib/deal-room/__tests__/grant-signatures.test.ts` now guards it generally: it
+**discovers** every migration later than `20260729b`, compares each
+`deal_room_*` redefinition against the signature `20260729b` declared, and fails
+on drift. The file set is discovered rather than listed, so a future migration
+cannot opt out by not being named. It also asserts this file supplies
+`declared_capacity` in both inserts, still admits at `'admitted'`, differs from
+`20260729b` by only the intended substitutions, and contains no policy, table,
+trigger, index, grant or revoke. Demonstrated in three directions — a widened
+signature, the fix removed, and a stray grant added — each failing with a specific
+diagnosis. 8 assertions.
+
+### Verification after applying
+
+```
+npm run deal-room:acl-verify        # ACL unchanged: anon 0, authenticated 21
+npm run deal-room:negative-access   # must now get past step one
+```
+
 ## Gate C Approval 3, 31 July 2026: the loop cannot start
 
 `deal_room_propose` fails in production for **every** member:
