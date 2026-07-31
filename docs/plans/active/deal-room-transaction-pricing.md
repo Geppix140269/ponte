@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stages 1, 2 and 3 delivered. Stages 4–9 not started and not authorised.
+**Status:** Stages 1, 2, 3 and 4a delivered. Stage 4b and Stages 5–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -158,10 +158,25 @@ The first substantive design task, and the one most likely to be got wrong.
 
 ### Stage 4 — Stripe checkout and webhook
 
-- A room-period checkout and an additional-branch checkout, both server-priced.
-- Webhook fulfilment reusing the existing idempotency pattern; cap-aware, so a period already at $199 accepts no further branch charge.
-- Failure, retry, duplicate-session and out-of-order-event behaviour specified and tested.
-- No Stripe object created. Catalogue creation is Stage 9.
+**Split into 4a and 4b on 31 July 2026.** The reason is in §12, discovery 6.
+
+#### Stage 4a — the charging decisions ✅ **delivered 31 July 2026**
+
+- A room-period charge, an additional-branch charge and a reactivation charge, all server-priced.
+- Fulfilment decision reusing the existing idempotency reasoning; cap-aware, so a period already at $199 accepts no further branch charge.
+- Failure, retry, duplicate-session, orphaned-payment and out-of-order-event behaviour specified and tested.
+- The charging gate, off, with four required conditions.
+- No Stripe object created, no Stripe SDK imported, no route.
+
+#### Stage 4b — the HTTP surfaces *(not started)*
+
+The checkout route and the webhook endpoint that call Stage 4a's decisions.
+
+**Deliberately held.** A route cannot do anything real until two owner gates are
+open: `20260731e` applied, so `deal_room_room_periods` exists to write to, and
+the Stripe keys set. Landing it earlier adds a payment-shaped surface that
+returns 503 on every path and no capability. Do 4b **when the Stripe gates are
+being opened**, not before.
 
 **Owner gates:** Stripe catalogue, secrets, webhook endpoint configuration.
 
@@ -388,6 +403,54 @@ constant stays until then. `activeDays: 30` is superseded in fact by
 
 ---
 
+**31 July 2026 — Stage 4a delivered, on the owner's instruction. Charging is OFF
+and this stage cannot turn it on.**
+
+- **`lib/deal-room/charging.ts`** — pure. No Stripe SDK import, no clock, no
+  database; `process.env` appears only inside the gate, asserted by test.
+- **The gate needs four conditions and has none of them:**
+  `DEAL_ROOM_BILLING === "on"`, `NEXT_PUBLIC_DEAL_ROOM === "on"`,
+  `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. The fourth gates **checkout**,
+  not only fulfilment — a charge that could not be verifiably confirmed must
+  never be started, and gating on the secret key alone would trade a member's
+  money for a log line. `DEAL_ROOM_BILLING` is server-only, so unlike the Deal
+  Room routing flag it cannot be read or set from a browser. Documented in
+  `docs/codex/FEATURE-FLAGS.md`.
+- **Three checkout decisions:** `roomActivationCharge`, `additionalBranchCharge`,
+  `reactivationCharge`. All price from `./pricing` and server-held capacity;
+  **no function in the module accepts an amount from its caller**, asserted
+  structurally. `additionalBranchCharge` returns `nothing_to_charge` at the cap,
+  which is a success under §10, not a failure.
+- **One fulfilment decision**, ordered by danger rather than likelihood:
+  wrong event type → ignore; unpaid → ignore; **replay checked before anything
+  can grant**; no room or no period row → `orphan`, loud and never retried;
+  unknown kind → refuse; amount mismatch **in both directions** → refuse; a
+  branch charge against a period already at the cap → refuse; a charge that
+  would take the period total past $199 → refuse; exactly on the cap → fulfil.
+- **`shouldProviderRetry` takes the write outcome, not just the decision.** No
+  decision on its own warrants a retry — only a `fulfil` whose write then failed
+  does.
+- **34 assertions** in `lib/deal-room/__tests__/charging.test.ts`, registered in
+  `npm test`, including that a branch charge's description names no counterparty,
+  competitor or negotiation (§10's disclosure rule applied to billing copy).
+
+**Mutation testing found a test gap, not dead code.** Deleting the first of the
+two cap checks — `kind === 'additional_branch' && periodPaidCents >= 19900` —
+left **every test passing**, which looked like a redundant branch. It is not.
+The total-based check that remains, `periodPaidCents + amountTotalCents > 19900`,
+lets a **zero-amount** event through: `19900 + 0` is not greater than `19900`. So
+a session claiming to have collected nothing would be fulfilled and would grant
+branch capacity for free. The 34th assertion is that case, and it fails when the
+check is removed. Both checks stay.
+
+**A defect I wrote and caught before it shipped.** The first draft of
+`shouldProviderRetry` read `return false || decision.action === "refuse" ? false
+: false`, which is `false` for every input through a nonsense ternary. It
+type-checked and would have passed a careless test. Rewritten to the rule above.
+`chargingEnabled()` was also duplicating the gate's four conditions beside
+`chargingUnavailableReason()`; it now derives from it, so the gate and its
+explanation cannot drift into disagreeing.
+
 ## 12. Decisions and discoveries
 
 1. **The authority is not yet on `main`.** PR #155 was open when this plan was
@@ -420,7 +483,18 @@ constant stays until then. `activeDays: 30` is superseded in fact by
    pinned by a test that says so in its title, so reversing it changes one
    named constant and one named test rather than silently changing bills.
    **Owner confirmation required.**
-6. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
+6. **Stage 4 was split, reversing a stated intention.** The plan and a message to
+   the owner both said Stage 4 would ship route handlers refusing behind an
+   off-by-default gate. Having built the decision layer, that looks wrong: a
+   checkout route can do nothing real until `20260731e` is applied (so
+   `deal_room_room_periods` exists to write to) **and** the Stripe keys are set,
+   both owner gates under §20. A route landed earlier is a stub returning 503 on
+   every path — a payment-shaped surface with no capability, and one more thing
+   to review. All the correctness lives in the decisions, which are now complete
+   and proven. So 4b waits until the Stripe gates are actually being opened. The
+   reversal is recorded rather than quietly enacted; the owner can ask for the
+   stubs at any time.
+7. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
    ADR-0008, ADR-0009, ADR-0016, both ADR-0018 files and ADR-0019 have no row.
    Recorded as an observation; back-filling accepted decisions is an owner
    action and was not done.
