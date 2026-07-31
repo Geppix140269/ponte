@@ -24,8 +24,10 @@
 // added in cutover PR 6. That file EXECUTES the pipeline and the route against
 // a recording double for @/lib/credits and asserts that a member_business run
 // reaches no credit function at all. Read the two together: shape here,
-// behaviour there. The runtime file also records one path where the boundary
-// does not hold, which this file cannot see.
+// behaviour there. The runtime file found one path where the boundary did not
+// hold and this file could not see it: the failure refund in `runLevel2Checks`.
+// That refund now carries the same purpose guard as the spend, and the shape of
+// that guard is pinned below.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -78,6 +80,21 @@ test("the only spendCredits call is guarded by a non-member-business purpose", (
   assert.ok(
     /if\s*\(\s*paidPurpose\s*&&\s*req\.userId\s*\)\s*\{[\s\S]*?spendCredits\(/.test(c),
     "spendCredits is not guarded by paidPurpose: a member-business run could be charged",
+  );
+});
+
+test("the failure refund is guarded by the purpose, exactly as the spend is", () => {
+  const c = code(pipeline);
+  // `runLevel2Checks` derives the same paidPurpose the spend uses, from the
+  // purpose it was handed, rather than inheriting a value it cannot see.
+  assert.ok(
+    /const\s+paidPurpose\s*=\s*normalizePurpose\(\s*opts\.purpose\s*\)\s*!==\s*["']member_business["']/.test(c),
+    "the checks no longer derive paidPurpose from the purpose they were given",
+  );
+  assert.ok(
+    /if\s*\(\s*paidPurpose\s*&&\s*userId\s*\)\s*\{[\s\S]*?refundSpend\(/.test(c),
+    "refundSpend is not guarded by paidPurpose: a free run could be given credits " +
+      "back for a verification that never paid",
   );
 });
 

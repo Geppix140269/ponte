@@ -342,8 +342,9 @@ cannot relink a retired route, the business path cannot regain a credit import).
   `?id=<uuid>`), so it must keep resolving those to `/structure?edit=<uuid>`.
 
 - **2026-07-31** — PR 6 (verification) implemented on branch
-  `claude/ponte-issue-130-cutover-pr6`. Not merged, no production action.
-  **This PR changes no behaviour.** The commercial boundary it was scoped to
+  `claude/ponte-issue-130-cutover-pr6`, **merged to `main` as PR #181,
+  `fc1b4cc`.**
+  **This PR changed no behaviour.** The commercial boundary it was scoped to
   build had already shipped under Issue #135: ADR-0018, the `paidPurpose` guard
   in `lib/verification/pipeline.ts`, the `purpose !== "member_business"` guard
   around the balance read and the 402 in `app/api/verification/route.ts`, and the
@@ -371,18 +372,19 @@ cannot relink a retired route, the business path cannot regain a credit import).
   - **The existing source-reading test is kept**, not replaced. It pins the
     readable shape of the guards, which is what a reviewer checks. Both files now
     carry a header saying what each proves and what it does not.
-  - **A DEFECT WAS FOUND BY RUNNING THE CODE, and is recorded rather than
-    fixed.** The refund at the bottom of `runLevel2Checks` is guarded by
-    `if (userId)` and by nothing else. A free `member_business` run whose checks
-    throw therefore calls `refundSpend(userId, COST_VERIFICATION_L2, id)` and
-    grants the member two credits back for a verification that never paid. This
-    breaches ADR-0018 ("cannot call any credit function") on the failure path.
-    The source-reading test cannot see it: all of its pipeline assertions are
-    about `runLevel2`, and the refund lives in `runLevel2Checks`, which the
-    Issue #135 boundary never touched. It is pinned as a named KNOWN GAP test so
-    the breach is observable in CI rather than only in a report, and it is NOT
-    fixed here because PR 6 is scoped to proof and a refund is money. **Owner
-    ruling wanted:** give the refund the same purpose guard the spend has.
+  - **A DEFECT WAS FOUND BY RUNNING THE CODE.** The refund at the bottom of
+    `runLevel2Checks` was guarded by `if (userId)` and by nothing else. A free
+    `member_business` run whose checks throw therefore called
+    `refundSpend(userId, COST_VERIFICATION_L2, id)` and granted the member two
+    credits back for a verification that never paid. This breached ADR-0018
+    ("cannot call any credit function") on the failure path. The source-reading
+    test could not see it: all of its pipeline assertions were about
+    `runLevel2`, and the refund lives in `runLevel2Checks`, which the Issue #135
+    boundary never touched. It was first pinned as a named KNOWN GAP test so the
+    breach was observable in CI rather than only in a report, and left unfixed
+    because PR 6 was scoped to proof and a refund is money. **PR 6 merged with
+    the breach still in place, so `fc1b4cc` carried an ADR-0018 violation to
+    `main`. It is fixed by the follow-up entry below.**
   - **`VERIFICATION_CREDIT_COUPLING` did not shrink**, and could not honestly.
     All four listed files still import `@/lib/credits` for the paid counterparty
     path: `lib/verification/pipeline.ts` and `app/api/verification/route.ts` use
@@ -391,6 +393,32 @@ cannot relink a retired route, the business path cannot regain a credit import).
     check. Moving a constant elsewhere to clear the baseline would game the
     ratchet without decoupling anything.
   - `npm run verify` green.
+
+- **2026-07-31** — **the PR 6 defect FIXED**, on branch
+  `claude/verification-refund-purpose-guard`, as an immediate follow-up to the
+  merge above. The refund is the second end of a payment whose first end was
+  already guarded; this gives it the same guard.
+  - `runLevel2Checks` derives
+    `const paidPurpose = normalizePurpose(opts.purpose) !== "member_business"`
+    — the same derivation and the same words as the spend guard in `runLevel2`,
+    so the two ends of one payment read as a pair — and the refund is guarded
+    `if (paidPurpose && userId)`. `normalizePurpose` makes a missing or unknown
+    purpose a counterparty check, so a caller that passes none keeps the paid
+    behaviour and its refund; both in-repo callers (`runLevel2` and
+    `resumeLevel2WithSelection`) pass the purpose explicitly, the latter reading
+    it from the row. The KNOWN GAP test is replaced by the zero-call assertion
+    its note described (`assert.deepEqual(__creditFunctionsCalled(), [])` on a
+    failed free run, plus a positive assertion that the failure was still
+    written to the case, so the guard cannot pass by skipping the handler). Its
+    paired falsifiability test is kept unchanged: the same upstream fault on the
+    `counterparty_check` path still spends once and refunds once. The
+    source-reading test gains a ninth check pinning the readable shape of the
+    new guard, which makes the ADR-0018 consequence "fails if any credit call
+    site on the shared path loses its purpose guard" true of the refund as well
+    as the spend. Both tests were confirmed to FAIL with the guard removed
+    before being accepted.
+  - **This is a money change and needs owner approval before merging**
+    (AGENTS.md stop conditions). `npm run verify` green.
 
 ## 12. Decisions and discoveries
 
