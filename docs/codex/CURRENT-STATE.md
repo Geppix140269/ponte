@@ -158,8 +158,9 @@ It renders nothing: the page redirects through `lib/marketplace/legacy-redirect.
 to the constitutional composer at `/structure` (a saved record resumes at
 `/structure?edit=<uuid>`). The transactional-email edit CTA and every in-app link
 were repointed there; a `check-governance.mjs` ratchet keeps new source from
-linking the retired editor. The legacy `ListingForm` is now unreachable dead code
-(removal logged PL-030). The five email links to the `/marketplace` **board** were
+linking the retired editor. The legacy `ListingForm` and its orphaned
+`tradeCategories.ts` have been **deleted** (PL-030), and the route-audit baseline
+is empty. The five email links to the `/marketplace` **board** were
 deliberately left — the board has no approved constitutional home yet (PL-029).
 
 ## Landing visual baseline
