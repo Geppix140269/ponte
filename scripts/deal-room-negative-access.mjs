@@ -30,10 +30,20 @@
  * role is used for setup and teardown only, never to check a permission - a
  * proof that ran as a role which bypasses RLS would prove nothing.
  *
+ * ## Removing what it creates
+ *
+ * A room cannot be deleted by any application role: the cascade reaches
+ * `deal_room_activity_events`, which is append-only to everyone including the
+ * service role. Teardown therefore runs the room deletion through the
+ * Management API as the table owner, with the trigger suspended inside a single
+ * transaction scoped to one room id. See `teardown()` for why that capability is
+ * deliberately kept outside the application.
+ *
  * Environment: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
- * SUPABASE_SERVICE_ROLE_KEY. Refuses to run against the production project
- * unless PONTE_ALLOW_PRODUCTION_DB=i-understand is set deliberately, for the
- * same reason `scripts/check-dev-env.mjs` does.
+ * SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ACCESS_TOKEN with
+ * SUPABASE_PROJECT_REF for teardown. Refuses to run against the production
+ * project unless PONTE_ALLOW_PRODUCTION_DB=i-understand is set deliberately, for
+ * the same reason `scripts/check-dev-env.mjs` does.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -122,10 +132,153 @@ async function member(label) {
 
 const created = { users: [], listings: [], rooms: [] };
 
+/* ------------------------------------------------------------------ */
+/* Teardown                                                            */
+/* ------------------------------------------------------------------ */
+/*
+ * The first version of this could not work, and said nothing about it.
+ *
+ * It deleted rooms with `admin.from("deal_rooms").delete()` and discarded the
+ * error. Deleting a room cascades to `deal_room_activity_events`, whose
+ * `deal_room_activity_append_only` trigger refuses DELETE - to anyone, service
+ * role included. That is the guarantee this fixture itself verifies in section
+ * 7. So every room delete failed, which left the listings undeletable on
+ * `deal_rooms_listing_id_fkey` and the users undeletable after them.
+ *
+ * On 31 July 2026 that put four accounts, two listings, two rooms and 26
+ * activity events into production permanently, and the run reported a clean
+ * finish. The first run had stopped at step one, so there had been nothing to
+ * remove and the teardown path had never actually been exercised.
+ *
+ * Removing a room therefore needs the append-only trigger momentarily
+ * suspended, which needs table ownership - the Management API connects as
+ * `postgres`, the owner. Deliberately NOT the service role: the ability to
+ * erase Deal Room history stays outside the application entirely, held only by
+ * whoever holds the management token, and no member, session or service-role
+ * key gains it. The suspension and the deletes are one transaction scoped to a
+ * single room id, so a failure anywhere restores the trigger.
+ *
+ * The credentials are demanded at startup rather than here, so the fixture
+ * never creates a room it has no way to remove.
+ */
+
+const MANAGEMENT_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+const PROJECT_REF = process.env.SUPABASE_PROJECT_REF;
+
+if (!MANAGEMENT_TOKEN || !PROJECT_REF) {
+  console.error(
+    "Set SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF (both are in .env.local).\n\n" +
+      "They are needed to REMOVE the rooms this fixture creates. Deleting a room\n" +
+      "cascades to deal_room_activity_events, which is append-only to every\n" +
+      "application role, so teardown runs through the Management API as the table\n" +
+      "owner. Without them the run would leave a room in the database for ever,\n" +
+      "so it does not start.",
+  );
+  process.exit(2);
+}
+
+const FIXTURE_MARKER = "Negative-access fixture. Fictional.";
+
+async function managementSql(sql) {
+  const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${MANAGEMENT_TOKEN}` },
+    body: JSON.stringify({ query: sql }),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`management API HTTP ${res.status}: ${text.slice(0, 400)}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * Remove one room and its history.
+ *
+ * Refuses unless the room's listing still carries the fixture marker, so this
+ * cannot be pointed at a real room by a stale id or a copied command.
+ */
+async function removeRoom(roomId) {
+  const guard = await managementSql(
+    `select count(*)::int as n from public.deal_rooms r
+       join public.listings l on l.id = r.listing_id
+      where r.id = '${uuid(roomId)}' and l.details = '${FIXTURE_MARKER}'`,
+  );
+  const n = guard?.[0]?.n ?? 0;
+  if (n === 0) throw new Error(`room ${roomId} is not a fixture room; refusing to delete it`);
+
+  await managementSql(`
+    begin;
+    alter table public.deal_room_activity_events disable trigger deal_room_activity_append_only;
+    delete from public.deal_room_activity_events where room_id = '${uuid(roomId)}';
+    delete from public.deal_rooms where id = '${uuid(roomId)}';
+    alter table public.deal_room_activity_events enable trigger deal_room_activity_append_only;
+    commit;
+  `);
+}
+
 async function teardown() {
-  for (const roomId of created.rooms) await admin.from("deal_rooms").delete().eq("id", roomId);
-  for (const listingId of created.listings) await admin.from("listings").delete().eq("id", listingId);
-  for (const userId of created.users) await admin.auth.admin.deleteUser(userId).catch(() => {});
+  const problems = [];
+
+  for (const roomId of created.rooms) {
+    try {
+      await removeRoom(roomId);
+    } catch (err) {
+      problems.push(`room ${roomId}: ${err.message}`);
+    }
+  }
+  for (const listingId of created.listings) {
+    const { error } = await admin.from("listings").delete().eq("id", listingId);
+    if (error) problems.push(`listing ${listingId}: ${error.message}`);
+  }
+  for (const userId of created.users) {
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) problems.push(`user ${userId}: ${error.message}`);
+  }
+
+  // Say so. A teardown that fails quietly is how the database acquired a
+  // permanent room while the run reported success.
+  const left = await managementSql(
+    `select
+       (select count(*)::int from public.deal_rooms where id in (${idList(created.rooms)})) as rooms,
+       (select count(*)::int from public.listings where id in (${idList(created.listings)})) as listings,
+       (select count(*)::int from auth.users where id in (${idList(created.users)})) as users,
+       (select count(*)::int from public.deal_room_activity_events
+          where room_id in (${idList(created.rooms)})) as activity`,
+  );
+  const remaining = left?.[0] ?? {};
+  const stranded = Object.entries(remaining).filter(([, v]) => Number(v) > 0);
+
+  if (problems.length || stranded.length) {
+    console.error(
+      "\nTEARDOWN INCOMPLETE. The database still holds fixture data:\n" +
+        stranded.map(([k, v]) => `  ${v} ${k}`).join("\n") +
+        (problems.length ? `\n\nErrors:\n${problems.map((p) => `  - ${p}`).join("\n")}` : "") +
+        "\n\nRemove it before the next run.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log("\nteardown complete: no rooms, listings, users or activity left behind.");
+}
+
+/** A SQL id list that is still valid SQL when the array is empty. */
+function idList(ids) {
+  return ids.length ? ids.map((id) => `'${uuid(id)}'`).join(", ") : "null";
+}
+
+/**
+ * The Management API takes SQL text, not bound parameters. Every id reaching it
+ * came from this process, but "came from us" is an argument rather than a check,
+ * so each one is proved to be a UUID before it is interpolated.
+ */
+function uuid(value) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value))) {
+    throw new Error(`refusing to interpolate a non-UUID into SQL: ${JSON.stringify(value)}`);
+  }
+  return value;
 }
 
 /* ------------------------------------------------------------------ */

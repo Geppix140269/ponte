@@ -266,4 +266,60 @@ test("20260731b fixes the initiator identity constraint and changes nothing else
   }
 });
 
+test("20260731c fixes the procedure approver gate and touches nothing else", () => {
+  const FILE = "supabase/migrations/20260731c_deal_room_procedure_approver_gate.sql";
+  const patched = readFileSync(FILE, "utf8");
+
+  // Exactly the three functions the defect lives in, and no fourth.
+  const replaced = Array.from(patched.matchAll(/create or replace function public\.(deal_room_\w+)\(/g), (m) => m[1]);
+  assert.deepEqual(replaced.sort(), [
+    "deal_room_admit_participant",
+    "deal_room_approve_procedure",
+    "deal_room_propose_procedure",
+  ]);
+
+  // 1. An admitted principal becomes a required approver, and nothing is demoted.
+  assert.match(
+    patched,
+    /is_required_approver = is_required_approver or v_p\.participant_class = 'principal'/,
+    "admission no longer makes an admitted principal a required approver",
+  );
+
+  // 2. One approval row per person, deterministically chosen.
+  assert.match(
+    patched,
+    /select distinct on \(p\.profile_id\) v_id, p\.id, 'pending'/,
+    "the seed is back to one row per participant row, which issues the initiator two obligations",
+  );
+  assert.match(patched, /order by p\.profile_id, \(p\.sub_room_id is null\) desc/, "the seed's choice is not deterministic");
+
+  // 3. Approval is by person, not by whichever participant row `limit 1` found.
+  assert.equal(
+    /where procedure_id = p_procedure_id and participant_id = v_participant/.test(patched),
+    false,
+    "the approval update is keyed on a single participant row again; that is the defect",
+  );
+  assert.match(
+    patched,
+    /where p\.id = a\.participant_id and p\.profile_id = auth\.uid\(\)/,
+    "the approval update no longer joins on the caller's profile",
+  );
+
+  // A caller with no row on this version must be refused, not silently ignored -
+  // otherwise the outstanding count can reach zero without them.
+  assert.match(patched, /This procedure version does not list you as a required approver/);
+
+  // Nothing outside the function bodies. Strip the `$$ ... $$` blocks and what
+  // remains must be the three statement headers, `begin;` and `commit;` - no
+  // DDL, and in particular no backfill of existing rows.
+  const outside = patched.replace(/\$\$[\s\S]*?\$\$/g, " BODY ").replace(/--[^\n]*/g, " ");
+  for (const forbidden of [
+    /create policy/i, /drop policy/i, /alter table/i, /create table/i, /create trigger/i,
+    /create index/i, /alter default privileges/i, /\bgrant\s/i, /\brevoke\s/i,
+    /\binsert\s+into\b/i, /\bupdate\s+public\./i, /\bdelete\s+from\b/i,
+  ]) {
+    assert.equal(forbidden.test(outside), false, `20260731c contains ${forbidden} outside a function body`);
+  }
+});
+
 console.log(`ok   deal-room grant signatures: ${passed} assertions passed`);
