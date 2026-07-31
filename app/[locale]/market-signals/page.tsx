@@ -25,6 +25,12 @@ import {
 } from "@/lib/find/query";
 import "@/components/desk/desk.css";
 import "@/components/ponte/category/category.css";
+// The entrance draws the two sides with the approved Bridge primitive, so this
+// route needs the authority stylesheet the landing already imports. Imported
+// from the authority package, never copied: there is one source for the
+// geometry, and CODEOWNERS protects it.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
 
 /**
  * R-FIND station 2, Discover: the Market Signals route.
@@ -130,6 +136,7 @@ export default async function MarketSignalsPage({
       <DeskShell rail={rail} current="market" objective={objective}>
         {entrance && <SignalGates counts={sideCounts} />}
         <SignalBoard
+          withEntrance={entrance}
           q={q}
           board={board}
           everything={everything}

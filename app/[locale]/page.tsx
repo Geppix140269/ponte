@@ -4,9 +4,10 @@ import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
+import { signalSideCounts } from "@/lib/board/inventory";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import DeskShell from "@/components/desk/DeskShell";
-import RecordCard from "@/components/desk/RecordCard";
+import SignalCrossing from "@/components/ponte/bridge/SignalCrossing";
 import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
@@ -48,8 +49,6 @@ import "@/components/ponte/bridge/bridge-integration.css";
 
 export const dynamic = "force-dynamic";
 
-/** How many signals the entrance shows as records before the full board. */
-const LANDING_SIGNALS = 4;
 /** How many the live strip carries. Enough to move; all of them real. */
 const STRIP_SIGNALS = 14;
 
@@ -65,9 +64,13 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
-  const board = await readMarketSignals(STRIP_SIGNALS);
+  // The strip needs records; the crossing needs the two sizes of the whole
+  // table. Issued together so the entrance costs one round trip, not two.
+  const [board, sideCounts] = await Promise.all([
+    readMarketSignals(STRIP_SIGNALS),
+    signalSideCounts(),
+  ]);
   const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
-  const records = live.slice(0, LANDING_SIGNALS);
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -125,7 +128,27 @@ export default async function HomePage({ params }: { params: { locale: string } 
             </Link>
           </div>
 
-          {board.state === "unavailable" ? (
+          {/*
+            The crossing, not a sample of the board.
+
+            This section used to print four RecordCards. Four out of several
+            thousand is not a summary of the inventory, it is an arbitrary
+            handful presented as one, and it implied the board was four records
+            long. The two sides and their real sizes say more about the market
+            in one graphic than four cards do, and the sizes are counted over
+            the whole table rather than over what happened to be newest.
+
+            Ponte is the bridge between a buyer and a seller. This is the one
+            place that sentence is drawn instead of written.
+          */}
+          {/*
+            Keyed on the counts this section actually draws, not on the strip's
+            read above it. They come from the same database and will usually
+            fail together, but "the crossing could not be drawn" is a statement
+            about the two counts, and deciding it from a different query is how
+            a section comes to report a failure that did not happen to it.
+          */}
+          {sideCounts === null ? (
             <div className="err">
               <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
               <div>
@@ -136,7 +159,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 </p>
               </div>
             </div>
-          ) : records.length === 0 ? (
+          ) : sideCounts.total === 0 ? (
             <div className="empty">
               <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
               <div>
@@ -153,7 +176,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </div>
             </div>
           ) : (
-            records.map((record) => <RecordCard key={record.ref} record={record} />)
+            <SignalCrossing counts={sideCounts} />
           )}
         </section>
 

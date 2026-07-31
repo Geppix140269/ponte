@@ -8,6 +8,10 @@ import { railForScreen } from "@/lib/desk/journey";
 import type { SignalSideCounts, CategorySplit } from "@/lib/board/inventory";
 import "@/components/desk/desk.css";
 import "@/components/ponte/category/category.css";
+// The crossing is drawn by the approved Bridge package; the gallery needs its
+// stylesheet for the same reason the landing does.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
 
 /**
  * The Market Signals entrance and category browse, over a controlled inventory.
