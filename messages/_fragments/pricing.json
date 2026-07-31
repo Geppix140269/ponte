@@ -2,39 +2,46 @@
   "pricing": {
     "meta": {
       "title": "Fees",
-      "description": "The Ponte marketplace is free: post, get vetted, connect. The desk is optional, on a success fee or a monthly retainer."
+      "description": "A Ponte Deal Room costs $79 USD for 30 active days and includes five active private counterparty branches. Additional branches are $15 USD each, capped at $199 USD per room per 30-day period."
     },
     "pill": "Fees",
-    "title": "The marketplace is <em>free</em>.",
-    "intro": "Post, get vetted, connect: no listing fees, no subscriptions, no commission on deals you close yourselves. Credits pay for checking a counterparty. The desk is there if you want it.",
-    "marketplace": {
-      "name": "The Marketplace",
-      "price": "Free",
-      "terms": "Always · for everyone",
-      "body": "Post what you sell or what you need. AI and the desk vet every listing before it goes live. You stay anonymous until both sides agree to connect, then you deal directly. Producers, trading companies and brokers all welcome, roles declared up front.",
-      "cta": "Start a listing"
+    "title": "One opportunity. Multiple confidential negotiations. <em>Five languages.</em>",
+    "intro": "Ponte is free for finding opportunities and establishing credible interest. You pay when counterparties move from interest into controlled transaction execution, and there is one thing to pay for.",
+    "product": {
+      "name": "Ponte Deal Room",
+      "price": "$79 USD",
+      "terms": "30 active days",
+      "body": "One structured commercial opportunity, with confidential parallel counterparty negotiations beneath it. Controlled admission, an agreed procedure, evidence, clarifications, blockers and decisions, durable multilingual records, and a permanent read-only history after the room closes.",
+      "cta": "See how a Deal Room works"
     },
-    "credits": {
-      "name": "Credits",
-      "price": "2 credits",
-      "terms": "Per counterparty check",
-      "body": "Checking who you are dealing with is the one thing on Ponte that costs money. A check reads the company registers and the OFAC, EU, UN and UK sanctions lists, names every source and dates it, and a person reviews anything that is not clean. Listing checks, write-ups and match alerts stay free.",
+    "formula": {
+      "heading": "How the price is worked out",
+      "included": "$79 USD covers 30 active days and up to five concurrently active private counterparty branches.",
+      "additional": "Each additional concurrently active branch costs $15 USD for the rest of that 30-day period.",
+      "cap": "The most a Master Deal Room can cost is $199 USD per 30-day period, however many branches are running.",
+      "worked": "So five branches cost $79 USD. Seven cost $109 USD. Thirteen or more cost $199 USD."
+    },
+    "languages": {
+      "heading": "Five languages, included",
+      "body": "English, Spanish, Russian, Simplified Chinese and Modern Standard Arabic. There is no multilingual plan, translation surcharge, per-word fee or separate language tier."
+    },
+    "free": {
+      "heading": "What carries no charge",
+      "body": "Browsing, publishing opportunities, preparing a Deal Room, inviting counterparties, receiving and accepting invitations, participants, advisers and specialists, documents, translations, and permanent read-only history. Verifying your own business is free. An invitation that is unanswered, declined or expired never generates a charge."
+    },
+    "never": {
+      "heading": "What Ponte does not charge for",
+      "body": "There are no memberships, plans, subscriptions, credit packs, listing fees, per-seat charges, per-document or per-message charges, commissions, success fees or percentages of your transaction. Ponte is paid for controlled transaction infrastructure, not for acting as a broker or claiming part of your trade."
+    },
+    "check": {
+      "heading": "Checking a counterparty",
+      "body": "A private check on another company is charged separately from the Deal Room. The cost is always shown before a check runs.",
       "cta": "See what a check covers"
     },
-    "desk": {
-      "name": "The Desk, per deal",
-      "price": "Success fee",
-      "terms": "% agreed in writing · paid on closing",
-      "body": "Want a deal managed end to end? The desk runs verification in depth, NCNDA, negotiation, contracts and closing coordination. The percentage is agreed up front in the fee agreement and is due only when the deal closes. Either side can engage us.",
-      "cta": "Bring us a deal"
+    "expiry": {
+      "heading": "When a period ends",
+      "body": "Nothing is deleted and no participant is removed. The room and its branches become read-only, everyone keeps access to their record, and starting a new 30-day period is priced from the branches you choose to resume. A room with nothing to resume stays readable without payment."
     },
-    "retainer": {
-      "name": "The Desk, on your side",
-      "price": "Retainer",
-      "terms": "Monthly · scoped to the mandate",
-      "body": "Continuous sourcing or selling support: a standing mandate to find, vet and negotiate on your behalf, month after month. For trading teams, producers entering new markets, and buyers with recurring programmes.",
-      "cta": "Scope a mandate"
-    },
-    "footnote": "Fee levels are agreed privately, in writing, before any work starts. No hidden costs, no charge for introductions you make yourselves on the board."
+    "footnote": "Prices are in US dollars and exclude any tax that applies where you are. Ponte does not convert currencies."
   }
 }

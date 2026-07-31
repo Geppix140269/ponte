@@ -73,7 +73,7 @@ const CANONICAL: RouteEntry[] = [
   { path: "/account", classification: "canonical", note: "Profile, company, business status, sign-out. Rebuilt in the Desk shell (cutover PR 2)." },
   { path: "/verify", classification: "canonical", note: "Business verification form host. Credit-free member_business boundary (cutover PR 6)." },
   { path: "/verification", classification: "canonical", note: "Verification explainer." },
-  { path: "/pricing", classification: "canonical", note: "Commercial page; accepted current commercial decisions only." },
+  { path: "/pricing", classification: "canonical", note: "Fees. One product and one formula per PT-COMMERCIAL-2026-07-31-01 section 19; no multi-plan comparison grid." },
   { path: "/about", classification: "canonical", note: "About." },
   { path: "/contact", classification: "canonical", note: "Contact." },
   { path: "/privacy", classification: "canonical", note: "Privacy." },
@@ -180,7 +180,7 @@ const LEGACY_REDIRECTS: RouteEntry[] = [
   { path: "/why-ponte", classification: "redirect", redirectsTo: "/about", retirementImplemented: true, note: "Legacy." },
   { path: "/brokerage", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy. Repointed off the retired board in cutover PR 5; one hop, not two." },
   { path: "/network", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy. Repointed off the retired board in cutover PR 5; one hop, not two." },
-  { path: "/advisory", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Analyst Desk generation -> the success-fee option on /pricing." },
+  { path: "/advisory", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Analyst Desk generation -> Fees. The success-fee engagement it named is retired (PT-COMMERCIAL-2026-07-31-01 section 15)." },
   { path: "/category/[slug]", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Legacy shop category." },
   { path: "/product/[slug]", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Legacy shop product." },
 ];
