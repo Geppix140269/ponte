@@ -18,6 +18,59 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Approval 4 preflight: the off switch did not work. Flag NOT flipped.
+
+### Completed
+
+- **Approval 4 was authorised and is not complete.** It is flag + allowlist +
+  deploy; the first did not do what the records said, so nothing was switched on.
+- **`lib/deal-room/flags.ts` claimed the allowlist was "checked in every server route
+  and command handler". Eleven of fifteen server actions never called it.**
+- **Not a security hole**, and not to be recorded as one: the flag is routing, Row
+  Level Security is the boundary, and every one of the eleven reaches the database
+  through a SECURITY DEFINER command that re-proves participation.
+- **What it broke is the off switch.** With the flag off the routes 404, but a server
+  action is an endpoint, not a page - it stays in the bundle and stays invokable. So
+  turning the flag off did not stop seven of the fifteen ways to change a room, and
+  removing somebody from the allowlist did not either. Acceptance criterion 16, the
+  reason it is safe to turn the flag on, was untrue.
+- **Four actions are exempt on purpose** - the admission path, because an invited
+  counterparty is not necessarily allowlisted. That reasoning is now written where
+  they are; it was written nowhere before, which is why it could not be told apart
+  from an oversight. **The other seven are now gated.**
+- **`__tests__/action-gate.test.ts`** discovers every action from the file and
+  requires each to gate or be a named exception. **Run against the pre-fix file it
+  names all seven.** It also requires a gated action to `fail()` rather than continue.
+- **`__tests__/flags.test.ts`** covers `dealRoomAvailableTo`, which had no test at
+  all. Nine assertions; the one that matters most is that an absent or empty
+  allowlist means **nobody**.
+
+### Risks / discrepancies
+
+- **Nobody has rendered these pages.** Turning the Deal Room on for a pilot member
+  would put surfaces in front of them that no person has ever looked at. The capture
+  needs only `PONTE_SITE_PASSWORD`.
+- Approval 4 cannot be completed from here: the environment variables are Netlify's,
+  `NEXT_PUBLIC_DEAL_ROOM` is inlined at build time so it needs a rebuild, and **no
+  one has said who goes on the allowlist**. The private access wall is untouched.
+
+### Production changes
+
+- **None.** No flag, no environment variable, no deployment, no database change.
+
+### Next
+
+1. Owner decides the allowlist, sets the two environment variables and deploys.
+2. Owner supplies `PONTE_SITE_PASSWORD` so the surfaces are seen before a member
+   sees them.
+3. The private access wall is a separate decision and remains untouched.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 72 to 76
+
+---
+
 ## 2026-07-31 - Requirement 12 proved; Approval 3 at 109 of 109
 
 ### Completed

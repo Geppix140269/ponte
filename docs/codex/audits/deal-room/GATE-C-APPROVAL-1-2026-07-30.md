@@ -1808,3 +1808,84 @@ two pending are now established.
 capture is written and needs only `PONTE_SITE_PASSWORD`. Approval 4 -
 `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains unauthorised.
 
+---
+
+# Approval 4 preflight, 31 July 2026: the off switch did not work
+
+**Authorised:** owner, 31 July 2026 - Approval 4.
+**Outcome:** **the flag was not flipped.** Approval 4 is flag + allowlist +
+deploy, and the first of those did not do what the records said it did. Fixed,
+tested, and the remaining steps need decisions and access that are the owner's.
+
+## 72. What Approval 4 rests on
+
+Acceptance criterion 16: turning `NEXT_PUBLIC_DEAL_ROOM` off removes access to the
+unfinished slice without regressing existing journeys. That sentence is the reason
+it is safe to turn on. `lib/deal-room/flags.ts` claimed the allowlist was "checked
+in every server route and command handler".
+
+**It was not. Eleven of the fifteen server actions never called it.**
+
+## 73. Why that matters, and what it is not
+
+It is **not** a security hole, and should not be recorded as one. The flag is
+routing, not authorisation - `flags.ts` says so at length and is right. Row Level
+Security is the boundary, and every one of the eleven reaches the database through
+a SECURITY DEFINER command that re-proves participation. A stranger invoking any of
+them is refused by Postgres exactly as before.
+
+What it broke is **the off switch**. With the flag off the routes 404, so a member
+cannot reach a form - but a server action is an endpoint, not a page. It stays in
+the deployed bundle and stays invokable. So turning the flag off did not stop seven
+of the fifteen ways to change a room, and removing somebody from the allowlist did
+not either.
+
+For a staged rollout whose entire safety case is "we can turn it off", that is the
+sentence that was untrue.
+
+## 74. Four are exempt on purpose; seven were not
+
+| | |
+|---|---|
+| `acceptInvitation`, `declareParticipation`, `acceptAgreement`, `completeAdmission` | **exempt, deliberately.** An invited counterparty is not necessarily allowlisted - the allowlist controls who may *open* a room, not who may be brought into one. Gating them would mean a pilot member could invite somebody who then could not accept. |
+| `approveProcedure`, `requestClarification`, `answerClarification`, `acceptEvidence`, `openBlocker`, `resolveBlocker`, `setReadOnly` | **no reason at all.** Now gated. |
+
+The exemption is written where the actions are, and the reasoning with it. It was
+not written anywhere before, which is why it could not be told apart from an
+oversight.
+
+## 75. Two tests, one of which was proved to fail
+
+`lib/deal-room/__tests__/action-gate.test.ts` discovers every exported action from
+the file and requires each to call `gate()` or to be a named exception. Run against
+the pre-fix file it names all seven. It also asserts that a gated action `fail()`s
+rather than continuing, that every exception still exists, and that each exempt
+action still reaches a `deal_room_*` command - the exemption is from routing, not
+from authorisation.
+
+`lib/deal-room/__tests__/flags.test.ts` covers `dealRoomAvailableTo`, which had **no
+test at all** despite being the whole of the staged-rollout control. Nine
+assertions, and the one that matters most is that an **absent or empty allowlist
+means nobody**. An env var set in one environment and missing in another is exactly
+how an unreleased feature reaches a whole market, and `allowed.size === 0` returning
+`true` is a one-character edit that nothing would have caught.
+
+Also covered: only exactly `on` enables the routes - not `ON`, `true`, `1` or
+` on`; the flag alone and the allowlist alone are each insufficient; a signed-out
+visitor is never admitted whatever the allowlist says; and an entry does not match
+by prefix.
+
+## 76. What Approval 4 still needs, and from whom
+
+| Step | State |
+|---|---|
+| the flag behaves as documented | **done** |
+| `NEXT_PUBLIC_DEAL_ROOM=on` in the deployment environment | **owner** - it is a Netlify environment variable, and it is inlined at build time, so it needs a rebuild rather than a restart |
+| `DEAL_ROOM_ALLOWLIST=<profile or organisation ids>` | **owner decision: nobody has said who.** Empty means nobody, which is the safe default and also means turning the flag on alone changes nothing for anyone |
+| deploy | follows the environment change |
+| the private access wall | **owner decision.** Untouched, and out of scope until said otherwise |
+
+**And the thing that has not changed:** nobody has rendered these pages. The capture
+is written and needs only `PONTE_SITE_PASSWORD`. Turning the Deal Room on for a
+pilot member would put surfaces in front of them that no person has ever looked at.
+
