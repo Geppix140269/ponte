@@ -18,6 +18,90 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - LB-001 initiator fix applied; Approval 3 re-run reaches 92 of 94
+
+### Completed
+
+- **PR #146 merged** (`main` `ee76e78`) after CI `verify` SUCCESS on head
+  `23ffdefabbfc5e3cf8cf92357abb480532566f80`. `Supabase Preview` was FAILURE, but it
+  is chronically red on `main` itself for unrelated legacy-migration reasons and never
+  reaches `20260731b`; it is neither evidence for nor against this change.
+- **`20260731b_deal_room_propose_initiator_capacity.sql` applied once** at
+  05:01:48.553 UTC from a checkout of merged `main`, checksum
+  `0de3c6e0e74f814746fe511b39165247163918d539f300ca8dc7ba9ac926ef13` verified against
+  the merged file before and recorded in the ledger after. Ledger 49 -> 50.
+- **Verified in place, not by overload**: `deal_room_propose` still has exactly one
+  entry, oid unchanged at 92112, `md5(pg_get_functiondef)` `fc68d229...` ->
+  `034d7cda...`, `declared_capacity` now appears twice in `prosrc` with four
+  `'Deal owner'` literals. Functions 23, authenticated 21, anon 0, policies 14 - all
+  unchanged. `npm run deal-room:acl-verify` passes: required 21, permitted 21.
+- **Approval 3 re-run: 92 passed, 2 failed**, from 2 passed and 1 failed. Requirement
+  13 - cross-room and cross-sub-room isolation - is now proved against real rows,
+  along with the admission gate, invitation identity binding, evidence versioning and
+  visibility, append-only activity, blockers, read-only continuity and the Storage
+  byte refusals.
+
+### Risks / discrepancies
+
+- **No procedure can ever be approved**, for two independent reasons.
+  `deal_room_propose_procedure` seeds one pending approval per *participant row*
+  carrying `is_required_approver`, and `deal_room_propose` gives the initiator two
+  such rows in one room; `deal_room_approve_procedure` resolves the caller with
+  `limit 1`, so the initiator's second row stays pending for ever. Separately,
+  `deal_room_admit_participant` never marks an admitted counterparty principal as a
+  required approver, so they are refused outright. Confirmed in production: both
+  approval rows on the fixture procedure belonged to the same person. **Requirement 12
+  (entitlement fail-closed) therefore cannot be tested**, since entitlements are
+  granted through that gate. No fix made, no identifier minted - the correction is a
+  product decision recorded as production evidence under LB-001.
+- **The fixture could not tear itself down and production holds its rows.** Every
+  teardown step failed: the append-only trigger on `deal_room_activity_events` refuses
+  the cascade DELETE, which then blocks the listings on their FK and the users after
+  them. `teardown()` discards that error, so it failed silently. The append-only
+  guarantee the fixture itself verifies is what defeats its cleanup; the first run's
+  clean teardown proved nothing, because there was nothing to remove.
+- **Left in production**, all created 05:02 UTC and all attributable: 4
+  `@example.invalid` users, 2 listings marked fictional, 2 rooms, 3 sub-rooms, 6
+  participants, 26 activity events, 2 invitations, 4 acceptances, 2 evidence rows and
+  3 versions, 1 procedure with 3 steps and 2 approvals, 1 blocker, 1 clarification, 2
+  entitlements, **0 Storage objects**. No real member account, listing or commercial
+  row was touched; the four canonical agreement documents are unchanged.
+- **`scripts/deal-room-negative-access.mjs` must not be re-run against production**
+  until its teardown is fixed or it is pointed at a non-production project. Each run
+  permanently adds a room.
+
+### Production changes
+
+- `20260731b` applied (one function replaced in place; no table, constraint, policy,
+  trigger, index, grant or row altered).
+- The fixture's own rows, listed above, created by the authorised Approval 3 re-run
+  and not removable.
+- **Containment**: the two fixture listings were seeded `status = 'approved'` and
+  `lib/board/live-deals.ts` selects the live board on exactly that, so two fictional
+  Deals were on the board - two of only four approved rows. A primary-key-scoped
+  `update ... set status = 'archived'`, further predicated on `details =
+  'Negative-access fixture. Fictional.'` and `status = 'approved'`, returned exactly
+  those two rows. Nothing was deleted. The board holds its two real approved listings.
+
+### Next
+
+1. **Owner decision** on the procedure approval gate: who is a required approver, and
+   at which participant level.
+2. **Owner decision** on removing the fixture rows, which requires momentarily
+   suspending the append-only trigger on `deal_room_activity_events`.
+3. Fix `deal-room-negative-access` teardown, or bind it to a non-production project,
+   before it is run again.
+4. Approval 4 - flag and deploy - remains unauthorised; the loop still does not
+   complete.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, Approval 3 re-run
+- `docs/codex/DATABASE-STATE.md`, `20260731b` and Approval 3 re-run sections
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-001 evidence and verification updated
+
+---
+
 ## 2026-07-31 - Gate C Approval 3: the fixture ran and the Deal Room loop cannot start
 
 ### Completed
