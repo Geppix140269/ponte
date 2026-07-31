@@ -376,3 +376,64 @@ counterparty check would need a direct USD price, not a credit balance.
 
 Stage 8 of the Deal Room transaction pricing programme (retirement of credits and
 paid verification). Does **not** block LB-014, LB-001 or LB-009.
+
+---
+
+## OD-012 — Does a broker's Deal Branch count toward the branch price?
+
+**Status:** OPEN
+**Owner:** Giuseppe Funaro
+**Urgency:** Medium — it does not block launch, and it decides what members are charged, so it must be settled before Stage 6 puts a price on a screen
+**Raised:** 31 July 2026, by Stage 2 of the Deal Room transaction pricing programme
+
+### Decision required
+
+`PT-COMMERCIAL-2026-07-31-01` §7 condition 1 says a branch counts toward the
+price only when "it is a **principal**-counterparty Deal Branch".
+
+`PT-COMMERCIAL-2026-07-31-01` §4, listing the simultaneous confidential branches
+a Master Deal Room may contain, gives as one of its own examples "**a broker
+acting for a disclosed or controlled principal**".
+
+In the live schema a broker is `deal_room_participants.participant_class =
+'intermediary'`, not `'principal'`. So the two sections point different ways.
+
+Does a branch whose admitted counterparty is an **intermediary** count as a
+billable branch?
+
+### What is implemented, pending the answer
+
+`lib/deal-room/pricing.ts` exports:
+
+```ts
+BILLABLE_PARTICIPANT_CLASSES = ["principal", "intermediary"]
+```
+
+That counts brokers. It follows §4's explicit example, and it matches the
+commercial substance: a broker fronting a real principal is a live counterparty
+negotiation consuming the same controlled-progression product as any other.
+Reading §7 literally instead would make **every brokered negotiation free**,
+which is the larger of the two commercial surprises and would create an obvious
+incentive to route negotiations through an intermediary.
+
+`provider`, `adviser`, `ponte_facilitator` and `observer` are excluded on either
+reading, and that exclusion is not in question.
+
+### Why this is safe to leave open for now
+
+Nothing charges. The module is pure, nothing imports it (asserted by its own
+test), and the reading is a single named constant documented at its definition
+and pinned by a test whose title says what it is testing. Reversing the decision
+is a one-line change plus one test edit, not a refactor.
+
+### Recommended decision
+
+Confirm that a broker's branch counts, and amend §7 condition 1 to read
+"principal-counterparty (including an intermediary acting for a disclosed or
+controlled principal)" so the authority stops contradicting its own §4. If the
+answer is the opposite, say so and the constant loses `intermediary`.
+
+### Blocks
+
+Stage 6 of `docs/plans/active/deal-room-transaction-pricing.md` — a price cannot
+go on a screen while it is undecided. Does not block Stages 3 to 5.
