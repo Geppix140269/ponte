@@ -5,6 +5,8 @@ import { landingFontVars } from "@/components/home/landing/fonts";
 import { createClient } from "@/lib/supabase/server";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
+import { reconfirmationLapsed } from "@/lib/listings/validity";
+import { reconfirmListingAction } from "../marketplace/actions";
 import { railFor } from "@/lib/desk/journey";
 import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
@@ -70,7 +72,13 @@ const STATUS_COPY: Record<string, { label: string; slot: string; note: string }>
   closed: { label: "Closed", slot: "complete", note: "No longer active." },
 };
 
-export default async function OpportunitiesPage({ params }: { params: { locale: string } }) {
+export default async function OpportunitiesPage({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams: { rc?: string };
+}) {
   setRequestLocale(params.locale);
 
   const supabase = createClient();
@@ -88,10 +96,15 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
   // The family terms are appended optionally: `20260728d` is not applied, and
   // selecting a column that does not exist fails the whole read. A member must
   // not lose sight of their records to a pending migration.
+  //
+  // `reconfirmed_at` is in BASE rather than in the optional tail, so it is read
+  // by BOTH the primary select and the missing-column fallback. Reconfirmation
+  // is an owner control on this page now, and it must not be the thing that
+  // blanks a member's records if a later migration is still pending.
   const BASE =
     "id, ref, type, product, status, hs_code, origin, destination, quantity, quantity_mode, " +
     "quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, " +
-    "validity_type, valid_until, created_at, market_family, market_intent, " +
+    "validity_type, valid_until, reconfirmed_at, created_at, market_family, market_intent, " +
     "service_category_key, service_subcategory_keys, distribution_partner_type_key, " +
     "distribution_relationship_terms, coverage_scope_key, territory_codes, product_sector_key, " +
     "custom_category_label";
@@ -147,6 +160,43 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
               Start a new record<span aria-hidden="true"> &rarr;</span>
             </Link>
           </div>
+
+          {/* The outcome of a reconfirmation the member just made from this
+              page. Reconfirmation is a re-stamp, never an edit: it succeeds
+              only if the full live publication contract still passes, and says
+              so plainly when it does not. */}
+          {searchParams.rc === "ok" ? (
+            <div
+              style={{
+                background: "var(--pos-tint)",
+                border: "1px solid var(--pos-line)",
+                borderRadius: "var(--dk-radius)",
+                padding: "14px 16px",
+                fontSize: 13,
+                lineHeight: 1.6,
+                color: "var(--ink-2)",
+                marginBottom: 12,
+              }}
+            >
+              <p style={{ color: "var(--pos)", fontWeight: 600 }}>Reconfirmed</p>
+              <p style={{ marginTop: 6 }}>
+                The record is current again and back on the public board.
+              </p>
+            </div>
+          ) : null}
+          {searchParams.rc === "blocked" ? (
+            <div className="err" style={{ marginBottom: 12 }}>
+              <PonteIcon name="evidence.evreview" size={22} />
+              <div>
+                <b>It could not be reconfirmed automatically</b>
+                <p>
+                  The record no longer meets the publication criteria, for example because your
+                  member-business verification is not current. Nothing was changed, and it needs
+                  Ponte review rather than a re-stamp.
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           {!user ? (
             <div className="empty">
@@ -224,6 +274,31 @@ export default async function OpportunitiesPage({ params }: { params: { locale: 
                       <p className="d" style={{ marginTop: 10 }}>
                         {copy.note}
                       </p>
+
+                      {/* Reconfirmation. A live record states a 90 day window;
+                          once it lapses the record leaves the public board and
+                          waits for its owner to say nothing has changed. The
+                          button re-stamps only that, and only if the full live
+                          publication gate still passes. `returnTo` brings the
+                          member back here rather than to the board. */}
+                      {r.status === "approved" && reconfirmationLapsed(r.reconfirmed_at) ? (
+                        <div className="notice" style={{ marginTop: 12 }}>
+                          <PonteIcon name="field.duration" size={18} />
+                          <div>
+                            <b>Awaiting your reconfirmation</b>
+                            This record is currently hidden from the public board because its
+                            reconfirmation window has lapsed. Reconfirm it if nothing has changed.
+                            Reconfirming edits nothing.
+                            <form action={reconfirmListingAction} style={{ marginTop: 12 }}>
+                              <input type="hidden" name="id" value={r.id} />
+                              <input type="hidden" name="returnTo" value="/opportunities" />
+                              <button type="submit" className="b b--sm">
+                                Reconfirm
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
                     {lead.length > 0 ? (
