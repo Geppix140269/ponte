@@ -1344,3 +1344,59 @@ of a production security guarantee and was not done.
 runs far enough to be worth reviewing, but it does not complete: no procedure can
 govern, so no entitlement can be granted and no progression can be measured.
 
+---
+
+# Teardown fixed and the fixture rows removed, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - fix the fixture teardown first, then merge and
+apply.
+
+## 45. Why the teardown could not have worked
+
+`teardown()` deleted rooms with `admin.from("deal_rooms").delete()` and **discarded
+the error**. The cascade reaches `deal_room_activity_events`, whose
+`deal_room_activity_append_only` trigger refuses DELETE to every role including the
+service role - the guarantee section 7 of the fixture itself verifies. So each room
+delete failed silently, which left the listings undeletable on
+`deal_rooms_listing_id_fkey` and the accounts undeletable after them.
+
+The first run had stopped at step one, so there was nothing to remove and the path
+was never exercised. Its "tore down completely" record was true but proved nothing.
+
+## 46. The fix
+
+Room deletion now runs through the **Management API as the table owner**, suspending
+the trigger inside a single transaction scoped to one room id and re-enabling it in
+the same transaction, so any failure restores it. The capability stays **outside the
+application**: not the service role, not any member session - only whoever holds the
+management token.
+
+Three guards:
+
+- `removeRoom()` refuses unless the room's listing still carries
+  `details = 'Negative-access fixture. Fictional.'`, so a stale id cannot reach a
+  real room.
+- Every id is proved to be a UUID before interpolation, because the Management API
+  takes SQL text rather than bound parameters.
+- The management credentials are required **at startup**, so the fixture never
+  creates a room it cannot remove, and teardown **verifies afterwards**, printing
+  `TEARDOWN INCOMPLETE` and exiting non-zero if anything is left.
+
+## 47. The stranded rows are gone
+
+Both fixture rooms were removed through that exact path. The trigger returned to
+`tgenabled = 'O'` and the cascade cleared everything beneath them; the two fixture
+listings and four `@example.invalid` accounts were then deleted by primary key.
+
+| | Before | After |
+|---|---|---|
+| `auth.users` | 14 | **10** |
+| `listings` | 9 (2 archived fixture) | **7**, 2 approved, **0 archived** |
+| every `deal_room_*` table | 26 activity events and the rest | **0** |
+| `deal_room_agreement_documents` | 4 | **4**, canonical and untouched |
+| `storage.objects` in `deal-room-evidence` | 0 | **0** |
+| ledger | 50 | **50** |
+
+Production is back to its pre-fixture state, and the fixture can now be run and
+re-run without accumulating rooms.
+

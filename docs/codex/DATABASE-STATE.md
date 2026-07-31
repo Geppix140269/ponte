@@ -343,6 +343,49 @@ delete them is to suspend the append-only trigger on `deal_room_activity_events`
 a momentary suspension of a security guarantee on a production table. That was not
 done and is not authorised.
 
+### RESOLVED, 31 July 2026: the teardown is fixed and the rows are gone
+
+Owner decision of 31 July 2026: fix the fixture teardown before applying anything
+further. `scripts/deal-room-negative-access.mjs` now removes a room through the
+**Management API as the table owner**, suspending
+`deal_room_activity_append_only` inside a single transaction scoped to one room id
+and re-enabling it in the same transaction, so a failure anywhere restores it.
+
+That capability is deliberately **outside the application**. It is not given to the
+service role and no member, session or service-role key gains it; it belongs to
+whoever holds the management token. `removeRoom()` additionally refuses unless the
+room's listing still carries `details = 'Negative-access fixture. Fictional.'`, so
+it cannot be pointed at a real room by a stale id. Every id is proved to be a UUID
+before it is interpolated, because the Management API takes SQL text rather than
+bound parameters.
+
+Two further changes make the original failure impossible to repeat: the management
+credentials are demanded **at startup**, so the fixture never creates a room it has
+no way to remove; and teardown now **verifies afterwards** and prints
+`TEARDOWN INCOMPLETE` with a non-zero exit if anything is left. The old version
+discarded the delete error and reported a clean finish.
+
+**Applied to the stranded rows the same day.** Both fixture rooms were removed
+through that exact path, the trigger returned to `tgenabled = 'O'`, and the cascade
+cleared the participants, sub-rooms, activity, invitations, acceptances, evidence,
+versions, procedure, steps, approvals, blocker, clarification and entitlements. The
+two fixture listings and four `@example.invalid` accounts were then deleted by
+primary key.
+
+| | After |
+|---|---|
+| `auth.users` | **10** |
+| `listings` | **7**, of which 2 approved and **0 archived** |
+| every `deal_room_*` table | **0** |
+| `deal_room_agreement_documents` | 4 - canonical, published 30 July, untouched |
+| `storage.objects` in `deal-room-evidence` | 0 |
+| ledger | 50 |
+
+Production is back to its pre-fixture state. The `archived` containment applied
+earlier is undone by the deletion of those listings, so no fixture row remains in
+any state.
+
+
 ## Gate C Approval 3, 31 July 2026: the loop cannot start
 
 `deal_room_propose` fails in production for **every** member:
