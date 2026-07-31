@@ -18,6 +18,78 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Procedure approver gate applied; Approval 3 passes 94 of 94
+
+### Completed
+
+- **Fixture teardown fixed first, on owner instruction.**
+  `scripts/deal-room-negative-access.mjs` now removes a room through the Management
+  API as the table owner, suspending `deal_room_activity_append_only` inside one
+  transaction scoped to a single room id and re-enabling it in the same transaction.
+  The capability is deliberately **outside the application** - not the service role,
+  not any member session. `removeRoom()` refuses unless the room's listing still
+  carries the fixture marker; every id is proved to be a UUID before interpolation;
+  the management credentials are demanded at startup so the fixture never creates a
+  room it cannot remove; and teardown verifies afterwards, printing
+  `TEARDOWN INCOMPLETE` with a non-zero exit if anything is left.
+- **The rows stranded by the old teardown were removed** through that same path.
+  Trigger back to `tgenabled = 'O'`; users 14 -> 10, listings 9 -> 7 with 2 approved
+  and 0 archived, every `deal_room_*` table at 0, the four canonical agreement
+  documents untouched.
+- **PR #152 merged** (`main` `414d3e8`) after CI `verify` SUCCESS on head
+  `76d48d9`. The merge parent is exactly that commit.
+- **`20260731c_deal_room_procedure_approver_gate.sql` applied once**, checksum
+  `7e60f2dfbaad3d27ff6165a0a5f6d4ff5bc872be7c5bf228b702be920c9971ba` verified against
+  the merged file before and recorded in the ledger after. Ledger 50 -> 51.
+- **Verified by catalogue, not by file**: still exactly three entries for the three
+  functions, so no overload; combined `md5(pg_get_functiondef)` `1ca84013...` ->
+  `0384017e...`; each edit present in `prosrc` and the old
+  `participant_id = v_participant` keying absent. Functions 23, authenticated 21,
+  anon 0, policies 14 - unchanged. `npm run deal-room:acl-verify` passes.
+- **Approval 3, third run: 94 passed, 0 failed.** The two procedure assertions pass,
+  so a procedure version can be proposed, approved by both principals and made to
+  govern, and the two admission steps complete to the 22% baseline. Teardown
+  completed cleanly for the first time.
+
+### Risks / discrepancies
+
+- **Requirement 12 is only partly proved and must not be recorded as more.** The
+  fixture proves an entitlement cannot be forged - a room administrator can neither
+  issue themselves a second one nor extend their own - but does **not** assert that a
+  room lacking an entitlement refuses to progress. "Entitlement fail-closed" in that
+  stronger sense remains unproved.
+- Untested: behaviour over time and across sessions, amendment of a governing
+  procedure, and anything beyond the three participants and two rooms the fixture
+  builds.
+- `Supabase Preview` remains red on `main` for unrelated legacy-migration reasons and
+  never reaches these files.
+
+### Production changes
+
+- `20260731c` applied - three functions replaced in place. No table, constraint,
+  policy, trigger, index, grant or row altered, and no row backfilled.
+- The stranded fixture rows deleted, as above. **Production is back to its
+  pre-fixture state**: 10 users, 7 listings, 2 approved, 0 archived, every
+  `deal_room_*` table at 0, 0 Storage objects, ledger 51.
+- The append-only trigger was suspended and restored twice inside scoped
+  transactions, once per fixture room, and is enabled.
+
+### Next
+
+1. Requirement 12 in its stronger sense - a room without an entitlement must refuse
+   to progress - needs an assertion the fixture does not yet make.
+2. Review the twelve `/deal-rooms` surfaces against a loop that now completes.
+3. Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains
+   unauthorised.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 45 to 52
+- `docs/codex/DATABASE-STATE.md`, the `20260731c` applied and third-run sections
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-001 verification updated
+
+---
+
 ## 2026-07-31 - LB-001 initiator fix applied; Approval 3 re-run reaches 92 of 94
 
 ### Completed

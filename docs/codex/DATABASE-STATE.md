@@ -101,6 +101,68 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## APPLIED to production, 31 July 2026: the procedure approver gate
+
+`20260731c_deal_room_procedure_approver_gate.sql`, checksum
+`7e60f2dfbaad3d27ff6165a0a5f6d4ff5bc872be7c5bf228b702be920c9971ba`, applied once
+from merged `main` `414d3e8`. Ledger 50 -> **51**, and the row records that same
+checksum.
+
+Three functions replaced on identical signatures. Verified against the
+pre-application baseline:
+
+| | Before | After |
+|---|---|---|
+| `admit_participant` + `propose_procedure` + `approve_procedure` | 3 entries | **3** - no overload was created |
+| combined `md5(pg_get_functiondef)` | `1ca8401373339b10c1cab9926f4deda4` | **`0384017e0d2d38d856a66101582a0d32`** |
+| `admit_participant` promotes principals | no | **yes** (`is_required_approver = is_required_approver or ...` present in `prosrc`) |
+| `propose_procedure` seeds per person | no | **yes** (`distinct on (p.profile_id)` present) |
+| `approve_procedure` approves by person | no | **yes** (`profile_id = auth.uid()` present, `participant_id = v_participant` absent) |
+| `deal_room_*` functions | 23 | 23 |
+| executable by `authenticated` | 21 | **21** |
+| executable by `anon` / PUBLIC | 0 | **0** |
+| `deal_room%` policies | 14 | 14 |
+
+`npm run deal-room:acl-verify` after the change: anon 0, PUBLIC 0, authenticated 21
+(required 21, permitted 21), service_role 23 unchanged, 14 policies, 0 non-SELECT.
+
+## Gate C Approval 3, third run, 31 July 2026: 94 passed, 0 failed
+
+**Every negative-access assertion held.** 2 passed on the first run, 92 on the
+second, **94 on this one.**
+
+The two that had failed - "the second required approver approves" and "the version
+governs once every approver has approved" - now pass, so a procedure version can be
+proposed, approved by both principals and made to govern. Its steps become ready and
+the two admission steps complete, which is the 22% baseline the product definition
+specifies.
+
+**And the teardown worked**: `teardown complete: no rooms, listings, users or
+activity left behind.` Production after the run:
+
+| | |
+|---|---|
+| `auth.users` | **10** |
+| `listings` | **7**, of which 2 approved, 0 archived |
+| `deal_rooms`, `deal_room_activity_events`, `deal_room_entitlements` | **0 / 0 / 0** |
+| `storage.objects` in `deal-room-evidence` | **0** |
+| `deal_room_activity_append_only` | `tgenabled = 'O'` - enabled |
+| ledger | **51** |
+
+### What this does and does not settle
+
+**Requirement 13 - cross-room and cross-sub-room isolation - is proved.**
+
+**Requirement 12 is partly proved and should not be recorded as more.** The fixture
+proves an entitlement cannot be forged: a room administrator can neither issue
+themselves a second entitlement nor extend their own. It does **not** assert that a
+room lacking an entitlement refuses to progress, so "entitlement fail-closed" in
+that stronger sense remains unproved.
+
+Also still untested: behaviour over time and across sessions, amendment of a
+governing procedure, and anything requiring more than the three participants and two
+rooms the fixture builds.
+
 ## SUPERSEDED BY THE APPLIED RECORD: the room initiator's declared capacity (option 1)
 
 **`20260731b` was applied to production at 05:01:48.553 UTC on 31 July 2026.** The
@@ -169,7 +231,11 @@ npm run deal-room:acl-verify        # ACL unchanged: anon 0, authenticated 21
 npm run deal-room:negative-access   # must now get past step one
 ```
 
-## Written but NOT applied: the procedure approver gate
+## SUPERSEDED BY THE APPLIED RECORD: the procedure approver gate
+
+**`20260731c` was applied to production on 31 July 2026. Ledger 50 -> 51.** The
+section below described it while it was still pending; the applied record is
+immediately after it.
 
 `supabase/migrations/20260731c_deal_room_procedure_approver_gate.sql`.
 
@@ -178,7 +244,7 @@ npm run deal-room:negative-access   # must now get past step one
 | SHA-256 | `7e60f2dfbaad3d27ff6165a0a5f6d4ff5bc872be7c5bf228b702be920c9971ba` |
 | Size | 16,063 bytes, no BOM |
 | Content | **three `create or replace function`, on identical signatures. Nothing else.** |
-| Status | written and tested, **NOT applied** |
+| Status | **APPLIED 31 July 2026. Ledger 50 -> 51.** |
 
 Owner decision of 31 July 2026: fix the procedure approver gate that Approval 3's
 re-run found. The correction follows
