@@ -1,3 +1,4 @@
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { createAdminClient } from "@/lib/supabase/server";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import {
@@ -614,7 +615,7 @@ export default async function AdminVerificationsPage({
   }
 
   return (
-    <>
+    <UnsavedFormGuard>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <section className="sec">
       <div className="sech">
@@ -683,6 +684,6 @@ export default async function AdminVerificationsPage({
         </ul>
       )}
       </section>
-    </>
+    </UnsavedFormGuard>
   );
 }

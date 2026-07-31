@@ -125,6 +125,7 @@
     },
     "detail": {
       "crumb": "Qualified Opportunities",
+      "back": "Back to results",
       "lead": "This page shows the commercial facts currently supported, what Ponte checked, and what remains unverified. The participant's identity is disclosed only through the controlled introduction.",
       "factsHeading": "Commercial facts",
       "receiptsHeading": "What Ponte checked",

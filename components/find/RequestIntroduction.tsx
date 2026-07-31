@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import AccountGate from "@/components/AccountGate";
+import UnsavedChangesDialog from "@/components/ponte/nav/UnsavedChangesDialog";
+import { useUnsavedGuard } from "@/components/ponte/nav/useUnsavedGuard";
 import { INTEREST_ROLES, type InterestRole } from "@/lib/interest/expression";
 
 export type RequestLabels = {
@@ -112,6 +115,15 @@ export default function RequestIntroduction({
   const done = [role, target.trim(), geography.trim(), reason.trim()].filter(Boolean).length;
   const total = 4;
   const complete = done === total;
+
+  // Typed work worth protecting: the free-text answers, before the request is
+  // sent. Role alone is one tap and is not counted, so merely opening the form
+  // never raises the dialog. `interceptLinks` covers the bared journey's own
+  // nav (the wordmark, Explore, Start a deal), which this component does not
+  // render and so cannot guard by hand.
+  const tj = useTranslations("journey");
+  const dirty = phase !== "sent" && [target.trim(), geography.trim(), reason.trim()].some(Boolean);
+  const { promptOpen, onContinueEditing, leaveNow } = useUnsavedGuard(dirty, { interceptLinks: true });
 
   const doSend = useCallback(
     async (business: string) => {
@@ -311,6 +323,13 @@ export default function RequestIntroduction({
         context="inquiry"
         onClose={() => setGateOpen(false)}
         onComplete={onGateComplete}
+      />
+
+      <UnsavedChangesDialog
+        open={promptOpen}
+        onContinueEditing={onContinueEditing}
+        onLeave={leaveNow}
+        t={tj}
       />
     </div>
   );

@@ -12,6 +12,7 @@ import {
   SelectField,
   Submit,
 } from "@/components/deal-room/primitives";
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { submitEvidence } from "../../../../actions";
 import { listEvidence, loadGoverningProcedure, loadRoom, loadSubRoom } from "@/lib/deal-room/queries";
 import { canUploadEvidence, mutationBlockedReason } from "@/lib/deal-room/permissions";
@@ -76,7 +77,7 @@ export default async function EvidenceRegisterPage({
   })).filter((entry) => entry.count > 0);
 
   return (
-    <>
+    <UnsavedFormGuard>
       <CommandError message={searchParams?.error} />
       <RoomHeader
         reference={`${access.room.ref} · ${subRoom.ref}`}
@@ -204,6 +205,6 @@ export default async function EvidenceRegisterPage({
           <Action label="Back to the workspace" href={here} secondary />
         </div>
       </Band>
-    </>
+    </UnsavedFormGuard>
   );
 }

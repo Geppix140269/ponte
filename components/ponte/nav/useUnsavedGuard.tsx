@@ -13,30 +13,59 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *      a clean page never nags. The brief allows exactly this ("where browser
  *      protections can reasonably be applied").
  *
- *   2. In-app controls we own: the logo, a Back control, a nav item. These route
- *      through `guard(proceed)`. When the draft is clean, `proceed` runs at once
- *      and the user feels nothing. When it is dirty, the navigation is held and
- *      the shared UnsavedChangesDialog is opened; the held action runs only if
- *      the user chooses to leave.
- *
- * This is opt-in per control rather than a global link interceptor: a surface
- * decides which of its exits are guarded, which keeps the behaviour predictable
- * and avoids swallowing clicks the user did not make dangerous.
+ *   2. In-app controls. Two ways to cover them:
+ *      - `guard(proceed)` for a control the surface owns (a Back button, a
+ *        wordmark it renders). When clean, `proceed` runs at once; when dirty,
+ *        the navigation is held behind the shared dialog.
+ *      - `interceptLinks`, for the exits the surface does NOT render, such as the
+ *        shared header logo or the bared journey's own nav. When enabled, a
+ *        capture-phase click listener (installed only while dirty) holds any
+ *        in-app link the same way, and performs the navigation only on "Leave".
+ *        Off by default, so a caller that wires its own exits keeps the tighter
+ *        opt-in behaviour and nothing swallows a click it did not make dangerous.
  */
-export function useUnsavedGuard(dirty: boolean) {
+export function useUnsavedGuard(dirty: boolean, opts?: { interceptLinks?: boolean }) {
+  const interceptLinks = opts?.interceptLinks ?? false;
   const pendingRef = useRef<(() => void) | null>(null);
   const [promptOpen, setPromptOpen] = useState(false);
 
   useEffect(() => {
     if (!dirty) return;
-    const handler = (e: BeforeUnloadEvent) => {
+
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       // Legacy Chrome requires a returnValue to be set for the prompt to show.
       e.returnValue = "";
     };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    let onClickCapture: ((e: MouseEvent) => void) | null = null;
+    if (interceptLinks) {
+      onClickCapture = (e: MouseEvent) => {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+          return;
+        }
+        const anchor = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+        if (!anchor) return;
+        if (anchor.target && anchor.target !== "_self") return;
+        if (anchor.hasAttribute("download")) return;
+        const href = anchor.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+
+        const destination = anchor.href;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        pendingRef.current = () => window.location.assign(destination);
+        setPromptOpen(true);
+      };
+      document.addEventListener("click", onClickCapture, true);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      if (onClickCapture) document.removeEventListener("click", onClickCapture, true);
+    };
+  }, [dirty, interceptLinks]);
 
   /** Run `proceed`, or hold it behind the dialog when work would be lost. */
   const guard = useCallback(

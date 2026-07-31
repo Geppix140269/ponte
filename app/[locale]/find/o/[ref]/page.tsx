@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import FindChrome from "@/components/find/FindChrome";
+import JourneyBack from "@/components/ponte/nav/JourneyBack";
 import RequestIntroduction, { type RequestLabels } from "@/components/find/RequestIntroduction";
 import {
   getQualifiedOpportunity,
@@ -140,7 +141,7 @@ async function Detail({
   return (
     <div className="qdetail">
       <div className="qdmain">
-        <nav className="qcrumb">{t("detail.crumb")} › {o.ref}</nav>
+        <JourneyBack href="/find" label={t("detail.back")} />
 
         <header className="qhead">
           <div className="qhead__tags">
