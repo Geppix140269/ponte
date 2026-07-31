@@ -9,7 +9,7 @@
 - **Repository:** `Geppix140269/ponte`
 - **Implementation status:** Authority only; implementation not authorised by this file
 - **Currency:** USD only
-- **Amendments:** Amendment 1, 31 July 2026 — see below
+- **Amendments:** Amendments 1 and 2, both 31 July 2026 — see below
 
 ## Amendment record
 
@@ -43,11 +43,53 @@ cap, the included five and every other rule are untouched.
 this decision, pinned by a named test. The amendment confirms the reading rather
 than changing behaviour.
 
+### Amendment 2 — the private counterparty check stays paid (31 July 2026)
+
+**Owner decision, closing OD-011.**
+
+Section 15 prohibited "paid verification or verification badges" without
+qualification, and section 1 said the Deal Room is "the only paid product". Ponte
+charges for a **counterparty check** — a private check a member buys on somebody
+else's company, against registers, VIES, GLEIF and the published sanctions lists.
+Read flatly, the authority retired it.
+
+**The owner has decided that the counterparty check stays paid.** Sections 1 and
+15 are amended above to say so, so the authority stops prohibiting something
+Ponte intends to keep selling.
+
+The distinction the amendment draws is the one ADR-0018 already established:
+
+| | Who it is about | Commercial rule |
+|---|---|---|
+| **`member_business`** | the member's **own** legal entity; a clean result is what lets them publish and receive an introduction | **Free, permanently.** ADR-0018. A toll in front of the act that lets a member participate at all suppresses the supply the marketplace depends on |
+| **`counterparty_check`** | **somebody else's** company. Changes nothing about the member's account, standing or ability to participate | **Paid.** A discretionary purchase, bought when a member wants it |
+
+What section 15 prohibits is charging a member to prove **themselves**. Charging
+for research a member chooses to buy about a third party is a different act, and
+it was never the toll the section was written against.
+
+**What this amendment does NOT do.**
+
+- It does not reinstate **Ponte Credits**. Section 15's prohibition on "credit
+  packs, room credits, tokens or usage currency" is **untouched**, so the
+  counterparty check must be repriced as a **direct charge in USD** rather than
+  billed against a credit balance. The credits subsystem is still retired.
+- It does not create a verification **badge**, tier or certificate. Those remain
+  prohibited, and gold remains a brand signal rather than a verification status.
+- It does not make `member_business` chargeable, now or later. ADR-0018 stands.
+- It does not add a second Deal Room charge. The Deal Room price is unchanged.
+
+**Effect on implementation:** the paid `counterparty_check` path in
+`lib/verification/pipeline.ts` and `app/api/verification/route.ts` survives, but
+its **pricing mechanism** does not: moving it from `COST_VERIFICATION_L2` credits
+to a direct USD price is part of Stage 8 of
+`docs/plans/active/deal-room-transaction-pricing.md`.
+
 ## 1. Executive owner decision
 
-Ponte Deal Room is the only paid product and the sole day-one monetisation engine of Ponte Trade.
+Ponte Deal Room is the only paid **product** and the principal day-one monetisation engine of Ponte Trade, subject to the single narrow exception recorded in **Amendment 2**: the private **counterparty check**, which a member buys on somebody else's company and which changes nothing about the member's own account, standing or ability to participate.
 
-Everything upstream of protected Deal Room progression remains free.
+Everything upstream of protected Deal Room progression remains free, and verifying a member's **own** business is free and always will be (ADR-0018).
 
 > Ponte is free for discovering opportunities and establishing credible interest. Ponte earns revenue when counterparties move from interest into controlled transaction execution.
 
@@ -363,7 +405,7 @@ Ponte must not publicly charge for or reintroduce:
 - paid Market Signal access;
 - paid visibility or promoted offers;
 - credit packs, room credits, tokens or usage currency;
-- paid verification or verification badges;
+- paid verification **of a member's own business**, or verification badges — see **Amendment 2**: a private **counterparty check**, bought on a third party, is not this and remains paid;
 - public Ponte Desk packages;
 - retainers;
 - transaction commissions or success fees;

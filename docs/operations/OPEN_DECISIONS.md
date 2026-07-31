@@ -310,10 +310,43 @@ separates marketing onto its own subdomain, is unresolved.
 
 ## OD-011 — Does the Deal Room-Only Pricing Authority retire the paid counterparty check?
 
-**Status:** OPEN
+**Status:** **DECIDED — 31 July 2026. No: the counterparty check stays paid.**
 **Owner:** Giuseppe Funaro
-**Urgency:** Medium — it does not block launch, and it does block Stage 8 of the pricing programme
 **Raised:** 31 July 2026, by the ADR-0020 authority reconciliation
+**Decided:** 31 July 2026, same day
+
+### The decision
+
+The private **counterparty check** — a check a member buys on somebody else's
+company — is **not** the "paid verification" section 15 prohibits, and remains
+paid. The owner directed that the authority be amended to say so.
+
+**Canonical record:** `PT-COMMERCIAL-2026-07-31-01`, **Amendment 2**, which
+amends **both** section 15 (the prohibition now reads "paid verification **of a
+member's own business**") and **section 1** (whose "the only paid product" would
+otherwise have recreated the same contradiction one section earlier).
+
+The line is ADR-0018's: what section 15 prohibits is charging a member to prove
+**themselves**. Charging for research a member chooses to buy about a **third
+party** is a different act, and was never the toll the section was written
+against. `member_business` remains free permanently.
+
+### Two consequences that are easy to miss
+
+1. **Ponte Credits are still retired.** Section 15's prohibition on "credit
+   packs, room credits, tokens or usage currency" is **untouched** by this
+   amendment. So the counterparty check survives but its **pricing mechanism does
+   not**: it must be repriced as a direct USD charge rather than billed against
+   a credit balance. That work is Stage 8.
+2. **No badge, tier or certificate.** Those stay prohibited, and gold remains a
+   brand signal rather than a verification status.
+
+**Unblocks:** Stage 8 of `docs/plans/active/deal-room-transaction-pricing.md`,
+and settles the `counterparty_check` half of **PL-035**.
+
+The original question and both readings are preserved below.
+
+---
 
 ### Decision required
 
@@ -374,8 +407,11 @@ counterparty check would need a direct USD price, not a credit balance.
 
 ### Blocks
 
-Stage 8 of the Deal Room transaction pricing programme (retirement of credits and
-paid verification). Does **not** block LB-014, LB-001 or LB-009.
+~~Stage 8 of the Deal Room transaction pricing programme (retirement of credits and
+paid verification). Does **not** block LB-014, LB-001 or LB-009.~~
+**Resolved 31 July 2026. Stage 8 is unblocked**, with its shape now settled: the
+credits subsystem is retired as planned, and the counterparty check is repriced
+in USD rather than retired with it.
 
 ---
 
