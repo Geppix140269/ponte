@@ -184,7 +184,10 @@ export async function runLevel2(
   // from checking somebody else's company (ADR-0018, Issue #135). A
   // member_business run therefore performs no balance read, no spend, no ledger
   // write and no refund: it cannot reach a credit function at all, which is the
-  // property lib/verification/__tests__/member-business-free.test.ts pins.
+  // property lib/verification/__tests__/member-business-free.test.ts pins by
+  // shape and member-business-free-runtime.test.ts pins by execution, including
+  // on the failure path. The refund guard that makes the failure path true lives
+  // at the bottom of `runLevel2Checks`.
   // A counterparty_check keeps its existing paid rule exactly. A guest already
   // paid at checkout and carries a ledger id.
   let ledgerId = req.guestLedgerId ?? null;
@@ -240,7 +243,8 @@ export async function runLevel2(
  *
  * A refund on failure stays here rather than moving up, because the failure it
  * pays back for happens here, and the state guard on the resume path means it
- * can fire at most once per verification.
+ * can fire at most once per verification. It carries the SAME purpose guard the
+ * spend carries, for the reason set out at the refund itself.
  */
 export async function runLevel2Checks(
   verificationId: string,
@@ -250,6 +254,12 @@ export async function runLevel2Checks(
   const sb = createAdminClient();
   const id = verificationId;
   const userId = opts.userId ?? null;
+  // The same derivation as `paidPurpose` in `runLevel2`, and deliberately the
+  // same words: the two guards protect the two ends of one payment and must be
+  // readable as a pair. `normalizePurpose` makes a missing or unknown purpose a
+  // counterparty check, so a legacy caller that passes none keeps the paid
+  // behaviour and its refund.
+  const paidPurpose = normalizePurpose(opts.purpose) !== "member_business";
 
   try {
     // 3. Registry.
@@ -471,6 +481,13 @@ export async function runLevel2Checks(
     // 'failed' here, and a resume is only ever accepted on a case still sitting
     // at 'needs_selection', so a failed run cannot be resumed into a second
     // refund.
+    //
+    // AND ONLY A RUN THAT PAID. A member-business verification is free
+    // (ADR-0018): it spends nothing, so there is nothing to give back, and an
+    // unguarded refund here would write a credit_ledger row granting the member
+    // two credits for a verification that never cost them any. That is not a
+    // theoretical path — any upstream fault reaches it — and it is why the
+    // refund carries the same purpose guard as the spend in `runLevel2`.
     const message = (err as Error).message;
     await sb
       .from("verifications")
@@ -481,7 +498,7 @@ export async function runLevel2Checks(
       })
       .eq("id", id);
 
-    if (userId) {
+    if (paidPurpose && userId) {
       await refundSpend(userId, COST_VERIFICATION_L2, id).catch(() => {});
     }
     return { id, status: "failed", reason: message };

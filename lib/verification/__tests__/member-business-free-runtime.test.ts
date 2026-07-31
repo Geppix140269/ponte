@@ -31,10 +31,14 @@
 // the money proof: money never leaves lib/credits, and lib/credits is the module
 // being watched.
 //
-// WHAT IT FOUND. One real breach of ADR-0018, on the failure path: see the
-// KNOWN GAP test below. The boundary holds on every path a member normally
-// takes and breaks when the checks throw. That is the whole argument for
-// running the code rather than reading it.
+// WHAT IT FOUND. One real breach of ADR-0018, on the failure path: the refund at
+// the bottom of `runLevel2Checks` was guarded by `if (userId)` and not by the
+// purpose, so a free run whose checks threw was given two credits back for a
+// verification that never paid. The boundary held on every path a member
+// normally takes and broke when the checks threw. That is the whole argument for
+// running the code rather than reading it. The refund now carries the same
+// purpose guard as the spend, and section 1b below is the assertion that keeps
+// it there.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from "node:assert/strict";
@@ -227,28 +231,21 @@ test("a member_business run refused for a missing attestation spends nothing and
 });
 
 // ---------------------------------------------------------------------------
-// 1b. A KNOWN GAP, found by this file and recorded rather than hidden.
+// 1b. The failure path, which is where this file found a real breach.
 // ---------------------------------------------------------------------------
 //
-// THIS TEST PINS BEHAVIOUR THAT ADR-0018 DOES NOT WANT. Read the whole note
-// before changing it.
+// The refund at the bottom of `runLevel2Checks` used to be guarded by
+// `if (userId)` and nothing else, so a free member-business run that died on an
+// upstream fault called `refundSpend(userId, COST_VERIFICATION_L2, id)` and
+// granted the member two credits back for a verification that never paid for
+// anything. The source-reading companion test could not see it: every one of its
+// pipeline assertions is about `runLevel2`, and the refund lives in
+// `runLevel2Checks`, which the commercial boundary of Issue #135 never touched.
 //
-// ADR-0018 says a member_business run cannot call a credit function. That is
-// true of every path above. It is NOT true when the checks throw. The failure
-// handler at the bottom of `runLevel2Checks` is guarded by `if (userId)` and
-// nothing else, so a free member-business run that dies on an upstream fault
-// calls `refundSpend(userId, COST_VERIFICATION_L2, id)` and grants the member
-// two credits back for a verification that never paid for anything.
-//
-// The source-reading companion test cannot see this: every one of its pipeline
-// assertions is about `runLevel2`, and the refund lives in `runLevel2Checks`,
-// which the commercial boundary of Issue #135 never touched.
-//
-// It is recorded here rather than fixed because cutover PR 6 is scoped to proof,
-// not to behaviour, and a refund is money. The fix is to give the refund the
-// same purpose guard the spend has. WHEN THAT LANDS, this test must be replaced
-// by the zero-call assertion below it, not deleted.
-test("KNOWN GAP: a failed member_business run still calls refundSpend", async () => {
+// The refund now carries the same purpose guard the spend carries, and this test
+// is the zero-call assertion that holds it there. The paired test below proves
+// the guard did not simply switch the refund off for everyone.
+test("a member_business run whose checks throw reaches no credit function either", async () => {
   stage();
   __registryThrows("registry upstream is down");
 
@@ -261,27 +258,36 @@ test("KNOWN GAP: a failed member_business run still calls refundSpend", async ()
 
   assert.equal(outcome.status, "failed", "the run failed on the upstream fault");
 
-  const calls = __creditFunctionsCalled();
   assert.deepEqual(
-    calls,
-    ["refundSpend"],
-    "the recorded gap changed shape. If the refund is now guarded by the purpose, " +
-      "this is the good news: replace this test with assert.deepEqual(calls, []) and " +
-      "delete the KNOWN GAP note above it.",
+    __creditFunctionsCalled(),
+    [],
+    `a failed free run reached a credit function: ${creditCallSummary()}`,
   );
-  assert.deepEqual(
-    __creditCalls("refundSpend")[0].args,
-    [USER, COST_VERIFICATION_L2, VERIFICATION_ID],
-    "the free run refunds a spend that never happened",
+  assert.equal(
+    __creditCalls("refundSpend").length,
+    0,
+    "a free run has nothing to refund: it never spent anything",
   );
   assert.equal(
     __creditCalls("spendCredits").length,
     0,
-    "nothing was ever spent, which is exactly why the refund is wrong",
+    "and nothing was spent, which is exactly why a refund would be wrong",
+  );
+
+  // The failure is still recorded on the case. A guard that quietly skipped the
+  // whole handler would pass the assertions above for the wrong reason.
+  const updates = callsFor("verifications", "update");
+  assert.ok(
+    updates.some(
+      (u) =>
+        u.payload?.status === "failed" &&
+        /registry upstream is down/.test(u.payload?.verdict_reason ?? ""),
+    ),
+    "the failure was written to the case",
   );
 });
 
-test("FALSIFIABILITY for the gap above: the same failure on the paid path is a correct refund", async () => {
+test("FALSIFIABILITY for the guard above: the same failure on the paid path still refunds", async () => {
   stage();
   __registryThrows("registry upstream is down");
 

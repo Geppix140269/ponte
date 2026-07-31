@@ -386,8 +386,9 @@ evidence the owner intended it.
 
 - `app/api/verification/route.ts:98-104` reads the balance and answers **402**
   with `cost: COST_VERIFICATION_L2` when short.
-- `lib/verification/pipeline.ts:194` spends 2 credits; `:485` refunds on a
-  Ponte-side failure.
+- `lib/verification/pipeline.ts:197` spends 2 credits; `:502` refunds on a
+  Ponte-side failure. Both are guarded by the same `paidPurpose`, so each fires
+  for a `counterparty_check` only.
 - `/check` and `components/check/CheckComposer.tsx` state the cost before the run.
 - `member_business` is free and guarded by
   `lib/verification/__tests__/member-business-free.test.ts` (ADR-0018).
