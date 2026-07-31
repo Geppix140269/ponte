@@ -27,7 +27,7 @@ import { MARKET_FAMILIES, intentsForFamily } from "@/lib/taxonomy/market";
 import LandingBridges from "@/components/ponte/bridge/LandingBridges";
 import BridgeRoute from "@/components/ponte/bridge/BridgeRoute";
 import { fire, mount, type Mounted, type TestElement } from "./render";
-import { blockWidth, deckPath, elevationX, stationFractions, subPath } from "@/components/ponte/bridge/geometry";
+import { DECK_HEIGHT, blockWidth, deckPath, elevationX, stationFractions, subPath } from "@/components/ponte/bridge/geometry";
 /* eslint-enable import/first */
 
 let passed = 0;
@@ -44,7 +44,22 @@ function test(name: string, fn: () => void): void {
 
 const families = landingFamilies();
 const bridgeCss = readFileSync("design/authority/bridge/v1/source/ponte-bridge.css", "utf8");
+const integrationCss = readFileSync("components/ponte/bridge/bridge-integration.css", "utf8");
+const bridgeRoute = readFileSync("components/ponte/bridge/BridgeRoute.tsx", "utf8");
 const landingPage = readFileSync("app/[locale]/page.tsx", "utf8");
+
+/**
+ * Top-level rules of a stylesheet, as `[selector, declarations]`.
+ *
+ * Comments are stripped first; `bridge-integration.css` explains itself at
+ * length and several of those explanations quote selectors.
+ */
+function rulesOf(css: string): [string, string][] {
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  return Array.from(stripped.matchAll(/([^{}]+)\{([^{}]*)\}/g)).map(
+    (m) => [m[1].trim().replace(/\s+/g, " "), m[2].trim().replace(/\s+/g, " ")] as [string, string],
+  );
+}
 
 /** Every station element of a mounted bridge, in render order. */
 function stationsOf(bridge: Mounted): TestElement[] {
@@ -451,6 +466,93 @@ test("the vertical treatment exists for narrow containers and is the approved on
   assert.match(geometry, /VERTICAL_BELOW = 460/, "the engine's own 460px threshold is not used");
   const source = readFileSync("components/ponte/bridge/BridgeRoute.tsx", "utf8");
   assert.match(source, /br--v/, "the component never applies the approved vertical class");
+});
+
+// ---------------------------------------------------------------------------
+// The bridge must be readable before, and if, the measurement ever runs
+//
+// The horizontal bridge is positioned entirely by a layout effect: it writes an
+// inline left, top and width onto every station and then sets the stage's
+// height from its lowest child. The approved stylesheet gives `.brst`
+// `position: absolute` and no coordinates, so when that effect does not run the
+// result is not a plainer layout, it is a pile: every station on the same
+// static position, a stage with no height, and the next section drawn over it.
+//
+// Seen live in Chrome on 31 July 2026 after the deploy of `f26718a`, most
+// likely a client chunk that failed mid-deploy, and recovered on its own. The
+// `<noscript>` rule answers "scripting is off"; this answers "the script has
+// not run yet, or never will", which is the more common case by far.
+//
+// The behaviour in a real browser is asserted in `e2e/landing-bridges.spec.ts`.
+// These are the checks that hold in `npm run verify`.
+// ---------------------------------------------------------------------------
+
+test("an unmeasured stage has a CSS-only layout, and it is in the implementation layer", () => {
+  // Not in the approved package. `ponte-bridge.css` is an approval record,
+  // checksum-pinned by `check-governance.mjs` and diff-pinned by
+  // `check-bridge-invariance.mjs`; the fallback belongs beside `br__stage`,
+  // which the approved source does not declare either.
+  assert.ok(
+    !/data-measured/.test(bridgeCss),
+    "the fallback was written into the approved authority stylesheet",
+  );
+
+  const fallback = rulesOf(integrationCss).filter(([selector]) => selector.includes("br__stage"));
+  assert.ok(fallback.length > 0, "there is no fallback layout for an unmeasured stage");
+
+  const stage = fallback.find(([selector]) => !selector.includes(">"));
+  assert.ok(stage, "the unmeasured stage itself is not laid out");
+  assert.match(stage![1], /display: ?flex|display: ?grid/, "the unmeasured stage does not put its stations in flow");
+
+  // A stage whose children are all out of flow has no height of its own, which
+  // is the half of the defect that let the section below overlap the bridge.
+  const min = /min-height: ?(\d+)px/.exec(stage![1]);
+  assert.ok(min, "the unmeasured stage has no minimum height");
+  assert.equal(
+    Number(min![1]),
+    DECK_HEIGHT,
+    "the fallback stage height is not the engine's own deck height",
+  );
+
+  // And the stations themselves have to leave `position: absolute`, or they
+  // stay stacked on one static position however the stage is laid out.
+  const stations = fallback.find(([selector]) => /\.brst\b/.test(selector));
+  assert.ok(stations, "the unmeasured stations are never taken out of absolute positioning");
+  assert.match(stations![1], /position: ?(relative|static)/, "the unmeasured stations stay absolutely positioned");
+});
+
+test("the fallback cannot reach the settled rendering", () => {
+  // The approved reference renders in `design/authority/bridge/v1/reference/`
+  // are what the settled bridge is compared against, so every fallback rule
+  // must be inert the moment the measurement has run. One unguarded selector
+  // would change the approved drawing and nothing else here would notice.
+  for (const [selector] of rulesOf(integrationCss)) {
+    if (!selector.includes("br__stage")) continue;
+    assert.ok(
+      selector.includes(":not([data-measured])"),
+      `'${selector}' is not guarded by :not([data-measured]), so it survives the measurement`,
+    );
+  }
+});
+
+test("the measurement retires the fallback itself, in the right order", () => {
+  assert.match(
+    bridgeRoute,
+    /stage\.setAttribute\("data-measured"/,
+    "nothing ever tells the stylesheet that the stage has been measured",
+  );
+
+  const positioned = bridgeRoute.indexOf("el.style.left =");
+  const retired = bridgeRoute.indexOf('stage.setAttribute("data-measured"');
+  const fit = bridgeRoute.indexOf("const fit = ");
+  assert.ok(positioned > -1 && retired > -1 && fit > -1, "the horizontal measurement effect has changed shape");
+
+  // After the stations are placed: a measurement that throws must leave the
+  // readable fallback standing rather than the pile it replaces.
+  assert.ok(retired > positioned, "the fallback is retired before the stations have been positioned");
+  // And before `fit`, which reads offsetTop and offsetHeight and would
+  // otherwise size the stage from the fallback's flow layout.
+  assert.ok(retired < fit, "the stage is measured while the fallback layout is still applying");
 });
 
 // ---------------------------------------------------------------------------

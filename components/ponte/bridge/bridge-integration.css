@@ -241,3 +241,115 @@
     margin-top: 14px;
   }
 }
+
+/* ----------------------------------------------------------------------
+   5. The readable fallback, for a stage that has not been measured yet
+
+   The horizontal bridge is positioned entirely by measurement. `BridgeRoute`
+   walks the deck's own curve in a layout effect and writes an inline `left`,
+   `top` and `width` onto every station, then sets the stage's height from its
+   lowest child. The approved stylesheet gives `.brst` `position: absolute`
+   with NO coordinates, which is correct: the coordinates come from the curve,
+   and a guessed pair would be the straight-line interpretation the owner
+   rejected. But it means the unmeasured state is not a plainer layout. It is
+   no layout at all: every station lands on the same static position, all of
+   the stage's children are out of flow so it keeps zero height, and the
+   section below is drawn straight over the pile.
+
+   Seen live in Chrome on 31 July 2026 after the deploy of `f26718a`, and
+   recovered on its own: most likely a client chunk that failed to arrive
+   mid-deploy. The `<noscript>` rule in `LandingBridges.tsx` does not cover it.
+   That rule unhides the action bridges, which answers "scripting is off"; it
+   says nothing about layout, and "the script has not run yet, or never will"
+   is the far more common case.
+
+   So this is a legibility floor, not a second drawing of the bridge:
+
+   - the stations go back into flow as a wrapping row, so they read as three
+     separate stations rather than one overprinted block;
+   - the stage takes the deck's own height as a minimum, so whatever follows
+     the bridge starts below it;
+   - no deck is drawn. A CSS deck could only be a straight rule, and a straight
+     rule is not the Ponte bridge. The approved node, pier, index, title and
+     description vocabulary carries the crossing until the arch can be
+     measured, and nothing here invents a colour, a font or a radius.
+
+   Every value is either the engine's own or one the approved stylesheet
+   already uses for a bridge laid out in flow: `min-height` is `DECK_HEIGHT`
+   from `geometry.ts`, the 16px stage padding is `.br--v .br__rows`, and the
+   22px gap is the `.br--v .brst` station separation.
+
+   ## How it is superseded
+
+   Every selector below is guarded by `:not([data-measured])`. `BridgeRoute`
+   sets that attribute inside the same layout effect that positions the
+   stations, after the positioning has succeeded and before it measures the
+   stage, so the fallback is gone before the browser paints the measured
+   bridge, and NOTHING here can reach the settled rendering that
+   `design/authority/bridge/v1/reference/*.png` records.
+
+   The elevation needs none of this: `.br--v` renders `.br__rows` instead, and
+   the approved `.br--v .brst` is already `position: relative`.
+   ---------------------------------------------------------------------- */
+
+.br .br__stage:not([data-measured]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 22px;
+  /* DECK_HEIGHT. The flow layout gives the stage a real height on its own;
+     this is the floor, so the section below clears it even in the degenerate
+     case of a bridge with no stations to size it. */
+  min-height: 92px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.br .br__stage:not([data-measured]) > .brst {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  /* The approved `max-width: 176px` still caps the block; only the floor and
+     the ability to share the row are added, so three stations stay side by
+     side on a wide stage and stack rather than overflow on a narrow one. */
+  flex: 1 1 132px;
+  min-width: 0;
+}
+
+/* In the document the abutments precede the stations, because when they are
+   positioned they are placed by coordinate and source order does not matter.
+   In flow it does: both would sit before the crossing. `order` puts them back
+   at the two ends, which is the whole of what an abutment says. */
+.br .br__stage:not([data-measured]) > .br__ab {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  flex: 0 0 auto;
+}
+
+.br .br__stage:not([data-measured]) > .br__ab--l {
+  order: -1;
+}
+
+.br .br__stage:not([data-measured]) > .br__ab--r {
+  order: 1;
+}
+
+/* Below the engine's own `VERTICAL_BELOW`, one item per row.
+   `useSyncExternalStore` reports "not narrow" on the server, so a narrow
+   viewport is served the horizontal stage and only switches to the approved
+   elevation once the client runs, which is precisely the case this section
+   covers. Left to wrap on its own the row breaks unevenly, with an abutment
+   sharing a line with one station and the other abutment alone below three
+   others. A column is both readable and the reading order the approved
+   elevation uses at the same width. */
+@media (max-width: 459px) {
+  .br .br__stage:not([data-measured]) > .brst,
+  .br .br__stage:not([data-measured]) > .br__ab {
+    flex: 1 0 100%;
+    max-width: none;
+  }
+}
