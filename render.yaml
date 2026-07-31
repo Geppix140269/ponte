@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: ponte-trade-production
+    runtime: node
+    region: frankfurt
+    plan: starter
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: ADMIN_ALERT_EMAIL
+        sync: false
+      - key: DEALS_TO_EMAIL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_AI_PAYMENT_LINK
+        sync: false
+      - key: NEXT_PUBLIC_CHECK_JOURNEY
+        sync: false
+      - key: COMPANIES_HOUSE_API_KEY
+        sync: false
+      - key: OPENCORPORATES_API_KEY
+        sync: false
+      - key: DATASOURCE_CONTACT_EMAIL
+        sync: false
+      - key: FREECURRENCYAPI_KEY
+        sync: false
+      - key: WTO_API_KEY
+        sync: false
+      - key: SAM_GOV_API_KEY
+        sync: false
+      - key: DATA_OPENSANCTIONS_ENABLED
+        sync: false
+      - key: OPENSANCTIONS_API_KEY
+        sync: false
+      - key: FIRMS_MAP_KEY
+        sync: false
+      - key: AISSTREAM_API_KEY
+        sync: false
+      - key: ECONDB_API_KEY
+        sync: false
+      - key: GFW_API_TOKEN
+        sync: false
+      - key: OPENAQ_API_KEY
+        sync: false
+      - key: COPERNICUS_CLIENT_ID
+        sync: false
+      - key: COPERNICUS_CLIENT_SECRET
+        sync: false
+      - key: SANCTIONS_REFRESH_SECRET
+        sync: false
