@@ -110,17 +110,6 @@ export type FindQuery = {
   q: string | null;
   /** An explicit ordering, or null to take the default for this query. */
   sort: BoardSort | null;
-  /**
-   * Ask for the full result list rather than the entrance.
-   *
-   * `/market-signals` with nothing set is a CHOICE — buyer requirements or
-   * seller offers — because the two are different questions and the counts are
-   * the useful thing to see first. `?view=board` is how a member says "show me
-   * everything anyway", and it is what the entrance's own "All signals" link
-   * carries. Any search or filter implies the board on its own, so this is only
-   * ever needed for the unfiltered case.
-   */
-  view: "board" | null;
   /** 1-based page. Always a number; 1 when the URL says nothing. */
   page: number;
 };
@@ -257,24 +246,31 @@ export function parseFindQuery(
     lane: isFindLane(rawLane) ? rawLane : null,
     q: clean(sp.q, MAX_QUERY_LENGTH),
     sort: isBoardSort(rawSort) ? rawSort : null,
-    view: first(sp.view) === "board" ? "board" : null,
     page: pageNumber(sp.page),
   };
 }
 
 /**
- * Does this URL ask for the result list, rather than for the entrance?
+ * Should the board carry the full-size entrance above it?
  *
- * True as soon as the member has said anything at all — a side, a category, a
- * search, a sort, or a page past the first — because every one of those is a
- * question the list answers and the entrance does not. `view=board` is the
- * explicit form, for the one case where nothing else has been said.
+ * True only for the bare URL: no filter, no search, no sort, first page. The
+ * entrance is an ARRIVAL affordance, so it belongs where somebody has just
+ * arrived and nowhere else. Once a member has narrowed anything, the compact
+ * lane selector inside the board carries the same choice in a row rather than
+ * in two large cards, and repeating it full-size would push their own results
+ * below the fold.
  *
- * Kept here rather than in the route so the entrance and the board cannot come
- * to disagree about which one a given URL means.
+ * The board renders either way. An earlier draft of this branch returned the
+ * entrance INSTEAD of the board, which read well and was wrong for two
+ * reasons: it put a click between a member and the inventory they came for,
+ * and it made the most valuable URL on the site a page with no records on it,
+ * which is a thin page to every crawler that reads it.
+ *
+ * Kept here rather than in the route so nothing else can form its own opinion
+ * about what a bare URL means.
  */
-export function showsBoard(q: FindQuery): boolean {
-  return q.view === "board" || hasActiveFilters(q) || q.sort !== null || q.page > 1;
+export function showsEntrance(q: FindQuery): boolean {
+  return !hasActiveFilters(q) && q.sort === null && q.page === 1;
 }
 
 /**
@@ -330,11 +326,6 @@ function boardParams(q: Partial<FindQuery>): URLSearchParams {
   if (q.minQty && q.minQty > 0) params.set("minQty", String(q.minQty));
   if (q.lane) params.set("lane", q.lane);
   if (q.sort) params.set("sort", q.sort);
-  // Only meaningful while nothing else is set: any filter already implies the
-  // board, and carrying a redundant `view=board` would make two URLs for one
-  // view and neither shareable link the canonical one. `params` is the set
-  // already written, so this asks exactly that without re-deriving it.
-  if (q.view === "board" && params.toString() === "") params.set("view", "board");
   // Page one is the absence of a page, so the first page of a search shares as
   // the same URL whether it was arrived at by searching or by paging back.
   if (q.page && q.page > 1) params.set("page", String(q.page));

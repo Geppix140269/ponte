@@ -16,13 +16,17 @@ import type { SignalSideCounts } from "@/lib/board/inventory";
  * member arrives with one of those two questions, never with both, and a single
  * blended list makes them do the sorting Ponte should have done.
  *
- * So the first thing the route asks is which question. Each door carries its own
+ * So the first thing the route offers is that choice. Each door carries its own
  * live count, because a door with no number on it asks a member to guess whether
  * it is worth opening, and its own search field, because the search a member
  * wants is almost always inside one side rather than across both.
  *
- * The board is never hidden: "All signals" carries `view=board`, and any filter
- * or search reaches it directly. See `showsBoard`.
+ * This band sits ABOVE the board, never instead of it. Offering the choice is
+ * worth a screenful; charging a click for the inventory somebody came for is
+ * not, and a hub page carrying no records is a thin page to every crawler that
+ * reads it. It is drawn only on a bare arrival: once anything is narrowed the
+ * board's own compact lane selector carries the same choice. See
+ * `showsEntrance`.
  *
  * ---------------------------------------------------------------------------
  * Two doors, one treatment
@@ -160,21 +164,21 @@ export default function SignalGates({ counts }: { counts: SignalSideCounts | nul
         />
         <p>
           {/*
+            No "All signals" link: the whole board is immediately below this
+            band, so a control leading to what is already on screen would be a
+            click that changes nothing.
+
             The count is stated only when it was actually read. A failed count
             is not zero and is not a market that has gone quiet, so the sentence
-            simply drops the number rather than printing one Ponte cannot stand
-            behind.
+            drops the number rather than printing one Ponte cannot stand behind.
           */}
           {total === null
-            ? "Or search across both sides of the market."
-            : `Or search across both. ${total.toLocaleString()} signals live on the board.`}
+            ? "Every signal is listed below, both sides together."
+            : `All ${total.toLocaleString()} signals are listed below, both sides together.`}
         </p>
         <div className="sgates__a">
-          <Link className="b b--2" href={buildBoardHref({ view: "board" })}>
-            All signals
-          </Link>
           <Link className="b b--2" href="/market-signals/categories">
-            Browse categories
+            Browse by market
           </Link>
         </div>
       </div>

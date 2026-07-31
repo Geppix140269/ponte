@@ -89,7 +89,7 @@ export default function CategoryBrowse({ splits }: { splits: CategorySplit[] | n
               : `${splits.length} markets, ${totalSignals.toLocaleString()} live signals. The bar shows how each market splits between the two sides.`}
           </p>
         </div>
-        <Link href={buildBoardHref({ view: "board" })}>All signals</Link>
+        <Link href={buildBoardHref({})}>All signals</Link>
       </div>
 
       {splits.length === 0 ? (

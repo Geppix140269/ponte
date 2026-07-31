@@ -11,6 +11,7 @@ import {
   matchesFindQuery,
   findQueryIsAnswerable,
   toInventoryQuery,
+  showsEntrance,
   type FindQuery,
 } from "../query";
 import { TRADE_SERVICE_CATEGORIES } from "../../taxonomy/services";
@@ -79,7 +80,37 @@ const Q = (over: Partial<FindQuery> = {}): FindQuery => ({
   family: null, serviceCategory: null, serviceSubcategory: null, partnerType: null,
   sector: null, territory: null,
   product: null, category: null, intent: null, market: null, origin: null, minQty: null, lane: null,
-  q: null, sort: null, view: null, page: 1, ...over,
+  q: null, sort: null, page: 1, ...over,
+});
+
+// ---- the entrance ----------------------------------------------------------
+test("the entrance is drawn on a bare arrival and nowhere else", () => {
+  // A bare URL is somebody who has just arrived and asked nothing.
+  assert.equal(showsEntrance(parseFindQuery({})), true);
+
+  // Anything narrowed, and the compact lane selector carries the choice
+  // instead. Repeating the full-size band would push the member's own results
+  // below the fold.
+  assert.equal(showsEntrance(parseFindQuery({ intent: "offer" })), false);
+  assert.equal(showsEntrance(parseFindQuery({ q: "basmati" })), false);
+  assert.equal(showsEntrance(parseFindQuery({ category: "Rice & Grains" })), false);
+  assert.equal(showsEntrance(parseFindQuery({ sector: "agri" })), false);
+  assert.equal(showsEntrance(parseFindQuery({ sort: "oldest" })), false);
+  assert.equal(showsEntrance(parseFindQuery({ page: "2" })), false);
+
+  // Junk that parses to nothing has narrowed nothing, so it is still an
+  // arrival rather than a filtered view of the board.
+  assert.equal(showsEntrance(parseFindQuery({ intent: "nonsense", page: "0" })), true);
+});
+
+test("the board renders whether or not the entrance does", () => {
+  // The entrance is additive. There is no query that hides the record list,
+  // which is what keeps the hub page from ever being a page with no records.
+  for (const sp of [{}, { intent: "offer" }, { q: "rice" }, { page: "3" }]) {
+    const q = parseFindQuery(sp);
+    assert.equal(typeof showsEntrance(q), "boolean");
+    assert.ok(q.page >= 1);
+  }
 });
 
 test("product matches product text or HS code", () => {
