@@ -1,8 +1,11 @@
 # ExecPlan — Persistent navigation and unsaved-work protection
 
-**Status:** In progress. Slice 1 (shared foundation + clearest violations +
-error resilience) implemented on branch. Journey-by-journey wiring enumerated
-below as remaining.
+**Status:** All three slices merged to `main` (Slice 1 via PR #118; Slices 2-3
+via PR #150, 31 July 2026). The code wiring for the brief is complete across
+every non-retired user-facing surface; the only outstanding item is the capture
+of per-journey visual and screen-reader evidence (PL-031), deferred because the
+dev app is behind a "temporarily private" env gate in the working environment.
+Not deployed or production-verified.
 **Owner authorisation:** 2026-07-30. The repository owner authorised the full
 brief, chose to extend the existing `DiscardWarning` precedent for the new
 components rather than hold for a fresh design authority, and chose the honest
