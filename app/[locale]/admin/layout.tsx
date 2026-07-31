@@ -2,13 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { landingFontVars } from "@/components/home/landing/fonts";
+import DeskShell from "@/components/desk/DeskShell";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import "@/components/desk/desk.css";
 
 export const dynamic = "force-dynamic";
 
-// July 2026: Ponte is a brokerage/marketplace. The legacy shop (Products,
-// Orders, and their admin screens) was deleted with zero orders ever taken;
-// the products and categories tables still hold the old rows, readable in
-// the Supabase console if that era ever needs a look.
+// The administration desk. The legacy shop (Products, Orders, and their admin
+// screens) was retired with zero orders ever taken; the products and categories
+// tables still hold the old rows, readable in the Supabase console if that era
+// ever needs a look. The live desk carries Listings, Signals, Verifications and
+// Users, each a real current operation.
 const adminNav = [
   { href: "/admin/listings", label: "Listings" },
   { href: "/admin/signals", label: "Signals" },
@@ -16,22 +21,35 @@ const adminNav = [
   { href: "/admin/users", label: "Users" },
 ];
 
-function Notice({ title, body }: { title: string; body: string }) {
+/** The Desk chrome around every admin surface, supplied once by the layout. */
+function AdminShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="container-px py-20">
-      <div className="glass p-12 max-w-xl mx-auto text-center">
-        <h1
-          className="serif text-white"
-          style={{ fontSize: 32, fontWeight: 500 }}
-        >
-          {title}
-        </h1>
-        <p className="mt-4 text-[15px] text-gray-2 leading-relaxed">{body}</p>
-        <Link href="/" className="btn-gold mt-8">
-          Back to site
-        </Link>
-      </div>
-    </section>
+    <div className={`ponte-desk ${landingFontVars}`}>
+      <DeskShell rail={null} objective={null}>
+        {children}
+      </DeskShell>
+    </div>
+  );
+}
+
+function Gate({ title, body }: { title: string; body: string }) {
+  return (
+    <AdminShell>
+      <section className="sec">
+        <div className="empty">
+          <PonteIcon name="profile.account" size={24} />
+          <div>
+            <b>{title}</b>
+            <p>{body}</p>
+            <div className="empty__a">
+              <Link className="b b--2" href="/">
+                Back to Ponte
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </AdminShell>
   );
 }
 
@@ -42,9 +60,9 @@ export default async function AdminLayout({
 }) {
   if (!isSupabaseConfigured()) {
     return (
-      <Notice
-        title="Admin"
-        body="The admin panel activates once Supabase is connected. Add your Supabase keys to enable it."
+      <Gate
+        title="Administration activates once sign-in is connected"
+        body="The admin desk becomes available when the authentication service is configured for this deployment. Nothing here can load until then."
       />
     );
   }
@@ -61,36 +79,46 @@ export default async function AdminLayout({
 
   if (profile?.role !== "admin") {
     return (
-      <Notice
-        title="Restricted"
-        body="This area is for administrators. If you should have access, set your profile role to 'admin' in Supabase."
+      <Gate
+        title="This area is for administrators"
+        body="Your account does not carry the admin role. If you should have access, set your profile role to 'admin' in Supabase."
       />
     );
   }
 
   return (
-    <div>
-      <div className="nav-glass border-b border-white/10">
-        <div className="container-px flex h-14 items-center gap-6 overflow-x-auto">
-          <span
-            className="serif text-white text-sm uppercase"
-            style={{ letterSpacing: "0.22em", fontWeight: 500 }}
-          >
-            Admin
-          </span>
+    <AdminShell>
+      <section className="sec" style={{ paddingBottom: 0 }}>
+        <nav
+          aria-label="Administration"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 18,
+            paddingBottom: 14,
+            borderBottom: "1px solid var(--rule)",
+          }}
+        >
+          <span className="kicker">Administration</span>
           {adminNav.map((n) => (
             <Link
               key={n.href}
               href={n.href}
-              className="whitespace-nowrap text-[12px] uppercase text-gray-2 hover:text-gold"
-              style={{ letterSpacing: "0.18em" }}
+              style={{
+                fontFamily: "var(--f-mono)",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--ink-2)",
+              }}
             >
               {n.label}
             </Link>
           ))}
-        </div>
-      </div>
-      <div className="container-px py-10">{children}</div>
-    </div>
+        </nav>
+      </section>
+      {children}
+    </AdminShell>
   );
 }

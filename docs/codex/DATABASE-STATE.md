@@ -101,6 +101,81 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the Storage policy helpers (blocks Approval 2)
+
+`supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
+| Size | 4,040 bytes, no BOM; raw-byte and utf8-string hashes identical |
+| Content | **2 grants, one transaction. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+| Ordering | **must be applied before, or in the same approval as, `20260729c`. Never after.** |
+
+**Approval 2 could not proceed without it, and the reason is a defect in
+`20260731a`'s predecessor.** `20260730c` revoked `authenticated` EXECUTE on four
+functions, on the ground that none was reachable by a member. For
+`deal_room_log_event` and `deal_room_events_append_only` that is permanently true.
+For `deal_room_is_writable(uuid)` and `deal_room_uuid_or_null(text)` it was true
+only of the schema **as applied at that moment**.
+
+`20260729c_deal_room_storage.sql` had been in the repository, unapplied, since 29
+July. Its `deal room evidence upload` policy calls both:
+
+```sql
+and public.deal_room_is_sub_room_participant(
+      public.deal_room_uuid_or_null((storage.foldername(name))[2]))
+and exists (select 1 from public.deal_room_sub_rooms s
+             where s.id = public.deal_room_uuid_or_null((storage.foldername(name))[2])
+               and public.deal_room_is_writable(s.room_id))
+```
+
+A function invoked inside a policy expression is privilege-checked against the
+**querying** role. Applying `20260729c` against the current ACL would therefore
+have produced an upload policy that fails **every member evidence upload** with
+`42501`. Caught before application, by reading the migration rather than trusting
+the earlier derivation.
+
+**Why the allowlist missed it.** It was derived from live production with
+`pg_policies where tablename like 'deal_room%'`. That query has two blind spots
+and this defect sat in both: it matches Deal Room tables in `public`, not
+`storage.objects`; and it can only see policies that **exist**, not ones in an
+unapplied migration. So `20260730c` recorded "appears in no policy expression" and
+"called nowhere" — **both true of the applied database, both false of the
+repository.**
+
+That is LB-008's shape one turn further out. The catalogue is the only witness to
+what production *holds*; it is not a witness to what production will *need*.
+
+**This is not a rollback of LB-008.** `deal_room_log_event` stays executable by
+neither member role, and so does `deal_room_events_append_only`; the forgery path
+remains closed. Only the two helpers a real policy demonstrably needs come back,
+and both are read-only — `deal_room_is_writable(uuid)` returns a boolean from
+entitlement and room state, `deal_room_uuid_or_null(text)` is pure text coercion
+touching no table.
+
+### The contract is now permitted-versus-required
+
+`npm run deal-room:acl-verify` no longer asserts a single number. It separates
+what `authenticated` **may** hold (21: four RLS helpers, two Storage policy
+helpers, fifteen commands) from what it **must** hold, which depends on the world:
+the two Storage helpers become required only once the `storage.objects` policies
+exist. The script queries `pg_policies` for those policies and says which regime
+it is in.
+
+That keeps the witness honest across the window between merging `20260731a` and
+applying it — it reports **`authenticated 19 (required 19, permitted 21)`** and
+exits 0 today, and will require 21 the moment `20260729c` lands.
+
+`lib/deal-room/__tests__/function-acl.test.ts` now derives policy helpers from
+**both** `20260729b` and `20260729c`, and models the end state the way Postgres
+does: every declared function starts granted by Supabase's default privileges,
+then each ACL migration's revokes and grants apply in file order. A file-by-file
+assertion could not express this, because `20260730b` and `20260730c` are applied
+and immutable and cannot be asked retrospectively to have known about a pending
+migration. 29 assertions.
+
 ## APPLIED to production, 30 July 2026: the Deal Room internal-function ACL (LB-008 closed)
 
 `supabase/migrations/20260730c_deal_room_internal_acl.sql`.

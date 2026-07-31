@@ -66,11 +66,18 @@ const RETIRED_LINK_BASELINE = [
 // be repointed to /find when /marketplace retires (cutover PR 5).
 const REDIRECT_CHAIN_BASELINE = ["/cart", "/checkout", "/order-success", "/brokerage", "/network"];
 
-// C3. The business-verification path still imports the credit library. The
-// owner accepted (this programme) that member_business verification becomes
-// credit-free; the boundary lands in cutover PR 6 (ADR to follow), after which
-// these files import no credit function and this list is empty. The credits
-// balance route is credit INFRASTRUCTURE, not verification, and is allowed.
+// C3. Files on the verification path that import the credit library.
+//
+// ADR-0018 (Issue #135) landed the commercial boundary: `member_business`
+// verification is FREE and cannot reach a credit function, while
+// `counterparty_check` keeps its paid rule. These four files still import
+// `@/lib/credits`, and that is now correct rather than pending: each one uses it
+// ONLY on the paid counterparty path, behind an explicit purpose guard. The
+// guards themselves are pinned by
+// lib/verification/__tests__/member-business-free.test.ts, which is the test
+// that actually protects the member from being charged; this list only records
+// which files are permitted to reach the credit library at all.
+// The credits balance route is credit INFRASTRUCTURE, not verification.
 const VERIFICATION_CREDIT_COUPLING = [
   "lib/verification/pipeline.ts",
   "app/[locale]/verify/page.tsx",
