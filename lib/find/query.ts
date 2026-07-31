@@ -87,6 +87,8 @@ export type FindQuery = {
   territory: string | null;
   /** The product to find. Decisive for the products family. */
   product: string | null;
+  /** The source category label, exactly as stored (e.g. "Rice & Grains"). */
+  category: string | null;
   /** Direction filter, or null for any. */
   intent: FindIntent | null;
   /** Destination market, free text (a country name or region). */
@@ -152,6 +154,7 @@ export function hasActiveFilters(q: FindQuery): boolean {
       q.sector ||
       q.territory ||
       q.product ||
+      q.category ||
       q.intent ||
       q.market ||
       q.origin ||
@@ -235,6 +238,7 @@ export function parseFindQuery(
     sector: canonicalKey(sp.sector, (k) => PRODUCT_SECTORS.some((s) => s.key === k)),
     territory: territoryCode(sp.territory),
     product: clean(sp.product, 120),
+    category: clean(sp.category, 80),
     intent: isFindIntent(rawIntent) ? rawIntent : null,
     market: clean(sp.market, 120),
     origin: clean(sp.origin, 120),
@@ -244,6 +248,29 @@ export function parseFindQuery(
     sort: isBoardSort(rawSort) ? rawSort : null,
     page: pageNumber(sp.page),
   };
+}
+
+/**
+ * Should the board carry the full-size entrance above it?
+ *
+ * True only for the bare URL: no filter, no search, no sort, first page. The
+ * entrance is an ARRIVAL affordance, so it belongs where somebody has just
+ * arrived and nowhere else. Once a member has narrowed anything, the compact
+ * lane selector inside the board carries the same choice in a row rather than
+ * in two large cards, and repeating it full-size would push their own results
+ * below the fold.
+ *
+ * The board renders either way. An earlier draft of this branch returned the
+ * entrance INSTEAD of the board, which read well and was wrong for two
+ * reasons: it put a click between a member and the inventory they came for,
+ * and it made the most valuable URL on the site a page with no records on it,
+ * which is a thin page to every crawler that reads it.
+ *
+ * Kept here rather than in the route so nothing else can form its own opinion
+ * about what a bare URL means.
+ */
+export function showsEntrance(q: FindQuery): boolean {
+  return !hasActiveFilters(q) && q.sort === null && q.page === 1;
 }
 
 /**
@@ -292,6 +319,7 @@ function boardParams(q: Partial<FindQuery>): URLSearchParams {
   if (q.sector) params.set("sector", q.sector);
   if (q.territory) params.set("territory", q.territory);
   if (q.product) params.set("product", q.product);
+  if (q.category) params.set("category", q.category);
   if (q.intent) params.set("intent", q.intent);
   if (q.market) params.set("market", q.market);
   if (q.origin) params.set("origin", q.origin);
@@ -342,6 +370,7 @@ const FILTER_KEYS = [
   "sector",
   "territory",
   "product",
+  "category",
   "intent",
   "market",
   "origin",
@@ -412,6 +441,7 @@ export function toInventoryQuery(q: FindQuery): InventoryQuery {
     sector: q.sector,
     territory: q.territory,
     product: q.product,
+    category: q.category,
     side: q.intent === "offer" ? "offer" : q.intent === "requirement" ? "requirement" : null,
     text: q.q,
   };

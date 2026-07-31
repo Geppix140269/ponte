@@ -20,6 +20,16 @@ export type InventoryQuery = {
   territory: string | null;
   /** Free-text product match, still supported alongside the keys. */
   product: string | null;
+  /**
+   * The source category label, matched exactly (e.g. "Rice & Grains").
+   *
+   * A stored value on `desk_radar.category`, and the axis the category browse
+   * navigates on. It is deliberately NOT `product_sector_key`: the sector is
+   * Ponte's fifteen-way HS classification, while this is the market vocabulary
+   * the inventory actually carries, and the two answer different questions. A
+   * member browsing "Coffee & Tea" is asking for that market, not for HS 09.
+   */
+  category: string | null;
   side: "offer" | "requirement" | null;
   /**
    * The member's own words, matched across every public field.
@@ -41,6 +51,7 @@ export function emptyInventoryQuery(): InventoryQuery {
     sector: null,
     territory: null,
     product: null,
+    category: null,
     side: null,
     text: null,
   };
@@ -66,6 +77,12 @@ export function canonicalColumnFor(query: InventoryQuery): string | null {
   if (query.sector) return "product_sector_key";
   if (query.territory) return "territory_codes";
   if (query.family) return "market_family";
+  // `category` is deliberately absent. The coverage machinery exists for the
+  // canonical classification axes, which a record may simply not carry; the
+  // category browse is built FROM the stored values, so every option it offers
+  // is one the inventory demonstrably has. Treating it as a classification axis
+  // would ask "is anything classified here?" about a list derived from the
+  // answer.
   return null;
 }
 
