@@ -145,7 +145,53 @@
 }
 
 /* ----------------------------------------------------------------------
-   3. The Multi-party Deal Room Bridge wrapper
+   3. ADR-0019 - the category marker on a selection station
+
+   The approved package has no icon slot, and it is not edited to gain one: the
+   vendored stylesheet is an approval record, checksum-pinned by
+   `check-governance.mjs` and diff-pinned by `check-bridge-invariance.mjs`. So
+   the marker is declared here, in the implementation layer, exactly as
+   `br__stage`, `br__vsvg` and `brst__w` already are.
+
+   Bounds, from the ADR: it appears only on a station that stands for a
+   classification, it is a `PonteIcon` registry key and nothing else, and it
+   introduces no colour of its own. `currentColor` is inherited from the
+   station, so the marker carries whatever state colour the approved stylesheet
+   has already decided, including the gold of a chosen station and the receded
+   ink of an unchosen one once a choice has been made.
+   ---------------------------------------------------------------------- */
+
+.br .brst__i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 10px;
+  color: var(--pf-ink-3);
+}
+
+/* Chosen and receded, in the same vocabulary the approved source uses for the
+   index and the description. Neither declaration invents a value. */
+.br .brst--on .brst__i {
+  color: var(--pf-gold-ink);
+}
+.br--chosen .brst:not(.brst--on) .brst__i {
+  color: var(--pf-ink-3);
+}
+
+/* In elevation the node and the pier are taken out of flow and pinned to the
+   drawn curve, so the marker becomes the first in-flow child of the station and
+   has to left-align with the label column rather than centre on a block that is
+   now full width. It sits above the index, on the node's own row. */
+.br--v .brst__i {
+  justify-content: flex-start;
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+/* ----------------------------------------------------------------------
+   4. The Multi-party Deal Room Bridge wrapper
 
    Commissioned by the owner on issue #97, decision 2.
 

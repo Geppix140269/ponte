@@ -8,8 +8,8 @@
    introduced here.
 
    Structure comes from rules and type, as everywhere else in the journey:
-   hairline-separated tiles on the same paper, a gold status rule on the
-   chosen one. No raised cards.
+   hairline-separated rows on the same paper, a gold state rule down the left
+   of the chosen one. No cards, no columns, no tiles.
    ====================================================================== */
 
 .pcat { margin: 20px 0; }
@@ -54,35 +54,35 @@
 }
 
 /* ----------------------------------------------------------------------
-   The grid.
+   The list.
 
-   Mobile first and one column, per the requirement: no horizontally
-   scrolling carousel of categories, and a tap target tall enough to hit.
-   Two columns from 560px, three from 900px where the list is not dense.
+   Issue #130 Stage 2. This was a responsive grid of tiles: one column on a
+   phone, two from 560px and three from 900px, each option carrying its own
+   1px ring and a 56px floor so the tiles read as boxes of equal height.
+   That is the card grid the owner ruled out for categorical choices, and it
+   is the reason a Bridge could be followed on the next screen by something
+   that looked nothing like it.
+
+   It is a flat list of full-width rows now. One column at every width, no
+   ring on any row, no tile height, and the whole row is the click target.
+   Structure comes from a single hairline between rows and from type, which
+   is what the rest of the journey already does.
+
+   The hairline is drawn ON the row rather than by a ruled container showing
+   through gaps, for the reason it always was: a container colour visible in
+   a gap reads as a broken or still-loading tile.
    ---------------------------------------------------------------------- */
-/* The hairlines are drawn ON the tiles, not by a ruled container showing
-   through 1px gaps. Eleven options in a three-column grid leave one track
-   empty, and a container-coloured block in that track reads as a broken or
-   still-loading tile. Same defect and same fix as the HS drill grid, which
-   left a large cream block whenever a row did not fill every column.
-   align-items:start also stops a short tile stretching to match a long one. */
 .pcat__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1px;
+  gap: 0;
   background: var(--pf-surface);
   border-block: 1px solid var(--pf-rule);
-  align-items: start;
 }
 
-@media (min-width: 560px) {
-  .pcat__grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 900px) {
-  .pcat__grid { grid-template-columns: repeat(3, 1fr); }
-}
-/* Second-level lists stay one column: they are long, plainly worded and
-   read as a list rather than a set of tiles. */
+/* `dense` no longer changes the column count, because there is only ever one.
+   It is kept as a caller-facing hint and as a hook for anything that later
+   needs a tighter second-level list. */
 .pcat__grid--dense,
 .pcat__grid--dense.pcat__grid { grid-template-columns: 1fr; }
 
@@ -93,21 +93,24 @@
   align-items: start;
   gap: 10px;
   width: 100%;
-  /* 56px is the floor for a comfortable touch target once padding and the
-     one-line title are counted; real tiles are taller. */
-  min-height: 56px;
-  padding: 14px 14px 14px 0;
+  padding: 15px 14px 15px 0;
   text-align: left;
   font: inherit;
   color: var(--pf-ink);
   background: var(--pf-surface);
   border: none;
+  /* The one separator a row is allowed. Not a ring, not a card edge: a rule
+     between two rows on the same paper. */
+  border-bottom: 1px solid var(--pf-rule);
   cursor: pointer;
-  box-shadow: 0 0 0 1px var(--pf-rule);
   transition: background var(--pf-dur-micro, 120ms) var(--pf-ease);
 }
 
-/* The link form of the same tile. `a` brings its own colour and underline. */
+/* The container already draws the closing rule, so the last row must not draw
+   a second one on top of it. */
+.pcat__grid > .pcat__opt:last-child { border-bottom: none; }
+
+/* The link form of the same row. `a` brings its own colour and underline. */
 a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
 
 .pcat__opt:hover { background: var(--pf-sunken); }
@@ -118,16 +121,18 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
 .pcat__opt[data-current="true"] .pcat__t { color: var(--pf-gold-ink); }
 .pcat__opt[data-current="true"] .pcat__ico { color: var(--pf-gold-ink); }
 
-/* The focus ring is drawn OUTSIDE the tile's own hairline, and the hairline is
-   restated rather than replaced: a tile that lost its rule while focused would
-   read as a gap opening in the grid. */
+/* The row carries no ring of its own any more, so focus is the focus ring and
+   nothing else. It sits above its neighbours so the ring is not clipped by the
+   next row's hairline. */
 .pcat__opt:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 1px var(--pf-rule), var(--pf-focus-ring);
+  box-shadow: var(--pf-focus-ring);
   z-index: 1;
 }
 
-/* Signal one: the gold status rule. */
+/* Signal one: the left state rule. It runs the full height of the chosen row,
+   which is what makes the choice legible in greyscale and at a glance down a
+   long list. */
 .pcat__mark {
   grid-column: 1;
   align-self: stretch;
@@ -157,7 +162,11 @@ a.pcat__opt { text-decoration: none; color: var(--pf-ink); }
   line-height: 1.3;
   color: var(--pf-ink);
 }
-/* Signal two: the title turns from ink to gold ink. */
+/* Signal two: the title turns from ink to gold ink AND takes weight. Weight is
+   the part that survives greyscale beside the left rule, which matters more now
+   that there is no box outline to thicken. */
+.pcat__opt[aria-checked="true"] .pcat__t,
+.pcat__opt[data-current="true"] .pcat__t { font-weight: 600; }
 .pcat__opt[aria-checked="true"] .pcat__t { color: var(--pf-gold-ink); }
 
 .pcat__d {

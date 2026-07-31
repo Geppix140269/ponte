@@ -395,7 +395,9 @@ test("the bridge uses the approved class vocabulary and introduces no substitute
   for (const name of Array.from(new Set(classNames.filter((c) => /^(br|brst)/.test(c))))) {
     const escaped = name.replace(/[-]/g, "\\-");
     assert.ok(
-      new RegExp(`\\.${escaped}\\b`).test(bridgeCss) || /^(br__stage|br__vsvg|brst__w)$/.test(name),
+      // `brst__i` is the fourth implementation-layer class: ADR-0019's category
+      // marker, styled in bridge-integration.css rather than in the approved package.
+      new RegExp(`\\.${escaped}\\b`).test(bridgeCss) || /^(br__stage|br__vsvg|brst__w|brst__i)$/.test(name),
       `'${name}' is neither defined by the approved Bridge stylesheet nor one of the two ` +
         `hooks the approved engine creates and styles inline (br__stage, br__vsvg, brst__w)`,
     );

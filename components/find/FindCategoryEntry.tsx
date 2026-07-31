@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import CategoryLinks, { type CategoryLink } from "@/components/ponte/category/CategoryLinks";
+import BridgeRoute from "@/components/ponte/bridge/BridgeRoute";
 import { MARKET_FAMILIES, type MarketFamily } from "@/lib/taxonomy/market";
 import { TRADE_SERVICE_CATEGORIES, subcategoriesFor, serviceCategory } from "@/lib/taxonomy/services";
 import { DISTRIBUTION_PARTNER_TYPES } from "@/lib/taxonomy/distribution";
@@ -35,18 +36,27 @@ export default async function FindCategoryEntry({ q }: { q: FindQuery }) {
       services: t("family.services"),
       distribution: t("family.distribution"),
     };
-    const items: CategoryLink[] = MARKET_FAMILIES.map((family) => ({
+    /*
+      Issue #130 Stage 2. Choosing between the three market families is the
+      categorical choice the Bridge exists for, so it is a bridge rather than
+      three boxed rows. `navigate` mode keeps every family a real URL: the
+      journey still works with scripting off, is shareable and opens in a new
+      tab. The marker on each station is ADR-0019's, taken from the canonical
+      taxonomy's own icon key rather than chosen here.
+    */
+    const stations = MARKET_FAMILIES.map((family, index) => ({
       key: family.key,
-      label: family.label,
+      title: family.label,
       description: description[family.key],
-      icon: family.icon,
+      index: String(index + 1).padStart(2, "0"),
       href: buildFindHref({ family: family.key }),
+      icon: family.icon,
     }));
 
     return (
       <section className="fphead" aria-label={t("family.title")} style={{ borderBottom: "none" }}>
         <Head eyebrow={t("family.eyebrow")} title={t("family.title")} lead={t("family.lead")} />
-        <CategoryLinks items={items} legend={t("family.legend")} />
+        <BridgeRoute mode="navigate" ariaLabel={t("family.legend")} stations={stations} />
       </section>
     );
   }

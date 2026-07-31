@@ -24,6 +24,10 @@ import { serviceCategory, serviceSubcategory } from "@/lib/taxonomy/services";
 import { partnerType } from "@/lib/taxonomy/distribution";
 import "@/components/find/find.css";
 import "@/components/ponte/category/category.css";
+// Issue #130 Stage 2: the family choice is a Bridge, so this route carries the
+// approved Bridge stylesheet and the implementation layer beside it.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
 
 export const dynamic = "force-dynamic";
 

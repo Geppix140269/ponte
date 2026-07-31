@@ -6,6 +6,7 @@ import { alternatesFor } from "@/lib/seo";
 import PonteShell from "@/components/shell/PonteShell";
 import RecordList from "@/components/explore/RecordList";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import BridgeRoute from "@/components/ponte/bridge/BridgeRoute";
 import { MARKET_FAMILIES } from "@/lib/taxonomy/market";
 import { HS_CATEGORIES, type HsCategory } from "@/components/hs/hsCategories";
 import { getMarketActivity } from "@/lib/board/market-activity";
@@ -19,6 +20,10 @@ import {
   type FamilyKey,
 } from "@/lib/explore/families";
 import "@/components/explore/explore.css";
+// Issue #130 Stage 2: the three families are a Bridge, so this route carries the
+// approved Bridge stylesheet and the implementation layer beside it.
+import "@/design/authority/bridge/v1/source/ponte-bridge.css";
+import "@/components/ponte/bridge/bridge-integration.css";
 
 /**
  * Explore the market (North Star entry architecture, section 7).
@@ -199,33 +204,46 @@ export default async function ExplorePage({
               <div className="exsec__h">
                 <h2 className="exsec__t">{t("universe.familiesTitle")}</h2>
               </div>
-              <div className="exfam">
-                {/* A link, like its two siblings. It was a span, so one of three
-                    identical-looking cards silently did nothing when clicked. */}
-                <Link className="exfam__i" href="/explore?family=products">
-                  <PonteIcon name={MARKET_FAMILIES[0].icon} size={40} className="exfam__ic" />
-                  <span className="exfam__t">{t("families.products.title")}</span>
-                  <span className="exfam__n">
-                    {/* The real total, not the number of rows this page read. */}
-                    {t("records", { count: total.toLocaleString("en-US") })}
-                  </span>
-                  <span className="exfam__d">{t("families.products.lead")}</span>
-                </Link>
-                <Link className="exfam__i" href="/explore?family=services">
-                  <PonteIcon name={MARKET_FAMILIES[1].icon} size={40} className="exfam__ic" />
-                  <span className="exfam__t">{t("families.services.title")}</span>
-                  <span className="exfam__n">
-                    {t("records", { count: families.services.toLocaleString("en-US") })}
-                  </span>
-                  <span className="exfam__d">{t("families.services.lead")}</span>
-                </Link>
-                <Link className="exfam__i" href="/explore?family=distribution">
-                  <PonteIcon name={MARKET_FAMILIES[2].icon} size={40} className="exfam__ic" />
-                  <span className="exfam__t">{t("families.distribution.title")}</span>
-                  <span className="exfam__n">{t("noCount")}</span>
-                  <span className="exfam__d">{t("families.distribution.lead")}</span>
-                </Link>
-              </div>
+              {/*
+                Issue #130 Stage 2. The three families were three boxed cards in
+                three columns, which is exactly the substitute the Bridge System
+                forbids: a categorical choice inside the market is a crossing,
+                not a set of tiles. It is one bridge now, in navigate mode, so
+                every family keeps its own URL, its middle-click and its place
+                in the reading order. The count rides the station's mono index
+                line, where a reference belongs. Icons are ADR-0019 markers.
+              */}
+              <BridgeRoute
+                mode="navigate"
+                ariaLabel={t("universe.familiesTitle")}
+                stations={[
+                  {
+                    key: "products",
+                    title: t("families.products.title"),
+                    description: t("families.products.lead"),
+                    // The real total, not the number of rows this page read.
+                    index: t("records", { count: total.toLocaleString("en-US") }),
+                    href: "/explore?family=products",
+                    icon: MARKET_FAMILIES[0].icon,
+                  },
+                  {
+                    key: "services",
+                    title: t("families.services.title"),
+                    description: t("families.services.lead"),
+                    index: t("records", { count: families.services.toLocaleString("en-US") }),
+                    href: "/explore?family=services",
+                    icon: MARKET_FAMILIES[1].icon,
+                  },
+                  {
+                    key: "distribution",
+                    title: t("families.distribution.title"),
+                    description: t("families.distribution.lead"),
+                    index: t("noCount"),
+                    href: "/explore?family=distribution",
+                    icon: MARKET_FAMILIES[2].icon,
+                  },
+                ]}
+              />
             </section>
 
             <section className="exsec" aria-label={t("universe.sectorsTitle")}>

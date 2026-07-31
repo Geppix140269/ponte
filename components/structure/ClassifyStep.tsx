@@ -9,7 +9,7 @@ import {
   TradeServiceSubcategoryPicker,
   DistributionPartnerTypePicker,
   DistributionRelationshipPicker,
-  DistributionCoveragePicker,
+  DistributionCoverageBridge,
   ProductSectorPicker,
 } from "@/components/ponte/category/pickers";
 import {
@@ -287,8 +287,11 @@ export default function ClassifyStep({
         />
       )}
 
+      {/* Issue #130 Stage 2: seven canonical scopes, one answer, so the choice
+          is made on the Bridge rather than in a list. The props and the handler
+          below are unchanged; only the control the member sees is different. */}
       {step === "distribution_coverage" && (
-        <DistributionCoveragePicker
+        <DistributionCoverageBridge
           legend={t("classify.chooseCoverage")}
           selectedLabel={t("classify.chosen")}
           value={draft.coverageScope}
@@ -312,7 +315,7 @@ export default function ClassifyStep({
               t={t}
             />
           )}
-        </DistributionCoveragePicker>
+        </DistributionCoverageBridge>
       )}
 
       {step === "distribution_relationship" && (
