@@ -47,7 +47,7 @@ function item(over: Partial<ActivityItem> = {}): ActivityItem {
     destinationText: "United Arab Emirates",
     scope: "500 MT",
     at: "2026-07-22T12:00:00Z",
-    href: "/marketplace/l/PT-0001",
+    href: "/find/o/PT-0001",
     ...over,
   };
 }

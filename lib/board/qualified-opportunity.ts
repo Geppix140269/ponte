@@ -34,6 +34,15 @@ import { levelRank } from "../verification/level";
 type DeskVersion = { qualification?: string | null; limitations?: string | null } | null;
 
 export type QualifiedOpportunity = {
+  /**
+   * The listing's own primary key.
+   *
+   * Not an identity: it says nothing about who posted the record, and it is
+   * never rendered. It travels because the per-record translation cache
+   * (`listing_translations.listing_id`) is keyed by it, and the detail page
+   * cannot offer a record in the reader's language without it.
+   */
+  id: string;
   ref: string;
   /** "offer" | "requirement" | "service". */
   type: string;
@@ -63,6 +72,18 @@ export type QualifiedOpportunity = {
   deskLimitations: string | null;
   details: string;
   createdAt: string;
+  /**
+   * The record's own published photograph, or null when it has none.
+   *
+   * A record field, not an identity field: it is the goods or the service the
+   * member published, never a person, a premises sign or a letterhead, and it
+   * carries nothing about who posted it. It is the public storage URL exactly
+   * as the shareable marketplace page built it (`listing-media` is a public
+   * bucket, so no signed URL is minted and no access is widened here); it is
+   * also what the social card shows, which is why a link forwarded on WhatsApp
+   * looks like an opportunity rather than a bare URL.
+   */
+  image: string | null;
   /**
    * A genuine Ponte-desk opportunity, brokered by Ponte rather than posted by a
    * third-party member. True only from the stored `desk_managed` flag: it is
@@ -208,10 +229,26 @@ export async function getQualifiedOpportunity(
     });
     if (!ownerEligible) return { state: "gone" };
 
+    // The record's first published photo, read exactly as the shareable
+    // marketplace page read it: oldest image, one only, addressed through the
+    // public `listing-media` bucket. Read after the two gates rather than
+    // before them, so a record that is not public costs no extra query.
+    const { data: media } = await sb
+      .from("listing_media")
+      .select("path, kind")
+      .eq("listing_id", data.id)
+      .eq("kind", "image")
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const image = media?.[0]
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-media/${media[0].path}`
+      : null;
+
     const desk = (data.desk_version ?? null) as DeskVersion;
     const lastConfirmed = data.reconfirmed_at ?? data.decided_at ?? null;
 
     const opportunity: QualifiedOpportunity = {
+      id: data.id,
       ref: data.ref,
       type: data.type,
       product: data.product,
@@ -238,6 +275,7 @@ export async function getQualifiedOpportunity(
       deskLimitations: desk?.limitations?.trim() || null,
       details: data.details ?? "",
       createdAt: data.created_at,
+      image,
       deskManaged: Boolean(data.desk_managed),
       trustLevel: profile ? levelRank(profile.verification_level) : null,
       // The receipts a public page may show. "Opportunity reviewed" is true

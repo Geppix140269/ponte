@@ -53,7 +53,7 @@ const PUBLICATION_DISCLAIMER =
   "Publication means your listing passed Ponte's structural and safety checks. " +
   "Ponte has not independently verified the commercial claims in it.";
 
-const listingLink = (ref: string) => route(`/marketplace/l/${encodeURIComponent(ref)}`);
+const listingLink = (ref: string) => route(`/find/o/${encodeURIComponent(ref)}`);
 
 // Reopen a saved listing in the current constitutional composer.
 //

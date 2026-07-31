@@ -115,6 +115,8 @@
       "hsCode": "HS code",
       "frequency": "Frequency",
       "timing": "Timing",
+      "chain": "Position in the chain",
+      "posted": "Posted",
       "role": "Declared role",
       "validUntil": "Valid until",
       "spotted": "Signal date",
@@ -140,7 +142,24 @@
       "goneTitle": "This opportunity is no longer active",
       "goneBody": "It has expired or been withdrawn. Current opportunities remain available.",
       "goneCta": "View current opportunities",
-      "notFound": "Opportunity not found"
+      "notFound": "Opportunity not found",
+      "readIn": "Read in",
+      "original": "Original",
+      "machineTranslation": "Machine translation. The original wording governs.",
+      "metaDescription": "Qualified opportunity on Ponte. {kind}. {teaser}",
+      "statedHeading": "What the record states",
+      "signInToRead": "Sign in free to read the full record.",
+      "share": "Share on WhatsApp",
+      "shareText": "{product} · qualified opportunity {ref} on Ponte"
+    },
+    "verification": {
+      "heading": "Counterparty verification",
+      "none": "Not verified",
+      "level1": "Identity verified",
+      "level2": "Business verified",
+      "level3": "Activity verified",
+      "level4": "Institutional",
+      "link": "What each level checks"
     },
     "receipts": {
       "businessChecked": "Business checked",

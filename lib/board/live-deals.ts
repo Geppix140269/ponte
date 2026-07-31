@@ -168,7 +168,7 @@ export async function getLiveDeals(limit = 40): Promise<LiveDeal[]> {
         destinationCode: isoCode(l.destination),
         postedAt: l.created_at,
         verificationLevel: null,
-        href: `/marketplace/l/${l.ref}`,
+        href: `/find/o/${l.ref}`,
       };
     });
 
@@ -319,7 +319,7 @@ export async function searchLiveDeals(
         destinationCode: isoCode(l.destination),
         postedAt: l.created_at,
         verificationLevel: null,
-        href: `/marketplace/l/${l.ref}`,
+        href: `/find/o/${l.ref}`,
       };
     });
 

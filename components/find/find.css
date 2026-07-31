@@ -430,6 +430,17 @@
 .ponte-find .qhead__ref { font-family: var(--f-mono); font-size: 13px; color: var(--ink-3); margin-top: var(--s-3); }
 .ponte-find .qhead__ref b { color: var(--ink); font-weight: 600; }
 
+/* Read this record in another language.
+   A reading aid, not an action. It sits under the head so a reader who cannot
+   read the title finds it at once, and it is set at crumb weight so it never
+   competes with the controlled introduction in the rail. */
+.ponte-find .qlang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-top: var(--s-4); }
+.ponte-find .qlang__k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qlang__l { font-size: 12.5px; color: var(--ink-3); text-decoration: none; }
+.ponte-find .qlang__l:hover { color: var(--gold-ink); }
+.ponte-find .qlang__l.is-current { color: var(--ink); font-weight: 600; }
+.ponte-find .qlang__note { flex-basis: 100%; font-family: var(--f-mono); font-size: 11px; color: var(--mute); }
+
 .ponte-find .qlead { font-size: 16.5px; line-height: 1.6; color: var(--ink-2); max-width: 68ch; margin: var(--s-5) 0; }
 
 .ponte-find .qblock { margin: var(--s-6) 0; }
@@ -460,6 +471,29 @@
 .ponte-find .qreceipt__t { font-size: 13.5px; color: var(--ink-2); }
 .ponte-find .qreceipt__t b { color: var(--ink); font-weight: 600; }
 .ponte-find .qreceipt__date { font-family: var(--f-mono); }
+
+/* The counterparty's verification level, under the receipts it belongs with.
+   A level, not a name: it says whether to spend time here, nothing about who. */
+.ponte-find .qlevel { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin: var(--s-4) 0 0; font-size: 13px; color: var(--ink-2); }
+.ponte-find .qlevel__k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-find .qlevel__v { color: var(--ink); font-weight: 600; }
+.ponte-find .qlevel__l { font-size: 12.5px; color: var(--gold-ink); }
+
+/* The desk-approved public review: what Ponte qualified, then what it did not.
+   The limitation is set quieter than the qualification but never hidden. */
+.ponte-find .qreview__q { font-size: 14.5px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; margin: 0; max-width: 68ch; }
+.ponte-find .qreview__l { font-size: 13.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; margin: var(--s-3) 0 0; max-width: 68ch; }
+
+/* The record's own prose, and the photograph published with it. Reading
+   matter, so it is set at body measure rather than in the ledger face. */
+.ponte-find .qstated { font-size: 14.5px; line-height: 1.65; color: var(--ink-2); white-space: pre-wrap; margin: 0; max-width: 68ch; }
+.ponte-find .qstated__gate { display: inline-block; margin-top: var(--s-3); font-size: 13px; color: var(--gold-ink); }
+.ponte-find .qphoto { display: block; width: 100%; height: 160px; object-fit: cover; margin-top: var(--s-4); border: 1px solid var(--rule); }
+@media (min-width: 720px) { .ponte-find .qphoto { width: 66%; } }
+
+/* Forwarding the opportunity. Secondary by construction: the action on this
+   page is the controlled introduction in the rail, never the share. */
+.ponte-find .qshare { margin: var(--s-6) 0 0; }
 
 /* What remains unverified: dashed well */
 .ponte-find .qunv { background: var(--sunken); border: 1px dashed var(--rule-strong); border-radius: 0; padding: var(--s-4); }
