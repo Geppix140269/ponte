@@ -59,12 +59,16 @@
  * is which token an element inherits on this surface, which is not a fact about
  * a pair.
  *
- * Scoped with `body:has(.dr-page)`, the SAME scope as the background rule below,
- * and that matters. The first version scoped it to `.dr-page` alone and fixed the
- * page heading while leaving the site footer's column headings near-white - because
- * the footer sits outside `.dr-page` but on the canvas that rule repaints. Paint a
- * surface and you own everything standing on it. */
-body:has(.dr-page) :is(h1, h2, h3, h4) {
+ * Scoped to `.dr-page`: this is about the Deal Room's own headings, on the Deal
+ * Room's own surface.
+ *
+ * It was briefly widened to `body:has(.dr-page)` to reach the site footer, whose
+ * headings were also unreadable. That fixed the symptom and broke something else:
+ * the footer's `THE DESK` / `COMPANY` / `CONTACT` headings are deliberately gold,
+ * and forcing them to ink silently restyled a shared component from inside the
+ * Deal Room's stylesheet. The footer's real problem was never its text colour -
+ * it was standing on the wrong canvas. See the rule after next. */
+.dr-page :is(h1, h2, h3, h4) {
   color: var(--pf-ink);
 }
 
@@ -80,6 +84,25 @@ body:has(.dr-page) :is(h1, h2, h3, h4) {
  * it has today. This is the narrowest rule that reaches the canvas. */
 body:has(.dr-page) {
   background: var(--pf-surface);
+}
+
+/* ...but the site footer is designed for the canvas that replaced.
+ *
+ * `components/SiteFooter.tsx` is styled for obsidian: `text-gold` headings,
+ * `text-gray-2` body copy, and a wordmark and two address labels in light ink.
+ * Every one of those is correct on `--obsidian` and close to invisible on paper,
+ * which is what the 31 July render showed at the bottom of all twelve surfaces.
+ *
+ * Giving the footer its own canvas back is the fix that changes nothing else: no
+ * colour is overridden, no brand decision is second-guessed from here, and the
+ * footer looks exactly as it does on every other route. Recolouring its parts one
+ * by one would mean this stylesheet quietly restyling a component it does not own,
+ * and getting it wrong once already is how this rule came to exist.
+ *
+ * Scoped the same way, so no other route is touched. */
+body:has(.dr-page) > footer,
+body:has(.dr-page) footer.mt-20 {
+  background: var(--obsidian);
 }
 
 .dr {

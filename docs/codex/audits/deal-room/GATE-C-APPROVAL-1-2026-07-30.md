@@ -2065,3 +2065,65 @@ The capture room was built and removed. After it: 10 users, 7 listings, every
 `deal_room_*` table at 0, ledger 53. The flag is still off, nothing is deployed, the
 access wall is untouched.
 
+---
+
+# The footer residual, 31 July 2026: it was standing on the wrong canvas
+
+**Authorised:** owner, 31 July 2026 - fix the footer residual.
+
+## 87. The residual, and what it actually was
+
+After the heading fix, three things in the site footer were still close to
+invisible on every Deal Room surface: the `ponte.` wordmark, and the two labels
+above the registered addresses - "1402 Celsius Ltd (Bulgaria)" and "1402 Celsius Ltd
+(United Kingdom)".
+
+The obvious reading is that those elements have the wrong colour. They do not.
+`components/SiteFooter.tsx` is styled for `--obsidian`, which is what `body` is on
+every other route: `text-gold` headings, `text-gray-2` body copy, light ink for the
+wordmark and the address labels. Every one of those is correct where the footer was
+designed to stand.
+
+**The Deal Room moved the floor out from under it.** `body:has(.dr-page)` repaints
+the canvas to `--pf-surface`, and the footer, which sits outside `.dr-page`, was
+left on paper wearing its obsidian clothes.
+
+## 88. A correction to the previous correction
+
+The heading rule had been widened from `.dr-page` to `body:has(.dr-page)`
+specifically to reach those footer headings. That worked and was wrong: `THE DESK`,
+`COMPANY` and `CONTACT` are **deliberately gold**, and forcing them to `--pf-ink`
+silently restyled a shared component from inside the Deal Room's stylesheet. The
+render made it look fixed, because ink on paper is legible - it was legible and not
+what the footer is supposed to be.
+
+That rule is scoped back to `.dr-page`, where it belongs.
+
+## 89. The fix
+
+```css
+body:has(.dr-page) > footer,
+body:has(.dr-page) footer.mt-20 {
+  background: var(--obsidian);
+}
+```
+
+Give the footer its own canvas back. No colour is overridden, no brand decision is
+second-guessed from a stylesheet that does not own it, and the footer looks exactly
+as it does on every other route.
+
+Confirmed at both viewports: the wordmark is white, the column headings are gold,
+both address labels and their registered numbers are legible, and the Deal Room
+content above is unchanged on paper.
+
+## 90. The general lesson, which cost three attempts
+
+Repainting a canvas is not a local change. `.dr-page` paints a surface, but the
+document is taller than `.dr-page` and other people's components stand on it. The
+first fix painted the surface and forgot the headings; the second fixed the headings
+and reached into a component it did not own; the third gave the component its own
+ground back.
+
+**Production unchanged.** Capture room built and removed: 10 users, 7 listings,
+every `deal_room_*` table at 0, ledger 53. The flag is still off.
+
