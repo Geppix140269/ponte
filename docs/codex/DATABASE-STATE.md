@@ -56,7 +56,7 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
 ## Written but NOT applied: the Deal Room admission verification gate
 
 `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
-SHA-256 `393a19470bd388edab70bdb21cf363e4995698d5b983107a3d4bc258859f7b43`, 57138 bytes.
+SHA-256 `4489d61cc1848c58cb8b6ad45043f60689d2f7bbc27268f0547184931fdbeedf`, 58338 bytes.
 
 **Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
 threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
@@ -159,13 +159,24 @@ and requires exactly that one to be reported.
 ### Execution status: NOT PROVED IN A DATABASE
 
 `scripts/deal-room-admission-gate-proof.mjs` (`npm run deal-room:gate-proof`)
-carries the seven proofs the controller requires: clean application, signatures
-and grants read from `pg_proc`, direct-RPC refusal for an inadmissible opener
-and an inadmissible invitee, both admissible paths, the stale-agreement refusal,
-and rollback. It has **never been executed.** There is no PostgreSQL, no
-container runtime and no Supabase CLI on the machine this branch was written on,
-so there is nowhere to run it, and the Supabase Preview for the branch fails in
-an unrelated historical migration.
+carries the proofs the controller requires: schema preflight, clean
+application, signatures and grants read from `pg_proc`, direct-RPC refusal for
+an inadmissible opener and an inadmissible invitee, both admissible paths, the
+stale-agreement refusal, and rollback.
+
+It is **self-contained**: it creates its own synthetic `auth.users`, `profiles`,
+approved products Deal and the four current agreement documents, and reads
+nothing it did not create. It therefore needs a production-equivalent **schema**
+and no business or user data at all, which is what a Supabase preview branch
+is. Everything runs inside one transaction that is always rolled back, and the
+rollback is verified by re-reading the catalogue and the fixture ids. A database
+missing a prerequisite fails immediately with the object named and exit code 3,
+before the transaction opens.
+
+It has **never been executed.** There is no PostgreSQL, no container runtime and
+no Supabase CLI on the machine this branch was written on, so there is nowhere
+to run it, and the Supabase Preview for the branch fails in an unrelated
+historical migration.
 
 Until that script runs green against a disposable production-equivalent schema,
 the SQL boundary is **written and unproved**, and no part of this record should

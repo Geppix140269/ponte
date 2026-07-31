@@ -119,10 +119,24 @@
 -- absent, three criteria block and the opener is refused - as an invitee in the
 -- same position would be.
 --
+-- ## Proving it BEFORE applying, which is the order that matters
+--
+--   DATABASE_URL=<disposable> DEAL_ROOM_PROOF_ALLOW=1 npm run deal-room:gate-proof
+--
+-- `scripts/deal-room-admission-gate-proof.mjs` applies this file to a disposable
+-- production-equivalent SCHEMA, creates its own synthetic members, Deal and
+-- agreement documents, drives the inadmissible and admissible paths at BOTH
+-- doors by calling the granted commands directly, and rolls everything back. It
+-- needs no business or user data and reads nothing it did not create.
+--
+-- At the time of writing it has NEVER BEEN RUN, so this file is written and
+-- unproved. Do not read anything below as evidence that it enforces.
+--
 -- ## Verification after applying
 --
---   npm run deal-room:acl-verify          -- ACL unchanged: anon 0, authenticated 21
---   npm run deal-room:negative-access     -- an unverified member must be refused
+--   npm run deal-room:acl-verify          -- anon 0; authenticated gains one
+--                                         -- command, deal_room_declare_opening_intent
+--   npm run deal-room:negative-access     -- an inadmissible member must be refused
 --
 --   -- and the helper alone, without changing anything:
 --   select public.deal_room_admission_minimum_missing(auth.uid(), null, '<listing>');
@@ -190,8 +204,11 @@ comment on column public.deal_room_participants.represented_legal_name is
 comment on column public.deal_room_participants.business_relationship is
   'PT-PRODUCT-2026-07-27-01 section 6 criterion 6, held independently. How the '
   'participant stands to that business: an office held, a mandate, an '
-  'engagement. Never derived from declared_capacity or participation_authority. '
-  'Seeded from listings.submitter_role for the member who opens the room.';
+  'engagement. Never derived from declared_capacity or participation_authority, '
+  'and never from listings.submitter_role. An invitee states it through '
+  'deal_room_declare_participation; the member who opens the room states it '
+  'through deal_room_declare_opening_intent, and deal_room_propose copies that '
+  'declaration onto their participant rows.';
 
 -- ---------------------------------------------------------------------------
 -- 0b. The two columns the OPENER needs, so criterion 3's "or" is real for them
@@ -819,9 +836,12 @@ begin
    * unchanged.
    *
    * It sits here, after the Deal has been resolved and proved approved and
-   * owned by the caller, because the relationship-to-the-business criterion
-   * reads `v_l.submitter_role` and the role and authority the inserts below
-   * write are only established facts once that ownership has been proved.
+   * owned by the caller, because a caller who does not own an approved Deal
+   * should be told THAT rather than be handed a list of declarations to make
+   * about a Deal they cannot take forward. Ownership is only ever a
+   * precondition: it satisfies no criterion, and the gate reads no column of
+   * `listings` at all. Criteria 6, 7 and 8 come from the member's own row in
+   * `deal_room_opener_declarations`, keyed to them and this Deal.
    */
   v_missing := public.deal_room_admission_minimum_missing(auth.uid(), null, p_listing_id);
   if v_missing is not null and array_length(v_missing, 1) > 0 then

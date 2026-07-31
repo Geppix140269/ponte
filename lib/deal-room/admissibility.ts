@@ -315,14 +315,18 @@ export const CRITERION_EVIDENCE: Record<
      * and relationship is how you stand to the business itself - an office you
      * hold, a mandate you were given, an engagement you were retained under.
      *
-     * `deal_room_declare_participation` now collects it on the admission path.
-     * On the propose path `deal_room_propose` seeds it from
-     * `listings.submitter_role`, which the publication gate already requires
-     * before a Deal can be approved, and which is a separate stored column
-     * rather than a re-reading of another criterion.
+     * Both doors collect it from the member, and neither infers it. An invitee
+     * states it through `deal_room_declare_participation`; the member opening a
+     * room states it through `deal_room_declare_opening_intent`, keyed to them
+     * and that Deal, and `deal_room_propose` copies the declaration onto their
+     * participant rows.
+     *
+     * An interim version read `listings.submitter_role` on the propose path.
+     * The controller struck that too, on 31 July 2026: owning the listing is
+     * not the member declaring how they stand to the business behind it.
      */
     label: "Relationship to the business",
-    source: "deal_room_participants.business_relationship, seeded from listings.submitter_role when opening",
+    source: "deal_room_participants.business_relationship, from the member's own declaration at either door",
     coverage: "stored",
   },
   transaction_role_declared: {

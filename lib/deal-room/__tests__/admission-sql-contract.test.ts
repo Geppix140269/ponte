@@ -435,4 +435,83 @@ test("the file is one transaction and says it has not been applied", () => {
   assert.ok(/^commit;/m.test(code));
 });
 
+// ---------------------------------------------------------------------------
+// The execution-proof harness is self-contained, and says it has not been run
+// ---------------------------------------------------------------------------
+//
+// The harness cannot be executed from this repository - there is no database -
+// so its PROPERTIES are pinned here instead. That is a smaller claim than "the
+// proof passes", and it is the only one that can honestly be made until a
+// disposable connection exists. What it does prevent is the harness quietly
+// reverting to the data-dependent shape the controller rejected on 31 July
+// 2026, where it read the first two profiles it found and assumed their facts.
+
+const PROOF = "scripts/deal-room-admission-gate-proof.mjs";
+const proof = readFileSync(PROOF, "utf8");
+/** Statements only: the file's own prose describes the shape it replaced. */
+const proofCode = proof.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+test("the proof creates every row it reads", () => {
+  for (const created of [
+    "insert into auth.users",
+    "insert into public.profiles",
+    "insert into public.listings",
+    "insert into public.deal_room_agreement_documents",
+  ]) {
+    assert.ok(proofCode.includes(created), `the harness must create its own ${created.split(" ").pop()}`);
+  }
+  // The data-dependent shape, by its shape rather than by its wording: a read
+  // of existing business rows that is not qualified by an id it just created.
+  assert.ok(
+    !/from public\.profiles[\s\S]{0,80}limit/.test(proofCode),
+    "the harness must not adopt whichever profiles happen to exist",
+  );
+  assert.ok(
+    !/from public\.listings where user_id[\s\S]{0,40}limit/.test(proofCode),
+    "the harness must not adopt whichever approved Deal happens to exist",
+  );
+});
+
+test("the proof isolates itself from anything already in the database", () => {
+  assert.ok(proofCode.includes("@example.invalid"), "synthetic accounts use the RFC 2606 reserved domain");
+  assert.ok(proofCode.includes("gen_random_uuid()::text as id"), "every run is tagged with its own id");
+  assert.ok(
+    proofCode.includes("where e.kind = 'starter' and r.initiator_profile_id = any($1::uuid[])"),
+    "the Starter entitlement isolation must be asserted, not assumed",
+  );
+});
+
+test("the proof fails precisely when the schema is not production-equivalent", () => {
+  assert.ok(proofCode.includes("REQUIRED_TABLES"), "the prerequisites are enumerated");
+  assert.ok(proofCode.includes("REQUIRED_FUNCTIONS"));
+  assert.ok(proofCode.includes("SCHEMA MISMATCH"), "the failure names what is missing");
+  assert.ok(proofCode.includes("process.exit(3)"), "a schema mismatch is distinguishable from a failed proof");
+  // And it must find out BEFORE writing anything.
+  const preflightAt = proofCode.indexOf("const missing = await preflight(client)");
+  const beginAt = proofCode.indexOf('await client.query("begin")');
+  assert.ok(preflightAt > 0 && beginAt > preflightAt, "the preflight must run before the transaction opens");
+});
+
+test("the proof never commits, and verifies its own rollback", () => {
+  assert.ok(proofCode.includes('await client.query("rollback")'));
+  assert.ok(!/client\.query\("commit"\)/.test(proofCode), "nothing may ever be committed");
+  // The migration's own commit is stripped so it cannot escape the transaction.
+  assert.ok(proofCode.includes('.replace(/^commit;\\s*$/m, "")'));
+  assert.ok(
+    proofCode.includes("rollback removed every migration object and every synthetic row"),
+    "the rollback must be proved by re-reading, not assumed",
+  );
+});
+
+test("the proof refuses production and refuses to run by accident", () => {
+  assert.ok(proof.includes("qaqfclbpfzmvqwpdqoky"), "the production project ref is refused by name");
+  assert.ok(proofCode.includes('process.env.DEAL_ROOM_PROOF_ALLOW !== "1"'), "a second explicit opt-in is required");
+});
+
+test("the proof states that it has never been executed", () => {
+  // The moment it runs green, this line is expected to change, and this test is
+  // the reminder to change it rather than leave a stale claim in the file.
+  assert.match(proof, /STATUS: WRITTEN, NEVER EXECUTED/);
+});
+
 console.log(`admission SQL contract: ${passed} passed`);
