@@ -300,20 +300,24 @@ export async function listParticipants(roomId: string): Promise<ParticipantRow[]
   const { data } = await supabase
     .from("deal_room_participants")
     .select(
-      // `profiles!...profile_id_fkey` names the relationship explicitly.
-      // `deal_room_participants` has TWO foreign keys to `profiles` -
-      // `profile_id` and `invited_by` - so a bare `profiles(full_name)` is
-      // ambiguous and PostgREST refuses the whole query:
+      // `display_label`, not an embed on `profiles`.
       //
-      //   Could not embed because more than one relationship was found for
-      //   'deal_room_participants' and 'profiles'
+      // Two things were wrong here, and only one of them was a typo.
       //
-      // It had refused it since the day it was written. `listParticipants()`
-      // returned an error and an empty array to every caller, so every surface
-      // that names a participant showed a fallback: two unnamed "A required
-      // approver" rows on the procedure page, an empty Bridge, "0 of 2 external
-      // organisations admitted". Found on 31 July 2026, by looking at the page.
-      "id, profile_id, sub_room_id, org_id, declared_capacity, participant_class, transaction_role, participation_authority, state, is_required_approver, is_room_administrator, admitted_at, profiles!deal_room_participants_profile_id_fkey(full_name), organizations(name)",
+      // `deal_room_participants` has two foreign keys to `profiles` -
+      // `profile_id` and `invited_by` - so a bare `profiles(full_name)` was
+      // ambiguous and PostgREST refused the WHOLE query, from the day it was
+      // written. Every surface that names a participant showed a fallback.
+      //
+      // Naming the relationship fixed that and revealed the real one: `profiles`
+      // is readable only to its owner, so the other party was always "A
+      // participant". `20260731f` writes the name onto the participant row from
+      // inside the command that proved the identity - the same thing
+      // `deal_room_activity_events` does with `actor_label`, which is why the
+      // activity feed named people correctly the whole time this could not.
+      //
+      // No join to `profiles` at all now, so the ambiguity cannot come back.
+      "id, profile_id, sub_room_id, org_id, declared_capacity, display_label, participant_class, transaction_role, participation_authority, state, is_required_approver, is_room_administrator, admitted_at, organizations(name)",
     )
     .eq("room_id", roomId);
 
@@ -321,7 +325,7 @@ export async function listParticipants(roomId: string): Promise<ParticipantRow[]
     id: row.id as string,
     profileId: row.profile_id as string,
     subRoomId: (row.sub_room_id as string | null) ?? null,
-    name: ((row.profiles as { full_name?: string } | null)?.full_name as string) ?? "A participant",
+    name: (row.display_label as string | null) ?? "A participant",
     organisation: ((row.organizations as { name?: string } | null)?.name as string) ?? null,
     declaredCapacity: (row.declared_capacity as string | null) ?? null,
     participantClass: row.participant_class as ParticipantClass,

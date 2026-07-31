@@ -104,9 +104,12 @@ const STORAGE_POLICY_HELPERS = ["deal_room_uuid_or_null", "deal_room_is_writable
  * `deal_room_log_event` is the forgery path LB-008 was about: it has no
  * authorisation check of its own, because the commands call it on the member's
  * behalf. `deal_room_events_append_only` is a trigger function; Postgres checks
- * EXECUTE at `create trigger`, not per row.
+ * EXECUTE at `create trigger`, not per row. `deal_room_display_label` reads a
+ * name out of `profiles`, which is readable only to its owner - a member who
+ * could call it directly could enumerate names, which is the whole reason it is
+ * a function rather than a widened policy.
  */
-const INTERNAL = ["deal_room_log_event", "deal_room_events_append_only"];
+const INTERNAL = ["deal_room_log_event", "deal_room_events_append_only", "deal_room_display_label"];
 
 // PERMITTED is what authenticated may hold. REQUIRED is what it must hold, and
 // that depends on the world: the two Storage helpers are only needed once the
@@ -144,7 +147,10 @@ console.log(`project ${ref}: ${rows.length} deal_room_* functions\n`);
 
 // 1. The inventory itself. A function that appears or disappears invalidates the
 //    lists above, and silently passing the rest would be worse than failing here.
-require_(rows.length === 23, `expected 23 deal_room_* functions, found ${rows.length}`);
+// 24 once `20260731f` is applied. The pricing lane's `20260731e` adds a
+// twenty-fifth, `deal_room_billing_append_only`; whoever applies it bumps this.
+// This reads PRODUCTION, so it counts what is applied, not what is written.
+require_(rows.length === 24, `expected 24 deal_room_* functions, found ${rows.length}`);
 const found = new Set(rows.map((r) => r.name));
 for (const name of [...PERMITTED, ...INTERNAL]) {
   require_(found.has(name), `${name} is named in this contract but does not exist in production`);
@@ -210,7 +216,7 @@ for (const name of INTERNAL) {
 //    fixture needs it; narrowing it is a separate decision, so a change here is a
 //    failure even though it would look like tightening.
 const svc = rows.filter((r) => r.service_role).length;
-require_(svc === 23, `service_role holds EXECUTE on ${svc}, expected 23 (unchanged)`);
+require_(svc === 24, `service_role holds EXECUTE on ${svc}, expected 24 (unchanged)`);
 
 // 7. Hardening that is easy to lose in an ACL edit.
 const definers = rows.filter((r) => r.security_definer);
@@ -256,7 +262,7 @@ console.log("");
 console.log(`  anon           : ${anonHolders.length} of ${rows.length}`);
 console.log(`  PUBLIC         : ${publicHolders.length} of ${rows.length}`);
 console.log(`  authenticated  : ${authHolders.length} of ${rows.length}  (required ${REQUIRED.size}, permitted ${PERMITTED.size})`);
-console.log(`  service_role   : ${svc} of ${rows.length}  (expected 23, unchanged)`);
+console.log(`  service_role   : ${svc} of ${rows.length}  (expected 24, unchanged)`);
 console.log(`  policies       : ${pol[0].total}, ${pol[0].non_select} non-SELECT, ${pol[0].naming_anon} naming anon`);
 for (const n of notes) console.log(`  note: ${n}`);
 
