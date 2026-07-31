@@ -266,6 +266,72 @@ fixture has kept from the beginning.
 users, 7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
 append-only trigger enabled, ledger 52.
 
+## Production DATA changed, 31 July 2026: the Approval 4 pilot preconditions
+
+Not a migration. Two scoped `update` statements against production rows, made so
+that the Approval 4 pilot can actually open a Deal Room. Recorded here because they
+are production data changes, and nothing else records them.
+
+### Why they were needed
+
+Checking what the pilot account would experience found that **no account in
+production could open a Deal Room at all**:
+
+| | |
+|---|---|
+| `deals@ponte.trade` owns no published Deal | a room is opened *on* a Deal you own |
+| the only two published Deals carried `market_family = null` | `deal_room_propose` refuses: *"This Deal carries no market family, so no procedure applies"* |
+| `deals@ponte.trade` had `full_name = null` | `deal_room_display_label` falls back to `'A participant'`, so the pilot would have appeared to reproduce the defect `20260731f` had just fixed |
+
+### What changed
+
+```sql
+update public.listings
+   set market_family = 'products',
+       market_intent = case type when 'requirement' then 'source_product'
+                                 when 'offer'       then 'offer_product' end
+ where ref in ('PT-9001','PT-9002') and status = 'approved' and market_family is null;
+
+update public.profiles set full_name = 'Ponte Deals'
+ where id = '8263140e-4231-496b-b4c6-cfc88739995b' and full_name is null;
+```
+
+| Row | Before | After |
+|---|---|---|
+| `PT-9001` "Refined cane sugar, ICUMSA 45" (`requirement`) | null / null | `products` / `source_product` |
+| `PT-9002` "Dried chickpeas, 8mm Kabuli" (`offer`) | null / null | `products` / `offer_product` |
+| `deals@ponte.trade` `full_name` | null | `Ponte Deals` |
+| `desk-opportunities@ponte.trade` `full_name` | `Ponte Desk` | unchanged |
+
+The intent is **derived from each listing's own `type`** using the repository's own
+mapping in `lib/structure/draft.ts:314` - `source_product` <-> `requirement`,
+`offer_product` <-> `offer` - rather than assigned by hand. Both updates are
+predicated on the prior value being null, so neither could touch a row that had
+already been classified.
+
+The name was chosen to sit beside the existing `Ponte Desk`: honest about whose
+account it is, impersonating nobody, and a real counterparty will see it.
+
+### Every precondition `deal_room_propose` checks, verified after
+
+| | `PT-9001` | `PT-9002` |
+|---|---|---|
+| published | yes | yes |
+| within `valid_until` (2027-05-20) | yes | yes |
+| `market_family` in the three | yes | yes |
+| `market_intent` present | yes | yes |
+| Starter entitlement already used by the owner | **no** | **no** |
+
+### One Starter room per member, and it matters for the pilot
+
+`deal_room_propose` refuses a second Starter room with *"This organisation has
+already used its Starter Deal Room"*. When the member has no organisation - and
+neither Ponte account does - the check is keyed on `initiator_profile_id`, so the
+Desk account can open **exactly one room, ever**, until that room is removed. Removal
+needs the Management-API teardown path, because the activity history is append-only.
+
+**The pilot is one shot.** Worth knowing before the first click.
+
 ## APPLIED to production, 31 July 2026: naming a participant to the people they deal with
 
 **Applied from merged `main` `3aefd5a`. Ledger 52 -> 53.** Functions 23 -> 24;

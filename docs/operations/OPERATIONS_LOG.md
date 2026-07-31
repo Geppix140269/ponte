@@ -72,6 +72,65 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Approval 4 pilot preconditions set. The flag is still off.
+
+### Completed
+
+- **Checked what the pilot account would actually experience before asking for a
+  deploy**, and found that **no account in production could open a Deal Room at
+  all**: the only two published Deals carried `market_family = null`, which
+  `deal_room_propose` refuses outright.
+- **Two production data changes**, both scoped and both predicated on the prior
+  value being null:
+  - `PT-9001` and `PT-9002` classified `products`, with `market_intent` **derived
+    from each listing's own `type`** using the repository's mapping in
+    `lib/structure/draft.ts:314` rather than assigned by hand - `requirement` ->
+    `source_product`, `offer` -> `offer_product`.
+  - `deals@ponte.trade` given `full_name = 'Ponte Deals'`, beside the existing
+    `Ponte Desk`. Without it `deal_room_display_label` returns `'A participant'` and
+    the pilot would have appeared to reproduce the defect `20260731f` had just fixed.
+- **Every precondition `deal_room_propose` checks verified after**: both published,
+  both within `valid_until`, both classified, neither owner has used a Starter room.
+
+### Risks / discrepancies
+
+- **The pilot is one shot.** `deal_room_propose` allows one Starter room per member
+  when they have no organisation, keyed on `initiator_profile_id`, and neither Ponte
+  account has an organisation. The Desk can open exactly one room until it is
+  removed, and removal needs the Management-API teardown path because the activity
+  history is append-only.
+- **`deals@ponte.trade` alone is not a viable pilot**: it owns no Deal, so its
+  portfolio would render correctly and stay permanently empty. The allowlist needs
+  the Desk account, which owns both published Deals, as well.
+- **The environment variables and the deploy could not be done from here.** The
+  Netlify CLI session has expired and `netlify login` is an interactive browser flow.
+  The repository sets no `[build.environment]` in `netlify.toml`, and committing the
+  allowlist there would remove the property the design depends on - it is server-only
+  so it can be widened **without** a rebuild.
+
+### Production changes
+
+- The two `update` statements above. **No migration, no schema change, no flag, no
+  deployment.** Ledger unchanged at 53.
+
+### Next
+
+Owner sets, in the Netlify dashboard, and triggers a rebuild:
+
+```
+NEXT_PUBLIC_DEAL_ROOM=on
+DEAL_ROOM_ALLOWLIST=122cf9ec-e80b-42c9-92d7-a8aa279c7d19,8263140e-4231-496b-b4c6-cfc88739995b
+```
+
+`NEXT_PUBLIC_DEAL_ROOM` is inlined at build time, so it needs a build rather than a
+restart. `DEAL_ROOM_ALLOWLIST` is server-only and can be widened later without one.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, "Production DATA changed, 31 July 2026"
+
+---
+
 ## 2026-07-31 - Approval 4 preflight: the off switch did not work. Flag NOT flipped.
 
 ### Completed
