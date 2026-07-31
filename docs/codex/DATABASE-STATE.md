@@ -53,6 +53,96 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: Deal Room paid room periods and billing events
+
+`supabase/migrations/20260731e_deal_room_paid_room_periods.sql`
+SHA-256 `3456e0b0862e6e4b306a2cca1db430f50fb0416f043afa3e8cee6066ff78a422`, 15,752 bytes.
+
+**Executed nowhere.** Written 31 July 2026 as Stage 3 of
+`docs/plans/active/deal-room-transaction-pricing.md`, under
+`PT-COMMERCIAL-2026-07-31-01` and ADR-0020. **Applying it is a separate owner
+approval**, and nothing in the application reads or writes what it creates —
+asserted by `lib/deal-room/__tests__/billing.test.ts`, which fails if any file
+under `app/`, `components/` or `lib/` gains a reader for either table.
+
+### What it does
+
+Additive throughout. No existing row is altered and no backfill is required.
+
+1. **`paid` becomes a fourth `deal_room_entitlements.kind`.** The CHECK is
+   dropped and re-added with `starter`, `sponsored`, `waived` and `paid`. The
+   three existing values are preserved — authority §8 permits historical
+   Starter-compatible values to remain for migration and audit, and production
+   holds **zero** `deal_room_*` rows today, so there is nothing to convert.
+2. **`deal_room_room_periods`** — one row per purchased 30-day period. A
+   reactivation is a new row, never an edit, because §12 makes reactivation a
+   new paid period.
+3. **`deal_room_billing_events`** — append-only record of charges and waivers.
+4. **`deal_room_entitlements.current_period_id`** — nullable FK to the period
+   funding the entitlement.
+
+### Three invariants are enforced by the database, not only by application code
+
+- **Price follows capacity.** `period_price_cents` is CHECKed against the
+  authority's own formula, `least(19900, 7900 + greatest(0, capacity - 5) * 1500)`.
+  A row whose price does not follow from its capacity cannot be written by a
+  bug, an admin console or a hand-typed INSERT. The test evaluates the SQL
+  formula and the TypeScript engine side by side at every capacity from 5 to 40.
+- **The $199 cap is a database fact**, stated a second time independently of the
+  formula so the ceiling survives an edit to it.
+- **One active period per room**, as a partial unique index on
+  `(room_id) where state = 'active'` — so a retry, a double-submitted checkout
+  or a race cannot bill one room twice for one window.
+
+Two more worth naming: `amount_due_cents` is a **stored generated column**
+(`period_price_cents - discount_cents`) so a waiver cannot drift from the list
+price it waives, which is what authority §17's value anchor requires; and
+`state <> 'active' or confirmed_at is not null`, so a period cannot be active
+without a server-side confirmation (§9: a browser return is not authoritative).
+
+### Replay safety
+
+`deal_room_billing_events.provider_event_id` carries a **unique index where not
+null** — the idempotency key. A replayed Stripe webhook cannot bill twice. This
+is the property `credit_purchases.stripe_session_id` gives the existing credit
+webhook, designed in rather than added after a double charge. The table also
+carries an append-only trigger that refuses UPDATE and DELETE **to the table
+owner as well**, which RLS never can.
+
+### Who may read a bill, and why it is narrower than every other Deal Room table
+
+Authority §11 restricts the active-branch count, purchased capacity and billing
+breakdown to authorised Master Deal Room administrators, and §4 names "a total
+billing amount where that amount would reveal branch count" as something that
+must not leak. `purchased_branch_capacity` is exactly such a number.
+
+So both SELECT policies are `deal_room_can_administer(room_id) or is_admin()` —
+matching the existing `entitlement read` policy, **not** the participant
+policies every other member-facing Deal Room table uses. **A room participant
+cannot read these tables at all.** There is no INSERT, UPDATE or DELETE policy
+for any member.
+
+### Grants
+
+Per the LB-008 lesson — Supabase `alter default privileges` grants explicitly to
+`anon` and `authenticated`, and revoking from PUBLIC does not remove an explicit
+role grant — both tables `revoke all` from `anon` and from `authenticated`, then
+grant `authenticated` **SELECT and nothing else**. The internal
+`deal_room_billing_append_only()` function is revoked from `public`, `anon` and
+`authenticated`.
+
+### Before applying
+
+Inspect the live schema first, per `AGENTS.md`. In particular confirm the
+`deal_room_entitlements` kind constraint is still named
+`deal_room_entitlements_kind_check` — it was created inline, so the name is
+Postgres's default and has not been verified against production by this work.
+The file's rollback block restores the three-value CHECK and will **fail if any
+row already carries `kind = 'paid'`**, which is correct: a paid room must not be
+silently downgraded to satisfy a rollback.
+
+Record the application in this file and in the ledger with the SHA-256 above.
+
 ## Written but NOT applied: Market Signal search indexes
 
 `supabase/migrations/20260730a_market_signal_search.sql` (LB-007).

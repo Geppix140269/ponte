@@ -532,12 +532,14 @@ test("17: the admin queue loads the submitter's business verification", () => {
   );
 });
 
+// The two obsidian marketplace pages used to be named here directly. They are
+// retired (cutover PR 5) and both are permanent redirects now, so the gate is
+// asserted where it actually runs: the board and homepage read through
+// lib/board/live-deals.ts, and the public record page reads through
+// lib/board/qualified-opportunity.ts. Naming the readers rather than the pages
+// also means a new page cannot bypass the gate by not being on this list.
 test("23: every public surface drops not-current opportunities", () => {
-  for (const path of [
-    "lib/board/live-deals.ts",
-    "app/[locale]/marketplace/page.tsx",
-    "app/[locale]/marketplace/l/[ref]/page.tsx",
-  ]) {
+  for (const path of ["lib/board/live-deals.ts", "lib/board/qualified-opportunity.ts"]) {
     assert.ok(
       src(path).includes("isPubliclyCurrent("),
       `${path} must apply the validity + 90-day reconfirmation currency`,
@@ -546,17 +548,16 @@ test("23: every public surface drops not-current opportunities", () => {
 });
 
 test("every public surface drops owners whose verification is no longer current", () => {
-  // The board and homepage filter to eligible owners; the detail page checks
+  // The board and homepage filter to eligible owners; the record reader checks
   // the single owner directly.
   assert.ok(src("lib/board/live-deals.ts").includes("eligibleOwnerIds("));
-  assert.ok(src("app/[locale]/marketplace/page.tsx").includes("eligibleOwnerIds("));
   assert.ok(
-    src("app/[locale]/marketplace/l/[ref]/page.tsx").includes("isPubliclyEligibleVerification("),
+    src("lib/board/qualified-opportunity.ts").includes("isPubliclyEligibleVerification("),
   );
 });
 
 test("owner reconfirmation re-stamps only if the full live gate still passes", () => {
-  const s = src("app/[locale]/marketplace/actions.ts");
+  const s = src("app/[locale]/_actions/listings.ts");
   assert.ok(s.includes("checkPublicationGate("), "reconfirm must re-check the full gate");
   assert.ok(s.includes("reconfirmed_at"), "reconfirm must re-stamp reconfirmed_at");
   assert.ok(s.includes("listing.user_id !== user.id"), "reconfirm must be owner-scoped");
@@ -567,9 +568,9 @@ test("owner reconfirmation re-stamps only if the full live gate still passes", (
 // longer exists. The current composer is StructureComposer, whose behaviour is
 // covered by lib/structure/__tests__.
 
-test("19: the detail page renders only truthful stored labels", () => {
-  const s = src("app/[locale]/marketplace/l/[ref]/page.tsx");
-  assert.ok(s.includes("truthfulLabels("), "detail must derive labels from stored data");
+test("19: the public record renders only truthful stored labels", () => {
+  const s = src("lib/board/qualified-opportunity.ts");
+  assert.ok(s.includes("truthfulLabels("), "the record reader must derive labels from stored data");
 });
 
 if (process.exitCode) console.error(`\n${passed} passed, some failed.`);

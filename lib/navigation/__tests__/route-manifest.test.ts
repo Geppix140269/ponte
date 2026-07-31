@@ -43,29 +43,23 @@ function test(name: string, fn: () => void) {
 // C1. Source files that still link a member to a retired route (/marketplace*
 // or /join). Scanned across app + components (lib is out of scope, as the
 // LB-013 ratchet also documents: the flag-off seam in lib/landing lives with
-// its own redirect). Files that ARE the retired surface, and cache-only
-// revalidatePath() calls, are not violations.
-const RETIRED_LINK_BASELINE = [
-  "app/manifest.ts",
-  "app/sitemap.ts",
-  // app/[locale]/account/page.tsx was retired-link-free by cutover PR 2: the
-  // account page was rebuilt on the Desk shell with no marketplace link.
-  "app/[locale]/contact/page.tsx",
-  "app/[locale]/learn/duties/page.tsx",
-  "app/[locale]/learn/trade-data/page.tsx",
-  "components/BottomNav.tsx",
-  "components/SiteHeader.tsx",
-  "components/SiteFooter.tsx",
-  "components/home/LiveDealsGrid.tsx",
-  "components/structure/StructureComposer.tsx",
-  // components/ListingForm.tsx was deleted by PL-030 (the retired composer is
-  // unreachable and now gone), so it no longer links a retired route.
-];
+// its own redirect). Cache-only revalidatePath() calls are not violations.
+//
+// EMPTY as of cutover PR 5. The twelve files recorded when this ratchet was
+// written are all repointed: /join went in PR 2 along with the account page;
+// the public entrances (PWA shortcut, sitemap, contact, both learn pages, the
+// header, the footer, the bottom bar and the homepage showcase) now name /find;
+// the composer's "complete your listing" control names /opportunities; and the
+// five owner-action emails name /opportunities or /workspace. NO source file
+// under app/ or components/ may link a retired route at all.
+const RETIRED_LINK_BASELINE: string[] = [];
 
 // C2. Redirect entries that still point at another redirect (a double hop).
-// All five ride the /cart|/checkout|... -> /marketplace legacy chain and must
-// be repointed to /find when /marketplace retires (cutover PR 5).
-const REDIRECT_CHAIN_BASELINE = ["/cart", "/checkout", "/order-success", "/brokerage", "/network"];
+//
+// EMPTY as of cutover PR 5. All five rode the /cart|/checkout|... ->
+// /marketplace legacy chain; each now names /find directly in middleware.ts, so
+// one hop reaches the destination and the ranking signal transfers once.
+const REDIRECT_CHAIN_BASELINE: string[] = [];
 
 // C3. Files on the verification path that import the credit library.
 //
@@ -88,8 +82,15 @@ const VERIFICATION_CREDIT_COUPLING = [
 const CREDIT_INFRASTRUCTURE = ["app/api/credits/balance/route.ts"];
 
 // Files whose path begins with one of these are the retired surface itself; a
-// link within the retired cluster is not a canonical->retired violation.
-const DEPRECATED_SURFACE_PREFIXES = ["app/[locale]/marketplace", "app/[locale]/join"];
+// link within the retired cluster would not be a canonical->retired violation.
+//
+// EMPTY as of cutover PR 5, which is a tightening rather than a formality.
+// `app/[locale]/join` is gone and the only file left under
+// `app/[locale]/marketplace` is the `new` quarantine page, which links nothing
+// retired. With no exclusions the scan below covers every file under app/ and
+// components/ without exception, so a retired link cannot hide inside the
+// retired cluster and be re-exposed later.
+const DEPRECATED_SURFACE_PREFIXES: string[] = [];
 
 // ---------------------------------------------------------------------------
 // Filesystem helpers.

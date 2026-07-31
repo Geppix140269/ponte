@@ -442,8 +442,8 @@ export default function LearnTradeDataPage() {
               senior analyst when a decision needs evidence first.
             </p>
             <div style={ACTS}>
-              <Link href="/marketplace" className="b b--lg">
-                Visit the marketplace
+              <Link href="/find" className="b b--lg">
+                Visit the opportunity board
               </Link>
               <Link href="/learn/duties" className="b b--2 b--lg">
                 Learn about import duties

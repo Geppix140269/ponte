@@ -13,15 +13,17 @@ const PATHS: {
   priority: number;
 }[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
-  // Marketplace
-  { path: "/marketplace", changeFrequency: "weekly", priority: 0.9 },
+  // The public opportunity board. The obsidian marketplace path held this slot
+  // until cutover PR 5 retired it; it is a permanent redirect to this path now,
+  // so listing it here as well would advertise a redirect to a crawler.
+  { path: "/find", changeFrequency: "weekly", priority: 0.9 },
   // Market Signals. The entrance and the market browse are the two crawlable
   // hubs: every indexable signal is reachable from the second, which is what
   // stops the individual signal URLs below being orphans in the sitemap.
   { path: "/market-signals", changeFrequency: "daily", priority: 0.9 },
   { path: "/market-signals/categories", changeFrequency: "daily", priority: 0.8 },
   // Verification. Answers "how do I verify a trade counterparty", so it is
-  // crawled at the same weight as the marketplace itself.
+  // crawled at the same weight as the board itself.
   { path: "/verification", changeFrequency: "monthly", priority: 0.9 },
   // Fees
   { path: "/pricing", changeFrequency: "weekly", priority: 0.9 },

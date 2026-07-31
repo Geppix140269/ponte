@@ -118,8 +118,11 @@ const LUCIDE_BASELINE = [
   // words, which is what the four lucide glyphs were decorating. /offline
   // renders the approved `participation.commsoff` key through PonteIcon, which
   // is the registry's own "the link does not exist yet".
-  "app/[locale]/marketplace/l/[ref]/page.tsx",
-  "app/[locale]/marketplace/page.tsx",
+  //
+  // The two obsidian marketplace pages left this list in Issue #130 cutover
+  // PR 5, which retired them: both are permanent redirects in middleware.ts
+  // now and neither file exists, so the lucide imports they carried are gone
+  // with them rather than migrated.
   "components/InstallPrompt.tsx",
   "components/LanguageSwitcher.tsx",
   "components/NetworkForm.tsx",

@@ -73,10 +73,18 @@ test("the destination is never restated: it is exactly destinationFor's", () => 
 
 // ---- each route opens its journey -----------------------------------------
 
-test("with the journey flags off, each route opens its fallback destination", () => {
+test("with the journey flags off, each route opens its fallback where one remains", () => {
   withFlags(FLAGS_OFF, () => {
-    assert.equal(directRouteNavigation("find").destination, "/marketplace");
-    assert.equal(directRouteNavigation("structure").destination, "/marketplace/new?type=requirement");
+    // Find and Structure have no fallback left to open. Find's seam was the
+    // obsidian board (retired in cutover PR 5) and Structure's was the legacy
+    // editor (a redirect to the composer since LB-013, closed in cutover PR 3),
+    // so both open their own journey in BOTH flag states and neither
+    // NEXT_PUBLIC_FIND_JOURNEY nor NEXT_PUBLIC_STRUCTURE_JOURNEY governs a
+    // destination any more. These two lines are the guard: if either branch
+    // ever reads its flag again, the off state stops matching the on state
+    // asserted below and this test fails.
+    assert.equal(directRouteNavigation("find").destination, "/find");
+    assert.equal(directRouteNavigation("structure").destination, "/structure");
     assert.equal(directRouteNavigation("check").destination, "/verify?for=counterparty");
     assert.equal(directRouteNavigation("investigate").destination, "/market-signals");
   });

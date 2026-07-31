@@ -27,15 +27,15 @@ const ITEMS: {
   { href: "/", key: "home", icon: "home" },
   // marketplaceShort, not marketplace: a slot is a fifth of a phone, and
   // "Place de marché" or "Маркетплейс" would arrive as an ellipsis.
-  { href: "/marketplace", key: "marketplaceShort", icon: "board" },
+  { href: "/find", key: "marketplaceShort", icon: "board" },
   { href: "/structure", key: "post", icon: "post", accent: true },
   { href: "/verify", key: "verify", icon: "verify" },
   { href: "/account", key: "account", icon: "user" },
 ];
 
 // The longest matching href wins, so a nested path lights its own item rather
-// than a shorter prefix (e.g. /marketplace/l/... stays under the board, not
-// Home). Home matches only itself.
+// than a shorter prefix (e.g. /find/o/... stays under the board, not Home).
+// Home matches only itself.
 function activeIndex(pathname: string): number {
   let best = -1;
   let bestLength = -1;

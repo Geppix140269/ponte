@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stages 1 and 2 delivered. Stages 3–9 not started and not authorised.
+**Status:** Stages 1, 2, 3 and 4a delivered. Stage 4b and Stages 5–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -147,7 +147,7 @@ The first substantive design task, and the one most likely to be got wrong.
 
 **Exit:** tests only. No schema, no route, no UI, no charge.
 
-### Stage 3 — Billing records and entitlements
+### Stage 3 — Billing records and entitlements ✅ **delivered 31 July 2026 (migration written, NOT applied)**
 
 - Migration **written, not applied**: a `paid` entitlement kind, room-period rows carrying currency, period price in cents, purchased branch capacity, period start and end, and a payment reference; a billing-event record.
 - Idempotency and replay safety designed in, not added later.
@@ -158,10 +158,25 @@ The first substantive design task, and the one most likely to be got wrong.
 
 ### Stage 4 — Stripe checkout and webhook
 
-- A room-period checkout and an additional-branch checkout, both server-priced.
-- Webhook fulfilment reusing the existing idempotency pattern; cap-aware, so a period already at $199 accepts no further branch charge.
-- Failure, retry, duplicate-session and out-of-order-event behaviour specified and tested.
-- No Stripe object created. Catalogue creation is Stage 9.
+**Split into 4a and 4b on 31 July 2026.** The reason is in §12, discovery 6.
+
+#### Stage 4a — the charging decisions ✅ **delivered 31 July 2026**
+
+- A room-period charge, an additional-branch charge and a reactivation charge, all server-priced.
+- Fulfilment decision reusing the existing idempotency reasoning; cap-aware, so a period already at $199 accepts no further branch charge.
+- Failure, retry, duplicate-session, orphaned-payment and out-of-order-event behaviour specified and tested.
+- The charging gate, off, with four required conditions.
+- No Stripe object created, no Stripe SDK imported, no route.
+
+#### Stage 4b — the HTTP surfaces *(not started)*
+
+The checkout route and the webhook endpoint that call Stage 4a's decisions.
+
+**Deliberately held.** A route cannot do anything real until two owner gates are
+open: `20260731e` applied, so `deal_room_room_periods` exists to write to, and
+the Stripe keys set. Landing it earlier adds a payment-shaped surface that
+returns 503 on every path and no capability. Do 4b **when the Stripe gates are
+being opened**, not before.
 
 **Owner gates:** Stripe catalogue, secrets, webhook endpoint configuration.
 
@@ -320,7 +335,121 @@ so does a second import appearing in the engine.
    `echo`. The exit code now goes to its own file. A run is green when that file
    says so, not when the notification does.
 
+**31 July 2026 — Stage 3 delivered, on the owner's instruction. The migration is
+written and NOT applied.**
+
+- **`supabase/migrations/20260731e_deal_room_paid_room_periods.sql`**, SHA-256
+  `3456e0b0862e6e4b306a2cca1db430f50fb0416f043afa3e8cee6066ff78a422`. Additive
+  throughout: `paid` added as a fourth entitlement kind (the three existing
+  values preserved, no backfill), `deal_room_room_periods`,
+  `deal_room_billing_events`, and `deal_room_entitlements.current_period_id`.
+- **Three invariants pushed into the database**, because getting them wrong
+  takes money from a member incorrectly: price is CHECKed against the
+  authority's own formula so a row whose price does not follow from its capacity
+  cannot be written at all; the $199 cap is stated again independently of the
+  formula; and a partial unique index permits **one active period per room**, so
+  a retry or a race cannot bill one room twice for one window.
+- **The §17 value anchor is structural.** `period_price_cents` holds the list
+  price and stays bound to the capacity formula, `discount_cents` holds the
+  waiver, and `amount_due_cents` is a **stored generated column**, so a
+  100% launch-partner room still records that a Deal Room costs $79 USD.
+- **§9 is a constraint, not a convention:** `state <> 'active' or confirmed_at
+  is not null`. A period cannot be active without a server-side confirmation.
+- **Replay safety designed in**, not added after a double charge:
+  `provider_event_id` is unique where not null, and the billing table is
+  append-only against the table owner as well as against members.
+- **The disclosure rule is in the policy.** Both tables are readable only by
+  `deal_room_can_administer(room_id)` — narrower than every other member-facing
+  Deal Room table — because `purchased_branch_capacity` is a branch-count
+  disclosure under §4 and §11. No member holds any write policy. Per the LB-008
+  lesson, `anon` and `authenticated` are revoked explicitly and `authenticated`
+  is re-granted SELECT alone.
+- **`lib/deal-room/billing.ts`** is the pure TypeScript half: the vocabularies
+  mirroring each CHECK, `periodEndFrom()`, `periodCovers()`, `amountDueCents()`,
+  `draftRoomPeriod()` and `launchPartnerWaiver()`. No clock — a period end is
+  derived from a start that is passed in.
+- **`lib/deal-room/__tests__/billing.test.ts`, 35 assertions**, registered in
+  `npm test`. It evaluates the SQL price formula and the TypeScript engine side
+  by side at every capacity from 5 to 40, pins each TypeScript vocabulary
+  against its CHECK constraint, and asserts the administrator-only policy, the
+  absence of any member write policy, the grants, the idempotency index and the
+  append-only trigger. **Proved to fail in three directions**: cap drifted to
+  $200, policy widened to any participant, idempotency index removed.
+- **Nothing imports `billing.ts`, and no file under `app/`, `components/` or
+  `lib/` names either new table.** Both are asserted, so a reader cannot ship
+  ahead of the migration — which is how PL-014 happened.
+
+**An existing guard caught the new function, correctly.**
+`lib/deal-room/__tests__/grant-signatures.test.ts` discovers every migration
+later than `20260729b` and refuses any `deal_room_*` function it does not
+recognise — the guard that exists because an accidental overload leaves every
+grant pointing at the old function (LB-005), and because a new `deal_room_*`
+function is a new privilege surface (LB-008). It failed on
+`deal_room_billing_append_only` with "Classify it deliberately", and had no seam
+for a legitimately-new function. One was added: `NEW_SINCE_20260729B`, a name to
+reason map, checked so a classification cannot be a placeholder and cannot rot
+into a name no migration declares. An **unclassified** new function still fails,
+demonstrated.
+
+**Deviation from this plan's own Stage 3 bullet, stated rather than done
+quietly.** The bullet said `STARTER_LIMITS_PROPOSED` would be "retired behind
+the new model". It has **not** been removed. It has two live call sites —
+`app/[locale]/deal-rooms/propose/page.tsx` prints the Starter limits as member
+copy, and `app/[locale]/deal-rooms/[roomId]/page.tsx` renders `usageSummary()`.
+Removing it would change what a member reads on two Deal Room surfaces, which is
+Stage 6 work under the Design Constitution, not a records-and-schema stage. The
+constant stays until then. `activeDays: 30` is superseded in fact by
+`ROOM_PERIOD_DAYS` in `billing.ts`, which is the value the paid model uses.
+
 ---
+
+**31 July 2026 — Stage 4a delivered, on the owner's instruction. Charging is OFF
+and this stage cannot turn it on.**
+
+- **`lib/deal-room/charging.ts`** — pure. No Stripe SDK import, no clock, no
+  database; `process.env` appears only inside the gate, asserted by test.
+- **The gate needs four conditions and has none of them:**
+  `DEAL_ROOM_BILLING === "on"`, `NEXT_PUBLIC_DEAL_ROOM === "on"`,
+  `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. The fourth gates **checkout**,
+  not only fulfilment — a charge that could not be verifiably confirmed must
+  never be started, and gating on the secret key alone would trade a member's
+  money for a log line. `DEAL_ROOM_BILLING` is server-only, so unlike the Deal
+  Room routing flag it cannot be read or set from a browser. Documented in
+  `docs/codex/FEATURE-FLAGS.md`.
+- **Three checkout decisions:** `roomActivationCharge`, `additionalBranchCharge`,
+  `reactivationCharge`. All price from `./pricing` and server-held capacity;
+  **no function in the module accepts an amount from its caller**, asserted
+  structurally. `additionalBranchCharge` returns `nothing_to_charge` at the cap,
+  which is a success under §10, not a failure.
+- **One fulfilment decision**, ordered by danger rather than likelihood:
+  wrong event type → ignore; unpaid → ignore; **replay checked before anything
+  can grant**; no room or no period row → `orphan`, loud and never retried;
+  unknown kind → refuse; amount mismatch **in both directions** → refuse; a
+  branch charge against a period already at the cap → refuse; a charge that
+  would take the period total past $199 → refuse; exactly on the cap → fulfil.
+- **`shouldProviderRetry` takes the write outcome, not just the decision.** No
+  decision on its own warrants a retry — only a `fulfil` whose write then failed
+  does.
+- **34 assertions** in `lib/deal-room/__tests__/charging.test.ts`, registered in
+  `npm test`, including that a branch charge's description names no counterparty,
+  competitor or negotiation (§10's disclosure rule applied to billing copy).
+
+**Mutation testing found a test gap, not dead code.** Deleting the first of the
+two cap checks — `kind === 'additional_branch' && periodPaidCents >= 19900` —
+left **every test passing**, which looked like a redundant branch. It is not.
+The total-based check that remains, `periodPaidCents + amountTotalCents > 19900`,
+lets a **zero-amount** event through: `19900 + 0` is not greater than `19900`. So
+a session claiming to have collected nothing would be fulfilled and would grant
+branch capacity for free. The 34th assertion is that case, and it fails when the
+check is removed. Both checks stay.
+
+**A defect I wrote and caught before it shipped.** The first draft of
+`shouldProviderRetry` read `return false || decision.action === "refuse" ? false
+: false`, which is `false` for every input through a nonsense ternary. It
+type-checked and would have passed a careless test. Rewritten to the rule above.
+`chargingEnabled()` was also duplicating the gate's four conditions beside
+`chargingUnavailableReason()`; it now derives from it, so the gate and its
+explanation cannot drift into disagreeing.
 
 ## 12. Decisions and discoveries
 
@@ -354,7 +483,18 @@ so does a second import appearing in the engine.
    pinned by a test that says so in its title, so reversing it changes one
    named constant and one named test rather than silently changing bills.
    **Owner confirmation required.**
-6. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
+6. **Stage 4 was split, reversing a stated intention.** The plan and a message to
+   the owner both said Stage 4 would ship route handlers refusing behind an
+   off-by-default gate. Having built the decision layer, that looks wrong: a
+   checkout route can do nothing real until `20260731e` is applied (so
+   `deal_room_room_periods` exists to write to) **and** the Stripe keys are set,
+   both owner gates under §20. A route landed earlier is a stub returning 503 on
+   every path — a payment-shaped surface with no capability, and one more thing
+   to review. All the correctness lives in the decisions, which are now complete
+   and proven. So 4b waits until the Stripe gates are actually being opened. The
+   reversal is recorded rather than quietly enacted; the owner can ask for the
+   stubs at any time.
+7. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
    ADR-0008, ADR-0009, ADR-0016, both ADR-0018 files and ADR-0019 have no row.
    Recorded as an observation; back-filling accepted decisions is an owner
    action and was not done.

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import { reconfirmationLapsed } from "@/lib/listings/validity";
-import { reconfirmListingAction } from "../marketplace/actions";
+import { reconfirmListingAction, submitDraftAction } from "../_actions/listings";
 import { railFor } from "@/lib/desk/journey";
 import { marketEntrances } from "@/lib/desk/entrances";
 import DeskShell from "@/components/desk/DeskShell";
@@ -101,10 +101,14 @@ export default async function OpportunitiesPage({
   // by BOTH the primary select and the missing-column fallback. Reconfirmation
   // is an owner control on this page now, and it must not be the thing that
   // blanks a member's records if a later migration is still pending.
+  //
+  // `decision_note` is in BASE for the same reason: a returned record tells its
+  // owner that "a named item must be corrected", and the name of that item is
+  // this column. Reading it here is what makes that sentence true.
   const BASE =
     "id, ref, type, product, status, hs_code, origin, destination, quantity, quantity_mode, " +
     "quantity_min, quantity_max, unit, frequency, incoterm, payment_terms, submitter_role, " +
-    "validity_type, valid_until, reconfirmed_at, created_at, market_family, market_intent, " +
+    "validity_type, valid_until, reconfirmed_at, decision_note, created_at, market_family, market_intent, " +
     "service_category_key, service_subcategory_keys, distribution_partner_type_key, " +
     "distribution_relationship_terms, coverage_scope_key, territory_codes, product_sector_key, " +
     "custom_category_label";
@@ -274,6 +278,44 @@ export default async function OpportunitiesPage({
                       <p className="d" style={{ marginTop: 10 }}>
                         {copy.note}
                       </p>
+
+                      {/* The named item, for a returned record. "A named item
+                          must be corrected" without the name is not something a
+                          member can act on. */}
+                      {r.status === "rejected" && r.decision_note ? (
+                        <p className="d" style={{ marginTop: 8, color: "var(--ink-2)" }}>
+                          {r.decision_note}
+                        </p>
+                      ) : null}
+
+                      {/* The two owner controls that used to exist only on the
+                          retired board (cutover PR 5).
+
+                          Opening the record in the composer is the ONLY way a
+                          member reaches their own saved work: /structure reads
+                          `?edit=<id>` and enforces ownership by query and by
+                          RLS. Without this link a saved draft is unreachable
+                          from anywhere in the product once the board is gone.
+
+                          Handing in a draft is the draft -> submitted
+                          transition. It is the same server action the board
+                          rendered, moved rather than rewritten, and it runs the
+                          central publication validator. */}
+                      {r.status !== "closed" ? (
+                        <div className="empty__a">
+                          <Link className="b b--2 b--sm" href={`/structure?edit=${r.id}`}>
+                            Open in the composer
+                          </Link>
+                          {r.status === "draft" ? (
+                            <form action={submitDraftAction}>
+                              <input type="hidden" name="id" value={r.id} />
+                              <button type="submit" className="b b--sm">
+                                Submit for review
+                              </button>
+                            </form>
+                          ) : null}
+                        </div>
+                      ) : null}
 
                       {/* Reconfirmation. A live record states a 90 day window;
                           once it lapses the record leaves the public board and

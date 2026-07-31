@@ -701,6 +701,235 @@ test("without JavaScript every destination is still a link", async ({ browser })
 });
 
 // ---------------------------------------------------------------------------
+// The bridge is readable when the JS positioning has not run
+// ---------------------------------------------------------------------------
+
+/**
+ * Measure a bridge that has not been positioned.
+ *
+ * The horizontal bridge is placed entirely by a layout effect: an inline
+ * `left`, `top` and `width` on every station, then the stage's height from its
+ * lowest child. The approved stylesheet gives `.brst` `position: absolute` and
+ * no coordinates, correctly, because the coordinates come from the measured
+ * curve. So without that effect every station lands on the same static
+ * position and the stage keeps zero height. The result is a pile of overprinted
+ * text with the next section drawn over it, which is what the landing looked
+ * like in Chrome on 31 July 2026 after the deploy of `f26718a`.
+ *
+ * There are two ways to arrive in that state and they are NOT the same DOM.
+ *
+ * `javaScriptEnabled: false` is a browser with scripting turned off. The
+ * `<noscript>` rule in `LandingBridges.tsx` fires, so all three action bridges
+ * are unhidden and every destination is on the page as a link.
+ *
+ * A client chunk that fails to arrive is a browser with scripting ON. The
+ * `<noscript>` rule does **not** fire, React never hydrates, and the action
+ * bridges stay `hidden`. This is what actually happened on 31 July 2026, and
+ * the earlier version of this file could not reproduce it: it tested the first
+ * case and described it as the second.
+ *
+ * The fallback has to hold in both, so both are run, and `actionBridgesVisible`
+ * below records which state each one is. If that number ever matches across the
+ * two modes, one of them has stopped being the case it was written for.
+ */
+async function unpositioned(page: Page) {
+  return page.evaluate(() => {
+    const rects = (nodes: Element[]) => nodes.map((n) => n.getBoundingClientRect());
+    const overlapping = (boxes: DOMRect[]) => {
+      const pairs: string[] = [];
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i];
+          const b = boxes[j];
+          // A half-pixel of tolerance: sub-pixel layout must not read as an
+          // overlap, but the failure this guards against is total, not marginal.
+          const hit = a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+          if (hit) pairs.push(`${i}/${j}`);
+        }
+      }
+      return pairs;
+    };
+
+    const de = document.documentElement;
+    const stages = Array.from(document.querySelectorAll<HTMLElement>(".pbridge .br__stage"));
+    const family = Array.from(document.querySelectorAll(".pbridge > .br .brst"));
+    const familyBoxes = rects(family);
+    const below = document.querySelector("section.sec");
+    const lowest = [...familyBoxes].sort((a, b) => b.bottom - a.bottom)[0];
+
+    return {
+      stages: stages.length,
+      // If any stage carries this, the measurement DID run and the test would
+      // be asserting the measured layout rather than the fallback.
+      measured: stages.filter((s) => s.hasAttribute("data-measured")).length,
+      /*
+        Only the stages that are actually displayed.
+
+        A stage inside a `hidden` action bridge is `display: none` and has no
+        box, correctly: with the bundle missing the noscript rule does not fire,
+        so the three action bridges stay hidden and only the family bridge is
+        on the page. Measuring those as "a stage that collapsed to 0px" would
+        report the designed behaviour as the defect.
+      */
+      stageHeights: stages
+        .filter((s) => s.offsetParent !== null)
+        .map((s) => Math.round(s.getBoundingClientRect().height)),
+      stations: family.length,
+      // Every station must have a box of its own, and no two of them may
+      // occupy the same one.
+      empty: familyBoxes.filter((b) => b.width < 1 || b.height < 1).length,
+      overlaps: overlapping(familyBoxes),
+      // In the fallback the stations wrap, so the lowest one is not always the
+      // last in the document.
+      gapToSectionBelow: below && lowest ? Math.round(below.getBoundingClientRect().top - lowest.bottom) : null,
+      // Every action destination is still a link, and each of those bridges has
+      // an unmeasured stage of its own.
+      actionLinks: document.querySelectorAll(".pbridge .brx a").length,
+      // Which of the two unpositioned states this is. The `<noscript>` rule
+      // unhides all three action bridges, so scripting-off shows 3 and a
+      // missing bundle shows 0. Measured as a box rather than by the `hidden`
+      // attribute, which stays put in both: the noscript rule overrides it with
+      // `display: block !important` without removing it.
+      actionBridgesVisible: Array.from(document.querySelectorAll(".pbridge .brx")).filter(
+        (section) => section.getBoundingClientRect().height > 0,
+      ).length,
+      actionOverlaps: Array.from(document.querySelectorAll(".pbridge .brx")).map((section) =>
+        overlapping(rects(Array.from(section.querySelectorAll(".brst")))).length,
+      ),
+      scrolls: de.scrollWidth > de.clientWidth,
+      scrollWidth: de.scrollWidth,
+      clientWidth: de.clientWidth,
+    };
+  });
+}
+
+/**
+ * The two ways the positioning does not run.
+ *
+ * `slug` names the evidence frame. `actionBridgesVisible` is the expected
+ * discriminator, asserted rather than assumed, so neither mode can quietly
+ * become the other.
+ */
+const UNPOSITIONED_MODES = [
+  {
+    name: "with scripting off",
+    slug: "no-positioning",
+    javaScriptEnabled: false,
+    blockChunks: false,
+    // The noscript rule fires and reveals all three.
+    actionBridgesVisible: 3,
+  },
+  {
+    name: "with the client chunks missing",
+    slug: "no-chunks",
+    javaScriptEnabled: true,
+    blockChunks: true,
+    // Scripting is on, so the noscript rule does not fire and they stay hidden.
+    actionBridgesVisible: 0,
+  },
+] as const;
+
+for (const viewport of [
+  { width: 1280, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  for (const mode of UNPOSITIONED_MODES) {
+    test(`the bridge is readable ${mode.name} at ${viewport.width}px`, async ({ browser }) => {
+      const context = await browser.newContext({ javaScriptEnabled: mode.javaScriptEnabled, viewport });
+      const page = await context.newPage();
+      /*
+        Aborting the chunks is the only way to reach the state that reached
+        production: a live document, scripting enabled, and no client. Nothing
+        else in the request is touched - the HTML, the CSS and the fonts all
+        arrive exactly as they do in a working load, which is what made the
+        failure look like a design change rather than a delivery one.
+      */
+      if (mode.blockChunks) await page.route("**/_next/static/chunks/**", (route) => route.abort());
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".pbridge .br__stage").first()).toBeVisible();
+
+      const state = await unpositioned(page);
+
+      // This mode really is the state it claims to be, and not the other one.
+      expect(
+        state.actionBridgesVisible,
+        `expected ${mode.actionBridgesVisible} visible action bridges ${mode.name}`,
+      ).toBe(mode.actionBridgesVisible);
+
+      // The premise: this really is the unmeasured state.
+      expect(state.measured, "a stage was measured, so this is not the fallback").toBe(0);
+      expect(state.stations, "the family bridge did not server-render its stations").toBe(3);
+
+      // The stage has a height, so whatever follows the bridge starts below it.
+      for (const height of state.stageHeights) {
+        expect(height, `an unmeasured stage collapsed to ${height}px`).toBeGreaterThan(0);
+      }
+
+      // And the stations are three separate blocks rather than one overprinted
+      // one. This is the assertion that would have failed on 31 July.
+      expect(state.empty, "a station has no box of its own").toBe(0);
+      expect(state.overlaps, `family stations overlap each other: ${state.overlaps.join(", ")}`).toEqual([]);
+      expect(state.actionOverlaps, "action stations overlap each other").toEqual([0, 0, 0]);
+
+      // The section beneath the bridge is not drawn over it.
+      expect(state.gapToSectionBelow, "no section was found below the bridge").not.toBeNull();
+      expect(
+        state.gapToSectionBelow!,
+        "the section below the bridge overlaps the unpositioned stations",
+      ).toBeGreaterThan(0);
+
+      // The fallback must not trade one failure for another.
+      expect(state.scrolls, `page scrolls horizontally: ${state.scrollWidth} > ${state.clientWidth}`).toBe(false);
+
+      /*
+        Every destination is still in the document, in both modes and for two
+        different reasons: with scripting off the noscript rule reveals them,
+        and with the bundle missing they are present but `hidden`. The count is
+        the same either way, which is the point - the markup does not depend on
+        the client, only its visibility does.
+      */
+      expect(state.actionLinks, "an action destination left the document").toBe(8);
+
+      await page.screenshot({
+        path: `${EVIDENCE}/fallback-${mode.slug}-${viewport.width}x${viewport.height}.png`,
+        fullPage: true,
+        animations: "disabled",
+      });
+      await context.close();
+    });
+  }
+}
+
+test("the measurement retires the fallback, and the settled bridge is the measured one", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+  await settled(page);
+
+  // The other half of the contract. If the attribute were never set, the
+  // fallback's flex row would still be laying out the settled bridge and every
+  // approved reference frame would be wrong.
+  const measured = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".pbridge > .br .br__stage");
+    const station = stage?.querySelector<HTMLElement>(".brst");
+    if (!stage || !station) return null;
+    return {
+      attribute: stage.hasAttribute("data-measured"),
+      stagePosition: getComputedStyle(stage).display,
+      stationPosition: getComputedStyle(station).position,
+      inlineLeft: station.style.left,
+      inlineHeight: stage.style.height,
+    };
+  });
+
+  expect(measured, "the measured stage was not found").not.toBeNull();
+  expect(measured!.attribute, "the measurement never retired the fallback").toBe(true);
+  expect(measured!.stagePosition, "the fallback flex layout survived the measurement").toBe("block");
+  expect(measured!.stationPosition, "a measured station is not absolutely positioned").toBe("absolute");
+  expect(measured!.inlineLeft, "a measured station carries no measured left").not.toBe("");
+  expect(measured!.inlineHeight, "the stage was never sized from its lowest child").not.toBe("");
+});
+
+// ---------------------------------------------------------------------------
 // Layout: no horizontal overflow at the widths the Bridge notes name
 // ---------------------------------------------------------------------------
 

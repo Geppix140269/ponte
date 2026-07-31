@@ -106,7 +106,7 @@ export default async function ContactPage({
               <h2 style={NAME}>{t("deal.title")}</h2>
               <p style={COPY}>{t("deal.body")}</p>
               <div style={ACT}>
-                <Link className="b" href="/marketplace">
+                <Link className="b" href="/find">
                   {t("deal.cta")}
                   <span aria-hidden="true">&rarr;</span>
                 </Link>

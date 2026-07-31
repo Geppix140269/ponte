@@ -7,7 +7,7 @@ import { Icon } from "@/components/icons";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-// One nav, one story: the marketplace, what it costs, how to reach the desk.
+// One nav, one story: the board, what it costs, how to reach the desk.
 //
 // inBottomNav marks the links the mobile bottom bar already owns. They stay in
 // the desktop header, where there is no bottom bar, and drop out of the mobile
@@ -16,7 +16,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 // the real navigation when it is not.
 type NavLink = { href: string; key: string; inBottomNav: boolean };
 const navLinks: NavLink[] = [
-  { href: "/marketplace", key: "marketplace", inBottomNav: true },
+  { href: "/find", key: "marketplace", inBottomNav: true },
   { href: "/market-signals", key: "signals", inBottomNav: false },
   { href: "/pricing", key: "fees", inBottomNav: false },
   { href: "/contact", key: "contact", inBottomNav: false },

@@ -185,3 +185,75 @@ three indicators for one focus. Only the blanket ring is removed, and only
 inside a bridge. What remains is the node ring at 2px `--pf-focus` (#1E5FA8) on
 `--pf-surface` (#FCFBF7), about **5.9:1** against the 3:1 WCAG 1.4.11 requires,
 plus the title underline.
+
+## 7. DS-10: the bridge had no layout at all until the measurement ran
+
+**Discovered 31 July 2026**, live in Chrome after the deploy of `f26718a`, and
+recovered on its own a moment later. Most likely a client chunk that failed to
+arrive mid-deploy.
+
+The horizontal bridge is positioned entirely by measurement: `BridgeRoute`
+walks the deck's own curve in a layout effect, writes an inline `left`, `top`
+and `width` onto every station, and then sizes the stage from its lowest child.
+The approved stylesheet gives `.brst` `position: absolute` and no coordinates,
+which is correct, because the coordinates come from the curve and a guessed
+pair would be the straight-line interpretation section 1 records as rejected.
+
+But it means the unmeasured state was not a plainer layout. It was no layout:
+every station landed on the same static position, and since every child of the
+stage is out of flow the stage kept **zero height**, so the section below was
+drawn straight over the pile. Measured on the component's own server markup
+with the shipped stylesheets, all three family stations occupied one identical
+box, `-18,122 176x151` at 1280 and `-68,96 176x151` at 390, with all four
+stages at 0px and every pair of stations overlapping.
+
+The `<noscript>` rule in `LandingBridges.tsx` did not cover this. It unhides the
+action bridges, which answers "scripting is off"; it says nothing about layout,
+and "the script has not run **yet**, or never will" is the more common case.
+
+**The fix** is section 5 of `components/ponte/bridge/bridge-integration.css`,
+the implementation layer. Nothing was added to the approved package: the
+authority stylesheet is checksum-pinned by `check-governance.mjs` and
+diff-pinned by `check-bridge-invariance.mjs`, and it does not declare
+`br__stage` either. Until the measurement runs, the stage lays its stations out
+as a flex row (one column below the engine's own 460px `VERTICAL_BELOW`) and
+takes `DECK_HEIGHT` as a minimum height. No deck is drawn: a CSS deck could only
+be a straight rule, so the approved node, pier, index, title and description
+vocabulary carries the crossing until the arch can be measured. Every value is
+either the engine's own or one the approved stylesheet already uses for a bridge
+laid out in flow.
+
+Re-measured on the same markup: three distinct station boxes at both widths,
+zero overlaps in the family bridge and in all three action bridges, real stage
+heights, no horizontal overflow, and all eight destinations still links.
+
+**It cannot reach the settled rendering.** Every selector is guarded by
+`:not([data-measured])`, and `BridgeRoute` sets that attribute inside the same
+layout effect that positions the stations: after the positioning has succeeded,
+so a measurement that throws leaves the readable fallback standing rather than
+the pile, and before `fit()`, which reads offsets and would otherwise size the
+stage from the fallback's flow layout. Verified by diffing the **full computed
+style** of the stage, a station and both abutments between the shipped
+stylesheets and the new ones with the attribute set: **0 differences at 1280 and
+0 at 390**. The frames in this directory are unaffected.
+
+Regression checks, both added with the fix:
+
+- `lib/landing/__tests__/family-action-bridges.test.tsx`, inside
+  `npm run verify`: the fallback exists, lives in the implementation layer, uses
+  `DECK_HEIGHT` as its minimum, takes the stations out of absolute positioning,
+  and **every** rule in that file mentioning `br__stage` is guarded by
+  `:not([data-measured])`. Plus the ordering contract in `BridgeRoute`.
+- `e2e/landing-bridges.spec.ts`, in a real browser with `javaScriptEnabled:
+  false` at 1280 and 390: no stage is measured, no two stations overlap in any
+  of the four bridges, every stage has a height, the section below is clear, the
+  page does not scroll horizontally, and the noscript rule still reveals all
+  eight destinations. A second test asserts the other half, that a hydrated
+  bridge does carry `data-measured` and is back to absolute positioning.
+  Frames: `fallback-no-positioning-1280x900.png`, `-390x844.png`.
+
+**Not run here:** the Playwright suite needs the site past the temporary
+Basic-auth gate in `middleware.ts`, whose password is not in the repository. The
+measurements above were taken in Chromium against the component's genuine
+`renderToStaticMarkup` output with the real stylesheets, which is the same DOM
+and CSS a browser holds while a chunk is in flight.

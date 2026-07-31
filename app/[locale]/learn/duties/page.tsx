@@ -510,14 +510,14 @@ export default function LearnDutiesPage() {
             </h2>
             <p style={{ ...COPY, maxWidth: "58ch" }}>
               The desk works duty and landed-cost questions as part of any engagement, and the
-              marketplace is where the counterparties are. Both start from the same place: tell us
-              the product and the route.
+              opportunity board is where the counterparties are. Both start from the same place:
+              tell us the product and the route.
             </p>
             <div style={ACTS}>
               <Link href="/contact" className="b b--lg">
                 Ask the desk
               </Link>
-              <Link href="/marketplace" className="b b--2 b--lg">
+              <Link href="/find" className="b b--2 b--lg">
                 See the board
               </Link>
             </div>
