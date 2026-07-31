@@ -45,6 +45,26 @@
   min-height: 100dvh;
 }
 
+/* Headings, which were invisible.
+ *
+ * `app/globals.css` sets `h1, h2, h3, h4 { color: var(--ink) }` for the app's
+ * obsidian canvas, and `--ink` is #eef1f5 - near-white. `.dr-page` paints the
+ * Ponte paper surface underneath it, and `.dr__title` set no colour of its own.
+ * So the primary heading of every Deal Room surface rendered near-white on
+ * near-white: "Refined cane sugar", "The agreed procedure", each of them
+ * effectively unreadable.
+ *
+ * Found on 31 July 2026 by looking at the page. `npm run check-contrast` passed
+ * throughout, because it checks token PAIRS and no token is wrong - the defect
+ * is which token an element inherits on this surface, which is not a fact about
+ * a pair.
+ *
+ * Scoped to `.dr-page` so no other route is repainted, for the same reason the
+ * surface rule below is scoped. */
+.dr-page :is(h1, h2, h3, h4) {
+  color: var(--pf-ink);
+}
+
 /* The canvas.
  *
  * `body` is obsidian and is taller than its own children - measured at 902px

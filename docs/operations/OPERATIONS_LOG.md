@@ -18,6 +18,60 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - The surfaces were rendered. Three defects, and the flag stays off.
+
+### Completed
+
+- **The twelve Deal Room surfaces were rendered against a live room, as both
+  parties, at 1280x900 and 390x844.** 28 frames in
+  `docs/codex/audits/deal-room/evidence/live/`. The owner supplied the site
+  password; the gate was not weakened.
+- **`listParticipants()` had never returned a row.** `deal_room_participants` has two
+  foreign keys to `profiles`, so PostgREST refused the ambiguous
+  `profiles(full_name)` embed and failed the whole query. Every surface that names a
+  participant showed a fallback: two rows reading "A required approver" on the
+  procedure page for **both** parties, an empty Bridge, "0 of 2 external organisations
+  admitted" on a room with one. **Fixed** by naming the relationship.
+- **Every heading was invisible.** `app/globals.css` sets `h1..h4 { color: var(--ink) }`
+  for the obsidian canvas and `--ink` is near-white; `.dr-page` paints the paper
+  surface and `.dr__title` set no colour. The primary heading of every Deal Room page
+  rendered near-white on near-white. **Fixed**, scoped to `.dr-page`.
+
+### Risks / discrepancies
+
+- **A participant can be named only to themselves.** `profiles` carries one SELECT
+  policy, `id = auth.uid() OR is_admin()`, so the counterparty renders as "A
+  participant" to everyone but themselves. **Product decision, not made here:**
+  denormalise a display label onto `deal_room_participants` at admission, as
+  `deal_room_activity_events` already does with `actor_label`; or widen `profiles`
+  SELECT for co-participants. The first moves no boundary. **This is in the way of
+  Approval 4.**
+- **109 database assertions passed against this same loop and none of the three could
+  fail one.** The embed defect is not reachable from SQL; the heading defect is not a
+  fact about a token pair, so `check-contrast` passed; the naming defect is a policy
+  interacting with a page.
+- `20260731d` remains correct and necessary but was **not sufficient**, and the
+  assertion added with it passes while the page still cannot print a name. The
+  assertion tests the row; the page needs the name.
+
+### Production changes
+
+- **None.** The flag was never turned on, nothing was deployed, no environment
+  variable was set. The capture room was built and removed: 10 users, 7 listings with
+  2 approved, every `deal_room_*` table at 0, ledger 52.
+
+### Next
+
+1. **Owner decision on how a participant is named to the other party.**
+2. Then Approval 4: allowlist, environment variables, deploy.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 77 to 82
+- `docs/codex/audits/deal-room/evidence/live/` - 28 frames
+
+---
+
 ## 2026-07-31 - Approval 4 preflight: the off switch did not work. Flag NOT flipped.
 
 ### Completed

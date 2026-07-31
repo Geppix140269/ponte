@@ -1889,3 +1889,120 @@ by prefix.
 is written and needs only `PONTE_SITE_PASSWORD`. Turning the Deal Room on for a
 pilot member would put surfaces in front of them that no person has ever looked at.
 
+---
+
+# The surfaces rendered, 31 July 2026: three defects, none of them findable in a database
+
+**Authorised:** owner, 31 July 2026 - Approval 4, then the site password supplied so
+the pages could be seen before a member sees them.
+**Evidence:** 28 frames in `docs/codex/audits/deal-room/evidence/live/`, 14 surfaces
+at 1280x900 and 390x844, captured as **both parties** against a live room.
+
+## 77. What it took
+
+`scripts/deal-room-live-room.mjs build`, a production build with
+`NEXT_PUBLIC_DEAL_ROOM=on` and both profile ids allowlisted, the site gate passed with
+the owner's password, `e2e/deal-room-surfaces.spec.ts`, then `remove`. Production
+after it: 10 users, 7 listings with 2 approved, every `deal_room_*` table at 0, ledger
+52.
+
+**109 database assertions had passed against this same loop.** None of the three
+defects below could fail one.
+
+## 78. `listParticipants()` had never returned a row
+
+```
+Could not embed because more than one relationship was found for
+'deal_room_participants' and 'profiles'
+```
+
+`deal_room_participants` has **two** foreign keys to `profiles` - `profile_id` and
+`invited_by` - so PostgREST refuses the bare `profiles(full_name)` embed and fails the
+**whole query**. `listParticipants()` returned an error and an empty array to every
+caller, on every surface, since the day it was written.
+
+What that produced: two rows reading **"A required approver"** on the procedure page,
+for both parties; an empty participant list on the Bridge; **"0 of 2 external
+organisations admitted"** on a room with an admitted external organisation.
+
+The activity feed named people correctly throughout - "Marta Ferreira", "Diego Alonso,
+Iberia Importaciones SL" - because an event carries its own `actor_label`. That is why
+nothing looked obviously broken.
+
+**Fixed:** the relationship is named -
+`profiles!deal_room_participants_profile_id_fkey(full_name)`.
+
+**Why no test caught it:** every assertion in the proof fixture queries the tables
+directly. None goes through PostgREST's embed syntax, which is where the defect lives.
+It is not reachable from SQL.
+
+## 79. A participant can be named only to themselves
+
+With the embed fixed, the counterparty's procedure page reads:
+
+| | |
+|---|---|
+| **A participant** | approved |
+| **Diego Alonso · Iberia Importaciones SL** | approved |
+
+They can see their own name and not the other party's. `profiles` carries one SELECT
+policy - `id = auth.uid() OR is_admin()` - so a member can never read another member's
+`full_name`. Every counterparty is "A participant" to everyone but themselves.
+
+**This is a product decision and was not made here.** Two shapes:
+
+1. **Denormalise a display label onto `deal_room_participants`** when a participant is
+   admitted, exactly as `deal_room_activity_events` already carries `actor_label` and
+   `actor_org_label`. No privacy boundary moves; the label is written by the command
+   that has already proved the identity.
+2. **Widen `profiles` SELECT** so co-participants of a room may read each other's
+   name. Smaller change, but it moves a boundary that currently holds everywhere.
+
+The first is consistent with what the Deal Room already does. Neither is an agent's
+call.
+
+Note that `20260731d` remains correct and remains necessary - the counterparty must be
+able to read the participant row an approval names - but it was **not sufficient**, and
+the assertion added with it passes while the page still cannot print a name. The
+assertion tests the row; the page needs the name.
+
+## 80. Every heading was invisible
+
+`app/globals.css` sets `h1, h2, h3, h4 { color: var(--ink) }` for the app's obsidian
+canvas, and `--ink` is `#eef1f5` - near-white. `.dr-page` paints the Ponte paper
+surface underneath, and `.dr__title` set no colour of its own.
+
+So the primary heading of **every Deal Room surface** rendered near-white on
+near-white. "Refined cane sugar". "The agreed procedure". Effectively unreadable, on
+every page of the slice, at both viewports.
+
+**Fixed:** `.dr-page :is(h1, h2, h3, h4) { color: var(--pf-ink) }`, scoped so no other
+route is repainted.
+
+**`npm run check-contrast` passed throughout.** It checks token *pairs*, and no token
+is wrong: `--ink` on obsidian is correct, `--pf-ink` on paper is correct. The defect is
+which token an element **inherits on a given surface**, which is not a fact about a
+pair. This is the same shape as every other instrument this lane has had to correct -
+it asserted about the tokens rather than about the world.
+
+## 81. What was checked and is right
+
+The Bridge draws one entry per person and reads "Deal owner - JOINED / Buyer -
+JOINED". Progress reads 22% against a procedure of weights 10 + 12 + 78 with two steps
+complete. Milestones, blockers, room access ("Starter Deal Room, 30 active days
+remaining, 1 of 3 private workspaces used") all render. The activity feed is
+attributable and ordered. The mobile layout at 390px holds without horizontal
+overflow. The bottom navigation bar that appears mid-page in the full-page captures is
+a `position: fixed` artifact of full-page capture, not an overlap.
+
+## 82. Approval 4 is not complete
+
+The flag was never turned on in production. Nothing was deployed. What this step
+established is that **it should not have been**: the primary heading of every page was
+illegible and no participant could be named.
+
+Two of the three are fixed. The third - how a participant is named to the other party -
+is the owner's decision, and it is squarely in the way: a Deal Room whose whole purpose
+is knowing who you are dealing with cannot show "A participant" where the counterparty
+should be.
+
