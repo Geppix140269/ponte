@@ -54,6 +54,12 @@ function rendersOwnChrome(path: string): boolean {
     path === "/terms" ||
     path === "/workspace" ||
     path.startsWith("/workspace/") ||
+    // The administration desk. It was built on the retired obsidian
+    // marketplace chrome, so an operator arriving from a Desk (cream) surface
+    // left the current generation the moment they opened /admin. It now renders
+    // its own Desk shell and must not be wrapped by the legacy chrome.
+    path === "/admin" ||
+    path.startsWith("/admin/") ||
     // Verification is the last step of a deal. It rendered in the obsidian
     // chrome, so a member who reached the final blocker in Start a Deal left
     // the cream product mid-task and arrived in the old one.
