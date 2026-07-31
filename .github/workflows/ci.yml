@@ -88,3 +88,116 @@ jobs:
         run: npm run verify
         env:
           NEXT_PUBLIC_APP_URL: https://ponte.trade
+
+  # ---------------------------------------------------------------------------
+  # The landing Bridge evidence suite (PL-040)
+  # ---------------------------------------------------------------------------
+  #
+  # Constitution section 21 requires desktop and 390 x 844 evidence on relevant
+  # UI pull requests and says technical tests alone are insufficient. The suite
+  # that produces it has existed since the Bridge slice and had NEVER RUN: the
+  # temporary Basic-auth gate in `middleware.ts` challenges every request, and
+  # `playwright.config.ts` sent no credentials, so every capture answered 401.
+  #
+  # The cost of that was not theoretical. DS-10 shipped the Family Bridge
+  # fallback with no captured evidence at all, and four assertions sat stale
+  # against tokens ADR-0015 moved months earlier without anyone seeing them fail
+  # (PL-041). `npm run verify` does not run Playwright, so the gate above cannot
+  # catch either.
+  #
+  # This job is deliberately narrow. It runs ONE spec - the landing bridges -
+  # because that is the one proven green (23 of 23). Widening it to the rest of
+  # `e2e/` would pull in the Deal Room and product-intake suites, which need a
+  # database and a feature flag, and a job that is red for reasons nobody can
+  # act on is worse than no job.
+  evidence:
+    name: landing evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Chromium only. The suite's captures are all Chromium and the approved
+      # reference renders were taken with it, so adding engines here would
+      # change what the evidence IS, not merely how long it takes.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # A synthetic Supabase ref that does not exist, so nothing in CI can read
+      # or write production. The landing then renders its honest "the sources
+      # could not be read" state, which is what the suite asserts against - it
+      # tests the bridge, not the inventory. `scripts/check-dev-env.mjs` guards
+      # `npm run dev` for the same reason; this is that rule applied to CI.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+          NEXT_PUBLIC_SUPABASE_URL: https://ponteevidenceci00000.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: evidence-ci-no-project-behind-this
+          SUPABASE_SERVICE_ROLE_KEY: evidence-ci-no-project-behind-this
+          SUPABASE_PROJECT_REF: ponteevidenceci00000
+
+      # Started here rather than by Playwright's own `webServer`, because that
+      # also starts a second dev server on 3101 for the product-intake gallery,
+      # which this spec never visits. `playwright.config.ts` already skips both
+      # when `PONTE_EVIDENCE_BASE_URL` is set, which is the same switch used to
+      # point the suite at a deploy preview.
+      - name: Serve the production build
+        run: |
+          npx next start --port 3100 &
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3100/ || true)
+            # 401 is the gate answering, which means the server is up. Anything
+            # 2xx/3xx/4xx will do; only a refused connection means "not yet".
+            if [ -n "$code" ] && [ "$code" != "000" ]; then
+              echo "server up (HTTP $code)"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the production server never came up on 3100"
+          exit 1
+        env:
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+
+      # The password is never printed and never written to a file. It reaches
+      # Playwright as `httpCredentials` and nothing else; `middleware.ts` holds
+      # only its SHA-256. With the secret absent the suite 401s and this job
+      # fails loudly, which is the correct outcome - a silently skipped evidence
+      # run is how the last one went unnoticed for a month.
+      # Named before it is used, so a missing secret reads as "nobody put the
+      # password in the store" rather than as 23 authentication failures.
+      - name: The site-gate password is available
+        run: |
+          if [ -z "${PONTE_SITE_PASSWORD}" ]; then
+            echo "::error::PONTE_SITE_PASSWORD is not set. Every request answers 401 behind the middleware.ts site gate, so no evidence can be captured. Add it as a repository secret (PL-040)."
+            exit 1
+          fi
+          echo "Site-gate password present."
+        env:
+          PONTE_SITE_PASSWORD: ${{ secrets.PONTE_SITE_PASSWORD }}
+
+      - name: Landing bridge evidence
+        run: npx playwright test e2e/landing-bridges.spec.ts
+        env:
+          PONTE_EVIDENCE_BASE_URL: http://127.0.0.1:3100
+          PONTE_SITE_PASSWORD: ${{ secrets.PONTE_SITE_PASSWORD }}
+
+      # Uploaded rather than committed. The frames are regenerated on every run
+      # and two of them are bistable between runs on identical source, so a
+      # committed diff would be noise; an artifact a reviewer opens beside the
+      # approved renders is what section 21 actually asks for.
+      - name: Upload the frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-bridge-evidence
+          path: docs/codex/audits/constitution-rebuild/evidence/landing-bridges/*.png
+          retention-days: 14
