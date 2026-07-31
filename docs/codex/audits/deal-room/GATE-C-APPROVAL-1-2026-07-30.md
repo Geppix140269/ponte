@@ -1472,3 +1472,81 @@ participants and two rooms the fixture builds.
 unchanged. What has changed is that the loop now completes in the database, so a
 review of the surfaces against a working loop is possible for the first time.
 
+---
+
+# Surface review against the working loop, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - review the Deal Room surfaces against the
+working loop, then fix what it found.
+**Method:** every check run against the **production catalogue**, not the migration
+files, for the same reason `deal-room:acl-verify` exists.
+
+## 53. What holds
+
+| Check | Result |
+|---|---|
+| all 15 `deal_room_*` RPC call sites against production signatures | **match argument for argument** - no PostgREST resolution failure is possible |
+| every column selected, across 14 tables | **all present** |
+| all 10 state vocabularies against the production CHECK constraints, **both directions** | **identical sets** |
+| `admission_and_nda` and `procedure_agreed`, the keys `approve_procedure` completes on approval | present in every family template, weights 10 + 12 = **22**, inside the definition's 18-25 band |
+| evidence MIME list and the 26,214,400-byte limit | client `accept`, server allowlist and bucket **agree exactly** |
+| `canApproveProcedure` after `20260731c` | correct for both principals |
+
+The step copy "Every required principal approver has approved this procedure version"
+became **true** only with `20260731c`. Before it the counterparty could never approve,
+so the interface was promising something the database refused.
+
+## 54. Four defects, none of them a security defect
+
+### a. The counterparty could not see who they were waiting for
+
+`20260731c` chose the master-level participant row as canonical for approvals, and
+`participant read` makes another person's master-level row visible to a room
+administrator alone. The procedure page therefore rendered "A required approver"
+rather than the initiator's name. Corrected by `20260731d`, which prefers the row in
+the procedure's own sub-room. **Introduced by this lane the same day.**
+
+### b, c, d. Participant ROWS were counted as people
+
+`deal_room_propose` admits the initiator twice - master level and first workspace -
+so one person holds two rows from the moment a room exists. Three surfaces counted
+rows:
+
+| Site | Was | Effect |
+|---|---|---|
+| `lib/deal-room/queries.ts` | `invitationSent: participants.length > 1` | **true on a room nobody had been invited to**, and true whether or not an invitation was ever sent - the signal carried no information |
+| `lib/deal-room/queries.ts` | `bridgeParticipants = participants.map(...)` | the initiator **drawn twice** on the Bridge; its label read "2 participants" |
+| `app/[locale]/deal-rooms/[roomId]/invitation/page.tsx` | `${participants.length} participants` | "**2 participants** in the parts of this room you can see", to someone sitting alone |
+
+`page.tsx` escaped it by collapsing organisation names through a `Set`, and the
+workspace roster escaped it by filtering on `subRoomId`.
+
+**This is the same mistake as LB-001's, one layer up.** Seeding one approval per
+participant row gave the initiator two obligations for themselves; counting
+participant rows gave them two identities. A row is a membership; a person is a party.
+
+**Corrections.** A pure module `lib/deal-room/participants.ts` provides
+`onePerPerson()` and `countPeople()`, keeping the workspace row - the one that
+carries the permissions a person exercises, and the one a co-participant is allowed
+to read - with the master-level row as fallback, deterministically regardless of the
+order rows arrive in. `invitationSent` no longer counts anything: `deal_room_invite`
+writes no participant row, it moves the sub-room from `draft` to
+`invitation_pending`, and that state change is the fact.
+`lib/deal-room/__tests__/participants.test.ts` pins all of it, including the two
+counts that were wrong.
+
+## 55. Also recorded
+
+- The vocabulary guard in `rls-contract.test.ts` is **one-directional**: every
+  TypeScript value must appear in the SQL, but nothing catches a state the database
+  allows and no surface can render. The reverse was checked against production during
+  this review and is clean, but it is unguarded.
+- `lib/deal-room/states.ts:11` cites `__tests__/states.test.ts`, which does not exist.
+  The guard is in `rls-contract.test.ts`.
+
+## 56. None of this changes the Gate C position
+
+Approval 3 remains 94 of 94. Requirement 12 remains only partly proved. Approval 4 -
+`NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains unauthorised, and the
+surfaces have still never been rendered against a live room by a human being.
+
