@@ -1142,8 +1142,107 @@ async function main() {
   const ownerForge = await admin.from("deal_room_activity_events").update({ summary: "Owner rewrite" }).eq("room_id", roomId);
   check("even the service role cannot rewrite history (append-only trigger)", Boolean(ownerForge.error));
 
-  /* ---------------- 8. Blocker, then read-only ----------------------- */
-  console.log("\n8. Blocker and read-only continuity");
+  /* ---------------- 9. Blocker, then read-only ----------------------- */
+  console.log("\n8. Entitlement fail-closed: requirement 12");
+
+  /*
+   * Requirement 12: a room without an entitlement fails closed.
+   *
+   * `deal_room_is_writable` INNER JOINs `deal_room_entitlements` and requires a
+   * state in ('reserved','active','grace','restored'), so a room with no
+   * entitlement row cannot satisfy it at all. The property is structural rather
+   * than a check somebody has to remember to write in each command - but that is
+   * an argument about the SQL, and this file exists because arguments about SQL
+   * are how the fail-open paths got in.
+   *
+   * Two cases, because they fail for different reasons: an entitlement that has
+   * lapsed, and no entitlement at all. And then the entitlement is restored and
+   * the same command runs again, which is what makes the refusals attributable.
+   * Without that last step every assertion here would also pass if the commands
+   * were refused for some entirely unrelated reason.
+   *
+   * The room stays in a writable STATE throughout: only the entitlement moves.
+   *
+   * The service role changes the entitlement. That is arranging the world, not
+   * checking a permission - every assertion below runs as a member.
+   */
+
+  const writableStates = ["active_procedure_agreed", "active_procedure_not_agreed", "blocked", "ready_to_proceed"];
+  const stateBefore = await admin.from("deal_rooms").select("state").eq("id", roomId).maybeSingle();
+  check(
+    "the room is in a writable state, so only the entitlement is in question",
+    writableStates.includes(stateBefore.data?.state),
+    `room state is ${stateBefore.data?.state}`,
+  );
+
+  const blockerArgs = (title) => ({
+    p_room_id: roomId, p_sub_room_id: subRoomId, p_step_key: "capability_evidence",
+    p_title: title, p_description: "Raised to test writability.",
+    p_category: "operational", p_requirement: "None; this is a fixture.",
+  });
+
+  async function everyMutationRefused(label) {
+    refused(await owner.client.rpc("deal_room_open_blocker", blockerArgs(`Blocked by ${label}`)), `${label}: no blocker can be opened`);
+    refused(
+      await counterparty.client.rpc("deal_room_submit_evidence", {
+        p_sub_room_id: subRoomId, p_step_key: "capability_evidence", p_title: "Late evidence",
+        p_provenance: "member_uploaded", p_visibility: "sub_room",
+        p_file_name: "late.pdf", p_mime: "application/pdf", p_size: 1024,
+        p_storage_path: `${roomId}/${subRoomId}/${randomUUID()}/1/late.pdf`, p_checksum: "c".repeat(64),
+      }),
+      `${label}: no evidence can be submitted`,
+    );
+    refused(
+      await owner.client.rpc("deal_room_invite", {
+        p_sub_room_id: subRoomId,
+        p_token_sha256: createHash("sha256").update(randomUUID()).digest("hex"),
+        p_expires_at: new Date(Date.now() + 8.64e7).toISOString(),
+      }),
+      `${label}: nobody else can be invited`,
+    );
+    refused(
+      await owner.client.rpc("deal_room_propose_procedure", {
+        p_room_id: roomId, p_sub_room_id: subRoomId,
+        p_summary: "Amended", p_completion: "x", p_steps: steps,
+      }),
+      `${label}: no new procedure version can be proposed`,
+    );
+  }
+
+  await admin.from("deal_room_entitlements").update({ state: "expired" }).eq("room_id", roomId);
+  await everyMutationRefused("an expired entitlement");
+
+  // Losing access to a room must not lose you the record of it. This is the
+  // same continuity the read-only section asserts, checked here against the
+  // entitlement rather than against the room state.
+  const historyAfterLapse = await counterparty.client
+    .from("deal_room_activity_events")
+    .select("id")
+    .eq("room_id", roomId);
+  check(
+    "an expired entitlement still leaves the history readable to the admitted",
+    !historyAfterLapse.error && (historyAfterLapse.data ?? []).length > 0,
+    historyAfterLapse.error ? historyAfterLapse.error.message : "the admitted counterparty could read no history at all",
+  );
+
+  // The case the requirement is actually named for: no row at all.
+  await admin.from("deal_room_entitlements").delete().eq("room_id", roomId);
+  const noRow = await admin.from("deal_room_entitlements").select("id").eq("room_id", roomId);
+  check("the room now has no entitlement row at all", (noRow.data ?? []).length === 0);
+  await everyMutationRefused("no entitlement row at all");
+
+  // And the refusals were the entitlement, not something else that happened to
+  // be broken by this point.
+  const restored = await admin.from("deal_room_entitlements").insert({
+    room_id: roomId, kind: "starter", state: "active", activated_at: new Date().toISOString(),
+  });
+  if (restored.error) throw new Error(`could not restore the entitlement: ${restored.error.message}`);
+  allowed(
+    await owner.client.rpc("deal_room_open_blocker", blockerArgs("Raised after the entitlement was restored")),
+    "restoring the entitlement makes the very same command succeed",
+  );
+
+  console.log("\n9. Blocker and read-only continuity");
 
   const blocker = await owner.client.rpc("deal_room_open_blocker", {
     p_room_id: roomId, p_sub_room_id: subRoomId, p_step_key: "capability_evidence",
@@ -1186,7 +1285,7 @@ async function main() {
   check("read-only preserves the history for the people who were admitted", (stillReadable.data ?? []).length >= 1);
 
   /* ---------------- 9. Storage follows the same result --------------- */
-  console.log("\n9. Evidence bytes");
+  console.log("\n10. Evidence bytes");
 
   const strangerDownload = await stranger.client.storage.from("deal-room-evidence").download(evidencePath);
   check("a stranger cannot download an evidence object", Boolean(strangerDownload.error));

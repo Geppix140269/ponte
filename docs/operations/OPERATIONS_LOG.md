@@ -18,6 +18,58 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Requirement 12 proved; Approval 3 at 109 of 109
+
+### Completed
+
+- **Requirement 12 - rooms without an entitlement fail closed - is proved.** Twelve
+  assertions added to `scripts/deal-room-negative-access.mjs` as section 8, run
+  against production. **109 passed, 0 failed** (from 97).
+- Two cases, because they fail differently: an **expired** entitlement and **no
+  entitlement row at all**. Under each, a blocker, evidence, an invitation and a new
+  procedure version are all refused.
+- **The control that makes it a proof:** restoring the entitlement and running the
+  very same command shows it succeed. Without that, every refusal would also have been
+  recorded if the commands were failing for an unrelated reason by that point in the
+  run.
+- The room stays in a writable **state** throughout, so only the entitlement is in
+  question. That separates this from the read-only section, where
+  `deal_room_set_read_only` changes the room state and expires the entitlement
+  together and cannot tell you which did the work.
+- **The continuity half**: an expired entitlement stops mutation and leaves the
+  history readable to the admitted. Losing access to a room must not lose you the
+  evidence you were in it.
+- The service role only arranges the entitlement; every assertion runs as a member
+  under their own session and RLS.
+
+### Risks / discrepancies
+
+- **Requirements 12 and 13 are now both proved**, so the earlier "11 passed, 1 failed,
+  2 pending" position no longer holds: the failure (requirement 11, LB-008) was
+  resolved on 30 July and the two pending are established. Earlier records saying
+  requirement 12 is "only partly proved" are dated statements of what was true then and
+  are left as written.
+- **Nobody has rendered these pages.** The capture is written and needs only
+  `PONTE_SITE_PASSWORD`. That is the last item.
+- Approval 4 remains unauthorised.
+
+### Production changes
+
+- **None.** The fixture created and removed its own data. After the run: 10 users, 7
+  listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
+  append-only trigger enabled, ledger 52.
+
+### Next
+
+1. The owner supplies `PONTE_SITE_PASSWORD` and the surface capture runs.
+2. Approval 4 - flag, deployment, access wall - remains unauthorised.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 66 to 71
+
+---
+
 ## 2026-07-31 - A live Deal Room was built and proved; the pages were not rendered
 
 ### Completed
