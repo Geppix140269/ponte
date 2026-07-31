@@ -100,9 +100,14 @@ increase the room-period charge above $199 USD.
 ### What a billable branch is
 
 A Deal Branch counts toward the price only when **all** of the following hold
-(authority section 7):
+(authority section 7, as amended):
 
-1. it is a principal-counterparty Deal Branch;
+1. it is a principal-counterparty Deal Branch — **including one whose admitted
+   counterparty is an intermediary acting for a disclosed or controlled
+   principal** (Amendment 1, 31 July 2026, closing OD-012: the owner resolved
+   the conflict between §7's "principal-counterparty" and §4's own "a broker
+   acting for a disclosed or controlled principal" in favour of §4, because the
+   alternative would make every brokered negotiation free);
 2. the intended counterparty has accepted the invitation;
 3. admission and required participation agreements are complete;
 4. the branch is write-enabled for protected commercial progression;

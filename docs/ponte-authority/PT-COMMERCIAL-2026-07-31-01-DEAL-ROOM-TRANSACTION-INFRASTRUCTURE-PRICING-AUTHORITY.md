@@ -9,6 +9,39 @@
 - **Repository:** `Geppix140269/ponte`
 - **Implementation status:** Authority only; implementation not authorised by this file
 - **Currency:** USD only
+- **Amendments:** Amendment 1, 31 July 2026 — see below
+
+## Amendment record
+
+### Amendment 1 — a broker's branch counts (31 July 2026)
+
+**Owner decision, closing OD-012.**
+
+Section 7 condition 1 said a billable branch is a "principal-counterparty Deal
+Branch", which reads as the principal alone. Section 4, listing what a Master
+Deal Room may contain, gives as one of its own examples "a broker acting for a
+disclosed or controlled principal". In the Deal Room schema a broker is an
+`intermediary`, not a `principal`, so the two sections pointed different ways and
+the difference decided what a member is charged.
+
+**The owner has decided that a broker's branch counts.** Section 7 condition 1
+is amended above to say so explicitly, so the authority no longer contradicts its
+own section 4.
+
+The reasoning: a broker fronting a real principal is a live counterparty
+negotiation consuming the same controlled-progression product as any other, and
+the alternative reading would make **every brokered negotiation free** — an
+obvious incentive to route negotiations through an intermediary.
+
+**Unchanged by this amendment:** `provider`, `adviser`, `ponte_facilitator` and
+`observer` participants never make a branch billable, and provider, adviser and
+internal workspaces remain unlimited and free under section 5. The prices, the
+cap, the included five and every other rule are untouched.
+
+**Effect on implementation:** none. `BILLABLE_PARTICIPANT_CLASSES` in
+`lib/deal-room/pricing.ts` already held `["principal", "intermediary"]` pending
+this decision, pinned by a named test. The amendment confirms the reading rather
+than changing behaviour.
 
 ## 1. Executive owner decision
 
@@ -151,7 +184,9 @@ There is no cross-room volume discount at launch.
 
 A branch counts for pricing only when all of the following are true:
 
-1. it is a principal-counterparty Deal Branch;
+1. it is a principal-counterparty Deal Branch — **including a branch whose
+   admitted counterparty is an intermediary acting for a disclosed or controlled
+   principal**, per section 4 (see Amendment 1);
 2. the intended counterparty has accepted the invitation;
 3. admission and required participation agreements are complete;
 4. the branch has become write-enabled for protected commercial progression;
