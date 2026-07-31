@@ -69,7 +69,7 @@ Dashboard, Project Settings, Authentication, SMTP Settings. Enable custom SMTP.
 | Host | `smtp.resend.com` |
 | Port | `465` |
 | Username | `resend` |
-| Password | your Resend API key, the same `RESEND_API_KEY` already in Netlify |
+| Password | your Resend API key, the same `RESEND_API_KEY` the site uses — read it from the hosting dashboard (Vercel since 31 July 2026, Netlify before that) |
 | Sender email | `auth@ponte.trade` |
 | Sender name | `Ponte Trade` — **corrected 30 July 2026.** This document said `Ponte`, which makes the recipient's sender read `Ponte <auth@ponte.trade>`. The brand name is `Ponte Trade` everywhere else in the product and in every application email |
 

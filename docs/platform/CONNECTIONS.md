@@ -34,21 +34,40 @@ GitHub (source of truth)  |
 
 ## Hosting
 
-**Netlify.** Confirmed by the owner on 21 July 2026: the account was suspended
-for a period and has since been restored, and Netlify serves ponte.trade today.
-Any older note saying the site moved to Vercel is out of date.
+**Vercel, since 31 July 2026.** `ponte.trade` and `www.ponte.trade` are served
+by Vercel. **Netlify is no longer the production origin.** Owner-reported at the
+completion of a controlled cutover; the migration is on branch
+`ops/vercel-production-migration` and PR #168.
 
-- Build config: `netlify.toml`, using `@netlify/plugin-nextjs`
-- Build command: `npm run build`, publish directory `.next`
-- Deploys automatically on push to `main`
-- Environment variables are set in the Netlify dashboard, not in the repository
+**This section had it the other way round until today**, and said so in as many
+words: "Any older note saying the site moved to Vercel is out of date." That
+sentence was correct on 21 July 2026 and is now exactly inverted. It is quoted
+rather than deleted because it is the reason to date a hosting claim and to say
+who confirmed it.
 
-**After a routing change, deploy without cache.** The durable cache has served
-stale prerenders before. This applies to the locale routing change in
-particular.
+- **Deployment is explicitly controlled and owner-held.** Until the Vercel
+  procedure is confirmed and recorded, **merging to `main` does not deploy
+  production.** Do not describe a merged change as live without evidence.
+- **Environment variables live in the hosting dashboard, not the repository.**
+  Which dashboard is now Vercel's. `NEXT_PUBLIC_*` flags are still evaluated at
+  build time, so changing one still requires a new build.
+- The new build command, output settings, cache behaviour and rollback path are
+  **unrecorded**. Record them when the procedure is confirmed.
 
-A failed build does not take the site down: Netlify keeps serving the last
-successful deploy. So a broken push costs a deploy, not an outage.
+**The repository still contains Netlify configuration, and it is deliberately
+untouched:** `netlify.toml`, `@netlify/plugin-nextjs` in `next.config.mjs`, and
+Netlify-specific reasoning in `middleware.ts`, `lib/rate-limit.ts` and
+`scripts/check-dev-env.mjs`. Changing any of it is a hosting-configuration
+change and was not authorised by the instruction that reconciled these
+documents. **The documentation and the configuration disagree on purpose.**
+
+**Netlify checks still run on every pull request** - `Header rules`,
+`Redirect rules`, `Pages changed`, `netlify/ponte-trade/deploy-preview`. **They
+are no longer a production signal**, and a deploy preview they publish is not a
+preview of what production serves.
+
+**None of this was verified from here.** No production fetch, no DNS lookup, no
+dashboard. It is the owner's report, dated.
 
 ## Data and storage
 

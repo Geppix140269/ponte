@@ -35,14 +35,21 @@ Tap the link to confirm/capture/void from your phone.
    (replace `<YOUR_TOKEN>` with the token from step 1)
 4. Look for `"chat":{"id":NNNNNN,...` in the JSON response. That number is your chat ID. Copy it.
 
-### 3. Drop into Netlify (1 min)
+### 3. Drop into the hosting dashboard (1 min)
 
-1. Open Netlify → Site → Site configuration → Environment variables
+Production moved from Netlify to Vercel on 31 July 2026
+(`docs/operations/OPERATIONS_LOG.md`), so this is Vercel now. Adding these to
+Netlify would change nothing a member can reach.
+
+1. Open Vercel → the production project → Settings → Environment Variables
 2. Add:
    - `TELEGRAM_BOT_TOKEN` = your bot token from step 1
    - `TELEGRAM_OPS_CHAT_ID` = your chat ID from step 2
    - `OPS_EMAIL` = `ops@ponte.trade` (or any address you want consolidated order alerts to land in)
-3. Save. Netlify will redeploy automatically.
+3. Save, **then deploy**. This step used to read "Netlify will redeploy
+   automatically". It does not happen by itself any more: a saved variable
+   reaches production only on the next deliberate Vercel deployment, and
+   deployments are owner-controlled.
 
 ### 4. Test
 
@@ -51,8 +58,10 @@ Place a test order in production with a $1 SKU (or use Stripe test mode). Within
 ## Troubleshooting
 
 **No message arrives:**
-- Check Netlify env vars saved correctly (no trailing spaces)
-- Check Netlify build logs for `[ponte] telegram sendMessage failed:` — that tells you what Telegram rejected
+- Check the Vercel env vars saved correctly (no trailing spaces)
+- Check that a deployment has happened **since** you saved them — the commonest
+  cause now that saving a variable no longer redeploys on its own
+- Check the Vercel runtime logs for `[ponte] telegram sendMessage failed:` — that tells you what Telegram rejected
 - Most common: chat ID is wrong (must be the integer from `chat.id`, not your username)
 
 **Multiple chats / group:**
