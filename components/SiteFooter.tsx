@@ -26,7 +26,7 @@ export default async function SiteFooter() {
               </h4>
               <ul className="space-y-2.5">
                 <li>
-                  <Link href="/marketplace" className="text-sm text-gray-2 transition-colors hover:text-gold">
+                  <Link href="/find" className="text-sm text-gray-2 transition-colors hover:text-gold">
                     {t("deskMarketplace")}
                   </Link>
                 </li>

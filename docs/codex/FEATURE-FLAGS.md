@@ -4,7 +4,7 @@
 
 | Flag | Code behaviour | Default when absent | Production value | Safe disable |
 |---|---|---|---|---|
-| `NEXT_PUBLIC_FIND_JOURNEY` | `on` routes the gateway Find intent to `/find`; otherwise to `/marketplace` | Off | Unknown — must be checked in the deployment host | Set to anything other than `on` and redeploy; gateway returns to the legacy seam. |
+| `NEXT_PUBLIC_FIND_JOURNEY` | **Governs no destination since Issue #130 cutover PR 5.** The gateway Find intent opens `/find` in every flag state. Its fallback was the obsidian `/marketplace` board, which is retired and is now a permanent 308 to `/find` | Irrelevant | Irrelevant: `lib/landing/routing.ts` no longer reads it | **None, and none is needed.** There is no earlier surface to fall back to; a change to the Find journey is a change to `/find`. |
 | `NEXT_PUBLIC_STRUCTURE_JOURNEY` | `on` routes Structure to `/structure`; otherwise to `/marketplace/new?type=requirement` | Off | Unknown — must be checked in the deployment host | Set to anything other than `on` and redeploy; gateway returns to the legacy seam. |
 | `NEXT_PUBLIC_CHECK_JOURNEY` | `on` routes a Check intent to `/check`; otherwise to `/verify?for=counterparty` | Off | Unknown — must be checked in the deployment host | Set to anything other than `on` and redeploy; the counterparty handoff returns to `/verify`. |
 | `NEXT_PUBLIC_DEAL_ROOM` | `on` exposes the `/deal-rooms` routes; anything else and every one of them answers 404 | Off | **Not set. The slice has never been activated in production.** | Unset it and redeploy. Nothing else changes: see below. |

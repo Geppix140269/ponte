@@ -1,7 +1,9 @@
 # ExecPlan: Single-generation product cutover
 
-**Status:** Active. PR 1 (route authority) implemented on branch
-`claude/ponte-single-generation-cutover-479321`; not merged.
+**Status:** Active. PR 4 (public market and detail) is on `main` (PR #166,
+`1006208`). PR 5 (member operations and board retirement) is implemented on
+branch `claude/ponte-issue-130-cutover-pr5` and not merged. PRs 1 and 2 are
+implemented on their own branches and not merged. PRs 3, 6, 7 and 8 remain.
 **Owner:** Giuseppe Funaro
 **Authorised:** 30 July 2026 — the owner authorised this programme to run inside
 Launch Mode, to be delivered as separate reviewable PRs (not one PR), with
@@ -233,6 +235,78 @@ cannot relink a retired route, the business path cannot regain a credit import).
   - The paid-counterparty separation in AccountGate is unchanged; the
     `member_business` verification pipeline is NOT made credit-free here (that
     remains PR 6). `npm run verify` green.
+- **2026-07-31** — PR 4 (public market and detail) **merged to `main`** as PR
+  #166, merge commit `1006208`. `/find/o/[ref]` became the one public Member
+  Opportunity record page, reading through a single reader,
+  `lib/board/qualified-opportunity.ts`, which applies the same publication
+  contract the obsidian detail page applied. Every in-product link to
+  `/marketplace/l/[ref]` was repointed. The obsidian page itself was left
+  rendering, so that PR retired nothing.
+- **2026-07-31** — PR 5 (member operations and board retirement) implemented on
+  branch `claude/ponte-issue-130-cutover-pr5`. Not merged, no production action.
+  This is the retirement of the obsidian board. Changes:
+  - **Pages deleted.** `app/[locale]/marketplace/page.tsx` and
+    `app/[locale]/marketplace/l/[ref]/page.tsx` no longer exist. Both paths
+    answer a permanent **308** in `middleware.ts`, which is where every other
+    permanent legacy redirect already lives: `/marketplace -> /find`, and a new
+    pattern rule `/marketplace/l/<ref> -> /find/o/<ref>` that carries the
+    reference across rather than dropping a forwarded link on the board.
+    `LEGACY_PREFIX` gained the ability to derive a destination from the match in
+    order to do that. `/marketplace/new` is unchanged and still redirects from
+    its own page (its target is derived from `id`/`edit`, so it cannot be a
+    static map). `/api/marketplace/*` is untouched.
+  - **Legacy chain repointed.** `/cart`, `/checkout`, `/order-success`,
+    `/brokerage` and `/network` name `/find` directly. They were redirecting to
+    a route that itself redirected, which is the double hop
+    `REDIRECT_CHAIN_BASELINE` existed to record.
+  - **Public entrances repointed to `/find`:** `app/manifest.ts` (PWA shortcut),
+    `app/sitemap.ts`, `/contact`, `/learn/duties`, `/learn/trade-data`,
+    `components/SiteHeader.tsx`, `components/SiteFooter.tsx`,
+    `components/BottomNav.tsx`, `components/home/LiveDealsGrid.tsx`.
+  - **Owner-action emails repointed (PL-029).** "Manage or withdraw this
+    listing", "Open your listing" and "Let it expire" go to `/opportunities`;
+    "Review the request" and "Open in Ponte" go to `/workspace`. None goes to
+    `/find`: they prompt an owner action, and the public search board cannot
+    perform one.
+  - **Server actions moved** from `app/[locale]/marketplace/actions.ts` to
+    `app/[locale]/_actions/listings.ts`. A private folder is never a route
+    segment, so the module is genuinely neutral rather than the property of
+    whichever surface renders it. `RETURN_PATHS` drops `/marketplace` and
+    `DEFAULT_RETURN` becomes `/opportunities`: the allowlist exists to bound
+    what `redirect()` may be handed, and a permanent redirect is not a member
+    surface. Importers updated: `/opportunities`, `/workspace`,
+    `lib/signals/__tests__/route-behaviour.test.ts`, and the source-reading
+    assertions in `lib/listings/__tests__/publication-gate.test.ts` and
+    `lib/signals/__tests__/block-d.test.ts`.
+  - **Landing seam.** `lib/landing/routing.ts` sends the Find intent to `/find`
+    unconditionally. `NEXT_PUBLIC_FIND_JOURNEY` governed a fallback to the
+    obsidian board; with that board retired the "off" position would forward to
+    the "on" position, which is a second hop and a false promise that a previous
+    surface still exists, not a safe-disable. `NEXT_PUBLIC_STRUCTURE_JOURNEY` is
+    deliberately untouched: `/marketplace/new` is not retired here, and flipping
+    that flag is PR 3's decision. A known cost of that flag-off path is now
+    recorded in the file: the quarantine redirect discards every query key
+    except `id`/`edit`, so the landing's captured intent does not survive it.
+  - **Ratchets emptied** (shrink-only, in the same diff):
+    `RETIRED_LINK_BASELINE` 10 entries -> 0; `REDIRECT_CHAIN_BASELINE` 5 -> 0;
+    `DEPRECATED_SURFACE_PREFIXES` 2 -> 0 (a tightening: the scan now covers
+    every file under app/ and components/ with no exclusion);
+    `LUCIDE_BASELINE` 5 -> 3 (both marketplace pages, deleted with their icons).
+  - **A FOURTH board capability was found with no home, and was carried across
+    rather than dropped.** Stage 4a moved three (owner-side introduction
+    decision, reconfirmation, account brief). Two more lived only on the board:
+    `submitDraftAction`, the member's own `draft -> submitted` hand-in, and the
+    `/structure?edit=<id>` link, the ONLY in-product route back into a member's
+    own saved record. `/opportunities` listed drafts but offered no way to open
+    or submit one, so deleting the board would have made a saved draft
+    permanently unreachable and stranded the `draft` state. Both are now
+    rendered on `/opportunities` using the same server action, moved not
+    rewritten, and the returned-record reason (`decision_note`) is shown there
+    too so "a named item must be corrected" names the item. **This was outside
+    PR 5's stated scope and is flagged for owner review**: the alternative was
+    to retire a capability with no replacement, which section 7 of this plan
+    forbids.
+  - `npm run verify` green.
 
 ## 12. Decisions and discoveries
 
@@ -248,6 +322,23 @@ cannot relink a retired route, the business path cannot regain a credit import).
   (deployed commit + Netlify deployment ID + production check) are gated on
   owner-held infrastructure and the currently-unknown deployed commit; they stay
   open until that infrastructure exists.
+- **Discovery, 31 July 2026 (PR 5), OPEN FOR OWNER RULING.** The obsidian board
+  owned FIVE member capabilities, not the three section 7 lists. The two that
+  were unrecorded are the draft hand-in (`submitDraftAction`) and the
+  `/structure?edit=<id>` link that reopens a member's own saved record; a third,
+  smaller loss is the returned-record reason (`decision_note`), which
+  `/opportunities` promised in words but did not read. Retiring the board
+  without them would have made every saved draft permanently unreachable from
+  inside the product, since `/opportunities` listed records but linked none of
+  them and `/find` shows only published ones. PR 5 carried all three to
+  `/opportunities`, reusing the existing action and the existing Desk classes
+  and adding no message keys. **The owner should rule on whether that carry-
+  across is the intended home, on the wording of the two new controls, and on
+  whether any further board affordance is wanted there.** The remaining board
+  affordances were checked and do have homes: the public listing rows are
+  `/find`, the WhatsApp share of an approved record is `/find/o/[ref]`, the
+  pending introduction requests are `/workspace`, reconfirmation and the record
+  list are `/opportunities`, and the account brief is `/account`.
 
 ## 13. Final evidence
 

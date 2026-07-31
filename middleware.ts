@@ -124,15 +124,25 @@ function isUnlocalized(pathname: string): boolean {
 // "/cart" was being rewritten to "/en/cart" by the locale middleware before
 // the origin's redirect could ever match, so it answered 307 instead of a
 // permanent 308 and the ranking signal was not transferring.
+// These five landed on `/marketplace` until the obsidian board retired
+// (cutover PR 5). A redirect whose target is itself a redirect costs a second
+// round trip and dilutes the ranking signal it exists to transfer, so each one
+// names the canonical board directly.
 const LEGACY_EXACT: Record<string, string> = {
   "/catalogue": "/pricing",
-  "/cart": "/marketplace",
-  "/checkout": "/marketplace",
-  "/order-success": "/marketplace",
+  "/cart": "/find",
+  "/checkout": "/find",
+  "/order-success": "/find",
   "/methodology": "/about",
   "/why-ponte": "/about",
-  "/brokerage": "/marketplace",
-  "/network": "/marketplace",
+  "/brokerage": "/find",
+  "/network": "/find",
+  // The obsidian board. Its public half is `/find` and its owner half moved to
+  // /opportunities, /workspace and /account (cutover PR 5), so the URL that was
+  // indexed and bookmarked as "the Ponte board" resolves to the board.
+  // Permanent, like every other entry here: the page is not coming back and the
+  // ranking signal has to transfer.
+  "/marketplace": "/find",
   // The Analyst Desk generation. Its three engagements (analyst call, strategy
   // intensive, retainer) priced the platform as consultancy, which is the
   // opposite of what the board now says. The desk itself survives as the
@@ -140,16 +150,24 @@ const LEGACY_EXACT: Record<string, string> = {
   "/advisory": "/pricing",
 };
 
-const LEGACY_PREFIX: { test: RegExp; to: string }[] = [
+// A pattern rule may name a fixed destination or derive one from the match, so
+// a retired URL that identifies a RECORD can carry that record across the hop
+// instead of dropping every reader on a board and making them find it again.
+const LEGACY_PREFIX: { test: RegExp; to: string | ((match: RegExpMatchArray) => string) }[] = [
   { test: /^\/category\/[^/]+\/?$/, to: "/pricing" },
   { test: /^\/product\/[^/]+\/?$/, to: "/pricing" },
+  // The retired public listing detail (cutover PR 4 built its replacement).
+  // The reference is the record's identity, so it survives: a link forwarded on
+  // WhatsApp two years ago still opens the same opportunity.
+  { test: /^\/marketplace\/l\/([^/]+)\/?$/, to: (match) => `/find/o/${match[1]}` },
 ];
 
 function legacyTarget(pathname: string): string | null {
   const clean = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
   if (LEGACY_EXACT[clean]) return LEGACY_EXACT[clean];
   for (const rule of LEGACY_PREFIX) {
-    if (rule.test.test(clean)) return rule.to;
+    const match = clean.match(rule.test);
+    if (match) return typeof rule.to === "function" ? rule.to(match) : rule.to;
   }
   return null;
 }
@@ -177,10 +195,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Retired interface languages (Ponte is now English-first: only English and
-  // Spanish remain). A URL under a removed locale, e.g. /fr/marketplace or a
-  // bare /de, is permanently redirected to the canonical English path so an old
-  // bookmark or indexed link never 404s. Any legacy shop/desk mapping is applied
-  // in the same hop, so /zh/cart lands directly on /marketplace, never looping.
+  // Spanish remain). A URL under a removed locale, e.g. /fr/find or a bare /de,
+  // is permanently redirected to the canonical English path so an old bookmark
+  // or indexed link never 404s. Any legacy shop/desk mapping is applied in the
+  // same hop, so /zh/cart lands directly on /find, never looping.
   const englishPath = stripRemovedLocale(pathname);
   if (englishPath !== null) {
     const url = request.nextUrl.clone();

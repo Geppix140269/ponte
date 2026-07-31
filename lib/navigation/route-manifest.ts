@@ -129,9 +129,9 @@ const DEVELOPMENT_ONLY: RouteEntry[] = [
 // ---------------------------------------------------------------------------
 // Redirects on the cutover path (page routes being retired).
 //
-// `/marketplace/new` already redirects (LB-013). The other three still render
-// and their retirement is a later cutover PR, marked `retirementImplemented:
-// false`. The capability migration each one owns is recorded in the ExecPlan.
+// Every one of these now redirects and renders no UI. `/marketplace/new` went
+// first (LB-013), `/join` in cutover PR 2, and the two obsidian board routes in
+// cutover PR 5, once each capability they owned had a proven home.
 // ---------------------------------------------------------------------------
 
 const CUTOVER_REDIRECTS: RouteEntry[] = [
@@ -139,15 +139,15 @@ const CUTOVER_REDIRECTS: RouteEntry[] = [
     path: "/marketplace",
     classification: "redirect",
     redirectsTo: "/find",
-    retirementImplemented: false,
-    note: "Board -> /find. Owner-side introduction decisions and reconfirmation -> /opportunities + /workspace; account brief -> /account. Retire only after those move (cutover PR 5).",
+    retirementImplemented: true,
+    note: "Obsidian board, retired in cutover PR 5. Permanent (308) redirect in middleware.ts. Owner-side introduction decisions -> /workspace; reconfirmation, record reopening and draft submission -> /opportunities; account brief -> /account.",
   },
   {
     path: "/marketplace/l/[ref]",
     classification: "redirect",
     redirectsTo: "/find/o/[ref]",
-    retirementImplemented: false,
-    note: "Public listing detail -> /find/o/[ref] (cutover PR 4).",
+    retirementImplemented: true,
+    note: "Public listing detail, retired in cutover PR 5 once PR 4 built /find/o/[ref]. Permanent (308) redirect in middleware.ts, carrying the reference across so a forwarded link still opens its own record.",
   },
   {
     path: "/marketplace/new",
@@ -173,13 +173,13 @@ const CUTOVER_REDIRECTS: RouteEntry[] = [
 
 const LEGACY_REDIRECTS: RouteEntry[] = [
   { path: "/catalogue", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Legacy shop." },
-  { path: "/cart", classification: "redirect", redirectsTo: "/marketplace", retirementImplemented: true, note: "Legacy shop. Repoint to /find when /marketplace retires." },
-  { path: "/checkout", classification: "redirect", redirectsTo: "/marketplace", retirementImplemented: true, note: "Legacy shop. Repoint to /find when /marketplace retires." },
-  { path: "/order-success", classification: "redirect", redirectsTo: "/marketplace", retirementImplemented: true, note: "Legacy shop. Repoint to /find when /marketplace retires." },
+  { path: "/cart", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy shop. Repointed off the retired board in cutover PR 5; one hop, not two." },
+  { path: "/checkout", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy shop. Repointed off the retired board in cutover PR 5; one hop, not two." },
+  { path: "/order-success", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy shop. Repointed off the retired board in cutover PR 5; one hop, not two." },
   { path: "/methodology", classification: "redirect", redirectsTo: "/about", retirementImplemented: true, note: "Legacy." },
   { path: "/why-ponte", classification: "redirect", redirectsTo: "/about", retirementImplemented: true, note: "Legacy." },
-  { path: "/brokerage", classification: "redirect", redirectsTo: "/marketplace", retirementImplemented: true, note: "Legacy. Repoint to /find when /marketplace retires." },
-  { path: "/network", classification: "redirect", redirectsTo: "/marketplace", retirementImplemented: true, note: "Legacy. Repoint to /find when /marketplace retires." },
+  { path: "/brokerage", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy. Repointed off the retired board in cutover PR 5; one hop, not two." },
+  { path: "/network", classification: "redirect", redirectsTo: "/find", retirementImplemented: true, note: "Legacy. Repointed off the retired board in cutover PR 5; one hop, not two." },
   { path: "/advisory", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Analyst Desk generation -> the success-fee option on /pricing." },
   { path: "/category/[slug]", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Legacy shop category." },
   { path: "/product/[slug]", classification: "redirect", redirectsTo: "/pricing", retirementImplemented: true, note: "Legacy shop product." },

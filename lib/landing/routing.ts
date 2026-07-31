@@ -5,16 +5,22 @@
  * the live workflow that already handles it, using the query params those pages
  * already read:
  *
- *   find        -> /find  (Journey 1)  or  /marketplace  (the seam)
+ *   find        -> /find                             (Journey 1)
  *   structure   -> /structure (Journey 2)  or  /marketplace/new (the seam)
  *   check       -> /verify?for=counterparty          (counterparty due diligence)
  *   investigate -> /market-signals                   (external signals board)
  *
- * Find (Journey 1) and Structure (Journey 2) each point at their new surface
- * when their flag is "on" (NEXT_PUBLIC_FIND_JOURNEY / NEXT_PUBLIC_STRUCTURE_
- * JOURNEY), and fall back to the old seam otherwise. Each flag is that
- * journey's safe-disable: turning it off restores the previous handoff with no
- * other change.
+ * Structure (Journey 2) still points at its new surface when
+ * NEXT_PUBLIC_STRUCTURE_JOURNEY is "on" and falls back to the old seam
+ * otherwise; that flag is still the journey's safe-disable, because
+ * `/marketplace/new` still exists as a redirect to the composer.
+ *
+ * Find no longer has a seam to fall back TO. Its fallback was the obsidian
+ * `/marketplace` board, and cutover PR 5 retired that page: the path is now a
+ * permanent redirect to `/find`. A flag whose "off" position forwards to its
+ * "on" position is not a safe-disable, it is a second hop and a false promise
+ * that a previous surface is still there, so the Find branch is unconditional
+ * and NEXT_PUBLIC_FIND_JOURNEY no longer governs a destination.
  *
  * The user's own words and any facts read from them ride along as query params
  * so nothing is lost across the navigation, and, because the destinations gate
@@ -34,8 +40,17 @@ import type { ExtractedFacts, RouteKey } from "./intent";
  */
 function baseFor(route: RouteKey): string {
   switch (route) {
+    // Journey 1 is unconditional: the surface its flag used to fall back to is
+    // retired. See the module comment.
     case "find":
-      return process.env.NEXT_PUBLIC_FIND_JOURNEY === "on" ? "/find" : "/marketplace";
+      return "/find";
+    // Journey 2 keeps its seam: `/marketplace/new` is NOT retired here, it is
+    // the already-quarantined redirect to the composer (LB-013). Known cost of
+    // the flag-off path, recorded rather than silently accepted: that redirect
+    // deliberately discards every query key except `id`/`edit`, so the intent,
+    // product and company this function appends do not survive it. Flipping
+    // NEXT_PUBLIC_STRUCTURE_JOURNEY on is cutover PR 3's decision, not this
+    // one's, so the branch is left exactly as it was.
     case "structure":
       return process.env.NEXT_PUBLIC_STRUCTURE_JOURNEY === "on"
         ? "/structure"

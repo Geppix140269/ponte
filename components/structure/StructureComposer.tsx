@@ -365,7 +365,13 @@ export default function StructureComposer({
             outcome={outcome}
             onWorkspace={() => router.push("/workspace")}
             onListing={() => router.push(`/find/o/${resultRef}`)}
-            onEdit={() => router.push("/marketplace")}
+            /* "Complete your listing" goes to the member's OWN records, never
+               to the public board. A record that is `needs_information` or
+               `flagged` is by definition not published, so /find would not
+               contain the very record the button just offered to complete. The
+               obsidian board is retired (cutover PR 5) and /opportunities is
+               where a member's own records live and are reopened. */
+            onEdit={() => router.push("/opportunities")}
             onVerify={() => router.push("/verify?for=business")}
             t={t}
           />

@@ -1,5 +1,14 @@
 "use server";
 
+// Member actions on a member's own listing records.
+//
+// These lived at `app/[locale]/marketplace/actions.ts` and were named after the
+// page that happened to render them. That page is retired (cutover PR 5) and
+// the three capabilities are now spread across `/opportunities` and
+// `/workspace`, so the module lives in a private folder instead: `_actions` is
+// never a route segment, which is what makes it a neutral home rather than
+// another surface's property.
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
@@ -8,23 +17,31 @@ import { checkPublicationGate } from "@/lib/listings/publication-gate";
 import { publishOrHold } from "@/lib/listings/publish";
 import { sendConnectAccepted } from "@/lib/email";
 
+/** The public opportunity board, whose contents these actions can change. */
+const PUBLIC_BOARD = "/find";
+
 /**
  * Where a member is sent back to after acting.
  *
- * Two of these capabilities now also live at their approved homes: the owner
- * side of an introduction decision at /workspace, and listing reconfirmation at
- * /opportunities. A member who reconfirms from /opportunities must land back on
- * /opportunities rather than be thrown to the board, so the form states where it
- * came from in a `returnTo` field.
+ * The owner side of an introduction decision lives at /workspace and listing
+ * reconfirmation at /opportunities. A member who reconfirms from /opportunities
+ * must land back on /opportunities, so the form states where it came from in a
+ * `returnTo` field.
  *
  * That field is a value from a form, so it is never trusted as a path. It is
  * matched against this fixed list of same-site member surfaces and falls back to
- * the board when it is absent or anything else, which is exactly the behaviour
- * every existing board form still gets. Nothing arbitrary reaches redirect() or
- * revalidatePath().
+ * the member's own records when it is absent or anything else. Nothing arbitrary
+ * reaches redirect() or revalidatePath().
+ *
+ * The obsidian marketplace path was on this list while the board still rendered
+ * these three capabilities. It is not on it now, and deliberately so: it is no
+ * longer a member surface, it is a permanent redirect. Leaving it here would let
+ * a form hand redirect() a path that only bounces, and would keep a retired
+ * route alive inside the very allowlist whose job is to bound what redirect()
+ * can be given.
  */
-const RETURN_PATHS = ["/marketplace", "/opportunities", "/workspace"] as const;
-const DEFAULT_RETURN = "/marketplace";
+const RETURN_PATHS = ["/opportunities", "/workspace"] as const;
+const DEFAULT_RETURN = "/opportunities";
 
 function returnPath(formData: FormData): string {
   const raw = String(formData.get("returnTo") || "");
@@ -32,15 +49,15 @@ function returnPath(formData: FormData): string {
 }
 
 /**
- * Revalidate the board AND the page the member actually acted on.
+ * Revalidate the public board AND the member surface that was acted on.
  *
- * The board keeps its existing invalidation whatever happens, because it still
- * renders all three capabilities and must not go stale while it is being
- * redistributed.
+ * Both of these actions can change what the public board shows, so the board is
+ * invalidated whatever happens; the member's own surface is invalidated so the
+ * record they just acted on is not still showing its previous state.
  */
 function revalidateBoardAnd(back: string): void {
-  revalidatePath(DEFAULT_RETURN);
-  if (back !== DEFAULT_RETURN) revalidatePath(back);
+  revalidatePath(PUBLIC_BOARD);
+  revalidatePath(back);
 }
 
 /**
@@ -81,7 +98,9 @@ export async function submitDraftAction(formData: FormData): Promise<void> {
     console.error("[ponte] automated publication failed on draft submit:", err);
   }
 
-  revalidatePath("/marketplace");
+  // A draft that publishes appears on the board, and it leaves the member's
+  // "saved privately" state either way.
+  revalidateBoardAnd(DEFAULT_RETURN);
 }
 
 /**
@@ -204,7 +223,7 @@ export async function connectDecisionAction(formData: FormData): Promise<void> {
     }
   }
 
-  // The owner decides from the board or from /workspace. Both are invalidated
-  // so the decided request leaves whichever list they were reading.
+  // The owner decides from /workspace. That surface is invalidated so the
+  // decided request leaves the list they were reading.
   revalidateBoardAnd(returnPath(formData));
 }

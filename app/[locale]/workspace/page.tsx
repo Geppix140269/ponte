@@ -8,7 +8,7 @@ import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
-import { connectDecisionAction } from "../marketplace/actions";
+import { connectDecisionAction } from "../_actions/listings";
 import "@/components/find/find.css";
 
 export const dynamic = "force-dynamic";

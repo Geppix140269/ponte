@@ -27,7 +27,7 @@ import { RedirectError } from "../../__mocks__/next-navigation";
 
 import { POST as interestPOST } from "../../../app/api/marketplace/interest/route";
 import { POST as investigatePOST } from "../../../app/api/market-signals/investigate/route";
-import { connectDecisionAction } from "../../../app/[locale]/marketplace/actions";
+import { connectDecisionAction } from "../../../app/[locale]/_actions/listings";
 import { setSignalStatusAction } from "../../../app/[locale]/admin/signals/actions";
 
 const tests: { name: string; fn: () => Promise<void> }[] = [];

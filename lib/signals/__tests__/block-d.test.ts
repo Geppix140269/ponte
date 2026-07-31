@@ -270,7 +270,7 @@ test("22: connection request reveals no contact; disclosure waits for accept", (
     "request-time email must not carry the requester's identity",
   );
 
-  const a = src("app/[locale]/marketplace/actions.ts");
+  const a = src("app/[locale]/_actions/listings.ts");
   const acceptGate = a.indexOf('decision === "accepted"');
   const firstDisclosure = a.indexOf("sendConnectAccepted(");
   assert.ok(acceptGate !== -1, "the decision action must branch on accepted");
@@ -395,19 +395,29 @@ test("cleanInterest scrubs the pre-accept fields but keeps the business name", (
   assert.ok(e.interest_reason.includes("[removed]"), "reason phone must be scrubbed");
 });
 
+// The owner side of an introduction decision moved off the retired obsidian
+// board to /workspace (cutover PR 5), so the disclosure rule is asserted there.
+// The pre-accept label is a message rather than a literal on that page, so it is
+// read from messages/en.json: the rule is what the owner is SHOWN, and that is
+// where the sentence lives.
 test("22: the owner never receives the business name before acceptance", () => {
-  const p = src("app/[locale]/marketplace/page.tsx");
+  const p = src("app/[locale]/workspace/page.tsx");
   // The pending-request query must not select the business identity at all.
   const pendingSelect = p.slice(p.indexOf("listing_connections"), p.indexOf("listing_connections") + 300);
   assert.ok(
     !pendingSelect.includes("interested_business"),
     "the pending-connections read must not select interested_business",
   );
-  assert.ok(p.includes("Confirmed member"), "pre-accept label must be the neutral 'Confirmed member'");
+  const messages = JSON.parse(readFileSync("messages/en.json", "utf8"));
+  const label = String(messages.find?.workspace?.decideRequest ?? "");
+  assert.ok(
+    label.includes("Confirmed member"),
+    "pre-accept label must be the neutral 'Confirmed member'",
+  );
 });
 
 test("22: identity is disclosed to the owner only on acceptance", () => {
-  const a = src("app/[locale]/marketplace/actions.ts");
+  const a = src("app/[locale]/_actions/listings.ts");
   const acceptGate = a.indexOf('decision === "accepted"');
   const nameDisclosure = a.indexOf("otherName:");
   assert.ok(acceptGate !== -1 && nameDisclosure > acceptGate, "otherName must be sent inside the accepted branch");
