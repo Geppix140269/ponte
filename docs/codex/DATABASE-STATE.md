@@ -101,7 +101,10 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the approver row a counterparty can read
+## SUPERSEDED BY THE APPLIED RECORD: the approver row a counterparty can read
+
+**`20260731d` was applied to production on 31 July 2026. Ledger 51 -> 52.** The
+section below described it while it was still pending; the applied record follows it.
 
 `supabase/migrations/20260731d_deal_room_approver_row_visibility.sql`.
 
@@ -110,7 +113,7 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 | SHA-256 | `7e42fd9dd1ff8c017e9bb864ae5787cd5c873555453180734f06dc44e08e1263` |
 | Size | 6,658 bytes, no BOM |
 | Content | **one `create or replace function`. Nothing else.** |
-| Status | written and tested, **NOT applied** |
+| Status | **APPLIED 31 July 2026. Ledger 51 -> 52.** |
 
 Found by the surface review of 31 July 2026, run against the loop that now
 completes. `20260731c` made approvals one per person and chose the **master-level**
@@ -140,6 +143,51 @@ display correction and not a second gate defect.
 
 No table, constraint, policy, trigger, index, grant or row is altered, and nothing is
 backfilled: there are no rooms in production.
+
+## APPLIED to production, 31 July 2026: the approver row a counterparty can read
+
+`20260731d_deal_room_approver_row_visibility.sql`, checksum
+`7e42fd9dd1ff8c017e9bb864ae5787cd5c873555453180734f06dc44e08e1263`, applied once from
+merged `main` `b575c21`. Ledger 51 -> **52**, and the row records that same checksum.
+
+| | Before | After |
+|---|---|---|
+| `deal_room_propose_procedure` entries | 1 | **1** - no overload |
+| its oid | 92120 | **92120** - replaced in place |
+| `md5(pg_get_functiondef)` | `16404d2e2f56286cb16f8fb395ebd97d` | **`cd7406ce6fdcebff69395092d0dcad33`** |
+| seed prefers the procedure's own sub-room | no | **yes**; `(p.sub_room_id is null) desc` absent |
+| `deal_room_*` functions | 23 | 23 |
+| `authenticated` / `anon` / PUBLIC | 21 / 0 / 0 | **21 / 0 / 0** |
+| `deal_room%` policies | 14 | 14 |
+
+`npm run deal-room:acl-verify`: anon 0, PUBLIC 0, authenticated 21 (required 21,
+permitted 21), service_role 23, 14 policies, 0 non-SELECT.
+
+## Gate C Approval 3, fourth run, 31 July 2026: 94 passed, 0 failed
+
+Unchanged from the third run, and the teardown was clean again: `teardown complete:
+no rooms, listings, users or activity left behind.` Production after the run: 10
+users, 7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
+`deal_room_activity_append_only` at `tgenabled = 'O'`, ledger 52.
+
+### What this run does NOT prove, and must not be read as proving
+
+**The fixture cannot detect the defect `20260731d` fixes.** It drives the loop through
+real member sessions and asserts what each of them may and may not *do*; it never
+asserts what a member can *see about another member*. The approver-name defect was
+invisible to it before the fix and is invisible to it now, so 94 of 94 means only that
+nothing regressed.
+
+The correction rests on reading `participant read` - another person's row is visible
+only through `sub_room_id is not null and deal_room_is_sub_room_participant(...)`, or
+to a room administrator - together with the new ordering, confirmed present in
+`prosrc` and the old ordering confirmed absent.
+
+**The assertion that would close this** is that, for every row in
+`deal_room_procedure_approvals` on a procedure a member can read, that member can also
+read the `deal_room_participants` row it names. It does not exist yet. Until it does,
+"the counterparty can see who they are waiting for" is a reasoned conclusion, not a
+proved one.
 
 ## APPLIED to production, 31 July 2026: the procedure approver gate
 

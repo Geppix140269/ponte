@@ -18,6 +18,72 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Surface review fixes applied; Approval 3 holds at 94 of 94
+
+### Completed
+
+- **Surface review of the twelve `/deal-rooms` surfaces against the working loop**,
+  run against the production catalogue rather than the migration files. 15 of 15 RPC
+  call sites match production argument for argument; every column selected across 14
+  tables exists; all 10 state vocabularies are identical to the CHECK constraints in
+  **both** directions; the two step keys `approve_procedure` completes exist in every
+  family template at weights 10 + 12 = 22; and the evidence MIME list and
+  26,214,400-byte limit agree across client, server and bucket.
+- **Four defects found and fixed, none of them security defects.** PR #156 merged
+  (`main` `b575c21`) after CI `verify` SUCCESS on head `06a6dfe`; the merge parent is
+  exactly that commit.
+- **`20260731d_deal_room_approver_row_visibility.sql` applied once**, checksum
+  `7e42fd9dd1ff8c017e9bb864ae5787cd5c873555453180734f06dc44e08e1263` verified against
+  the merged file before and recorded in the ledger after. Ledger 51 -> 52. Replaced
+  in place: one entry, oid unchanged at 92120, `md5(pg_get_functiondef)`
+  `16404d2e...` -> `cd7406ce...`, the new ordering present in `prosrc` and the old
+  absent. Functions 23, authenticated 21, anon 0, policies 14 - unchanged.
+  `deal-room:acl-verify` passes.
+- **Approval 3, fourth run: 94 passed, 0 failed**, teardown clean.
+
+### Risks / discrepancies
+
+- **The 94 of 94 does not prove the fix.** The fixture asserts what each member may
+  and may not *do*; it never asserts what a member can *see about another member*. The
+  approver-name defect was invisible to it before the fix and remains invisible now,
+  so this run shows only that nothing regressed. The correction rests on reading
+  `participant read` together with the catalogue. **The missing assertion** - that for
+  every approval row on a procedure a member can read, that member can also read the
+  participant row it names - does not exist. Until it does, "the counterparty can see
+  who they are waiting for" is reasoned, not proved.
+- **One of the four defects was introduced by this lane** the same day, in
+  `20260731c`. It was found by review rather than by any test, which is the same
+  reason it was possible to introduce.
+- The vocabulary guard in `rls-contract.test.ts` is one-directional and cannot catch a
+  state the database allows and no surface renders. Checked by hand this day and
+  clean, but unguarded.
+- Requirement 12 remains only partly proved.
+
+### Production changes
+
+- `20260731d` applied - one function replaced in place. No table, constraint, policy,
+  trigger, index, grant or row altered, and nothing backfilled.
+- The fixture created and removed its own data. **Production is unchanged**: 10 users,
+  7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
+  append-only trigger enabled, ledger 52.
+
+### Next
+
+1. Add the approver-row visibility assertion, so the defect class is caught rather
+   than reasoned about.
+2. Requirement 12 in its stronger sense - a room without an entitlement must refuse to
+   progress.
+3. Render the surfaces against a live room. Nobody has done this.
+4. Approval 4 remains unauthorised.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 53 to 56
+- `docs/codex/DATABASE-STATE.md`, the `20260731d` applied and fourth-run sections
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-001 verification updated
+
+---
+
 ## 2026-07-31 - Procedure approver gate applied; Approval 3 passes 94 of 94
 
 ### Completed
