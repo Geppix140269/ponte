@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import BridgeRoute, { type BridgeStation } from "./BridgeRoute";
 import { FAMILY_BRIDGE_ABUTMENTS, STRUCTURED_JOURNEY } from "@/lib/landing/families";
 
@@ -19,17 +19,30 @@ import { FAMILY_BRIDGE_ABUTMENTS, STRUCTURED_JOURNEY } from "@/lib/landing/famil
  * from **Intent** to **The market**, and on selection an Action Bridge crossing
  * from the chosen family to the **Structured journey**.
  *
- * ## Working without JavaScript
+ * ## Working without a client
  *
  * The bridge is a selection, and a selection needs a client. But the grid it
  * replaces was nine plain server-rendered links, and losing eight of them when a
  * script fails would be a real loss of function dressed as a design change.
  *
- * So all three action bridges are rendered server-side and the unselected ones
- * are `hidden`. With JavaScript the member sees exactly one, revealed on
- * selection. Without it, the `<noscript>` rule below unhides all three and the
- * page falls back to what it does today: every family, every action, every
- * destination, as links. It is the same markup either way.
+ * So all three action bridges are rendered server-side and every destination is
+ * a real link in the document. Which of them a member SEES is decided by
+ * `data-live`, set on this block by the layout effect below: until the client
+ * announces itself, `bridge-integration.css` shows all three, and afterwards
+ * `hidden` is honoured and exactly one is revealed on selection. It is the same
+ * markup either way.
+ *
+ * This replaces a `<noscript>` rule that did the same thing, and it replaces it
+ * because that rule answered the wrong question. `<noscript>` fires when
+ * scripting is DISABLED. On 31 July 2026 the landing was served with scripting
+ * enabled and its client chunks missing: the rule stayed inert, React never
+ * hydrated, and all eight destinations sat in the document unreachable behind
+ * `hidden`. Nobody could have clicked them and nothing said so.
+ *
+ * `data-live` covers both, because it asks the question that actually matters -
+ * has the client taken over? - rather than a proxy for it. Scripting disabled
+ * is one way for the answer to be no; a bundle that never arrived is another,
+ * and it is the more common one.
  *
  * The neutral opening state, with no family chosen and no actions shown, is the
  * approved one: `reference/desktop-1-family-neutral.png`.
@@ -57,6 +70,29 @@ const COUNT_WORD = ["no", "one", "two", "three", "four", "five"] as const;
 export default function LandingBridges({ families }: LandingBridgesProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
+  const blockRef = useRef<HTMLDivElement | null>(null);
+
+  /*
+    The client announcing that it is here and in charge of the reveal.
+
+    Until this runs, `bridge-integration.css` shows every action bridge, so all
+    eight destinations are on the page as links. Once it runs, `hidden` is
+    honoured again and the member sees exactly one, revealed by selection.
+
+    `useLayoutEffect`, so the collapse happens before the browser paints: with
+    `useEffect` a working client would flash all three action bridges and then
+    drop two of them, which is a worse first frame than the one this fixes.
+
+    Written to the DOM rather than held in state for the same reason DS-10's
+    `data-measured` is: it has to land inside this layout effect, not in a
+    render that React may schedule after the paint.
+  */
+  useLayoutEffect(() => {
+    const block = blockRef.current;
+    if (!block) return;
+    block.setAttribute("data-live", "");
+    return () => block.removeAttribute("data-live");
+  }, []);
 
   const chosen = families.find((f) => f.key === selected) ?? null;
 
@@ -75,13 +111,7 @@ export default function LandingBridges({ families }: LandingBridgesProps) {
   }
 
   return (
-    <div className="pbridge">
-      {/* The rule that makes the no-JS fallback work. Scoped to this block, and
-          inert whenever scripting is on. */}
-      <noscript>
-        <style>{`.pbridge .brx[hidden]{display:block!important}`}</style>
-      </noscript>
-
+    <div className="pbridge" ref={blockRef}>
       <div className="bhead">
         <h2>Three routes across.</h2>
         <span>{chosen ? `${chosen.label} selected` : "No route selected"}</span>
