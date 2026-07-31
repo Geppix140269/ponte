@@ -2,6 +2,44 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 31 July 2026 - OD-012 decided: a broker's Deal Branch counts, and the authority is amended to say so
+
+**Decision:** a Deal Branch whose admitted counterparty is an **intermediary
+acting for a disclosed or controlled principal** is a billable
+principal-counterparty branch.
+
+**The conflict this settles.** `PT-COMMERCIAL-2026-07-31-01` section 7 condition
+1 made a branch billable when "it is a principal-counterparty Deal Branch",
+which reads as the principal alone. Section 4, listing what a Master Deal Room
+may contain, gives as one of its **own examples** "a broker acting for a
+disclosed or controlled principal" — and a broker is an `intermediary` in the
+Deal Room schema, not a `principal`. Two sections of one authority pointed
+different ways, and the difference decided what a member is charged.
+
+**Rationale.** A broker fronting a real principal is a live counterparty
+negotiation consuming the same controlled-progression product as any other. The
+alternative reading would make **every brokered negotiation free**, which is both
+the larger commercial surprise and an obvious incentive to route negotiations
+through an intermediary.
+
+**Recorded as Amendment 1** to the authority, which rewrites section 7 condition
+1 explicitly rather than leaving the contradiction for the next reader to
+rediscover. The authority now carries an amendment record.
+
+**No behaviour changed.** `BILLABLE_PARTICIPANT_CLASSES` in
+`lib/deal-room/pricing.ts` already held `["principal", "intermediary"]` pending
+this decision, documented at its definition and pinned by a named test, so the
+amendment confirms the implemented reading rather than altering any price.
+`provider`, `adviser`, `ponte_facilitator` and `observer` never make a branch
+billable, which was never in question, and provider/adviser/internal workspaces
+remain unlimited and free under section 5.
+
+**Affected areas.** Authority amended; ADR-0020 condition 1 restated; OD-012
+closed in the open-decisions register with both readings preserved; the plan's
+discovery 5 and Current State updated; the pricing test renamed to say the
+question is settled. **Unblocks Stage 6**, which still needs the Design
+Constitution work and LB-014's classification.
+
 ## 31 July 2026 - ADR-0020: the Deal Room is Ponte's only paid product, at $79 USD per 30 active days
 
 **Decision:** the owner replaced the entire 27 July commercial ladder with one

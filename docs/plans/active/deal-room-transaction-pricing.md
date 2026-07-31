@@ -526,6 +526,12 @@ released slot (3).
    pinned by a test that says so in its title, so reversing it changes one
    named constant and one named test rather than silently changing bills.
    **Owner confirmation required.**
+   **Decided 31 July 2026, the same day: a broker's branch counts.** The owner
+   resolved it toward §4 and directed that the authority be amended, which it now
+   is — **Amendment 1** rewrites §7 condition 1 to say so explicitly, so the
+   authority no longer contradicts itself. No behaviour changed; the constant
+   already held the settled reading. **Stage 6 is unblocked** by this, though it
+   still needs the Design Constitution work and LB-014's classification.
 6. **Stage 4 was split, reversing a stated intention.** The plan and a message to
    the owner both said Stage 4 would ship route handlers refusing behind an
    off-by-default gate. Having built the decision layer, that looks wrong: a

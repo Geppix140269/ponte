@@ -396,12 +396,13 @@ test("an observer or facilitator in a counterparty room does not create a charge
   }
 });
 
-test("a broker fronting a principal counts - the OD-012 reading, made visible", () => {
-  // Authority section 4 lists "a broker acting for a disclosed or controlled
-  // principal" as a branch the room may contain; section 7 condition 1 says
-  // "principal-counterparty". This test pins the reading actually implemented,
-  // so a change of owner mind changes a named test rather than silently
-  // changing what members are charged.
+test("a broker fronting a principal counts - settled by the owner, OD-012", () => {
+  // Owner decision of 31 July 2026, recorded as Amendment 1 to the authority.
+  // Section 7 condition 1 said "principal-counterparty" while section 4 gave "a
+  // broker acting for a disclosed or controlled principal" as an example of a
+  // branch; a broker is an `intermediary` here. The owner resolved it toward
+  // section 4 and amended section 7 to match, because the alternative would make
+  // every brokered negotiation free. This test pins the settled reading.
   assert.equal(
     isBillableBranch(
       billableBranch({ counterparties: [counterparty({ participantClass: "intermediary" })] }),
