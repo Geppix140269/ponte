@@ -2,6 +2,50 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 31 July 2026 - OD-011 decided: the private counterparty check stays paid
+
+**Decision:** the **counterparty check** — a private check a member buys on
+somebody else's company — is **not** the "paid verification" the Deal Room-Only
+Pricing Authority prohibits, and remains paid.
+
+**The conflict this settles.** `PT-COMMERCIAL-2026-07-31-01` section 15
+prohibited "paid verification or verification badges" without qualification, and
+section 1 declared the Deal Room "the only paid product". Ponte charges for a
+counterparty check today. Read flatly, the authority retired a service Ponte
+intends to keep selling.
+
+**Recorded as Amendment 2**, which amends **both** sections. Amending only
+section 15 would have left the identical contradiction one section earlier, in
+section 1's "only paid product" — so section 1 now names the exception and
+section 15's prohibition reads "paid verification **of a member's own
+business**".
+
+**Rationale.** The line is the one ADR-0018 already drew. `member_business`
+verifies the member's **own** legal entity and is what lets them publish and
+receive an introduction; charging for it is a toll on participation and it is
+free permanently. `counterparty_check` is research a member **chooses to buy**
+about a **third party** and changes nothing about their account or standing.
+Section 15 was written against the first, not the second.
+
+**Two consequences that are easy to miss.**
+
+1. **Ponte Credits are still retired.** Section 15's prohibition on "credit
+   packs, room credits, tokens or usage currency" is untouched, so the check
+   survives but its **pricing mechanism does not**: it must be repriced as a
+   direct USD charge rather than billed against a credit balance. That is Stage 8
+   of the pricing programme.
+2. **No badge, tier or certificate** is created. Those remain prohibited, and
+   gold remains a brand signal rather than a verification status.
+
+**Affected areas.** Authority amended (sections 1 and 15, plus the amendment
+record); ADR-0020's supersession-map row 5 and consequence 8 restated; OD-011
+closed with both readings preserved; PL-035's blocked half unblocked and given
+its shape; the plan, Current State and the pricing inventory reconciled.
+**Unblocks Stage 8.**
+
+**No code changed.** The paid path already behaves this way; what changed is that
+the authority now permits it.
+
 ## 31 July 2026 - OD-012 decided: a broker's Deal Branch counts, and the authority is amended to say so
 
 **Decision:** a Deal Branch whose admitted counterparty is an **intermediary

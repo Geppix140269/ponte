@@ -165,7 +165,7 @@ deleted or rewritten**; each now carries a superseded banner pointing here.
 | 2 | **Portfolio subscriptions** — €149/month or €1,490/year for 5 concurrent master rooms | `PT-COMMERCIAL-2026-07-27-02` §3; `PT-COMMERCIAL-2026-07-27-04` §5; ADR-0004 entitlement list | No membership or plan of any kind. One product, one formula, one-time 30-day purchase. |
 | 3 | **Ponte Credits** — credit packs as a purchasable usage currency | `PT-COMMERCIAL-2026-07-27-02` §4; `PT-COMMERCIAL-2026-07-27-04` §6; `lib/credits/packs.ts` | No credit packs, room credits, tokens or usage currency. |
 | 4 | **Credit-funded rooms** — 60 credits activates a room for 90 days; 20 credits extends it | `PT-COMMERCIAL-2026-07-27-02` §5; `PT-COMMERCIAL-2026-07-27-04` §6 | A room period is bought directly, in USD, for 30 days. |
-| 5 | **Paid verification** | `PT-COMMERCIAL-2026-07-27-01` §5; ADR-0004 Consequences | No paid verification. ADR-0018 already made member-business verification free; this authority extends the prohibition to verification generally, including the paid `counterparty_check`. See the open question below. |
+| 5 | **Paid verification of a member's own business** | `PT-COMMERCIAL-2026-07-27-01` §5; ADR-0004 Consequences | Verifying a member's own business is free, permanently (ADR-0018). **Amended 31 July 2026 (Amendment 2, closing OD-011): the private `counterparty_check` — a check bought on a third party — is NOT this and stays paid.** It must move off Ponte Credits to a direct USD price, because §15's prohibition on credits is untouched. |
 | 6 | **Paid verification certificates or badges** | `PT-COMMERCIAL-2026-07-27-01` §5 (investigation, evidence, verification and reporting services) | No paid certificate or badge. Gold remains a brand signal, never a verification status. |
 | 7 | **Public Ponte Desk packages** | `PT-COMMERCIAL-2026-07-27-01` §6; `PT-COMMERCIAL-2026-07-27-02` §12; ADR-0004 "Relationship to Ponte Desk" | No public Ponte Desk package, tier or price. |
 | 8 | **Retainers** | `PT-COMMERCIAL-2026-07-27-02` §12; `PT-COMMERCIAL-2026-07-27-04` §11; `/pricing` `retainer.*` | No retainer is publicly offered or priced. |
@@ -235,13 +235,18 @@ The following remain fully in force and this ADR depends on them:
    with `price_data` built inline. A room period, an additional-branch charge
    and a ratchet to the cap need their own checkout, their own idempotent
    webhook fulfilment and their own record.
-8. **The paid `counterparty_check` is an unresolved conflict**, recorded as an
-   open decision. Authority §15 forbids "paid verification or verification
-   badges" without qualification. `counterparty_check` is a paid check on a
-   third party rather than a verification of the member's own account, so it may
-   be outside the intended prohibition — but the text does not say so, and an
-   agent must not narrow an owner's prohibition by inference. **Owner decision
-   required (OD-011).**
+8. **The paid `counterparty_check` conflict is resolved — it stays paid.**
+   §15 forbade "paid verification or verification badges" without qualification,
+   and §1 said the Deal Room is "the only paid product", so read flatly the
+   authority retired a service Ponte intends to keep selling. **Owner decision of
+   31 July 2026, closing OD-011: a check bought on a third party is not the paid
+   verification §15 prohibits.** Recorded as **Amendment 2**, which amends both
+   §15 and §1 — amending only §15 would have left the same contradiction one
+   section earlier. The line is ADR-0018's: §15 prohibits charging a member to
+   prove *themselves*, and `member_business` remains free permanently.
+   **Two consequences:** Ponte Credits are still retired, so the check must be
+   repriced as a direct USD charge rather than billed against a credit balance;
+   and no badge, tier or certificate is created.
 9. **Launch sequencing changes.** LB-001 (the Deal Room loop) and LB-009
    (multilingual) both now sit inside a product that must also be able to charge.
    Charging is **not** itself a launch blocker unless the owner says so: the loop

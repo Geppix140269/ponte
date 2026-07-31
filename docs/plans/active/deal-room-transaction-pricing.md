@@ -209,7 +209,7 @@ Staged and reversible, in this order: stop new grants (the signup trigger), stop
 new purchases (checkout and packs), remove member-facing balance/cost/top-up
 surfaces, then decide the ledger's fate. **`credit_ledger` records money real
 members paid and must be preserved or migrated, never dropped.** The
-`counterparty_check` half is blocked on **OD-011**.
+`counterparty_check` half is **settled by OD-011 (31 July 2026): the check stays paid.** Retire the credits subsystem as planned, and reprice the check as a direct USD charge rather than retiring it with them.
 
 ### Stage 9 — Production preflight and rollout gates
 
