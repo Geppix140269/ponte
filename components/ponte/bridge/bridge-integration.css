@@ -379,3 +379,41 @@
     max-width: none;
   }
 }
+
+/* ----------------------------------------------------------------------
+   6. Every destination stays reachable until the client takes over
+
+   All three action bridges are server-rendered, and the unselected ones carry
+   `hidden` so that a working client can reveal exactly one on selection. That
+   is right when there IS a working client. When there is not, `hidden` is the
+   whole of the behaviour, and all eight destinations sit in the document
+   unreachable - present to a crawler, invisible to a member, with nothing on
+   the page to say a choice was ever available.
+
+   That is what `ponte.trade` served on 31 July 2026. The `<noscript>` rule this
+   replaces could not help: scripting was enabled, so it never fired. It answers
+   "is scripting turned off", and the question that decides whether a member can
+   reach these links is "has the client taken over".
+
+   `data-live` is set on `.pbridge` by a layout effect in `LandingBridges`, so
+   it is absent in the server HTML and absent for as long as the client has not
+   run - whether that is because scripting is off, because the bundle failed, or
+   because it simply has not arrived yet. Until then every action bridge is
+   shown and the landing degrades to what the card grid it replaced always did:
+   every family, every action, every destination, as plain links.
+
+   `display: block` rather than `revert`: `.brx` has no display of its own in
+   the approved stylesheet, and `revert` would return it to the UA default for
+   a `<section>`, which is the same thing by a longer route and one more thing
+   to reason about. The `hidden` attribute stays on the element, which is what
+   makes the handover a single attribute flip on the parent rather than a
+   re-render of every section.
+
+   It cannot outlive the client. The effect sets `data-live` before the first
+   paint, so a working client never shows this state at all, and the cleanup
+   removes it if the block ever unmounts.
+   ---------------------------------------------------------------------- */
+
+.pbridge:not([data-live]) .brx[hidden] {
+  display: block;
+}

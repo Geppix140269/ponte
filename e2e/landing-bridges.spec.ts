@@ -799,6 +799,14 @@ async function unpositioned(page: Page) {
       // Every action destination is still a link, and each of those bridges has
       // an unmeasured stage of its own.
       actionLinks: document.querySelectorAll(".pbridge .brx a").length,
+      // Present in the document is not the same as reachable. A link inside a
+      // `hidden` section has no box, cannot be clicked and is not in the
+      // accessibility tree - it is findable by a crawler and by nobody else.
+      // That distinction is the whole of PL-043, so it is measured rather than
+      // inferred from the count above.
+      reachableActionLinks: Array.from(document.querySelectorAll<HTMLElement>(".pbridge .brx a")).filter(
+        (a) => a.getBoundingClientRect().width > 0 && a.getBoundingClientRect().height > 0,
+      ).length,
       // Which of the two unpositioned states this is. The `<noscript>` rule
       // unhides all three action bridges, so scripting-off shows 3 and a
       // missing bundle shows 0. Measured as a box rather than by the `hidden`
@@ -830,7 +838,7 @@ const UNPOSITIONED_MODES = [
     slug: "no-positioning",
     javaScriptEnabled: false,
     blockChunks: false,
-    // The noscript rule fires and reveals all three.
+    // `data-live` is never set, so all three are revealed.
     actionBridgesVisible: 3,
   },
   {
@@ -838,8 +846,16 @@ const UNPOSITIONED_MODES = [
     slug: "no-chunks",
     javaScriptEnabled: true,
     blockChunks: true,
-    // Scripting is on, so the noscript rule does not fire and they stay hidden.
-    actionBridgesVisible: 0,
+    // Three, the same as scripting-off, and that convergence is the fix.
+    //
+    // This expected 0 until PL-043. The two modes differed because the reveal
+    // hung on `<noscript>`, which fires when scripting is DISABLED - so with a
+    // missing bundle it stayed inert and all eight destinations sat in the
+    // document behind `hidden`, present to a crawler and unreachable to a
+    // member. `data-live` asks whether the client has taken over instead, which
+    // is the question that decides whether anyone can click them, and both
+    // modes answer it the same way.
+    actionBridgesVisible: 3,
   },
 ] as const;
 
@@ -903,6 +919,10 @@ for (const viewport of [
         the client, only its visibility does.
       */
       expect(state.actionLinks, "an action destination left the document").toBe(8);
+      expect(
+        state.reachableActionLinks,
+        "an action destination is in the document but cannot be clicked",
+      ).toBe(8);
 
       await page.screenshot({
         path: `${EVIDENCE}/fallback-${mode.slug}-${viewport.width}x${viewport.height}.png`,
@@ -941,6 +961,56 @@ test("the measurement retires the fallback, and the settled bridge is the measur
   expect(measured!.stationPosition, "a measured station is not absolutely positioned").toBe("absolute");
   expect(measured!.inlineLeft, "a measured station carries no measured left").not.toBe("");
   expect(measured!.inlineHeight, "the stage was never sized from its lowest child").not.toBe("");
+});
+
+test("a live client takes the reveal back, and shows one action bridge at a time", async ({ page }) => {
+  /*
+    The other half of PL-043.
+
+    The existing evidence test asserts `.brx:not([hidden])` has count 0 in the
+    neutral state, which reads the ATTRIBUTE. The attribute is present either
+    way - what changed is whether CSS honours it - so that assertion would pass
+    unchanged on a page showing all three action bridges at once, which is the
+    approved neutral state's exact opposite. Visibility is therefore measured
+    here, not inferred.
+  */
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+  await settled(page);
+
+  const neutral = await page.evaluate(() => ({
+    live: !!document.querySelector(".pbridge")?.hasAttribute("data-live"),
+    visibleBridges: Array.from(document.querySelectorAll(".pbridge .brx")).filter(
+      (s) => s.getBoundingClientRect().height > 0,
+    ).length,
+    reachableLinks: Array.from(document.querySelectorAll<HTMLElement>(".pbridge .brx a")).filter(
+      (a) => a.getBoundingClientRect().height > 0,
+    ).length,
+  }));
+
+  expect(neutral.live, "the client never claimed the reveal").toBe(true);
+  expect(neutral.visibleBridges, "the neutral state is showing an action bridge").toBe(0);
+  expect(neutral.reachableLinks, "an action destination is clickable before a family is chosen").toBe(0);
+
+  // And on selection, exactly one - which is the behaviour the reveal exists
+  // for, and the thing a fallback that never handed back would break.
+  await page.locator(".pbridge > .br .brst").first().click();
+  await settled(page);
+
+  const chosen = await page.evaluate(() => ({
+    visibleBridges: Array.from(document.querySelectorAll(".pbridge .brx")).filter(
+      (s) => s.getBoundingClientRect().height > 0,
+    ).length,
+    label: document.querySelector(".pbridge .brx:not([hidden])")?.getAttribute("aria-label") ?? "",
+    reachableLinks: Array.from(document.querySelectorAll<HTMLElement>(".pbridge .brx a")).filter(
+      (a) => a.getBoundingClientRect().height > 0,
+    ).length,
+  }));
+
+  expect(chosen.visibleBridges, "more than one action bridge is on screen").toBe(1);
+  expect(chosen.label).toMatch(/^Products:/);
+  // Products carries three actions, and only those three are reachable.
+  expect(chosen.reachableLinks, "another family's destinations are reachable too").toBe(3);
 });
 
 test("an unmeasurable deck keeps the fallback rather than collapsing onto one point", async ({ page }) => {
