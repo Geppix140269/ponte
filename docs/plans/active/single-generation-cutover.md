@@ -1,9 +1,9 @@
 # ExecPlan: Single-generation product cutover
 
-**Status:** Active. PR 4 (public market and detail) is on `main` (PR #166,
-`1006208`). PR 5 (member operations and board retirement) is implemented on
-branch `claude/ponte-issue-130-cutover-pr5` and not merged. PRs 1 and 2 are
-implemented on their own branches and not merged. PRs 3, 6, 7 and 8 remain.
+**Status:** Active. PRs 1, 2, 4 and 5 are merged to `main`; PR 5 (board
+retirement) landed as PR #174, leaving `main` at `ea49cb8`. PR 3 (one creation
+system) is implemented on branch `claude/ponte-issue-130-cutover-pr3`. PRs 6, 7
+and 8 remain.
 **Owner:** Giuseppe Funaro
 **Authorised:** 30 July 2026 — the owner authorised this programme to run inside
 Launch Mode, to be delivered as separate reviewable PRs (not one PR), with
@@ -93,8 +93,14 @@ Delivered as separate PRs, in this sequence:
    action once; remove credit reads/cost copy from AccountGate outside a paid
    counterparty context; rebuild `/account` in the Desk shell (profile, company,
    business status, sign-out only); `/join` -> referral capture then `/login`.
-3. **One creation system.** Only `/structure` creates/edits a commercial record;
-   flip `NEXT_PUBLIC_STRUCTURE_JOURNEY` on; retire `/marketplace/new`'s residue.
+3. **One creation system.** Only `/structure` creates/edits a commercial record.
+   Planned as "flip `NEXT_PUBLIC_STRUCTURE_JOURNEY` on"; delivered instead by
+   closing the seam in code, because the flag's off position pointed at
+   `/marketplace/new`, itself a redirect to `/structure` since LB-013. The flag
+   therefore chose between arriving directly and arriving through a hop that
+   discarded the member's captured facts, so no deployment-host flag change was
+   needed or would have helped. `/marketplace/new` stays alive as a redirect for
+   inbound legacy email links.
 4. **Public market and detail.** `/find` + `/find/o/[ref]` own the public board
    and record; migrate `/marketplace/l/[ref]` capabilities; redirect it.
 5. **Member operations.** Move the three `/marketplace` capabilities
@@ -308,6 +314,27 @@ cannot relink a retired route, the business path cannot regain a credit import).
     forbids.
   - `npm run verify` green.
 
+- **2026-07-31** — PR 3 (one creation system) implemented on branch
+  `claude/ponte-issue-130-cutover-pr3`. `lib/landing/routing.ts` now returns
+  `/structure` unconditionally for the Structure route: the branch no longer
+  reads `NEXT_PUBLIC_STRUCTURE_JOURNEY`, matching what PR 5 did for
+  `NEXT_PUBLIC_FIND_JOURNEY`. This closes a silent data loss rather than merely
+  removing a conditional. The flag's off position sent the member to
+  `/marketplace/new?type=requirement`, which has been a redirect to the composer
+  since LB-013, and that redirect deliberately discards every query key except
+  `id`/`edit`. The intent, product and company captured on the landing were
+  therefore dropped on the flag-off path and the member arrived at an empty
+  composer having already said what they wanted. `lib/landing/__tests__/
+  intent.test.ts` gains an explicit assertion that a product survives the
+  Structure jump, which is the regression guard for exactly that.
+  **No deployment-host flag was changed and none needed to be:** with both
+  branches leading to the same surface the flag governed nothing, so the cutover
+  completes without the production flag change the scope originally anticipated.
+  `docs/codex/FEATURE-FLAGS.md` records the flag as governing no destination.
+  `/marketplace/new` itself is deliberately NOT deleted: it is unlinked from the
+  product but was the URL in already-sent email (the LB-013 defect URL carried
+  `?id=<uuid>`), so it must keep resolving those to `/structure?edit=<uuid>`.
+
 ## 12. Decisions and discoveries
 
 - **Owner decisions, 30 July 2026:** (a) proceed now with ExecPlan + PR 1 as
@@ -322,7 +349,13 @@ cannot relink a retired route, the business path cannot regain a credit import).
   (deployed commit + Netlify deployment ID + production check) are gated on
   owner-held infrastructure and the currently-unknown deployed commit; they stay
   open until that infrastructure exists.
-- **Discovery, 31 July 2026 (PR 5), OPEN FOR OWNER RULING.** The obsidian board
+- **Owner ruling, 31 July 2026. Closes the PR 5 discovery recorded below.**
+  `/opportunities` is confirmed as the intended home for the three
+  carried-across capabilities, and the wording of the two new controls is
+  confirmed as it stands. No further board affordance is to follow them. The
+  discovery below is kept as the record of what was found and why it was
+  carried rather than dropped; it is no longer open.
+- **Discovery, 31 July 2026 (PR 5), RULED ON DIRECTLY ABOVE.** The obsidian board
   owned FIVE member capabilities, not the three section 7 lists. The two that
   were unrecorded are the draft hand-in (`submitDraftAction`) and the
   `/structure?edit=<id>` link that reopens a member's own saved record; a third,

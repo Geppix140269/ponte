@@ -145,14 +145,21 @@ test("facts are extracted only when present", () => {
 
 test("each route maps to its production destination, carrying context", () => {
   const facts = { raw: "check acme", company: "Acme" };
-  // Find is unconditional since cutover PR 5 retired the /marketplace board.
+  // Find is unconditional since cutover PR 5 retired the obsidian board, and
+  // Structure since cutover PR 3 closed the legacy editor seam.
   assert.ok(destinationFor("find", { raw: "" }).startsWith("/find"));
-  assert.ok(
-    destinationFor("structure", { raw: "" }).startsWith("/marketplace/new?type=requirement"),
-  );
+  assert.ok(destinationFor("structure", { raw: "" }).startsWith("/structure"));
   assert.ok(destinationFor("check", facts).startsWith("/verify?for=counterparty"));
   assert.ok(destinationFor("investigate", { raw: "" }).startsWith("/market-signals"));
   // Context rides along as query params so nothing is lost across the jump.
+  // Structure is asserted explicitly because it is what cutover PR 3 fixed:
+  // the old fallback sent the member through a redirect that discarded every
+  // key except id/edit, so these facts were dropped and the composer opened
+  // empty from a landing where the member had already said what they wanted.
+  const structureUrl = destinationFor("structure", { raw: "sell olive oil", product: "olive oil" });
+  assert.ok(structureUrl.startsWith("/structure"));
+  assert.ok(structureUrl.includes("product=olive"), "the product survives the jump");
+
   const url = destinationFor("check", facts);
   assert.ok(url.includes("company=Acme"));
   assert.ok(url.includes("intent=check+acme") || url.includes("intent=check%20acme"));
