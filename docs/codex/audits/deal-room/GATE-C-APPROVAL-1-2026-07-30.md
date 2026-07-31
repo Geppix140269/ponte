@@ -1400,3 +1400,75 @@ listings and four `@example.invalid` accounts were then deleted by primary key.
 Production is back to its pre-fixture state, and the fixture can now be run and
 re-run without accumulating rooms.
 
+---
+
+# Gate C Approval 3, third run, 31 July 2026: 94 passed, 0 failed
+
+**Authorised:** owner, 31 July 2026 - fix the fixture teardown first, then merge and
+apply.
+**Repository state:** merged `main` `414d3e8`; `20260731c` applied once, checksum
+`7e60f2df...0c9971ba`, ledger 50 -> 51.
+
+## 48. The gate opens
+
+The two assertions that failed on the second run now pass:
+
+| | |
+|---|---|
+| the second required approver approves | **ok** |
+| the version governs once every approver has approved | **ok** |
+
+A procedure version can now be proposed, approved by both principals, and made to
+govern. Its steps become ready and the two admission steps complete - the 22%
+baseline the product definition specifies, produced by the mechanism rather than
+asserted.
+
+**2 passed on the first run, 92 on the second, 94 on this one. 0 failed.**
+
+## 49. Verified in place, not by overload
+
+Three functions replaced on identical signatures; still exactly three entries, so no
+overload and no invalidated grant. Combined `md5(pg_get_functiondef)`
+`1ca84013...` -> `0384017e...`. Each edit confirmed present in `prosrc` by reading
+the catalogue, and the old `participant_id = v_participant` keying confirmed absent.
+ACL unchanged: anon 0, PUBLIC 0, authenticated 21, service_role 23, 14 policies.
+
+## 50. The fixture removed everything it made
+
+`teardown complete: no rooms, listings, users or activity left behind.`
+
+| | |
+|---|---|
+| `auth.users` | **10** |
+| `listings` | **7**, 2 approved, 0 archived |
+| every `deal_room_*` table | **0** |
+| `storage.objects` in `deal-room-evidence` | **0** |
+| `deal_room_activity_append_only` | `tgenabled = 'O'` |
+| ledger | **51** |
+
+This is the first run whose teardown was both exercised and successful.
+
+## 51. What Approval 3 now establishes, and what it does not
+
+**Established.** Requirement 13 - cross-room and cross-sub-room isolation. The
+admission gate and its four agreements at the current version and checksum. The
+invitation bound to the recorded intended identity. Evidence submission, self-review
+refusal, clarification, correction, versioning, retention and `own_org` visibility.
+Append-only activity, including against the service role. Blockers and their note
+requirement. Read-only continuity. The Storage byte refusals, including a crafted
+path. And now the procedure gate end to end.
+
+**Not established, and not to be claimed.** Requirement 12 is only **partly** proved:
+the fixture shows an entitlement cannot be forged - a room administrator can neither
+issue themselves a second one nor extend their own - but it does not assert that a
+room lacking an entitlement refuses to progress. "Entitlement fail-closed" in that
+stronger sense is still unproved. Also untested: behaviour over time and across
+sessions, amendment of a governing procedure, and anything beyond the three
+participants and two rooms the fixture builds.
+
+## 52. Approval 4 remains unauthorised
+
+`NEXT_PUBLIC_DEAL_ROOM` is unset, nothing is deployed, and the access wall is
+unchanged. What has changed is that the loop now completes in the database, so a
+review of the surfaces against a working loop is possible for the first time.
+
