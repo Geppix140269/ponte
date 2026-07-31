@@ -255,7 +255,11 @@ for (const r of data) {
     valid_until: null,
     public_expires_at: null,
     published_at: publishable ? PUBLISHED_AT : null,
-    indexable: false,
+    // Indexable exactly when publishable. The column is the desk's per-row say
+    // over whether a signal may stand as a search result, and the sitemap and
+    // the detail page's robots directive both honour it, so a held-back row is
+    // kept out of the index by the same decision that keeps it off the board.
+    indexable: publishable,
     status: publishable ? "approved_signal" : "private",
     ai_description: null,
     summary_line: title.slice(0, 160),
