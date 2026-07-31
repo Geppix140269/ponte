@@ -18,6 +18,66 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Gate C Approval 3: the fixture ran and the Deal Room loop cannot start
+
+### Completed
+
+- **PR #143 merged** (`main` `b4d4907`) after CI `verify` SUCCESS, `Supabase
+  Preview` SKIPPED.
+- **`npm run deal-room:negative-access` run against production** with
+  `PONTE_ALLOW_PRODUCTION_DB=i-understand`, after capturing a full pre-state
+  baseline including id fingerprints for `auth.users` and `listings`.
+- **It proved two refusals and then stopped**: a non-owner cannot create a room for
+  another member's Deal, and no direct INSERT into `deal_rooms` is possible at all.
+  **2 passed, 1 failed.**
+
+### Risks / discrepancies
+
+- **The Deal Room cannot be opened by anyone in production.**
+  `deal_room_propose` fails with `new row for relation "deal_room_participants"
+  violates check constraint "deal_room_participants_identity_when_admitted"`.
+  The constraint requires an `admitted` or `active` participant to carry either an
+  `org_id` or a non-empty `declared_capacity`. `deal_room_propose` admits the
+  initiator immediately with `org_id = v_org` and **no `declared_capacity`**, and
+  `v_org` is NULL for **all 10 production profiles** - `organizations` holds zero
+  rows. Every member, on step one.
+- **The counterparty path is sound**, which isolates the defect to the initiator.
+  `deal_room_accept_invitation` inserts at `prerequisites_pending` where the
+  constraint does not apply, `deal_room_declare_participation` sets
+  `declared_capacity`, and `deal_room_admit_participant` refuses admission while
+  both are empty. The counterparty is made to declare; the initiator is not.
+- **The constraint is right and the command does not satisfy it.** The correction is
+  a product decision - seed the initiator's `declared_capacity` in
+  `deal_room_propose`, require an organisation before proposing, or narrow the
+  constraint - and each asserts something different about what Ponte claims a room
+  initiator has declared. **No fix was made and no identifier was minted**; this is
+  recorded as production evidence for LB-001, which stays open.
+- **Requirements 12 and 13 remain unproved**, along with the Storage read policy
+  against real evidence rows and the whole invitation-to-closure behaviour. All of
+  it waits on a room existing.
+
+### Production changes
+
+- **None.** The fixture uses its own `@example.invalid` accounts and a listing
+  marked fictional, and tore down completely: users back to 10 with an identical id
+  fingerprint, listings 7 identical, rooms, participants, activity and entitlements
+  all 0, ledger unchanged at 49. No real member account or commercial data was used.
+
+### Next
+
+1. Owner decision on how `deal_room_propose` should satisfy the identity
+   constraint.
+2. Re-run Approval 3 once a room can be created.
+3. Approval 4 - flag and deploy - remains unauthorised and would be premature.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, Approval 3 section
+- `docs/codex/DATABASE-STATE.md`, Gate C Approval 3 section
+- `docs/launch/LAUNCH-BLOCKERS.md` - LB-001 updated with the production evidence
+
+---
+
 ## 2026-07-31 - Gate C Approval 2 applied: evidence Storage is live and fail-closed
 
 ### Completed

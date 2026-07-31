@@ -1110,3 +1110,116 @@ non-commercial pilot Deal and `npm run deal-room:negative-access`.
 **Approval 4** — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
 unauthorised.
 
+---
+
+# Gate C Approval 3, 31 July 2026: the fixture ran, and the loop cannot start
+
+**Authorised:** owner, 31 July 2026 — merge PR #143, then proceed with Approval 3.
+**Repository state:** merged `main` at `b4d4907a5791c944391d03208a68f09aa60b49bb`.
+**Outcome:** **the fixture stopped at the first positive-path step. Two refusals
+proved, then `deal_room_propose` failed for the Deal owner.** Requirements 12 and
+13 remain unproved. No production change.
+
+## 33. What the fixture proved before it stopped
+
+| Assertion | Result |
+|---|---|
+| a non-owner cannot create a room for another member's Deal | **ok** |
+| no direct INSERT into `deal_rooms` is possible at all | **ok** |
+| **the Deal owner can create the room** | **FAIL** |
+
+```
+new row for relation "deal_room_participants"
+violates check constraint "deal_room_participants_identity_when_admitted"
+```
+
+The run halted there — deliberately, because every remaining assertion needs a
+room. **2 passed, 1 failed.**
+
+## 34. The defect
+
+The constraint, from `20260729a`:
+
+```sql
+CHECK (state <> ALL (ARRAY['admitted','active'])
+       OR org_id IS NOT NULL
+       OR (declared_capacity IS NOT NULL AND length(btrim(declared_capacity)) > 0))
+```
+
+`deal_room_propose` admits the initiator immediately — two rows, master level and
+first workspace — with `state = 'admitted'`, `org_id = v_org`, and **no
+`declared_capacity` in the insert at all**.
+
+`v_org` is `select organization_id into v_org from public.profiles where id =
+auth.uid()`. In production **all 10 profiles have no organisation and
+`organizations` holds zero rows**, so `v_org` is always NULL. All three disjuncts
+are false and the row is rejected.
+
+**This is not an edge case. It is every member, on step one.**
+
+The function itself anticipates the org-less member elsewhere — its entitlement
+check reads `(v_org is null and r.initiator_profile_id = auth.uid())` — so the
+design does contemplate members without an organisation. The participant insert
+simply does not carry that through.
+
+## 35. Why the counterparty path is sound, and what that isolates
+
+| Path | State on insert | Constraint applies? | Capacity |
+|---|---|---|---|
+| Initiator, via `deal_room_propose` | `admitted` | **yes** | **never set** |
+| Counterparty, via `deal_room_accept_invitation` | `prerequisites_pending` | no | set later |
+| Counterparty, via `deal_room_declare_participation` | — | — | **sets `declared_capacity`** |
+| Counterparty, via `deal_room_admit_participant` | `admitted` | yes | **refuses while org and capacity are both empty** |
+
+The counterparty is *made* to declare a capacity before admission, and admission is
+explicitly gated on it. The initiator is admitted with neither. **The constraint is
+right; `deal_room_propose` does not satisfy it.**
+
+## 36. The correction is a product decision, and was not made
+
+Three options, and they assert different things:
+
+1. **Set the initiator's `declared_capacity` inside `deal_room_propose`.** The row
+   already carries `transaction_role = 'Deal owner'` and `participation_authority =
+   'Owner of the published Deal'`; either could seed it. Smallest change, and it
+   makes the initiator's claim explicit rather than implied by Deal ownership.
+2. **Require an organisation before proposing.** Truest to the constraint's intent —
+   an admitted party has a stated identity — but it adds a gate to the journey and
+   no member has one today.
+3. **Narrow the constraint** so it does not bind the initiator. Cheapest and the
+   weakest: it drops the guarantee for exactly the party with the most authority.
+
+Each says something different about what Ponte asserts a room initiator has
+declared, which is why it is the owner's call and not an agent's.
+
+## 37. No production change
+
+The fixture creates its own three accounts on `@example.invalid` and one listing
+whose details read "Negative-access fixture. Fictional." It tears down rooms,
+listings and users in a `finally`, and it did:
+
+| | Before | After |
+|---|---|---|
+| `auth.users` | 10 | **10**, identical id fingerprint |
+| `listings` | 7 | **7**, identical id fingerprint |
+| rooms / participants / activity / entitlements | 0 | **0 / 0 / 0 / 0** |
+| `deal-room-evidence` objects | 0 | **0** |
+| ledger | 49 | **49** |
+
+No real member account and no real commercial data was used. The service role was
+used only for setup and teardown, never to check a permission.
+
+## 38. What Approval 3 has and has not established
+
+**Established:** a non-owner cannot open a room against another member's Deal, and
+no member can INSERT into `deal_rooms` directly.
+
+**Not established, and not to be claimed:** requirements 12 and 13 — entitlement
+fail-closed, cross-room and cross-sub-room isolation — and the Storage read policy
+against real evidence rows. Also untested against a real room: invitation,
+admission, proposal, counterproposal, acceptance, blockers, evidence, and the
+status and next-action behaviour. All of it waits on a room existing.
+
+Approval 4 — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised, and would be premature: the loop does not start.
+
