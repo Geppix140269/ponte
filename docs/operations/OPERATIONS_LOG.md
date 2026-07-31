@@ -18,6 +18,65 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Gate C Approval 2 applied: evidence Storage is live and fail-closed
+
+### Completed
+
+- **PR #142 merged** (`main` `647436b`) after CI `verify` SUCCESS. `Supabase
+  Preview` failed, the only failure, reproducing the recorded migration-bearing-PR
+  pattern.
+- **Applied in the required order, from a clean checkout of merged `main`**, with
+  both checksums verified against the **merged** files first:
+  - `20260731a_deal_room_storage_policy_helpers.sql` at **04:26:11.008 UTC**,
+    ledger **47 to 48**, checksum `bbd49851...caadf9`
+  - `20260729c_deal_room_storage.sql` at **04:26:35.893 UTC**, ledger **48 to 49**,
+    checksum `94629e5d...29972` — the value recorded in the Gate C preflight
+  - Both one transaction, exit 0, no timeout, no HTML, no 502.
+- **Exactly the intended delta.** Buckets 6 to 7: only `deal-room-evidence`,
+  private, 25 MiB, four MIME types. Storage policies 12 to 14: only `deal room
+  evidence read` (SELECT) and `deal room evidence upload` (INSERT), both
+  `authenticated`, no UPDATE and no DELETE. **Pre and post state captured for every
+  bucket and every storage policy; the other six buckets and twelve policies are
+  unchanged.** `ponte-deal-docs` untouched at 0 objects.
+- **`npm run deal-room:acl-verify` detected the policies are live**, switched itself
+  from the required-19 regime to required-21, and **exited 0**: `anon` 0, `PUBLIC`
+  0, `authenticated` 21 of 23, `service_role` 23 unchanged, the event logger still
+  executable by neither member role.
+- **The upload policy was proved to evaluate, not merely to exist.** A real QA
+  member uploading into a sub-room they do not participate in received `403
+  Unauthorized: new row violates row-level security policy`. Had `20260731a` not
+  been applied first, the same request would have returned `permission denied for
+  function deal_room_uuid_or_null` — the policy would have failed before reaching
+  its own decision. Anonymous upload is refused identically; anonymous and member
+  listings both return `200 []`. Nothing was uploaded.
+
+### Decisions
+
+- Owner, 31 July 2026: merge PR #142, then proceed with Approval 2.
+
+### Risks / discrepancies
+
+- **None found.** Every Approval 2 check passed and no discrepancy arose.
+- Approval 3 remains outstanding: a labelled non-commercial pilot Deal and the
+  negative-access fixture, which is what finally proves requirements 12 and 13
+  (entitlement fail-closed, cross-room isolation) and the read policy against real
+  evidence rows. The read policy has been exercised only against an empty bucket.
+- Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deploy, access wall - remains unauthorised.
+
+### Next
+
+1. Approval 3: pilot Deal using the QA account, then `npm run deal-room:negative-access`.
+2. Approval 4: flag and deploy.
+
+### Evidence
+
+- `docs/codex/DATABASE-STATE.md`, Storage policy helpers and Deal Room slice sections
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, Approval 2 section
+- `public.schema_migrations`: 49 rows
+- `npm run deal-room:acl-verify`, exit 0, `authenticated 21 (required 21, permitted 21)`
+
+---
+
 ## 2026-07-31 - Approval 2 stopped before application: the Storage upload policy needs two helpers `20260730c` revoked
 
 ### Completed
