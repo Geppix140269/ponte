@@ -194,6 +194,27 @@ const LATER_MIGRATIONS = readdirSync("supabase/migrations")
   .filter((f) => f > "20260729b_deal_room_rls.sql")
   .sort();
 
+/**
+ * `deal_room_*` functions legitimately introduced AFTER `20260729b`.
+ *
+ * The signature check exists to catch an accidental **overload** - a redefinition
+ * keyed on a different argument list, which replaces nothing and leaves every
+ * grant pointing at the old function. A genuinely new function is a different
+ * thing and is not that defect.
+ *
+ * It still must not appear silently, because a new `deal_room_*` function is a
+ * new privilege surface: that is precisely what LB-008 was. So each one is
+ * listed here with what it is and what it is granted, and the check below fails
+ * on a name that is neither declared by `20260729b` nor classified here.
+ */
+const NEW_SINCE_20260729B: Record<string, string> = {
+  deal_room_billing_append_only:
+    "20260731e (WRITTEN, NOT APPLIED): the append-only trigger guard for " +
+    "deal_room_billing_events, mirroring deal_room_events_append_only. It has no " +
+    "caller - the trigger fires it - and the file revokes it from public, anon " +
+    "and authenticated.",
+};
+
 test("every later migration redefining a deal_room function keeps the declared signature", () => {
   const original = declaredSignatures();
   const problems: string[] = [];
@@ -207,7 +228,12 @@ test("every later migration redefining a deal_room function keeps the declared s
       const name = m[1];
       const types = typeList(m[2]);
       if (!original.has(name)) {
-        problems.push(`${file} declares ${name}, which 20260729b never declared. Classify it deliberately`);
+        if (!NEW_SINCE_20260729B[name]) {
+          problems.push(
+            `${file} declares ${name}, which 20260729b never declared. Classify it deliberately ` +
+              `by adding it to NEW_SINCE_20260729B with what it is and what it is granted`,
+          );
+        }
         continue;
       }
       if (original.get(name) !== types) {
@@ -221,6 +247,29 @@ test("every later migration redefining a deal_room function keeps the declared s
   assert.deepEqual(problems, []);
   // The check is worthless if it silently scanned nothing.
   assert.ok(redefinitions > 0, "no redefinitions found in later migrations; the scan has drifted from the tree");
+});
+
+test("every classified new function is actually declared by a later migration", () => {
+  // Keeps NEW_SINCE_20260729B from rotting into a list of names that grant
+  // permission to nothing, which is how an allowlist stops being read.
+  const declared = new Set<string>();
+  for (const file of LATER_MIGRATIONS) {
+    const text = readFileSync(`supabase/migrations/${file}`, "utf8");
+    for (const m of Array.from(
+      text.matchAll(/create or replace function public\.(deal_room_\w+)\(/g),
+    )) {
+      declared.add(m[1]);
+    }
+  }
+  const stale = Object.keys(NEW_SINCE_20260729B).filter((name) => !declared.has(name));
+  assert.deepEqual(stale, [], "classified but no longer declared by any later migration");
+});
+
+test("a classified new function still has to state what it is", () => {
+  for (const [name, reason] of Object.entries(NEW_SINCE_20260729B)) {
+    assert.ok(reason.length > 40, `${name} needs a real classification, not a placeholder`);
+    assert.match(reason, /^\d{8}[a-z]/, `${name} must name the migration that introduces it`);
+  }
 });
 
 test("20260731b fixes the initiator identity constraint and changes nothing else", () => {

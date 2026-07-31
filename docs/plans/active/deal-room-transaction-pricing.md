@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stages 1 and 2 delivered. Stages 3–9 not started and not authorised.
+**Status:** Stages 1, 2 and 3 delivered. Stages 4–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -147,7 +147,7 @@ The first substantive design task, and the one most likely to be got wrong.
 
 **Exit:** tests only. No schema, no route, no UI, no charge.
 
-### Stage 3 — Billing records and entitlements
+### Stage 3 — Billing records and entitlements ✅ **delivered 31 July 2026 (migration written, NOT applied)**
 
 - Migration **written, not applied**: a `paid` entitlement kind, room-period rows carrying currency, period price in cents, purchased branch capacity, period start and end, and a payment reference; a billing-event record.
 - Idempotency and replay safety designed in, not added later.
@@ -319,6 +319,72 @@ so does a second import appearing in the engine.
    notification reports the **shell's** exit code, and the command ended in an
    `echo`. The exit code now goes to its own file. A run is green when that file
    says so, not when the notification does.
+
+**31 July 2026 — Stage 3 delivered, on the owner's instruction. The migration is
+written and NOT applied.**
+
+- **`supabase/migrations/20260731e_deal_room_paid_room_periods.sql`**, SHA-256
+  `3456e0b0862e6e4b306a2cca1db430f50fb0416f043afa3e8cee6066ff78a422`. Additive
+  throughout: `paid` added as a fourth entitlement kind (the three existing
+  values preserved, no backfill), `deal_room_room_periods`,
+  `deal_room_billing_events`, and `deal_room_entitlements.current_period_id`.
+- **Three invariants pushed into the database**, because getting them wrong
+  takes money from a member incorrectly: price is CHECKed against the
+  authority's own formula so a row whose price does not follow from its capacity
+  cannot be written at all; the $199 cap is stated again independently of the
+  formula; and a partial unique index permits **one active period per room**, so
+  a retry or a race cannot bill one room twice for one window.
+- **The §17 value anchor is structural.** `period_price_cents` holds the list
+  price and stays bound to the capacity formula, `discount_cents` holds the
+  waiver, and `amount_due_cents` is a **stored generated column**, so a
+  100% launch-partner room still records that a Deal Room costs $79 USD.
+- **§9 is a constraint, not a convention:** `state <> 'active' or confirmed_at
+  is not null`. A period cannot be active without a server-side confirmation.
+- **Replay safety designed in**, not added after a double charge:
+  `provider_event_id` is unique where not null, and the billing table is
+  append-only against the table owner as well as against members.
+- **The disclosure rule is in the policy.** Both tables are readable only by
+  `deal_room_can_administer(room_id)` — narrower than every other member-facing
+  Deal Room table — because `purchased_branch_capacity` is a branch-count
+  disclosure under §4 and §11. No member holds any write policy. Per the LB-008
+  lesson, `anon` and `authenticated` are revoked explicitly and `authenticated`
+  is re-granted SELECT alone.
+- **`lib/deal-room/billing.ts`** is the pure TypeScript half: the vocabularies
+  mirroring each CHECK, `periodEndFrom()`, `periodCovers()`, `amountDueCents()`,
+  `draftRoomPeriod()` and `launchPartnerWaiver()`. No clock — a period end is
+  derived from a start that is passed in.
+- **`lib/deal-room/__tests__/billing.test.ts`, 35 assertions**, registered in
+  `npm test`. It evaluates the SQL price formula and the TypeScript engine side
+  by side at every capacity from 5 to 40, pins each TypeScript vocabulary
+  against its CHECK constraint, and asserts the administrator-only policy, the
+  absence of any member write policy, the grants, the idempotency index and the
+  append-only trigger. **Proved to fail in three directions**: cap drifted to
+  $200, policy widened to any participant, idempotency index removed.
+- **Nothing imports `billing.ts`, and no file under `app/`, `components/` or
+  `lib/` names either new table.** Both are asserted, so a reader cannot ship
+  ahead of the migration — which is how PL-014 happened.
+
+**An existing guard caught the new function, correctly.**
+`lib/deal-room/__tests__/grant-signatures.test.ts` discovers every migration
+later than `20260729b` and refuses any `deal_room_*` function it does not
+recognise — the guard that exists because an accidental overload leaves every
+grant pointing at the old function (LB-005), and because a new `deal_room_*`
+function is a new privilege surface (LB-008). It failed on
+`deal_room_billing_append_only` with "Classify it deliberately", and had no seam
+for a legitimately-new function. One was added: `NEW_SINCE_20260729B`, a name to
+reason map, checked so a classification cannot be a placeholder and cannot rot
+into a name no migration declares. An **unclassified** new function still fails,
+demonstrated.
+
+**Deviation from this plan's own Stage 3 bullet, stated rather than done
+quietly.** The bullet said `STARTER_LIMITS_PROPOSED` would be "retired behind
+the new model". It has **not** been removed. It has two live call sites —
+`app/[locale]/deal-rooms/propose/page.tsx` prints the Starter limits as member
+copy, and `app/[locale]/deal-rooms/[roomId]/page.tsx` renders `usageSummary()`.
+Removing it would change what a member reads on two Deal Room surfaces, which is
+Stage 6 work under the Design Constitution, not a records-and-schema stage. The
+constant stays until then. `activeDays: 30` is superseded in fact by
+`ROOM_PERIOD_DAYS` in `billing.ts`, which is the value the paid model uses.
 
 ---
 
