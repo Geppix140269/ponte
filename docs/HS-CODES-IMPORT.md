@@ -5,7 +5,9 @@ One-off data load. Run this once on your local machine to populate
 
 ## Prerequisites
 
-1. `OPENAI_API_KEY` set in Netlify (you've confirmed this)
+1. `OPENAI_API_KEY` available in the hosting dashboard — Vercel since the
+   31 July 2026 cutover, Netlify when this runbook was written and confirmed.
+   The key itself did not change; where you read it from did
 2. Supabase migration `supabase/migrations/20260527_hs_codes.sql` already
    run (you've confirmed this)
 3. Node 18+ installed locally
@@ -20,13 +22,13 @@ npm install --save-dev tsx dotenv
 ## Step 2 — Create a `.env.local` file at the repo root
 
 `.env.local` is git-ignored. Use it to feed the script the three values
-it needs. Three env vars are enough — copy them from Netlify (Site
-configuration → Environment variables) and your Supabase dashboard.
+it needs. Three env vars are enough — copy them from Vercel (the production
+project → Settings → Environment Variables) and your Supabase dashboard.
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJh...        # Supabase → Project Settings → API → service_role secret
-OPENAI_API_KEY=sk-...                    # Same as in Netlify env vars
+OPENAI_API_KEY=sk-...                    # Same as in the Vercel env vars
 ```
 
 The `service_role` key is your full-access Supabase key (NOT the anon

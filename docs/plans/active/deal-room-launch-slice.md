@@ -236,7 +236,7 @@ Both are stated rather than worked around, and both have a committed, one-comman
 
 1. `npm run verify` fails on unmodified `main` at `check-migrations` - two files share the identifier `20260728d`, and the safe rename is the unapplied one because the other is already recorded in the production ledger under its exact name. PL-004.
 2. `npm run verify` also fails at `check-launch-mode` - the check matches a single-line string that `AGENTS.md` wraps across a line break. The policy text is correct; the matching is line-sensitive. PL-005.
-3. Neither failure blocks merge or deployment: CI runs neither check and Netlify runs `npm run build`. Both are therefore Post-Launch by the mandatory test, despite blocking acceptance criterion 19.
+3. Neither failure blocks merge or deployment: CI runs neither check and the host runs `npm run build`. Both are therefore Post-Launch by the mandatory test, despite blocking acceptance criterion 19. (Written when Netlify ran that build; production moved to Vercel on 31 July 2026, which changes who runs it but not the classification, since `netlify.toml` and Vercel's Next.js detection both invoke the same `npm run build`.)
 4. `ponte-deal-docs` is an orphan private bucket: zero objects, zero policies, zero code references, created before any accepted Deal Room authority. PL-006.
 5. `verification-docs` has no storage policy and is reached only through the service-role admin client. Consistent, not fail-open; intent unresolved. PL-007.
 6. The organisation layer is empty: 0 organisations, 0 of 9 profiles bound. PL-008.

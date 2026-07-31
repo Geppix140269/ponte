@@ -274,7 +274,11 @@ addresses across July 2026, so the operational sending path is live and working.
 ### Prior evidence (superseded by the live check above)
 
 - `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are recorded as existing in Netlify
-  (`docs/platform/RUNBOOK.md`, `docs/platform/VERSIONS.md`).
+  (`docs/platform/RUNBOOK.md`, `docs/platform/VERSIONS.md`). That was the state
+  when this was written and is left standing as the record. Production moved to
+  Vercel on 31 July 2026, so **re-reading this fact now means reading Vercel**,
+  and whether both variables were carried across at cutover is not recorded
+  anywhere — which makes it one more owner-held fact, not a settled one.
 - The forward was **recommended** in `docs/platform/AUTH-EMAIL-SETUP.md` §3 on
   22 July 2026, with no record of it being set up.
 

@@ -164,8 +164,14 @@ the hand-written contract in `types/` needs the new column added. Do this
 ## 3. Environment variables
 
 No new variable is introduced by this PR. Confirm the existing ones are set in
-Netlify, because the new code depends on two of them more visibly than the old
-code did.
+the hosting dashboard, because the new code depends on two of them more visibly
+than the old code did.
+
+**Which dashboard changed on 31 July 2026.** Production moved from Netlify to
+Vercel (`docs/operations/OPERATIONS_LOG.md`), so the variables that matter are
+the ones Vercel holds. Whether each variable below was carried across at cutover
+is **not recorded** — do not assume it was. Read the list before deploying, not
+after.
 
 | Variable | Required | Consequence if missing |
 |---|---|---|
@@ -176,11 +182,9 @@ code did.
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Publication cannot write. Submission saves the listing and the outcome silently fails to `submitted`. |
 | `ANTHROPIC_API_KEY` | optional | AI vetting on the exception console does not run. Publication is unaffected. |
 
-Verify:
-
-```bash
-netlify env:list
-```
+Verify against the production project in the Vercel dashboard, under Settings →
+Environment Variables. The previous instruction here was `netlify env:list`,
+which now reads the environment of a host that no longer serves production.
 
 ---
 
@@ -190,10 +194,18 @@ netlify env:list
 
 1. Migration applied and verified (steps 1.2–1.4).
 2. Merge the pull request carrying this branch to `main`.
-3. Netlify builds and deploys `main` automatically.
-4. Confirm the deploy succeeded before running smoke tests.
+3. **Deploy `main` deliberately through Vercel.** This step used to read
+   "Netlify builds and deploys `main` automatically", and that is no longer
+   true: since the 31 July 2026 cutover, merging to `main` does not deploy.
+   Production releases are owner-controlled and explicit.
+4. Confirm the deploy succeeded, **and that it is serving the commit you
+   merged**, before running smoke tests.
 
 Do not merge before step 1.4 passes.
+
+Steps 2 and 3 are now two separate acts. A merged `main` means the code is on
+the branch, not that any member is running it — so the smoke tests in section 5
+prove nothing until step 3 has actually happened.
 
 **Note on PR #74.** It was merged on 28 July 2026 at 14:40 UTC, carrying the
 application code but **not** the exception console, this runbook, the
@@ -327,7 +339,12 @@ git revert -m 1 <merge-commit-sha>
 git push origin main
 ```
 
-Netlify redeploys. The added columns and `listing_events` rows remain and are
+**The revert is not the rollback.** Pushing the revert only changes `main`;
+since 31 July 2026 it triggers no deploy. Production keeps serving the faulty
+build until someone deploys the reverted commit through Vercel. Treat the
+rollback as incomplete until production is confirmed to be serving it.
+
+Once it is deployed, the added columns and `listing_events` rows remain and are
 simply unread by the reverted code. **No data is lost and no listing changes
 state.** This is the expected rollback and is safe at any time.
 

@@ -152,7 +152,8 @@ The authenticated approved-listing policy checks only `status = approved`. A Pha
 | Provenance and duplicate checks | Complete |
 | Drift and risks recorded | Complete |
 | Runtime/database changes absent | Complete |
-| CI and Netlify preview | Required on final PR head |
+| CI on the final PR head | Required |
+| Netlify preview | **Retired 31 July 2026.** Netlify is no longer the production origin and its builds are being stopped, so a preview is neither available nor evidence of anything. Do not treat its absence as a failing gate |
 | Owner review before merge | Pending |
 
 ## Phase boundary
@@ -182,6 +183,7 @@ Completed:
 
 Remaining:
 
-- final CI and Netlify checks on the latest head;
+- final CI checks on the latest head (the Netlify checks that used to be
+  required here were retired on 31 July 2026 — see the gate table above);
 - owner review and merge decision for PR #44;
 - explicit owner direction before Phase B begins.

@@ -217,7 +217,26 @@ production-deployed commit. Netlify writes no GitHub deployment
 (`gh api …/deployments` → `[]`), the operations log's last deployment note is the
 28 July hotfix of `b378ad2` with no recorded outcome, and `https://ponte.trade/`
 answers `401` behind the Basic-auth wall so no build identifier can be read.
-`main` is `23637d3`. Which commit is being served is an owner-held fact.
+`main` was `23637d3` when this was written and has moved several times since.
+Which commit is being served is an owner-held fact.
+
+**Reconciled 31 July 2026.** Production moved to Vercel
+(`docs/operations/OPERATIONS_LOG.md`). The finding is unchanged but its reasons
+are now different, and one of them is worse:
+
+- The first reason is stale as written. Whether *Vercel* writes GitHub
+  deployment records has not been checked, so `gh api …/deployments` may or may
+  not still return `[]`. Check before citing it either way.
+- The Basic-auth wall is unchanged, so a build identifier still cannot be read
+  from outside.
+- The gap has widened rather than closed. Under Netlify's git-based CD, `main`
+  was a defensible guess at what production served. It no longer is: merging to
+  `main` does not deploy, so the deployed commit can now sit arbitrarily far
+  behind `main` with nothing in the repository recording the distance.
+
+Until a Vercel deployment procedure is confirmed and its outcomes are written to
+the operations log, treat "merged" and "deployed" as separate facts and never
+cite one as evidence of the other.
 
 ## Resolved blockers
 

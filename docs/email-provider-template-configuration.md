@@ -116,7 +116,7 @@ the email and the value the field must hold.
 | Host | `smtp.resend.com` |
 | Port | `465` |
 | Username | `resend` |
-| Password | the Resend API key already in Netlify as `RESEND_API_KEY` |
+| Password | the Resend API key the site already uses as `RESEND_API_KEY`, read from the hosting dashboard (Vercel since 31 July 2026, Netlify before that) |
 | Sender email | `auth@ponte.trade` |
 | **Sender name** | **`Ponte Trade`** — not `Ponte` |
 | Rate limit for sending emails | at least `100` per hour |

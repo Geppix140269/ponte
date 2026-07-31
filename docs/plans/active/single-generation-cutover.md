@@ -114,8 +114,10 @@ Delivered as separate PRs, in this sequence:
    ChromeGate, legacy SiteHeader/SiteFooter/BottomNav, obsolete styles and
    retired nav message keys; fold PonteShell into Desk. Extends
    `constitution-led-interface-rebuild.md`.
-8. **Production evidence.** Route atlas; record the deployed commit + Netlify
-   deployment ID; visual and behavioural production check.
+8. **Production evidence.** Route atlas; record the deployed commit + the
+   hosting deployment ID; visual and behavioural production check. The
+   deployment ID is Vercel's since the 31 July 2026 cutover — recording a
+   Netlify one would now identify a build nobody is served.
 
 **Explicit exclusions.** No production migration, flag change, deploy or merge
 without the owner authority `AGENTS.md` reserves. `/check` and `/deal-rooms/*`
@@ -436,9 +438,12 @@ cannot relink a retired route, the business path cannot regain a credit import).
 - **Discovery:** the brief conflates PonteShell and Ponte Desk. The approved
   target is DeskShell; PonteShell is intermediate debt (see section 3).
 - **Discovery:** acceptance criteria 12 (authenticated journeys), 14 and 15
-  (deployed commit + Netlify deployment ID + production check) are gated on
+  (deployed commit + hosting deployment ID + production check) are gated on
   owner-held infrastructure and the currently-unknown deployed commit; they stay
-  open until that infrastructure exists.
+  open until that infrastructure exists. **Amended 31 July 2026:** the
+  deployment ID these criteria want is now Vercel's, and they are further from
+  satisfiable than when written — the deployed commit was previously guessable
+  from `main`, and since merging no longer deploys, it is not.
 - **Owner ruling, 31 July 2026. Closes the PR 5 discovery recorded below.**
   `/opportunities` is confirmed as the intended home for the three
   carried-across capabilities, and the wording of the two new controls is

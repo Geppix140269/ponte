@@ -68,19 +68,64 @@ Use this structure:
 1. Confirm the Vercel deployment procedure and record it, replacing the
    "push to `main` and Netlify builds" model that `CONTRIBUTING.md` carried
    until today.
-2. Decide the disposition of the Netlify build configuration and of the Netlify
-   PR checks, which are now noise at best and misleading at worst.
+2. ~~Decide the disposition of the Netlify build configuration and of the
+   Netlify PR checks, which are now noise at best and misleading at worst.~~
+   **Decided by the owner the same day:** Netlify Build status is to be set to
+   *Stopped builds*, generating no production, preview or branch build.
+   Releases deploy deliberately through Vercel. The dashboard setting itself is
+   owner-applied and **was not confirmed from this session** — the Netlify CLI
+   session is expired and `netlify login` is interactive.
 3. Establish and record which commit production is serving. It has been
    unrecorded since before the cutover.
 4. Verify the nightly sanctions refresh still reaches the origin.
+5. Amend `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` §11.1, which
+   lists "Netlify deployment" in the stack to preserve. It is an authority
+   document, so it is left untouched here and flagged: an authority is amended
+   by the owner, not reconciled by an agent.
 
 ### Evidence
 
 - Owner control notices of 31 July 2026, freeze and release.
-- Reconciled records: `CONTRIBUTING.md`, `docs/platform/CONNECTIONS.md`,
+- First pass, the records that describe how the repository is operated:
+  `CONTRIBUTING.md`, `docs/platform/CONNECTIONS.md`,
   `docs/codex/CURRENT-STATE.md`, `docs/codex/FEATURE-FLAGS.md`,
   `docs/platform/RUNBOOK.md`.
+- Second pass, after a full `netlify` sweep showed the first pass had stopped
+  too early — the procedures somebody would actually *follow*:
+  `docs/runbooks/PR-74-automated-listing-publication-deployment.md`,
+  `docs/TELEGRAM-OPS-SETUP.md`, `docs/HS-CODES-IMPORT.md`,
+  `docs/platform/AUTH-EMAIL-SETUP.md`,
+  `docs/email-provider-template-configuration.md`,
+  `docs/operations/OPEN_DECISIONS.md`, `docs/launch/LAUNCH-BLOCKERS.md`,
+  `docs/plans/active/single-generation-cutover.md`,
+  `docs/plans/active/ISSUE-42-PHASE-A-MARKET-RECONCILIATION.md`,
+  `docs/plans/active/deal-room-launch-slice.md`.
 - **No production probe, no dashboard, no DNS lookup.**
+
+### What the second pass found, and why it was needed
+
+The first pass reconciled the records that *describe* the deployment. It missed
+the ones that *instruct* it. The worst was the PR-74 deployment runbook, whose
+rollback step read "Netlify redeploys" after a `git revert` — an operator
+following it would have believed a rollback had taken effect while production
+kept serving the faulty build. Two setup guides also sent an operator to the
+Netlify dashboard to add environment variables, where they would have had no
+effect on anything a member reaches.
+
+Two acceptance gates required a Netlify deploy preview on the final PR head.
+With builds stopped that gate can never pass, so it is retired rather than left
+to fail.
+
+Where a claim rested on a fact that has not been re-established — whether each
+environment variable was carried across at cutover, whether Vercel writes GitHub
+deployment records — the reconciliation says so instead of substituting "Vercel"
+for "Netlify" and inheriting the old sentence's confidence.
+
+Left alone on purpose: roughly thirty dated audit findings under
+`docs/codex/audits/`, the dated entries in `docs/platform/VERSIONS.md`, and
+`docs/launch/POST-LAUNCH-BACKLOG.md` PL-028, which refers to `netlify.toml` —
+the file, which still exists and is still accurate. Rewriting dated evidence to
+match today would falsify the record it exists to preserve.
 
 ---
 
