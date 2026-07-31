@@ -88,27 +88,31 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Check the balance before opening a case. The pipeline spends atomically
-  // and would refuse anyway, but a member should be told before a record
-  // exists rather than after.
-  try {
-    const balance = await getBalance(user.id);
-    if (balance < COST_VERIFICATION_L2) {
+  // Verifying the member's OWN business is free (ADR-0018, Issue #135), so the
+  // balance is never read and 402 is never reachable on that path. A
+  // counterparty check keeps its paid rule: check the balance before opening a
+  // case, because the pipeline spends atomically and would refuse anyway, but a
+  // member should be told before a record exists rather than after.
+  if (purpose !== "member_business") {
+    try {
+      const balance = await getBalance(user.id);
+      if (balance < COST_VERIFICATION_L2) {
+        return NextResponse.json(
+          {
+            error: "Not enough credits for this check.",
+            balance,
+            cost: COST_VERIFICATION_L2,
+          },
+          { status: 402 },
+        );
+      }
+    } catch (err) {
+      console.error("[ponte] balance check failed:", err);
       return NextResponse.json(
-        {
-          error: "Not enough credits for this check.",
-          balance,
-          cost: COST_VERIFICATION_L2,
-        },
-        { status: 402 },
+        { error: "Could not read your credit balance. Please try again." },
+        { status: 500 },
       );
     }
-  } catch (err) {
-    console.error("[ponte] balance check failed:", err);
-    return NextResponse.json(
-      { error: "Could not read your credit balance. Please try again." },
-      { status: 500 },
-    );
   }
 
   try {

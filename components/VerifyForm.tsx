@@ -14,7 +14,8 @@ export type VerifyPurpose = "member_business" | "counterparty_check";
  * journey chrome.
  *
  * The paint changed; the rules did not. The purposes, the attestation gate, the
- * credit cost stated before anything is spent, the 401/402/429 paths, the
+ * credit cost stated before anything is spent on a PAID counterparty check
+ * (a member-business check is free and shows none of it), the 401/402/429 paths, the
  * candidate disambiguation that resumes the case already paid for, and the
  * three outcomes are exactly as they were. Verified, review and failed keep the
  * reserved semantic colours rather than gold, because gold is a brand signal
@@ -91,7 +92,12 @@ export default function VerifyForm({
   purpose,
 }: {
   balance: number | null;
-  cost: number;
+  /**
+   * What this check costs, or null when it is free. Verifying the member's own
+   * business is free (ADR-0018, Issue #135): the page passes null, and no
+   * balance, cost, shortfall or top-up affordance is rendered for it.
+   */
+  cost: number | null;
   purpose: VerifyPurpose;
 }) {
   const t = useTranslations("verification");
@@ -115,7 +121,9 @@ export default function VerifyForm({
   const [picked, setPicked] = useState("");
   const [resuming, setResuming] = useState(false);
 
-  const short = balance !== null && balance < cost;
+  // A free check has no cost, so it can never be short of credits.
+  const isPaid = cost !== null;
+  const short = isPaid && balance !== null && balance < cost;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -375,21 +383,33 @@ export default function VerifyForm({
 
   return (
     <form onSubmit={onSubmit} className="vform">
-      {/* Balance and price, stated before anything is spent. */}
-      <div className="vbal">
-        <span className="vbal__l">{t("request.balance.label")}</span>
-        <span className="vbal__n serif">{balance ?? "-"}</span>
-        <span className="vbal__u">{t("request.balance.unit")}</span>
-        <span className="vbal__c">{t("request.balance.cost", { cost })}</span>
-      </div>
+      {/* Balance and price, stated before anything is spent, on the PAID path
+          only. Verifying the member's own business is free (ADR-0018, Issue
+          #135): it shows no balance, no cost, no shortfall and no top-up, and
+          says plainly that it is free instead. */}
+      {isPaid ? (
+        <>
+          <div className="vbal">
+            <span className="vbal__l">{t("request.balance.label")}</span>
+            <span className="vbal__n serif">{balance ?? "-"}</span>
+            <span className="vbal__u">{t("request.balance.unit")}</span>
+            <span className="vbal__c">{t("request.balance.cost", { cost })}</span>
+          </div>
 
-      {short && (
-        <div className="vshort">
-          <p className="vshort__p">{t("request.balance.short")}</p>
-          <Link href="/pricing" className="fbtn fbtn--ghost">
-            {t("request.balance.topUp")}
-          </Link>
-        </div>
+          {short && (
+            <div className="vshort">
+              <p className="vshort__p">{t("request.balance.short")}</p>
+              <Link href="/pricing" className="fbtn fbtn--ghost">
+                {t("request.balance.topUp")}
+              </Link>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="vfree">
+          Verifying the business you represent is free. It is separate from a
+          paid check on another company.
+        </p>
       )}
 
       <div className="vfields">

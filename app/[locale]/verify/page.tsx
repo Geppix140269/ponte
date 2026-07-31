@@ -99,8 +99,13 @@ export default async function VerifyPage({
   const mode = modeFor(searchParams?.for);
   const user = isSupabaseConfigured() ? await getUser() : null;
 
+  // Verifying the member's OWN business is free (ADR-0018, Issue #135), so this
+  // page performs no balance read on that path and passes no cost to the form.
+  // The balance is read only for the paid counterparty check, which keeps its
+  // commercial rule unchanged.
+  const isPaid = mode === "counterparty_check";
   let balance: number | null = null;
-  if (user) {
+  if (user && isPaid) {
     try {
       balance = await getBalance(user.id);
     } catch (err) {
@@ -149,13 +154,26 @@ export default async function VerifyPage({
               ))}
             </ul>
           ) : user ? (
-            <VerifyForm balance={balance} cost={COST_VERIFICATION_L2} purpose={mode} />
+            <VerifyForm
+              balance={balance}
+              cost={isPaid ? COST_VERIFICATION_L2 : null}
+              purpose={mode}
+            />
           ) : (
             // Signed out. The service is still explained, because a member who
             // cannot act yet should still learn what the act would be.
             <div className="vgate">
               <h2 className="vgate__t serif">{t("request.signedOut.heading")}</h2>
-              <p className="vgate__p">{t("request.signedOut.body")}</p>
+              {/* Purpose-aware, because the two acts differ commercially:
+                  verifying your own business is free, a counterparty check is
+                  paid. The generic line is used only before a choice is made. */}
+              <p className="vgate__p">
+                {mode === "member_business"
+                  ? t("request.signedOut.bodyBusiness")
+                  : mode === "counterparty_check"
+                    ? t("request.signedOut.bodyCounterparty")
+                    : t("request.signedOut.body")}
+              </p>
               <Link
                 className="fbtn"
                 href={`/login?next=/verify?for=${searchParams.for}`}
