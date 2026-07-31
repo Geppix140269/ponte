@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import { approveSignalAction, setSignalStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,46 @@ export const dynamic = "force-dynamic";
  *
  * English, like the rest of the admin area.
  */
+
+const tag: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 10,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  color: "var(--ink-2)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: 4,
+  padding: "2px 7px",
+};
+
+const quote: React.CSSProperties = {
+  borderLeft: "2px solid var(--rule)",
+  paddingLeft: 12,
+  fontSize: 13,
+  lineHeight: 1.6,
+  color: "var(--ink-2)",
+};
+
+const field: React.CSSProperties = {
+  width: 120,
+  font: "inherit",
+  fontSize: 12,
+  color: "var(--ink)",
+  background: "var(--raised)",
+  border: "1px solid var(--rule-strong)",
+  borderRadius: "var(--dk-radius-in)",
+  padding: "7px 9px",
+};
+
+const summaryStyle: React.CSSProperties = {
+  cursor: "pointer",
+  fontFamily: "var(--f-mono)",
+  fontSize: 11,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "var(--ink-3)",
+};
 
 const OUTCOME: Record<string, { tone: "good" | "bad"; text: string }> = {
   approved: { tone: "good", text: "Approved. The signal is on the public board with a 90-day expiry." },
@@ -43,19 +84,45 @@ const DETAIL: Record<string, string> = {
 function OutcomeBanner({ r, m }: { r?: string; m?: string }) {
   if (!r) return null;
   const known = OUTCOME[r];
-  const tone = known?.tone ?? "bad";
+  const good = (known?.tone ?? "bad") === "good";
   const detail = m ? (DETAIL[m] ?? m) : null;
   return (
-    <div
-      className={`mb-6 rounded-xl border p-4 text-[13px] leading-relaxed ${
-        tone === "good"
-          ? "border-positive/40 bg-positive/10 text-cream"
-          : "border-negative/40 bg-negative/10 text-cream"
-      }`}
-    >
-      <p>{known?.text ?? `Outcome: ${r}`}</p>
-      {detail && <p className="mono mt-2 text-[12px] text-gray-2">{detail}</p>}
-    </div>
+    <section className="sec" style={{ paddingBottom: 0 }}>
+      {good ? (
+        <div
+          style={{
+            background: "var(--pos-tint)",
+            border: "1px solid var(--pos-line)",
+            borderRadius: "var(--dk-radius)",
+            padding: "14px 16px",
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--ink-2)",
+          }}
+        >
+          <p style={{ color: "var(--pos)", fontWeight: 600 }}>
+            {known?.text ?? `Outcome: ${r}`}
+          </p>
+          {detail && (
+            <p className="mono" style={{ marginTop: 8, fontSize: 12, color: "var(--ink-3)" }}>
+              {detail}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="err">
+          <PonteIcon name="evidence.evreview" size={22} />
+          <div>
+            <b>{known?.text ?? `Outcome: ${r}`}</b>
+            {detail && (
+              <p className="mono" style={{ marginTop: 6 }}>
+                {detail}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -114,17 +181,38 @@ function fmt(iso: string | null): string {
 function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
   const isApproved = s.status === "approved_signal";
   return (
-    <div className="glass p-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="badge uppercase">{s.side}</span>
-        <span className="flex-1 text-[15px] text-cream">{s.product}</span>
-        <span className="text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
-          {s.status} · {fmt(s.spotted_at)}
+    <div
+      style={{
+        background: "var(--raised)",
+        border: "1px solid var(--rule)",
+        borderRadius: "var(--dk-radius)",
+        boxShadow: "var(--e-1)",
+        padding: "18px 20px",
+      }}
+    >
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+        <span style={tag}>{s.side}</span>
+        <span style={{ flex: 1, fontSize: 15, color: "var(--ink)" }}>{s.product}</span>
+        <span
+          className="mono"
+          style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)" }}
+        >
+          {s.status} &middot; {fmt(s.spotted_at)}
         </span>
       </div>
 
       {/* Public facts: what the board would show. */}
-      <div className="mt-3 grid gap-x-6 gap-y-1 text-[13px] text-gray-2 sm:grid-cols-2 md:grid-cols-3">
+      <div
+        className="mono"
+        style={{
+          marginTop: 12,
+          display: "grid",
+          gap: "4px 24px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          fontSize: 12,
+          color: "var(--ink-2)",
+        }}
+      >
         {s.qty != null && <span>Qty: {s.qty} {s.unit ?? ""}</span>}
         {s.incoterms && <span>Incoterm: {s.incoterms}</span>}
         {s.payment && <span>Payment: {s.payment}</span>}
@@ -136,24 +224,23 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
       </div>
 
       {s.ai_description && (
-        <p className="mt-3 border-l-2 border-white/10 pl-3 text-[13px] leading-relaxed text-gray-2">
-          {s.ai_description}
-        </p>
+        <p style={{ ...quote, marginTop: 12 }}>{s.ai_description}</p>
       )}
 
       {/* Internal provenance. Admin only, never in a public payload. */}
-      <details className="mt-3">
-        <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
-          Internal provenance (never public)
-        </summary>
-        <div className="mt-2 grid gap-1 text-[12px] text-gray-2">
+      <details style={{ marginTop: 12 }}>
+        <summary style={summaryStyle}>Internal provenance (never public)</summary>
+        <div
+          className="mono"
+          style={{ marginTop: 8, display: "grid", gap: 4, fontSize: 12, color: "var(--ink-2)" }}
+        >
           {s.source_platform && <span>Source: {s.source_platform}</span>}
-          {s.source_url && <span className="break-all">URL: {s.source_url}</span>}
+          {s.source_url && <span style={{ overflowWrap: "anywhere" }}>URL: {s.source_url}</span>}
           {s.counterparty_name && <span>Counterparty: {s.counterparty_name}</span>}
           {s.counterparty_company && <span>Company: {s.counterparty_company}</span>}
           {s.counterparty_contact && <span>Contact: {s.counterparty_contact}</span>}
           {s.raw_description && (
-            <p className="mt-1 whitespace-pre-wrap border-l-2 border-white/10 pl-3">{s.raw_description}</p>
+            <p style={{ ...quote, marginTop: 4, whiteSpace: "pre-wrap" }}>{s.raw_description}</p>
           )}
           {s.notes && <span>Notes: {s.notes}</span>}
         </div>
@@ -163,46 +250,57 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
           Each is what the REQUESTER told us; there is no third party here to
           reveal, because a Market Signal has none stored. Admin-only. */}
       {requests.length > 0 && (
-        <details className="mt-3" open>
-          <summary className="cursor-pointer text-[11px] uppercase text-gold" style={{ letterSpacing: "0.14em" }}>
+        <details style={{ marginTop: 12 }} open>
+          <summary style={summaryStyle}>
             {requests.length} investigation {requests.length === 1 ? "request" : "requests"}
           </summary>
-          <div className="mt-2 space-y-3">
+          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 12 }}>
             {requests.map((r) => (
-              <div key={r.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-[12px] text-gray-2">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="text-cream">{r.requesting_business ?? "Unnamed business"}</span>
+              <div
+                key={r.id}
+                className="mono"
+                style={{
+                  background: "var(--sunken)",
+                  border: "1px solid var(--rule)",
+                  borderRadius: "var(--dk-radius-in)",
+                  padding: 12,
+                  fontSize: 12,
+                  color: "var(--ink-2)",
+                }}
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                  <span style={{ color: "var(--ink)" }}>{r.requesting_business ?? "Unnamed business"}</span>
                   {/* Which act this was. A capability declaration is an answer
                       to the signal; an investigation is a question about it. */}
-                  <span className="badge uppercase">
+                  <span style={tag}>
                     {r.request_kind === "capability" ? "can supply / buy" : "investigate"}
                   </span>
-                  {r.requester_type && <span className="badge uppercase">{r.requester_type}</span>}
-                  {r.wants_intro && <span className="text-gold">wants introduction</span>}
-                  <span className="ml-auto">{fmt(r.created_at)}</span>
+                  {r.requester_type && <span style={tag}>{r.requester_type}</span>}
+                  {r.wants_intro && (
+                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>wants introduction</span>
+                  )}
+                  <span style={{ marginLeft: "auto" }}>{fmt(r.created_at)}</span>
                 </div>
                 {r.establish_goal && (
-                  <p className="mt-1.5 border-l-2 border-white/10 pl-3 leading-relaxed">
-                    Establish: {r.establish_goal}
-                  </p>
+                  <p style={{ ...quote, marginTop: 6, fontSize: 12 }}>Establish: {r.establish_goal}</p>
                 )}
                 {r.capability && (
-                  <p className="mt-1.5 border-l-2 border-white/10 pl-3 leading-relaxed">
+                  <p style={{ ...quote, marginTop: 6, fontSize: 12 }}>
                     Can supply / would buy: {r.capability}
                   </p>
                 )}
-                <div className="mt-1 grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+                <div style={{ marginTop: 4, display: "grid", gap: "2px 24px", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
                   {/* How to reach them. Admin only, like everything else on
                       this card, and never shown to another member. */}
                   {r.contact_phone && (
-                    <span className="text-cream">
+                    <span style={{ color: "var(--ink)" }}>
                       Call: {r.contact_phone}
                       {r.contact_language ? ` (${r.contact_language})` : ""}
                     </span>
                   )}
                   {r.indicative && <span>Indicative: {r.indicative}</span>}
                   {r.geography && <span>Geography: {r.geography}</span>}
-                  {r.evidence && <span className="sm:col-span-2">Evidence: {r.evidence}</span>}
+                  {r.evidence && <span style={{ gridColumn: "1 / -1" }}>Evidence: {r.evidence}</span>}
                 </div>
               </div>
             ))}
@@ -212,66 +310,91 @@ function SignalCard({ s, requests }: { s: Signal; requests: Investigation[] }) {
 
       {/* Decisions. Approve publishes; the lifecycle buttons pull it off the
           board and drive the investigation states (brief Block D). */}
-      <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-white/10 pt-4">
+      <div
+        style={{
+          marginTop: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "flex-end",
+          gap: 8,
+          borderTop: "1px solid var(--rule)",
+          paddingTop: 16,
+        }}
+      >
         {!isApproved && (
           <form action={approveSignalAction}>
             <input type="hidden" name="id" value={s.id} />
-            <button className="btn-gold !px-4 !py-2 text-[12px]">Approve for board</button>
+            <button className="b b--sm">Approve for board</button>
           </form>
         )}
         {isApproved && (
           <form action={setSignalStatusAction}>
             <input type="hidden" name="id" value={s.id} />
             <input type="hidden" name="status" value="private" />
-            <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Unpublish</button>
+            <button className="b b--2 b--sm">Unpublish</button>
           </form>
         )}
         <form action={setSignalStatusAction}>
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="under_investigation" />
-          <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Under investigation</button>
+          <button className="b b--2 b--sm">Under investigation</button>
         </form>
         {/* Confirm links a real member listing by its reference. The listing
             must be approved, current and its owner verification-passing, or the
             action is refused. The signal is never itself promoted; a normal
             Qualified Opportunity carries it. */}
-        <form action={setSignalStatusAction} className="flex items-end gap-2">
+        <form action={setSignalStatusAction} style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="confirmed" />
-          <label className="flex flex-col gap-1 text-[10px] uppercase text-gray-2" style={{ letterSpacing: "0.12em" }}>
+          <label
+            className="mono"
+            style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-3)" }}
+          >
             Link listing ref (required)
-            <input
-              name="listing_ref"
-              required
-              placeholder="PT-0000"
-              className="w-28 rounded-md border border-white/15 bg-white/[0.04] px-2 py-1.5 text-[12px] text-cream"
-            />
+            <input name="listing_ref" required placeholder="PT-0000" style={field} />
           </label>
-          <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Confirm</button>
+          <button className="b b--2 b--sm">Confirm</button>
         </form>
         <form action={setSignalStatusAction}>
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="unavailable" />
-          <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Mark unavailable</button>
+          <button className="b b--2 b--sm">Mark unavailable</button>
         </form>
         <form action={setSignalStatusAction}>
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="expired" />
-          <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Mark expired</button>
+          <button className="b b--2 b--sm">Mark expired</button>
         </form>
         <form action={setSignalStatusAction}>
           <input type="hidden" name="id" value={s.id} />
           <input type="hidden" name="status" value="withdrawn" />
-          <button className="btn-ghost-light !px-4 !py-2 text-[12px]">Withdraw</button>
+          <button className="b b--2 b--sm">Withdraw</button>
         </form>
       </div>
 
       {s.promoted_listing_id && (
-        <p className="mt-2 text-[11px] text-positive">
+        <p style={{ marginTop: 8, fontSize: 11, color: "var(--pos)" }}>
           Linked to a Qualified Opportunity (a normal member listing). This signal did not inherit a badge.
         </p>
       )}
     </div>
+  );
+}
+
+function Group({ title, signals, requestsFor }: {
+  title: string;
+  signals: Signal[];
+  requestsFor: (id: string) => Investigation[];
+}) {
+  return (
+    <>
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 24, marginBottom: 12 }}>{title}</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {signals.map((s) => (
+          <SignalCard key={s.id} s={s} requests={requestsFor(s.id)} />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -315,75 +438,71 @@ export default async function AdminSignalsPage({
   );
 
   return (
-    <div>
+    <>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
-      <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
-        Market Signals
-      </h1>
-      <p className="mt-2 text-[14px] text-gray-2">
-        {live.length} live · {awaiting.length} awaiting approval · {totalRequests} investigation
-        {totalRequests === 1 ? " request" : " requests"} · {all.length} total. Imports land private; a
-        signal is public only after you approve it.
-      </p>
-
-      {error && (
-        <div className="mt-4 rounded-xl border border-negative/40 bg-negative/10 p-4 text-[13px] text-cream">
-          The signal table could not be read. If the Block A migration has not been applied yet,
-          apply supabase/migrations/20260723a_desk_radar_signal_gate.sql first.
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <h2>
+              <PonteIcon name="primitive.span" size={18} />
+              Market Signals
+            </h2>
+            <p className="d">
+              {live.length} live &middot; {awaiting.length} awaiting approval &middot; {totalRequests} investigation
+              {totalRequests === 1 ? " request" : " requests"} &middot; {all.length} total. Imports land private; a
+              signal is public only after you approve it.
+            </p>
+          </div>
         </div>
-      )}
 
-      {requested.length > 0 && (
-        <>
-          <h2 className="serif text-white mt-8 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-            Investigation requests
-          </h2>
-          <div className="space-y-4">
-            {requested.map((s) => (
+        {error && (
+          <div className="err">
+            <PonteIcon name="evidence.evreview" size={22} />
+            <div>
+              <b>The signal table could not be read</b>
+              <p>
+                If the Block A migration has not been applied yet, apply
+                supabase/migrations/20260723a_desk_radar_signal_gate.sql first.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {requested.length > 0 && (
+          <Group title="Investigation requests" signals={requested} requestsFor={requestsFor} />
+        )}
+
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 24, marginBottom: 12 }}>
+          Awaiting approval
+        </h3>
+        {awaiting.length === 0 ? (
+          <div className="empty">
+            <PonteIcon name="evidence.infocomplete" size={24} />
+            <div>
+              <b>Nothing private is waiting</b>
+              <p>Imported signals land here first, before you approve them for the board.</p>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {awaiting.map((s) => (
               <SignalCard key={s.id} s={s} requests={requestsFor(s.id)} />
             ))}
           </div>
-        </>
-      )}
+        )}
 
-      <h2 className="serif text-white mt-8 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-        Awaiting approval
-      </h2>
-      {awaiting.length === 0 ? (
-        <div className="glass p-6 text-[14px] text-gray-2">Nothing private is waiting.</div>
-      ) : (
-        <div className="space-y-4">
-          {awaiting.map((s) => (
-            <SignalCard key={s.id} s={s} requests={requestsFor(s.id)} />
-          ))}
-        </div>
-      )}
+        {live.length > 0 && (
+          <Group title="Live on the board" signals={live} requestsFor={requestsFor} />
+        )}
 
-      {live.length > 0 && (
-        <>
-          <h2 className="serif text-white mt-10 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-            Live on the board
-          </h2>
-          <div className="space-y-4">
-            {live.map((s) => (
-              <SignalCard key={s.id} s={s} requests={requestsFor(s.id)} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {rest.length > 0 && (
-        <>
-          <h2 className="serif text-white mt-10 mb-4" style={{ fontSize: 20, fontWeight: 500 }}>
-            Investigated, confirmed and retired
-          </h2>
-          <div className="space-y-4">
-            {rest.map((s) => (
-              <SignalCard key={s.id} s={s} requests={requestsFor(s.id)} />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+        {rest.length > 0 && (
+          <Group
+            title="Investigated, confirmed and retired"
+            signals={rest}
+            requestsFor={requestsFor}
+          />
+        )}
+      </section>
+    </>
   );
 }

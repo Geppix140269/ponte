@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -41,83 +42,99 @@ async function foundingAttribution(): Promise<{ code: string; count: number }[]>
 }
 
 export default async function AdminOverview() {
-  const [pending, approved, listings, users, orders, products] = await Promise.all([
+  const [submitted, reviewed, listings, users] = await Promise.all([
     countWhere("listings", "status", "submitted"),
     countWhere("listings", "status", "approved"),
     count("listings"),
     count("profiles"),
-    count("orders"),
-    count("products"),
   ]);
 
   const cards = [
-    { label: "Awaiting vetting", value: pending },
-    { label: "Approved listings", value: approved },
+    { label: "Submitted", value: submitted },
+    { label: "Reviewed", value: reviewed },
     { label: "Listings total", value: listings },
     { label: "Users", value: users },
-    { label: "Legacy orders", value: orders },
-    { label: "Legacy products", value: products },
   ];
 
   const attribution = await foundingAttribution();
 
   return (
-    <div>
-      <h1
-        className="serif text-white mb-7"
-        style={{ fontSize: 32, fontWeight: 500 }}
-      >
-        Overview
-      </h1>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {cards.map((c) => (
-          <div key={c.label} className="glass p-6">
-            <p
-              className="serif text-white"
-              style={{ fontSize: 36, fontWeight: 500, lineHeight: 1 }}
-            >
-              {c.value}
-            </p>
-            <p
-              className="mt-3 text-[10px] uppercase text-gray-2"
-              style={{ letterSpacing: "0.22em" }}
-            >
-              {c.label}
+    <>
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <p className="kicker">Overview</p>
+            <h2>
+              <PonteIcon name="profile.account" size={18} />
+              Current operations
+            </h2>
+            <p className="d">Counts read live from Supabase.</p>
+          </div>
+        </div>
+
+        <dl className="factgrid">
+          {cards.map((c) => (
+            <div key={c.label}>
+              <dt>{c.label}</dt>
+              <dd>{c.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="sec">
+        <div className="sech">
+          <div>
+            <h2>Founding attribution</h2>
+            <p className="d">
+              Aggregate counts by invitation code, with no member identities.
+              Members who arrive via the general invitation URL (/join) are
+              counted here by invitation code.
             </p>
           </div>
-        ))}
-      </div>
-      <p className="mt-6 text-[13px] text-gray-2">
-        Counts read live from Supabase. Seed the catalogue (supabase/seed.sql)
-        to populate products.
-      </p>
+        </div>
 
-      <section className="mt-10">
-        <h2
-          className="serif text-white mb-4"
-          style={{ fontSize: 22, fontWeight: 500 }}
-        >
-          Founding attribution
-        </h2>
         {attribution.length === 0 ? (
-          <p className="text-[13px] text-gray-2">
-            No founding referrals recorded yet. Members who arrive via the
-            general invitation URL (/join) are counted here by invitation code.
-          </p>
+          <div className="empty">
+            <PonteIcon name="profile.reference" size={24} />
+            <div>
+              <b>No founding referrals recorded yet</b>
+              <p>
+                As members arrive through an invitation code, their totals appear
+                here.
+              </p>
+            </div>
+          </div>
         ) : (
-          <div className="glass divide-y divide-white/10 max-w-md">
-            {attribution.map((a) => (
-              <div
-                key={a.code}
-                className="flex items-center justify-between px-5 py-3 text-[14px]"
-              >
-                <span className="mono text-cream">{a.code}</span>
-                <span className="text-white">{a.count}</span>
-              </div>
-            ))}
+          <div className="panel" style={{ maxWidth: 420 }}>
+            <div className="panel__h">
+              <b>By invitation code</b>
+              <span>{attribution.length} codes</span>
+            </div>
+            <div>
+              {attribution.map((a, i) => (
+                <div
+                  key={a.code}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "11px 16px",
+                    fontFamily: "var(--f-mono)",
+                    fontSize: 13,
+                    borderTop: i === 0 ? "0" : "1px solid var(--rule)",
+                  }}
+                >
+                  <span style={{ color: "var(--ink-2)" }}>{a.code}</span>
+                  <span style={{ color: "var(--ink)", fontWeight: 600 }}>
+                    {a.count}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
-    </div>
+    </>
   );
 }
