@@ -18,6 +18,72 @@ Use this structure:
 
 ---
 
+## 2026-07-30 - Market Signals made crawlable, and the private-site gate deliberately kept up
+
+### Completed
+
+- **`robots.txt` and `sitemap.xml` were 404 in production, silently.** Both are
+  generated App Router routes at the origin root, but neither is a page, so the
+  locale middleware rewrote them to `/en/robots.txt` and `/en/sitemap.xml`,
+  which no route serves. Fixed in `middleware.ts` by exempting the two exact
+  paths from LOCALE routing only. **They still pass through the site gate.**
+  Every other piece of SEO is downstream of these answering 200.
+- **Signal detail pages are no longer blanket `noindex`.** They returned
+  `title: "Market Signal", robots: { index: false }` for several thousand pages.
+  The stated reason (a dated indication becoming a stale search result) is
+  answered rather than dropped: only an approved, in-window, `indexable`,
+  product-bearing signal is offered, and every offered page carries the
+  source-read date in its title, description and structured data.
+- **schema.org JSON-LD** added: a seller offer is an `Offer`, a buyer
+  requirement is a `Demand`. No counterparty node is emitted, and a test asserts
+  no `INTERNAL_SIGNAL_COLUMNS` name reaches the serialised output. Emitted under
+  exactly the same predicate as the index directive.
+- **`robots.txt` names the AI agents explicitly**, including `Google-Extended`
+  and `Applebot-Extended`, which are consent tokens rather than crawlers.
+  `/dev`, `/workspace`, `/auth` and `/api` are now disallowed; previously only
+  `/account` and `/admin` were.
+- **Sitemap** gains the two Market Signals hubs and the individual signals via
+  `lib/board/indexable-signals.ts`, applying the same three predicates the
+  page's robots directive applies.
+- **Data:** `indexable` was `false` on every imported row. Now **true on 4,764**
+  live signals; **0** private rows are indexable.
+
+### Decisions
+
+- **Owner decision (2026-07-30): the private-site gate STAYS UP.** Offered three
+  options - lift it, open only the public signal surfaces, or leave it - the
+  owner chose to leave it. **All SEO work above is therefore correct and inert.**
+- Consequence, recorded so it is not rediscovered: `https://ponte.trade/` and
+  every path under it, including `/robots.txt` and `/sitemap.xml`, answer
+  **401** with `WWW-Authenticate: Basic`. No search engine or AI crawler can
+  read anything. A sustained 401 also causes search engines to drop pages they
+  already hold, so this is not a neutral state, it is an actively de-indexing
+  one. That is understood and accepted.
+
+### Risks / discrepancies
+
+- The two conditions for the SEO to function are independent: the gate must
+  lift **and** the middleware fix must ship. Neither alone is sufficient. The
+  fix is in PR #139; the gate is an owner action with no ticket.
+- The 1,310 cleaned signals carry no `public_expires_at`, so once indexed their
+  URLs would never age out. `indexRisk()` reports this per row.
+- Published signals still carry no written description, so meta descriptions are
+  assembled from structured facts only.
+
+### Next
+
+- Nothing, while the gate is up. When it lifts: verify `robots.txt` and
+  `sitemap.xml` answer 200, submit the sitemap, then decide the expiry window.
+
+### Evidence
+
+- PR #139. `lib/market-signals/seo.ts` and its 13 tests;
+  `lib/board/indexable-signals.ts`; `app/robots.ts`; `app/sitemap.ts`.
+- Production 401 confirmed by request on 30 July 2026 for `/`, `/robots.txt`,
+  `/sitemap.xml` and `/market-signals`.
+
+---
+
 ## 2026-07-30 - Supplier signals cleaned, category vocabulary merged, Market Signals entrance built
 
 ### Completed
