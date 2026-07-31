@@ -142,14 +142,29 @@ the two missing labelled backs: "Back to the room" on `[roomId]/activity` and
 the workspace hub. Test: `lib/nav/__tests__/form-dirty.test.ts` (7 assertions),
 wired into `npm test`.
 
-Remaining (next slices), by route:
-- `marketplace/new` (`ListingForm`): guard exits; wire its existing preview
-  `Save as draft` into the dialog's authenticated save option.
-- `find/o/[ref]`: add a labelled "Back to results/Find"; guard the
-  `RequestIntroduction` composer; the breadcrumb is currently inert text.
-- `/learn/*` double-`<main>` fix; `not-found.tsx` second-CTA label/target fix.
-- Anonymous "Sign in and save" wiring where a journey supports resume-after-auth.
-- Desktop + 390x844 + screen-reader evidence per wired journey.
+**2026-07-30 — Slice 3 implemented on branch (same PR #118).**
+`useUnsavedGuard` gained an opt-in `interceptLinks` mode: a capture-phase click
+listener, installed only while dirty, that holds any in-app link the surface
+does not itself render (a bared journey's own nav, the shared header logo) and
+performs the navigation only on "Leave". Default off, so the Slice 1 callers are
+unchanged. `find/o/[ref]`: the inert breadcrumb is replaced by a labelled
+`JourneyBack` to the results, and `RequestIntroduction` now guards its typed
+answers (target, geography, reason) with `interceptLinks`, so the introduction
+request cannot be lost to the FindChrome nav. Fixed the two audit tail items:
+the double `<main>` on `/learn/duties` and `/learn/trade-data` (the page's own
+`<main>` demoted to a `<div>`; ChromeGate supplies the landmark), and the
+`not-found.tsx` second CTA, which said "Browse the Catalogue" while pointing at
+`/pricing` -- now "Explore the market" to `/explore`.
+
+Discovered: `marketplace/new` and its `ListingForm` are RETIRED (the route now
+redirects to the Structure composer, LB-009). There is nothing there to guard;
+the composer that needs protection is `/structure`, done in Slice 1.
+
+Remaining:
+- Desktop + 390x844 + screen-reader visual evidence per wired journey (the dev
+  app is behind a "temporarily private" env gate in the working environment, so
+  this is deferred rather than skipped; correctness is covered by unit,
+  component, typecheck and build).
 
 ## 12. Decisions and discoveries
 

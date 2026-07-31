@@ -142,7 +142,9 @@ export default function LearnDutiesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([faqJsonLd, breadcrumbJsonLd]) }}
       />
-      <main className="pb-24">
+      {/* A div, not a <main>: ChromeGate already supplies the page's single
+          <main> landmark on this non-bared route, and two would nest. */}
+      <div className="pb-24">
         {/* Hero */}
         <section className="container-px pt-16 pb-12">
           <nav className="mb-6 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted">
@@ -357,7 +359,7 @@ export default function LearnDutiesPage() {
             </Link>
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 }
