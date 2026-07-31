@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured, getUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { accountBrief, isAiConfigured, type AccountBrief } from "@/lib/ai-vet";
 import { COUNTRIES } from "@/lib/countries";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import DeskShell from "@/components/desk/DeskShell";
@@ -103,6 +104,71 @@ export default async function AccountPage({ params }: { params: { locale: string
   const countryName =
     (profile?.country && COUNTRIES.find((c) => c.code === profile.country)?.name) || null;
 
+  // The account brief. One cached brief per member, regenerated at most daily or
+  // when the number of records changes, so the reading stays affordable without
+  // ever being metered: nothing here is behind a payment, and no credit is
+  // touched. A member with no records has nothing to read about and gets none.
+  //
+  // `pending_connection_requests` is a real count, not a placeholder: the brief
+  // treats it as the urgent item, so an invented number would be an invented
+  // instruction. It is counted server side with a head query over this member's
+  // own records, which costs one round trip and reads no request content.
+  let brief: AccountBrief | null = null;
+  if (isAiConfigured()) {
+    const { data: own } = await adminSb
+      .from("listings")
+      .select("id, ref, type, product, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    const records = own ?? [];
+    if (records.length > 0) {
+      const { count } = await adminSb
+        .from("listing_connections")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending")
+        .in(
+          "listing_id",
+          records.map((l) => l.id),
+        );
+      const pendingRequests = count ?? 0;
+
+      const { data: cached } = await adminSb
+        .from("account_briefs")
+        .select("brief, listing_count, generated_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const stale =
+        !cached ||
+        cached.listing_count !== records.length ||
+        Date.now() - new Date(cached.generated_at).getTime() > 24 * 3600 * 1000;
+      if (stale) {
+        const fresh = await accountBrief({
+          listings: records.map((l) => ({
+            ref: l.ref,
+            type: l.type,
+            product: l.product,
+            status: l.status,
+            days_old: Math.floor((Date.now() - new Date(l.created_at).getTime()) / 86400000),
+          })),
+          pending_connection_requests: pendingRequests,
+        });
+        if (fresh) {
+          brief = fresh;
+          await adminSb.from("account_briefs").upsert({
+            user_id: user.id,
+            brief: fresh,
+            listing_count: records.length,
+            generated_at: new Date().toISOString(),
+          });
+        } else if (cached) {
+          brief = cached.brief as AccountBrief;
+        }
+      } else {
+        brief = cached.brief as AccountBrief;
+      }
+    }
+  }
+
   return (
     <AccountShell>
       {/* Founding attribution (Block F): records once, for a genuinely new
@@ -152,6 +218,46 @@ export default async function AccountPage({ params }: { params: { locale: string
           </div>
         </dl>
       </section>
+
+      {/* The account brief: a written read of where this member's records
+          stand, and what is waiting on them. It is generated from the member's
+          own records and the count of undecided introduction requests, and
+          nothing else. It states, it does not act. */}
+      {brief ? (
+        <section className="sec">
+          <div className="sech">
+            <div>
+              <h2>
+                <PonteIcon name="field.notes" size={18} />
+                Where your records stand
+              </h2>
+              <p className="d">
+                A written read of the records on your account and the introductions waiting on
+                your decision. It is a summary, not an instruction, and it changes nothing.
+              </p>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel__h">
+              <PonteIcon name="evidence.infocomplete" size={16} />
+              <b>Account brief</b>
+            </div>
+            <div style={{ padding: "14px 16px" }}>
+              <p style={{ fontSize: 14, lineHeight: 1.6 }}>{brief.summary}</p>
+              {brief.next_actions.length > 0 ? (
+                <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+                  {brief.next_actions.map((a) => (
+                    <li key={a} className="d" style={{ marginTop: 6 }}>
+                      {a}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="sec">
         <div className="sech">
