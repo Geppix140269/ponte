@@ -266,7 +266,18 @@ fixture has kept from the beginning.
 users, 7 listings with 2 approved, every `deal_room_*` table at 0, 0 Storage objects,
 append-only trigger enabled, ledger 52.
 
-## Written but NOT applied: naming a participant to the people they deal with
+## APPLIED to production, 31 July 2026: naming a participant to the people they deal with
+
+**Applied from merged `main` `3aefd5a`. Ledger 52 -> 53.** Functions 23 -> 24;
+`display_label` present; `deal_room_display_label` executable by `authenticated`
+**false**; `authenticated` still 21, `anon` and PUBLIC still 0; policies 14.
+`deal-room:acl-verify` passes (it caught the new SECURITY DEFINER function first,
+21 expected against 22 found) and `deal-room:negative-access` holds at 109.
+
+**Rendered:** the counterparty's procedure page now reads "Marta Ferreira" and
+"Diego Alonso · Iberia Importaciones SL" where it read "A participant".
+
+The section below was written while it was still pending.
 
 `supabase/migrations/20260731f_deal_room_participant_label.sql`.
 

@@ -2006,3 +2006,62 @@ is the owner's decision, and it is squarely in the way: a Deal Room whose whole 
 is knowing who you are dealing with cannot show "A participant" where the counterparty
 should be.
 
+---
+
+# Option 1 applied and rendered, 31 July 2026: the counterparty has a name
+
+**Authorised:** owner, 31 July 2026 - merge PR #180, apply it, re-render.
+**Applied:** `20260731f_deal_room_participant_label.sql`,
+`3e8bbf6b80fe974e632636871e0f567896d01f4d632e5caf6726cf37a38a5bc2`, from merged
+`main` `3aefd5a`. Ledger 52 -> **53**.
+
+## 83. Verified against the catalogue
+
+| | Before | After |
+|---|---|---|
+| `deal_room_*` functions | 23 | **24** |
+| `deal_room_participants.display_label` | absent | **present** |
+| `deal_room_display_label` executable by `authenticated` | - | **false** |
+| executable by `authenticated` / `anon` / PUBLIC | 21 / 0 / 0 | **21 / 0 / 0** |
+| `deal_room%` policies | 14 | 14 |
+
+`npm run deal-room:acl-verify` passes. It caught the new SECURITY DEFINER function
+first - 21 expected, 22 found - which is the guard doing its job, and the count is
+now 22 with the reason written beside it.
+
+`npm run deal-room:negative-access`: **109 passed, 0 failed**, unchanged.
+
+## 84. What the render shows
+
+The counterparty's procedure page, which read "A participant" before:
+
+| | |
+|---|---|
+| **Marta Ferreira** | approved |
+| **Diego Alonso · Iberia Importaciones SL** | approved |
+
+Both parties named, to each other, with no change to `profiles` and no member able
+to call `deal_room_display_label` at all.
+
+## 85. The heading fix was scoped too narrowly, and the render caught that too
+
+The first correction scoped the heading colour to `.dr-page`. That fixed the page
+heading and left the **site footer's** column headings near-white, because the
+footer sits outside `.dr-page` but on the canvas `body:has(.dr-page)` repaints.
+
+Paint a surface and you own everything standing on it. The rule now uses the same
+scope as the background rule it exists to answer, and "THE DESK", "COMPANY" and
+"CONTACT" are legible.
+
+**Residual, recorded and not fixed:** the footer's `ponte.` wordmark and the two
+small labels above the registered addresses are still faint on the paper surface.
+They are not headings, they live in the shared footer component, and changing them
+blind would reach every other route. Worth a deliberate pass by whoever owns
+`components/pfooter.css` and the brand lockup.
+
+## 86. No production change beyond the migration
+
+The capture room was built and removed. After it: 10 users, 7 listings, every
+`deal_room_*` table at 0, ledger 53. The flag is still off, nothing is deployed, the
+access wall is untouched.
+

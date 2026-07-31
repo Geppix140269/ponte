@@ -221,7 +221,11 @@ require_(svc === 24, `service_role holds EXECUTE on ${svc}, expected 24 (unchang
 // 7. Hardening that is easy to lose in an ACL edit.
 const definers = rows.filter((r) => r.security_definer);
 const unpinned = rows.filter((r) => !r.config.includes("search_path=public, pg_temp"));
-require_(definers.length === 21, `expected 21 SECURITY DEFINER functions, found ${definers.length}`);
+// 22 since `20260731f` added `deal_room_display_label`, which must be SECURITY
+// DEFINER to read `profiles` at all and is granted to no member role. A new
+// SECURITY DEFINER function is a thing to notice, which is why this is a count
+// and not a filter.
+require_(definers.length === 22, `expected 22 SECURITY DEFINER functions, found ${definers.length}`);
 require_(
   unpinned.length === 0,
   `functions without a pinned search_path: ${unpinned.map((r) => r.name).join(", ")}`,
