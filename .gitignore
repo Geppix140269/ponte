@@ -57,6 +57,11 @@ build-verify.log
 # Playwright: browsers, traces and run output. Evidence PNGs are committed
 # under docs/codex/audits/, but nothing generated at run time is.
 /e2e/.playwright/
+
+# The live-room manifest holds SESSION TOKENS for the two throwaway accounts the
+# capture signs in as. `scripts/deal-room-live-room.mjs remove` deletes it along
+# with the accounts; it must never reach a commit in the meantime.
+/e2e/.deal-room-live.json
 /playwright-report/
 /test-results/
 

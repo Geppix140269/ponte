@@ -18,6 +18,67 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - A live Deal Room was built and proved; the pages were not rendered
+
+### Completed
+
+- **`scripts/deal-room-live-room.mjs`** stands a real room up and takes it down:
+  two members, a published Deal, an invitation, the four-agreement admission gate,
+  an agreed procedure, evidence through clarification and acceptance, and an open
+  blocker. A failed build removes what it created and says whether that succeeded;
+  `remove` and the failure path are one function so they cannot drift.
+- **`e2e/deal-room-surfaces.spec.ts`** captures the twelve surfaces at 1280x900 and
+  390x844 **as both parties**, and asserts each page rendered rather than
+  photographing a 401 or a 404.
+- **A live room was built, queried as each member through RLS, and removed.** It
+  proves the derivations the surface review corrected: the initiator sees 3
+  participant rows but 2 people, the counterparty 2 and 2, both draw 2 Bridge
+  entries, both can name 2 of 2 approvers, and `invitationSent` is true because a
+  workspace left `draft`. Under the old code the initiator would have been drawn
+  three times and told "3 participants", and before `20260731d` the counterparty
+  could have named 1 of 2 approvers.
+- `e2e/deal-room-bridge.spec.ts` rationale corrected: it is not superseded, because a
+  single room is in one state at a time and blocked, paused, read-only and
+  ready-to-proceed cannot be reached on demand.
+
+### Risks / discrepancies
+
+- **BLOCKED, and not by anything in the repository: the site access wall.**
+  `middleware.ts` gates every request behind Basic auth unconditionally - first
+  statement, no exemption for `NODE_ENV`, localhost or path - and only the
+  password's SHA-256 is committed. **No page can be rendered anywhere without it.**
+  The gate was not weakened and the password was not guessed. The capture needs
+  `PONTE_SITE_PASSWORD=... npx playwright test e2e/deal-room-surfaces.spec.ts`.
+- **Nobody has seen these pages.** Layout, contrast, wrapping at 390px, the Bridge
+  against real names, whether the copy reads sensibly beside real values - none of it
+  is established. The data is right; the rendering is unexamined.
+- The live-room manifest holds session tokens for two throwaway `@example.invalid`
+  accounts. It is gitignored, never printed, and deleted by `remove` along with the
+  accounts.
+
+### Production changes
+
+- **None persisting.** The room was built and removed through the same
+  Management-API path as the proof fixture's teardown. After it: 10 users, 7 listings
+  with 2 approved and 0 archived, every `deal_room_*` table at 0, 0 Storage objects,
+  append-only trigger enabled, ledger 52.
+- The fixture listing is published only long enough to open the room, then archived:
+  `deal_room_propose` requires a published Deal, and `lib/board/live-deals.ts`
+  selects the live board on the same status.
+
+### Next
+
+1. **The owner supplies `PONTE_SITE_PASSWORD` and the capture runs.** That is the
+   whole of what is outstanding for this step.
+2. Requirement 12 in its stronger sense.
+3. Approval 4 remains unauthorised.
+
+### Evidence
+
+- `docs/codex/audits/deal-room/GATE-C-APPROVAL-1-2026-07-30.md`, sections 61 to 65
+
+---
+
 ## 2026-07-31 - Surface review fixes applied; Approval 3 holds at 94 of 94
 
 ### Completed
