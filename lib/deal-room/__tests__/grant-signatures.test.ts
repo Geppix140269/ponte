@@ -231,6 +231,17 @@ const NEW_SINCE_20260729B: Record<string, string> = {
     "deal_room_billing_events, mirroring deal_room_events_append_only. It has no " +
     "caller - the trigger fires it - and the file revokes it from public, anon " +
     "and authenticated.",
+  deal_room_declare_opening_intent:
+    "20260731g (WRITTEN, NOT APPLIED): the opener's own declaration of their " +
+    "relationship to the represented business, their transaction role and their " +
+    "authority to participate, for one Deal. Controller ruling of 31 July 2026: " +
+    "those three were previously inferred from owning an approved listing and " +
+    "filled with the literals 'Deal owner' and 'Owner of the published Deal', " +
+    "which is not a declaration the member made. GRANTED to authenticated, " +
+    "because the member is the only person who can make it; it proves listing " +
+    "ownership and refuses each of the three by name when blank, and writes the " +
+    "only rows deal_room_opener_declarations ever receives - that table has a " +
+    "select-own policy and no member INSERT or UPDATE policy at all.",
   deal_room_room_prerequisite_state:
     "20260731g (WRITTEN, NOT APPLIED): PT-PRODUCT-2026-07-27-01 section 6 " +
     "criterion 9, as an explicit named state - not_applicable, completed or " +

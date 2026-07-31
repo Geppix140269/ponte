@@ -321,6 +321,92 @@ test("the opener has a real route into criterion 3's 'or'", () => {
   assert.ok(name![1].includes("v_profile_legal_name"), "criterion 4 must accept the opener's own trading name");
 });
 
+test("the opener declares relationship, role and authority personally", () => {
+  // Controller ruling, 31 July 2026: "Owning the Ponte listing is not the same
+  // fact as declaring authority to participate for the represented business, and
+  // a system-generated string is not the member's declaration."
+  assert.ok(code.includes("create table if not exists public.deal_room_opener_declarations ("));
+  assert.ok(
+    code.includes("constraint deal_room_opener_declarations_one_per_deal unique (profile_id, listing_id)"),
+    "the declaration is keyed to the member AND the Deal: the same person may hold different roles in different Deals",
+  );
+  for (const column of ["business_relationship", "transaction_role", "participation_authority"]) {
+    assert.ok(
+      code.includes(`  ${column}`.padEnd(0) || column),
+      `${column} must be stored`,
+    );
+    assert.ok(
+      code.includes(`length(btrim(${column})) > 0`),
+      `${column} must refuse a blank: a whitespace declaration is not a declaration`,
+    );
+  }
+  assert.ok(code.includes("create function public.deal_room_declare_opening_intent(") ||
+    code.includes("create or replace function public.deal_room_declare_opening_intent("));
+  assert.ok(
+    code.includes("grant execute on function public.deal_room_declare_opening_intent(uuid, text, text, text) to authenticated;"),
+    "the member is the only person who can make the declaration, so they must be able to call it",
+  );
+  // The table takes writes only through that command.
+  assert.ok(code.includes("alter table public.deal_room_opener_declarations enable row level security;"));
+  assert.ok(
+    !/create policy[\s\S]{0,200}on public\.deal_room_opener_declarations for (insert|update|all)/.test(code),
+    "no member INSERT or UPDATE policy: the only way in is the command",
+  );
+});
+
+test("the gate reads the opener's declaration and infers nothing from ownership", () => {
+  assert.ok(
+    code.includes("from public.deal_room_opener_declarations d"),
+    "the propose path must read the member's own declaration",
+  );
+  // The three facts, on the propose branch, from the declaration and nothing else.
+  for (const [variable, source] of [
+    ["v_relationship", "v_open_relationship"],
+    ["v_role", "v_open_role"],
+    ["v_authority", "v_open_authority"],
+  ] as const) {
+    const assignments = code.match(new RegExp(`${variable} := [\\s\\S]*?;`, "g")) ?? [];
+    assert.ok(
+      assignments.some((a) => a.includes(source)),
+      `${variable} must be resolved from the opener's declaration on the propose path`,
+    );
+  }
+  /*
+   * And the inference that used to fill them is gone from the gate entirely.
+   *
+   * Scoped to the helper's own body rather than the whole file, because
+   * `'Deal owner'` legitimately survives elsewhere: it is the `declared_capacity`
+   * placeholder `20260731b` introduced so an admitted initiator row satisfies
+   * `deal_room_participants_identity_when_admitted`, which closed LB-001. That
+   * is a constraint filler on a column the gate does not read for the opener,
+   * not evidence for a criterion. The distinction is the whole point, so the
+   * assertion is made where it is true rather than widened until it is false.
+   */
+  const helper = executable.match(
+    /create or replace function public\.deal_room_admission_minimum_missing\([\s\S]*?\n\$\$;/,
+  );
+  assert.ok(helper, "the gate helper body must be readable");
+  for (const gone of [
+    "v_owns_approved_deal",
+    "v_submitter_role",
+    "'Deal owner'",
+    "'Owner of the published Deal'",
+    "l.user_id",
+    "l.status",
+  ]) {
+    assert.ok(
+      !helper![0].includes(gone),
+      `the gate must not read or manufacture ${gone}: owning a listing is a precondition, never evidence`,
+    );
+  }
+
+  // The two literals must also never be written as a role or an authority.
+  assert.ok(
+    !executable.includes("'Owner of the published Deal'"),
+    "the authority must be the member's words; the literal has no remaining legitimate use",
+  );
+});
+
 test("the opener's participant rows carry declarations, not borrowed facts", () => {
   const seed = code.match(/select coalesce\(nullif\(btrim\(coalesce\(p\.declared_capacity[\s\S]*?;/);
   assert.ok(seed, "the initiator's own declarations must be read before the inserts");

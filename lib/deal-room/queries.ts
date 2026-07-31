@@ -676,25 +676,32 @@ export async function loadOverview(access: RoomAccess): Promise<RoomOverview> {
 /**
  * Where each of the nine is supplied when the member is OPENING a room.
  *
- * Criteria 6, 7 and 8 point at the Deal rather than at a declaration form, and
- * that is not a fudge. On this path the relationship IS `listings.submitter_role`
- * and the role and authority follow from owning an approved Deal, so the only
- * place a member can change any of the three is the Deal record itself.
+ * Two forms, because the facts are about two different things. `#opener-about`
+ * holds what is true of the member in every Deal - the capacity they act in,
+ * the name they trade under, where they are established. `#opener-intent` holds
+ * what is true of them in THIS Deal - how they stand to the business they
+ * represent, their role, and what authorises it.
+ *
+ * Criteria 6, 7 and 8 used to point at the Deal record, because the relationship
+ * was read from `listings.submitter_role` and the role and authority were
+ * manufactured from ownership. The controller struck that on 31 July 2026, so
+ * they now point where the member states them.
  */
 function openerRoutes(locale: string, listingId: string): RemedyRoutes {
   const account = `/${locale}/account`;
-  const declaration = `/${locale}/deal-rooms/propose?deal=${listingId}#opener-declaration`;
-  const deal = `/${locale}/structure?edit=${listingId}`;
+  const page = `/${locale}/deal-rooms/propose?deal=${listingId}`;
+  const about = `${page}#opener-about`;
+  const intent = `${page}#opener-intent`;
   return {
     authenticated_individual: account,
     confirmed_contact_method: account,
-    identified_business_or_capacity: declaration,
-    legal_or_trading_name: declaration,
-    jurisdiction: declaration,
-    relationship_to_the_business: deal,
-    transaction_role_declared: deal,
-    authority_to_participate_declared: deal,
-    room_specific_prerequisite: `/${locale}/deal-rooms/propose?deal=${listingId}`,
+    identified_business_or_capacity: about,
+    legal_or_trading_name: about,
+    jurisdiction: about,
+    relationship_to_the_business: intent,
+    transaction_role_declared: intent,
+    authority_to_participate_declared: intent,
+    room_specific_prerequisite: page,
   };
 }
 
@@ -725,16 +732,20 @@ function inviteeRoutes(locale: string, admissionHref: string): RemedyRoutes {
 /**
  * The initiator's admissibility, before a room or a participant row exists.
  *
- * The role and the authority are the values `deal_room_propose` itself writes
- * (`20260731b`): `'Deal owner'` and `'Owner of the published Deal'`. They are
- * supplied here ONLY after this function has re-proved the same precondition the
- * command proves - that the caller owns this Deal and it is approved. If that is
- * not established, both are null and the criteria block. They are facts about a
- * proved relationship, not defaults.
+ * ## Ownership is not evidence
  *
- * `relationship_to_the_business` comes from `listings.submitter_role`, which the
- * publication gate requires before a Deal can be approved, so on this path the
- * criterion rests on a real and separate stored fact.
+ * An earlier version re-proved that the caller owned an approved Deal and then
+ * supplied criteria 6, 7 and 8 from that: the relationship from
+ * `listings.submitter_role`, the role and the authority from the literals
+ * `deal_room_propose` was about to write. The controller struck all three on
+ * 31 July 2026 - "owning the Ponte listing is not the same fact as declaring
+ * authority to participate for the represented business, and a system-generated
+ * string is not the member's declaration."
+ *
+ * So this function no longer reads the listing at all. The three come from
+ * `deal_room_opener_declarations`, keyed to the member and this Deal, which the
+ * member wrote through `deal_room_declare_opening_intent`. No row means three
+ * pending criteria, which is what "has not declared" should look like.
  *
  * `declaredCapacity` and `legalOrTradingName` come from the member's own profile
  * declarations, added by `20260731g`. Before them this function always passed
@@ -755,11 +766,15 @@ export async function initiatorAdmissibility(listingId: string, locale: string):
         .maybeSingle()
     : { data: null };
 
-  const { data: listing } = user
+  // The member's own declaration for THIS Deal. Read through their own session,
+  // and the table's only policy is select-your-own, so somebody else's
+  // declaration cannot be read and cannot satisfy anything.
+  const { data: declaration } = user
     ? await supabase
-        .from("listings")
-        .select("id, user_id, status, submitter_role")
-        .eq("id", listingId)
+        .from("deal_room_opener_declarations")
+        .select("business_relationship, transaction_role, participation_authority")
+        .eq("profile_id", user.id)
+        .eq("listing_id", listingId)
         .maybeSingle()
     : { data: null };
 
@@ -770,11 +785,11 @@ export async function initiatorAdmissibility(listingId: string, locale: string):
     declared_capacity?: string | null;
     legal_or_trading_name?: string | null;
   };
-  const deal = (listing ?? {}) as { user_id?: string | null; status?: string | null; submitter_role?: string | null };
-
-  // The same precondition `deal_room_propose` proves. Only when it holds do the
-  // role and authority the command will write count as established.
-  const ownsApprovedDeal = Boolean(user) && deal.user_id === user!.id && deal.status === "approved";
+  const declared = (declaration ?? {}) as {
+    business_relationship?: string | null;
+    transaction_role?: string | null;
+    participation_authority?: string | null;
+  };
 
   return dealRoomAdmissibility(
     {
@@ -791,9 +806,11 @@ export async function initiatorAdmissibility(listingId: string, locale: string):
       // a fallback here, which is the independence the controller required.
       legalOrTradingName: row.legal_or_trading_name ?? row.company ?? null,
       jurisdiction: row.country ?? null,
-      relationshipToBusiness: ownsApprovedDeal ? (deal.submitter_role ?? null) : null,
-      transactionRole: ownsApprovedDeal ? "Deal owner" : null,
-      participationAuthority: ownsApprovedDeal ? "Owner of the published Deal" : null,
+      // The member's own words, for this Deal. No literal, and no inference from
+      // owning the listing: the controller ruled out both on 31 July 2026.
+      relationshipToBusiness: declared.business_relationship ?? null,
+      transactionRole: declared.transaction_role ?? null,
+      participationAuthority: declared.participation_authority ?? null,
       roomPrerequisites: notApplicableUntilPrerequisitesExist(),
     },
     openerRoutes(locale, listingId),

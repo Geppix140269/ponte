@@ -24,7 +24,7 @@ import { templateFor } from "@/lib/deal-room/procedure";
 import { STARTER_LIMITS_PROPOSED } from "@/lib/deal-room/entitlement";
 import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/states";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
-import { declareOpenerCapacity, proposeRoom } from "../actions";
+import { declareOpenerCapacity, declareOpeningIntent, proposeRoom } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +127,21 @@ export default async function ProposeRoomPage({
     country?: string | null;
     declared_capacity?: string | null;
     legal_or_trading_name?: string | null;
+  };
+
+  // And what they declared about THIS Deal. Own-row policy only, so a
+  // declaration that is not theirs returns nothing and the form starts empty.
+  const { data: intentRow } = selected
+    ? await supabase
+        .from("deal_room_opener_declarations")
+        .select("business_relationship, transaction_role, participation_authority")
+        .eq("listing_id", selected.id)
+        .maybeSingle()
+    : { data: null };
+  const intent = (intentRow ?? {}) as {
+    business_relationship?: string | null;
+    transaction_role?: string | null;
+    participation_authority?: string | null;
   };
 
   return (
@@ -301,11 +316,12 @@ export default async function ProposeRoomPage({
               It is rendered whether or not the member is admissible, because a
               declaration is also a thing somebody may want to correct.
             */}
-            <div id="opener-declaration">
+            <div id="opener-about">
               <p className="dr__item-meta">
                 Who you act for, under what name, and where you are established. Ponte records these declarations and
                 does not check them. If you act for a company, its name is enough; if you act in your own professional
-                capacity, state that capacity and the name you trade under.
+                capacity, state that capacity and the name you trade under. These are true of you in every Deal, so
+                they are kept on your account.
               </p>
               <CommandForm
                 action={declareOpenerCapacity}
@@ -330,6 +346,58 @@ export default async function ProposeRoomPage({
                   label="Jurisdiction you are established in"
                   name="jurisdiction"
                   defaultValue={mine.country ?? undefined}
+                />
+                <Submit label="Record this declaration" />
+              </CommandForm>
+            </div>
+
+            {/*
+              The three facts that are about THIS Deal rather than about the
+              member, and the reason they are a separate form.
+
+              Until 31 July 2026 the opener declared none of them. Owning an
+              approved Deal produced a relationship read from the Deal's
+              submitter role and two literals - "Deal owner" and "Owner of the
+              published Deal" - and the gate counted all three as satisfied. The
+              controller struck it: owning a Ponte listing is not a declaration
+              of authority to act for the business behind it, and a string the
+              system wrote is not something the member said. An invitee types
+              all three; the opener now does too.
+            */}
+            <div id="opener-intent">
+              <p className="dr__item-meta">
+                How you stand to the business you represent in this Deal, your role in it, and what authorises you to
+                act in that role. These are about this transaction, not about you in general, so they are recorded
+                against this Deal. Ponte records the declaration and does not check it.
+              </p>
+              <CommandForm
+                action={declareOpeningIntent}
+                hidden={{
+                  locale: params.locale,
+                  listingId: selected.id,
+                  returnTo: `/${params.locale}/deal-rooms/propose?deal=${selected.id}`,
+                }}
+              >
+                <TextField
+                  label="How you stand to the business you represent"
+                  name="businessRelationship"
+                  required
+                  defaultValue={intent.business_relationship ?? undefined}
+                  help="An office you hold, a mandate you were given, or an engagement you were retained under. This is not your role in the transaction and not your authority to commit."
+                />
+                <Field
+                  label="Your role in this transaction"
+                  name="transactionRole"
+                  required
+                  defaultValue={intent.transaction_role ?? undefined}
+                  help="For example: seller, buyer, seller's agent. Responsibilities in the procedure are assigned by role."
+                />
+                <TextField
+                  label="Your authority to act in that role"
+                  name="participationAuthority"
+                  required
+                  defaultValue={intent.participation_authority ?? undefined}
+                  help="State what authorises you: an office you hold, a mandate, an engagement. Declaring authority is not the same as it having been sighted."
                 />
                 <Submit label="Record this declaration" />
               </CommandForm>

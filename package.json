@@ -42,7 +42,8 @@
     "evidence:deal-room": "playwright test e2e/deal-room-bridge.spec.ts",
     "deal-room:negative-access": "node scripts/deal-room-negative-access.mjs",
     "deal-room:acl-verify": "node scripts/deal-room-acl-verify.mjs",
-    "deal-room:live-room": "node scripts/deal-room-live-room.mjs"
+    "deal-room:live-room": "node scripts/deal-room-live-room.mjs",
+    "deal-room:gate-proof": "node scripts/deal-room-admission-gate-proof.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.4.0",

@@ -34,6 +34,15 @@
 --    independently and may not be derived from the declared capacity or the
 --    participation authority. Nullable, no default, no backfill: an existing row
 --    is not invalidated, and an already-admitted participant is not re-gated.
+-- 1b. `deal_room_opener_declarations`, a new table keyed to the member AND the
+--    Deal, holding the three facts the member who opens a room states about
+--    themselves: relationship to the represented business, transaction role and
+--    authority to participate. Written only by
+--    `deal_room_declare_opening_intent`, a new command granted to
+--    `authenticated`. Before it, the propose path read the relationship from
+--    `listings.submitter_role` and manufactured the other two as the literals
+--    `'Deal owner'` and `'Owner of the published Deal'`; the controller ruled on
+--    31 July 2026 that neither is the member's declaration.
 -- 2. `deal_room_admission_minimum_missing(profile, participant, listing)` - one
 --    read-only helper returning the NAMES of the section 6 criteria that are not
 --    met, or an empty array. It is the SQL twin of `dealRoomAdmissibility()` and
@@ -96,11 +105,19 @@
 -- "Relationship to the business" and "legal or trading name" now each have their
 -- own column, added in section 0. Neither is read from the declared capacity or
 -- the participation authority any more; the controller struck both fallbacks by
--- name. On the propose path the initiator's `business_relationship` is seeded
--- from `listings.submitter_role`, which the publication gate already requires
--- before a Deal can be approved - a separate stored column, not a re-reading of
--- another criterion - and the legal name from `profiles.company`. If either is
--- absent the opener is refused, exactly as an invitee would be.
+-- name.
+--
+-- ## Ownership of a Deal is a precondition, never evidence
+--
+-- `deal_room_propose` still requires the caller to own an approved Deal, and
+-- that requirement is untouched. What changed on 31 July 2026 is that owning it
+-- no longer SATISFIES anything: the gate does not read `listings.user_id`,
+-- `listings.status` or `listings.submitter_role` at all, and no criterion is
+-- filled with a literal. The opener's relationship, role and authority come from
+-- `deal_room_opener_declarations`, which they wrote, exactly as the invitee's
+-- come from `deal_room_participants`, which they wrote. If the declaration is
+-- absent, three criteria block and the opener is refused - as an invitee in the
+-- same position would be.
 --
 -- ## Verification after applying
 --
@@ -118,7 +135,12 @@
 -- six-parameter form, then:
 --
 --   drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);
+--   drop function if exists public.deal_room_room_prerequisite_state(uuid);
+--   drop function if exists public.deal_room_declare_opening_intent(uuid, text, text, text);
 --   drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
+--   -- and, if the reversal is permanent, the opener declarations. Dropping the
+--   -- table DISCARDS what members stated about themselves:
+--   -- drop table if exists public.deal_room_opener_declarations;
 --   -- the columns may be left in place; they are nullable and nothing reads
 --   -- them once the functions above are back. Drop them only if the reversal is
 --   -- permanent, and note that dropping them DISCARDS member declarations:
@@ -216,6 +238,142 @@ comment on column public.profiles.legal_or_trading_name is
   'Preferred over profiles.company where both exist; never written from it.';
 
 -- ---------------------------------------------------------------------------
+-- 0c. The opener's OWN declaration of relationship, role and authority
+-- ---------------------------------------------------------------------------
+--
+-- Controller ruling, 31 July 2026: "Owning the Ponte listing is not the same
+-- fact as declaring authority to participate for the represented business, and
+-- a system-generated string is not the member's declaration."
+--
+-- Until now the propose path manufactured all three of criteria 6, 7 and 8 once
+-- ownership of an approved Deal had been proved: the relationship was read from
+-- `listings.submitter_role`, and the role and authority were the literals
+-- `'Deal owner'` and `'Owner of the published Deal'`. An invitee types all three
+-- and an opener typed none, while the gate claimed one standard at both doors.
+-- That is the asymmetry this table removes.
+--
+-- ## Why a table and not more profile columns
+--
+-- The capacity and the trading name in section 0b are facts about the MEMBER:
+-- an independent broker is an independent broker in every room. Relationship,
+-- role and authority are facts about the member IN THIS DEAL - the same person
+-- may be the seller's agent in one and a buyer in the next - so they are keyed
+-- to the member and the Deal together, and the unique constraint says exactly
+-- that. A profile column would have made a declaration about one transaction
+-- silently stand for every other, which is a different way of manufacturing a
+-- declaration the member did not make.
+--
+-- ## Why the three are `not null` here but nullable everywhere else
+--
+-- A row in this table IS the declaration. There is no such thing as a partial
+-- one: a member who has stated a role and not an authority has not declared,
+-- and the check constraints make a blank string as impossible as a null. The
+-- absence of a row is how "not declared" is represented, and the gate reads
+-- that absence as three pending criteria.
+
+create table if not exists public.deal_room_opener_declarations (
+  id                      uuid primary key default gen_random_uuid(),
+  profile_id              uuid not null references public.profiles(id) on delete cascade,
+  listing_id              uuid not null references public.listings(id) on delete cascade,
+
+  business_relationship   text not null,
+  transaction_role        text not null,
+  participation_authority text not null,
+
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now(),
+
+  constraint deal_room_opener_declarations_one_per_deal unique (profile_id, listing_id),
+  constraint deal_room_opener_declarations_relationship_stated
+    check (length(btrim(business_relationship)) > 0),
+  constraint deal_room_opener_declarations_role_stated
+    check (length(btrim(transaction_role)) > 0),
+  constraint deal_room_opener_declarations_authority_stated
+    check (length(btrim(participation_authority)) > 0)
+);
+
+comment on table public.deal_room_opener_declarations is
+  'What the member who OPENS a room declares about themselves in one specific '
+  'Deal: PT-PRODUCT-2026-07-27-01 section 6 criteria 6, 7 and 8. Written only by '
+  'deal_room_declare_opening_intent. Never inferred from listing ownership and '
+  'never populated with a system-generated literal.';
+
+alter table public.deal_room_opener_declarations enable row level security;
+
+-- Read your own, and nothing else: the propose page shows the member what they
+-- previously declared so the form is a correction rather than a blank slate.
+-- There is deliberately no member INSERT or UPDATE policy, following the rule
+-- the rest of this cluster follows - the only way in is a command, and a
+-- command cannot change state without validating it.
+drop policy if exists deal_room_opener_declarations_read_own on public.deal_room_opener_declarations;
+create policy deal_room_opener_declarations_read_own
+  on public.deal_room_opener_declarations for select
+  using (profile_id = auth.uid());
+
+create or replace function public.deal_room_declare_opening_intent(
+  p_listing_id   uuid,
+  p_relationship text,
+  p_role         text,
+  p_authority    text
+) returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_l public.listings%rowtype;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated' using errcode = '42501';
+  end if;
+
+  select * into v_l from public.listings where id = p_listing_id;
+  if not found then
+    raise exception 'Deal not found' using errcode = '42501';
+  end if;
+  -- The same ownership rule `deal_room_propose` applies. A member does not
+  -- declare a role in somebody else's Deal.
+  if v_l.user_id <> auth.uid() then
+    raise exception 'Only the owner of a Deal can declare how they act in it' using errcode = '42501';
+  end if;
+
+  /*
+   * Three separate refusals, so a member who supplied two is told which one is
+   * missing rather than being sent back to re-read the whole form. Each names
+   * its own fact in its own words, because they are three different questions
+   * and the point of this table is that they stopped being answered by one.
+   */
+  if coalesce(btrim(p_relationship), '') = '' then
+    raise exception 'State how you stand to the business you represent: an office you hold, a mandate, or an engagement'
+      using errcode = '23514';
+  end if;
+  if coalesce(btrim(p_role), '') = '' then
+    raise exception 'State your role in this transaction' using errcode = '23514';
+  end if;
+  if coalesce(btrim(p_authority), '') = '' then
+    raise exception 'State what authorises you to act in that role' using errcode = '23514';
+  end if;
+
+  insert into public.deal_room_opener_declarations
+    (profile_id, listing_id, business_relationship, transaction_role, participation_authority)
+  values
+    (auth.uid(), p_listing_id, btrim(p_relationship), btrim(p_role), btrim(p_authority))
+  on conflict (profile_id, listing_id) do update
+    set business_relationship   = excluded.business_relationship,
+        transaction_role        = excluded.transaction_role,
+        participation_authority = excluded.participation_authority,
+        updated_at              = now();
+end;
+$$;
+
+comment on function public.deal_room_declare_opening_intent(uuid, text, text, text) is
+  'The opener''s own declaration of relationship, transaction role and authority '
+  'for one Deal. ADR-0021 ruling 2, controller correction of 31 July 2026: these '
+  'three facts must be the member''s statement, not an inference from owning the '
+  'listing and not a fixed literal.';
+
+revoke execute on function public.deal_room_declare_opening_intent(uuid, text, text, text) from public, anon;
+grant execute on function public.deal_room_declare_opening_intent(uuid, text, text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- 1. The predicate
 -- ---------------------------------------------------------------------------
 --
@@ -283,8 +441,13 @@ declare
   v_p public.deal_room_participants%rowtype;
   v_org_name text;
   v_org_country text;
-  v_submitter_role text;
-  v_owns_approved_deal boolean := false;
+  -- The opener's own declaration for this Deal. There is deliberately no
+  -- `v_submitter_role` and no `v_owns_approved_deal` any more: the controller
+  -- ruled on 31 July 2026 that owning the listing is not a declaration, so
+  -- ownership no longer supplies evidence for any criterion.
+  v_open_relationship text;
+  v_open_role text;
+  v_open_authority text;
   v_prerequisites text;
   -- The declared facts, resolved from whichever door was used.
   v_business text;
@@ -330,11 +493,21 @@ begin
     end if;
   end if;
 
+  /*
+   * The opener's declaration for THIS Deal.
+   *
+   * Note what is not read: `listings.user_id`, `listings.status` and
+   * `listings.submitter_role`. Ownership of an approved Deal is a precondition
+   * `deal_room_propose` checks on its own account, and it is not evidence for
+   * any of the nine - the controller struck that inference on 31 July 2026. If
+   * no declaration row exists, all three of criteria 6, 7 and 8 stay null and
+   * block, which is what "the opener has not declared" should look like.
+   */
   if p_listing is not null then
-    select (l.user_id = p_profile and l.status = 'approved'), l.submitter_role
-      into v_owns_approved_deal, v_submitter_role
-      from public.listings l where l.id = p_listing;
-    v_owns_approved_deal := coalesce(v_owns_approved_deal, false);
+    select d.business_relationship, d.transaction_role, d.participation_authority
+      into v_open_relationship, v_open_role, v_open_authority
+      from public.deal_room_opener_declarations d
+     where d.profile_id = p_profile and d.listing_id = p_listing;
   end if;
 
   /*
@@ -368,14 +541,18 @@ begin
     v_role := nullif(btrim(coalesce(v_p.transaction_role, '')), '');
     v_authority := nullif(btrim(coalesce(v_p.participation_authority, '')), '');
   else
-    -- The propose path. The role and the authority are the values this same
-    -- transaction is about to write ('Deal owner', 'Owner of the published
-    -- Deal'), and they count as established only once ownership of an approved
-    -- Deal has been proved. Otherwise they are null and both criteria block.
-    v_relationship := case when v_owns_approved_deal
-                           then nullif(btrim(coalesce(v_submitter_role, '')), '') end;
-    v_role := case when v_owns_approved_deal then 'Deal owner' end;
-    v_authority := case when v_owns_approved_deal then 'Owner of the published Deal' end;
+    /*
+     * The propose path, from the opener's OWN declaration and nothing else.
+     *
+     * No literal appears on either side of these three assignments, and no
+     * branch consults ownership. That is the whole of the controller's
+     * correction: the member who opens the room answers the same three
+     * questions the member who is invited answers, in their own words, and the
+     * gate reads the same kind of stored statement in both cases.
+     */
+    v_relationship := nullif(btrim(coalesce(v_open_relationship, '')), '');
+    v_role := nullif(btrim(coalesce(v_open_role, '')), '');
+    v_authority := nullif(btrim(coalesce(v_open_authority, '')), '');
   end if;
 
   -- 1. An authenticated, attributable member. No level, by controller ruling.
@@ -609,6 +786,9 @@ declare
   -- participant rows, so the opener carries the same facts an invitee supplies.
   v_self_capacity text;
   v_self_name text;
+  v_self_relationship text;
+  v_self_role text;
+  v_self_authority text;
 begin
   if auth.uid() is null then
     raise exception 'Not authenticated' using errcode = '42501';
@@ -799,11 +979,15 @@ begin
    * `deal_room_participants_identity_when_admitted` satisfied - that constraint
    * needs an org or a capacity on an admitted row, and 20260731b introduced this
    * literal to close LB-001. Where the member has actually declared a capacity,
-   * their declaration is recorded instead of the placeholder.
+   * their declaration is recorded instead of the placeholder. It is a constraint
+   * filler, not evidence: criterion 3 is evaluated from the profile declaration
+   * and the organisation name, never from this column on the opener's own row.
    *
-   * `business_relationship` comes from `listings.submitter_role` and nothing
-   * else: a separate stored column, not a re-reading of the capacity or the
-   * authority written beside it.
+   * The role, the authority and the relationship come from
+   * `deal_room_opener_declarations` - the member's own words for this Deal - and
+   * from nowhere else. No literal appears in these inserts for any of the three,
+   * and `listings.submitter_role` is not read: the controller ruled on 31 July
+   * 2026 that owning the listing is not a declaration.
    */
   select coalesce(nullif(btrim(coalesce(p.declared_capacity, '')), ''), 'Deal owner'),
          coalesce(nullif(btrim(coalesce(p.legal_or_trading_name, '')), ''),
@@ -811,14 +995,18 @@ begin
     into v_self_capacity, v_self_name
     from public.profiles p where p.id = auth.uid();
 
+  select d.business_relationship, d.transaction_role, d.participation_authority
+    into v_self_relationship, v_self_role, v_self_authority
+    from public.deal_room_opener_declarations d
+   where d.profile_id = auth.uid() and d.listing_id = p_listing_id;
+
   insert into public.deal_room_participants
     (room_id, sub_room_id, profile_id, org_id, participant_class, transaction_role,
      participation_authority, declared_capacity, represented_legal_name, business_relationship,
      is_required_approver, is_room_administrator, state, admitted_at)
   values
-    (v_room, null, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', v_self_capacity, v_self_name,
-     nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
+    (v_room, null, auth.uid(), v_org, 'principal', v_self_role,
+     v_self_authority, v_self_capacity, v_self_name, v_self_relationship,
      true, true, 'admitted', now());
 
   insert into public.deal_room_participants
@@ -826,9 +1014,8 @@ begin
      participation_authority, declared_capacity, represented_legal_name, business_relationship,
      is_required_approver, is_room_administrator, state, admitted_at)
   values
-    (v_room, v_sub, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', v_self_capacity, v_self_name,
-     nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
+    (v_room, v_sub, auth.uid(), v_org, 'principal', v_self_role,
+     v_self_authority, v_self_capacity, v_self_name, v_self_relationship,
      true, true, 'admitted', now());
 
   perform public.deal_room_log_event(v_room, null, 'room_proposed', 'room', v_room,

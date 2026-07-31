@@ -56,7 +56,7 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
 ## Written but NOT applied: the Deal Room admission verification gate
 
 `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
-SHA-256 `694b7141dcddb957791da3977d385fb0880e9cc16d983b0074bc1b5f6e5b4c13`, 47476 bytes.
+SHA-256 `393a19470bd388edab70bdb21cf363e4995698d5b983107a3d4bc258859f7b43`, 57138 bytes.
 
 **Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
 threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
@@ -88,14 +88,28 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    is ever written from `listings.submitter_role`, from a relationship or from
    an authority, and `legal_or_trading_name` is never defaulted from
    `company` — it is preferred over it at read time and falls back to it.
-3. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
+3. **`deal_room_opener_declarations`**, a new table keyed to `(profile_id,
+   listing_id)`, holding what the member who OPENS a room states about
+   themselves in one Deal: relationship to the represented business,
+   transaction role, authority to participate. Row Level Security on, one
+   select-own policy, and **no member INSERT or UPDATE policy** — the only
+   writer is **`deal_room_declare_opening_intent(uuid, text, text, text)`**, a
+   new command granted to `authenticated` which proves listing ownership and
+   refuses each of the three by name when blank. Before this, the propose path
+   read the relationship from `listings.submitter_role` and manufactured the
+   other two as the literals `'Deal owner'` and `'Owner of the published Deal'`;
+   the controller ruled on 31 July 2026 that owning a listing is not a
+   declaration of authority to act for the business behind it, and that a string
+   the system wrote is not something the member said. The gate now reads no
+   listing column at all.
+4. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
    `not_applicable`, `completed` or `pending` for section 6 criterion 9 — a name,
    never a number. This release has one branch and returns `not_applicable`,
    because no prerequisites table and no prerequisite column exist anywhere in
    the schema. It is a claim made out loud rather than a criterion skipped, which
    is what the controller required. Revoked from `public`, `anon` and
    `authenticated`.
-4. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
+5. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
    NAMES of the section 6 entry criteria a member does not meet, or an empty
    array. Never a count, a score or a completeness value. `security definer`
    because it reads `auth.users.email_confirmed_at`; `stable` because it writes
@@ -104,7 +118,7 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    state one profile id at a time. Classified in
    `lib/deal-room/__tests__/grant-signatures.test.ts` and listed as permanently
    internal in `lib/deal-room/__tests__/function-acl.test.ts`.
-5. **`deal_room_declare_participation`**, **re-signed from six parameters to
+6. **`deal_room_declare_participation`**, **re-signed from six parameters to
    eight**, so the legal/trading name and the relationship are declared in the
    same atomic act as the capacity, the role and the authority. This is the one
    signature change in the file and it is deliberate: the six-parameter form is
@@ -113,13 +127,13 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    `anon`, `grant` to `authenticated`). Pinned by `DELIBERATE_RESIGNATURES` in
    `grant-signatures.test.ts`, which also scans every later migration to be sure
    nothing recreates the old form.
-6. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
+7. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
    to the gate, on the same nine-argument signature. The initiator's two
    participant rows now also carry `represented_legal_name` from
    `profiles.company` and `business_relationship` from `listings.submitter_role`
    — separate stored columns, so the opener supplies the same two facts an
    invitee does.
-7. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
+8. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
    plus the same call, on the same one-argument signature.
 
 ### Why it exists at all
@@ -141,6 +155,21 @@ confirmed contact method, evaluated on its own. Six of the nine criteria are
 satisfied by a member declaration, because section 6 asks for a declaration and
 nothing more, and all nine are independent — a test breaks each one in isolation
 and requires exactly that one to be reported.
+
+### Execution status: NOT PROVED IN A DATABASE
+
+`scripts/deal-room-admission-gate-proof.mjs` (`npm run deal-room:gate-proof`)
+carries the seven proofs the controller requires: clean application, signatures
+and grants read from `pg_proc`, direct-RPC refusal for an inadmissible opener
+and an inadmissible invitee, both admissible paths, the stale-agreement refusal,
+and rollback. It has **never been executed.** There is no PostgreSQL, no
+container runtime and no Supabase CLI on the machine this branch was written on,
+so there is nowhere to run it, and the Supabase Preview for the branch fails in
+an unrelated historical migration.
+
+Until that script runs green against a disposable production-equivalent schema,
+the SQL boundary is **written and unproved**, and no part of this record should
+be read as saying otherwise.
 
 ### Reversal
 

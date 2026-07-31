@@ -1,4 +1,4 @@
-// Falsifiability. Nine named ways to break the admission gate, and the proof
+// Falsifiability. Ten named ways to break the admission gate, and the proof
 // that the suite goes red for every one of them.
 //
 // Run: npx tsx lib/deal-room/__tests__/admission-mutation.test.ts
@@ -23,6 +23,10 @@
 //   7. unrelated evidence is relabelled identity_confirmed
 //   8. every remedy collapses onto one route
 //   9. the opener's route into criterion 3's "or" is closed again
+//
+// The third pass found one more, and it is covered the same way:
+//
+//   10. the opener's authority is manufactured from ownership again
 //
 // Each mutation below is applied to the real file, the relevant suite is run in
 // a child process, and the run is required to FAIL. The file is then restored.
@@ -261,6 +265,18 @@ mutation(
   MIGRATION,
   `                         nullif(btrim(coalesce(v_profile_capacity, '')), ''));`,
   `                         null);`,
+  [SQL_SUITE],
+);
+
+// ---------------------------------------------------------------------------
+// 10. The correction of the third controller pass
+// ---------------------------------------------------------------------------
+
+mutation(
+  "10. manufacturing the opener's authority from ownership again is caught",
+  MIGRATION,
+  "    v_authority := nullif(btrim(coalesce(v_open_authority, '')), '');",
+  "    v_authority := 'Owner of the published Deal';",
   [SQL_SUITE],
 );
 

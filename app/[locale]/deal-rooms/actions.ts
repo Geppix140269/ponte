@@ -288,6 +288,46 @@ export async function declareOpenerCapacity(formData: FormData): Promise<void> {
   redirect(back);
 }
 
+/**
+ * The opener's declaration about THIS Deal: relationship, role, authority.
+ *
+ * ## Why this is an RPC while the one above is a table write
+ *
+ * `declareOpenerCapacity` writes the member's own `profiles` row, which carries
+ * member policies. `deal_room_opener_declarations` deliberately has no member
+ * INSERT or UPDATE policy, following the rule the rest of the cluster follows:
+ * the only way in is a command, and a command validates before it writes. So
+ * this calls `deal_room_declare_opening_intent`, which proves the caller owns
+ * the Deal and refuses each of the three facts by name if it is blank.
+ *
+ * ## Why the three are not defaulted from anything
+ *
+ * They used to be. Owning an approved Deal produced a relationship read from
+ * `listings.submitter_role` and the literals `'Deal owner'` and `'Owner of the
+ * published Deal'`, and the gate counted all three as satisfied. The controller
+ * struck it on 31 July 2026: owning a listing is not a declaration of authority
+ * to act for the business behind it, and a string the system wrote is not
+ * something the member said. Nothing here supplies a value the member did not
+ * type.
+ */
+export async function declareOpeningIntent(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
+  const locale = String(formData.get("locale") ?? "en");
+  const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("deal_room_declare_opening_intent", {
+    p_listing_id: String(formData.get("listingId") ?? ""),
+    p_relationship: String(formData.get("businessRelationship") ?? ""),
+    p_role: String(formData.get("transactionRole") ?? ""),
+    p_authority: String(formData.get("participationAuthority") ?? ""),
+  });
+
+  if (error) fail(back, readable(error));
+  revalidatePath(`/${locale}/deal-rooms/propose`);
+  redirect(back);
+}
+
 export async function declareParticipation(formData: FormData): Promise<void> {
   const supabase = createClient();
   const back = returnTo(formData, "/");

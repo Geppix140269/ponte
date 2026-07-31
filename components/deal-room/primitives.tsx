@@ -341,12 +341,20 @@ export function TextField({
   help,
   required,
   rows = 3,
+  defaultValue,
 }: {
   label: string;
   name: string;
   help?: string;
   required?: boolean;
   rows?: number;
+  /**
+   * What the member declared last time, so a form they are sent back to is a
+   * correction rather than a blank slate they refill from memory. `Field` has
+   * carried this since it was written; the textarea had not needed it until the
+   * opener began declaring a relationship and an authority here.
+   */
+  defaultValue?: string;
 }) {
   const id = `f-${name}`;
   return (
@@ -366,6 +374,7 @@ export function TextField({
         name={name}
         rows={rows}
         required={required}
+        defaultValue={defaultValue}
         aria-describedby={help ? `${id}-help` : undefined}
       />
     </p>
