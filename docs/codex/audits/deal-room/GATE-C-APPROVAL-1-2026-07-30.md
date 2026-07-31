@@ -1005,3 +1005,108 @@ Still open, and not part of LB-008: requirements 12 and 13 (entitlement fail-clo
 cross-room isolation), which need Approval 3; Approval 2 (bucket and policies); and
 Approval 4 (flag and deploy).
 
+---
+
+# Gate C Approval 2, 31 July 2026: evidence Storage applied and verified
+
+**Authorised:** owner, 31 July 2026 — merge PR #142, then proceed with Approval 2.
+**Repository state:** merged `main` at `647436b539dc307bb16c6c53e8c2dcfa63face08`,
+clean worktree, CI `verify` SUCCESS.
+**Outcome:** **both migrations applied. Every check passed. No discrepancy.**
+
+## 28. What Approval 2 nearly broke, and how it was caught
+
+Reading `20260729c` before applying it found that its `deal room evidence upload`
+policy calls `deal_room_uuid_or_null(text)` and `deal_room_is_writable(uuid)` —
+both of which `20260730c` had revoked from `authenticated` on the ground that they
+appeared in no policy expression.
+
+That ground was true of the database **as applied** and false of the repository,
+where `20260729c` had been sitting since 29 July. The allowlist had been derived
+from `pg_policies where tablename like 'deal_room%'`, which cannot see
+`storage.objects` policies and cannot see policies that do not yet exist.
+
+Applying `20260729c` alone would have created an upload policy that failed **every
+member evidence upload** with `42501`. `20260731a` was prepared, reviewed and
+merged first, and applied first.
+
+## 29. Application
+
+| | Time (UTC) | Ledger | Checksum |
+|---|---|---|---|
+| `20260731a_deal_room_storage_policy_helpers.sql` | **04:26:11.008** | 47 → 48 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
+| `20260729c_deal_room_storage.sql` | **04:26:35.893** | 48 → 49 | `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972` |
+
+Both one transaction, exit 0, no timeout, no HTML, no 502. Checksums verified
+against the **merged** files before execution, not branch copies. `20260729b`,
+`20260730b` and `20260730c` remained byte-identical to their applied checksums
+throughout.
+
+## 30. Pre and post state, captured in full
+
+| | Before | After | Delta |
+|---|---|---|---|
+| Buckets | 6 | 7 | **only `deal-room-evidence`** |
+| Storage policies | 12 | 14 | **only the two Deal Room policies** |
+| `authenticated` EXECUTE | 19 | 21 | the two Storage helpers |
+| `anon` / `PUBLIC` EXECUTE | 0 / 0 | **0 / 0** | none |
+| `service_role` EXECUTE | 23 | **23** | none |
+
+`deal-room-evidence`: `public = false`, 25 MiB limit, restricted to
+`application/pdf`, `image/png`, `image/jpeg`, `image/webp`, **0 objects**.
+
+The two policies are `deal room evidence read` (SELECT) and `deal room evidence
+upload` (INSERT), both scoped `to authenticated`. **No UPDATE and no DELETE
+policy**, deliberately: an evidence version is immutable, and removal is a
+retention action for the service role.
+
+**Nothing unrelated changed.** Every bucket and every storage policy was listed
+before and after; the other six buckets and twelve policies are identical,
+fingerprints `84b3fdf5b6f33e833e9ba91cb9f0708d` and
+`b75af4ee476edb76c957e701a95aa8ee`. `ponte-deal-docs` is untouched and still holds
+0 objects.
+
+## 31. The witness, and the probe that mattered
+
+`npm run deal-room:acl-verify` **detected that the policies are now live**,
+switched itself from the required-19 regime to required-21, and exited 0:
+
+```
+  authenticated  : 21 of 23  (required 21, permitted 21)
+  note: storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are
+        required (expected 21)
+```
+
+That switch is the permitted-versus-required design working: the same script was
+green before Approval 2 with 19 and is green after with 21, without either state
+being a false alarm.
+
+**The upload policy was proved to evaluate, not merely to exist.** Two outcomes
+look similar and mean opposite things:
+
+| Response | Meaning |
+|---|---|
+| `permission denied for function …` | the grant is missing; the policy never reached its own decision |
+| a row-level-security refusal | **the policy evaluated and correctly denied** |
+
+A real QA member (`deals@ponte.trade`, `profiles.role = customer`) attempting an
+upload into a sub-room they do not participate in received:
+
+```
+403 Unauthorized: new row violates row-level security policy
+```
+
+That is the pass. Anonymous upload is refused identically. Anonymous and member
+listings of the private bucket both return `200 []`. **Nothing was uploaded**, and
+`deal-room-evidence` still holds 0 objects.
+
+## 32. What remains
+
+**Approval 3.** The read policy has so far been exercised only against an empty
+bucket, and requirements 12 and 13 — entitlement fail-closed, cross-room and
+cross-sub-room isolation — are still catalogue-only. All three need a labelled
+non-commercial pilot Deal and `npm run deal-room:negative-access`.
+
+**Approval 4** — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised.
+

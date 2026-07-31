@@ -101,7 +101,7 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the Storage policy helpers (blocks Approval 2)
+## APPLIED to production, 31 July 2026: the Storage policy helpers
 
 `supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql`.
 
@@ -110,8 +110,8 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 | SHA-256 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
 | Size | 4,040 bytes, no BOM; raw-byte and utf8-string hashes identical |
 | Content | **2 grants, one transaction. Nothing else.** |
-| Status | written and tested, **NOT applied** |
-| Ordering | **must be applied before, or in the same approval as, `20260729c`. Never after.** |
+| Status | **APPLIED 2026-07-31 04:26:11 UTC**, one transaction, exit 0. Ledger **47 to 48**, checksum verified |
+| Ordering | applied **before** `20260729c`, as required. `20260729c` followed at 04:26:35 UTC |
 
 **Approval 2 could not proceed without it, and the reason is a defect in
 `20260731a`'s predecessor.** `20260730c` revoked `authenticated` EXECUTE on four
@@ -175,6 +175,32 @@ then each ACL migration's revokes and grants apply in file order. A file-by-file
 assertion could not express this, because `20260730b` and `20260730c` are applied
 and immutable and cannot be asked retrospectively to have known about a pending
 migration. 29 assertions.
+
+### Confirmed in production after both were applied
+
+`npm run deal-room:acl-verify` detected the policies are live, switched itself to
+the required-21 regime and **exited 0**:
+
+```
+  authenticated  : 21 of 23  (required 21, permitted 21)
+  note: storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are
+        required (expected 21)
+```
+
+`anon` 0, `PUBLIC` 0, `service_role` 23 unchanged, `deal_room_log_event` still
+executable by neither member role.
+
+**The upload policy was proved to evaluate, not merely to exist.** A real QA member
+attempting an upload into a sub-room they do not participate in received:
+
+```
+403 Unauthorized: new row violates row-level security policy
+```
+
+That is the pass. Had `20260731a` not been applied first, the same request would
+have returned `permission denied for function deal_room_uuid_or_null` — the policy
+would have failed before reaching its own decision. Anonymous upload is refused
+identically, and both anonymous and member listings return `200 []`.
 
 ## APPLIED to production, 30 July 2026: the Deal Room internal-function ACL (LB-008 closed)
 
@@ -377,7 +403,7 @@ required to be identical — **what the application calls, what `20260729b` gran
 what `20260730b` grants** — because any two agreeing proves little when one is
 derived from the other. All three agree on the same **15** commands.
 
-## Deal Room launch slice: `20260729a` and `20260729b` APPLIED, `c` NOT applied
+## Deal Room launch slice: `20260729a`, `20260729b` and `20260729c` all APPLIED
 
 **Gate C Approval 1, executed 30 July 2026 against `cptglsmjmzcfpjndqfmc`.**
 `20260729a` applied from `main` at `7f979e0`; the corrected `20260729b` applied
@@ -491,12 +517,24 @@ This is the same defect class as the RLS gap recorded above: Supabase's default
 privileges grant more than the migration expects, and a `revoke ... from public`
 does not undo them.
 
-### `20260729c_deal_room_storage.sql` — NOT applied, not attempted
+### `20260729c_deal_room_storage.sql` — APPLIED 31 July 2026 (Approval 2)
 
-Its three executable statements create the `deal-room-evidence` bucket and its
-two `storage.objects` policies, which `GATE-C-TEST-PLAN.md` treats as Gate C
-**Approval 2**. `deal-room-evidence` does not exist; `ponte-deal-docs` still holds
-0 objects and 0 policies.
+Applied at **2026-07-31 04:26:35.893 UTC**, one transaction, exit 0, immediately
+after `20260731a` supplied the two helpers its upload policy needs. Ledger **48 to
+49**, checksum `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972`
+— the value recorded in the Gate C preflight, unchanged since.
+
+**Exactly the intended delta, and nothing else.** Buckets **6 to 7**: only
+`deal-room-evidence`, `public = false`, 25 MiB limit, restricted to
+`application/pdf`, `image/png`, `image/jpeg`, `image/webp`. Storage policies **12
+to 14**: only `deal room evidence read` (SELECT) and `deal room evidence upload`
+(INSERT), both scoped `to authenticated`. **No UPDATE and no DELETE policy**, by
+design — an evidence version is immutable and removal is a retention action.
+
+The other six buckets and twelve storage policies were captured before and after
+and are unchanged, fingerprints `84b3fdf5b6f33e833e9ba91cb9f0708d` and
+`b75af4ee476edb76c957e701a95aa8ee`. `ponte-deal-docs` is untouched and still holds
+**0 objects**; `deal-room-evidence` holds **0 objects**.
 
 ### Unchanged by all of this
 
