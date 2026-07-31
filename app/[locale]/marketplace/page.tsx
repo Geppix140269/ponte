@@ -58,7 +58,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ponte.trade";
 // The share headline is written in the sender's language; the ref and the
 // link are data and stay as they are.
 function waShareUrl(headline: string, ref: string): string {
-  const text = `${headline}\n${APP_URL}/marketplace/l/${encodeURIComponent(ref)}`;
+  const text = `${headline}\n${APP_URL}/find/o/${encodeURIComponent(ref)}`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
@@ -446,7 +446,7 @@ export default async function MarketplacePage({
                     />
                     {/* The whole row opens the listing. Controls sit above it. */}
                     <Link
-                      href={`/marketplace/l/${b.ref}`}
+                      href={`/find/o/${b.ref}`}
                       aria-label={t("board.open", { ref: b.ref })}
                       className="absolute inset-0 z-0"
                     />

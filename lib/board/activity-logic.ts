@@ -85,7 +85,7 @@ export function fromDeal(deal: LiveDeal): ActivityItem {
     destinationText: deal.destinationText,
     scope: scopeOf(deal.quantity, deal.unit),
     at: deal.postedAt,
-    href: deal.ref ? `/marketplace/l/${deal.ref}` : null,
+    href: deal.ref ? `/find/o/${deal.ref}` : null,
   };
 }
 
