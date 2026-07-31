@@ -21,14 +21,25 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
  *
  * ## What it needs
  *
- *   node scripts/deal-room-live-room.mjs build
- *   PONTE_SITE_PASSWORD=... npx playwright test e2e/deal-room-surfaces.spec.ts
- *   node scripts/deal-room-live-room.mjs remove
+ *   PONTE_ALLOW_PRODUCTION_DB=i-understand node scripts/deal-room-live-room.mjs build
  *
- * and a server started with `NEXT_PUBLIC_DEAL_ROOM=on` and a
- * `DEAL_ROOM_ALLOWLIST` containing both profile ids - the builder prints them.
- * The flag is inlined at build time, so it has to be set for the build, not just
- * the process.
+ *   NEXT_PUBLIC_DEAL_ROOM=on DEAL_ROOM_ALLOWLIST=<the two ids it printed> \
+ *     PONTE_DIST_DIR=.next-evidence npx next build
+ *   NEXT_PUBLIC_DEAL_ROOM=on DEAL_ROOM_ALLOWLIST=<same> \
+ *     PONTE_DIST_DIR=.next-evidence npx next start --port 3111
+ *
+ *   PONTE_EVIDENCE_BASE_URL=http://127.0.0.1:3111 PONTE_SITE_PASSWORD=... \
+ *     npx playwright test e2e/deal-room-surfaces.spec.ts
+ *
+ *   PONTE_ALLOW_PRODUCTION_DB=i-understand node scripts/deal-room-live-room.mjs remove
+ *
+ * `.next-evidence` is the dist dir the evidence run already uses, so the
+ * capture does not clear the ordinary build out from under anything.
+ *
+ * `NEXT_PUBLIC_DEAL_ROOM` is inlined at build time, so it has to be set for the
+ * BUILD and not only for the process that serves it. Setting it only on `next
+ * start` produces a server that 404s every Deal Room route and a directory of
+ * screenshots of nothing - which `assertRendered` catches, but late.
  *
  * ## The site access wall
  *
@@ -94,7 +105,10 @@ function surfaces(m: Manifest) {
     { id: "room-overview", path: room, who: "owner" as const },
     { id: "room-overview-counterparty", path: room, who: "counterparty" as const },
     { id: "procedure", path: `${room}/procedure`, who: "owner" as const },
-    // The one that read "A required approver" before 20260731d.
+    // The page that read "A required approver" twice, to BOTH parties, until
+    // 31 July 2026 - and still did after `20260731d`, because the cause was not
+    // the one the database work had found. `listParticipants()` was returning an
+    // error and an empty array to everybody.
     { id: "procedure-counterparty", path: `${room}/procedure`, who: "counterparty" as const },
     { id: "invitation", path: `${room}/invitation`, who: "owner" as const },
     { id: "activity", path: `${room}/activity`, who: "owner" as const },
@@ -122,8 +136,10 @@ async function settle(page: Page): Promise<void> {
  * name so the failure says which one happened.
  */
 async function assertRendered(page: Page, path: string): Promise<void> {
-  const status = page.url();
-  expect(status, `navigation left ${path}`).toContain(path.split("?")[0]);
+  // English is the default locale, so `middleware.ts` canonicalises `/en/x` to
+  // `/x`. Landing on the unprefixed form is arriving, not being redirected away.
+  const canonical = (value: string) => value.replace(/^(https?:\/\/[^/]+)?\/en(?=\/|$)/, "$1");
+  expect(canonical(page.url()), `navigation left ${path}`).toContain(canonical(path.split("?")[0]));
 
   const body = (await page.locator("body").innerText()).slice(0, 4000);
   expect(body.length, `${path} rendered an empty body`).toBeGreaterThan(40);
@@ -153,9 +169,13 @@ for (const viewport of [
       }),
     };
 
+    // `domain` and `path` rather than `url`: Playwright rejects both together,
+    // and the session cookie has to be scoped to the whole site, not to
+    // whatever path the first navigation happens to be.
+    const domain = new URL(origin).hostname;
     for (const who of ["owner", "counterparty"] as const) {
       await contexts[who].addCookies(
-        m[who].cookies.map((cookie) => ({ ...cookie, url: origin, path: "/", sameSite: "Lax" as const })),
+        m[who].cookies.map((cookie) => ({ ...cookie, domain, path: "/", sameSite: "Lax" as const })),
       );
     }
 

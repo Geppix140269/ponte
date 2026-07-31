@@ -163,7 +163,31 @@ export async function sendInvitation(formData: FormData): Promise<void> {
 
 /* ------------------------------------------------------------------ *
  * 3. Acceptance, declaration, agreements, admission
- * ------------------------------------------------------------------ */
+ * ------------------------------------------------------------------ *
+ *
+ * THE FOUR ACTIONS IN THIS SECTION DO NOT CALL `gate()`, ON PURPOSE.
+ *
+ * An invited counterparty is not necessarily on `DEAL_ROOM_ALLOWLIST`. That is
+ * the point of an invitation: the allowlist is a staged-rollout control over who
+ * may *open* a Deal Room, not over who may be brought into one. Gating admission
+ * would mean a pilot member could invite somebody who then could not accept, and
+ * the invitation journey would be unusable for exactly as long as the rollout
+ * was staged.
+ *
+ * They are not ungoverned. Each calls a SECURITY DEFINER command that proves the
+ * caller is the person the invitation names, holds the invited address as a
+ * confirmed email, and has accepted every current agreement before admission.
+ * Row Level Security is the boundary; the flag is routing.
+ *
+ * `__tests__/action-gate.test.ts` holds this list, so a new action cannot join
+ * it silently - adding one to the exception set is a deliberate edit with this
+ * comment to answer to.
+ *
+ * The seven ordinary in-room actions below - approve, clarify, answer, accept
+ * evidence, open and resolve a blocker, set read-only - had no such reason and
+ * were simply not gated. Until 31 July 2026 that meant turning the flag off did
+ * not stop them, which is the property Approval 4's rollback depends on.
+ */
 
 export async function acceptInvitation(formData: FormData): Promise<void> {
   const locale = String(formData.get("locale") ?? "en");
@@ -269,6 +293,7 @@ export async function proposeProcedure(formData: FormData): Promise<void> {
 }
 
 export async function approveProcedure(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
 
@@ -359,6 +384,7 @@ export async function submitEvidence(formData: FormData): Promise<void> {
 }
 
 export async function requestClarification(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
@@ -376,6 +402,7 @@ export async function requestClarification(formData: FormData): Promise<void> {
 
 /** Answer a clarification, optionally with the corrected file in the same act. */
 export async function answerClarification(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
@@ -417,6 +444,7 @@ export async function answerClarification(formData: FormData): Promise<void> {
 }
 
 export async function acceptEvidence(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
@@ -437,6 +465,7 @@ export async function acceptEvidence(formData: FormData): Promise<void> {
  * ------------------------------------------------------------------ */
 
 export async function openBlocker(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
@@ -459,6 +488,7 @@ export async function openBlocker(formData: FormData): Promise<void> {
 }
 
 export async function resolveBlocker(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
   const subRoomId = String(formData.get("subRoomId") ?? "");
@@ -476,6 +506,7 @@ export async function resolveBlocker(formData: FormData): Promise<void> {
 }
 
 export async function setReadOnly(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
   const locale = String(formData.get("locale") ?? "en");
   const roomId = String(formData.get("roomId") ?? "");
 

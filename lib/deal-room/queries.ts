@@ -300,7 +300,20 @@ export async function listParticipants(roomId: string): Promise<ParticipantRow[]
   const { data } = await supabase
     .from("deal_room_participants")
     .select(
-      "id, profile_id, sub_room_id, org_id, declared_capacity, participant_class, transaction_role, participation_authority, state, is_required_approver, is_room_administrator, admitted_at, profiles(full_name), organizations(name)",
+      // `profiles!...profile_id_fkey` names the relationship explicitly.
+      // `deal_room_participants` has TWO foreign keys to `profiles` -
+      // `profile_id` and `invited_by` - so a bare `profiles(full_name)` is
+      // ambiguous and PostgREST refuses the whole query:
+      //
+      //   Could not embed because more than one relationship was found for
+      //   'deal_room_participants' and 'profiles'
+      //
+      // It had refused it since the day it was written. `listParticipants()`
+      // returned an error and an empty array to every caller, so every surface
+      // that names a participant showed a fallback: two unnamed "A required
+      // approver" rows on the procedure page, an empty Bridge, "0 of 2 external
+      // organisations admitted". Found on 31 July 2026, by looking at the page.
+      "id, profile_id, sub_room_id, org_id, declared_capacity, participant_class, transaction_role, participation_authority, state, is_required_approver, is_room_administrator, admitted_at, profiles!deal_room_participants_profile_id_fkey(full_name), organizations(name)",
     )
     .eq("room_id", roomId);
 

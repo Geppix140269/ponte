@@ -19,9 +19,11 @@ import { destinationFor } from "./routing";
  * A click is the whole decision: it leaves the landing page at once. Nothing
  * here keeps the visitor on the landing waiting for a second step.
  *
- * Start a deal does not restate a destination. It asks `destinationFor`, so
- * NEXT_PUBLIC_STRUCTURE_JOURNEY keeps deciding between the composer and the
- * legacy seam, and that flag stays the journey's one safe-disable.
+ * Start a deal does not restate a destination. It asks `destinationFor`, which
+ * is still the single destination authority. Since cutover PR 3 that answer is
+ * unconditionally the composer: the legacy seam it used to choose between was
+ * itself a redirect to the composer, so NEXT_PUBLIC_STRUCTURE_JOURNEY no longer
+ * decides anything and is no longer a safe-disable.
  */
 
 export type BridgeRoute = "explore" | "deal";
