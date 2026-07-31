@@ -246,8 +246,7 @@
     "pill": "Contact",
     "title": "Let’s talk.",
     "lead": {
-      "default": "Posting a deal does not need us: the board is free and open. Write when you want the desk involved, or when something is not working. We reply within one business day.",
-      "retainer": "You are considering a Trade Desk Retainer: a standing analyst on call. Tell us the cadence and the kinds of questions you expect, and we will propose a monthly block."
+      "default": "Posting a deal does not need us: the board is free and open. Write when you want the desk involved, or when something is not working. We reply within one business day."
     },
     "deal": {
       "title": "Post a deal yourself",
@@ -256,8 +255,7 @@
     },
     "email": {
       "title": "Email us",
-      "body": "For anything the board does not cover: mandates, retainers, or a deal you would rather not put in public.",
-      "subject": "Enquiry: {topic}"
+      "body": "For anything the board does not cover: a question about a Deal Room, something that is not working, or a deal you would rather not put in public."
     }
   },
   "explore": {

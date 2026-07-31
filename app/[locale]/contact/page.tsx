@@ -11,13 +11,11 @@ import "@/components/desk/desk.css";
 /**
  * Contact, on the Desk (Issue #130 Stage 3).
  *
- * The page a member reaches from the two paid engagements on /pricing, so it
- * was the second half of a journey that changed generation halfway through. It
- * now renders the same Desk shell as the page that sent them here.
- *
- * The two ways in are unchanged: post the deal yourself, or write to the desk.
- * The engagement lead, the mailto subject and both destinations are the same
- * strings and the same links as before.
+ * Once the second half of a journey that began at one of two paid engagements
+ * on /pricing. Both are retired: the strategy intensive with /advisory, and the
+ * retainer on 31 July 2026 under PT-COMMERCIAL-2026-07-31-01 section 15
+ * (PL-042). So the page no longer varies by engagement, and the ways in are the
+ * two that survive: post the deal yourself, or write to the desk.
  */
 
 export async function generateMetadata({
@@ -75,19 +73,23 @@ const ACT: CSSProperties = { marginTop: "auto", paddingTop: 8 };
 
 export default async function ContactPage({
   params,
-  searchParams,
 }: {
   params: { locale: string };
-  searchParams: { engagement?: string; product?: string };
 }) {
   setRequestLocale(params.locale);
   const t = await getTranslations("contact");
 
-  // The Analyst Desk's strategy intensive went with /advisory. The retainer
-  // did not: it is still an engagement on /pricing, so it still gets its own
-  // opening line here.
-  const key = searchParams.engagement ?? searchParams.product ?? "";
-  const lead = key === "retainer" ? t("lead.retainer") : t("lead.default");
+  // One opening line, because there is no longer a paid engagement to open on.
+  //
+  // The Analyst Desk's strategy intensive went with /advisory; the retainer
+  // followed it on 31 July 2026, retired by PT-COMMERCIAL-2026-07-31-01
+  // section 15 (PL-042). `searchParams` is gone with it: nothing varies by
+  // engagement any more.
+  //
+  // A bookmarked or shared `/contact?engagement=retainer` still exists in the
+  // world. It now lands on the ordinary page, which is the point - an unknown
+  // query string must not be able to surface an offer Ponte no longer makes.
+  const lead = t("lead.default");
 
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
@@ -117,12 +119,13 @@ export default async function ContactPage({
               <h2 style={NAME}>{t("email.title")}</h2>
               <p style={COPY}>{t("email.body")}</p>
               <div style={ACT}>
-                <a
-                  className="b b--2"
-                  href={`mailto:hello@ponte.trade${
-                    key ? `?subject=${encodeURIComponent(t("email.subject", { topic: key }))}` : ""
-                  }`}
-                >
+                {/*
+                  A plain mailto. The subject used to be prefilled from the
+                  engagement the member arrived on, and there is no longer an
+                  engagement to name - a subject reading "Enquiry: retainer"
+                  would announce the very offer PL-042 removed.
+                */}
+                <a className="b b--2" href="mailto:hello@ponte.trade">
                   hello@ponte.trade
                 </a>
               </div>
