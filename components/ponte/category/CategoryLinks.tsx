@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import type { TaxonomyIcon } from "@/lib/taxonomy/market";
 
 /**
- * The same category grid, as navigation rather than selection.
+ * The same category rows, as navigation rather than selection.
  *
  * Find and Explore are not building a record; they are moving through the
  * market. The right control there is a link: it works without JavaScript, it

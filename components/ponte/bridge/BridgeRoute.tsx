@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "@/i18n/navigation";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import type { FlowIconKey, FlowLabelledKey } from "@/design-system/ponte-flow/generated/flow-icon-keys";
 import {
   BASE_PIER,
   DECK_HEIGHT,
@@ -69,19 +71,17 @@ export interface BridgeStation {
   mark?: string;
   /** Destination, for a `navigate` bridge. */
   href?: string;
+  /**
+   * An optional Ponte Flow marker, per ADR-0019.
+   *
+   * The approved package has no icon slot, so this is the implementation-layer
+   * `brst__i` marker styled in `bridge-integration.css`, and ADR-0019 bounds it:
+   * classification stations only, a registry key and nothing else, inheriting
+   * `currentColor`, never the only carrier of meaning. The type excludes the
+   * nine labelled keys because the title is always beside the marker.
+   */
+  icon?: Exclude<FlowIconKey, FlowLabelledKey>;
 }
-
-/*
- * There is deliberately no icon on a station.
- *
- * An earlier version of this component put a Ponte Flow icon above each title.
- * The approved reference renders, now in `design/authority/bridge/v1/reference/`,
- * show no icon there: a station is an index, a title, a description and a
- * marker. The icon was an addition made while the reference was missing, and it
- * is removed rather than kept, which is also the answer to what was recorded as
- * gap DS-6. The approved stylesheet has no icon slot because the approved
- * station has no icon.
- */
 
 export interface BridgeRouteProps {
   stations: BridgeStation[];
@@ -104,6 +104,15 @@ export interface BridgeRouteProps {
    * child of this component rather than of the section around it.
    */
   countNote?: string | null;
+  /**
+   * Draw the elevation at every width, not only on a narrow viewport.
+   *
+   * For a bridge whose station count crowds its labels at the width it is
+   * given. Seven stations in the composer column put "Worldwide" hard against
+   * "Online only", which is a collision rather than a layout. The elevation is
+   * the same approved drawing; this only changes what decides to use it.
+   */
+  alwaysVertical?: boolean;
 }
 
 const NARROW = `(max-width: ${VERTICAL_BELOW - 1}px)`;
@@ -137,8 +146,15 @@ export default function BridgeRoute({
   right,
   rightDashed,
   countNote = null,
+  alwaysVertical = false,
 }: BridgeRouteProps) {
-  const isVertical = useIsVertical();
+  // The elevation is normally the narrow-viewport drawing, but a bridge with
+  // enough stations crowds its labels long before the viewport gets narrow: at
+  // seven stations in a composer column the labels of adjacent stations touch
+  // and run together. Such a bridge asks for the elevation at every width. It
+  // is the same approved drawing, chosen by the station count rather than by
+  // the viewport.
+  const isVertical = useIsVertical() || alwaysVertical;
   const groupId = useId();
 
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -438,6 +454,15 @@ export default function BridgeRoute({
       <>
         <span className="brst__n" aria-hidden="true" />
         <span className="brst__p" aria-hidden="true" />
+        {/* ADR-0019. The marker hangs off the foot of the pier, so it belongs
+            to the crossing rather than sitting inside a box of its own. It is
+            inside the single clickable station element, and PonteIcon renders
+            it aria-hidden, so the accessible name is still the title alone. */}
+        {station.icon ? (
+          <span className="brst__i">
+            <PonteIcon name={station.icon} size={16} />
+          </span>
+        ) : null}
         <span className="brst__w" style={{ display: "block" }}>
           {station.index ? (
             <span className="brst__ix" aria-hidden="true">
