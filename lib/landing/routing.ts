@@ -6,21 +6,21 @@
  * already read:
  *
  *   find        -> /find                             (Journey 1)
- *   structure   -> /structure (Journey 2)  or  /marketplace/new (the seam)
+ *   structure   -> /structure                        (Journey 2)
  *   check       -> /verify?for=counterparty          (counterparty due diligence)
  *   investigate -> /market-signals                   (external signals board)
  *
- * Structure (Journey 2) still points at its new surface when
- * NEXT_PUBLIC_STRUCTURE_JOURNEY is "on" and falls back to the old seam
- * otherwise; that flag is still the journey's safe-disable, because
- * `/marketplace/new` still exists as a redirect to the composer.
+ * Neither Find nor Structure has a seam to fall back TO any more, so neither
+ * branch reads its flag.
  *
- * Find no longer has a seam to fall back TO. Its fallback was the obsidian
- * `/marketplace` board, and cutover PR 5 retired that page: the path is now a
- * permanent redirect to `/find`. A flag whose "off" position forwards to its
- * "on" position is not a safe-disable, it is a second hop and a false promise
- * that a previous surface is still there, so the Find branch is unconditional
- * and NEXT_PUBLIC_FIND_JOURNEY no longer governs a destination.
+ * Find's fallback was the obsidian board, retired in cutover PR 5: that path is
+ * now a permanent redirect to /find. Structure's was the legacy editor, a
+ * redirect to the composer since LB-013. A flag whose "off" position forwards
+ * to its "on" position is not a safe-disable. It is a second hop and a false
+ * promise that a previous surface is still there, so NEXT_PUBLIC_FIND_JOURNEY
+ * and NEXT_PUBLIC_STRUCTURE_JOURNEY no longer govern a destination.
+ *
+ * Closing the Structure seam also fixes a silent loss: see `baseFor`.
  *
  * The user's own words and any facts read from them ride along as query params
  * so nothing is lost across the navigation, and, because the destinations gate
@@ -44,17 +44,23 @@ function baseFor(route: RouteKey): string {
     // retired. See the module comment.
     case "find":
       return "/find";
-    // Journey 2 keeps its seam: `/marketplace/new` is NOT retired here, it is
-    // the already-quarantined redirect to the composer (LB-013). Known cost of
-    // the flag-off path, recorded rather than silently accepted: that redirect
-    // deliberately discards every query key except `id`/`edit`, so the intent,
-    // product and company this function appends do not survive it. Flipping
-    // NEXT_PUBLIC_STRUCTURE_JOURNEY on is cutover PR 3's decision, not this
-    // one's, so the branch is left exactly as it was.
+    // Journey 2 is unconditional for the same reason Journey 1 is. The seam is
+    // closed rather than flipped (cutover PR 3).
+    //
+    // The fallback was the legacy editor path, which has itself been a redirect
+    // to the composer since LB-013. So the flag never chose between two
+    // surfaces: it chose between reaching /structure directly and reaching it
+    // through a hop. That hop was not free. The redirect deliberately discards
+    // every query key except `id`/`edit`, so the intent, product and company
+    // this function appends were dropped on the flag-off path and the member
+    // arrived at an empty composer having already said what they wanted.
+    //
+    // Naming /structure here is what fixes that, and it is why this is a code
+    // change and not a deployment-host flag flip: with both branches leading to
+    // the same surface, the flag governed nothing, and setting it could not
+    // have restored anything.
     case "structure":
-      return process.env.NEXT_PUBLIC_STRUCTURE_JOURNEY === "on"
-        ? "/structure"
-        : "/marketplace/new?type=requirement";
+      return "/structure";
     // Check & Verify (Journey 3) when its flag is on; else the counterparty
     // handoff to the existing /verify surface. Turning the flag off restores the
     // previous behaviour with no other change (the journey's safe-disable).
