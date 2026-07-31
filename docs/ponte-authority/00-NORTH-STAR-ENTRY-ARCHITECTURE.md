@@ -55,6 +55,130 @@ Flow remains the semantic icon and motion implementation.
 - a **global command bar** that is visibly a different system from the rail and
   carries all product navigation.
 
+---
+
+## Amendment, 31 July 2026: the conversion layer, and the landing composition
+
+> **Status: PROPOSED, not accepted.** Drafted by Claude Code on 31 July 2026 from
+> rulings the owner gave verbally in session, and recorded in **ADR-0021**. Under
+> `docs/codex/SOURCE-OF-TRUTH-SOP.md` a verbal instruction and an AI draft are
+> proposal inputs only. Until the owner accepts this and it merges, the document
+> below this banner governs unchanged.
+
+### Why this document needed amending
+
+This document is dated **26 July 2026**. The entire Deal Room product corpus
+begins on **27 July 2026** — the product contract, the deal-to-room branching
+model and the experience design — and the commercial authority making the Deal
+Room Ponte's only paid product is dated **31 July 2026** (ADR-0020).
+
+**This entry architecture was therefore written the day before the Deal Room
+existed as a product, and the two have never been reconciled.** That is the
+source of the apparent conflict between ADR-0020's *"sole day-one monetisation
+engine"* and §3 of the Deal Room product contract, *"it must not dominate the
+public entry experience."*
+
+### What is retained without change
+
+**§1 stands in full.** The platform still has two primary entry journeys and no
+others: Explore the market, and Start a deal. **The Deal Room is not a third.**
+ADR-0003 already says it is *"not a primary landing route"*, and nothing here
+changes that.
+
+Everything in §3 is retained, and §3.5 in particular is reaffirmed and given
+teeth below: no active interface may promise a capability that is not
+implemented, enabled, reachable and complete.
+
+### What this document did not define, and now does: the conversion layer
+
+This is an **entry** architecture. It stops before conversion, and says so
+itself, deferring *"everything downstream of entry that this document does not
+restate"* to other authorities. Conversion is one of those things, and it now
+exists:
+
+```text
+LIQUIDITY   free, public          the three market families produce signals and
+                                  opportunities: requirements, offers, trade
+                                  services, distribution and representation.
+                                  This is §1's two journeys, unchanged.
+        |
+        v
+CONVERSION  paid, authenticated   a structured Deal either triggers a master
+                                  Deal Room or it does not. One Deal may raise
+                                  zero, one or several independently sponsored
+                                  master rooms. This is where Ponte charges, and
+                                  it is governed by
+                                  PT-PRODUCT-2026-07-27-02 and ADR-0020.
+```
+
+So *"everything converges on the Deal Room"* is a statement about the **funnel**,
+not about navigation. The Deal Room is the destination and the only paid product;
+the public entrance remains the market. Both accepted rules survive intact.
+
+**Consequently the Deal Room door belongs in the authenticated product**, which
+is what `PT-DESIGN-2026-07-27-01` §4 already specifies: *"The authenticated
+workspace introduces a primary Deal Rooms destination beside the existing
+Workspace areas."* The global command bar defined above carries it, since this
+document already gives that bar *"all product navigation"*. The one **public**
+surface where the Deal Room must be named is `/pricing`, required by
+`PT-COMMERCIAL-2026-07-31-01` §19.
+
+### Navigation depth
+
+**New rule, first stated here.** From the landing page a member is never more
+than **three steps** from a Deal Room. A *step* is one member-initiated
+navigation that changes route; **authenticating is not a step**, and redirects
+the product performs on the member's behalf are not steps.
+
+No click-depth or step-count rule existed anywhere in the repository before this
+amendment. See ADR-0021 §3.
+
+This rule governs the authenticated product. It does not create a landing
+entrance and does not override §1.
+
+### §5 landing composition: recording an actual divergence
+
+§5 states a required landing hierarchy of nine items. The landing does not carry
+nine, and this amendment records that honestly rather than leaving the authority
+describing a page that does not exist.
+
+| §5 item | Present |
+|---|---|
+| 1. Global command bar | yes |
+| 2. No journey rail | yes |
+| 3. Hero and the three market families | yes |
+| 4. The objective console, "Ask Ponte" | **no — never built** |
+| 5. Market Signals | **removed, 31 July 2026, owner instruction** |
+| 6. Qualified Opportunities | **no — never built** |
+| 7. Browse by sector | **no — never built** |
+| 8. Bring a record to the desk | **removed, 31 July 2026, owner instruction** |
+| 9. Footer | yes |
+
+**Items 4, 6 and 7 have never existed on the landing.** That divergence predates
+this amendment and is recorded here for the first time.
+
+**Items 5 and 8 were removed by owner instruction on 31 July 2026.** The reasons
+given, recorded so the decision is not re-litigated:
+
+- **Market Signals (5).** The demand and supply crossing is drawn again one step
+  later, inside Explore, where the member has already chosen a family and the two
+  sides mean something specific to them. Asking the demand-or-supply question
+  before the family question put the second question first.
+- **Bring a record to the desk (8).** The band read *"Bring a requirement, an
+  offer or a service to the desk"* over a *Start a deal* and a *How review works*
+  control. It named the product as three things a member brings to a desk, which
+  is neither the three canonical families nor the seven intents beneath them, so
+  it taught a model the product does not have — and it did so in the last thing a
+  reader saw. Its *Start a deal* control also led to bare `/structure`, which
+  drops a member into the legacy three-box picker rather than a canonical
+  family-and-intent pair.
+
+**The required hierarchy is therefore reduced to items 1, 2, 3 and 9**, with 4, 6
+and 7 remaining unbuilt rather than removed. The three-family crossing is the
+landing's single route in.
+
+---
+
 **Authority order for the entry surfaces**, unchanged in shape and now explicit:
 
 1. approved Ponte product authorities and the source-of-truth SOP;
