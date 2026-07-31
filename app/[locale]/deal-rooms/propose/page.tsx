@@ -12,7 +12,7 @@ import {
   Submit,
   TextField,
 } from "@/components/deal-room/primitives";
-import { dealRoomGate } from "@/lib/deal-room/queries";
+import { dealRoomGate, initiatorAdmissibility } from "@/lib/deal-room/queries";
 import { createClient } from "@/lib/supabase/server";
 import {
   assessCredibleInterest,
@@ -101,6 +101,21 @@ export default async function ProposeRoomPage({
     : null;
 
   const dealBlockers = assessment?.blockers.filter((blocker) => !blocker.code.startsWith("no_counterparty")) ?? [];
+
+  /*
+   * ADR-0021 ruling 2, on the surface as well as in the command.
+   *
+   * The member who opens a room is held to the same Deal Room-ready minimum as
+   * the member they invite. If they do not meet it the control is not rendered
+   * at all: North Star section 10 forbids a dead button, and section 3.5 forbids
+   * an interface promising what it cannot deliver. What replaces it names the
+   * evidence that is missing and links to where it is supplied, which is free.
+   *
+   * Nothing here counts, scores or measures. Product contract section 6: the
+   * model stays evidence-specific rather than numerical.
+   */
+  const admissibility = selected ? await initiatorAdmissibility(selected.id) : null;
+  const admissible = admissibility?.admissible ?? false;
 
   return (
     <UnsavedFormGuard>
@@ -236,6 +251,17 @@ export default async function ProposeRoomPage({
               side, a stated role and a stated objective: curiosity is not credible commercial interest.
             </p>
 
+            {admissibility && !admissible ? (
+              <Banner tone="review" title="Before you can open a Deal Room">
+                {admissibility.summary}{" "}
+                <a className="dr__link" href={`/${params.locale}/verify?for=business`}>
+                  Supply it now
+                </a>
+                . {admissibility.limitation}
+              </Banner>
+            ) : null}
+
+            {admissible ? (
             <CommandForm
               action={proposeRoom}
               hidden={{
@@ -302,6 +328,7 @@ export default async function ProposeRoomPage({
               />
               <Submit label="Create the proposed room" />
             </CommandForm>
+            ) : null}
 
             <p className="dr__why">
               Creating the room reserves your Starter entitlement. The 30-day term does not begin until the invited

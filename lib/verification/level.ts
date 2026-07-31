@@ -80,6 +80,63 @@ export function meetsMemberBusinessFloor(v: unknown): boolean {
 }
 
 /**
+ * The level at which a member's IDENTITY counts as established for Deal Room
+ * admission. ADR-0021 ruling 2.
+ *
+ * ## Why this is a separate constant from MEMBER_BUSINESS_MIN_LEVEL
+ *
+ * They are different thresholds for different acts and must never share a
+ * value by accident. `MEMBER_BUSINESS_MIN_LEVEL` is the PUBLICATION floor: what
+ * Ponte requires before it will publish a listing on a member's behalf, and it
+ * is `company_verified` because publication is Ponte asserting something public
+ * about a business.
+ *
+ * Deal Room admission is not publication. The owner ruled on 31 July 2026:
+ *
+ *   "A complete Passport and a registry-checked business are not required
+ *    merely to enter."
+ *
+ * which restates `PT-PRODUCT-2026-07-27-01` section 6, "A complete Passport is
+ * not required for entry." So `company_verified` is explicitly NOT the Deal
+ * Room floor, and this constant is deliberately the rung below it.
+ *
+ * ## Why it is only one part of the Deal Room floor
+ *
+ * The real Deal Room threshold is the NINE criteria of section 6 evaluated as a
+ * set, and it lives in `lib/deal-room/admissibility.ts`. This constant is the
+ * stored evidence for exactly one of them - the authenticated individual whose
+ * identity has been established. The business facts, the declared role and the
+ * declared authority are equally part of the floor and are checked there, not
+ * here, because no rung on this three-value scale expresses them.
+ *
+ * That gap is real and is recorded rather than hidden: section 6 asks for an
+ * "identified business", which sits between `identity_verified` (a person, not
+ * a business) and `company_verified` (a business matched to a registry). This
+ * scale has no rung for "business identified but not registry-checked", so the
+ * admissibility module checks the declared business facts directly instead of
+ * pretending a rung means something it does not.
+ *
+ * ## Changing it
+ *
+ * One line. Moving it to `company_verified` would require registry-checking to
+ * enter, which the owner has ruled out; moving it to `unverified` would remove
+ * identity from the floor entirely. Both are single-token edits and both are
+ * covered by `lib/deal-room/__tests__/admissibility.test.ts`.
+ */
+export const DEAL_ROOM_IDENTITY_MIN_LEVEL: VerificationLevel = "identity_verified";
+
+/**
+ * Does this stored value establish identity to the Deal Room standard?
+ *
+ * `company_verified` passes as well, because it is strictly more than the floor
+ * asks for. `unverified`, and every unrecognised value, does not.
+ */
+export function meetsDealRoomIdentityFloor(v: unknown): boolean {
+  const rank = levelRank(v);
+  return rank >= 0 && rank >= levelRank(DEAL_ROOM_IDENTITY_MIN_LEVEL);
+}
+
+/**
  * The level to store when a member-business verification passes.
  *
  * Named rather than inlined so the pipeline cannot drift from the floor: if the

@@ -17,6 +17,7 @@ import { resolveInvitation } from "@/lib/deal-room/invitation-server";
 import { INVITATION_FAILURE_MESSAGE } from "@/lib/deal-room/invitation";
 import { AGREEMENT_KIND_LABEL, REQUIRED_AGREEMENT_KINDS } from "@/lib/deal-room/states";
 import { AGREEMENT_DOCUMENTS } from "@/lib/deal-room/agreements";
+import { participantAdmissibility } from "@/lib/deal-room/queries";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { acceptAgreement, completeAdmission, declareParticipation } from "../../../actions";
 
@@ -103,6 +104,22 @@ export default async function AdmissionPage({
   const admitted = participant?.state === "admitted" || participant?.state === "active";
 
   const returnTo = `/${params.locale}/deal-rooms/invitation/${params.token}/admission?participant=${participantId}`;
+
+  /*
+   * ADR-0021 ruling 2. The Deal Room-ready minimum, unchanged by the fact that
+   * this participant pays nothing.
+   *
+   * Branching model section 6: "Sponsored access removes payment friction. It
+   * does not weaken admission, confidentiality or authority requirements." An
+   * invited counterparty meets exactly what the member who opened the room met.
+   *
+   * It is read after the declaration above, because that declaration is what
+   * supplies most of the minimum. So this is stated as a live checklist item and
+   * not as a refusal at the door: the member can see what is left and complete
+   * it on this same page.
+   */
+  const admissibility = participantId ? await participantAdmissibility(participantId) : null;
+  const admissible = admissibility?.admissible ?? false;
 
   return (
     <UnsavedFormGuard>
@@ -235,17 +252,28 @@ export default async function AdmissionPage({
           </Band>
 
           <Band title="3. Enter">
-            <CommandForm
-              action={completeAdmission}
-              hidden={{
-                locale: params.locale,
-                participantId,
-                roomId: participant.room_id as string,
-                returnTo,
-              }}
-            >
-              <Submit label="Enter private Deal Room" />
-            </CommandForm>
+            {admissibility && !admissible ? (
+              <Banner tone="review" title="Still needed before you can enter">
+                {admissibility.summary}{" "}
+                <a className="dr__link" href={`/${params.locale}/verify?for=business`}>
+                  Supply it now
+                </a>
+                . You are not being asked to buy anything: the party who opened this room covers it, and confirming
+                your own business costs nothing. {admissibility.limitation}
+              </Banner>
+            ) : (
+              <CommandForm
+                action={completeAdmission}
+                hidden={{
+                  locale: params.locale,
+                  participantId,
+                  roomId: participant.room_id as string,
+                  returnTo,
+                }}
+              >
+                <Submit label="Enter private Deal Room" />
+              </CommandForm>
+            )}
             <p className="dr__why">
               {hasIdentity && hasRoleAndAuthority && allAgreementsAccepted
                 ? "Everything above is complete. Admission is checked again when you press this, and the room records it."

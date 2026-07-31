@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { dealRoomAvailableTo } from "./flags";
+import { dealRoomAdmissibility, type AdmissibilityResult } from "./admissibility";
 import { countMaterialEventsSince, earnedMilestones, type ActivityEvent, type ActivityEventType } from "./activity";
 import { bridgeModel, type BridgeModel, type BridgeParticipant } from "./bridge";
 import { momentumFor, procedureProgress, type ProcedureProgress } from "./progress";
@@ -642,4 +643,155 @@ export async function loadOverview(access: RoomAccess): Promise<RoomOverview> {
     participants,
     subRooms,
   };
+}
+
+/* ------------------------------------------------------------------ *
+ * ADR-0021 ruling 2: the admission verification gate
+ * ------------------------------------------------------------------ *
+ *
+ * Two readers, one predicate. `lib/deal-room/admissibility.ts` decides; these
+ * functions only fetch the stored facts it names and hand them over.
+ *
+ * Both are fail-closed by construction. Every field of `AdmissibilityFacts` is
+ * required and `null` means "not readable", so a failed query, a missing row or
+ * a policy returning zero rows produces `pending` on the affected criteria and
+ * blocks. There is no path through either function that turns an absent value
+ * into a pass.
+ */
+
+/**
+ * The initiator's admissibility, before a room or a participant row exists.
+ *
+ * The role and the authority are the values `deal_room_propose` itself writes
+ * (`20260731b`): `'Deal owner'` and `'Owner of the published Deal'`. They are
+ * supplied here ONLY after this function has re-proved the same precondition the
+ * command proves - that the caller owns this Deal and it is approved. If that is
+ * not established, both are null and the criteria block. They are facts about a
+ * proved relationship, not defaults.
+ *
+ * `relationship_to_the_business` comes from `listings.submitter_role`, which the
+ * publication gate requires before a Deal can be approved, so on this path the
+ * criterion rests on a real and separate stored fact.
+ */
+export async function initiatorAdmissibility(listingId: string): Promise<AdmissibilityResult> {
+  const user = await getUser();
+  const supabase = createClient();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("verification_level, company, country")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: listing } = user
+    ? await supabase
+        .from("listings")
+        .select("id, user_id, status, submitter_role")
+        .eq("id", listingId)
+        .maybeSingle()
+    : { data: null };
+
+  const row = (profile ?? {}) as { verification_level?: unknown; company?: string | null; country?: string | null };
+  const deal = (listing ?? {}) as { user_id?: string | null; status?: string | null; submitter_role?: string | null };
+
+  // The same precondition `deal_room_propose` proves. Only when it holds do the
+  // role and authority the command will write count as established.
+  const ownsApprovedDeal = Boolean(user) && deal.user_id === user!.id && deal.status === "approved";
+
+  return dealRoomAdmissibility({
+    verificationLevel: row.verification_level ?? null,
+    emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
+    organisationName: row.company ?? null,
+    declaredCapacity: null,
+    jurisdiction: row.country ?? null,
+    relationshipToBusiness: ownsApprovedDeal ? (deal.submitter_role ?? null) : null,
+    transactionRole: ownsApprovedDeal ? "Deal owner" : null,
+    participationAuthority: ownsApprovedDeal ? "Owner of the published Deal" : null,
+    // No prerequisite mechanism exists in the schema, so none can be
+    // outstanding. Stated explicitly rather than omitted: the field is required
+    // precisely so this is a decision somebody made.
+    outstandingPrerequisites: [],
+  });
+}
+
+/**
+ * An invited participant's admissibility, from their own declaration.
+ *
+ * Read through the caller's own session, so a participant row that is not
+ * theirs returns nothing and every criterion blocks.
+ *
+ * `relationship_to_the_business` has no field on this path. The admission form
+ * collects the substance of it under two other labels - the professional
+ * capacity, and the authority ("an office you hold, a mandate, an engagement") -
+ * so the capacity is used, falling back to the authority for a member who named
+ * an organisation instead of a capacity. Both are the member's own declaration,
+ * which is what section 6 asks for; neither is independent of another criterion,
+ * and `CRITERION_EVIDENCE` records that.
+ */
+export async function participantAdmissibility(participantId: string): Promise<AdmissibilityResult> {
+  const user = await getUser();
+  const supabase = createClient();
+
+  const { data: participant } = user && participantId
+    ? await supabase
+        .from("deal_room_participants")
+        .select("id, profile_id, org_id, declared_capacity, transaction_role, participation_authority")
+        .eq("id", participantId)
+        .maybeSingle()
+    : { data: null };
+
+  const part = (participant ?? {}) as {
+    profile_id?: string | null;
+    org_id?: string | null;
+    declared_capacity?: string | null;
+    transaction_role?: string | null;
+    participation_authority?: string | null;
+  };
+
+  // Somebody else's admission is not readable and must not be evaluated.
+  const mine = Boolean(user) && part.profile_id === user!.id;
+
+  const { data: profile } = mine
+    ? await supabase
+        .from("profiles")
+        .select("verification_level, company, country")
+        .eq("id", user!.id)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: organisation } = mine && part.org_id
+    ? await supabase.from("organizations").select("name, country").eq("id", part.org_id).maybeSingle()
+    : { data: null };
+
+  const row = (profile ?? {}) as { verification_level?: unknown; company?: string | null; country?: string | null };
+  const org = (organisation ?? {}) as { name?: string | null; country?: string | null };
+
+  if (!mine) {
+    // Every fact null: nine pending criteria and a refusal that names them.
+    return dealRoomAdmissibility({
+      verificationLevel: null,
+      emailConfirmedAt: null,
+      organisationName: null,
+      declaredCapacity: null,
+      jurisdiction: null,
+      relationshipToBusiness: null,
+      transactionRole: null,
+      participationAuthority: null,
+      outstandingPrerequisites: null,
+    });
+  }
+
+  return dealRoomAdmissibility({
+    verificationLevel: row.verification_level ?? null,
+    emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
+    organisationName: org.name ?? row.company ?? null,
+    declaredCapacity: part.declared_capacity ?? null,
+    jurisdiction: org.country ?? row.country ?? null,
+    relationshipToBusiness: part.declared_capacity ?? part.participation_authority ?? null,
+    transactionRole: part.transaction_role ?? null,
+    participationAuthority: part.participation_authority ?? null,
+    outstandingPrerequisites: [],
+  });
 }

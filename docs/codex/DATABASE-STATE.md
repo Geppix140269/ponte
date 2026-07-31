@@ -53,6 +53,56 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: the Deal Room admission verification gate
+
+`supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
+SHA-256 `84550862e0fcf73b76d8acbc1a1f7399fb88c9c891c3612d590a33081ff1d8b7`, 28923 bytes.
+
+**Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
+threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
+the same day. **Applying it is a separate owner approval.** It replaces two
+`security definer` functions that are granted to `authenticated` in three
+applied migrations, so the ACL is a real event even though no table, constraint,
+policy, trigger, index, grant or row is altered.
+
+### What it does
+
+1. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
+   NAMES of the section 6 entry criteria a member does not meet, or an empty
+   array. Never a count, a score or a completeness value. `security definer`
+   because it reads `auth.users.email_confirmed_at`; `stable` because it writes
+   nothing. Revoked from `public`, `anon` and `authenticated` in the same file:
+   a member who could call it directly could probe another member's verification
+   state one profile id at a time. Classified in
+   `lib/deal-room/__tests__/grant-signatures.test.ts` and listed as permanently
+   internal in `lib/deal-room/__tests__/function-acl.test.ts`.
+2. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
+   to that helper, on the same nine-argument signature.
+3. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
+   plus the same call, on the same one-argument signature.
+
+### Why it exists at all
+
+`app/[locale]/deal-rooms/actions.ts` holds the gate today, in
+`lib/deal-room/admissibility.ts`. Both commands are granted to `authenticated`,
+so a member with a session can call either directly and never reach that file.
+Until this migration is applied, the application check is defence in depth over
+an ungated command, not enforcement.
+
+### The floor it encodes
+
+`identity_verified`, not `company_verified`. The owner ruled that "a complete
+Passport and a registry-checked business are not required merely to enter", so
+the publication floor is deliberately not reused. Six of the nine criteria are
+satisfied by a member declaration, because section 6 asks for a declaration and
+nothing more.
+
+### Reversal
+
+Re-apply `20260731b` and `20260731f` in that order, then
+`drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);`.
+Nothing else is touched, so there is no data to migrate back.
+
 ## Written but NOT applied: Deal Room paid room periods and billing events
 
 `supabase/migrations/20260731e_deal_room_paid_room_periods.sql`

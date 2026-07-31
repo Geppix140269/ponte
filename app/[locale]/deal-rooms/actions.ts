@@ -4,7 +4,8 @@ import { randomUUID, createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { dealRoomGate } from "@/lib/deal-room/queries";
+import { dealRoomGate, initiatorAdmissibility, participantAdmissibility } from "@/lib/deal-room/queries";
+import { admissibilityRefusal } from "@/lib/deal-room/admissibility";
 import { mintInvitationToken } from "@/lib/deal-room/invitation";
 import { templateFor, type MarketFamily } from "@/lib/deal-room/procedure";
 
@@ -93,8 +94,27 @@ export async function proposeRoom(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+  const listingId = String(formData.get("listingId") ?? "");
+
+  /*
+   * ADR-0021 ruling 2. The member who OPENS the room is held to the same
+   * threshold as the member who is invited into it.
+   *
+   * `deal_room_propose` admits the initiator at creation, as an admitted
+   * participant in two rows, so product contract section 5's "Every participant
+   * must" applies to them at this moment and not later. There is no other point
+   * at which their admission could be checked.
+   *
+   * The check is here rather than only on the surface because the surface can be
+   * skipped: a form post reaches this action directly. It is still not the
+   * boundary - the same rule is written into the command by
+   * `20260731g_deal_room_admission_verification_gate.sql`, which is not applied.
+   */
+  const admissibility = await initiatorAdmissibility(listingId);
+  if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
+
   const { data, error } = await supabase.rpc("deal_room_propose", {
-    p_listing_id: String(formData.get("listingId") ?? ""),
+    p_listing_id: listingId,
     p_counterparty_profile: String(formData.get("counterpartyProfileId") ?? "") || null,
     p_counterparty_email: String(formData.get("counterpartyEmail") ?? ""),
     p_counterparty_name: String(formData.get("counterpartyName") ?? ""),
@@ -253,8 +273,25 @@ export async function completeAdmission(formData: FormData): Promise<void> {
   const locale = String(formData.get("locale") ?? "en");
   const supabase = createClient();
   const back = returnTo(formData, "/");
+  const participantId = String(formData.get("participantId") ?? "");
+
+  /*
+   * ADR-0021 ruling 2, the invitee half.
+   *
+   * The gate is HERE and deliberately not on `declareParticipation`, which is
+   * the act of supplying the very facts six of the nine criteria are made of.
+   * Gating that would make the threshold unreachable: a member would have to be
+   * admissible before they were allowed to become admissible.
+   *
+   * Being a sponsored guest changes nothing. Branching model section 6: "Sponsored
+   * access removes payment friction. It does not weaken admission, confidentiality
+   * or authority requirements." The predicate has no input for who paid.
+   */
+  const admissibility = await participantAdmissibility(participantId);
+  if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
+
   const { error } = await supabase.rpc("deal_room_admit_participant", {
-    p_participant_id: String(formData.get("participantId") ?? ""),
+    p_participant_id: participantId,
   });
 
   if (error) fail(back, readable(error));

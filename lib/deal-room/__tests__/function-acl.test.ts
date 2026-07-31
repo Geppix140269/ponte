@@ -122,6 +122,12 @@ const STORAGE_POLICY_HELPERS = ["deal_room_is_writable(uuid)", "deal_room_uuid_o
 /** Reachable by no member role, permanently. */
 const PERMANENTLY_INTERNAL = [
   "deal_room_events_append_only()",
+  // ADR-0021 ruling 2, 20260731g. Written, NOT applied. Reads
+  // `profiles.verification_level` and `auth.users.email_confirmed_at` for a
+  // given profile id, so a member who could call it directly could probe another
+  // member's verification state one id at a time. The two commands that need it
+  // are SECURITY DEFINER and call it internally.
+  "deal_room_admission_minimum_missing(uuid, uuid, uuid)",
   "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
   // Reads a name out of `profiles`, which is readable only to its owner. A
   // member who could call it directly could enumerate names - which is exactly
@@ -372,12 +378,13 @@ const LOGGER = "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)";
 
 test("the inventory, the policy helpers and the commands are all found", () => {
   const declared = declaredFunctions();
-  // 25: the original 23, plus `deal_room_display_label` (20260731f) and the
-  // pricing lane's `deal_room_billing_append_only` (20260731e). Neither is
-  // applied yet. The number is asserted rather than derived so that a function
-  // appearing or vanishing is a failure somebody has to look at - which is how
-  // both of these were noticed at all.
-  assert.equal(declared.size, 25, `expected 25 declared deal_room_* functions, found ${declared.size}`);
+  // 26: the original 23, plus `deal_room_display_label` (20260731f), the
+  // pricing lane's `deal_room_billing_append_only` (20260731e) and the
+  // admission gate's `deal_room_admission_minimum_missing` (20260731g). None of
+  // the three is applied yet. The number is asserted rather than derived so that
+  // a function appearing or vanishing is a failure somebody has to look at -
+  // which is how all three were noticed at all.
+  assert.equal(declared.size, 26, `expected 26 declared deal_room_* functions, found ${declared.size}`);
   assert.ok(declared.has(LOGGER), "the event logger is not in the declared inventory; the parser has drifted");
 
   const helpers = policyHelpers();
