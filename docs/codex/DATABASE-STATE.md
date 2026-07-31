@@ -101,7 +101,12 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
-## Written but NOT applied: the room initiator's declared capacity (option 1)
+## SUPERSEDED BY THE APPLIED RECORD: the room initiator's declared capacity (option 1)
+
+**`20260731b` was applied to production at 05:01:48.553 UTC on 31 July 2026.** The
+section below described it while it was still pending; the applied record, with the
+before-and-after fingerprints, is further down under "APPLIED to production, 31 July
+2026: the room initiator's declared capacity".
 
 `supabase/migrations/20260731b_deal_room_propose_initiator_capacity.sql`.
 
@@ -110,7 +115,7 @@ Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 | SHA-256 | `0de3c6e0e74f814746fe511b39165247163918d539f300ca8dc7ba9ac926ef13` |
 | Size | 13,354 bytes, no BOM |
 | Content | **one `create or replace function`. Nothing else.** |
-| Status | written and tested, **NOT applied** |
+| Status | **APPLIED 31 July 2026, 05:01:48.553 UTC. Ledger 49 -> 50.** |
 
 Owner decision of 31 July 2026, option 1 of the three the Approval 3 record set
 out: seed the initiator's `declared_capacity` inside `deal_room_propose` rather
@@ -163,6 +168,54 @@ diagnosis. 8 assertions.
 npm run deal-room:acl-verify        # ACL unchanged: anon 0, authenticated 21
 npm run deal-room:negative-access   # must now get past step one
 ```
+
+## Written but NOT applied: the procedure approver gate
+
+`supabase/migrations/20260731c_deal_room_procedure_approver_gate.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `7e60f2dfbaad3d27ff6165a0a5f6d4ff5bc872be7c5bf228b702be920c9971ba` |
+| Size | 16,063 bytes, no BOM |
+| Content | **three `create or replace function`, on identical signatures. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+
+Owner decision of 31 July 2026: fix the procedure approver gate that Approval 3's
+re-run found. The correction follows
+`PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` section 8 - a procedure
+"becomes agreed only after approval by every designated principal approver", and
+material changes "require renewed approval from affected principal participants".
+
+**Every admitted principal is a required approver, and each person approves once.**
+
+| Function | Change |
+|---|---|
+| `deal_room_admit_participant` | The admission update also sets `is_required_approver` when `participant_class = 'principal'`. Admission is the honest place for it - identity, capacity, authority declaration and every current agreement have just been proved. `or`-ed, so it can only promote; nothing is demoted. |
+| `deal_room_propose_procedure` | Seeds `distinct on (p.profile_id)` - one approval row per **person**, not per participant row - choosing the master-level row where one exists, then the earliest admitted, then the lowest id. |
+| `deal_room_approve_procedure` | Approves by person, joining the approval rows to `deal_room_participants` on `profile_id = auth.uid()`, instead of keying on whichever row a `limit 1` happened to find. It also now **refuses** a caller who holds no approval row on that version, rather than updating nothing and letting the outstanding count fall to zero without them. |
+
+Why both halves are needed: the initiator holds two participant rows in one room
+(master-level and first workspace, both created by `deal_room_propose` and both
+marked required), so the old seed issued them two obligations and the old approve
+could satisfy only one - `v_outstanding` never reached zero. Separately the
+counterparty was never marked a required approver at all, so they were refused
+outright and had no row. Either defect alone made a procedure unable to govern.
+
+Each body is `20260729b`'s, extracted verbatim and patched: 3 changed lines in
+`admit_participant`, 13 in `propose_procedure` (8 of them comment), 25 in
+`approve_procedure` (14 of them comment). Signatures are unchanged, so no overload
+is created and no grant is invalidated.
+
+**No table, constraint, policy, trigger, index, grant or row is altered, and no
+existing row is backfilled.** The only rooms in production are the negative-access
+fixture's; their disposal is a separate owner decision, and the two stale approval
+rows on the fixture procedure are left as they are. The join-on-profile update would
+in fact settle such a duplicate pair if that room were ever used again.
+
+`lib/deal-room/__tests__/grant-signatures.test.ts` holds the guard: the file replaces
+exactly those three functions, each edit is present, the old `participant_id =
+v_participant` keying is absent, and **nothing at all appears outside the function
+bodies** - no DDL and no backfill.
 
 ## APPLIED to production, 31 July 2026: the room initiator's declared capacity
 
