@@ -59,9 +59,12 @@
  * is which token an element inherits on this surface, which is not a fact about
  * a pair.
  *
- * Scoped to `.dr-page` so no other route is repainted, for the same reason the
- * surface rule below is scoped. */
-.dr-page :is(h1, h2, h3, h4) {
+ * Scoped with `body:has(.dr-page)`, the SAME scope as the background rule below,
+ * and that matters. The first version scoped it to `.dr-page` alone and fixed the
+ * page heading while leaving the site footer's column headings near-white - because
+ * the footer sits outside `.dr-page` but on the canvas that rule repaints. Paint a
+ * surface and you own everything standing on it. */
+body:has(.dr-page) :is(h1, h2, h3, h4) {
   color: var(--pf-ink);
 }
 
