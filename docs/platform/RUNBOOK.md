@@ -137,8 +137,14 @@ real result.
 **Secrets the workflow needs**, set under Settings, Secrets and variables,
 Actions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`,
 `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ADMIN_ALERT_EMAIL`. Rotating any of
-these means updating both Netlify and here, or the nightly run starts failing
-while the site stays up.
+these means updating both the hosting dashboard and here, or the nightly run
+starts failing while the site stays up.
+
+**Updated 31 July 2026:** that dashboard is **Vercel's**, not Netlify's
+(`docs/operations/OPERATIONS_LOG.md`). The two-places rule is unchanged; only
+the first place moved. **Also unverified:** this workflow posts to
+`/api/cron/sanctions-refresh` on the production origin with a shared secret, and
+whether it still reaches the origin after the cutover has not been checked.
 
 **Two GitHub scheduling caveats.** Scheduled runs can be delayed by several
 minutes at peak, which does not matter for a daily rebuild. And GitHub

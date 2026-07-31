@@ -97,18 +97,32 @@ Recorded 30 July 2026 while auditing email (LB-012). Every "Not yet deployed" an
 "Not deployed" in the table above states what nobody has verified rather than what
 anybody has checked, and this is why:
 
-- Netlify writes no GitHub deployment, so `gh api repos/Geppix140269/ponte/deployments`
-  returns `[]`.
+- The host writes no GitHub deployment, so `gh api repos/Geppix140269/ponte/deployments`
+  returns `[]`. (Recorded of Netlify; **unverified for Vercel**, which may behave
+  differently and should be checked rather than assumed.)
 - `https://ponte.trade/` answers `401` behind the temporary Basic-auth wall, so no
   build identifier can be read from production.
 - The last deployment named in `docs/operations/OPERATIONS_LOG.md` is the 28 July
   hotfix of `b378ad2`, and its own recorded next action — confirm the deployment
   succeeded and production is serving — has no recorded outcome.
 
-`main` is `23637d3`. Which commit Netlify is serving is an owner-held fact, and no
-claim about production behaviour in this document should be read as verified until
-it is recorded. Establishing it needs the Netlify dashboard, a deploy log, or the
-site password.
+`main` was `23637d3` when this was written. Which commit production is serving is
+an owner-held fact, and no claim about production behaviour in this document
+should be read as verified until it is recorded.
+
+**Updated 31 July 2026: the host changed and the gap did not close.** Production
+moved from Netlify to Vercel (`OPERATIONS_LOG.md`, 31 July 2026), so "the Netlify
+dashboard or a deploy log" is no longer the route to the answer, and any reading
+of this note that assumed Netlify is stale. **What is unchanged is the thing that
+matters:** nobody has recorded which commit production serves, and the site
+password that would let anyone read a build identifier is still not in the
+repository.
+
+**One reason to be more careful, not less.** Until today, merging to `main` at
+least implied a deployment had been attempted. It no longer does - deployment is
+explicitly controlled and owner-held - so "merged" and "deployed" have come
+further apart, and a row in the table above saying "On `main`" now says even less
+about production than it did.
 
 ## Design authority truth
 

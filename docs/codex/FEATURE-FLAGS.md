@@ -59,6 +59,18 @@ either way.
 
 The flags are evaluated at build time because they are `NEXT_PUBLIC_*` variables. Changing them requires a new deployment.
 
+**Updated 31 July 2026.** Production moved from Netlify to Vercel
+(`docs/operations/OPERATIONS_LOG.md`). The build-time rule is unchanged - it is a
+property of `NEXT_PUBLIC_*` in Next, not of the host - but two things around it
+are. The dashboard the values live in is now Vercel's, and **a push no longer
+triggers a build on its own**: deployment is explicitly controlled and
+owner-held until the Vercel procedure is confirmed. So "set it and redeploy" in
+this table now means two separate acts, and the second is not automatic.
+
+"Unknown - must be checked in the deployment host" was already the honest answer
+for the production value of three of these flags. It still is, and the host it
+refers to has changed.
+
 They govern the entrance's interpreted searches, and the Start a deal bridge route, through `destinationFor` in `lib/landing/routing.ts`, which remains the only place a destination is decided. `lib/landing/bridge.ts` maps the two North Star routes onto it and adds no flag of its own.
 
 `/explore` has no flag. It is a new public route with no legacy seam to fall back to, and nothing behind it that a flag could safely disable; removing it would mean removing the Explore entrance itself.

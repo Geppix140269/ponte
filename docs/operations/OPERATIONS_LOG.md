@@ -18,6 +18,72 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - Production hosting moved from Netlify to Vercel
+
+### Completed
+
+- **`https://ponte.trade` and `https://www.ponte.trade` are served by Vercel.**
+  **Netlify is no longer the production origin.** Owner-reported on 31 July 2026
+  at the completion of a controlled cutover. A freeze was in force during the
+  cutover and has been lifted for code development only.
+- The migration itself is on branch `ops/vercel-production-migration` and
+  **PR #168**. Neither was read or touched in producing this entry, by owner
+  instruction.
+
+### Decisions
+
+- **Merging to `main` no longer implies a production deployment.** The owner has
+  stated that all production deployments remain **explicitly controlled** until
+  the new Vercel deployment procedure is confirmed. Treat deployment as a
+  separate, owner-held act.
+- **No deployment, DNS, environment-variable, hosting-configuration or Netlify
+  action** is authorised. That restriction survives the lifting of the freeze.
+
+### Risks / discrepancies
+
+- **This entry is owner-reported, not independently verified.** Nothing here was
+  established by probing production: `ponte.trade` was not fetched, no DNS was
+  resolved, and no hosting dashboard was opened. The distinction matters because
+  this file is read as evidence.
+- **The repository still contains Netlify hosting configuration**, and it was
+  deliberately left untouched: `netlify.toml`, `@netlify/plugin-nextjs` in
+  `next.config.mjs`, and the Netlify-specific reasoning in `middleware.ts`,
+  `lib/rate-limit.ts` and `scripts/check-dev-env.mjs`. Changing any of it is a
+  hosting-configuration change and is not authorised. **The documentation is
+  reconciled; the configuration is not, and the two now disagree on purpose.**
+- **Netlify checks still run on every pull request** - `Header rules`,
+  `Redirect rules`, `Pages changed` and `netlify/ponte-trade/deploy-preview`.
+  They were green on every PR merged today. **A green Netlify check now says
+  nothing about production**, and a deploy preview it publishes is not a preview
+  of what production serves. Do not read them as a production signal.
+- **The deployed commit remains unrecorded**, and the reasons have changed
+  rather than gone away. See `CURRENT-STATE.md`.
+- **The nightly sanctions refresh** (`.github/workflows/sanctions-refresh.yml`)
+  posts to `/api/cron/sanctions-refresh` on the production origin and carries a
+  shared secret. Whether it still reaches the origin after the cutover is
+  **unverified**, and it is an environment concern, so it was not touched.
+
+### Next
+
+1. Confirm the Vercel deployment procedure and record it, replacing the
+   "push to `main` and Netlify builds" model that `CONTRIBUTING.md` carried
+   until today.
+2. Decide the disposition of the Netlify build configuration and of the Netlify
+   PR checks, which are now noise at best and misleading at worst.
+3. Establish and record which commit production is serving. It has been
+   unrecorded since before the cutover.
+4. Verify the nightly sanctions refresh still reaches the origin.
+
+### Evidence
+
+- Owner control notices of 31 July 2026, freeze and release.
+- Reconciled records: `CONTRIBUTING.md`, `docs/platform/CONNECTIONS.md`,
+  `docs/codex/CURRENT-STATE.md`, `docs/codex/FEATURE-FLAGS.md`,
+  `docs/platform/RUNBOOK.md`.
+- **No production probe, no dashboard, no DNS lookup.**
+
+---
+
 ## 2026-07-31 - The surfaces were rendered. Three defects, and the flag stays off.
 
 ### Completed

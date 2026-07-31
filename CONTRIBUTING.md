@@ -3,20 +3,29 @@
 ## The one rule
 
 **One repository, one branch, one deploy path.** `main` on
-`github.com/Geppix140269/ponte` is the only real copy, and Netlify deploys from
-it. The failure this project actually had was three stale clones on one machine
-each pushing a different version of the site, so the live site served three eras
-at once. The fix is that only one working copy can publish, not that changes
-have to take a slow route.
+`github.com/Geppix140269/ponte` is the only real copy. The failure this project
+actually had was three stale clones on one machine each pushing a different
+version of the site, so the live site served three eras at once. The fix is that
+only one working copy can publish, not that changes have to take a slow route.
+
+> **Hosting moved on 31 July 2026.** `ponte.trade` and `www.ponte.trade` are
+> served by **Vercel**; Netlify is no longer the production origin. Until the
+> new deployment procedure is confirmed and recorded, **merging to `main` does
+> not deploy production** - deployment is an explicitly controlled, owner-held
+> act. See `docs/operations/OPERATIONS_LOG.md`, 31 July 2026.
 
 ## Change control
 
-By the owner's decision, work commits straight to `main` and deploys. There is
-no branch and pull request step.
+By the owner's decision, work commits straight to `main`. There is no branch and
+pull request step.
 
 1. Commit to `main`.
-2. Push. Netlify builds and deploys.
+2. Push.
 3. Update the matching file in `docs/platform` in the same commit.
+
+**Pushing is no longer the same act as deploying.** It was until 31 July 2026,
+when Netlify built from `main` automatically. Do not assume a merged change is
+live, and do not describe one as deployed without evidence.
 
 Before pushing anything substantial, run the same gates CI runs:
 
@@ -24,8 +33,13 @@ Before pushing anything substantial, run the same gates CI runs:
 npm run verify        # locale validation, typecheck, production build
 ```
 
-A failed Netlify build does not take the site down: the last successful deploy
-keeps serving. A broken push costs a deploy, not an outage.
+A failed build does not take the site down: the last successful deploy keeps
+serving. A broken push costs a deploy, not an outage.
+
+**The Netlify checks on a pull request are no longer a production signal.**
+`Header rules`, `Redirect rules`, `Pages changed` and
+`netlify/ponte-trade/deploy-preview` still run, and a deploy preview they publish
+is not a preview of what production serves. `verify` is the gate.
 
 CI still runs on every push to `main`, so a break is reported rather than
 discovered later. The pre-commit hook still refuses secrets, env files and
