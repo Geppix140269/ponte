@@ -310,8 +310,8 @@ test("DS-8: hovering the chosen station does not demote it", async ({ page }) =>
   const expectSelectedNode = async () => {
     await expect(node).toHaveCSS("width", "15px");
     await expect(node).toHaveCSS("height", "15px");
-    await expect(node).toHaveCSS("background-color", "rgb(138, 101, 32)"); // --pf-gold-ink
-    await expect(node).toHaveCSS("border-top-color", "rgb(138, 101, 32)");
+    await expect(node).toHaveCSS("background-color", "rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914)
+    await expect(node).toHaveCSS("border-top-color", "rgb(126, 89, 20)");
     await expect(pier).toHaveCSS("opacity", "1");
     await expect(pier).toHaveCSS("width", "2px");
   };
@@ -334,7 +334,7 @@ test("DS-8: hovering the chosen station does not demote it", async ({ page }) =>
   const other = stations(page).nth(1);
   await other.hover();
   await expect(other.locator(".brst__n")).toHaveCSS("width", "13px");
-  await expect(other.locator(".brst__n")).toHaveCSS("background-color", "rgb(242, 239, 230)"); // --pf-sunken
+  await expect(other.locator(".brst__n")).toHaveCSS("background-color", "rgb(226, 219, 196)"); // --pf-sunken (#E2DBC4, ADR-0015 Stage 1)
 });
 
 // ---------------------------------------------------------------------------
@@ -431,12 +431,26 @@ test("keyboard evidence: focus is visible and the group is one tab stop", async 
 
   const focused = page.locator(".pbridge > .br .brst:focus");
   await expect(focused).toHaveCount(1);
-  await shotFramed(page, "desktop-5-keyboard-focus");
 
-  // One more Tab must leave the bridge entirely: a radiogroup is one stop, and
-  // arrow keys move within it.
+  /*
+    One more Tab must leave the bridge entirely: a radiogroup is one stop, and
+    arrow keys move within it.
+
+    Asserted BEFORE the evidence frame, not after. `shotFramed` takes a
+    full-page capture, which scrolls and resizes the page, and a Tab pressed
+    immediately afterwards is swallowed - focus stays exactly where it was.
+    That read as a focus trap the product does not have: isolating the capture
+    shows this same assertion passing with the screenshot removed and failing
+    with it, and a raw tab trace of the landing puts focus on the station at
+    stop 6 and out of `.pbridge` at stop 7.
+  */
   await page.keyboard.press("Tab");
   expect(await page.evaluate(() => !!document.activeElement?.closest(".pbridge"))).toBe(false);
+
+  // Back onto the station, so the frame records the focused state it is for.
+  await page.keyboard.press("Shift+Tab");
+  await expect(focused).toHaveCount(1);
+  await shotFramed(page, "desktop-5-keyboard-focus");
 });
 
 test("keyboard selection: arrows traverse and select, and focus follows", async ({ page }) => {
@@ -512,7 +526,7 @@ test("reduced motion evidence: movement removed, settled state complete", async 
   // word, the drawn deck, and all three destinations.
   expect(settled.selected).toBe("Products");
   expect(settled.nodeWidth).toBe("15px");
-  expect(settled.nodeBackground).toBe("rgb(138, 101, 32)"); // --pf-gold-ink
+  expect(settled.nodeBackground).toBe("rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914)
   expect(settled.markOpacity).toBe("1");
   expect(settled.markText).toBe("Selected route");
   expect(settled.liveDeckDrawn).toBe(true);
@@ -1003,6 +1017,6 @@ test("the approved gold italic headline emphasis is intact", async ({ page }) =>
     return { colour: c.color, style: c.fontStyle, family: c.fontFamily };
   });
   expect(style.style).toBe("italic");
-  expect(style.colour).toBe("rgb(138, 101, 32)"); // --pf-gold-ink, AA on cream
+  expect(style.colour).toBe("rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914, ADR-0015 Stage 1), AA on cream
   expect(style.family.toLowerCase()).toContain("playfair");
 });
