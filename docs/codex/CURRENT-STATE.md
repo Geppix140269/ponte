@@ -9,9 +9,8 @@
 **Market discoverability authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`  
 **Deal Room authority:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md`  
 **Deal-to-Room hierarchy:** `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md`  
-**Deal Room monetisation authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`  
-**Starter Deal Room proposal:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md`  
-**Launch model proposal:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`  
+**Deal Room commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (Deal Room-Only Pricing Authority, accepted 31 July 2026, recorded by ADR-0020, **delivered by open PR #155**)  
+**Superseded commercial records (history only):** `PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md`, `PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md`, `PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md`, `PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`  
 **Repository:** `Geppix140269/ponte`  
 **Canonical branch:** `main`  
 **Unified market decision:** `docs/decisions/ADR-0001-unified-trade-market.md`  
@@ -20,9 +19,10 @@
 **Deal Room product decision:** `docs/decisions/ADR-0003-deal-room-product-contract.md`  
 **Deal Room detailed definition decision:** `docs/decisions/ADR-0008-detailed-deal-room-product-definition.md`  
 **Deal Room technical decision:** `docs/decisions/ADR-0009-deal-room-technical-architecture.md` (accepted as amended, 29 July 2026)  
-**Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md`  
-**Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md`  
-**Starter Deal Room decision:** `docs/decisions/ADR-0006-starter-deal-room-access.md`  
+**Deal Room pricing decision:** `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md` (accepted 31 July 2026; supersedes ADR-0004, ADR-0005 and ADR-0006 within their commercial scope)  
+**Deal Room monetisation decision:** `docs/decisions/ADR-0004-deal-room-monetisation-boundary.md` (partly superseded by ADR-0020)  
+**Master-room hierarchy decision:** `docs/decisions/ADR-0005-free-deals-and-counterparty-room-branches.md` (partly superseded by ADR-0020)  
+**Starter Deal Room decision:** `docs/decisions/ADR-0006-starter-deal-room-access.md` (**superseded** by ADR-0020; there is no Starter Deal Room)  
 **Phase A evidence:** `docs/codex/audits/issue-42-phase-a/PHASE-A-FINAL-REPORT.md`
 
 ## Status vocabulary
@@ -54,9 +54,11 @@ Code on `main` is not automatically deployed, enabled or production-verified. An
 | Complete Market Signal discoverability and category-first journeys | Designed and owner-accepted on branch `agent/record-market-discoverability`; development brief issued to Claude Code | Not implemented or production-verified | ADR-0011 makes every eligible signal discoverable and requires Trade Services and Distribution to begin with structured categories. The current 60-record board, generic non-product subject field and approximately 160-row upload remain implementation/reconciliation work. |
 | Deal Room Product Contract v1 | Designed and owner-accepted on branch `decision/deal-room-product-contract-v1` | Not started | Product foundation only: formal admission, Deal Room-ready Business Passport, agreed procedure, evidence, decisions, blockers, stable progress and closure. No design, code, schema, migration, deployment or production action. |
 | Deal-to-Room and Sub-Room Model | Designed and owner-accepted on branch | Not started | Structured Deals may be published free. One paid master Deal Room corresponds to one Deal and may contain any number of private related sub-rooms. Five room slots mean five concurrent master Deals, not five conversations. |
-| Deal Room monetisation policy | Designed and owner-accepted on branch | Not started | The upstream market creates liquidity; an active master Deal Room is the primary paid commercial environment. Entitlement is required conceptually. |
-| Starter Deal Room principle | Designed and accepted in principle on branch | Not started | Ponte will provide one real limited Starter Deal Room before ongoing paid use. Recommended limits are proposed, not owner-accepted. |
-| Deal Room Launch Model v2 | Designed on branch; proposed for owner approval | Not started | Combines Free Market Access, Starter Deal Room, €149/month or €1,490/year Portfolio subscription and Ponte Credits. All numerical limits and prices remain unapproved. |
+| **Deal Room-Only Pricing Authority (ADR-0020)** | **Recorded on branch `claude/deal-room-only-pricing-reconciliation`. The authority file itself is delivered by open PR #155 and is not yet on `main`** | **Not started. No production action of any kind** | Owner decision of 31 July 2026: the Deal Room is Ponte's only paid product, **$79 USD for 30 active days**, five concurrently active private principal-counterparty Deal Branches included, **$15 USD** per additional concurrent branch, capped at **$199 USD** per Master Deal Room per 30-day period, **USD only**, five languages included. Supersedes Starter access, Portfolio subscriptions, Ponte Credits, credit-funded rooms, paid verification, paid verification badges, public Ponte Desk packages, retainers, success fees, commissions, percentage-of-transaction pricing, euro Deal Room prices and unlimited free principal-counterparty branches. **Recording the decision is not implementing it.** There is no pricing engine, no branch-counting predicate, no billing record, no `paid` entitlement kind, no Stripe object and no charge. `deal_room_entitlements.kind` still admits only `starter`, `sponsored` and `waived`, and the table holds no price, currency or payment reference. Programme: `docs/plans/active/deal-room-transaction-pricing.md`. Inventory: `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md`. Open owner decision on paid `counterparty_check`: **OD-011**. |
+| Deal Room monetisation policy | Designed and owner-accepted on branch; **partly superseded 31 July 2026** | Not started | The upstream market creates liquidity and the master Deal Room captures value: still true, and strengthened. Its Starter exception, Portfolio/Credits entitlement sources, paid verification, Ponte Desk packages, retainers, success fees and commissions are superseded by ADR-0020. |
+| Starter Deal Room principle | **Superseded 31 July 2026. Will not be implemented** | Not started, and now never will be | ADR-0020 retires the Starter Deal Room. The entire pre-activation journey is free for everyone instead, without an entitlement or an organisation limit. `deal_room_entitlements.kind = 'starter'` and `STARTER_LIMITS_PROPOSED` in `lib/deal-room/entitlement.ts` are legacy values awaiting retirement (PL-036). |
+| Deal Room Launch Model v2 and Launch Pricing v1 | **Superseded 31 July 2026, never approved** | Not started, and now never will be | The €149/€1,490 Portfolio subscription, the €100–€400 credit packs, the 60-credit 90-day activation and the four-level ladder are all retired by ADR-0020. Preserved as history. |
+| **The public `/pricing` page contradicts binding commercial authority** | **On `main`, unchanged by this work** | **Deployed state unknown; the deployed commit is unrecorded (see the note below this table)** | `/pricing` publishes four engagements — a free marketplace, **Credits at 2 per counterparty check**, a **Desk success fee** and a **Desk monthly retainer** — and never names the Deal Room. Three of the four are prohibited by authority §15. The site-wide footer blurb repeats "success fee or retainer" on every page, and `/about` repeats credits and success fees three times, including in the legal-entity paragraph. Recorded as **proposed LB-014** for owner classification. **Deliberately not changed by this PR**, which is authority reconciliation only. |
 | Ponte Design Constitution v1 | Implemented on branch `governance/ponte-design-constitution-v1` | Not deployed; authority only | Owner approved 27 July 2026. Becomes binding when merged. Includes ADR-0002, CODEOWNERS, PR design gate and governance enforcement. |
 | Ponte Bridge System v1 | Implemented on the authority branch | Not implemented in production | Approved for Family, Action, Completion, Journey, Counterparty and Deal Room bridges, mobile, reduced motion and gold italic landing emphasis. |
 | Ponte Desk and commercial journey repair | On `main` via PR #49, merge commit `85f0338d251e68cea583793adaea2379d77ddc03` | Deployed; production baseline visually inspected | Landing actions, services/distribution composer paths, signal actions, sign-in and Your records are restored. The current family/action card grid is temporary. |
@@ -190,16 +192,24 @@ Programme sequencing is governed by `docs/plans/active/constitution-led-interfac
 
 ## Deal Room product truth
 
-The owner accepted the Deal Room foundation, commercial boundary, master-room hierarchy and the need for a real limited Starter experience on 27 July 2026.
+The owner accepted the Deal Room foundation, commercial boundary and master-room hierarchy on 27 July 2026, and on **31 July 2026** decided the commercial model outright (`PT-COMMERCIAL-2026-07-31-01`, ADR-0020), replacing the ladder that had stood since 27 July.
 
-The accepted and proposed commercial ladder is:
+The accepted commercial model is:
 
 ```text
-Structured Deal — free to create and publish when eligible
--> Starter Deal Room — principle accepted; launch limits proposed
--> paid Portfolio subscription or Ponte Credits
--> optional paid agent, Ponte Desk and specialist services
+Everything upstream of protected Deal Room progression — FREE, no limit
+  browse, publish, prepare a Master Deal Room, create draft branches,
+  invite, accept, prepare for activation
+-> Activate the Master Deal Room — $79 USD for 30 active days,
+   including 5 concurrently active private principal-counterparty branches
+-> Each additional concurrently active branch — $15 USD for that room period
+-> Maximum $199 USD per Master Deal Room per 30-day period
+-> Expiry — read-only continuity; nothing deleted; reactivation is a new period
 ```
+
+USD only. English, Spanish, Russian, Simplified Chinese and Modern Standard Arabic included. **The Deal Room is Ponte's only paid product.**
+
+There is no membership, plan, Starter room, Portfolio subscription, credit pack, paid verification, public Ponte Desk package, retainer, commission, success fee or percentage-of-transaction charge.
 
 The master-room hierarchy remains:
 
@@ -210,39 +220,25 @@ One master Deal Room — one Deal and one room entitlement
 -> private internal workstreams
 ```
 
-Paid master rooms may contain unlimited directly related private sub-rooms. Sub-room creation does not consume another master-room slot. External guest organisations may consume included capacity or credits.
+Provider, adviser and internal workspaces remain unlimited and free under one Master Deal Room. Concurrently active **principal-counterparty** branches are what the price counts: five included, $15 USD each thereafter, to the $199 USD cap.
 
-### Starter Deal Room proposal
+### What the price counts, and what it never counts
 
-The recommended Starter configuration is:
+A Deal Branch is billable only when it is a **principal-counterparty** branch, the counterparty has accepted the invitation, admission and required participation agreements are complete, the branch is write-enabled for protected progression, and it is not closed, declined, withdrawn, expired or archived (authority §7).
 
-- €0 and no credit card;
-- once per verified organisation;
-- one master Deal Room;
-- 30 active days starting when the first required external principal completes admission;
-- three private sub-rooms;
-- two admitted external guest organisations;
-- two internal organisation users;
-- real admission, NDA, procedure, evidence, clarification, blockers, decisions, milestones, progress and basic AI recap;
-- no founder, Ponte Desk or specialist work;
-- read-only expiry with seamless upgrade and no loss of history.
+Never billable: draft branches; invitations prepared, sent or awaiting acceptance; declined or expired invitations; failed admissions; closed or archived read-only branches; and **all provider, adviser and internal workspaces**. Closing a branch releases a slot for reuse in the same period and refunds nothing.
 
-The Starter principle is accepted. These numerical limits are **proposed, not owner-accepted**.
+**A billing amount must never reveal branch count** to a participant not authorised to see the branch structure. Only authorised Master Deal Room administrators may see the active-branch count, purchased capacity and billing breakdown.
 
-### Paid launch proposal
+### Superseded on 31 July 2026
 
-- €149 per month or €1,490 per year;
-- five concurrent active master Deal Rooms;
-- unlimited related private sub-rooms;
-- 25 concurrent external guest organisations;
-- five internal organisation members;
-- 60 credits for a 90-day pay-as-you-go master room including two external guest organisations;
-- five credits for an additional guest organisation;
-- 20 credits for a 30-day extension or temporary extra master-room slot.
+The €0 Starter Deal Room (one per verified organisation, 3 sub-rooms, 2 guest organisations, 2 internal users), the €149/month or €1,490/year Portfolio subscription with 5 concurrent master rooms and 25 guest organisations, and the Ponte Credits scheme (100/250/500 packs, 60 credits for a 90-day room, 20-credit extension, 5-credit guest organisation) are **all retired** by ADR-0020. They are recorded in the superseded authorities and are not to be implemented.
 
-These paid numerical terms are also **proposed, not owner-accepted**.
+### Implementation status: nothing
 
-No price, Stripe, billing, tax or production charging is authorised, and none exists in the code: the launch slice carries `starter` and `waived` entitlement kinds only, and its migrations contain no price, currency, invoice or Stripe identifier of any kind.
+**No price, pricing engine, branch-counting predicate, billing record, entitlement kind, Stripe object, tax treatment or production charging exists.** The Deal Room launch slice carries `starter`, `sponsored` and `waived` entitlement kinds only; `deal_room_entitlements` has no `paid` value in its CHECK constraint and contains no price, currency, period price, purchased branch capacity or payment reference, and its migrations contain no price, currency, invoice or Stripe identifier of any kind. The only Stripe checkout in the repository sells credit packs.
+
+Recording ADR-0020 changed none of that. The staged programme is `docs/plans/active/deal-room-transaction-pricing.md` and every production-changing stage in it needs separate owner approval.
 
 **Corrected 29 July 2026.** This section previously read "This entire Deal Room capability is Designed, not implemented." That is no longer true. The protected progression loop authorised by issue #97 is implemented on `agent/deal-room-launch-slice`, behind a feature flag that has never been set, against a schema that has never been applied. Everything beyond that slice — Portfolio subscriptions, credits, multi-room capacity, the Deal Passport, closure packs and the remaining DR surfaces — remains Designed and not implemented.
 
@@ -329,10 +325,12 @@ RLS was enabled on inspected core tables. Investigation and connection policies 
 2. Deploy and production-verify the Market Signals search and pagination delivered for LB-007, then classify the existing inventory (PL-017) and reconcile the new batch (PL-018), which are the parts of ADR-0011 that remain.
 3. Require exact before-and-after counts, classification coverage, privacy-contract evidence, tests and desktop/390 × 844 screenshots before implementation approval.
 4. Do not apply a production migration, deploy, change a production feature flag or merge the implementation without the later approval required by `AGENTS.md`.
-5. Product owner approves or revises the Starter limits and paid launch numbers in `PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md`.
+5. Merge PR #155 so the Deal Room-Only Pricing Authority reaches `main`, then merge the ADR-0020 reconciliation PR that depends on it. **In that order** — the reconciliation cites the authority path and must not land first.
 6. Complete issue #51's detailed Deal Room journey, screen register, domain model, permissions, state machine, progress model and delivery plan.
-7. Complete issue #52's legal, billing, tax, refund, Stripe, entitlement and unit-economics requirements after commercial approval.
-8. No production schema, pricing, Stripe or charging action without the required later approvals.
+7. Classify proposed **LB-014** — the public `/pricing` page, footer blurb and `/about` copy publishing Credits, a success fee and a retainer against binding authority. Only the owner may make that call.
+8. Decide **OD-011** — whether authority §15's prohibition on "paid verification" retires the paid `counterparty_check`, or whether a check on a third party is outside it. Stage 8 of the pricing programme is blocked on this.
+9. Complete issue #52's legal, billing, tax, refund, Stripe, entitlement and unit-economics requirements against the **new** model, not the retired one.
+10. No production schema, pricing, Stripe or charging action without the required later approvals.
 9. Review and merge the Design Constitution authority PR after checks pass.
 10. Open a separate landing bridge implementation PR using the merged authorities.
 11. Verify that PR at desktop and 390 × 844, including keyboard and reduced motion, before merge.

@@ -1,6 +1,34 @@
 # Ponte Trade Deal Room Monetisation Policy
 
-- **Status:** Accepted by the product owner; effective when merged
+> ## ⚠ Superseded within its commercial scope — 31 July 2026
+>
+> The **Deal Room-Only Pricing Authority** (`PT-COMMERCIAL-2026-07-31-01`,
+> recorded by **ADR-0020**) replaces this document's commercial rules.
+>
+> **What this document still governs:** the principle that the upstream market is
+> free and the master Deal Room is where Ponte captures value; that payment
+> confers no commercial, disclosure or decision authority; that a lapsed
+> entitlement never deletes history; and that a paid room may contain private
+> sub-rooms without a second master-room charge — for provider, adviser and
+> internal workspaces.
+>
+> **What is superseded:** the Starter Deal Room exception (§2, §4, §7, §9, §10);
+> Portfolio subscriptions and Ponte Credits as entitlement sources (§3); the
+> monetisation list in §5, including paid verification, investigation and
+> reporting services, portfolio plans, and transaction, referral, completion and
+> success fees; public Ponte Desk packages and paid fulfilment tiers (§6, §12);
+> and the four-level launch ladder in §8 and §10.
+>
+> Ponte's only paid product is the Deal Room, at **$79 USD for 30 active days**,
+> including five concurrently active private principal-counterparty Deal
+> Branches, **$15 USD** per additional concurrent branch, capped at **$199 USD**
+> per Master Deal Room per 30-day period, in **USD only**.
+>
+> This document is preserved as the historical record. Do not implement from it.
+> See `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md` for the full
+> supersession map.
+
+- **Status:** **Superseded within its commercial scope on 31 July 2026** by `PT-COMMERCIAL-2026-07-31-01` / ADR-0020. Originally accepted by the product owner; effective when merged
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Repository:** `Geppix140269/ponte`
