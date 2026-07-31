@@ -13,9 +13,21 @@
  * non-participant. That is the property that makes the flag safe to be public.
  *
  * `DEAL_ROOM_ALLOWLIST` is server-only, has no `NEXT_PUBLIC_` prefix and is
- * therefore never shipped to the browser. It is checked in every server route
- * and command handler. It is a staged-rollout control, not a permission model:
- * an allowlisted member still sees only their own rooms.
+ * therefore never shipped to the browser. It is a staged-rollout control, not a
+ * permission model: an allowlisted member still sees only their own rooms.
+ *
+ * It is checked on every Deal Room route, through `loadAccess`, and in every
+ * server action **except the four that carry an invited counterparty through
+ * admission** - accept, declare, accept agreement, complete admission. An
+ * invitee is not necessarily allowlisted, and gating them would make invitations
+ * unusable while the rollout is staged. `app/[locale]/deal-rooms/actions.ts`
+ * says so where they are, and `__tests__/action-gate.test.ts` holds the list so
+ * the exception cannot grow silently.
+ *
+ * This paragraph used to claim the check was in "every server route and command
+ * handler". It was not: on 31 July 2026, eleven of fifteen actions did not call
+ * it, seven of them for no reason at all. Documentation is not a mechanism, and
+ * that is why there is now a test.
  *
  * ## Safe disable
  *
