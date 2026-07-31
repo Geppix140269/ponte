@@ -47,6 +47,22 @@ export default defineConfig({
     // The captures set their own viewports; this is only the default.
     viewport: { width: 1280, height: 900 },
     deviceScaleFactor: 1,
+    /*
+      The temporary private-site gate in `middleware.ts` challenges every
+      request, including these. Without credentials every capture answers 401
+      and the suite cannot produce evidence at all - which is why every approved
+      reference render in this repository was taken by hand after the owner
+      supplied the password, and why none has ever been taken in CI.
+
+      Read from the environment, never committed: `middleware.ts` holds only the
+      SHA-256 verifier and this holds nothing. The gate is not weakened, no route
+      is exempted, and with the variable unset the suite behaves exactly as it
+      did before - it 401s. Playwright's own `webServer` readiness check already
+      treats 401 as a live server, so the two servers above still start.
+    */
+    httpCredentials: process.env.PONTE_SITE_PASSWORD
+      ? { username: "ponte", password: process.env.PONTE_SITE_PASSWORD }
+      : undefined,
   },
   /**
    * Two servers, for two different jobs.

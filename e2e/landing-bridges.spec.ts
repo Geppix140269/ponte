@@ -701,6 +701,130 @@ test("without JavaScript every destination is still a link", async ({ browser })
 });
 
 // ---------------------------------------------------------------------------
+// The pre-measurement layout: a bridge whose client never ran is still readable
+// ---------------------------------------------------------------------------
+
+/*
+  This is the failure that reached production, and `javaScriptEnabled: false`
+  does not reproduce it.
+
+  On 31 July 2026, after the deploy of `f26718a`, `ponte.trade` served the
+  landing with its HTML and CSS intact and its client chunks missing. Scripting
+  was ON, so the `<noscript>` rule that unhides the action bridges never fired;
+  React never hydrated, so the effect that positions the stations never ran. All
+  three stations resolved to the same static position and painted on top of one
+  another, and the stage - which is sized from its lowest child - kept a height
+  of zero and let Market Signals draw straight through them.
+
+  Aborting the chunk requests reproduces exactly that: a live document, no
+  client. The assertions below are the two properties that failed, stated
+  directly - stations that do not sit on top of each other, and a bridge that
+  does not reach the section beneath it.
+*/
+async function withoutClientChunks(page: Page): Promise<void> {
+  await page.route("**/_next/static/chunks/**", (route) => route.abort());
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  // The family bridge's own stage. The three action bridges each have one too,
+  // and theirs stay unmeasured for a different and correct reason: they are
+  // `hidden` until a family is chosen, and a hidden element cannot be measured.
+  await expect(page.locator(".pbridge > .br .br__stage")).toHaveAttribute("data-unmeasured", "");
+}
+
+for (const width of [1280, 390]) {
+  test(`the bridge stays readable with no client chunks at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await withoutClientChunks(page);
+
+    const layout = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".pbridge > .br .br__stage");
+      const stations = Array.from(document.querySelectorAll<HTMLElement>(".pbridge > .br .brst"));
+      const below = document.querySelectorAll("section.sec")[0];
+      if (!stage || stations.length !== 3 || !below) return null;
+      const boxes = stations.map((s) => s.getBoundingClientRect());
+      // Every pair, not just neighbours: three stations on one point overlap
+      // in all three pairings, and a fallback that only separated adjacent
+      // ones would still be broken.
+      const overlaps: string[] = [];
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i];
+          const b = boxes[j];
+          if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) {
+            overlaps.push(`${i}/${j}`);
+          }
+        }
+      }
+      return {
+        overlaps,
+        stageHeight: Math.round(stage.getBoundingClientRect().height),
+        // Every station must be inside the stage's own box, which is the
+        // property `fit()` provides when it runs and nothing provided when it
+        // did not.
+        gapToSectionBelow: Math.round(
+          below.getBoundingClientRect().top - Math.max(...boxes.map((b) => b.bottom)),
+        ),
+        readable: stations.every((s) => {
+          const box = s.getBoundingClientRect();
+          return box.width > 40 && box.height > 20;
+        }),
+        titles: stations.map((s) => s.querySelector(".brst__t")?.textContent ?? ""),
+      };
+    });
+
+    // Constitution section 21: evidence of the states this change touches, at
+    // both review widths. This is the state a member sees when the client does
+    // not arrive, and it is the whole point of the change.
+    await page.screenshot({
+      path: `${EVIDENCE}/no-client-chunks-${width}.png`,
+      animations: "disabled",
+      fullPage: width === 1280,
+    });
+
+    expect(layout, "the family bridge was not found without its client chunks").not.toBeNull();
+    expect(layout!.overlaps, "stations are drawn on top of one another").toEqual([]);
+    expect(layout!.stageHeight, "the stage has no height, so it cannot hold its stations").toBeGreaterThan(0);
+    expect(layout!.gapToSectionBelow, "the bridge overlaps the section below it").toBeGreaterThan(0);
+    expect(layout!.readable, "a station has collapsed to nothing").toBe(true);
+    // The copy is the point. A readable layout that lost a family would be a
+    // different failure wearing the same passing test.
+    expect(layout!.titles).toEqual(["Products", "Trade services", "Distribution and representation"]);
+  });
+}
+
+test("the measured drawing takes over, and leaves no trace of the fallback", async ({ page }) => {
+  // The other half of the contract: on a working client the attribute is gone
+  // and the approved geometry is in force, so nothing above can have changed
+  // what a member actually sees.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await landing(page);
+  await settled(page);
+
+  const measured = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".pbridge > .br .br__stage");
+    const stations = Array.from(document.querySelectorAll<HTMLElement>(".pbridge > .br .brst"));
+    if (!stage || stations.length !== 3) return null;
+    return {
+      unmeasured: stage.hasAttribute("data-unmeasured"),
+      deckHidden: getComputedStyle(stage.querySelector(".br__deck")!).display === "none",
+      // The approved fractions at 3 stations are 0.26 / 0.50 / 0.74 of the deck,
+      // so the middle station is centred and the outer two are not evenly
+      // spaced to the edges. A flow layout cannot produce that.
+      positioned: stations.every((s) => s.style.left !== "" && getComputedStyle(s).position === "absolute"),
+      lefts: stations.map((s) => Math.round(parseFloat(s.style.left))),
+    };
+  });
+
+  expect(measured, "the family bridge did not render").not.toBeNull();
+  expect(measured!.unmeasured, "the stage still claims to be unmeasured after hydrating").toBe(false);
+  expect(measured!.deckHidden, "the deck is hidden after measuring").toBe(false);
+  expect(measured!.positioned, "the stations are not absolutely positioned from the curve").toBe(true);
+  // Middle station centred between the outer two, which the arch guarantees and
+  // the fallback's `space-between` does not.
+  const [a, b, c] = measured!.lefts;
+  expect(Math.abs((a + c) / 2 - b), "the stations are not on the approved fractions").toBeLessThan(2);
+});
+
+// ---------------------------------------------------------------------------
 // Layout: no horizontal overflow at the widths the Bridge notes name
 // ---------------------------------------------------------------------------
 

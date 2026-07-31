@@ -205,16 +205,36 @@ export default function BridgeRoute({
     const y0 = deckBaseline(H);
     const d = deckPath(W, H);
 
+    // A detached path is enough for getPointAtLength in every browser that
+    // supports it, and avoids the engine's temporary document-body insert.
+    // Verified 31 July 2026 in Firefox 153 and Chromium 151: both return the
+    // same length for the same deck, to three decimal places.
+    const probe = document.createElementNS(SVG_NS, "path");
+    probe.setAttribute("d", d);
+    const L = probe.getTotalLength();
+
+    /*
+      A deck that cannot be measured places every station at the same point.
+
+      Each station is `position: absolute` with no coordinates of its own, so
+      the numbers written below are the only thing that separates them. If `L`
+      comes back as 0 or NaN, `at()` returns the same point for every fraction
+      and all three stations land on top of one another at the left, with the
+      stage still at zero height and the section beneath drawn over them.
+
+      Returning here leaves `data-measured` unset, which is what keeps the
+      pre-measurement layout in `bridge-integration.css` in place. An
+      unmeasurable deck therefore reads as a plain row of stations rather than
+      as a pile of overlapping text. The measurement is retried on the next
+      resize, selection or station change like any other run of this effect.
+    */
+    if (!Number.isFinite(L) || L <= 0) return;
+
     deck.setAttribute("viewBox", `0 0 ${W} ${H}`);
     deck.setAttribute("width", String(W));
     deck.setAttribute("height", String(H));
     deck.textContent = "";
 
-    // A detached path is enough for getPointAtLength in every browser that
-    // supports it, and avoids the engine's temporary document-body insert.
-    const probe = document.createElementNS(SVG_NS, "path");
-    probe.setAttribute("d", d);
-    const L = probe.getTotalLength();
     const at = (t: number) => {
       const point = probe.getPointAtLength(L * Math.max(0, Math.min(1, t)));
       return { x: point.x, y: point.y };
@@ -288,6 +308,30 @@ export default function BridgeRoute({
       if (bottom > 0) stage.style.height = `${bottom + 2}px`;
     };
     fit();
+
+    /*
+      Every station now carries a real left, top and width, so the stage may
+      hand over from the pre-measurement layout to the approved drawing.
+
+      The attribute ships in the server HTML and is REMOVED here, rather than
+      being added here, for two reasons.
+
+      It fails safe. Anything that stops this effect short - an unmeasurable
+      deck above, a bundle that never loaded, a client that never hydrated -
+      leaves the attribute exactly where the server put it, and the fallback in
+      `bridge-integration.css` stays in force. A flag that had to be ADDED to
+      trigger the fallback would be absent in precisely the case it exists for.
+
+      And it scopes itself. `DealRoomBridge` renders the same `.br__stage` class
+      and measures it its own way; it does not render this attribute, so no rule
+      below can reach it.
+
+      It is removed last, after `fit()`, because it is a statement that the
+      numbers are already on the elements. Removing it earlier would hand over
+      to a drawing that had not been positioned yet.
+    */
+    delete stage.dataset.unmeasured;
+
     const frame = requestAnimationFrame(fit);
     let cancelled = false;
     if (typeof document !== "undefined" && document.fonts) {
@@ -543,13 +587,20 @@ export default function BridgeRoute({
         survived onto `.br__rows` and clipped it: the rows box stopped 44px short
         of its own content, and the last station's description ran over the
         section below. Which is exactly what it looked like at 390.
+
+        `data-unmeasured` on the stage is the pre-measurement state, and it is
+        correct in the server HTML: nothing has measured anything yet. The
+        horizontal effect removes it once every station carries a real position.
+        Until then `bridge-integration.css` lays the stations out in plain flow,
+        so a bridge whose client never ran reads as a row of stations rather
+        than as three of them stacked on the same point.
       */}
       {isVertical ? (
         <div key="rows" className="br__rows br__rows--arc" ref={rowsRef}>
           {stations.map(renderStation)}
         </div>
       ) : (
-        <div key="stage" className="br__stage" style={{ position: "relative" }} ref={stageRef}>
+        <div key="stage" className="br__stage" data-unmeasured="" style={{ position: "relative" }} ref={stageRef}>
           <svg
             className="br__deck"
             style={{ position: "absolute", left: 0, top: 0 }}

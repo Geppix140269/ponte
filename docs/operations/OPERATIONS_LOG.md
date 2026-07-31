@@ -18,6 +18,79 @@ Use this structure:
 
 ---
 
+## 2026-07-31 - The landing Bridge collapsed on production, and now has a readable state without its client
+
+### Completed
+
+- **A production incident on the entry surface, reported by the owner.** `ponte.trade`
+  served the landing with its HTML and CSS intact and its client chunks missing,
+  shortly after the deploy of `f26718a`. Scripting was on, so the `<noscript>`
+  fallback never fired; React never hydrated, so nothing positioned the Bridge.
+  All three market families painted on the same point at the left edge and the
+  Market Signals section drew through them. It cleared on its own. **No console
+  trace was captured** - by the time a server was running locally the site had
+  recovered - so the chunk-fetch failure is the best-fitting cause rather than a
+  proved one.
+
+- **The underlying defect was reproduced, measured and fixed (PL-032).** A
+  horizontal station is `position: absolute` with no coordinates in the approved
+  stylesheet, so the measuring effect writes the only numbers that separate the
+  stations. Against a production build with `_next/static/chunks/**` aborted:
+  three overlapping pairs, stage height 0, the section below overlapping the
+  bridge by 139px. `BridgeRoute` now ships `data-unmeasured` on the stage in the
+  server HTML and removes it only once every station carries a real position;
+  `bridge-integration.css` lays the stations out in plain flow until then. The
+  same guard covers an unmeasurable deck. **No production change, no migration,
+  no flag, nothing deployed.**
+
+- **The evidence suite was made runnable.** `playwright.config.ts` sent no
+  credentials, so every capture answered 401 against the Basic-auth site gate -
+  which is why every approved reference render here was produced by hand. It now
+  reads `PONTE_SITE_PASSWORD` from the environment. The gate is not weakened, no
+  route is exempted, and nothing is committed but the variable name.
+
+### Decisions
+
+- **Classified Post-Launch (PL-032), implemented under the owner's explicit
+  instruction** of 31 July 2026. The default in `AGENTS.md` is Post-Launch when
+  uncertain, and the owner separately authorised the specific work, which is the
+  condition that permits implementing it now. The classification is flagged for
+  owner reconsideration: it was observed on production, on ENTRY, and while it
+  lasts the three families and all nine destinations are unreadable.
+
+### Risks / discrepancies
+
+- **The cause of the production incident is inferred, not proved.** The fix
+  addresses the class of failure - a bridge with no client - and does not depend
+  on which client failure occurred.
+- **The bridge is legible without a client, not operable.** The action bridges
+  stay `hidden`, so the nine destinations remain unreachable in that state.
+  Recorded in PL-032; not fixed there.
+- **Four assertions in `e2e/landing-bridges.spec.ts` still expect the
+  pre-ADR-0015 gold** `#8A6520`; Stage 1 changed the token to `#7E5914` in
+  `f5a3dcd`, which is on `main`. They fail on `main` and on the branch alike.
+  PL-033, deliberately not fixed here.
+- **The Firefox detached-path concern raised earlier the same day was wrong.**
+  `getTotalLength()` on an unattached `<path>` returns the same value in Firefox
+  153 and Chromium 151, to three decimal places. Recorded so it is not
+  investigated twice.
+
+### Next
+
+1. Owner review of the classification and of the two fallback frames.
+2. Decide PL-033 (the gold assertions), then PL-034 (running the evidence suite
+   in CI), in that order - the second starts red without the first.
+
+### Evidence
+
+- Branch `claude/bridge-fallback-layout`; `npm run verify` exits 0.
+- `docs/codex/audits/constitution-rebuild/evidence/landing-bridges/` sections 7,
+  with `no-client-chunks-1280.png` and `no-client-chunks-390.png`.
+- Settled rendering unchanged: four desktop frames and two of three mobile
+  frames byte-identical against `main`; the third is bistable on `main` itself.
+
+---
+
 ## 2026-07-31 - Procedure approver gate applied; Approval 3 passes 94 of 94
 
 ### Completed

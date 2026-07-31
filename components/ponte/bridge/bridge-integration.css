@@ -241,3 +241,129 @@
     margin-top: 14px;
   }
 }
+
+/* ----------------------------------------------------------------------
+   5. The pre-measurement layout
+
+   A horizontal station is `position: absolute` with no coordinates in the
+   approved stylesheet. Every number that separates one station from the next is
+   written by the measuring effect in `BridgeRoute.tsx`. That is correct - the
+   implementation notes forbid a fixed block width, because a constant
+   reintroduces the label collisions the measured geometry exists to prevent -
+   but it means the stylesheet alone describes no layout at all.
+
+   So when the effect does not run, all three stations resolve to the same
+   static position and paint on top of one another at the left edge, and the
+   stage, which is sized from its lowest child by `fit()`, keeps a height of
+   zero and lets the next section draw straight through them. That is what
+   `ponte.trade` showed on 31 July 2026, in Chrome, after the deploy of
+   `f26718a`: the copy was all present and none of it was readable.
+
+   The implementation notes already require the other end of this. Section 3:
+
+     "Every component is authored in its end state, so a paused tab, a print, a
+      screenshot, reduced motion and a JS failure all show correct information."
+
+   That sentence is written about motion, and the arch is not an animation, so
+   this is not the case it decides. It is the principle behind it applied to the
+   one part of the drawing that is not authored anywhere: a JS failure must not
+   turn a bridge into an unreadable pile.
+
+   WHAT THIS IS NOT. It is not a second geometry and it must never grow into
+   one. There is no arch, no measured spacing and no invented ornament here -
+   the deck is hidden rather than approximated, because a straight rule drawn
+   between two points is exactly the substitution the owner rejected when this
+   component was first built. What remains is the approved station composition -
+   node, pier, index, title, description - in plain document flow, in the same
+   order, carrying the same copy. It is legible and honest, and it says nothing
+   the measured drawing would not.
+
+   It is superseded before a member ever sees it. `useLayoutEffect` runs before
+   paint, so on a client that works there is no fallback frame to see; the
+   attribute is already gone by the first paint.
+
+   SCOPE. `data-unmeasured` is rendered by `BridgeRoute` alone. `DealRoomBridge`
+   uses the same `.br__stage` class and measures itself its own way, so nothing
+   below can reach it. The elevation branch needs none of this: `.br--v` puts
+   its stations at `position: relative` in a flex column, which is already a
+   working no-JS layout, and it renders `.br__rows` rather than a stage.
+   ---------------------------------------------------------------------- */
+
+.br .br__stage[data-unmeasured] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 10px;
+}
+
+/* Nothing has told the deck how big it is or given it a path to draw, so it is
+   hidden rather than left as an empty box of the browser's default size. */
+.br .br__stage[data-unmeasured] > .br__deck {
+  display: none;
+}
+
+/* The three declarations the measured drawing owns - `position`, `transform`
+   and the block width - handed back to normal flow. `max-width` keeps the
+   approved 176px cap, so a station is never wider here than it is there. */
+.br .br__stage[data-unmeasured] .brst {
+  position: static;
+  transform: none;
+  flex: 1 1 0;
+  width: auto;
+  max-width: 176px;
+}
+
+/* The abutments are absolutely positioned to the ends of the deck and pinned to
+   its baseline by the effect. With no deck they join the row, still first and
+   last, so the crossing still begins and ends somewhere. */
+.br .br__stage[data-unmeasured] .br__ab {
+  position: static;
+  flex: 0 0 auto;
+}
+
+/* The far abutment is second in the DOM, before the stations, because the
+   measured layout places it by coordinate and does not care. In flow it does. */
+.br .br__stage[data-unmeasured] .br__ab--r {
+  order: 1;
+}
+
+/* Below the approved 460px elevation break the client would have drawn this
+   bridge in elevation, and a row of three stations does not fit the width
+   regardless. Stacking is the honest answer at this size and matches what the
+   elevation does with the same content. The server renders the horizontal stage
+   at every width - `useIsVertical` reads `matchMedia`, which the server cannot
+   - so this is the state a narrow viewport lands in when the client is absent. */
+@media (max-width: 700px) {
+  .br .br__stage[data-unmeasured] {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
+  }
+  .br .br__stage[data-unmeasured] .brst {
+    max-width: none;
+    align-items: flex-start;
+    text-align: left;
+  }
+  /* The title is a flex box in the approved source so it can centre itself
+     under the node. Stacked, there is no node above it to centre on, and a
+     centred title over a left-aligned index and description reads as three
+     different columns. `min-height` goes too: it reserves two lines so that
+     adjacent stations align across the deck, and stacked there is nothing to
+     align with. Both are the same reasoning the approved `.br--v` rules apply
+     to the elevation, and the values are copied from them. */
+  .br .br__stage[data-unmeasured] .brst__t {
+    min-height: 0;
+    display: block;
+  }
+  /* Both abutments read from the left in a stacked column, for the same reason:
+     the far one is right-aligned in the approved source because it sits at the
+     right-hand end of a deck it no longer has. */
+  .br .br__stage[data-unmeasured] .br__ab--r {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .br .br__stage[data-unmeasured] .br__ab--r i {
+    align-self: flex-start;
+  }
+}

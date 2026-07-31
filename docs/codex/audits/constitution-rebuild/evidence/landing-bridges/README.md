@@ -185,3 +185,50 @@ three indicators for one focus. Only the blanket ring is removed, and only
 inside a bridge. What remains is the node ring at 2px `--pf-focus` (#1E5FA8) on
 `--pf-surface` (#FCFBF7), about **5.9:1** against the 3:1 WCAG 1.4.11 requires,
 plus the title underline.
+
+## 7. The pre-measurement layout (PL-032, 31 July 2026)
+
+Two frames were added to this folder: `no-client-chunks-1280.png` and
+`no-client-chunks-390.png`. Both are captured against a production build with
+every `_next/static/chunks/**` request aborted, which is the state that reached
+production on 31 July 2026 - a live document with no client.
+
+`javaScriptEnabled: false` does **not** reproduce it, and that distinction is
+the whole reason the frames exist. With scripting off, the `<noscript>` rule in
+`LandingBridges.tsx` fires and unhides all three action bridges. With scripting
+on and the bundle missing, it does not fire, React never hydrates, and nothing
+positions the stations.
+
+**What was wrong.** Every horizontal station is `position: absolute` with no
+coordinates in the approved stylesheet, so the measuring effect writes the only
+numbers that separate them. Without it all three resolved to the same static
+position, and the stage - which `fit()` sizes from its lowest child - kept a
+height of zero. Measured on the build, before the fix:
+
+| | Observed |
+|---|---|
+| Overlapping station pairs | `0/1`, `0/2`, `1/2` - all three |
+| Stage height | 0px |
+| Gap to the section below | **−139px** |
+
+**What the frames show now.** The approved station composition - node, pier,
+index, title, description - in plain document flow, in the same order, carrying
+the same copy. The deck is hidden rather than approximated: a straight rule
+drawn between two points is the substitution the owner rejected when this
+component was first built, and it is not reintroduced as a fallback. At 390 the
+stations stack, which is what the elevation does with the same content.
+
+**It is not a second geometry, and it is never seen on a working client.**
+`useLayoutEffect` runs before paint, so the attribute is already gone by the
+first frame. The settled rendering is unchanged and was proved so rather than
+asserted: `desktop-1` through `desktop-4` and `mobile-2`, `mobile-3` regenerate
+**byte-identical** against `main`. `mobile-1-family-neutral-390x844.png` differs,
+and is a pre-existing instability rather than a change - two consecutive runs on
+identical `main` source produced two different hashes, and the branch's output
+matches one of them exactly.
+
+Checked in Firefox 153 and Chromium 151, measured and fallback, on the real page.
+
+**Known limitation, recorded rather than hidden.** In this state the action
+bridges remain `hidden`, so the nine destinations are not reachable. The bridge
+is legible, not operable. That is a functional gap outside PL-032.
