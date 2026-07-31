@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { WifiOff } from "lucide-react";
 import OfflineRetry from "@/components/OfflineRetry";
+import { landingFontVars } from "@/components/home/landing/fonts";
+import DeskShell from "@/components/desk/DeskShell";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import type { Locale } from "@/i18n/routing";
+import "@/components/desk/desk.css";
 
 /*
  * The page the service worker serves when the network is gone. It is a real
@@ -10,10 +14,19 @@ import type { Locale } from "@/i18n/routing";
  * and so that a reader in Spanish gets a Spanish offline page: the worker
  * stores one of these per language, keyed off the URL prefix.
  *
- * The layout is written with inline styles on purpose. This page is the one
- * page guaranteed to be opened with no network, and if the hashed stylesheet
- * happens not to be in the cache the reader would otherwise get unstyled
- * black on white. Everything structural here survives that.
+ * It now renders the Desk shell, so the last thing a reader sees when the
+ * connection drops is the product they were already in rather than the retired
+ * obsidian chrome (Issue #130 Stage 3). The shell is rendered on the SERVER, at
+ * the moment the worker fetches this page while the reader is still online, and
+ * what the worker stores is that finished HTML. Nothing on this page fetches
+ * anything of its own, and the one control is a reload.
+ *
+ * The structural layout is still written inline on purpose. This is the one page
+ * guaranteed to be opened with no network, and if the hashed stylesheet is not
+ * in the cache the box, the spacing and the reading measure all survive without
+ * it. Colour is left to the Desk tokens rather than repeated as literals: with
+ * the stylesheet absent the page falls back to the browser's own text colours,
+ * which is legible, honest and does not fork the palette.
  */
 
 export async function generateMetadata({
@@ -28,6 +41,31 @@ export async function generateMetadata({
   };
 }
 
+const WRAP: CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  paddingTop: 40,
+  paddingBottom: 64,
+};
+
+const BOX: CSSProperties = { maxWidth: 560, width: "100%" };
+
+const TITLE: CSSProperties = {
+  fontSize: 27,
+  fontWeight: 500,
+  letterSpacing: "-0.018em",
+  lineHeight: 1.14,
+  marginBottom: 8,
+};
+
+const HINT: CSSProperties = {
+  marginTop: 16,
+  fontSize: 11,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: "var(--ink-3)",
+};
+
 export default async function OfflinePage({
   params,
 }: {
@@ -37,43 +75,26 @@ export default async function OfflinePage({
   const t = await getTranslations("pwa");
 
   return (
-    <section
-      className="container-px py-24"
-      style={{ display: "flex", justifyContent: "center" }}
-    >
-      <div
-        className="glass p-10 text-center"
-        style={{ maxWidth: 480, color: "#F5F0E8" }}
-      >
-        <WifiOff
-          className="mx-auto h-9 w-9 text-gold"
-          style={{ color: "#C9973A" }}
-          aria-hidden="true"
-        />
-
-        <h1
-          className="serif mt-6"
-          style={{ fontSize: 30, fontWeight: 500, color: "#FFFFFF" }}
-        >
-          {t("offlineTitle")}
-        </h1>
-
-        <p
-          className="mt-4 text-[15px] leading-relaxed"
-          style={{ color: "#9CA3AF" }}
-        >
-          {t("offlineBody")}
-        </p>
-
-        <OfflineRetry label={t("offlineRetry")} />
-
-        <p
-          className="mt-6 text-[11px] uppercase"
-          style={{ color: "#9CA3AF", letterSpacing: "0.18em" }}
-        >
-          {t("offlineHint")}
-        </p>
-      </div>
-    </section>
+    <div className={`ponte-desk ${landingFontVars}`}>
+      <DeskShell rail={null} objective={null}>
+        <section className="sec" style={WRAP}>
+          <div className="empty" style={BOX}>
+            <PonteIcon name="participation.commsoff" size={24} />
+            <div>
+              <h1 className="serif" style={TITLE}>
+                {t("offlineTitle")}
+              </h1>
+              <p>{t("offlineBody")}</p>
+              <div className="empty__a">
+                <OfflineRetry label={t("offlineRetry")} />
+              </div>
+              <p className="mono" style={HINT}>
+                {t("offlineHint")}
+              </p>
+            </div>
+          </div>
+        </section>
+      </DeskShell>
+    </div>
   );
 }

@@ -111,11 +111,15 @@ if (existsSync("docs/schemas/market-record.schema.json")) {
 const LUCIDE_BASELINE = [
   // app/[locale]/account/page.tsx dropped lucide-react in cutover PR 2: the
   // account page was rebuilt on the Desk shell and now renders PonteIcon keys.
-  "app/[locale]/contact/page.tsx",
+  //
+  // /contact, /pricing and /offline dropped it in Issue #130 Stage 3, which
+  // moved the last member-facing routes onto the Desk shell. /contact and
+  // /pricing carry no icon at all now: the register panels state the terms in
+  // words, which is what the four lucide glyphs were decorating. /offline
+  // renders the approved `participation.commsoff` key through PonteIcon, which
+  // is the registry's own "the link does not exist yet".
   "app/[locale]/marketplace/l/[ref]/page.tsx",
   "app/[locale]/marketplace/page.tsx",
-  "app/[locale]/offline/page.tsx",
-  "app/[locale]/pricing/page.tsx",
   "components/InstallPrompt.tsx",
   "components/LanguageSwitcher.tsx",
   "components/NetworkForm.tsx",
