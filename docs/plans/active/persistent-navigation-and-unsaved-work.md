@@ -125,16 +125,28 @@ Done: audit; shared foundation (`JourneyBack`, `UnsavedChangesDialog`,
 composer; `error.tsx` + `global-error.tsx`; i18n `journey` namespace; tests;
 this plan and the audit.
 
+**2026-07-30 — Slice 2 implemented on branch (same PR #118).**
+The server-action form pages, which hold no React state to ask, get a different
+mechanism: `components/ponte/nav/UnsavedFormGuard.tsx`, a client wrapper that
+reads dirtiness from the form DOM (snapshot on mount, re-snapshot on input, via
+the pure `lib/nav/form-dirty.ts`), attaches `beforeunload` while dirty, and
+intercepts leave-navigation with a capture-phase click listener that opens the
+shared dialog and performs the navigation only on "Leave". A real submission
+clears the guard so the action's own redirect is never intercepted. `display:
+contents` wrapper, so page layout is unchanged.
+
+Wired with the guard: Deal Room `propose`, `invitation/[token]/admission` (the
+authority declaration), `blockers`, `evidence`, `evidence/[evidenceId]`
+(clarification); admin `listings` and `verifications` (decision notes). Added
+the two missing labelled backs: "Back to the room" on `[roomId]/activity` and
+the workspace hub. Test: `lib/nav/__tests__/form-dirty.test.ts` (7 assertions),
+wired into `npm test`.
+
 Remaining (next slices), by route:
 - `marketplace/new` (`ListingForm`): guard exits; wire its existing preview
   `Save as draft` into the dialog's authenticated save option.
 - `find/o/[ref]`: add a labelled "Back to results/Find"; guard the
   `RequestIntroduction` composer; the breadcrumb is currently inert text.
-- Deal Room `propose` and `invitation/[token]/admission`: guard the heavy free
-  text; add labelled Back where the leaf/hub pages lack it (`[roomId]/activity`,
-  the workspace hub).
-- Deal Room `blockers` / `evidence` / clarification: guard typed input.
-- `admin/listings`, `admin/verifications`: guard long decision notes.
 - `/learn/*` double-`<main>` fix; `not-found.tsx` second-CTA label/target fix.
 - Anonymous "Sign in and save" wiring where a journey supports resume-after-auth.
 - Desktop + 390x844 + screen-reader evidence per wired journey.

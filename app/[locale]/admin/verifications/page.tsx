@@ -1,3 +1,4 @@
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { createAdminClient } from "@/lib/supabase/server";
 import {
   draftVerificationNotes,
@@ -493,7 +494,8 @@ export default async function AdminVerificationsPage({
   }
 
   return (
-    <div>
+    <UnsavedFormGuard>
+      <div>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <h1 className="serif text-white mb-2" style={{ fontSize: 32, fontWeight: 500 }}>
         Verifications
@@ -545,6 +547,7 @@ export default async function AdminVerificationsPage({
           ))}
         </ul>
       )}
-    </div>
+      </div>
+    </UnsavedFormGuard>
   );
 }

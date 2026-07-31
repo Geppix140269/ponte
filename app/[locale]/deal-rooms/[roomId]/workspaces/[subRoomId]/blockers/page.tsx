@@ -12,6 +12,7 @@ import {
   Submit,
   TextField,
 } from "@/components/deal-room/primitives";
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { openBlocker, resolveBlocker } from "../../../../actions";
 import { listBlockers, listParticipants, loadRoom, loadSubRoom } from "@/lib/deal-room/queries";
 import { canOpenBlocker, canResolveBlocker, mutationBlockedReason } from "@/lib/deal-room/permissions";
@@ -62,7 +63,7 @@ export default async function BlockerCentrePage({
   const hereBlockers = `${here}/blockers`;
 
   return (
-    <>
+    <UnsavedFormGuard>
       <CommandError message={searchParams?.error} />
       <RoomHeader
         reference={`${access.room.ref} · ${subRoom.ref}`}
@@ -193,6 +194,6 @@ export default async function BlockerCentrePage({
           </ul>
         )}
       </Band>
-    </>
+    </UnsavedFormGuard>
   );
 }

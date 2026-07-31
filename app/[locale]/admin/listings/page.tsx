@@ -1,3 +1,4 @@
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { createAdminClient } from "@/lib/supabase/server";
 import {
   decideListingAction,
@@ -887,7 +888,8 @@ export default async function AdminListingsPage({
   const filtered = Object.values(filters).some(Boolean);
 
   return (
-    <div>
+    <UnsavedFormGuard>
+      <div>
       <OutcomeBanner r={searchParams.r} m={searchParams.m} />
       <h1 className="serif text-white" style={{ fontSize: 30, fontWeight: 500 }}>
         Listing exceptions
@@ -961,6 +963,7 @@ export default async function AdminListingsPage({
           <div className="space-y-4">{settled.map((l) => <Card key={l.id} l={l} />)}</div>
         </>
       )}
-    </div>
+      </div>
+    </UnsavedFormGuard>
   );
 }

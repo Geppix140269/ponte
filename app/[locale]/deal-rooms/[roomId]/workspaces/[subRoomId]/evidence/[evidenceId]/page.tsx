@@ -13,6 +13,7 @@ import {
   Submit,
   TextField,
 } from "@/components/deal-room/primitives";
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { acceptEvidence, answerClarification, requestClarification } from "../../../../../actions";
 import { loadEvidence, loadGoverningProcedure, loadRoom, loadSubRoom } from "@/lib/deal-room/queries";
 import { canAcceptEvidence, canRequestClarification, mutationBlockedReason } from "@/lib/deal-room/permissions";
@@ -92,7 +93,7 @@ export default async function EvidenceDetailPage({
   const here_evidence = `${here}/evidence/${params.evidenceId}`;
 
   return (
-    <>
+    <UnsavedFormGuard>
       <CommandError message={searchParams?.error} />
       {openClarification ? (
         <Banner tone="review" title="A clarification is open on this item">
@@ -290,6 +291,6 @@ export default async function EvidenceDetailPage({
           </div>
         </aside>
       </div>
-    </>
+    </UnsavedFormGuard>
   );
 }

@@ -17,6 +17,7 @@ import { resolveInvitation } from "@/lib/deal-room/invitation-server";
 import { INVITATION_FAILURE_MESSAGE } from "@/lib/deal-room/invitation";
 import { AGREEMENT_KIND_LABEL, REQUIRED_AGREEMENT_KINDS } from "@/lib/deal-room/states";
 import { AGREEMENT_DOCUMENTS } from "@/lib/deal-room/agreements";
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { acceptAgreement, completeAdmission, declareParticipation } from "../../../actions";
 
 export const dynamic = "force-dynamic";
@@ -104,7 +105,7 @@ export default async function AdmissionPage({
   const returnTo = `/${params.locale}/deal-rooms/invitation/${params.token}/admission?participant=${participantId}`;
 
   return (
-    <>
+    <UnsavedFormGuard>
       <meta name="referrer" content="no-referrer" />
       <CommandError message={searchParams?.error} />
 
@@ -259,6 +260,6 @@ export default async function AdmissionPage({
           Open the invitation link you were sent and accept it first.
         </Banner>
       ) : null}
-    </>
+    </UnsavedFormGuard>
   );
 }
