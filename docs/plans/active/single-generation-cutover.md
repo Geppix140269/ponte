@@ -221,9 +221,14 @@ cannot relink a retired route, the business path cannot regain a credit import).
   - Ratchets tightened (shrink-only): `RETIRED_LINK_BASELINE`
     (`lib/navigation/__tests__/route-manifest.test.ts`) and `LUCIDE_BASELINE`
     (`scripts/check-governance.mjs`) drop `app/[locale]/account/page.tsx`.
-  - `npm run verify` green. Deferred to PR 6 (unchanged): the `member_business`
-    verify-page/pipeline credit decoupling (the `VERIFICATION_CREDIT_COUPLING`
-    baseline is untouched) and its ADR. Remaining: PRs 3-8.
+  - `npm run verify` green. Deferred at the time (the
+    `VERIFICATION_CREDIT_COUPLING` baseline was untouched here): the
+    `member_business` verify-page/pipeline credit decoupling and its ADR.
+    **Superseded.** That work did not wait for PR 6: it shipped under Issue #135
+    as `docs/decisions/ADR-0018-member-business-verification-is-free.md` and the
+    purpose guards in `lib/verification/pipeline.ts`,
+    `app/api/verification/route.ts` and `app/[locale]/verify/page.tsx`. PR 6 adds
+    the runtime proof the ADR asked for, not the behaviour. Remaining: PRs 3-8.
 - **2026-07-30** — PR 2 controller amendment (PR #133 review; PR #132 closed as
   the duplicate, its broad rewrites not imported). Focused corrections only:
   - The signed-in Desk account control (`components/desk/DeskAccount.tsx`) now
@@ -239,8 +244,9 @@ cannot relink a retired route, the business path cannot regain a credit import).
     in `npm test`) cover the helper and pin the Stage 1 contracts by source. The
     route manifest and its tests are not rewritten.
   - The paid-counterparty separation in AccountGate is unchanged; the
-    `member_business` verification pipeline is NOT made credit-free here (that
-    remains PR 6). `npm run verify` green.
+    `member_business` verification pipeline is NOT made credit-free here.
+    **Superseded:** it was made credit-free by Issue #135 (ADR-0018), before
+    PR 6 ran. `npm run verify` green.
 - **2026-07-31** — PR 4 (public market and detail) **merged to `main`** as PR
   #166, merge commit `1006208`. `/find/o/[ref]` became the one public Member
   Opportunity record page, reading through a single reader,
@@ -335,6 +341,57 @@ cannot relink a retired route, the business path cannot regain a credit import).
   product but was the URL in already-sent email (the LB-013 defect URL carried
   `?id=<uuid>`), so it must keep resolving those to `/structure?edit=<uuid>`.
 
+- **2026-07-31** — PR 6 (verification) implemented on branch
+  `claude/ponte-issue-130-cutover-pr6`. Not merged, no production action.
+  **This PR changes no behaviour.** The commercial boundary it was scoped to
+  build had already shipped under Issue #135: ADR-0018, the `paidPurpose` guard
+  in `lib/verification/pipeline.ts`, the `purpose !== "member_business"` guard
+  around the balance read and the 402 in `app/api/verification/route.ts`, and the
+  paid-only cost surface on `app/[locale]/verify/page.tsx`. What had NOT shipped
+  was the proof ADR-0018 asks for. What PR 6 adds:
+  - **A runtime proof**, `lib/verification/__tests__/member-business-free-runtime.test.ts`
+    (10 tests, registered in `npm test` under `tsconfig.test.json`). It executes
+    the real `runLevel2` pipeline and the real `POST /api/verification` handler
+    against test doubles and asserts that a `member_business` run records ZERO
+    calls to any credit function, not only to `spendCredits`.
+  - **A recording double for the credit library**, `lib/__mocks__/credits.ts`,
+    remapped from `@/lib/credits` in `tsconfig.test.json`. Every function export
+    records its name and arguments; `__creditCalls()` and
+    `__creditFunctionsCalled()` read them back. Supporting doubles:
+    `lib/__mocks__/supabase-admin.ts`, `lib/__mocks__/ai.ts`,
+    `lib/__mocks__/registry.ts`. `lib/__mocks__/supabase-server.ts` gained
+    `single()`, `upsert()` and `rpc()` so the chain
+    `.insert(row).select("id").single()` the pipeline uses can run.
+  - **Falsifiability, deliberately.** A double that silently failed to intercept
+    would make every zero-call assertion pass for the wrong reason, so the same
+    harness is required to SEE a real spend on the `counterparty_check` path,
+    with the exact arguments, and to see the route answer 402 for an
+    insufficient balance. The zero-call assertions are only worth anything
+    because those observations exist beside them.
+  - **The existing source-reading test is kept**, not replaced. It pins the
+    readable shape of the guards, which is what a reviewer checks. Both files now
+    carry a header saying what each proves and what it does not.
+  - **A DEFECT WAS FOUND BY RUNNING THE CODE, and is recorded rather than
+    fixed.** The refund at the bottom of `runLevel2Checks` is guarded by
+    `if (userId)` and by nothing else. A free `member_business` run whose checks
+    throw therefore calls `refundSpend(userId, COST_VERIFICATION_L2, id)` and
+    grants the member two credits back for a verification that never paid. This
+    breaches ADR-0018 ("cannot call any credit function") on the failure path.
+    The source-reading test cannot see it: all of its pipeline assertions are
+    about `runLevel2`, and the refund lives in `runLevel2Checks`, which the
+    Issue #135 boundary never touched. It is pinned as a named KNOWN GAP test so
+    the breach is observable in CI rather than only in a report, and it is NOT
+    fixed here because PR 6 is scoped to proof and a refund is money. **Owner
+    ruling wanted:** give the refund the same purpose guard the spend has.
+  - **`VERIFICATION_CREDIT_COUPLING` did not shrink**, and could not honestly.
+    All four listed files still import `@/lib/credits` for the paid counterparty
+    path: `lib/verification/pipeline.ts` and `app/api/verification/route.ts` use
+    the functions under their guards, and `app/[locale]/verify/page.tsx` and
+    `app/[locale]/check/page.tsx` read `COST_VERIFICATION_L2` to price the paid
+    check. Moving a constant elsewhere to clear the baseline would game the
+    ratchet without decoupling anything.
+  - `npm run verify` green.
+
 ## 12. Decisions and discoveries
 
 - **Owner decisions, 30 July 2026:** (a) proceed now with ExecPlan + PR 1 as
@@ -342,7 +399,12 @@ cannot relink a retired route, the business path cannot regain a credit import).
   Supabase, non-production email, member + admin test accounts) — this agent
   wires config and seed scripts to it and cannot provision it (PL-001/PL-002);
   (c) `member_business` verification becomes fully credit-free, with a test
-  proving it cannot call any credit function — recorded as an ADR in PR 6.
+  proving it cannot call any credit function — recorded as an ADR. **Delivered
+  ahead of PR 6, under Issue #135:**
+  `docs/decisions/ADR-0018-member-business-verification-is-free.md` plus the
+  purpose guards. The "test proving it cannot call any credit function" arrived
+  later, in PR 6, as `lib/verification/__tests__/member-business-free-runtime.test.ts`;
+  the Issue #135 test was source-reading only and could not prove that.
 - **Discovery:** the brief conflates PonteShell and Ponte Desk. The approved
   target is DeskShell; PonteShell is intermediate debt (see section 3).
 - **Discovery:** acceptance criteria 12 (authenticated journeys), 14 and 15
