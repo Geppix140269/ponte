@@ -123,11 +123,16 @@ const STORAGE_POLICY_HELPERS = ["deal_room_is_writable(uuid)", "deal_room_uuid_o
 const PERMANENTLY_INTERNAL = [
   "deal_room_events_append_only()",
   // ADR-0021 ruling 2, 20260731g. Written, NOT applied. Reads
-  // `profiles.verification_level` and `auth.users.email_confirmed_at` for a
-  // given profile id, so a member who could call it directly could probe another
-  // member's verification state one id at a time. The two commands that need it
-  // are SECURITY DEFINER and call it internally.
+  // `auth.users.email_confirmed_at` and a participant row for a given profile
+  // id, so a member who could call it directly could probe another member's
+  // admission state one id at a time. The two commands that need it are
+  // SECURITY DEFINER and call it internally.
   "deal_room_admission_minimum_missing(uuid, uuid, uuid)",
+  // The section 6 criterion 9 evaluator, 20260731g. Written, NOT applied.
+  // Internal for the same reason: it answers a question about a room the caller
+  // may have no part in, and it is one branch of the gate rather than a
+  // member-facing capability.
+  "deal_room_room_prerequisite_state(uuid)",
   "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
   // Reads a name out of `profiles`, which is readable only to its owner. A
   // member who could call it directly could enumerate names - which is exactly
@@ -155,9 +160,35 @@ function typeList(args: string): string {
     .join(", ");
 }
 
+/**
+ * Signatures a later migration replaces DELIBERATELY, old form to new.
+ *
+ * This file models the END STATE of the ACL - what `authenticated` may execute
+ * once every migration has run - so a command that was re-signed appears in
+ * earlier migrations under its old argument list and in the tree under its new
+ * one. Without this map the same command counts twice: once as a grant on a
+ * signature nothing declares, once as a declaration nothing grants.
+ *
+ * It is NOT a way to wave through an overload. The proof that the old signature
+ * stops existing lives in `grant-signatures.test.ts`, which requires the
+ * re-signing migration to drop the old form by name, requires the new form to
+ * be re-granted and re-revoked, and scans every later migration to be sure
+ * nothing recreates the old one. This map only says "these two names are the
+ * same command at two points in time", which is what makes the arithmetic below
+ * mean anything.
+ */
+const RE_SIGNED: Record<string, string> = {
+  // 20260731g: two parameters added so the legal/trading name and the
+  // relationship to the business are declared independently of the capacity and
+  // the authority. Controller ruling, 31 July 2026.
+  "deal_room_declare_participation(uuid, text, text, text, text, text)":
+    "deal_room_declare_participation(uuid, text, text, text, text, text, text, text)",
+};
+
 /** `name(type, type)` - the key both sides are compared on. */
 function key(name: string, args: string): string {
-  return `${name}(${typeList(args)})`;
+  const signature = `${name}(${typeList(args)})`;
+  return RE_SIGNED[signature] ?? signature;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,8 +208,25 @@ function declaredFunctions(): Set<string> {
     .sort()
     .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8"));
   for (const sql of migrations) {
-    const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
+    // `create function` as well as `create or replace function`. A signature is
+    // legitimately changed by dropping and creating, and a scan blind to the
+    // bare form would call the new signature undeclared while still seeing its
+    // grant - which is the same invisibility described above, one shape along.
+    const pattern = /create (?:or replace )?function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(sql.matchAll(pattern))) found.add(key(m[1], m[2]));
+    // A dropped signature is no longer declared. `key()` has already folded a
+    // deliberately re-signed name onto its new form, so this only removes a
+    // signature that is genuinely gone.
+    //
+    // Anchored to the start of a line so a `drop` written inside a `--` comment
+    // - the reversal notes at the top of 20260731g are full of them - is not
+    // read as a real statement. Reading one would remove a function from the
+    // inventory and quietly disable its ACL check.
+    const dropped = /^[ \t]*drop function if exists public\.(deal_room_\w+)\(([^)]*)\)\s*;/gm;
+    for (const m of Array.from(sql.matchAll(dropped))) {
+      const signature = `${m[1]}(${typeList(m[2])})`;
+      if (!RE_SIGNED[signature]) found.delete(signature);
+    }
   }
   return found;
 }
@@ -378,13 +426,14 @@ const LOGGER = "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)";
 
 test("the inventory, the policy helpers and the commands are all found", () => {
   const declared = declaredFunctions();
-  // 26: the original 23, plus `deal_room_display_label` (20260731f), the
-  // pricing lane's `deal_room_billing_append_only` (20260731e) and the
-  // admission gate's `deal_room_admission_minimum_missing` (20260731g). None of
-  // the three is applied yet. The number is asserted rather than derived so that
-  // a function appearing or vanishing is a failure somebody has to look at -
-  // which is how all three were noticed at all.
-  assert.equal(declared.size, 26, `expected 26 declared deal_room_* functions, found ${declared.size}`);
+  // 27: the original 23, plus `deal_room_display_label` (20260731f), the
+  // pricing lane's `deal_room_billing_append_only` (20260731e), and the
+  // admission gate's `deal_room_admission_minimum_missing` and
+  // `deal_room_room_prerequisite_state` (20260731g). None of the four is applied
+  // yet. The number is asserted rather than derived so that a function appearing
+  // or vanishing is a failure somebody has to look at - which is how all four
+  // were noticed at all.
+  assert.equal(declared.size, 27, `expected 27 declared deal_room_* functions, found ${declared.size}`);
   assert.ok(declared.has(LOGGER), "the event logger is not in the declared inventory; the parser has drifted");
 
   const helpers = policyHelpers();

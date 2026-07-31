@@ -56,29 +56,59 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
 ## Written but NOT applied: the Deal Room admission verification gate
 
 `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
-SHA-256 `84550862e0fcf73b76d8acbc1a1f7399fb88c9c891c3612d590a33081ff1d8b7`, 28923 bytes.
+SHA-256 `f1bc5d3b6ddf3c436c256b8377e93dede7c68ec19f3fbf42dc0bb04f5e55a134`, 43675 bytes.
 
 **Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
 threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
-the same day. **Applying it is a separate owner approval.** It replaces two
-`security definer` functions that are granted to `authenticated` in three
-applied migrations, so the ACL is a real event even though no table, constraint,
-policy, trigger, index, grant or row is altered.
+the same day, and **amended the same day** on controller review. **Applying it is
+a separate owner approval.** It adds two nullable columns, replaces two
+`security definer` functions granted to `authenticated` in three applied
+migrations, and drops and recreates a third at a wider signature. No constraint,
+policy, trigger, index or row is altered, and nothing is backfilled.
 
 ### What it does
 
-1. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
+1. **Two additive columns on `deal_room_participants`**:
+   `represented_legal_name` and `business_relationship`, both `text`, both
+   nullable, no default, no backfill. They exist because the controller ruled on
+   31 July 2026 that section 6 criteria 4 and 6 must be held independently and
+   may not be derived from the declared capacity or the participation authority.
+   `deal_room_participants_identity_when_admitted` is **not** widened: doing so
+   would invalidate rows admitted before the columns existed. The gate is where
+   the new facts are required, so no existing admitted participant is
+   retroactively expelled.
+2. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
+   `not_applicable`, `completed` or `pending` for section 6 criterion 9 — a name,
+   never a number. This release has one branch and returns `not_applicable`,
+   because no prerequisites table and no prerequisite column exist anywhere in
+   the schema. It is a claim made out loud rather than a criterion skipped, which
+   is what the controller required. Revoked from `public`, `anon` and
+   `authenticated`.
+3. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
    NAMES of the section 6 entry criteria a member does not meet, or an empty
    array. Never a count, a score or a completeness value. `security definer`
    because it reads `auth.users.email_confirmed_at`; `stable` because it writes
    nothing. Revoked from `public`, `anon` and `authenticated` in the same file:
-   a member who could call it directly could probe another member's verification
+   a member who could call it directly could probe another member's admission
    state one profile id at a time. Classified in
    `lib/deal-room/__tests__/grant-signatures.test.ts` and listed as permanently
    internal in `lib/deal-room/__tests__/function-acl.test.ts`.
-2. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
-   to that helper, on the same nine-argument signature.
-3. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
+4. **`deal_room_declare_participation`**, **re-signed from six parameters to
+   eight**, so the legal/trading name and the relationship are declared in the
+   same atomic act as the capacity, the role and the authority. This is the one
+   signature change in the file and it is deliberate: the six-parameter form is
+   **dropped by name in the same transaction**, so no overload survives, and the
+   ACL that `drop function` discards is re-issued (`revoke` from `public` and
+   `anon`, `grant` to `authenticated`). Pinned by `DELIBERATE_RESIGNATURES` in
+   `grant-signatures.test.ts`, which also scans every later migration to be sure
+   nothing recreates the old form.
+5. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
+   to the gate, on the same nine-argument signature. The initiator's two
+   participant rows now also carry `represented_legal_name` from
+   `profiles.company` and `business_relationship` from `listings.submitter_role`
+   — separate stored columns, so the opener supplies the same two facts an
+   invitee does.
+6. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
    plus the same call, on the same one-argument signature.
 
 ### Why it exists at all
@@ -91,17 +121,32 @@ an ungated command, not enforcement.
 
 ### The floor it encodes
 
-`identity_verified`, not `company_verified`. The owner ruled that "a complete
-Passport and a registry-checked business are not required merely to enter", so
-the publication floor is deliberately not reused. Six of the nine criteria are
+**No verification level at all.** Not `company_verified`, which is the
+publication floor, and not `identity_verified` either. An earlier draft required
+the latter; the controller struck it on 31 July 2026 as "a stricter
+identity-verification wall that the owner did not approve". Criterion 1 is a
+session user plus a `profiles` row to attribute the act to; criterion 2 is the
+confirmed contact method, evaluated on its own. Six of the nine criteria are
 satisfied by a member declaration, because section 6 asks for a declaration and
-nothing more.
+nothing more, and all nine are independent — a test breaks each one in isolation
+and requires exactly that one to be reported.
 
 ### Reversal
 
-Re-apply `20260731b` and `20260731f` in that order, then
-`drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);`.
-Nothing else is touched, so there is no data to migrate back.
+Re-apply `20260731b` and `20260731f` in that order, then re-apply the
+`deal_room_declare_participation` block of `20260729b` to restore the
+six-parameter form, then:
+
+```sql
+drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);
+drop function if exists public.deal_room_room_prerequisite_state(uuid);
+drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
+```
+
+The two columns may be left in place: they are nullable and nothing reads them
+once the functions above are back. Drop them only if the reversal is permanent,
+and note that dropping them **discards member declarations**. The whole file is
+one transaction, so a failure part-way leaves the database exactly as it was.
 
 ## Written but NOT applied: Deal Room paid room periods and billing events
 

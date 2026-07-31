@@ -42,15 +42,23 @@
  * that would breach section 6 and the Design Constitution rule against a
  * numbered tier becoming the trust model.
  *
- * **4. Not a full-verification wall.** Section 6 opens "A complete Passport is
- * not required for entry", and the owner ruled that a registry-checked business
- * is not required either. `company_verified` is therefore NOT the floor and
- * `MEMBER_BUSINESS_MIN_LEVEL` - the PUBLICATION floor - is deliberately not
- * imported here. The only level this module reads is
- * `DEAL_ROOM_IDENTITY_MIN_LEVEL`, which is `identity_verified`, one rung below.
- * Six of the nine are satisfied by a member DECLARATION, because section 6 asks
- * for a declaration and nothing more; demanding evidence there would be a
- * stricter gate than the authority wrote.
+ * **4. Not a verification wall of any height.** Section 6 opens "A complete
+ * Passport is not required for entry", and the owner ruled that a
+ * registry-checked business is not required either. This module therefore reads
+ * `profiles.verification_level` NOWHERE. Not `company_verified`, which is the
+ * PUBLICATION floor, and not `identity_verified` either.
+ *
+ * An earlier draft of this gate required `identity_verified`. The controller
+ * rejected it on 31 July 2026: "`authenticated individual` is not
+ * `identity_verified`. The accepted minimum says authenticated individual plus
+ * confirmed contact method. Requiring `profiles.verification_level >=
+ * identity_verified` adds a stricter identity-verification wall that the owner
+ * did not approve." So criterion 1 asks what it says: is there a session user,
+ * and is there a profile this act can be attributed to. Criterion 2 asks for the
+ * confirmed contact method, independently, as section 6 lists it. Six of the
+ * nine are satisfied by a member DECLARATION, because section 6 asks for a
+ * declaration and nothing more; demanding evidence there would be a stricter
+ * gate than the authority wrote.
  *
  * **5. Equal for everyone, and admission only.** Product contract section 5 says
  * "Every participant must", with no carve-out for whoever opened the room.
@@ -97,21 +105,67 @@
  * as `lib/listings/publication-gate.ts` does.
  */
 
-import { DEAL_ROOM_IDENTITY_MIN_LEVEL, meetsDealRoomIdentityFloor } from "../verification/level";
-
-export { DEAL_ROOM_IDENTITY_MIN_LEVEL };
-
 /**
- * The three outcomes a criterion may have. Owner instruction, 31 July 2026.
+ * The outcomes a criterion may have. Owner instruction, 31 July 2026.
  *
  * - `confirmed` - established by evidence the system holds.
  * - `declared` - satisfied by a valid member declaration, which is sufficient
  *   for the criteria section 6 deliberately writes as declarations.
+ * - `not_applicable` - section 6 qualifies exactly one criterion with "where
+ *   applicable", and this is that case, stated rather than assumed. It does not
+ *   block. It is a separate word from `confirmed` on purpose: claiming evidence
+ *   that was never gathered is the failure mode the controller struck.
  * - `pending` - the information is missing, or the system cannot evaluate it.
- *   **Blocks admission.** There is no fourth state and no "unknown, allowed".
+ *   **Blocks admission.** There is no "unknown, allowed".
+ *
+ * `pending` is the ONLY blocking state, and it is the state everything unknown
+ * lands in. That asymmetry is the fail-closed rule in one line.
  */
-export const CRITERION_STATES = ["confirmed", "declared", "pending"] as const;
+export const CRITERION_STATES = ["confirmed", "declared", "not_applicable", "pending"] as const;
 export type CriterionState = (typeof CRITERION_STATES)[number];
+
+/**
+ * The three named states a room-specific prerequisite may be in, and nothing
+ * else. Controller ruling, 31 July 2026.
+ *
+ * Non-numerical by construction: these are names, there is no order between
+ * them, and no arithmetic is possible on them. `not_applicable` is a positive
+ * finding - "this room imposes none" - and is deliberately NOT spelled the same
+ * as `completed`, because a room that required three things and got them is not
+ * the same fact as a room that required nothing.
+ */
+export const ROOM_PREREQUISITE_STATES = ["not_applicable", "completed", "pending"] as const;
+export type RoomPrerequisiteState = (typeof ROOM_PREREQUISITE_STATES)[number];
+
+/**
+ * An explicit statement about this room's prerequisites.
+ *
+ * There is no variant that means "I did not look". That is what `null` is for
+ * in `AdmissibilityFacts`, and it blocks.
+ */
+export type RoomPrerequisiteEvaluation =
+  | { status: "not_applicable"; reason: string }
+  | { status: "completed"; completed: readonly string[] }
+  | { status: "pending"; outstanding: readonly string[] };
+
+/** Why this release answers `not_applicable`, in the words the member reads. */
+export const NO_PREREQUISITE_MECHANISM =
+  "This room imposes no entry prerequisites of its own.";
+
+/**
+ * The ONE place this release may say `not_applicable`, said out loud.
+ *
+ * Every caller goes through this function rather than writing the literal, so
+ * the day a prerequisite mechanism is built there is exactly one call site to
+ * find and exactly one test to fail. Calling it is an assertion about the
+ * schema: no prerequisites table, no prerequisite column, nothing that can
+ * impose one. If that stops being true and this function still returns
+ * `not_applicable`, the gate is lying, which is why a test pins the claim to
+ * the schema rather than to this function's own return value.
+ */
+export function notApplicableUntilPrerequisitesExist(): RoomPrerequisiteEvaluation {
+  return { status: "not_applicable", reason: NO_PREREQUISITE_MECHANISM };
+}
 
 /**
  * Section 6's own user-facing vocabulary, verbatim, carried alongside the three
@@ -131,6 +185,14 @@ export const EVIDENCE_STATES = [
   "authority_sighted",
   "under_review",
   "not_confirmed",
+  /*
+   * Not one of section 6's words, and added deliberately rather than reusing
+   * one. Section 6 writes the ninth criterion as "where applicable", and no
+   * existing state says "this did not apply" - `identity_confirmed` would have
+   * claimed evidence that was never gathered. The controller required the
+   * distinction to be explicit and testable, so it gets its own word.
+   */
+  "no_prerequisites_apply",
 ] as const;
 
 export type EvidenceState = (typeof EVIDENCE_STATES)[number];
@@ -180,8 +242,16 @@ export const CRITERION_EVIDENCE: Record<
   }
 > = {
   authenticated_individual: {
-    label: "Identity confirmed",
-    source: `profiles.verification_level at or above ${DEAL_ROOM_IDENTITY_MIN_LEVEL}`,
+    /*
+     * An authenticated, attributable member. Two facts, and no rung.
+     *
+     * `auth.uid()` proves a session. A `profiles` row for that same id proves
+     * the act can be attributed to somebody the room record can name. Neither
+     * is a verification level, and this criterion must never become one: the
+     * controller struck exactly that on 31 July 2026.
+     */
+    label: "Authenticated member",
+    source: "the session user, and the profiles row it is attributable to",
     coverage: "stored",
   },
   confirmed_contact_method: {
@@ -195,8 +265,18 @@ export const CRITERION_EVIDENCE: Record<
     coverage: "stored",
   },
   legal_or_trading_name: {
+    /*
+     * Its own column, because section 6 lists it as its own criterion.
+     *
+     * The first draft satisfied this with whatever satisfied criterion 3, so a
+     * member who named only a professional capacity cleared both with one
+     * string. The controller struck that: "A professional capacity cannot
+     * simultaneously stand in for the legal/trading name." A capacity is what
+     * you do; a trading name is what you trade as. They are frequently
+     * different and occasionally the same, and the member states each.
+     */
     label: "Legal or trading name",
-    source: "profiles.company, or the organisation named for the room",
+    source: "deal_room_participants.represented_legal_name, or the organisation named for the room",
     coverage: "stored",
   },
   jurisdiction: {
@@ -206,25 +286,24 @@ export const CRITERION_EVIDENCE: Record<
   },
   relationship_to_the_business: {
     /*
-     * No column anywhere records this on its own.
+     * Its own column too, for the same reason and by the same ruling.
      *
-     * Opening a room: `listings.submitter_role`, which the publication gate
-     * already requires before a Deal can be approved and which `deal_room_propose`
-     * requires to be an approved Deal. That is a real, separate, stored fact.
+     * The first draft fell back to the declared capacity and then to the
+     * participation authority. The controller struck both: "capacity/authority
+     * cannot stand in for relationship to the business." They answer different
+     * questions. Capacity is the hat you wear, authority is what lets you sign,
+     * and relationship is how you stand to the business itself - an office you
+     * hold, a mandate you were given, an engagement you were retained under.
      *
-     * Being admitted: nothing collects it. The admission form asks for an
-     * organisation, a capacity, a role and an authority, and none of those is
-     * "how do you stand to this business". The caller passes the declared
-     * capacity, which is the member's own statement of the same thing, so the
-     * criterion is genuinely declared by the member - but it is not independent
-     * of `identified_business_or_capacity`, and that is recorded here rather
-     * than smoothed over. Making it independent needs a field on
-     * `deal_room_declare_participation`, which is a migration and therefore an
-     * owner decision.
+     * `deal_room_declare_participation` now collects it on the admission path.
+     * On the propose path `deal_room_propose` seeds it from
+     * `listings.submitter_role`, which the publication gate already requires
+     * before a Deal can be approved, and which is a separate stored column
+     * rather than a re-reading of another criterion.
      */
     label: "Relationship to the business",
-    source: "listings.submitter_role when opening; the declared capacity when being admitted",
-    coverage: "derived",
+    source: "deal_room_participants.business_relationship, seeded from listings.submitter_role when opening",
+    coverage: "stored",
   },
   transaction_role_declared: {
     label: "Transaction role",
@@ -242,13 +321,21 @@ export const CRITERION_EVIDENCE: Record<
      * the Deal Room schema. `prerequisites_pending` is a participant STATE with
      * nothing behind it, so no room can impose a prerequisite today.
      *
-     * Fail-closed still applies: the caller must SAY so, by passing an empty
-     * list. Passing `null` means "I could not determine this room's
-     * prerequisites" and blocks. The criterion cannot pass by omission, because
-     * the field is not optional.
+     * Section 6 writes this criterion as "any room-specific prerequisite
+     * completed, WHERE APPLICABLE", so "there are none" is a real and correct
+     * answer - but the controller ruled on 31 July 2026 that it may not be
+     * reached by omission: "Room-specific prerequisites cannot silently pass
+     * because the feature is unmodelled... Represent the criterion explicitly
+     * as `not_applicable`, `pending` or `completed`."
+     *
+     * So the caller passes a `RoomPrerequisiteEvaluation` naming one of those
+     * three states, and `null` - "I could not determine this room's
+     * prerequisites" - blocks. `notApplicableUntilPrerequisitesExist()` is the
+     * one place this release is allowed to say `not_applicable`, it carries the
+     * reason with it, and a test pins both.
      */
     label: "Room prerequisites",
-    source: "no prerequisite mechanism exists in the schema; the caller states the outstanding set",
+    source: "no prerequisite mechanism exists in the schema; the caller states an explicit named evaluation",
     coverage: "unmodelled",
   },
 };
@@ -302,31 +389,54 @@ export interface AdmissibilityResult {
  * whether this member opened the room.
  */
 export interface AdmissibilityFacts {
-  /** `profiles.verification_level`, as stored. Unrecognised values fail closed. */
-  verificationLevel: unknown;
-  /** `auth.users.email_confirmed_at`. Null blocks. */
+  /**
+   * The session user, as the caller proved it. Null blocks.
+   *
+   * NOT a verification level, and there is deliberately no field for one: this
+   * module reads `profiles.verification_level` nowhere at all.
+   */
+  authenticatedUserId: string | null;
+  /**
+   * The `profiles.id` this act is attributable to. Null blocks, and a value
+   * that is not the same person as `authenticatedUserId` blocks: a session
+   * without an attributable profile, or attributed to somebody else, is not an
+   * authenticated individual for the purpose of a room record.
+   */
+  attributableProfileId: string | null;
+  /** `auth.users.email_confirmed_at`. Null blocks. Its own criterion, always. */
   emailConfirmedAt: string | null;
   /** `profiles.company`, or the organisation named for this room. */
   organisationName: string | null;
   /** A declared professional capacity, where no organisation is named. */
   declaredCapacity: string | null;
+  /**
+   * The legal or trading name the member acts under. Its OWN fact.
+   *
+   * Never defaulted from `declaredCapacity`. A member who states only a
+   * capacity leaves this pending, and is told so as its own line.
+   */
+  legalOrTradingName: string | null;
   /** `profiles.country`, or the jurisdiction declared for this room. */
   jurisdiction: string | null;
-  /** See `CRITERION_EVIDENCE`: no dedicated column, nearest stored fact. */
+  /**
+   * How the member stands to that business. Its OWN fact.
+   *
+   * Never defaulted from `declaredCapacity` or `participationAuthority`.
+   */
   relationshipToBusiness: string | null;
   /** The transaction role declared for this room. */
   transactionRole: string | null;
   /** The authority declared for that role. */
   participationAuthority: string | null;
   /**
-   * Room-specific prerequisites still outstanding, by name.
+   * An explicit named evaluation of this room's prerequisites.
    *
-   * `[]` means the caller has established that none are outstanding, which is
-   * always the truthful answer today because nothing in the schema can record
-   * one. `null` means the caller could not determine it, and blocks. Not
-   * optional, so it cannot pass by being forgotten.
+   * `null` means the caller could not determine it, and blocks. Not optional,
+   * so it cannot pass by being forgotten, and there is no variant that means
+   * "unmodelled, therefore fine" - `not_applicable` is a claim somebody makes
+   * on the record via `notApplicableUntilPrerequisitesExist()`.
    */
-  outstandingPrerequisites: readonly string[] | null;
+  roomPrerequisites: RoomPrerequisiteEvaluation | null;
 }
 
 /** Where the free evidence is supplied. ADR-0018 made this verification free. */
@@ -373,27 +483,27 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const findings: AdmissibilityFinding[] = [];
 
   /*
-   * 1. Authenticated individual. CONFIRMED, not declared.
+   * 1. Authenticated individual. CONFIRMED, and no verification level anywhere.
    *
-   * Read as section 6's own state for it, `identity confirmed`, rather than as
-   * "is signed in". Both gates are reachable only by an authenticated member, so
-   * the weaker reading would make this criterion vacuous and it could not be
-   * part of a floor. The owner's ruling is explicit that a level rung is the
-   * evidence for identity, and ADR-0018 made that check free.
+   * A session user, and a profile the act is attributable to, and the two being
+   * the same person. That is what "authenticated individual" says, and the
+   * controller ruled on 31 July 2026 that it must not be read as anything
+   * stronger.
    *
-   * The rung is `identity_verified`. A member who never ran a registry check is
-   * NOT blocked by this: `company_verified` is not required and is not read.
+   * Both are compared as trimmed strings so that an empty id, a whitespace id
+   * or a mismatched pair all land in `pending` rather than in a truthy check.
    */
-  const identity = meetsDealRoomIdentityFloor(facts.verificationLevel);
+  const uid = declared(facts.authenticatedUserId) ? String(facts.authenticatedUserId).trim() : null;
+  const pid = declared(facts.attributableProfileId) ? String(facts.attributableProfileId).trim() : null;
+  const attributable = uid !== null && pid !== null && uid === pid;
   findings.push(
     finding(
       "authenticated_individual",
-      identity ? "confirmed" : "pending",
-      identity ? "identity_confirmed" : "not_confirmed",
+      attributable ? "confirmed" : "pending",
+      attributable ? "identity_confirmed" : "not_confirmed",
       {
-        statement:
-          "Confirm your identity. Verifying the business you represent is free and takes one form. A registry check is not required to enter a Deal Room.",
-        href: VERIFY_BUSINESS_HREF,
+        statement: "Sign in as a Ponte member. A room records who acted, so the act must be attributable to an account.",
+        href: ACCOUNT_HREF,
       },
     ),
   );
@@ -439,22 +549,27 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   );
 
   /*
-   * 4. Legal or trading name. DECLARED.
+   * 4. Legal or trading name. DECLARED, and independently.
    *
-   * Listed by section 6 separately from 3, and evaluated separately, but it
-   * rests on the same two facts: the organisation's name, or - for a member
-   * with no company - the capacity they trade under, which is the name they
-   * act in. Demanding a registered company name here would readmit the
-   * full-Passport wall through the side door.
+   * Section 6 lists it separately from 3, so it is satisfied separately. The
+   * organisation named for the room carries its own name, so that satisfies
+   * this; a member acting in a personal professional capacity states the name
+   * they trade under. What does NOT satisfy it is `declaredCapacity` - the
+   * controller struck that fallback by name.
+   *
+   * This is still not a registered-company demand: a trading name the member
+   * states is enough, and no registry is consulted. The full-Passport wall
+   * stays out.
    */
-  const name = declared(facts.organisationName) || declared(facts.declaredCapacity);
+  const name = declared(facts.organisationName) || declared(facts.legalOrTradingName);
   findings.push(
     finding(
       "legal_or_trading_name",
       name ? "declared" : "pending",
       name ? "business_information_supplied" : "not_confirmed",
       {
-        statement: "Give the legal or trading name you act under.",
+        statement:
+          "Give the legal or trading name you act under. This is the name itself, not the capacity you act in, and both are asked for separately.",
         href: VERIFY_BUSINESS_HREF,
       },
     ),
@@ -471,8 +586,8 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
     ),
   );
 
-  // 6. Relationship to the business. DECLARED, and see CRITERION_EVIDENCE: the
-  //    caller supplies it because no column holds it on its own.
+  // 6. Relationship to the business. DECLARED, from its own column and nothing
+  //    else. Not the capacity, not the authority: see CRITERION_EVIDENCE.
   const relationship = declared(facts.relationshipToBusiness);
   findings.push(
     finding(
@@ -522,26 +637,51 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   );
 
   /*
-   * 9. Room-specific prerequisites. CONFIRMED when the caller has established
-   *    that none are outstanding; PENDING when any are, and PENDING when the
-   *    caller passes `null` to say it could not tell. Absence is never a pass.
+   * 9. Room-specific prerequisites, as an explicit named state.
+   *
+   *   not_applicable -> this room imposes none, and somebody said so on the
+   *                     record. Satisfied, and reported in its own word rather
+   *                     than disguised as evidence that was never gathered.
+   *   completed      -> it imposed some and they are done. Satisfied.
+   *   pending        -> some are outstanding. Blocks, and names them.
+   *   null           -> the caller could not determine it. Blocks.
+   *
+   * The exhaustive switch is the guard: adding a fourth state to
+   * `ROOM_PREREQUISITE_STATES` without deciding here whether it passes will not
+   * compile, so a future state cannot inherit "satisfied" by default.
    */
-  const outstanding = facts.outstandingPrerequisites;
-  const prerequisiteState: CriterionState =
-    outstanding === null ? "pending" : outstanding.length === 0 ? "confirmed" : "pending";
+  const prereq = facts.roomPrerequisites;
+  let prerequisiteState: CriterionState;
+  let prerequisiteEvidence: EvidenceState;
+  let prerequisiteRemedy: string;
+  if (prereq === null) {
+    prerequisiteState = "pending";
+    prerequisiteEvidence = "under_review";
+    prerequisiteRemedy = "This room's prerequisites could not be read, so entry is held until they can be.";
+  } else {
+    switch (prereq.status) {
+      case "not_applicable":
+        prerequisiteState = "not_applicable";
+        prerequisiteEvidence = "no_prerequisites_apply";
+        prerequisiteRemedy = prereq.reason;
+        break;
+      case "completed":
+        prerequisiteState = "confirmed";
+        prerequisiteEvidence = "identity_confirmed";
+        prerequisiteRemedy = "This room's prerequisites are complete.";
+        break;
+      case "pending":
+        prerequisiteState = "pending";
+        prerequisiteEvidence = "under_review";
+        prerequisiteRemedy = `Complete what this room requires before entry: ${prereq.outstanding.join(", ")}.`;
+        break;
+    }
+  }
   findings.push(
-    finding(
-      "room_specific_prerequisite",
-      prerequisiteState,
-      prerequisiteState === "confirmed" ? "identity_confirmed" : "under_review",
-      {
-        statement:
-          outstanding === null || outstanding.length === 0
-            ? "This room's prerequisites could not be read, so entry is held until they can be."
-            : `Complete what this room requires before entry: ${outstanding.join(", ")}.`,
-        href: ACCOUNT_HREF,
-      },
-    ),
+    finding("room_specific_prerequisite", prerequisiteState, prerequisiteEvidence, {
+      statement: prerequisiteRemedy,
+      href: ACCOUNT_HREF,
+    }),
   );
 
   const pending = findings.filter((f) => f.state === "pending");

@@ -82,7 +82,7 @@ export default async function AdmissionPage({
     ? await supabase
         .from("deal_room_participants")
         .select(
-          "id, room_id, sub_room_id, org_id, declared_capacity, transaction_role, participation_authority, state, profile_id",
+          "id, room_id, sub_room_id, org_id, declared_capacity, represented_legal_name, business_relationship, transaction_role, participation_authority, state, profile_id",
         )
         .eq("id", participantId)
         .maybeSingle()
@@ -98,6 +98,12 @@ export default async function AdmissionPage({
   const acceptedKinds = new Set(((accepted ?? []) as { agreement_kind: string }[]).map((row) => row.agreement_kind));
 
   const hasIdentity = Boolean(participant?.org_id) || Boolean(participant?.declared_capacity);
+  // The name and the relationship are counted separately from the capacity, on
+  // purpose: the chip must not read "Complete" while two of the nine criteria
+  // are still pending underneath it.
+  const hasNameAndRelationship =
+    (Boolean(participant?.org_id) || Boolean(participant?.represented_legal_name)) &&
+    Boolean(participant?.business_relationship);
   const hasRoleAndAuthority =
     Boolean(participant?.transaction_role) && Boolean(participant?.participation_authority);
   const allAgreementsAccepted = REQUIRED_AGREEMENT_KINDS.every((kind) => acceptedKinds.has(kind));
@@ -154,13 +160,15 @@ export default async function AdmissionPage({
           <Band title="1. Who you act for, and in what role">
             <div className="dr__check">
               <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                <p className="dr__item-title">Organisation or declared capacity, role, and authority</p>
+                <p className="dr__item-title">Who you act for, under what name, in what relationship, role and authority</p>
                 <span
                   className={
-                    hasIdentity && hasRoleAndAuthority ? "dr__chip dr__chip--done" : "dr__chip dr__chip--declared"
+                    hasIdentity && hasNameAndRelationship && hasRoleAndAuthority
+                      ? "dr__chip dr__chip--done"
+                      : "dr__chip dr__chip--declared"
                   }
                 >
-                  {hasIdentity && hasRoleAndAuthority ? "Complete" : "Not yet"}
+                  {hasIdentity && hasNameAndRelationship && hasRoleAndAuthority ? "Complete" : "Not yet"}
                 </span>
               </div>
               <p className="dr__check-why">
@@ -190,6 +198,26 @@ export default async function AdmissionPage({
                 label="Or, the professional capacity you act in"
                 name="declaredCapacity"
                 help="For example: independent broker, freight forwarder, legal adviser. One of this or an organisation is required."
+              />
+              {/*
+                Two fields the capacity above must not answer for.
+
+                Section 6 lists the legal or trading name and the relationship
+                to the business as their own criteria, and the controller ruled
+                on 31 July 2026 that neither may be derived from the capacity or
+                the authority. So they are asked here, in their own words, and
+                the command refuses the declaration if either is blank.
+              */}
+              <Field
+                label="Legal or trading name you act under"
+                name="legalName"
+                help="The name itself, not the capacity. Leave blank only if you named an organisation above, whose name is used."
+              />
+              <TextField
+                label="How you stand to that business"
+                name="businessRelationship"
+                required
+                help="An office you hold, a mandate you were given, or an engagement you were retained under. This is not your role in the transaction and not your authority to commit."
               />
               <Field
                 label="Your role in this transaction"

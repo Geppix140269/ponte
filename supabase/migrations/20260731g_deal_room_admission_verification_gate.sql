@@ -28,18 +28,29 @@
 --
 -- ## What it adds
 --
--- 1. `deal_room_admission_minimum_missing(profile, participant, listing)` - one
+-- 1. Two additive nullable columns on `deal_room_participants`:
+--    `represented_legal_name` and `business_relationship`. They exist because
+--    the controller ruled on 31 July 2026 that criteria 4 and 6 must be held
+--    independently and may not be derived from the declared capacity or the
+--    participation authority. Nullable, no default, no backfill: an existing row
+--    is not invalidated, and an already-admitted participant is not re-gated.
+-- 2. `deal_room_admission_minimum_missing(profile, participant, listing)` - one
 --    read-only helper returning the NAMES of the section 6 criteria that are not
 --    met, or an empty array. It is the SQL twin of `dealRoomAdmissibility()` and
 --    is the only place either command asks the question.
--- 2. `deal_room_propose`, replaced with 20260731b's body verbatim plus a call to
---    that helper.
--- 3. `deal_room_admit_participant`, replaced with 20260731f's body verbatim plus
+-- 3. `deal_room_declare_participation`, DELIBERATELY re-signed from six
+--    parameters to eight so the two new facts can be declared in the same
+--    atomic act as the rest. The six-parameter form is dropped in the same
+--    transaction, so no overload survives; see section 2 for why this is a drop
+--    and not a `create or replace`, and what it costs.
+-- 4. `deal_room_propose`, replaced with 20260731b's body verbatim plus a call to
+--    the helper, plus the two new columns seeded on the initiator rows.
+-- 5. `deal_room_admit_participant`, replaced with 20260731f's body verbatim plus
 --    the same call.
 --
--- Both are `create or replace` on their EXISTING signatures, so no overload is
--- created and no grant is invalidated. No table, constraint, policy, trigger,
--- index, grant or row is altered.
+-- `deal_room_propose` and `deal_room_admit_participant` are `create or replace`
+-- on their EXISTING signatures, so no overload is created and no grant is
+-- invalidated. No constraint, policy, trigger, index or row is altered.
 --
 -- ## Four properties this mirrors from the application module
 --
@@ -52,33 +63,44 @@
 -- row, a null column, an unrecognised level - lands in the missing array. There
 -- is no `coalesce(..., true)` anywhere in it. An unknown blocks.
 --
--- **`identity_verified`, not `company_verified`.** The owner ruled that "a
--- complete Passport and a registry-checked business are not required merely to
--- enter". The level test is `in ('identity_verified','company_verified')`, which
--- is the publication floor's rung OR the one below it, deliberately not
--- `profiles_verification_level_check`'s top value alone. Six of the nine
--- criteria are satisfied by a member declaration, because section 6 asks for a
--- declaration and nothing more.
+-- **No verification level at all.** `profiles.verification_level` is not read by
+-- this file. Not `company_verified`, which is the publication floor, and not
+-- `identity_verified` either. An earlier draft required the latter and the
+-- controller struck it on 31 July 2026: "`authenticated individual` is not
+-- `identity_verified`... Requiring `profiles.verification_level >=
+-- identity_verified` adds a stricter identity-verification wall that the owner
+-- did not approve." Criterion 1 is a session user plus a `profiles` row to
+-- attribute the act to; criterion 2 is the confirmed contact method, on its own.
+-- Six of the nine are satisfied by a member declaration, because section 6 asks
+-- for a declaration and nothing more.
 --
 -- **One standard for both doors.** The initiator and the invitee call the same
 -- helper. Branching model section 6: "Sponsored access removes payment friction.
 -- It does not weaken admission, confidentiality or authority requirements."
 --
--- ## The one criterion this cannot check, and what it does about it
+-- ## The one criterion nothing can evidence, and what it does about it
 --
--- Section 6 asks for "any room-specific prerequisite completed". There is no
--- prerequisites table and no prerequisite column anywhere in the Deal Room
--- schema; `prerequisites_pending` is a participant state with nothing behind it.
--- So no room can impose one, and the helper treats the outstanding set as empty
--- and says so in a comment at the point of the check rather than omitting the
--- criterion. When prerequisites are built, that comment is the seam.
+-- Section 6 asks for "any room-specific prerequisite completed, where
+-- applicable". There is no prerequisites table and no prerequisite column
+-- anywhere in the Deal Room schema; `prerequisites_pending` is a participant
+-- state with nothing behind it. So no room can impose one.
 --
--- "Relationship to the business" has no dedicated column either. On the propose
--- path it reads `listings.submitter_role`, which the publication gate already
--- requires. On the admission path nothing collects it, so it reads the declared
--- capacity and falls back to the declared authority - both the member's own
--- statement of the same thing. It is therefore not independent of two other
--- criteria on that path, and that is recorded here rather than hidden.
+-- The controller ruled that this may not therefore be skipped: "Room-specific
+-- prerequisites cannot silently pass because the feature is unmodelled...
+-- Represent the criterion explicitly as `not_applicable`, `pending` or
+-- `completed`." The helper returns a second value saying which of those three
+-- it found, this release returns `not_applicable` from one named branch, and a
+-- test asserts the branch exists and is reached. When prerequisites are built,
+-- that branch is the seam and its test is what fails first.
+--
+-- "Relationship to the business" and "legal or trading name" now each have their
+-- own column, added in section 0. Neither is read from the declared capacity or
+-- the participation authority any more; the controller struck both fallbacks by
+-- name. On the propose path the initiator's `business_relationship` is seeded
+-- from `listings.submitter_role`, which the publication gate already requires
+-- before a Deal can be approved - a separate stored column, not a re-reading of
+-- another criterion - and the legal name from `profiles.company`. If either is
+-- absent the opener is refused, exactly as an invitee would be.
 --
 -- ## Verification after applying
 --
@@ -90,11 +112,64 @@
 --
 -- ## Reversal
 --
--- Re-apply 20260731b and 20260731f in that order, then
--- `drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);`.
--- Nothing else is touched, so there is no data to migrate back.
+-- Re-apply 20260731b and 20260731f in that order to restore `deal_room_propose`
+-- and `deal_room_admit_participant`, then re-apply the
+-- `deal_room_declare_participation` block of 20260729b to restore the
+-- six-parameter form, then:
+--
+--   drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);
+--   drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
+--   -- the columns may be left in place; they are nullable and nothing reads
+--   -- them once the functions above are back. Drop them only if the reversal is
+--   -- permanent, and note that dropping them DISCARDS member declarations:
+--   -- alter table public.deal_room_participants
+--   --   drop column if exists represented_legal_name,
+--   --   drop column if exists business_relationship;
+--
+-- Everything is inside one transaction, so a failure part-way leaves the
+-- database exactly as it was.
 
 begin;
+
+-- ---------------------------------------------------------------------------
+-- 0. The two columns criteria 4 and 6 need to be independent
+-- ---------------------------------------------------------------------------
+--
+-- Controller ruling, 31 July 2026: "A professional capacity cannot
+-- simultaneously stand in for the legal/trading name, and capacity/authority
+-- cannot stand in for relationship to the business. Add the minimum additive
+-- storage and declaration path needed to hold the represented legal/trading
+-- name and relationship independently."
+--
+-- Minimum means minimum: two nullable text columns, no default, no backfill, no
+-- constraint, no index. Nothing existing changes meaning and no existing row
+-- becomes invalid. An already-admitted participant keeps `state = 'admitted'`
+-- and is never re-gated, so nobody is retroactively expelled from a room by
+-- columns that did not exist when they entered.
+--
+-- They are NOT added to `deal_room_participants_identity_when_admitted`. That
+-- constraint says an admitted participant is identifiable as an organisation or
+-- a capacity, which remains true and is a different claim. Widening it would
+-- invalidate existing admitted rows, which is precisely what additive means to
+-- avoid; the gate below is where the new facts are required.
+
+alter table public.deal_room_participants
+  add column if not exists represented_legal_name text;
+
+alter table public.deal_room_participants
+  add column if not exists business_relationship text;
+
+comment on column public.deal_room_participants.represented_legal_name is
+  'PT-PRODUCT-2026-07-27-01 section 6 criterion 4, held independently. The legal '
+  'or trading name the participant acts under. Never derived from '
+  'declared_capacity: a capacity is what you do, a trading name is what you '
+  'trade as. Declared by the member, checked against no registry.';
+
+comment on column public.deal_room_participants.business_relationship is
+  'PT-PRODUCT-2026-07-27-01 section 6 criterion 6, held independently. How the '
+  'participant stands to that business: an office held, a mandate, an '
+  'engagement. Never derived from declared_capacity or participation_authority. '
+  'Seeded from listings.submitter_role for the member who opens the room.';
 
 -- ---------------------------------------------------------------------------
 -- 1. The predicate
@@ -108,6 +183,44 @@ begin;
 -- `security definer` because it reads `auth.users.email_confirmed_at`, which no
 -- member holds a policy on. It is `stable` and writes nothing.
 
+/*
+ * The ninth criterion, as an explicit named state. Controller ruling, 31 July
+ * 2026.
+ *
+ * Returns exactly one of 'not_applicable', 'completed' or 'pending'. It is a
+ * name, never a number, and there is no ordering between the three.
+ *
+ * This release has ONE branch, and it is a claim about the schema rather than a
+ * shrug: there is no prerequisites table, no prerequisite column, and nothing
+ * anywhere that can impose a room-specific prerequisite, so section 6's "where
+ * applicable" does not apply and the honest answer is 'not_applicable'. It is
+ * deliberately NOT 'completed' - a room that required nothing is not the same
+ * fact as a room that required something and got it.
+ *
+ * When prerequisites are built, this function is the seam. Its replacement must
+ * return 'pending' when it cannot read the answer, not when it reads a negative
+ * one, or the fail-closed rule is lost at exactly the point it matters.
+ */
+create or replace function public.deal_room_room_prerequisite_state(p_room uuid)
+returns text
+language plpgsql stable security definer set search_path = public, pg_temp
+as $$
+begin
+  -- p_room is accepted and deliberately unused: the signature is the seam, so
+  -- the room-aware implementation does not have to change every caller.
+  perform p_room;
+  return 'not_applicable';
+end;
+$$;
+
+comment on function public.deal_room_room_prerequisite_state(uuid) is
+  'PT-PRODUCT-2026-07-27-01 section 6 criterion 9, as an explicit named state: '
+  'not_applicable | completed | pending. Never a count or a score. This release '
+  'returns not_applicable because no prerequisite mechanism exists in the schema. '
+  'A future implementation must return pending when it cannot read the answer.';
+
+revoke execute on function public.deal_room_room_prerequisite_state(uuid) from public, anon, authenticated;
+
 create or replace function public.deal_room_admission_minimum_missing(
   p_profile     uuid,
   p_participant uuid,
@@ -117,7 +230,7 @@ language plpgsql stable security definer set search_path = public, pg_temp
 as $$
 declare
   v_missing text[] := array[]::text[];
-  v_level text;
+  v_profile_id uuid;
   v_company text;
   v_country text;
   v_confirmed timestamptz;
@@ -126,6 +239,7 @@ declare
   v_org_country text;
   v_submitter_role text;
   v_owns_approved_deal boolean := false;
+  v_prerequisites text;
   -- The declared facts, resolved from whichever door was used.
   v_business text;
   v_name text;
@@ -137,14 +251,22 @@ begin
   if p_profile is null then
     -- No caller, no evidence. Every criterion is missing.
     return array[
-      'identity confirmed', 'confirmed contact method', 'business or professional capacity',
+      'an authenticated member', 'confirmed contact method', 'business or professional capacity',
       'legal or trading name', 'jurisdiction', 'relationship to the business',
       'transaction role', 'authority to participate', 'room prerequisites'
     ];
   end if;
 
-  select p.verification_level, p.company, p.country
-    into v_level, v_company, v_country
+  /*
+   * Criterion 1 reads the profile ROW, not a level on it.
+   *
+   * `verification_level` is not selected here, and must not be: the controller
+   * struck the identity-verification wall on 31 July 2026. What is asked is
+   * whether this act is attributable to a member, which a `profiles` row
+   * answers. `v_profile_id` is null when there is no such row, and that blocks.
+   */
+  select p.id, p.company, p.country
+    into v_profile_id, v_company, v_country
     from public.profiles p where p.id = p_profile;
 
   select u.email_confirmed_at into v_confirmed
@@ -169,19 +291,28 @@ begin
     v_owns_approved_deal := coalesce(v_owns_approved_deal, false);
   end if;
 
-  -- Resolve the declared facts. The participant's own declaration wins where it
-  -- exists, because it is the statement made for THIS room.
+  /*
+   * Resolve the declared facts. The participant's own declaration wins where it
+   * exists, because it is the statement made for THIS room.
+   *
+   * Note what `v_name` does NOT read: `v_p.declared_capacity`. Criterion 3 may
+   * be satisfied by a capacity, and criterion 4 may not - that separation is
+   * the controller's correction of 31 July 2026, and collapsing the two lines
+   * back into `v_name := v_business` is the mutation the falsifiability test
+   * exists to catch.
+   */
   v_business := coalesce(nullif(btrim(coalesce(v_org_name, '')), ''),
                          nullif(btrim(coalesce(v_p.declared_capacity, '')), ''),
                          nullif(btrim(coalesce(v_company, '')), ''));
-  v_name := v_business;
+  v_name := coalesce(nullif(btrim(coalesce(v_p.represented_legal_name, '')), ''),
+                     nullif(btrim(coalesce(v_org_name, '')), ''),
+                     nullif(btrim(coalesce(v_company, '')), ''));
   v_jurisdiction := coalesce(nullif(btrim(coalesce(v_org_country, '')), ''),
                              nullif(btrim(coalesce(v_country, '')), ''));
 
   if p_participant is not null then
-    -- No column records the relationship on this path. See the header.
-    v_relationship := coalesce(nullif(btrim(coalesce(v_p.declared_capacity, '')), ''),
-                               nullif(btrim(coalesce(v_p.participation_authority, '')), ''));
+    -- Its own column, and no fallback to capacity or authority.
+    v_relationship := nullif(btrim(coalesce(v_p.business_relationship, '')), '');
     v_role := nullif(btrim(coalesce(v_p.transaction_role, '')), '');
     v_authority := nullif(btrim(coalesce(v_p.participation_authority, '')), '');
   else
@@ -195,11 +326,9 @@ begin
     v_authority := case when v_owns_approved_deal then 'Owner of the published Deal' end;
   end if;
 
-  -- 1. Authenticated individual, with identity established. CONFIRMED evidence.
-  --    `company_verified` passes because it is more than this asks for; it is
-  --    not required, and requiring it would be the publication floor.
-  if coalesce(v_level, '') not in ('identity_verified', 'company_verified') then
-    v_missing := v_missing || 'identity confirmed';
+  -- 1. An authenticated, attributable member. No level, by controller ruling.
+  if v_profile_id is null then
+    v_missing := v_missing || 'an authenticated member';
   end if;
 
   -- 2. Confirmed contact method. CONFIRMED evidence.
@@ -212,9 +341,9 @@ begin
     v_missing := v_missing || 'business or professional capacity';
   end if;
 
-  -- 4. Legal or trading name. DECLARED. For a member with no company this is
-  --    the capacity they trade under; demanding a registered name here would
-  --    readmit the full-Passport wall through the side door.
+  -- 4. Legal or trading name. DECLARED, and on its own facts. A member with no
+  --    company states the name they trade under; no registry is consulted, so
+  --    this is still not the full-Passport wall.
   if v_name is null then
     v_missing := v_missing || 'legal or trading name';
   end if;
@@ -241,14 +370,20 @@ begin
     v_missing := v_missing || 'authority to participate';
   end if;
 
-  -- 9. Any room-specific prerequisite completed.
-  --    Nothing in this schema can record a prerequisite: there is no
-  --    prerequisites table and no prerequisite column, and
-  --    `prerequisites_pending` is a participant state with nothing behind it.
-  --    So the outstanding set is empty and this criterion is satisfied. When a
-  --    prerequisite mechanism is built, its check goes exactly here, and it must
-  --    add to v_missing when it cannot read the answer rather than when it
-  --    reads a negative one.
+  /*
+   * 9. Any room-specific prerequisite completed, WHERE APPLICABLE.
+   *
+   * Asked out loud rather than assumed. `deal_room_room_prerequisite_state`
+   * returns one of three names; only two of them pass, and ANY other value -
+   * including null, including a name added later without a decision being made
+   * here - blocks. That `else` is the fail-closed rule for this criterion, and
+   * it is why the answer cannot become 'satisfied' by the feature simply not
+   * existing.
+   */
+  v_prerequisites := public.deal_room_room_prerequisite_state(v_p.room_id);
+  if v_prerequisites is null or v_prerequisites not in ('not_applicable', 'completed') then
+    v_missing := v_missing || 'room prerequisites';
+  end if;
 
   return v_missing;
 end;
@@ -258,15 +393,141 @@ comment on function public.deal_room_admission_minimum_missing(uuid, uuid, uuid)
   'ADR-0021 ruling 2. Returns the NAMES of the PT-PRODUCT-2026-07-27-01 section 6 '
   'entry criteria this member does not meet, or an empty array. Never a count, a '
   'score or a completeness value. Fail-closed: anything unreadable is missing. '
-  'identity_verified is the floor; a registry-checked business is not required. '
-  'Mirrored by lib/deal-room/admissibility.ts.';
+  'Reads NO verification level: neither company_verified nor identity_verified is '
+  'required, by controller ruling of 31 July 2026. All nine criteria are '
+  'independent. Mirrored by lib/deal-room/admissibility.ts.';
 
 -- Internal. The commands call it; members do not, following the pattern
 -- 20260730c established for Deal Room helpers.
 revoke execute on function public.deal_room_admission_minimum_missing(uuid, uuid, uuid) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2. deal_room_propose, with the gate
+-- 2. deal_room_declare_participation, re-signed to collect the two new facts
+-- ---------------------------------------------------------------------------
+--
+-- ## Why this is a drop-and-create and not a `create or replace`
+--
+-- PostgreSQL identifies a function by name AND argument types. Adding two
+-- parameters with `create or replace` does not replace anything: it creates a
+-- SECOND function, and both remain callable. The six-parameter form would still
+-- be granted to `authenticated` and would still write a participant row with no
+-- legal name and no relationship - an ungated door left open beside the gated
+-- one, which is exactly the overload the controller forbade.
+--
+-- So the old signature is dropped explicitly, in the same transaction, before
+-- the new one is created. A test asserts that this file contains the drop, that
+-- it names the exact six-parameter signature, and that no `create` for that
+-- signature survives anywhere.
+--
+-- ## What it costs, stated rather than discovered
+--
+-- `drop function` discards the function's ACL with it, so the grant is
+-- re-issued below. Between the drop and the create there is no
+-- `deal_room_declare_participation` at all - inside one transaction, so no
+-- session ever observes the gap, and a failure anywhere in this file rolls the
+-- whole thing back to the six-parameter form.
+--
+-- ## Why one command and not two
+--
+-- The alternative the controller allowed was a second narrowly scoped command.
+-- Rejected because admission is one act: two commands can half-succeed, leaving
+-- a participant with a role and an authority but no relationship, in a state no
+-- screen asked for and the gate then refuses without explaining why. One
+-- statement writes all six declared facts or none of them.
+
+drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text);
+
+create function public.deal_room_declare_participation(
+  p_participant_id   uuid,
+  p_org_name         text,
+  p_org_country      text,
+  p_declared_capacity text,
+  p_role             text,
+  p_authority        text,
+  p_legal_name       text,
+  p_relationship     text
+) returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_p public.deal_room_participants%rowtype;
+  v_org uuid;
+begin
+  select * into v_p from public.deal_room_participants where id = p_participant_id;
+  if not found or v_p.profile_id <> auth.uid() then
+    raise exception 'You can only complete your own admission' using errcode = '42501';
+  end if;
+  if v_p.state not in ('invited','prerequisites_pending','terms_pending') then
+    raise exception 'This admission is already complete' using errcode = '23514';
+  end if;
+  if not public.deal_room_is_writable(v_p.room_id) then
+    raise exception 'This room cannot be changed in its current state' using errcode = '42501';
+  end if;
+  if coalesce(btrim(p_role), '') = '' or coalesce(btrim(p_authority), '') = '' then
+    raise exception 'A role and a declaration of authority are both required' using errcode = '23514';
+  end if;
+  if coalesce(btrim(p_org_name), '') = '' and coalesce(btrim(p_declared_capacity), '') = '' then
+    raise exception 'Give the organisation you act for, or the capacity you act in' using errcode = '23514';
+  end if;
+
+  /*
+   * The two facts this migration exists for, each refused on its own terms.
+   *
+   * Separate `if`s rather than one combined test, so a member who supplied one
+   * is told about the other and not about both. The legal name is NOT defaulted
+   * from `p_org_name` here: a member who names an organisation gets the name
+   * from the organisation row at evaluation time, and a member who names only a
+   * capacity must state the name they trade under.
+   */
+  if coalesce(btrim(p_org_name), '') = '' and coalesce(btrim(p_legal_name), '') = '' then
+    raise exception 'Give the legal or trading name you act under. This is the name itself, not the capacity you act in'
+      using errcode = '23514';
+  end if;
+  if coalesce(btrim(p_relationship), '') = '' then
+    raise exception 'State how you stand to that business: an office you hold, a mandate, or an engagement'
+      using errcode = '23514';
+  end if;
+
+  -- The organisation layer is empty in production, so an organisation is
+  -- created here on the member's own statement rather than looked up. It is
+  -- never inferred from a company text field elsewhere.
+  if coalesce(btrim(p_org_name), '') <> '' then
+    select id into v_org from public.organizations
+     where lower(name) = lower(btrim(p_org_name)) limit 1;
+    if v_org is null then
+      insert into public.organizations (name, country, owner_id)
+      values (btrim(p_org_name), nullif(btrim(p_org_country), ''), auth.uid())
+      returning id into v_org;
+    end if;
+    update public.profiles set organization_id = coalesce(organization_id, v_org)
+     where id = auth.uid();
+  end if;
+
+  update public.deal_room_participants
+     set org_id = v_org,
+         declared_capacity = nullif(btrim(p_declared_capacity), ''),
+         represented_legal_name = nullif(btrim(p_legal_name), ''),
+         business_relationship = nullif(btrim(p_relationship), ''),
+         transaction_role = btrim(p_role),
+         participation_authority = btrim(p_authority),
+         state = 'terms_pending'
+   where id = p_participant_id;
+end;
+$$;
+
+comment on function public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text) is
+  'The admission declaration, in one atomic act. Re-signed from six parameters to '
+  'eight by 20260731g so that the legal/trading name and the relationship to the '
+  'business are declared independently of the capacity and the authority. The '
+  'six-parameter form is dropped in the same transaction; no overload survives.';
+
+-- The ACL the drop discarded, re-issued exactly as 20260730b and 20260730c had
+-- it: revoked from public and anon, granted to authenticated, and nothing else.
+revoke execute on function public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text) from public, anon;
+grant execute on function public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 3. deal_room_propose, with the gate
 -- ---------------------------------------------------------------------------
 
 create or replace function public.deal_room_propose(
@@ -469,21 +730,38 @@ begin
 
   -- The initiator is admitted at master level, as principal, approver and
   -- administrator, and into their own first workspace.
+  /*
+   * The initiator's two participant rows, now carrying the same two declared
+   * facts an invitee must supply.
+   *
+   * `represented_legal_name` from `profiles.company` and `business_relationship`
+   * from `listings.submitter_role`: two separate stored columns, neither of them
+   * a re-reading of the capacity or the authority written beside them. The gate
+   * above already refused this call if either was absent, so these are recorded
+   * rather than assumed - and recording them is what lets the invitee's gate and
+   * the opener's gate read the identical columns afterwards.
+   */
   insert into public.deal_room_participants
     (room_id, sub_room_id, profile_id, org_id, participant_class, transaction_role,
-     participation_authority, declared_capacity, is_required_approver, is_room_administrator,
-     state, admitted_at)
+     participation_authority, declared_capacity, represented_legal_name, business_relationship,
+     is_required_approver, is_room_administrator, state, admitted_at)
   values
     (v_room, null, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', 'Deal owner', true, true, 'admitted', now());
+     'Owner of the published Deal', 'Deal owner',
+     nullif(btrim(coalesce((select p.company from public.profiles p where p.id = auth.uid()), '')), ''),
+     nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
+     true, true, 'admitted', now());
 
   insert into public.deal_room_participants
     (room_id, sub_room_id, profile_id, org_id, participant_class, transaction_role,
-     participation_authority, declared_capacity, is_required_approver, is_room_administrator,
-     state, admitted_at)
+     participation_authority, declared_capacity, represented_legal_name, business_relationship,
+     is_required_approver, is_room_administrator, state, admitted_at)
   values
     (v_room, v_sub, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', 'Deal owner', true, true, 'admitted', now());
+     'Owner of the published Deal', 'Deal owner',
+     nullif(btrim(coalesce((select p.company from public.profiles p where p.id = auth.uid()), '')), ''),
+     nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
+     true, true, 'admitted', now());
 
   perform public.deal_room_log_event(v_room, null, 'room_proposed', 'room', v_room,
     'Room proposed from a published Deal, with credible commercial interest recorded.',
@@ -496,7 +774,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 3. deal_room_admit_participant, with the same gate
+-- 4. deal_room_admit_participant, with the same gate
 -- ---------------------------------------------------------------------------
 
 create or replace function public.deal_room_admit_participant(p_participant_id uuid)

@@ -3,7 +3,11 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { dealRoomAvailableTo } from "./flags";
-import { dealRoomAdmissibility, type AdmissibilityResult } from "./admissibility";
+import {
+  dealRoomAdmissibility,
+  notApplicableUntilPrerequisitesExist,
+  type AdmissibilityResult,
+} from "./admissibility";
 import { countMaterialEventsSince, earnedMilestones, type ActivityEvent, type ActivityEventType } from "./activity";
 import { bridgeModel, type BridgeModel, type BridgeParticipant } from "./bridge";
 import { momentumFor, procedureProgress, type ProcedureProgress } from "./progress";
@@ -678,11 +682,7 @@ export async function initiatorAdmissibility(listingId: string): Promise<Admissi
   const supabase = createClient();
 
   const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("verification_level, company, country")
-        .eq("id", user.id)
-        .maybeSingle()
+    ? await supabase.from("profiles").select("id, company, country").eq("id", user.id).maybeSingle()
     : { data: null };
 
   const { data: listing } = user
@@ -693,7 +693,7 @@ export async function initiatorAdmissibility(listingId: string): Promise<Admissi
         .maybeSingle()
     : { data: null };
 
-  const row = (profile ?? {}) as { verification_level?: unknown; company?: string | null; country?: string | null };
+  const row = (profile ?? {}) as { id?: string | null; company?: string | null; country?: string | null };
   const deal = (listing ?? {}) as { user_id?: string | null; status?: string | null; submitter_role?: string | null };
 
   // The same precondition `deal_room_propose` proves. Only when it holds do the
@@ -701,18 +701,23 @@ export async function initiatorAdmissibility(listingId: string): Promise<Admissi
   const ownsApprovedDeal = Boolean(user) && deal.user_id === user!.id && deal.status === "approved";
 
   return dealRoomAdmissibility({
-    verificationLevel: row.verification_level ?? null,
+    authenticatedUserId: user?.id ?? null,
+    // The profile row read back, not the session id repeated: this criterion
+    // asks whether the act is attributable, and a session with no profile row
+    // is not. `row.id` is null when the read found nothing, which blocks.
+    attributableProfileId: row.id ?? null,
     emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
     organisationName: row.company ?? null,
     declaredCapacity: null,
+    // The business named on the account is the name it trades under. This is a
+    // different column from any capacity, which is the independence the
+    // controller required; a member with no company on file leaves it pending.
+    legalOrTradingName: row.company ?? null,
     jurisdiction: row.country ?? null,
     relationshipToBusiness: ownsApprovedDeal ? (deal.submitter_role ?? null) : null,
     transactionRole: ownsApprovedDeal ? "Deal owner" : null,
     participationAuthority: ownsApprovedDeal ? "Owner of the published Deal" : null,
-    // No prerequisite mechanism exists in the schema, so none can be
-    // outstanding. Stated explicitly rather than omitted: the field is required
-    // precisely so this is a decision somebody made.
-    outstandingPrerequisites: [],
+    roomPrerequisites: notApplicableUntilPrerequisitesExist(),
   });
 }
 
@@ -722,13 +727,11 @@ export async function initiatorAdmissibility(listingId: string): Promise<Admissi
  * Read through the caller's own session, so a participant row that is not
  * theirs returns nothing and every criterion blocks.
  *
- * `relationship_to_the_business` has no field on this path. The admission form
- * collects the substance of it under two other labels - the professional
- * capacity, and the authority ("an office you hold, a mandate, an engagement") -
- * so the capacity is used, falling back to the authority for a member who named
- * an organisation instead of a capacity. Both are the member's own declaration,
- * which is what section 6 asks for; neither is independent of another criterion,
- * and `CRITERION_EVIDENCE` records that.
+ * `legal_or_trading_name` and `relationship_to_the_business` each read their own
+ * column - `represented_legal_name` and `business_relationship`, added by
+ * `20260731g` - rather than borrowing the capacity or the authority. The
+ * controller struck the borrowing on 31 July 2026, and a member who supplies
+ * only a capacity now sees those two criteria pending as their own lines.
  */
 export async function participantAdmissibility(participantId: string): Promise<AdmissibilityResult> {
   const user = await getUser();
@@ -737,7 +740,9 @@ export async function participantAdmissibility(participantId: string): Promise<A
   const { data: participant } = user && participantId
     ? await supabase
         .from("deal_room_participants")
-        .select("id, profile_id, org_id, declared_capacity, transaction_role, participation_authority")
+        .select(
+          "id, profile_id, org_id, declared_capacity, represented_legal_name, business_relationship, transaction_role, participation_authority",
+        )
         .eq("id", participantId)
         .maybeSingle()
     : { data: null };
@@ -746,6 +751,8 @@ export async function participantAdmissibility(participantId: string): Promise<A
     profile_id?: string | null;
     org_id?: string | null;
     declared_capacity?: string | null;
+    represented_legal_name?: string | null;
+    business_relationship?: string | null;
     transaction_role?: string | null;
     participation_authority?: string | null;
   };
@@ -754,44 +761,53 @@ export async function participantAdmissibility(participantId: string): Promise<A
   const mine = Boolean(user) && part.profile_id === user!.id;
 
   const { data: profile } = mine
-    ? await supabase
-        .from("profiles")
-        .select("verification_level, company, country")
-        .eq("id", user!.id)
-        .maybeSingle()
+    ? await supabase.from("profiles").select("id, company, country").eq("id", user!.id).maybeSingle()
     : { data: null };
 
   const { data: organisation } = mine && part.org_id
     ? await supabase.from("organizations").select("name, country").eq("id", part.org_id).maybeSingle()
     : { data: null };
 
-  const row = (profile ?? {}) as { verification_level?: unknown; company?: string | null; country?: string | null };
+  const row = (profile ?? {}) as { id?: string | null; company?: string | null; country?: string | null };
   const org = (organisation ?? {}) as { name?: string | null; country?: string | null };
 
   if (!mine) {
-    // Every fact null: nine pending criteria and a refusal that names them.
+    /*
+     * Somebody else's participation, or none. Every fact null, INCLUDING the
+     * prerequisite evaluation, which is `null` rather than
+     * `notApplicableUntilPrerequisitesExist()`: this caller established nothing
+     * about this room, so it must not make a claim about it. Nine pending
+     * criteria and a refusal that names them.
+     */
     return dealRoomAdmissibility({
-      verificationLevel: null,
+      authenticatedUserId: null,
+      attributableProfileId: null,
       emailConfirmedAt: null,
       organisationName: null,
       declaredCapacity: null,
+      legalOrTradingName: null,
       jurisdiction: null,
       relationshipToBusiness: null,
       transactionRole: null,
       participationAuthority: null,
-      outstandingPrerequisites: null,
+      roomPrerequisites: null,
     });
   }
 
   return dealRoomAdmissibility({
-    verificationLevel: row.verification_level ?? null,
+    authenticatedUserId: user?.id ?? null,
+    attributableProfileId: row.id ?? null,
     emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
     organisationName: org.name ?? row.company ?? null,
     declaredCapacity: part.declared_capacity ?? null,
+    // Its own column first. `profiles.company` is the fallback for a member who
+    // named a company on their account and an organisation for the room; the
+    // capacity is NOT a fallback, and that is the point of the correction.
+    legalOrTradingName: part.represented_legal_name ?? org.name ?? row.company ?? null,
     jurisdiction: org.country ?? row.country ?? null,
-    relationshipToBusiness: part.declared_capacity ?? part.participation_authority ?? null,
+    relationshipToBusiness: part.business_relationship ?? null,
     transactionRole: part.transaction_role ?? null,
     participationAuthority: part.participation_authority ?? null,
-    outstandingPrerequisites: [],
+    roomPrerequisites: notApplicableUntilPrerequisitesExist(),
   });
 }

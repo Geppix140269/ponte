@@ -231,6 +231,44 @@ const NEW_SINCE_20260729B: Record<string, string> = {
     "deal_room_billing_events, mirroring deal_room_events_append_only. It has no " +
     "caller - the trigger fires it - and the file revokes it from public, anon " +
     "and authenticated.",
+  deal_room_room_prerequisite_state:
+    "20260731g (WRITTEN, NOT APPLIED): PT-PRODUCT-2026-07-27-01 section 6 " +
+    "criterion 9, as an explicit named state - not_applicable, completed or " +
+    "pending - so a criterion the schema cannot model is answered out loud " +
+    "rather than skipped. Controller ruling of 31 July 2026. Called only from " +
+    "deal_room_admission_minimum_missing, and the file revokes it from public, " +
+    "anon and authenticated.",
+};
+
+/**
+ * Signatures a later migration changes ON PURPOSE, and what it must do to earn
+ * the exception.
+ *
+ * A changed argument list is normally the overload bug this file exists to
+ * catch: `create or replace` with different parameters creates a SECOND
+ * function, leaves the first callable, and leaves every existing grant pointing
+ * at the old one. So the default is failure, and it stays failure.
+ *
+ * An entry here does not exempt anything. The check below still requires the
+ * file to drop the old signature BY NAME and to re-issue the ACL that the drop
+ * discarded. It converts "this looks like the overload bug" into "this is the
+ * documented exception, and here is the proof it was done properly".
+ */
+const DELIBERATE_RESIGNATURES: Record<string, { from: string; to: string; file: string; why: string }> = {
+  deal_room_declare_participation: {
+    from: "uuid, text, text, text, text, text",
+    to: "uuid, text, text, text, text, text, text, text",
+    file: "20260731g_deal_room_admission_verification_gate.sql",
+    why:
+      "20260731g (WRITTEN, NOT APPLIED): the controller ruled on 31 July 2026 that " +
+      "the legal/trading name and the relationship to the business must be held " +
+      "independently of the declared capacity and the participation authority. Two " +
+      "parameters were added so all six declared facts are written in one atomic " +
+      "act; two separate commands could half-succeed and leave a participant in a " +
+      "state no screen asked for. The six-parameter form is dropped in the same " +
+      "transaction, so no overload survives, and the grant to authenticated is " +
+      "re-issued because drop function discards the ACL with the function.",
+  },
 };
 
 test("every later migration redefining a deal_room function keeps the declared signature", () => {
@@ -240,7 +278,11 @@ test("every later migration redefining a deal_room function keeps the declared s
 
   for (const file of LATER_MIGRATIONS) {
     const text = readFileSync(`supabase/migrations/${file}`, "utf8");
-    const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
+    // `create function` as well as `create or replace function`: a bare create
+    // after a drop is exactly how a signature is legitimately changed, and a
+    // scan that only looked for `or replace` would not see it - which would let
+    // the one shape that CAN leave an overload pass unexamined.
+    const pattern = /create (?:or replace )?function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(text.matchAll(pattern))) {
       redefinitions++;
       const name = m[1];
@@ -254,10 +296,36 @@ test("every later migration redefining a deal_room function keeps the declared s
         }
         continue;
       }
-      if (original.get(name) !== types) {
+      if (original.get(name) === types) continue;
+
+      /*
+       * The signature changed. Either it is the documented exception and the
+       * file did the three things that make it safe, or it is the overload bug.
+       */
+      const planned = DELIBERATE_RESIGNATURES[name];
+      if (!planned || planned.file !== file || planned.from !== original.get(name) || planned.to !== types) {
         problems.push(
           `${file} redefines ${name}(${types}) but 20260729b declares ${name}(${original.get(name)}). ` +
             `This creates an overload rather than replacing it, and every existing grant keeps pointing at the old one`,
+        );
+        continue;
+      }
+      if (!text.includes(`drop function if exists public.${name}(${planned.from})`)) {
+        problems.push(
+          `${file} re-signs ${name} but never drops ${name}(${planned.from}). Both would remain callable, ` +
+            `and the old one would keep its grant - which is the overload this exception exists to avoid`,
+        );
+      }
+      if (!text.includes(`grant execute on function public.${name}(${planned.to}) to authenticated`)) {
+        problems.push(
+          `${file} re-signs ${name} but never re-grants ${name}(${planned.to}) to authenticated. ` +
+            `drop function discards the ACL with the function, so the command would be unreachable`,
+        );
+      }
+      if (!text.includes(`revoke execute on function public.${name}(${planned.to}) from public, anon`)) {
+        problems.push(
+          `${file} re-signs ${name} but never re-revokes ${name}(${planned.to}) from public and anon, ` +
+            `which 20260730b established for every Deal Room command`,
         );
       }
     }
@@ -274,13 +342,48 @@ test("every classified new function is actually declared by a later migration", 
   for (const file of LATER_MIGRATIONS) {
     const text = readFileSync(`supabase/migrations/${file}`, "utf8");
     for (const m of Array.from(
-      text.matchAll(/create or replace function public\.(deal_room_\w+)\(/g),
+      text.matchAll(/create (?:or replace )?function public\.(deal_room_\w+)\(/g),
     )) {
       declared.add(m[1]);
     }
   }
   const stale = Object.keys(NEW_SINCE_20260729B).filter((name) => !declared.has(name));
   assert.deepEqual(stale, [], "classified but no longer declared by any later migration");
+});
+
+test("no deliberate re-signature leaves the old signature callable anywhere", () => {
+  /*
+   * The exception, checked against the WHOLE tree rather than one file.
+   *
+   * The per-file check above proves the dropping file did its job. This one
+   * proves nothing later resurrects the old signature: a migration that
+   * re-applied 20260729b's block wholesale would recreate the six-parameter
+   * form beside the eight-parameter one and hand it back its grant, which is
+   * the overload arriving by a different route.
+   */
+  for (const [name, planned] of Object.entries(DELIBERATE_RESIGNATURES)) {
+    assert.ok(planned.why.length > 40, `${name} needs a real classification, not a placeholder`);
+    assert.match(planned.why, /^\d{8}[a-z]/, `${name} must name the migration that re-signs it`);
+    assert.notEqual(planned.from, planned.to, `${name} is listed as re-signed but the signature is unchanged`);
+
+    const index = LATER_MIGRATIONS.indexOf(planned.file);
+    assert.ok(index >= 0, `${name} names ${planned.file}, which is not a later migration`);
+
+    for (const file of LATER_MIGRATIONS.slice(index)) {
+      const text = readFileSync(`supabase/migrations/${file}`, "utf8");
+      const recreated = new RegExp(
+        `create (?:or replace )?function public\\.${name}\\(([\\s\\S]*?)\\)\\s*returns`,
+        "g",
+      );
+      for (const m of Array.from(text.matchAll(recreated))) {
+        assert.equal(
+          typeList(m[1]),
+          planned.to,
+          `${file} recreates ${name} at a signature other than the re-signed one, which is an overload`,
+        );
+      }
+    }
+  }
 });
 
 test("a classified new function still has to state what it is", () => {

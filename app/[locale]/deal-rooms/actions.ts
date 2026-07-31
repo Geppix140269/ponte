@@ -235,6 +235,12 @@ export async function declareParticipation(formData: FormData): Promise<void> {
     p_declared_capacity: String(formData.get("declaredCapacity") ?? ""),
     p_role: String(formData.get("role") ?? ""),
     p_authority: String(formData.get("authority") ?? ""),
+    // Section 6 criteria 4 and 6, each on its own field. They are NOT defaulted
+    // from the capacity or the authority above: the controller struck exactly
+    // that on 31 July 2026, and an empty string here is refused by the command
+    // rather than quietly standing in for one of the others.
+    p_legal_name: String(formData.get("legalName") ?? ""),
+    p_relationship: String(formData.get("businessRelationship") ?? ""),
   });
 
   if (error) fail(back, readable(error));
