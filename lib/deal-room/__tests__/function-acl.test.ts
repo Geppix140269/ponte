@@ -81,14 +81,48 @@ const aclSql = readFileSync(ACL, "utf8");
 /** `20260730b` with comments stripped, so a name in prose is never mistaken for a grant. */
 const aclCode = aclSql.replace(/--[^\n]*/g, "");
 
+/** `20260729b` likewise: it carries the original grant block as well as the policies. */
+const rlsCode = rlsSql.replace(/--[^\n]*/g, "");
+
 const aclCSql = readFileSync(ACL_C, "utf8");
 const aclCCode = aclCSql.replace(/--[^\n]*/g, "");
+
+const STORAGE = "supabase/migrations/20260729c_deal_room_storage.sql";
+const storageSql = readFileSync(STORAGE, "utf8");
+
+const ACL_D = "supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql";
+const aclDSql = readFileSync(ACL_D, "utf8");
+const aclDCode = aclDSql.replace(/--[^\n]*/g, "");
 
 /** The three that `20260730b` left with `authenticated`, and `20260730c` removes. */
 const RESIDUAL = [
   "deal_room_events_append_only()",
   "deal_room_is_writable(uuid)",
   "deal_room_uuid_or_null(text)",
+];
+
+/**
+ * Two of that three are required by the `storage.objects` policies in
+ * `20260729c`, and `20260731a` grants them back.
+ *
+ * This is the defect that made `20260731a` necessary, and it is worth naming
+ * precisely because it is subtle. `20260730c` revoked them on the ground that
+ * they appeared in no policy expression - which was true of the database **as
+ * applied**, and false of the repository, where `20260729c` had been sitting
+ * unapplied since 29 July. A function called inside a policy expression is
+ * privilege-checked against the querying role, so applying `20260729c` without
+ * those grants would fail every member evidence upload with 42501.
+ *
+ * The assertions below therefore read BOTH migration files for policies, not
+ * just `20260729b`. A helper allowlist derived only from applied policies is
+ * blind to the ones a pending migration will create.
+ */
+const STORAGE_POLICY_HELPERS = ["deal_room_is_writable(uuid)", "deal_room_uuid_or_null(text)"];
+
+/** Reachable by no member role, permanently. */
+const PERMANENTLY_INTERNAL = [
+  "deal_room_events_append_only()",
+  "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
 ];
 
 /** An ordered list of argument types, as Postgres would identify the function. */
@@ -124,17 +158,29 @@ function declaredFunctions(): Set<string> {
   return found;
 }
 
-/** Helpers that RLS policy expressions call. Privilege-checked against the querying role. */
+/**
+ * Every function a policy expression calls, across EVERY migration that creates
+ * policies - not just the ones already applied.
+ *
+ * Reading only `20260729b` is what produced the `20260731a` defect: the
+ * `storage.objects` policies in `20260729c` were invisible, so two helpers looked
+ * unused and were revoked. A policy expression is privilege-checked against the
+ * querying role, so any function named in one must stay member-executable.
+ */
 function policyHelpers(): Set<string> {
   const declared = declaredFunctions();
   const byName = new Map<string, string>();
   for (const sig of Array.from(declared)) byName.set(sig.slice(0, sig.indexOf("(")), sig);
 
   const helpers = new Set<string>();
-  for (const policy of Array.from(rlsSql.matchAll(/create policy[\s\S]*?;/g))) {
-    for (const call of Array.from(policy[0].matchAll(/\b(deal_room_\w+)\s*\(/g))) {
-      const sig = byName.get(call[1]);
-      if (sig) helpers.add(sig);
+  // Comments stripped first: a function named in prose is not a policy dependency.
+  for (const sql of [rlsSql, storageSql]) {
+    const code = sql.replace(/--[^\n]*/g, "");
+    for (const policy of Array.from(code.matchAll(/create policy[\s\S]*?;/g))) {
+      for (const call of Array.from(policy[0].matchAll(/\b(deal_room_\w+)\s*\(/g))) {
+        const sig = byName.get(call[1]);
+        if (sig) helpers.add(sig);
+      }
     }
   }
   return helpers;
@@ -293,8 +339,10 @@ test("the inventory, the policy helpers and the commands are all found", () => {
       "deal_room_can_read_evidence(uuid)",
       "deal_room_is_master_participant(uuid)",
       "deal_room_is_sub_room_participant(uuid)",
+      "deal_room_is_writable(uuid)",
+      "deal_room_uuid_or_null(text)",
     ],
-    "the set of helpers the RLS policies call has changed; the authenticated allowlist needs the same review the policies did",
+    "the set of functions called by a policy expression has changed. Four come from the Deal Room table policies in 20260729b; two more from the storage.objects policies in 20260729c. Any addition needs the same review the policies did",
   );
 
   assert.equal(memberCommands().size, 15, "expected 15 member commands granted by 20260729b");
@@ -401,14 +449,61 @@ test("a member calling the logger has no path: it is in neither allowlist", () =
 // 4. authenticated keeps exactly the helpers and the commands
 // ---------------------------------------------------------------------------
 
-test("every RLS helper the policies need remains executable by authenticated", () => {
-  const grantedToAuth = new Set(
-    aclStatements("grant").filter((s) => s.roles.includes("authenticated")).map((s) => s.sig),
-  );
+/**
+ * The `authenticated` EXECUTE set the migrations actually produce, in order.
+ *
+ * This models the real mechanism rather than any single file's intent, which is
+ * what both ACL defects turned on. The starting state is NOT empty: Supabase's
+ * `alter default privileges` grants EXECUTE to `anon`, `authenticated` and
+ * `service_role` on every new function in `public`, so every declared function
+ * begins granted. Each migration then revokes and grants in file order.
+ *
+ * A file-by-file assertion cannot express this. `20260730b` is applied and
+ * immutable, and was written before the `storage.objects` policies were known to
+ * need two of the helpers; requiring it alone to grant them would be asking an
+ * already-executed file to have known the future.
+ */
+function effectiveAuthenticatedGrants(): Set<string> {
+  const effective = new Set(Array.from(declaredFunctions())); // Supabase default: all 23
+  for (const code of [rlsCode, aclCode, aclCCode, aclDCode]) {
+    for (const s of aclStatements("revoke", code)) {
+      if (s.roles.includes("authenticated")) effective.delete(s.sig);
+    }
+    for (const s of aclStatements("grant", code)) {
+      if (s.roles.includes("authenticated")) effective.add(s.sig);
+    }
+  }
+  return effective;
+}
+
+test("every function a policy expression calls remains executable by authenticated", () => {
+  const effective = effectiveAuthenticatedGrants();
   const missing = Array.from(policyHelpers())
-    .filter((sig) => !grantedToAuth.has(sig))
-    .map((sig) => `${sig} is called by an RLS policy but not granted to authenticated. Every member read through that policy would fail`);
+    .filter((sig) => !effective.has(sig))
+    .map(
+      (sig) =>
+        `${sig} is called by a policy expression but authenticated does not end with EXECUTE on it. ` +
+        `Every read or write through that policy would fail with 42501 - this is exactly the 20260731a defect`,
+    );
   assert.deepEqual(missing, []);
+});
+
+test("the migrations together leave authenticated with exactly the 21", () => {
+  const effective = effectiveAuthenticatedGrants();
+  const expected = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+
+  const surplus = Array.from(effective)
+    .filter((sig) => !expected.has(sig))
+    .map((sig) => `authenticated would end with EXECUTE on ${sig}, which no policy calls and no command needs`);
+  const missing = Array.from(expected)
+    .filter((sig) => !effective.has(sig))
+    .map((sig) => `authenticated would NOT end with EXECUTE on ${sig}, which a policy or the application needs`);
+  assert.deepEqual([...surplus, ...missing], []);
+  assert.equal(effective.size, 21, `expected 21, the migrations produce ${effective.size}`);
+
+  for (const sig of PERMANENTLY_INTERNAL) {
+    assert.ok(!effective.has(sig), `${sig} must never end up executable by authenticated`);
+  }
 });
 
 test("every intended member command is granted to authenticated exactly once", () => {
@@ -439,7 +534,11 @@ test("the migration text GRANTS authenticated nothing beyond the helpers and the
   // proved by `scripts/deal-room-acl-verify.mjs` against `pg_proc.proacl`, and
   // nothing in this suite may be read as a substitute for it.
   const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
-  assert.equal(allowed.size, 19, `the allowlist should be 4 helpers + 15 commands = 19, got ${allowed.size}`);
+  assert.equal(
+    allowed.size,
+    21,
+    `the allowlist should be 4 RLS helpers + 2 Storage policy helpers + 15 commands = 21, got ${allowed.size}`,
+  );
 
   const grantedToAuth = aclStatements("grant").filter((s) => s.roles.includes("authenticated"));
   const surplus = grantedToAuth
@@ -458,13 +557,8 @@ test("the migration text never GRANTS a member role an internal function", () =>
   const internal = Array.from(declaredFunctions()).filter((sig) => !allowed.has(sig));
   assert.deepEqual(
     internal.sort(),
-    [
-      "deal_room_events_append_only()",
-      "deal_room_is_writable(uuid)",
-      "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
-      "deal_room_uuid_or_null(text)",
-    ],
-    "the set of functions no member may execute has changed; each addition or removal needs its own review",
+    PERMANENTLY_INTERNAL.slice().sort(),
+    "the set of functions no member may execute has changed. Only the event logger and the append-only trigger function belong here: is_writable and uuid_or_null are called by the storage.objects policies and must stay member-executable",
   );
 
   const grantedToAuth = new Set(
@@ -530,16 +624,23 @@ test("the corrective migration grants exactly the commands the application calls
   const helpers = policyHelpers();
   const corrective = correctiveAllowlist();
 
-  const expected = new Set(Array.from(commands).concat(Array.from(helpers)));
+  // Scoped to what 20260730b could know when it was written: the commands, and
+  // the four helpers the Deal Room TABLE policies call. The two storage.objects
+  // helpers arrive in 20260731a, and are asserted by the effective-grants test
+  // above rather than demanded of an applied file retrospectively.
+  const tableHelpers = new Set(
+    Array.from(helpers).filter((sig) => !STORAGE_POLICY_HELPERS.includes(sig)),
+  );
+  const expected = new Set(Array.from(commands).concat(Array.from(tableHelpers)));
   const missing = Array.from(expected)
     .filter((sig) => !corrective.has(sig))
-    .map((sig) => `${sig} is needed by the application or by an RLS policy but ${ACL} does not grant it to authenticated`);
+    .map((sig) => `${sig} is needed by the application or by a table policy but ${ACL} does not grant it to authenticated`);
   const surplus = Array.from(corrective)
     .filter((sig) => !expected.has(sig))
     .map((sig) => `${ACL} grants ${sig} to authenticated, but it is neither called by the application nor used by a policy`);
 
   assert.deepEqual([...missing, ...surplus], []);
-  assert.equal(corrective.size, 19, `the corrective allowlist should be 15 commands + 4 helpers = 19, got ${corrective.size}`);
+  assert.equal(corrective.size, 19, `20260730b should grant 15 commands + 4 table helpers = 19, got ${corrective.size}`);
 });
 
 test("the applied grant list and the corrective allowlist do not diverge", () => {
@@ -597,8 +698,16 @@ test("20260730c revokes authenticated on exactly the three residual functions", 
   assert.equal(revokes.length, 3, `20260730c should contain exactly 3 revoke statements, found ${revokes.length}`);
 });
 
-test("20260730c re-asserts authenticated on exactly the 19, and revokes none of them", () => {
-  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+test("20260730c re-asserts authenticated on exactly the 19 it could know about", () => {
+  // Scoped to the allowlist as it stood when 20260730c was written and applied:
+  // the commands, plus the four helpers the Deal Room TABLE policies call. The
+  // two storage.objects helpers were revoked here and restored by 20260731a; an
+  // applied file cannot be asked retrospectively to have known that.
+  const allowed = new Set(
+    Array.from(policyHelpers())
+      .filter((sig) => !STORAGE_POLICY_HELPERS.includes(sig))
+      .concat(Array.from(memberCommands())),
+  );
   const granted = aclStatements("grant", aclCCode).filter((s) => s.roles.includes("authenticated"));
   const sigs = new Set(granted.map((s) => s.sig));
 
@@ -650,29 +759,32 @@ test("20260730c is grants and revokes only, touches no default privileges and na
   assert.ok(names.length > 0, "no function names parsed from 20260730c; the parser has drifted");
 });
 
-test("the two ACL migrations together account for every declared function exactly once", () => {
-  // A closed world across both files: each of the 23 is either allowlisted to
-  // authenticated, or revoked from authenticated by one of the two files.
+test("the ACL migrations together account for every declared function, by outcome not by statement", () => {
+  // A closed world across ALL the ACL migrations, judged on the END STATE rather
+  // than on which file said what. Revoking in one file and granting in a later
+  // one is legitimate history - it is exactly what 20260730c and 20260731a do -
+  // so the old "never both" rule was wrong once a correction existed. What must
+  // hold is that every declared function ends up deliberately on one side.
   const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
-  const revokedFromAuth = new Set(
-    aclStatements("revoke", aclCode)
-      .concat(aclStatements("revoke", aclCCode))
-      .filter((s) => s.roles.includes("authenticated"))
-      .map((s) => s.sig),
-  );
+  const effective = effectiveAuthenticatedGrants();
 
   const unaccounted = Array.from(declaredFunctions())
-    .filter((sig) => !allowed.has(sig) && !revokedFromAuth.has(sig))
-    .map((sig) => `${sig} is neither allowlisted to authenticated nor revoked from it by either ACL migration`);
+    .filter((sig) => !allowed.has(sig) && effective.has(sig))
+    .map((sig) => `${sig} ends up executable by authenticated but is on no allowlist`);
   assert.deepEqual(unaccounted, []);
 
-  const contradictory = Array.from(allowed)
-    .filter((sig) => revokedFromAuth.has(sig))
-    .map((sig) => `${sig} is both allowlisted and revoked from authenticated across the two files`);
-  assert.deepEqual(contradictory, []);
+  const lost = Array.from(allowed)
+    .filter((sig) => !effective.has(sig))
+    .map((sig) => `${sig} is allowlisted but the migrations leave authenticated without it`);
+  assert.deepEqual(lost, []);
 
-  assert.equal(revokedFromAuth.size, 4, "exactly four functions should be revoked from authenticated: the logger and the three internal helpers");
-  assert.equal(allowed.size + revokedFromAuth.size, declaredFunctions().size);
+  const denied = Array.from(declaredFunctions()).filter((sig) => !effective.has(sig));
+  assert.deepEqual(
+    denied.slice().sort(),
+    PERMANENTLY_INTERNAL.slice().sort(),
+    "exactly two functions should end up denied to authenticated: the event logger and the append-only trigger function",
+  );
+  assert.equal(allowed.size + denied.length, declaredFunctions().size);
 });
 
 test("the catalogue verification procedure exists and checks what this suite cannot", () => {
@@ -691,8 +803,13 @@ test("the catalogue verification procedure exists and checks what this suite can
   ]) {
     assert.ok(source.includes(needle), `${script} no longer references ${needle}; it cannot prove the ACL state`);
   }
+  // Strip BOTH comment forms before looking for write verbs. Stripping only `//`
+  // made the guard fire on a `/** ... */` block that merely described a revoke -
+  // a false positive that would push the next person to reword documentation
+  // instead of trusting the check.
+  const executable = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
   assert.ok(
-    /select|SELECT/.test(source) && !/\b(insert|update|delete|drop|alter|grant|revoke)\s/i.test(source.replace(/\/\/[^\n]*/g, "")),
+    /select|SELECT/.test(executable) && !/\b(insert|update|delete|drop|alter|grant|revoke)\s/i.test(executable),
     `${script} must be read-only`,
   );
 });
