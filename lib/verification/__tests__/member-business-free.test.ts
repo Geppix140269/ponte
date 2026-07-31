@@ -7,10 +7,25 @@
 // ledger row, refund one, or answer 402. A counterparty_check keeps its paid
 // rule, and that separation must survive every later edit.
 //
-// Source-level, deliberately. The pipeline reaches Supabase and several
-// upstreams, so running it here would prove nothing about money without a live
-// database. What can be proved exactly, and is what actually matters, is that
-// every credit call site on the shared path is guarded by the purpose.
+// SOURCE-LEVEL, AND ONLY HALF THE PROOF.
+//
+// This file reads the pipeline, the route, the page and the form and pins the
+// readable SHAPE of the guards: `paidPurpose`, the `purpose !== "member_business"`
+// block around the balance read and the 402, the isPaid branch in the UI. That
+// shape is what a reviewer checks by eye, and keeping it stable is worth a test
+// of its own.
+//
+// It does NOT prove behaviour. Every assertion below is a string or regex over
+// source text, so it would still pass if a spend moved above its guard, reached
+// the ledger through a helper module, or kept its spelling while changing its
+// runtime meaning.
+//
+// PAIRED WITH lib/verification/__tests__/member-business-free-runtime.test.ts,
+// added in cutover PR 6. That file EXECUTES the pipeline and the route against
+// a recording double for @/lib/credits and asserts that a member_business run
+// reaches no credit function at all. Read the two together: shape here,
+// behaviour there. The runtime file also records one path where the boundary
+// does not hold, which this file cannot see.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

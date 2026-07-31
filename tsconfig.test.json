@@ -3,6 +3,10 @@
   "compilerOptions": {
     "paths": {
       "@/lib/supabase/server": ["./lib/__mocks__/supabase-server.ts"],
+      "@/lib/supabase/admin": ["./lib/__mocks__/supabase-admin.ts"],
+      "@/lib/credits": ["./lib/__mocks__/credits.ts"],
+      "@/lib/ai": ["./lib/__mocks__/ai.ts"],
+      "@/lib/registry": ["./lib/__mocks__/registry.ts"],
       "@/lib/auth": ["./lib/__mocks__/auth.ts"],
       "@/lib/email": ["./lib/__mocks__/email.ts"],
       "@/lib/rate-limit": ["./lib/__mocks__/rate-limit.ts"],
