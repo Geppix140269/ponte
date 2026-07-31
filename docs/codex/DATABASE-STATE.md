@@ -101,6 +101,46 @@ deliberately not dropped, because other objects may come to depend on it.
 
 Follow-up: PL-016 in `docs/launch/POST-LAUNCH-BACKLOG.md`.
 
+## Written but NOT applied: the approver row a counterparty can read
+
+`supabase/migrations/20260731d_deal_room_approver_row_visibility.sql`.
+
+| | |
+|---|---|
+| SHA-256 | `7e42fd9dd1ff8c017e9bb864ae5787cd5c873555453180734f06dc44e08e1263` |
+| Size | 6,658 bytes, no BOM |
+| Content | **one `create or replace function`. Nothing else.** |
+| Status | written and tested, **NOT applied** |
+
+Found by the surface review of 31 July 2026, run against the loop that now
+completes. `20260731c` made approvals one per person and chose the **master-level**
+participant row. `participant read`, from `20260729b`, allows another person's row
+only through `sub_room_id is not null and deal_room_is_sub_room_participant(...)`,
+or to a room administrator - so a master-level row is invisible to an admitted
+counterparty.
+
+The counterparty could read the approval row (`approval read` needs only
+`deal_room_is_master_participant`, which any admitted participant satisfies) but not
+the participant row it points at, so
+`app/[locale]/deal-rooms/[roomId]/procedure/page.tsx` rendered the fallback
+**"A required approver"** instead of the initiator's name - on the page whose stated
+purpose is to show who is outstanding.
+
+Nothing was insecure and no approval was lost. The gate worked; it could not be read
+by the person waiting on it.
+
+**The correction** changes only the seed's `order by`, to prefer a row the other
+approvers can see: the participant's row in this procedure's own sub-room, then any
+other sub-room row, then the master-level row, then earliest admitted, then lowest
+id. Deterministic and independent of physical row order.
+
+`deal_room_approve_procedure` is unaffected - it already approves by joining on
+`profile_id = auth.uid()` rather than on any particular row, which is why this is a
+display correction and not a second gate defect.
+
+No table, constraint, policy, trigger, index, grant or row is altered, and nothing is
+backfilled: there are no rooms in production.
+
 ## APPLIED to production, 31 July 2026: the procedure approver gate
 
 `20260731c_deal_room_procedure_approver_gate.sql`, checksum

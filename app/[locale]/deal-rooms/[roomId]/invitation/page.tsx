@@ -11,6 +11,7 @@ import {
 } from "@/components/deal-room/primitives";
 import { listParticipants, loadRoom, listSubRooms } from "@/lib/deal-room/queries";
 import { canInviteParticipant, mutationBlockedReason } from "@/lib/deal-room/permissions";
+import { countPeople } from "@/lib/deal-room/participants";
 import { buildPreview, INVITATION_TTL_DAYS } from "@/lib/deal-room/invitation";
 import {
   VERIFICATION_EVIDENCE_COLUMNS,
@@ -328,8 +329,9 @@ export default async function InvitationPreviewPage({
 
           <Band title="Who is already here">
             <p className="dr__item-meta">
-              {participants.length === 1 ? "1 participant" : `${participants.length} participants`} in the parts of this
-              room you can see.
+              {/* People, not participant rows: the initiator holds two of those. */}
+              {countPeople(participants) === 1 ? "1 participant" : `${countPeople(participants)} participants`} in the
+              parts of this room you can see.
             </p>
           </Band>
         </aside>

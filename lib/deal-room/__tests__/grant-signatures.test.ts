@@ -291,7 +291,9 @@ test("20260731c fixes the procedure approver gate and touches nothing else", () 
     /select distinct on \(p\.profile_id\) v_id, p\.id, 'pending'/,
     "the seed is back to one row per participant row, which issues the initiator two obligations",
   );
-  assert.match(patched, /order by p\.profile_id, \(p\.sub_room_id is null\) desc/, "the seed's choice is not deterministic");
+  // Which row it prefers is 20260731d's business; that it chooses deterministically
+  // is this file's.
+  assert.match(patched, /order by p\.profile_id,/, "the seed's choice is not deterministic");
 
   // 3. Approval is by person, not by whichever participant row `limit 1` found.
   assert.equal(
@@ -319,6 +321,44 @@ test("20260731c fixes the procedure approver gate and touches nothing else", () 
     /\binsert\s+into\b/i, /\bupdate\s+public\./i, /\bdelete\s+from\b/i,
   ]) {
     assert.equal(forbidden.test(outside), false, `20260731c contains ${forbidden} outside a function body`);
+  }
+});
+
+test("20260731d seeds an approver row the other approvers can read", () => {
+  const FILE = "supabase/migrations/20260731d_deal_room_approver_row_visibility.sql";
+  const patched = readFileSync(FILE, "utf8");
+
+  // One function, and it is the one that seeds.
+  const replaced = Array.from(patched.matchAll(/create or replace function public\.(deal_room_\w+)\(/g), (m) => m[1]);
+  assert.deepEqual(replaced, ["deal_room_propose_procedure"]);
+
+  // The row must be visible to a counterparty. `participant read` allows another
+  // person's row only when `sub_room_id is not null`, so a master-level row is
+  // readable by a room administrator alone - which left the counterparty looking
+  // at an approver the page could not name.
+  assert.match(
+    patched,
+    /order by p\.profile_id,\s*\n\s*\(p\.sub_room_id = p_sub_room_id\) desc nulls last,\s*\n\s*\(p\.sub_room_id is not null\) desc,/,
+    "the seed no longer prefers a row the other approvers are allowed to read",
+  );
+  assert.equal(
+    /\(p\.sub_room_id is null\) desc/.test(patched),
+    false,
+    "the master-level row is preferred again; that is the defect 20260731d exists to fix",
+  );
+
+  // Still one row per person, and still deterministic.
+  assert.match(patched, /select distinct on \(p\.profile_id\) v_id, p\.id, 'pending'/);
+  assert.match(patched, /p\.admitted_at nulls last, p\.id;/);
+
+  // Nothing outside the function body.
+  const outside = patched.replace(/\$\$[\s\S]*?\$\$/g, " BODY ").replace(/--[^\n]*/g, " ");
+  for (const forbidden of [
+    /create policy/i, /drop policy/i, /alter table/i, /create table/i, /create trigger/i,
+    /create index/i, /alter default privileges/i, /\bgrant\s/i, /\brevoke\s/i,
+    /\binsert\s+into\b/i, /\bupdate\s+public\./i, /\bdelete\s+from\b/i,
+  ]) {
+    assert.equal(forbidden.test(outside), false, `20260731d contains ${forbidden} outside a function body`);
   }
 });
 

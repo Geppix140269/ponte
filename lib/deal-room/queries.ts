@@ -23,6 +23,7 @@ import type {
   SubRoomState,
 } from "./states";
 import { roomIsReadOnly } from "./states";
+import { onePerPerson } from "./participants";
 
 /**
  * Every Deal Room read, in one place.
@@ -559,8 +560,12 @@ export async function loadOverview(access: RoomAccess): Promise<RoomOverview> {
     (step) => step.state === "ready" || step.state === "in_progress" || step.state === "clarification_required",
   );
 
-  const bridgeParticipants: BridgeParticipant[] = participants
-    .filter((participant) => participant.state !== "removed" && participant.state !== "withdrawn")
+  // One entry per PERSON. The initiator holds a master-level row and a workspace
+  // row from the moment the room exists, and drawing both put them on the Bridge
+  // twice, with the label reading "2 participants" for a room holding one.
+  const bridgeParticipants: BridgeParticipant[] = onePerPerson(
+    participants.filter((participant) => participant.state !== "removed" && participant.state !== "withdrawn"),
+  )
     .map((participant) => ({
       role: participant.transactionRole,
       principal: participant.participantClass === "principal",
@@ -594,7 +599,14 @@ export async function loadOverview(access: RoomAccess): Promise<RoomOverview> {
         participant.profileId !== access.room.initiatorProfileId &&
         (participant.state === "admitted" || participant.state === "active"),
     ),
-    invitationSent: participants.length > 1,
+    // Not `participants.length > 1`: the initiator's own two rows made that true
+    // on a room nobody had been invited to, and it stayed true whether or not an
+    // invitation was ever sent, so it carried no information at all.
+    //
+    // `deal_room_invite` creates no participant row - it writes the invitation
+    // and moves the sub-room from `draft` to `invitation_pending`. That state
+    // change IS the fact, and it is already loaded.
+    invitationSent: subRooms.some((subRoom) => subRoom.state !== "draft"),
     anyEvidenceSubmitted: activity.some((event) => event.eventType === "evidence_submitted"),
     completion: progress.value,
     momentum,
