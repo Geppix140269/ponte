@@ -72,9 +72,10 @@ Use this structure:
    Netlify PR checks, which are now noise at best and misleading at worst.~~
    **Decided by the owner the same day:** Netlify Build status is to be set to
    *Stopped builds*, generating no production, preview or branch build.
-   Releases deploy deliberately through Vercel. The dashboard setting itself is
-   owner-applied and **was not confirmed from this session** — the Netlify CLI
-   session is expired and `netlify login` is interactive.
+   Releases deploy deliberately through Vercel. The setting is owner-applied
+   and owner-confirmed, and it is **also confirmed by observation** — see below.
+   It was not read from the dashboard: the Netlify CLI on the working machine
+   is installed but its session is expired, and `netlify login` is interactive.
 3. Establish and record which commit production is serving. It has been
    unrecorded since before the cutover.
 4. Verify the nightly sanctions refresh still reaches the origin.
@@ -101,6 +102,31 @@ Use this structure:
   `docs/plans/active/ISSUE-42-PHASE-A-MARKET-RECONCILIATION.md`,
   `docs/plans/active/deal-room-launch-slice.md`.
 - **No production probe, no dashboard, no DNS lookup.**
+
+### Netlify builds are stopped, shown rather than asserted
+
+The owner set Netlify Build status to *Stopped builds* and confirmed it. That
+confirmation is a dashboard setting nobody here can read, so it was checked the
+only way available from outside: push a branch and see what reports.
+
+| Check on the PR head | PR #192, 09:44 UTC | PRs #193 and #194, after the change |
+|---|---|---|
+| `netlify/ponte-trade/deploy-preview` (commit status) | present | **absent** |
+| `netlify/Header rules - ponte-trade` | present | **absent** |
+| `netlify/Pages changed - ponte-trade` | present | **absent** |
+| `netlify/Redirect rules - ponte-trade` | present | **absent** |
+| `github-actions/verify` | present | present |
+| `github-actions/landing evidence` | present | present |
+| `supabase/Supabase Preview` | present | present |
+
+The three non-Netlify checks registering on the new heads is what makes the
+absence meaningful: the pipeline reported normally, and Netlify was the only
+thing that did not. Two branches pushed, **no production, preview or branch
+build generated**.
+
+This is evidence about *builds*, not about the dashboard toggle, and it was
+taken minutes after the push. It agrees with the owner's confirmation; it does
+not replace it.
 
 ### What the second pass found, and why it was needed
 
