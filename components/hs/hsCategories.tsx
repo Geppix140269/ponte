@@ -151,9 +151,17 @@ export function chapterInCategory(chapter: string, cat: HsCategory): boolean {
 }
 
 /**
- * The 15-tile category grid (Tier 1). Box-free by construction: the hairline
- * grid comes from a 1px background gap, never a rounded card. Presentational:
- * the caller decides what a tap does (narrow to that category's chapters).
+ * The 15 sectors (Tier 1), as an unboxed row list.
+ *
+ * Issue #130 Stage 2. This was a three-column grid of ringed tiles. Fifteen
+ * options is far past the seven a Bridge deck can carry, so the owner's rule
+ * for a long list applies instead: one column at every width, no per-item ring,
+ * no tile height, a single hairline between rows, and the whole row is the
+ * target. The approved drawing stays exactly where it was, beside the name,
+ * acting as a marker on the row rather than as decoration inside a card.
+ *
+ * Still presentational: the caller decides what a tap does (narrow to that
+ * sector's chapters).
  */
 export function HsCategoryGrid({
   onPick,

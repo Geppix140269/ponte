@@ -562,21 +562,10 @@ test("owner reconfirmation re-stamps only if the full live gate still passes", (
   assert.ok(s.includes("listing.user_id !== user.id"), "reconfirm must be owner-scoped");
 });
 
-test("the interface supports only asset additions, covered by assetsChanged", () => {
-  const s = src("components/ListingForm.tsx");
-  // The only asset operation the composer offers is inserting newly selected
-  // files, and that is exactly what assetsChanged reports on an edit.
-  assert.ok(
-    s.includes("assetsChanged: isEditing && (media.length > 0 || docs.length > 0)"),
-    "assetsChanged must report newly selected media/documents on an edit",
-  );
-  // There is no removal, replacement or other mutation of stored assets to miss.
-  assert.ok(!/listing_media[\s\S]{0,120}\.(delete|remove)\(/.test(s), "no media removal in the composer");
-  assert.ok(
-    !/listing_documents[\s\S]{0,120}\.(delete|remove)\(/.test(s),
-    "no document removal in the composer",
-  );
-});
+// The legacy ListingForm asset-additions test was removed with the component it
+// read (PL-030): `/marketplace/new` is quarantined to a redirect and the form no
+// longer exists. The current composer is StructureComposer, whose behaviour is
+// covered by lib/structure/__tests__.
 
 test("19: the detail page renders only truthful stored labels", () => {
   const s = src("app/[locale]/marketplace/l/[ref]/page.tsx");

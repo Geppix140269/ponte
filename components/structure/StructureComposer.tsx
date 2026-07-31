@@ -660,7 +660,9 @@ function HsDrill({ draft, set, t }: { draft: StructureDraft; set: (p: Partial<St
               setChosen((prev) => ({ category: prev.category, chapter: c }));
               fetch(`/api/hs/search?chapter=${c.chapter}`).then((r) => r.json()).then((d) => { setHeadings(d?.headings ?? []); setLevel("headings"); }).catch(() => {});
             }}>
-              {c.chapter_title}<span className="hstile__n">{c.chapter}</span>
+              {/* Wrapped so the row is two flex items rather than an anonymous
+                  text item and a span: Issue #130 Stage 2 made this a row. */}
+              <span>{c.chapter_title}</span><span className="hstile__n">{c.chapter}</span>
             </button>
           ))}
         </div>

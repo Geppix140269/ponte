@@ -7,11 +7,33 @@ import FindChrome from "@/components/find/FindChrome";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
+import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
+import { connectDecisionAction } from "../marketplace/actions";
 import "@/components/find/find.css";
 
 export const dynamic = "force-dynamic";
 
 type Waiting = { id: string; created_at: string; ref: string; product: string };
+/**
+ * An introduction request another member has sent on a record THIS member owns,
+ * still undecided. It is the owner's move, which is why it leads the page.
+ *
+ * The requester's business identity is deliberately absent from this shape and
+ * from the read that fills it. Pre-acceptance the owner sees the substance of
+ * the request (role, target, geography, reason) and an accurate "confirmed
+ * member" label, never the business name or a contact. Disclosure happens in
+ * connectDecisionAction, and only on acceptance.
+ */
+type Decision = {
+  id: string;
+  created_at: string;
+  ref: string;
+  product: string;
+  role: string | null;
+  target: string | null;
+  geography: string | null;
+  reason: string | null;
+};
 /**
  * `kind` is the record's own family and intent in words, not the legacy
  * three-value `type`. A member with a freight-forwarding record and a durum
@@ -33,11 +55,14 @@ function fmtDate(iso: string, locale: string): string {
 /**
  * The member workspace, ordered by action ownership (H03/H04).
  *
- * "Waiting on others" is the introduction requests this member has sent that
- * the owner has not yet decided: their work, correctly filed as not their move.
- * "My opportunities" is the listings they own. Both are read with explicit
- * owner/requester filters. An item waiting on someone else never appears as the
- * member's task, which is the whole point of the split.
+ * "Waiting on your decision" is the introduction requests other members have
+ * sent on records this member owns. It leads because it is the only thing on the
+ * page that is the member's own move, and the page asks what needs their
+ * attention. "Waiting on others" is the introduction requests this member has
+ * sent that the owner has not yet decided: their work, correctly filed as not
+ * their move. "My opportunities" is the listings they own. All three are read
+ * with explicit owner/requester filters. An item waiting on someone else never
+ * appears as the member's task, which is the whole point of the split.
  */
 export default async function WorkspacePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
@@ -48,9 +73,43 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
 
   let waiting: Waiting[] = [];
   let mine: Mine[] = [];
+  let decisions: Decision[] = [];
 
   if (isSupabaseConfigured()) {
     const sb = createAdminClient();
+
+    // The owner side. Every record this member owns is read, not the first
+    // twenty: a pending request on the twenty-first record is still the
+    // member's move, and a limit here would silently hide it.
+    const { data: owned } = await sb
+      .from("listings")
+      .select("id, ref, product")
+      .eq("user_id", user!.id);
+    const ownedIds = (owned ?? []).map((l) => l.id);
+    if (ownedIds.length > 0) {
+      // The select is the disclosure rule in code: `interested_business` is not
+      // among these columns, so the counterparty's identity is never read on to
+      // this page at all, let alone rendered.
+      const { data: inbound } = await sb
+        .from("listing_connections")
+        .select(
+          "id, listing_id, created_at, interest_role, interest_target, interest_geography, interest_reason",
+        )
+        .eq("status", "pending")
+        .in("listing_id", ownedIds)
+        .order("created_at", { ascending: false });
+      const ownedById = new Map((owned ?? []).map((l) => [l.id, l]));
+      decisions = (inbound ?? []).map((c) => ({
+        id: c.id,
+        created_at: c.created_at,
+        ref: ownedById.get(c.listing_id)?.ref ?? "",
+        product: ownedById.get(c.listing_id)?.product ?? "",
+        role: c.interest_role,
+        target: c.interest_target,
+        geography: c.interest_geography,
+        reason: c.interest_reason,
+      }));
+    }
 
     // H03 , introduction requests this member has sent, still pending.
     const { data: conns } = await sb
@@ -98,6 +157,73 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
       <FindChrome>
         <section className="fphead" style={{ borderBottom: "none" }}>
           <h1 className="fphead__h serif">{t("workspace.title")}</h1>
+        </section>
+
+        {/* Waiting on your decision , the owner side of an introduction */}
+        <section className="wsblock" aria-label={t("workspace.decideTitle")}>
+          <h2 className="wsblock__h serif">
+            {t("workspace.decideTitle")}
+            <span className="wsblock__n">{decisions.length}</span>
+          </h2>
+          {decisions.length > 0 ? (
+            decisions.map((d) => {
+              const roleLabel = d.role
+                ? INTEREST_ROLE_LABELS[d.role as InterestRole] ?? d.role
+                : null;
+              // A request made before the structured fields existed carries none
+              // of them. It still reads, and it is still decidable.
+              const facts = [
+                { key: "target", label: t("workspace.decideTarget"), value: d.target },
+                { key: "geography", label: t("workspace.decideGeography"), value: d.geography },
+                { key: "reason", label: t("workspace.decideReason"), value: d.reason },
+              ].filter((f) => Boolean(f.value));
+              return (
+                <div className="wsrow" key={d.id}>
+                  <div className="wsrow__top">
+                    <span className="wsrow__title serif">{d.product || d.ref}</span>
+                    <span className="wsrow__status">{t("workspace.decideStatus")}</span>
+                  </div>
+                  <p className="wsrow__meta">
+                    {d.ref} · {t("workspace.decideMeta", { date: fmtDate(d.created_at, locale) })}
+                  </p>
+                  {/* "Confirmed member" is the whole claim: they signed in with a
+                      confirmed email. It is NOT a claim that their business is
+                      verified, and the business name is withheld until the owner
+                      accepts. */}
+                  <p className="wsrow__meta">
+                    {roleLabel
+                      ? t("workspace.decideRequestRole", { role: roleLabel })
+                      : t("workspace.decideRequest")}
+                  </p>
+                  {facts.length > 0 ? (
+                    <dl className="qfacts">
+                      {facts.map((f) => (
+                        <div className="qfact" key={f.key}>
+                          <dt className="qfact__k">{f.label}</dt>
+                          <dd className="qfact__v">{f.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                  <p className="flane__note" style={{ marginTop: 12 }}>
+                    {t("workspace.decideDisclosure")}
+                  </p>
+                  <form action={connectDecisionAction} style={{ display: "flex", gap: 10 }}>
+                    <input type="hidden" name="id" value={d.id} />
+                    <input type="hidden" name="returnTo" value="/workspace" />
+                    <button className="fbtn" name="decision" value="accepted">
+                      {t("workspace.decideAccept")}
+                    </button>
+                    <button className="fbtn fbtn--secondary" name="decision" value="declined">
+                      {t("workspace.decideDecline")}
+                    </button>
+                  </form>
+                </div>
+              );
+            })
+          ) : (
+            <p className="flane__note">{t("workspace.decideEmpty")}</p>
+          )}
         </section>
 
         {/* H03 , Waiting on others */}

@@ -21,9 +21,16 @@ import type { CategoryIconMap } from "./CategoryIcons";
  *             is what a screen-reader user expects of a set of independent
  *             yes/no choices, and arrow-key traversal would be wrong here.
  *
- * Selection never depends on colour alone. A chosen option carries a gold
- * status rule, ink-to-gold title, and the word "Selected" in the corner. Turn
- * the screen greyscale and all three survive.
+ * Selection never depends on colour alone. A chosen row carries a gold state
+ * rule down its left edge, an ink-to-gold title that also takes weight, and the
+ * word "Selected" at the end. Turn the screen greyscale and the rule, the
+ * weight and the word all survive.
+ *
+ * Issue #130 Stage 2 changed the presentation and nothing else: the options are
+ * a single-column list of full-width rows rather than a two- or three-column
+ * grid of ringed tiles. Every role, state, attribute and key behaviour below is
+ * unchanged, which is why `lib/structure/__tests__/classify.test.tsx` needed no
+ * edit at all.
  */
 
 export interface PickerOption {

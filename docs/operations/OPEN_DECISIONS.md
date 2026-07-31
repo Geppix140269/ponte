@@ -305,3 +305,74 @@ separates marketing onto its own subdomain, is unresolved.
 ### Blocks
 
 `LB-012`. Also blocks any honest reading of its closing test sends.
+
+---
+
+## OD-011 — Does the Deal Room-Only Pricing Authority retire the paid counterparty check?
+
+**Status:** OPEN
+**Owner:** Giuseppe Funaro
+**Urgency:** Medium — it does not block launch, and it does block Stage 8 of the pricing programme
+**Raised:** 31 July 2026, by the ADR-0020 authority reconciliation
+
+### Decision required
+
+`PT-COMMERCIAL-2026-07-31-01` §15 states that Ponte must not publicly charge for
+or reintroduce **"paid verification or verification badges"**, without
+qualification, and §1 states that the Deal Room is Ponte's **only** paid product.
+
+Ponte currently charges **2 credits** for a `counterparty_check`.
+
+Does the prohibition retire it?
+
+### The two readings, both defensible
+
+**It is retired.** The words are flat and the authority is emphatic that the Deal
+Room is the *only* paid product. A counterparty check is verification, it is
+paid, and there is no carve-out for it anywhere in the authority.
+
+**It is outside the prohibition.** ADR-0018 spent its length establishing that
+these are two different commercial acts sharing one technical pipeline:
+`member_business` verifies the legal entity the member represents and unlocks
+their own participation, while `counterparty_check` is a private check on
+somebody else's company that changes nothing about the member's account.
+ADR-0018 made the first free precisely so the second could stay paid, and gave a
+strategic reason — a toll in front of publication suppresses the supply the
+marketplace depends on, which is not true of a check the member chooses to buy.
+On that reading §15 is aimed at re-tolling the member's own onboarding, which
+ADR-0018 already prohibited.
+
+### Why an agent must not decide it
+
+Narrowing an owner's prohibition by inference is exactly the move the
+Source-of-Truth SOP exists to prevent. The authority does not name
+`counterparty_check`, and the fact that a distinction is defensible is not
+evidence the owner intended it.
+
+### Current state, for the record
+
+- `app/api/verification/route.ts:98-104` reads the balance and answers **402**
+  with `cost: COST_VERIFICATION_L2` when short.
+- `lib/verification/pipeline.ts:194` spends 2 credits; `:485` refunds on a
+  Ponte-side failure.
+- `/check` and `components/check/CheckComposer.tsx` state the cost before the run.
+- `member_business` is free and guarded by
+  `lib/verification/__tests__/member-business-free.test.ts` (ADR-0018).
+- `/pricing` publishes "Credits — 2 credits — Per counterparty check", which is
+  part of proposed **LB-014** either way.
+
+### Recommended decision
+
+Confirm one reading explicitly and record it. If the check is retired, it goes
+into Stage 8 of `docs/plans/active/deal-room-transaction-pricing.md` with the
+rest of the credits retirement. If it survives, amend the authority — or record
+an ADR under it — so §15 names the exception, because the next contributor will
+read §15 and reach the same question.
+
+Whichever way it goes, the credits *subsystem* is retired regardless: a surviving
+counterparty check would need a direct USD price, not a credit balance.
+
+### Blocks
+
+Stage 8 of the Deal Room transaction pricing programme (retirement of credits and
+paid verification). Does **not** block LB-014, LB-001 or LB-009.

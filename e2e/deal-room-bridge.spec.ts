@@ -10,9 +10,21 @@ import { mkdirSync } from "node:fs";
  *
  * ## Why it runs against the state gallery rather than a real room
  *
- * At Gate B the `deal_room_*` tables exist in no database: applying the
- * migration is a separate Gate C owner decision, and there is no non-production
- * project to apply it to (PL-002). So there is no real room to photograph.
+ * At Gate B the `deal_room_*` tables existed in no database: applying the
+ * migration was a separate Gate C owner decision, and there is no
+ * non-production project to apply it to (PL-002). So there was no real room to
+ * photograph.
+ *
+ * That changed on 31 July 2026 - the schema is applied and the loop completes -
+ * and `e2e/deal-room-surfaces.spec.ts` now photographs the twelve member
+ * surfaces against a real room built by `scripts/deal-room-live-room.mjs`.
+ *
+ * This spec stays, and is not superseded. A single room is in one state at a
+ * time, and several of the states below cannot be reached on demand at all: a
+ * blocked room needs a real disagreement, a read-only room needs a term to
+ * expire, `Ready to proceed` needs an entire transaction to finish. The gallery
+ * renders each from the real domain. The two are complements - this one covers
+ * the states, the other covers the surfaces.
  *
  * `/en/dev/deal-room` renders each state from the real domain - `bridgeModel()`
  * over a step table from `templateFor()`, percentages from

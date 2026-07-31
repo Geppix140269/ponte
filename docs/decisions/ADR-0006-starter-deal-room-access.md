@@ -1,6 +1,31 @@
 # ADR-0006 — Starter Deal Room Access
 
-- **Status:** Accepted in principle by the product owner; numerical limits proposed until separately approved
+> ## ⚠ Superseded by ADR-0020 — 31 July 2026. There is no Starter Deal Room.
+>
+> ADR-0020 and `PT-COMMERCIAL-2026-07-31-01` retire the Starter entitlement
+> entirely. **Ponte issues no public free Starter Deal Room.** The organisation
+> entitlement, the 30-day free term, the 3 sub-rooms, the 2 external guest
+> organisations, the 2 internal users, the conversion points and the upgrade
+> ladder are all superseded. `deal_room_entitlements.kind = 'starter'` is a
+> legacy schema value retained for migration and audit, not a product.
+>
+> **The problem this ADR was solving is solved differently, and more
+> generously.** Instead of one free room per verified organisation, the entire
+> pre-activation journey is free for everyone, without limit: browsing,
+> publishing, preparing a draft Master Deal Room, creating draft branches,
+> inviting counterparties, accepting invitations and preparing for activation
+> (authority §8). Payment begins only when a credible counterparty branch is
+> ready to enter protected, write-enabled progression — **$79 USD for 30 active
+> days**.
+>
+> **What survives:** the guardrails. Do not describe payment as verification or
+> reduced risk; do not hide limits or expiry; do not delete evidence or history
+> when a term ends; do not require an invited guest to pay to participate. All
+> are restated in the new authority.
+>
+> See `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** **Superseded on 31 July 2026** by ADR-0020 / `PT-COMMERCIAL-2026-07-31-01`. Originally accepted in principle by the product owner; numerical limits proposed until separately approved
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Supersedes within scope:** Any interpretation that every active Deal Room requires payment before a verified organisation can experience the core product

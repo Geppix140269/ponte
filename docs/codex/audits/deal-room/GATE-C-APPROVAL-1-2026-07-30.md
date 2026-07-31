@@ -1005,3 +1005,713 @@ Still open, and not part of LB-008: requirements 12 and 13 (entitlement fail-clo
 cross-room isolation), which need Approval 3; Approval 2 (bucket and policies); and
 Approval 4 (flag and deploy).
 
+---
+
+# Gate C Approval 2, 31 July 2026: evidence Storage applied and verified
+
+**Authorised:** owner, 31 July 2026 — merge PR #142, then proceed with Approval 2.
+**Repository state:** merged `main` at `647436b539dc307bb16c6c53e8c2dcfa63face08`,
+clean worktree, CI `verify` SUCCESS.
+**Outcome:** **both migrations applied. Every check passed. No discrepancy.**
+
+## 28. What Approval 2 nearly broke, and how it was caught
+
+Reading `20260729c` before applying it found that its `deal room evidence upload`
+policy calls `deal_room_uuid_or_null(text)` and `deal_room_is_writable(uuid)` —
+both of which `20260730c` had revoked from `authenticated` on the ground that they
+appeared in no policy expression.
+
+That ground was true of the database **as applied** and false of the repository,
+where `20260729c` had been sitting since 29 July. The allowlist had been derived
+from `pg_policies where tablename like 'deal_room%'`, which cannot see
+`storage.objects` policies and cannot see policies that do not yet exist.
+
+Applying `20260729c` alone would have created an upload policy that failed **every
+member evidence upload** with `42501`. `20260731a` was prepared, reviewed and
+merged first, and applied first.
+
+## 29. Application
+
+| | Time (UTC) | Ledger | Checksum |
+|---|---|---|---|
+| `20260731a_deal_room_storage_policy_helpers.sql` | **04:26:11.008** | 47 → 48 | `bbd498511e04fb7a277df7dd52e0921ca295fa50697628a06e3e504767caadf9` |
+| `20260729c_deal_room_storage.sql` | **04:26:35.893** | 48 → 49 | `94629e5dec518439687f0ecf0583aaed15caed0f0839e87bf42c941c7fe29972` |
+
+Both one transaction, exit 0, no timeout, no HTML, no 502. Checksums verified
+against the **merged** files before execution, not branch copies. `20260729b`,
+`20260730b` and `20260730c` remained byte-identical to their applied checksums
+throughout.
+
+## 30. Pre and post state, captured in full
+
+| | Before | After | Delta |
+|---|---|---|---|
+| Buckets | 6 | 7 | **only `deal-room-evidence`** |
+| Storage policies | 12 | 14 | **only the two Deal Room policies** |
+| `authenticated` EXECUTE | 19 | 21 | the two Storage helpers |
+| `anon` / `PUBLIC` EXECUTE | 0 / 0 | **0 / 0** | none |
+| `service_role` EXECUTE | 23 | **23** | none |
+
+`deal-room-evidence`: `public = false`, 25 MiB limit, restricted to
+`application/pdf`, `image/png`, `image/jpeg`, `image/webp`, **0 objects**.
+
+The two policies are `deal room evidence read` (SELECT) and `deal room evidence
+upload` (INSERT), both scoped `to authenticated`. **No UPDATE and no DELETE
+policy**, deliberately: an evidence version is immutable, and removal is a
+retention action for the service role.
+
+**Nothing unrelated changed.** Every bucket and every storage policy was listed
+before and after; the other six buckets and twelve policies are identical,
+fingerprints `84b3fdf5b6f33e833e9ba91cb9f0708d` and
+`b75af4ee476edb76c957e701a95aa8ee`. `ponte-deal-docs` is untouched and still holds
+0 objects.
+
+## 31. The witness, and the probe that mattered
+
+`npm run deal-room:acl-verify` **detected that the policies are now live**,
+switched itself from the required-19 regime to required-21, and exited 0:
+
+```
+  authenticated  : 21 of 23  (required 21, permitted 21)
+  note: storage.objects Deal Room policies are LIVE, so the 2 Storage helpers are
+        required (expected 21)
+```
+
+That switch is the permitted-versus-required design working: the same script was
+green before Approval 2 with 19 and is green after with 21, without either state
+being a false alarm.
+
+**The upload policy was proved to evaluate, not merely to exist.** Two outcomes
+look similar and mean opposite things:
+
+| Response | Meaning |
+|---|---|
+| `permission denied for function …` | the grant is missing; the policy never reached its own decision |
+| a row-level-security refusal | **the policy evaluated and correctly denied** |
+
+A real QA member (`deals@ponte.trade`, `profiles.role = customer`) attempting an
+upload into a sub-room they do not participate in received:
+
+```
+403 Unauthorized: new row violates row-level security policy
+```
+
+That is the pass. Anonymous upload is refused identically. Anonymous and member
+listings of the private bucket both return `200 []`. **Nothing was uploaded**, and
+`deal-room-evidence` still holds 0 objects.
+
+## 32. What remains
+
+**Approval 3.** The read policy has so far been exercised only against an empty
+bucket, and requirements 12 and 13 — entitlement fail-closed, cross-room and
+cross-sub-room isolation — are still catalogue-only. All three need a labelled
+non-commercial pilot Deal and `npm run deal-room:negative-access`.
+
+**Approval 4** — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised.
+
+---
+
+# Gate C Approval 3, 31 July 2026: the fixture ran, and the loop cannot start
+
+**Authorised:** owner, 31 July 2026 — merge PR #143, then proceed with Approval 3.
+**Repository state:** merged `main` at `b4d4907a5791c944391d03208a68f09aa60b49bb`.
+**Outcome:** **the fixture stopped at the first positive-path step. Two refusals
+proved, then `deal_room_propose` failed for the Deal owner.** Requirements 12 and
+13 remain unproved. No production change.
+
+## 33. What the fixture proved before it stopped
+
+| Assertion | Result |
+|---|---|
+| a non-owner cannot create a room for another member's Deal | **ok** |
+| no direct INSERT into `deal_rooms` is possible at all | **ok** |
+| **the Deal owner can create the room** | **FAIL** |
+
+```
+new row for relation "deal_room_participants"
+violates check constraint "deal_room_participants_identity_when_admitted"
+```
+
+The run halted there — deliberately, because every remaining assertion needs a
+room. **2 passed, 1 failed.**
+
+## 34. The defect
+
+The constraint, from `20260729a`:
+
+```sql
+CHECK (state <> ALL (ARRAY['admitted','active'])
+       OR org_id IS NOT NULL
+       OR (declared_capacity IS NOT NULL AND length(btrim(declared_capacity)) > 0))
+```
+
+`deal_room_propose` admits the initiator immediately — two rows, master level and
+first workspace — with `state = 'admitted'`, `org_id = v_org`, and **no
+`declared_capacity` in the insert at all**.
+
+`v_org` is `select organization_id into v_org from public.profiles where id =
+auth.uid()`. In production **all 10 profiles have no organisation and
+`organizations` holds zero rows**, so `v_org` is always NULL. All three disjuncts
+are false and the row is rejected.
+
+**This is not an edge case. It is every member, on step one.**
+
+The function itself anticipates the org-less member elsewhere — its entitlement
+check reads `(v_org is null and r.initiator_profile_id = auth.uid())` — so the
+design does contemplate members without an organisation. The participant insert
+simply does not carry that through.
+
+## 35. Why the counterparty path is sound, and what that isolates
+
+| Path | State on insert | Constraint applies? | Capacity |
+|---|---|---|---|
+| Initiator, via `deal_room_propose` | `admitted` | **yes** | **never set** |
+| Counterparty, via `deal_room_accept_invitation` | `prerequisites_pending` | no | set later |
+| Counterparty, via `deal_room_declare_participation` | — | — | **sets `declared_capacity`** |
+| Counterparty, via `deal_room_admit_participant` | `admitted` | yes | **refuses while org and capacity are both empty** |
+
+The counterparty is *made* to declare a capacity before admission, and admission is
+explicitly gated on it. The initiator is admitted with neither. **The constraint is
+right; `deal_room_propose` does not satisfy it.**
+
+## 36. The correction is a product decision, and was not made
+
+Three options, and they assert different things:
+
+1. **Set the initiator's `declared_capacity` inside `deal_room_propose`.** The row
+   already carries `transaction_role = 'Deal owner'` and `participation_authority =
+   'Owner of the published Deal'`; either could seed it. Smallest change, and it
+   makes the initiator's claim explicit rather than implied by Deal ownership.
+2. **Require an organisation before proposing.** Truest to the constraint's intent —
+   an admitted party has a stated identity — but it adds a gate to the journey and
+   no member has one today.
+3. **Narrow the constraint** so it does not bind the initiator. Cheapest and the
+   weakest: it drops the guarantee for exactly the party with the most authority.
+
+Each says something different about what Ponte asserts a room initiator has
+declared, which is why it is the owner's call and not an agent's.
+
+## 37. No production change
+
+The fixture creates its own three accounts on `@example.invalid` and one listing
+whose details read "Negative-access fixture. Fictional." It tears down rooms,
+listings and users in a `finally`, and it did:
+
+| | Before | After |
+|---|---|---|
+| `auth.users` | 10 | **10**, identical id fingerprint |
+| `listings` | 7 | **7**, identical id fingerprint |
+| rooms / participants / activity / entitlements | 0 | **0 / 0 / 0 / 0** |
+| `deal-room-evidence` objects | 0 | **0** |
+| ledger | 49 | **49** |
+
+No real member account and no real commercial data was used. The service role was
+used only for setup and teardown, never to check a permission.
+
+## 38. What Approval 3 has and has not established
+
+**Established:** a non-owner cannot open a room against another member's Deal, and
+no member can INSERT into `deal_rooms` directly.
+
+**Not established, and not to be claimed:** requirements 12 and 13 — entitlement
+fail-closed, cross-room and cross-sub-room isolation — and the Storage read policy
+against real evidence rows. Also untested against a real room: invitation,
+admission, proposal, counterproposal, acceptance, blockers, evidence, and the
+status and next-action behaviour. All of it waits on a room existing.
+
+Approval 4 — `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall — remains
+unauthorised, and would be premature: the loop does not start.
+
+---
+
+# Gate C Approval 3 re-run, 31 July 2026: the loop runs
+
+**Authorised:** owner, 31 July 2026 - merge PR #146, then apply it and re-run
+Approval 3.
+**Repository state:** merged `main` `ee76e78`; `20260731b` applied once at
+05:01:48.553 UTC, checksum `0de3c6e0...c926ef13`, ledger 49 -> 50.
+**Outcome:** **92 passed, 2 failed**, against 2 passed and 1 failed on 31 July
+before the fix.
+
+## 39. The initiator defect is closed
+
+`deal_room_propose` now supplies `declared_capacity = 'Deal owner'` on both initiator
+inserts, so the identity CHECK is satisfied and the room is created. The replacement
+was made in place: the function kept oid 92112 and there is still exactly **one**
+`deal_room_propose`, so no overload was created and no grant was invalidated. ACL
+after the change is unchanged - anon 0, PUBLIC 0, authenticated 21, service_role 23.
+
+## 40. What is now proved against real production rows
+
+| | |
+|---|---|
+| Room creation, and its refusal for a non-owner | ok |
+| No direct INSERT into `deal_rooms` by anyone | ok |
+| Invitation addressed to the recorded external principal | ok |
+| A mismatched confirmed email cannot accept, however legitimate elsewhere | ok |
+| Acceptance is recorded as `invitation_accepted`, **not** as admission | ok |
+| The four-agreement gate: participation, NDA, room rules, authority declaration | ok |
+| `participant_admitted` appears only after the gate is passed | ok |
+| Nobody can accept an agreement on another participant's behalf | ok |
+| The canonical checksum cannot be rewritten and acceptances cannot be forged | ok |
+| **Sub-room isolation: A cannot select, count or name B, and B never appears in A's activity** | ok |
+| Evidence submission, self-acceptance refusal, clarification, versioning, retention | ok |
+| An evidence version cannot be edited or deleted | ok |
+| `own_org` evidence is not readable by the other organisation | ok |
+| Activity is append-only, **including for the service role** | ok |
+| Blockers: cannot resolve without a note, resolved blockers retained | ok |
+| Read-only closes the room to every mutation while preserving history | ok |
+| A stranger cannot download evidence bytes or mint a signed URL; a crafted path is refused | ok |
+
+**Requirement 13 - cross-room and cross-sub-room isolation - is proved.**
+
+## 41. What fails: no procedure can ever be approved
+
+Two independent defects. Either alone is sufficient.
+
+**a. The initiator is issued two approval obligations for themselves.**
+`deal_room_propose_procedure` seeds one pending row per *participant row* holding
+`is_required_approver`, and `deal_room_propose` gives the initiator two such rows in
+the same room - master-level and first workspace. `deal_room_approve_procedure`
+resolves the caller with `limit 1` and updates that one `participant_id`. Observed in
+production: both approval rows on the fixture procedure belonged to the same person,
+`213848cf` approved and `986c582b` still pending. `v_outstanding` can never reach 0.
+
+**b. An admitted counterparty principal is not a required approver.**
+`deal_room_admit_participant` leaves `is_required_approver` false. The counterparty -
+`principal`, `Buyer`, `admitted` - is refused with `Only a required approver can
+approve this procedure`, and was never issued an approval row.
+
+So a procedure version stays `proposed` and governs nothing; its steps never become
+ready; and **requirement 12, entitlement fail-closed, cannot be tested**, because
+entitlements are granted through the gate that cannot be reached.
+
+The correction is a product decision - who Ponte requires to approve a procedure, and
+at which level a participant carries that authority. It was not made here and no
+identifier was minted.
+
+## 42. Production was changed, and could not be fully restored
+
+Unlike the first run, this one built a complete room, and **the fixture could not tear
+it down**. Every teardown step failed:
+
+```
+delete room b1d27725: FAILED - deal_room_activity_events is append-only: DELETE is not permitted
+delete room db2ddfbd: FAILED - deal_room_activity_events is append-only: DELETE is not permitted
+delete listing b8a15147: FAILED - violates foreign key constraint "deal_rooms_listing_id_fkey"
+delete listing fe985d4b: FAILED - violates foreign key constraint "deal_rooms_listing_id_fkey"
+delete user (x4):        FAILED - Database error deleting user
+```
+
+**The append-only guarantee the fixture verifies is what prevents the fixture from
+cleaning up after itself.** `teardown()` discards the error from
+`admin.from("deal_rooms").delete()`, so it failed silently and the run reported
+nothing. The first run's clean teardown was not evidence that teardown works - there
+was simply nothing to remove.
+
+Left in production, all created 05:02 UTC and all attributable: 4 `@example.invalid`
+users, 2 listings marked "Negative-access fixture. Fictional.", 2 rooms, 3 sub-rooms,
+6 participants, 26 activity events, 2 invitations, 4 acceptances, 2 evidence rows and
+3 versions, 1 procedure with 3 steps and 2 approvals, 1 blocker, 1 clarification, 2
+entitlements. **0 Storage objects.** No real member account, listing or commercial row
+was touched, and the four canonical agreement documents (published 30 July) are
+unchanged.
+
+**Containment.** Both fixture listings were seeded `status = 'approved'`, and
+`lib/board/live-deals.ts` selects the board on exactly that - so two fictional Deals
+were live, two of only four approved rows. They were moved to `archived` by a
+primary-key-scoped update further predicated on `details = 'Negative-access fixture.
+Fictional.'` and `status = 'approved'`; it returned exactly those two rows. Nothing
+was deleted. The board holds its two real approved listings again.
+
+**Removing the rest needs owner authorisation**, because the only route is to suspend
+the append-only trigger on `deal_room_activity_events`. That is a momentary suspension
+of a production security guarantee and was not done.
+
+## 43. Two findings for controller intake, unallocated
+
+1. **`scripts/deal-room-negative-access.mjs` cannot be re-run safely.** Its teardown
+   is defeated by the append-only trigger and swallows the error. Until it is either
+   made to run against a non-production project or given an authorised, explicit
+   trigger-suspension teardown, each run permanently adds a room to production.
+2. **The fixture seeds its listings as `approved`**, which publishes fictional Deals
+   to the live board for the duration of the run even when teardown succeeds.
+
+## 44. Approval 4 remains unauthorised
+
+`NEXT_PUBLIC_DEAL_ROOM`, deployment and the access wall are unchanged. The loop now
+runs far enough to be worth reviewing, but it does not complete: no procedure can
+govern, so no entitlement can be granted and no progression can be measured.
+
+---
+
+# Teardown fixed and the fixture rows removed, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - fix the fixture teardown first, then merge and
+apply.
+
+## 45. Why the teardown could not have worked
+
+`teardown()` deleted rooms with `admin.from("deal_rooms").delete()` and **discarded
+the error**. The cascade reaches `deal_room_activity_events`, whose
+`deal_room_activity_append_only` trigger refuses DELETE to every role including the
+service role - the guarantee section 7 of the fixture itself verifies. So each room
+delete failed silently, which left the listings undeletable on
+`deal_rooms_listing_id_fkey` and the accounts undeletable after them.
+
+The first run had stopped at step one, so there was nothing to remove and the path
+was never exercised. Its "tore down completely" record was true but proved nothing.
+
+## 46. The fix
+
+Room deletion now runs through the **Management API as the table owner**, suspending
+the trigger inside a single transaction scoped to one room id and re-enabling it in
+the same transaction, so any failure restores it. The capability stays **outside the
+application**: not the service role, not any member session - only whoever holds the
+management token.
+
+Three guards:
+
+- `removeRoom()` refuses unless the room's listing still carries
+  `details = 'Negative-access fixture. Fictional.'`, so a stale id cannot reach a
+  real room.
+- Every id is proved to be a UUID before interpolation, because the Management API
+  takes SQL text rather than bound parameters.
+- The management credentials are required **at startup**, so the fixture never
+  creates a room it cannot remove, and teardown **verifies afterwards**, printing
+  `TEARDOWN INCOMPLETE` and exiting non-zero if anything is left.
+
+## 47. The stranded rows are gone
+
+Both fixture rooms were removed through that exact path. The trigger returned to
+`tgenabled = 'O'` and the cascade cleared everything beneath them; the two fixture
+listings and four `@example.invalid` accounts were then deleted by primary key.
+
+| | Before | After |
+|---|---|---|
+| `auth.users` | 14 | **10** |
+| `listings` | 9 (2 archived fixture) | **7**, 2 approved, **0 archived** |
+| every `deal_room_*` table | 26 activity events and the rest | **0** |
+| `deal_room_agreement_documents` | 4 | **4**, canonical and untouched |
+| `storage.objects` in `deal-room-evidence` | 0 | **0** |
+| ledger | 50 | **50** |
+
+Production is back to its pre-fixture state, and the fixture can now be run and
+re-run without accumulating rooms.
+
+---
+
+# Gate C Approval 3, third run, 31 July 2026: 94 passed, 0 failed
+
+**Authorised:** owner, 31 July 2026 - fix the fixture teardown first, then merge and
+apply.
+**Repository state:** merged `main` `414d3e8`; `20260731c` applied once, checksum
+`7e60f2df...0c9971ba`, ledger 50 -> 51.
+
+## 48. The gate opens
+
+The two assertions that failed on the second run now pass:
+
+| | |
+|---|---|
+| the second required approver approves | **ok** |
+| the version governs once every approver has approved | **ok** |
+
+A procedure version can now be proposed, approved by both principals, and made to
+govern. Its steps become ready and the two admission steps complete - the 22%
+baseline the product definition specifies, produced by the mechanism rather than
+asserted.
+
+**2 passed on the first run, 92 on the second, 94 on this one. 0 failed.**
+
+## 49. Verified in place, not by overload
+
+Three functions replaced on identical signatures; still exactly three entries, so no
+overload and no invalidated grant. Combined `md5(pg_get_functiondef)`
+`1ca84013...` -> `0384017e...`. Each edit confirmed present in `prosrc` by reading
+the catalogue, and the old `participant_id = v_participant` keying confirmed absent.
+ACL unchanged: anon 0, PUBLIC 0, authenticated 21, service_role 23, 14 policies.
+
+## 50. The fixture removed everything it made
+
+`teardown complete: no rooms, listings, users or activity left behind.`
+
+| | |
+|---|---|
+| `auth.users` | **10** |
+| `listings` | **7**, 2 approved, 0 archived |
+| every `deal_room_*` table | **0** |
+| `storage.objects` in `deal-room-evidence` | **0** |
+| `deal_room_activity_append_only` | `tgenabled = 'O'` |
+| ledger | **51** |
+
+This is the first run whose teardown was both exercised and successful.
+
+## 51. What Approval 3 now establishes, and what it does not
+
+**Established.** Requirement 13 - cross-room and cross-sub-room isolation. The
+admission gate and its four agreements at the current version and checksum. The
+invitation bound to the recorded intended identity. Evidence submission, self-review
+refusal, clarification, correction, versioning, retention and `own_org` visibility.
+Append-only activity, including against the service role. Blockers and their note
+requirement. Read-only continuity. The Storage byte refusals, including a crafted
+path. And now the procedure gate end to end.
+
+**Not established, and not to be claimed.** Requirement 12 is only **partly** proved:
+the fixture shows an entitlement cannot be forged - a room administrator can neither
+issue themselves a second one nor extend their own - but it does not assert that a
+room lacking an entitlement refuses to progress. "Entitlement fail-closed" in that
+stronger sense is still unproved. Also untested: behaviour over time and across
+sessions, amendment of a governing procedure, and anything beyond the three
+participants and two rooms the fixture builds.
+
+## 52. Approval 4 remains unauthorised
+
+`NEXT_PUBLIC_DEAL_ROOM` is unset, nothing is deployed, and the access wall is
+unchanged. What has changed is that the loop now completes in the database, so a
+review of the surfaces against a working loop is possible for the first time.
+
+---
+
+# Surface review against the working loop, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - review the Deal Room surfaces against the
+working loop, then fix what it found.
+**Method:** every check run against the **production catalogue**, not the migration
+files, for the same reason `deal-room:acl-verify` exists.
+
+## 53. What holds
+
+| Check | Result |
+|---|---|
+| all 15 `deal_room_*` RPC call sites against production signatures | **match argument for argument** - no PostgREST resolution failure is possible |
+| every column selected, across 14 tables | **all present** |
+| all 10 state vocabularies against the production CHECK constraints, **both directions** | **identical sets** |
+| `admission_and_nda` and `procedure_agreed`, the keys `approve_procedure` completes on approval | present in every family template, weights 10 + 12 = **22**, inside the definition's 18-25 band |
+| evidence MIME list and the 26,214,400-byte limit | client `accept`, server allowlist and bucket **agree exactly** |
+| `canApproveProcedure` after `20260731c` | correct for both principals |
+
+The step copy "Every required principal approver has approved this procedure version"
+became **true** only with `20260731c`. Before it the counterparty could never approve,
+so the interface was promising something the database refused.
+
+## 54. Four defects, none of them a security defect
+
+### a. The counterparty could not see who they were waiting for
+
+`20260731c` chose the master-level participant row as canonical for approvals, and
+`participant read` makes another person's master-level row visible to a room
+administrator alone. The procedure page therefore rendered "A required approver"
+rather than the initiator's name. Corrected by `20260731d`, which prefers the row in
+the procedure's own sub-room. **Introduced by this lane the same day.**
+
+### b, c, d. Participant ROWS were counted as people
+
+`deal_room_propose` admits the initiator twice - master level and first workspace -
+so one person holds two rows from the moment a room exists. Three surfaces counted
+rows:
+
+| Site | Was | Effect |
+|---|---|---|
+| `lib/deal-room/queries.ts` | `invitationSent: participants.length > 1` | **true on a room nobody had been invited to**, and true whether or not an invitation was ever sent - the signal carried no information |
+| `lib/deal-room/queries.ts` | `bridgeParticipants = participants.map(...)` | the initiator **drawn twice** on the Bridge; its label read "2 participants" |
+| `app/[locale]/deal-rooms/[roomId]/invitation/page.tsx` | `${participants.length} participants` | "**2 participants** in the parts of this room you can see", to someone sitting alone |
+
+`page.tsx` escaped it by collapsing organisation names through a `Set`, and the
+workspace roster escaped it by filtering on `subRoomId`.
+
+**This is the same mistake as LB-001's, one layer up.** Seeding one approval per
+participant row gave the initiator two obligations for themselves; counting
+participant rows gave them two identities. A row is a membership; a person is a party.
+
+**Corrections.** A pure module `lib/deal-room/participants.ts` provides
+`onePerPerson()` and `countPeople()`, keeping the workspace row - the one that
+carries the permissions a person exercises, and the one a co-participant is allowed
+to read - with the master-level row as fallback, deterministically regardless of the
+order rows arrive in. `invitationSent` no longer counts anything: `deal_room_invite`
+writes no participant row, it moves the sub-room from `draft` to
+`invitation_pending`, and that state change is the fact.
+`lib/deal-room/__tests__/participants.test.ts` pins all of it, including the two
+counts that were wrong.
+
+## 55. Also recorded
+
+- The vocabulary guard in `rls-contract.test.ts` is **one-directional**: every
+  TypeScript value must appear in the SQL, but nothing catches a state the database
+  allows and no surface can render. The reverse was checked against production during
+  this review and is clean, but it is unguarded.
+- `lib/deal-room/states.ts:11` cites `__tests__/states.test.ts`, which does not exist.
+  The guard is in `rls-contract.test.ts`.
+
+## 56. None of this changes the Gate C position
+
+Approval 3 remains 94 of 94. Requirement 12 remains only partly proved. Approval 4 -
+`NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains unauthorised, and the
+surfaces have still never been rendered against a live room by a human being.
+
+---
+
+# The fixture learns to see, 31 July 2026: Approval 3 at 97 of 97
+
+**Authorised:** owner, 31 July 2026 - merge PR #158, then add the missing assertion.
+
+## 57. What was missing, and why it mattered
+
+Every assertion in `scripts/deal-room-negative-access.mjs` asked what a member may and
+may not **do**. None asked what a member may **see about another member**. Two defects
+went through that gap on 31 July 2026 and were caught by reading, not by running:
+
+- `deal_room_propose_procedure` seeded one approval per participant **row**. The
+  initiator holds two rows in their own room, so they were issued two obligations for
+  themselves and no procedure could ever be approved (LB-001, `20260731c`).
+- The fix then made the initiator's **master-level** row canonical, and
+  `participant read` allows another person's row only through
+  `sub_room_id is not null and deal_room_is_sub_room_participant(...)`, or to a room
+  administrator. The counterparty could read the approval but not the participant it
+  named, so the procedure page showed them an unnamed "A required approver"
+  (`20260731d`).
+
+The fourth run passed 94 of 94 with the second defect still latent. That is what a
+blind spot looks like from inside.
+
+## 58. Three assertions that interlock
+
+| | |
+|---|---|
+| another person's master-level participant row is not readable by a counterparty | **ok** |
+| one approval per person, not per participant row | **ok** - 2 rows for 2 people |
+| the counterparty can read the participant every approval names | **ok** |
+
+Neither of the two defects can return silently:
+
+- prefer a master-level row again and the **third** fails, because the **first**
+  proves that row cannot be read;
+- seed per participant row again and the **second** fails at once - 3 rows for 2
+  people.
+
+And neither can pass vacuously. The first is a plain refusal, so widening the policy
+breaks it. The third would pass trivially only with no approval rows at all, which the
+second forbids.
+
+The service role looks up the master-level row's id and does nothing else; the read
+under test runs as the counterparty, under their own session and RLS.
+
+## 59. The count, run by run
+
+| Run | Passed | Failed | What it established |
+|---|---|---|---|
+| 1 | 2 | 1 | the loop could not start - no room could be created |
+| 2 | 92 | 2 | the loop runs; no procedure can be approved |
+| 3 | 94 | 0 | the procedure gate opens |
+| 4 | 94 | 0 | `20260731d` applied; **nothing regressed, nothing proved** |
+| 5 | **97** | **0** | the approver a member waits for is one they can name |
+
+Teardown clean. Production unchanged: 10 users, 7 listings with 2 approved, every
+`deal_room_*` table at 0, 0 Storage objects, append-only trigger enabled, ledger 52.
+
+## 60. Still open
+
+- **Requirement 12 in its stronger sense**: an entitlement cannot be forged or
+  self-extended, but nothing asserts that a room lacking one refuses to progress.
+- The vocabulary guard in `rls-contract.test.ts` remains **one-directional** and
+  cannot catch a state the database allows and no surface renders.
+- **The surfaces have never been rendered against a live room by a person.**
+- Approval 4 - `NEXT_PUBLIC_DEAL_ROOM`, deployment, the access wall - remains
+  unauthorised.
+
+---
+
+# Rendering the surfaces against a live room, 31 July 2026
+
+**Authorised:** owner, 31 July 2026 - render the surfaces against a live room.
+**Outcome:** **a live room was built, its data proved, and taken down. The pages
+were NOT rendered.** One blocker, and it is not ours to remove.
+
+## 61. The blocker: the site access wall
+
+`middleware.ts` gates every request behind Basic auth, unconditionally - it is the
+first statement of `middleware()`, with no exemption for `NODE_ENV`, for localhost
+or for any path. Only the password's SHA-256 is committed; the plaintext is in
+neither the repository nor `.env.local`. **Without it no page can be rendered
+anywhere, locally or otherwise.**
+
+The recorded rule is explicit: *never remove or weaken the gate to capture
+evidence*. It was not weakened, and no attempt was made to guess the password.
+
+The capture needs one thing from the owner:
+
+```
+PONTE_SITE_PASSWORD=... npx playwright test e2e/deal-room-surfaces.spec.ts
+```
+
+## 62. Everything that does not depend on it was done
+
+**`scripts/deal-room-live-room.mjs`** stands a real room up and takes it down: two
+members, a published Deal, an invitation, the four-agreement admission gate, an
+agreed procedure, an evidence item carried through clarification and acceptance,
+and an open blocker. It writes the ids and each member's session cookies to a
+gitignored manifest - the cookies produced by `@supabase/ssr` itself rather than
+hand-assembled, so the encoding is whatever the installed version uses.
+
+Three things it does deliberately:
+
+- **The listing is published, then archived a few milliseconds later.**
+  `deal_room_propose` refuses anything but a published Deal, and correctly so, but
+  `lib/board/live-deals.ts` selects the live board on that same status. On 31 July a
+  fixture listing left `approved` put two fictional Deals in front of members for
+  the length of a run. The room keeps its own `deal_snapshot` and no Deal Room
+  surface reads the listing back.
+- **A failed build removes what it had already created**, and says whether that
+  succeeded. Three builds failed while it was being written - an unpublished Deal, an
+  unknown interest route, an unknown blocker category - and each left nothing behind.
+  The proof fixture's original teardown was never exercised, and the run that finally
+  exercised it put four accounts and two rooms into production permanently.
+- **`remove` and the failure path are one function**, so they cannot drift.
+
+**`e2e/deal-room-surfaces.spec.ts`** captures the twelve surfaces at 1280x900 and
+390x844, as **both parties**. That last point is the lesson of the surface review:
+capturing only the initiator would have photographed a procedure page that looked
+perfectly correct while the counterparty's said "A required approver". It asserts
+each page actually rendered - a 401, a 404 from the flag being off, an allowlist miss
+and an error boundary all photograph beautifully.
+
+`e2e/deal-room-bridge.spec.ts` keeps its job and its rationale is corrected: a single
+room is in one state at a time, and blocked, paused, read-only and ready-to-proceed
+cannot be reached on demand. The two are complements.
+
+## 63. What the live room proved, without a browser
+
+The room was built, queried as each member through RLS exactly as a browser would,
+and removed. This proves the derivations the surfaces render, though not their
+layout:
+
+| | initiator | counterparty |
+|---|---|---|
+| participant rows visible | **3** | **2** |
+| people | **2** | **2** |
+| Bridge entries drawn | **2** | **2** |
+| approvers the procedure page can name | **2 of 2** | **2 of 2** |
+| `invitationSent` | true, from the workspace leaving `draft` | true |
+
+Read against the defects the review found: the old code would have drawn the
+initiator **three** Bridge entries and told them "3 participants", and before
+`20260731d` the counterparty could have named **1 of 2** approvers. The invitation
+page's count is 2 where it would have been 3.
+
+## 64. No production change
+
+The room was removed through the same Management-API path as the proof fixture's
+teardown. After it: 10 users, 7 listings with 2 approved and 0 archived, every
+`deal_room_*` table at 0, 0 Storage objects,
+`deal_room_activity_append_only` at `tgenabled = 'O'`, ledger 52. The manifest,
+and the session tokens in it, are gone.
+
+## 65. What remains unproved, and is the point
+
+**Nobody has seen these pages.** Layout, contrast, wrapping at 390px, the Bridge's
+geometry against real names, whether the copy reads sensibly beside real values,
+whether the reduced-motion path is right - none of it is established by any of the
+above. The data is right. The rendering is unexamined, and stays unexamined until
+the password is supplied.
+

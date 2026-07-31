@@ -79,6 +79,10 @@ export default async function SubRoomPage({
         dealLine="A private workspace. What is written here is visible only to the participants admitted to it, and to the room's sponsor team."
       />
 
+      <div className="dr__actions">
+        <Action label="Back to the room" href={base} secondary />
+      </div>
+
       <div className="dr__layout">
         <div>
           <Band title="Procedure items">

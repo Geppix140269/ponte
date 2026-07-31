@@ -30,9 +30,9 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0001](ADR-0001-unified-trade-market.md) | Unified trade market with three primary families | Accepted by owner; effective on merge |
 | [ADR-0002](ADR-0002-ponte-design-constitution.md) | Binding Ponte Design Constitution and Bridge System authority | Accepted by owner; effective on merge |
 | [ADR-0003](ADR-0003-deal-room-product-contract.md) | Deal Room as the controlled PROGRESS layer | Accepted by owner; effective on merge |
-| [ADR-0004](ADR-0004-deal-room-monetisation-boundary.md) | Master Deal Room as Ponte's primary monetisation boundary | Accepted by owner; effective on merge |
-| [ADR-0005](ADR-0005-free-deals-and-counterparty-room-branches.md) | Free structured Deals with paid master Deal Rooms and private sub-rooms | Accepted by owner; effective on merge |
-| [ADR-0006](ADR-0006-starter-deal-room-access.md) | Starter Deal Room access before ongoing paid use | Principle accepted; numerical limits proposed |
+| [ADR-0004](ADR-0004-deal-room-monetisation-boundary.md) | Master Deal Room as Ponte's primary monetisation boundary | Accepted by owner; **partly superseded by ADR-0020** (entitlement sources, Ponte Desk layer, per-branch pricing) |
+| [ADR-0005](ADR-0005-free-deals-and-counterparty-room-branches.md) | Free structured Deals with paid master Deal Rooms and private sub-rooms | Accepted by owner; **partly superseded by ADR-0020** (unlimited free principal-counterparty sub-rooms only) |
+| [ADR-0006](ADR-0006-starter-deal-room-access.md) | Starter Deal Room access before ongoing paid use | **Superseded by ADR-0020.** There is no Starter Deal Room |
 | [ADR-0007](ADR-0007-deal-passport.md) | Deal Passport as the durable evidence-backed transaction-history layer | Accepted by owner; effective on merge |
 | [ADR-0010](ADR-0010-constitution-led-interface-rebuild.md) | Constitution-led rebuild of the complete interface | Accepted by owner; effective on merge |
 | [ADR-0011](ADR-0011-complete-market-discoverability-and-category-first-journeys.md) | Complete Market Signal discoverability and category-first Trade Services and Distribution journeys | Accepted by owner; effective on merge |
@@ -42,6 +42,28 @@ decisions, their rationale, alternatives and consequences.
 | [ADR-0013](ADR-0013-automated-listing-publication.md) | Automated listing publication and one transactional email system | Accepted by owner; effective on merge |
 | [ADR-0015](ADR-0015-contrast-and-colour-remediation.md) | Contrast and colour remediation: strengthened paper with a blue interaction family (amends the Constitution to v1.1) | Accepted by owner; effective on merge |
 | [ADR-0017](ADR-0017-authentication-and-operational-email.md) | Authentication and operational transactional email: generated Supabase templates, a strict document reader, sender identity and no tracking (extends ADR-0013) | Accepted 30 July 2026 |
+| [ADR-0020](ADR-0020-deal-room-only-pricing-authority.md) | Ponte Deal Room is the only paid product, at $79 USD per 30 active days, five included principal-counterparty branches, $15 USD each thereafter, capped at $199 USD (supersedes ADR-0004/0005/0006 within their commercial scope) | Accepted 31 July 2026; effective on merge. **Nothing implemented** |
+
+## The index is incomplete beyond the ADR-0012 collision
+
+Recorded 31 July 2026 while adding the ADR-0020 row. The table above still does
+not describe `docs/decisions/`. Present on disk and **absent from the index**:
+ADR-0008 (detailed Deal Room product definition), ADR-0009 (Deal Room technical
+architecture), ADR-0016 (multilingual Deal Room interpretation), **both** files
+numbered ADR-0018 (`member-business-verification-is-free` and
+`mobile-action-hierarchy-and-completion-bridge`), **both** files numbered
+ADR-0015 (`contrast-and-colour-remediation`, which is listed, and
+`STAGE-2-interaction-tokens`, which is not), and ADR-0019 (bridge station
+category marker).
+
+So ADR-0015 and ADR-0018 are two further live numbering collisions of the same
+class as the ADR-0012 one below, and five accepted decisions are uncited here.
+ADR-0020 was chosen as the next number **after the highest file on disk**, not
+the highest row in this table, which is why it skips ADR-0019.
+
+Back-filling or renumbering accepted decision records is an owner action and was
+deliberately **not** performed by the pull request that recorded this. It is
+logged so the next contributor does not read this table as complete.
 
 ## Unresolved numbering collision on ADR-0012
 

@@ -9,6 +9,41 @@ import { publishOrHold } from "@/lib/listings/publish";
 import { sendConnectAccepted } from "@/lib/email";
 
 /**
+ * Where a member is sent back to after acting.
+ *
+ * Two of these capabilities now also live at their approved homes: the owner
+ * side of an introduction decision at /workspace, and listing reconfirmation at
+ * /opportunities. A member who reconfirms from /opportunities must land back on
+ * /opportunities rather than be thrown to the board, so the form states where it
+ * came from in a `returnTo` field.
+ *
+ * That field is a value from a form, so it is never trusted as a path. It is
+ * matched against this fixed list of same-site member surfaces and falls back to
+ * the board when it is absent or anything else, which is exactly the behaviour
+ * every existing board form still gets. Nothing arbitrary reaches redirect() or
+ * revalidatePath().
+ */
+const RETURN_PATHS = ["/marketplace", "/opportunities", "/workspace"] as const;
+const DEFAULT_RETURN = "/marketplace";
+
+function returnPath(formData: FormData): string {
+  const raw = String(formData.get("returnTo") || "");
+  return (RETURN_PATHS as readonly string[]).includes(raw) ? raw : DEFAULT_RETURN;
+}
+
+/**
+ * Revalidate the board AND the page the member actually acted on.
+ *
+ * The board keeps its existing invalidation whatever happens, because it still
+ * renders all three capabilities and must not go stale while it is being
+ * redistributed.
+ */
+function revalidateBoardAnd(back: string): void {
+  revalidatePath(DEFAULT_RETURN);
+  if (back !== DEFAULT_RETURN) revalidatePath(back);
+}
+
+/**
  * A member hands in their own draft.
  *
  * It now goes straight through the central validator rather than into a desk
@@ -60,10 +95,11 @@ export async function submitDraftAction(formData: FormData): Promise<void> {
  * success the 90-day reconfirmation clock resets and it returns to the board.
  */
 export async function reconfirmListingAction(formData: FormData): Promise<void> {
+  const back = returnPath(formData);
   const user = await getUser();
-  if (!user) redirect("/login?next=/marketplace");
+  if (!user) redirect(`/login?next=${back}`);
   const id = String(formData.get("id") || "");
-  if (!id) redirect("/marketplace");
+  if (!id) redirect(back);
 
   const adminSb = createAdminClient();
   const { data: listing } = await adminSb
@@ -75,7 +111,7 @@ export async function reconfirmListingAction(formData: FormData): Promise<void> 
     .maybeSingle();
   // Ownership and state: only the owner may reconfirm, and only an approved one.
   if (!listing || listing.user_id !== user.id || listing.status !== "approved") {
-    redirect("/marketplace");
+    redirect(back);
   }
 
   const { data: profile } = await adminSb
@@ -100,7 +136,7 @@ export async function reconfirmListingAction(formData: FormData): Promise<void> 
     business_verification_id: profile?.business_verification_id ?? null,
     verification: verification as never,
   });
-  if (!gate.ok) redirect("/marketplace?rc=blocked");
+  if (!gate.ok) redirect(`${back}?rc=blocked`);
 
   await adminSb
     .from("listings")
@@ -109,8 +145,8 @@ export async function reconfirmListingAction(formData: FormData): Promise<void> 
     .eq("user_id", user.id)
     .eq("status", "approved");
 
-  revalidatePath("/marketplace");
-  redirect("/marketplace?rc=ok");
+  revalidateBoardAnd(back);
+  redirect(`${back}?rc=ok`);
 }
 
 /**
@@ -168,5 +204,7 @@ export async function connectDecisionAction(formData: FormData): Promise<void> {
     }
   }
 
-  revalidatePath("/marketplace");
+  // The owner decides from the board or from /workspace. Both are invalidated
+  // so the decided request leaves whichever list they were reading.
+  revalidateBoardAnd(returnPath(formData));
 }

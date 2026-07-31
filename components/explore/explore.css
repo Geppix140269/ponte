@@ -162,48 +162,10 @@
   color: var(--ink-2);
 }
 
-/* ---- the three families ---- */
-.ponte-find .exfam {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  margin-top: 8px;
-}
-.ponte-find .exfam__i {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 22px 24px 22px 0;
-  border-right: 1px solid var(--rule);
-  text-decoration: none;
-}
-.ponte-find .exfam__i:last-child {
-  border-right: 0;
-}
-.ponte-find .exfam__i + .exfam__i {
-  padding-left: 24px;
-}
-.ponte-find a.exfam__i:hover .exfam__t {
-  color: var(--gold-ink);
-}
-.ponte-find .exfam__t {
-  font-family: var(--f-serif);
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--ink);
-  transition: color 120ms;
-}
-.ponte-find .exfam__n {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-}
-.ponte-find .exfam__d {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--ink-2);
-}
+/* The three families were a three-column set of boxed cards here (`.exfam`,
+   `.exfam__i` and their parts). Issue #130 Stage 2 replaced them with the
+   Bridge, which brings its own approved stylesheet, so the card rules are
+   deleted rather than left behind to be reached for again. */
 
 /* ---- the sector universe ---- */
 .ponte-find .exuni {
@@ -390,22 +352,6 @@
   color: var(--ink-3);
 }
 
-@media (max-width: 900px) {
-  .ponte-find .exfam {
-    grid-template-columns: 1fr;
-  }
-  .ponte-find .exfam__i {
-    border-right: 0;
-    border-bottom: 1px solid var(--rule);
-    padding: 20px 0;
-  }
-  .ponte-find .exfam__i + .exfam__i {
-    padding-left: 0;
-  }
-  .ponte-find .exfam__i:last-child {
-    border-bottom: 0;
-  }
-}
 @media (max-width: 640px) {
   .ponte-find .exhead,
   .ponte-find .excrumb,
@@ -433,18 +379,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ponte-find .exsector__disc,
-  .ponte-find .exfam__t {
+  .ponte-find .exsector__disc {
     transition: none !important;
   }
   .ponte-find a.exsector:hover .exsector__disc {
     transform: none;
   }
-}
-
-/* The Flow navigation-family asset on a family card. Decorative: the family
-   name sits beside it and carries the meaning. */
-.ponte-find .exfam__ic {
-  color: var(--ink);
-  margin-bottom: 4px;
 }

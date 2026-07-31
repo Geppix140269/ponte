@@ -1,5 +1,22 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Link } from "@/i18n/navigation";
+import { landingFontVars } from "@/components/home/landing/fonts";
+import DeskShell from "@/components/desk/DeskShell";
+import "@/components/desk/desk.css";
+
+/**
+ * Learn: what trade data is, on the Desk (Issue #130 Stage 3).
+ *
+ * The sister article to /learn/duties, migrated with it for the same reason:
+ * both are public entrances, and both were still drawn by the retired obsidian
+ * chrome. Like its sister it also stops nesting a second <main>.
+ *
+ * Every word, both structured-data blocks, the coverage table and both outgoing
+ * links are unchanged. Coverage strength was previously drawn in emerald and
+ * amber; it is now stated in the reserved state tokens, and it was already, and
+ * still is, carried by the word "Strong" or "Limited" rather than by colour.
+ */
 
 export const metadata: Metadata = {
   title: "What Is Trade Data? Transaction-Level Customs Intelligence Explained",
@@ -120,6 +137,113 @@ const USE_CASES = [
   },
 ];
 
+const SOURCES = [
+  {
+    title: "Customs declarations",
+    body: "Filed with national customs authorities at the point of import or export. Contains: HS classification, declared value, quantity, weight, country of origin, importer and exporter names (where published).",
+  },
+  {
+    title: "Bills of lading",
+    body: "Filed with port authorities for sea freight. Contains: shipper, consignee, description of goods, port of loading, port of discharge, vessel name, container numbers, and cargo weight.",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Presentation. Every value below is either a layout measure or a Desk token;
+// no literal colour appears in this file.
+// ---------------------------------------------------------------------------
+
+const RULED: CSSProperties = { borderTop: "1px solid var(--rule)", paddingTop: 26 };
+
+const H1: CSSProperties = {
+  fontSize: "clamp(30px, 4.6vw, 46px)",
+  lineHeight: 1.08,
+  letterSpacing: "-0.022em",
+  fontWeight: 500,
+  margin: "14px 0 14px",
+  maxWidth: "22ch",
+};
+
+const LEAD: CSSProperties = { fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", maxWidth: "66ch" };
+
+const PROSE: CSSProperties = { fontSize: 14, lineHeight: 1.7, color: "var(--ink-2)", maxWidth: "74ch" };
+
+const GRID: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+  gap: 12,
+  alignItems: "stretch",
+};
+
+const PANEL_BODY: CSSProperties = { padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 };
+
+const SUB: CSSProperties = { fontSize: 14, fontWeight: 600, lineHeight: 1.35 };
+
+const COPY: CSSProperties = { fontSize: 13, lineHeight: 1.6, color: "var(--ink-2)" };
+
+const QUOTE: CSSProperties = {
+  fontSize: 17,
+  fontWeight: 500,
+  lineHeight: 1.4,
+  color: "var(--ink)",
+};
+
+const TABLE_WRAP: CSSProperties = {
+  overflowX: "auto",
+  border: "1px solid var(--rule)",
+  borderRadius: "var(--dk-radius)",
+  background: "var(--raised)",
+};
+
+const TABLE: CSSProperties = { width: "100%", borderCollapse: "collapse", minWidth: 580 };
+
+const TH: CSSProperties = {
+  textAlign: "left",
+  padding: "10px 16px",
+  fontSize: 11,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+  color: "var(--ink-3)",
+  background: "var(--sunken)",
+  borderBottom: "1px solid var(--rule-strong)",
+};
+
+const TD: CSSProperties = {
+  padding: "11px 16px",
+  fontSize: 13,
+  lineHeight: 1.6,
+  color: "var(--ink-2)",
+  borderBottom: "1px solid var(--rule)",
+  verticalAlign: "top",
+};
+
+const TD_NAME: CSSProperties = { ...TD, color: "var(--ink)", fontWeight: 600 };
+
+/**
+ * Coverage strength. `Strong` is a reached state and `Limited` is a halted one,
+ * so they take the reserved --pos and --review tokens rather than a decorative
+ * green and amber. The word is still the carrier; the colour only agrees.
+ */
+function coverageChip(level: string): CSSProperties {
+  const strong = level === "Strong";
+  return {
+    display: "inline-block",
+    padding: "2px 9px",
+    borderRadius: 999,
+    fontSize: 11,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    color: strong ? "var(--pos)" : "var(--review)",
+    background: strong ? "var(--pos-tint)" : "var(--review-tint)",
+    border: `1px solid ${strong ? "var(--pos-line)" : "var(--review-line)"}`,
+  };
+}
+
+const ACTS: CSSProperties = { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 };
+
 export default function LearnTradeDataPage() {
   return (
     <>
@@ -127,180 +251,207 @@ export default function LearnTradeDataPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([faqJsonLd, breadcrumbJsonLd]) }}
       />
-      <main className="pb-24">
-        {/* Hero */}
-        <section className="container-px pt-16 pb-12">
-          <nav className="mb-6 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted">
-            <Link href="/" className="hover:text-gold transition-colors">Home</Link>
-            <span className="text-white/20">/</span>
-            <span>Learn</span>
-            <span className="text-white/20">/</span>
-            <span className="text-cream">What Is Trade Data?</span>
-          </nav>
-          <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-gold">
-            Trade intelligence fundamentals
-          </p>
-          <h1 className="heading-xl mb-6 max-w-3xl">
-            What is transaction-level trade data, and why does it matter?
-          </h1>
-          <p className="body-lg max-w-2xl text-muted">
-            Behind every trade statistic is a customs declaration: a record of
-            exactly who shipped what, to whom, at what price. Transaction-level
-            trade data makes those records searchable. Here is what it is,
-            where it comes from, and what you can do with it.
-          </p>
-        </section>
-
-        {/* The critical difference */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-6 max-w-2xl">
-            Statistical data vs. transaction-level data
-          </h2>
-          <p className="body-md text-muted max-w-2xl mb-8">
-            Most publicly available trade data, whether UN Comtrade, World Bank WITS
-            or Eurostat, is <strong className="text-cream">aggregated statistical data</strong>.
-            It tells you how much was traded between two countries in a given year.
-            Transaction-level data is different: it shows you the individual shipments
-            that make up those totals.
-          </p>
-
-          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
-            <div className="rounded-xl border border-white/20 bg-steel/20 p-6">
-              <p className="text-[11px] uppercase tracking-widest text-muted mb-3">Statistical data tells you</p>
-              <p className="text-cream text-lg font-medium leading-snug">
-                &ldquo;Vietnam exported $2.3bn of footwear to the US in 2024.&rdquo;
-              </p>
-            </div>
-            <div className="rounded-xl border border-gold/40 bg-gold/5 p-6">
-              <p className="text-[11px] uppercase tracking-widest text-gold mb-3">Transaction data tells you</p>
-              <p className="text-cream text-lg font-medium leading-snug">
-                &ldquo;Nike Inc. imported 42,000 pairs from Pou Chen Corp at $18.50/pair
-                on 15 March 2024, via Ho Chi Minh City to Los Angeles.&rdquo;
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Where it comes from */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">Where the data comes from</h2>
-          <p className="body-md text-muted max-w-2xl mb-6">
-            Transaction-level trade data originates from two primary document types:
-          </p>
-          <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mb-8">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-cream uppercase tracking-wider">Customs declarations</h3>
-              <p className="text-sm text-muted leading-relaxed">
-                Filed with national customs authorities at the point of import or export.
-                Contains: HS classification, declared value, quantity, weight, country of origin,
-                importer and exporter names (where published).
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-cream uppercase tracking-wider">Bills of lading</h3>
-              <p className="text-sm text-muted leading-relaxed">
-                Filed with port authorities for sea freight. Contains: shipper, consignee,
-                description of goods, port of loading, port of discharge, vessel name,
-                container numbers, and cargo weight.
-              </p>
-            </div>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-navy/40 p-6 max-w-3xl">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-gold mb-2">Ponte&apos;s data engine</p>
-            <p className="text-sm text-muted leading-relaxed">
-              Ponte&apos;s research is grounded in{" "}
-              <strong className="text-cream">transaction-level trade evidence</strong> across
-              199 countries. Every finding passes a 5-step verification pipeline: 4-source pull,
-              conflict detection, Monte Carlo resolution, and senior-analyst sign-off before
-              delivery.
+      <div className={`ponte-desk ${landingFontVars}`}>
+        <DeskShell rail={null} objective={null}>
+          {/* Hero */}
+          <section className="sec">
+            <nav className="crumbs" aria-label="Breadcrumb">
+              <Link href="/">Home</Link>
+              <span aria-hidden="true">/</span>
+              <span>Learn</span>
+              <span aria-hidden="true">/</span>
+              <span style={{ color: "var(--ink)" }}>What Is Trade Data?</span>
+            </nav>
+            <p className="kicker">Trade intelligence fundamentals</p>
+            <h1 className="serif" style={H1}>
+              What is transaction-level trade data, and why does it matter?
+            </h1>
+            <p style={LEAD}>
+              Behind every trade statistic is a customs declaration: a record of
+              exactly who shipped what, to whom, at what price. Transaction-level
+              trade data makes those records searchable. Here is what it is,
+              where it comes from, and what you can do with it.
             </p>
-          </div>
-        </section>
+          </section>
 
-        {/* Coverage map */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">Coverage by region</h2>
-          <p className="body-md text-muted max-w-2xl mb-8">
-            Data quality varies significantly by country. The following table shows
-            coverage strength and key notes for major trading regions.
-          </p>
-          <div className="overflow-x-auto max-w-3xl">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 pr-6 text-[11px] uppercase tracking-wider text-muted font-medium">Region</th>
-                  <th className="text-left py-3 pr-6 text-[11px] uppercase tracking-wider text-muted font-medium">Coverage</th>
-                  <th className="text-left py-3 text-[11px] uppercase tracking-wider text-muted font-medium">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COVERAGE.map((row) => (
-                  <tr key={row.region} className="border-b border-white/[0.06]">
-                    <td className="py-3 pr-6 text-cream font-medium">{row.region}</td>
-                    <td className="py-3 pr-6">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${row.level === "Strong" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
-                        {row.level}
-                      </span>
-                    </td>
-                    <td className="py-3 text-muted text-xs leading-relaxed">{row.note}</td>
+          {/* The critical difference */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Statistical data vs. transaction-level data</h2>
+              </div>
+            </div>
+            <p style={{ ...PROSE, marginBottom: 14 }}>
+              Most publicly available trade data, whether UN Comtrade, World Bank WITS
+              or Eurostat, is{" "}
+              <strong style={{ color: "var(--ink)", fontWeight: 600 }}>aggregated statistical data</strong>.
+              It tells you how much was traded between two countries in a given year.
+              Transaction-level data is different: it shows you the individual shipments
+              that make up those totals.
+            </p>
+
+            <div style={{ ...GRID, maxWidth: 860 }}>
+              <div className="panel">
+                <div className="panel__h">
+                  <b>Statistical data tells you</b>
+                </div>
+                <div style={PANEL_BODY}>
+                  <p style={QUOTE}>
+                    &ldquo;Vietnam exported $2.3bn of footwear to the US in 2024.&rdquo;
+                  </p>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="panel__h">
+                  <b>Transaction data tells you</b>
+                </div>
+                <div style={PANEL_BODY}>
+                  <p style={QUOTE}>
+                    &ldquo;Nike Inc. imported 42,000 pairs from Pou Chen Corp at $18.50/pair
+                    on 15 March 2024, via Ho Chi Minh City to Los Angeles.&rdquo;
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Where it comes from */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Where the data comes from</h2>
+                <p className="d">
+                  Transaction-level trade data originates from two primary document types:
+                </p>
+              </div>
+            </div>
+            <div style={{ ...GRID, maxWidth: 860, marginBottom: 12 }}>
+              {SOURCES.map((source) => (
+                <div key={source.title} className="panel">
+                  <div style={PANEL_BODY}>
+                    <h3 style={SUB}>{source.title}</h3>
+                    <p style={COPY}>{source.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="panel" style={{ maxWidth: 720 }}>
+              <div className="panel__h">
+                <b>Ponte&apos;s data engine</b>
+              </div>
+              <div style={PANEL_BODY}>
+                <p style={COPY}>
+                  Ponte&apos;s research is grounded in{" "}
+                  <strong style={{ color: "var(--ink)", fontWeight: 600 }}>
+                    transaction-level trade evidence
+                  </strong>{" "}
+                  across 199 countries. Every finding passes a 5-step verification pipeline: 4-source pull,
+                  conflict detection, Monte Carlo resolution, and senior-analyst sign-off before
+                  delivery.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Coverage map */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Coverage by region</h2>
+                <p className="d">
+                  Data quality varies significantly by country. The following table shows
+                  coverage strength and key notes for major trading regions.
+                </p>
+              </div>
+            </div>
+            <div style={TABLE_WRAP}>
+              <table style={TABLE}>
+                <thead>
+                  <tr>
+                    <th className="mono" style={TH} scope="col">Region</th>
+                    <th className="mono" style={TH} scope="col">Coverage</th>
+                    <th className="mono" style={TH} scope="col">Notes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-4 text-xs text-muted max-w-2xl">
-            For routes with limited direct coverage, Ponte uses price extrapolation methodology,
-            deriving unit values from comparable origin-destination pairs with strong data coverage.
-            All extrapolated values are flagged in reports.
-          </p>
-        </section>
+                </thead>
+                <tbody>
+                  {COVERAGE.map((row) => (
+                    <tr key={row.region}>
+                      <td style={TD_NAME}>{row.region}</td>
+                      <td style={TD}>
+                        <span className="mono" style={coverageChip(row.level)}>
+                          {row.level}
+                        </span>
+                      </td>
+                      <td style={TD}>{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ ...COPY, marginTop: 12, maxWidth: "74ch" }}>
+              For routes with limited direct coverage, Ponte uses price extrapolation methodology,
+              deriving unit values from comparable origin-destination pairs with strong data coverage.
+              All extrapolated values are flagged in reports.
+            </p>
+          </section>
 
-        {/* Use cases */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-4 max-w-2xl">What you can do with trade data</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl">
-            {USE_CASES.map((uc) => (
-              <div key={uc.title} className="space-y-2">
-                <h3 className="text-sm font-semibold text-cream">{uc.title}</h3>
-                <p className="text-xs leading-relaxed text-muted">{uc.body}</p>
+          {/* Use cases */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>What you can do with trade data</h2>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+            <div style={GRID}>
+              {USE_CASES.map((uc) => (
+                <div key={uc.title} className="panel">
+                  <div style={PANEL_BODY}>
+                    <h3 style={SUB}>{uc.title}</h3>
+                    <p style={COPY}>{uc.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* FAQ */}
-        <section className="container-px py-12 border-t border-white/10">
-          <h2 className="heading-lg mb-8 max-w-2xl">Frequently asked questions</h2>
-          <div className="max-w-3xl space-y-8">
-            {faqJsonLd.mainEntity.map((item) => (
-              <div key={item.name} className="space-y-2">
-                <h3 className="text-sm font-semibold text-cream">{item.name}</h3>
-                <p className="text-sm text-muted leading-relaxed">{item.acceptedAnswer.text}</p>
+          {/* FAQ */}
+          <section className="sec" style={RULED}>
+            <div className="sech">
+              <div>
+                <h2>Frequently asked questions</h2>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: "74ch" }}>
+              {faqJsonLd.mainEntity.map((item) => (
+                <div key={item.name}>
+                  <h3 style={{ ...SUB, marginBottom: 6 }}>{item.name}</h3>
+                  <p style={PROSE}>{item.acceptedAnswer.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* CTA */}
-        <section className="container-px py-12 border-t border-white/10">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-gold mb-3">Ready to use it</p>
-          <h2 className="heading-lg mb-4 max-w-xl">
-            Put this kind of evidence behind your next deal.
-          </h2>
-          <p className="text-sm text-muted max-w-lg mb-6">
-            Bring a live offer or requirement to the Deal Desk, or book a
-            senior analyst when a decision needs evidence first.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/marketplace" className="btn-primary">
-              Visit the marketplace
-            </Link>
-            <Link href="/learn/duties" className="btn-ghost text-sm">
-              Learn about import duties
-            </Link>
-          </div>
-        </section>
-      </main>
+          {/* CTA */}
+          <section className="sec" style={RULED}>
+            <p className="kicker">Ready to use it</p>
+            <h2 className="serif" style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.016em", margin: "12px 0 10px", maxWidth: "24ch" }}>
+              Put this kind of evidence behind your next deal.
+            </h2>
+            <p style={{ ...COPY, maxWidth: "58ch" }}>
+              Bring a live offer or requirement to the Deal Desk, or book a
+              senior analyst when a decision needs evidence first.
+            </p>
+            <div style={ACTS}>
+              <Link href="/marketplace" className="b b--lg">
+                Visit the marketplace
+              </Link>
+              <Link href="/learn/duties" className="b b--2 b--lg">
+                Learn about import duties
+              </Link>
+            </div>
+          </section>
+        </DeskShell>
+      </div>
     </>
   );
 }

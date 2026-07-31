@@ -16,20 +16,44 @@ Ponte's market is organised around Products, Trade services, and Distribution an
 
 After credible commercial interest, the Deal Room provides the downstream PROGRESS layer: formal admission, an agreed procedure, structured evidence and decisions, blockers, next actions and durable history.
 
-The commercial model is:
+The commercial model, decided by the owner on 31 July 2026
+(`PT-COMMERCIAL-2026-07-31-01`, ADR-0020), is:
 
 ```text
-Free Market Access and structured Deals
-  -> one limited Starter Deal Room experience per verified organisation
-  -> ongoing paid Portfolio subscription or Ponte Credits
-  -> optional paid agent, Ponte Desk and specialist services
+Everything upstream of protected Deal Room progression is FREE
+  -> browse, publish, prepare a Master Deal Room, create draft branches,
+     invite, accept, prepare for activation: no charge, no limit
+  -> activate the Master Deal Room: $79 USD for 30 active days,
+     including 5 concurrently active private principal-counterparty branches
+  -> each additional concurrently active branch: $15 USD for that room period
+  -> maximum $199 USD per Master Deal Room per 30-day period
+  -> expiry is read-only continuity, never deletion
 ```
+
+USD only. English, Spanish, Russian, Simplified Chinese and Modern Standard
+Arabic are included in the price.
+
+**The Deal Room is Ponte's only paid product.** There are no memberships, plans,
+Starter rooms, Portfolio subscriptions, credit packs, paid verification, public
+Ponte Desk packages, retainers, commissions, success fees or
+percentage-of-transaction charges. Earlier documents describing any of those are
+superseded and preserved as history only.
+
+**None of this is implemented.** No pricing engine, billing record, entitlement,
+Stripe object or charge exists. The live `/pricing` page still publishes the
+retired model (proposed **LB-014**). Programme:
+`docs/plans/active/deal-room-transaction-pricing.md`.
 
 Ponte Trade's market is organised around three equal primary families — Products, Trade services, and Distribution and representation — with externally observed Market Signals and member-created Member Opportunities available in each. See ADR-0001 and the canonical taxonomy.
 
 Every approved, unexpired and anonymised public Market Signal must be discoverable through search, filtering, browsing or pagination. Trade Services and Distribution journeys must begin with structured category choices rather than generic free text. See ADR-0011 and `PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md`.
 
-One master Deal Room corresponds to one Deal and may contain private counterparty, provider, adviser and internal sub-rooms. Paid sub-room creation does not consume another master-room slot.
+One master Deal Room corresponds to one Deal and may contain private
+counterparty, provider, adviser and internal sub-rooms. Provider, adviser and
+internal workspaces are unlimited and free. Concurrently active
+**principal-counterparty** branches are what the price counts: five are
+included, and each further concurrent branch costs $15 USD to the $199 USD cap
+(ADR-0020).
 
 These Deal Room foundations are designed product authority, not implemented behaviour.
 
@@ -54,13 +78,15 @@ When documents conflict, use this order:
 
 1d. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` — downstream Deal Room product authority.
 
-1e. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — Deal Room monetisation authority, including the Starter-access exception.
+1e. `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` — **the Deal Room-Only Pricing Authority, and the only commercial authority to implement from.** Recorded by ADR-0020. Delivered by PR #155; until that merges, this points forward to an accepted decision not yet on `main`.
 
-1f. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` — master-room and private sub-room hierarchy.
+1f. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` — master-room and private sub-room hierarchy. In force, except that principal-counterparty branches above five are now priced (ADR-0020).
 
-1g. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md` — accepted Starter principle and proposed limits.
+1g. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` — **superseded within its commercial scope** by 1e. History only.
 
-1h. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` — proposed consolidated launch model; not binding until owner approval.
+1h. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md` — **superseded** by 1e. There is no Starter Deal Room. History only.
+
+1i. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` and `PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` — **superseded** by 1e, never approved. History only.
 
 2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing implementation authority for everything downstream of entry, where later accepted authorities do not restate the decision.
 
@@ -88,7 +114,16 @@ ADR-0011 records the owner-approved requirement that every eligible Market Signa
 
 ADR-0002 records the owner-approved Ponte Design Constitution and Bridge System authority. Its first implementation is deliberately separate from the authority PR.
 
-The Deal Room, master-room hierarchy, Starter access, entitlement, billing and production charging are not implemented.
+ADR-0020 records the owner's 31 July 2026 commercial decision: the Deal Room is
+Ponte's only paid product, at $79 USD per 30 active days. It is a decision
+record, not implementation status.
+
+The Deal Room master-room hierarchy is implemented and proved against production
+(LB-001, Approval 3, 94/94) but sits behind an unset flag. **Entitlement pricing,
+billing, the pricing engine, branch counting, Stripe for the Deal Room and
+production charging are not implemented at all.** Starter access is superseded
+and will not be implemented. The live `/pricing` page still publishes the retired
+model.
 
 ## Read next
 
@@ -96,9 +131,9 @@ The Deal Room, master-room hierarchy, Starter access, entitlement, billing and p
 1. `docs/ponte-authority/PT-PRODUCT-2026-07-28-01-COMPLETE-MARKET-DISCOVERABILITY-AND-CATEGORY-FIRST-JOURNEYS.md` for Market Signals search, pagination and category-first non-product journeys
 2. `docs/ponte-authority/PT-PRODUCT-2026-07-27-01-DEAL-ROOM-PRODUCT-CONTRACT-V1.md` for transaction progression
 3. `docs/ponte-authority/PT-PRODUCT-2026-07-27-02-DEAL-TO-ROOM-BRANCHING-MODEL.md` for master rooms and sub-rooms
-4. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-01-DEAL-ROOM-MONETISATION-POLICY.md` for commercial boundaries
-5. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-03-STARTER-DEAL-ROOM-ACCESS.md` for Starter access
-6. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` for proposed launch limits and pricing
+4. `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` for the commercial model, and `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md` for the supersession map
+5. `docs/plans/active/deal-room-transaction-pricing.md` for the staged implementation programme
+6. `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md` for what the repository actually charges for today, which is not the same thing
 7. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md`
 8. `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md`
 9. `design/authority/bridge/v1/README.md` when bridge, progress or connection UI is involved

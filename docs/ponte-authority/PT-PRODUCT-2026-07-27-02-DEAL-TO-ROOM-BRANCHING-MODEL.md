@@ -1,6 +1,31 @@
 # Ponte Trade Deal-to-Room and Sub-Room Model
 
-- **Status:** Accepted by the product owner; effective when merged
+> ## Commercially amended by ADR-0020 — 31 July 2026. The hierarchy stands.
+>
+> **This authority is not superseded.** The Deal-to-Room hierarchy it defines —
+> one commercial opportunity, one Master Deal Room, several isolated private
+> negotiations beneath it — is the foundation the new pricing model is built on,
+> and sections 1 to 3, 5 to 9 and 11 are unchanged and binding. The sub-room
+> privacy boundary in §7 is, if anything, strengthened: **a billing amount must
+> never reveal branch count** to a participant not authorised to see the branch
+> structure.
+>
+> **What changes is the price, in §4 and §10 only.** `PT-COMMERCIAL-2026-07-31-01`
+> sets **$79 USD for 30 active days**, including **five concurrently active
+> private principal-counterparty Deal Branches**; each further concurrent branch
+> costs **$15 USD** for the current room period, capped at **$199 USD** per
+> Master Deal Room per 30-day period. **USD only.**
+>
+> So the rule that "creating an additional sub-room does not consume another
+> master Deal Room slot" (§4) survives **completely for provider, adviser and
+> internal workspaces**, which remain unlimited and free, and is narrowed only
+> for principal-counterparty branches beyond the fifth concurrent one. The
+> subscription-slot, credit and guest-organisation framing in §10 is retired
+> entirely: there is no subscription, no credit and no guest-organisation charge.
+>
+> See `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** Accepted by the product owner; effective when merged. **Commercially amended 31 July 2026** by `PT-COMMERCIAL-2026-07-31-01` / ADR-0020 (§4 and §10 pricing only)
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Repository:** `Geppix140269/ponte`

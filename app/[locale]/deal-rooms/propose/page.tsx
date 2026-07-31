@@ -23,6 +23,7 @@ import {
 import { templateFor } from "@/lib/deal-room/procedure";
 import { STARTER_LIMITS_PROPOSED } from "@/lib/deal-room/entitlement";
 import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/states";
+import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { proposeRoom } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -102,7 +103,7 @@ export default async function ProposeRoomPage({
   const dealBlockers = assessment?.blockers.filter((blocker) => !blocker.code.startsWith("no_counterparty")) ?? [];
 
   return (
-    <>
+    <UnsavedFormGuard>
       <CommandError message={searchParams.error} />
       <RoomHeader
         reference="Deal Rooms"
@@ -309,6 +310,6 @@ export default async function ProposeRoomPage({
           </Band>
         </>
       ) : null}
-    </>
+    </UnsavedFormGuard>
   );
 }

@@ -61,6 +61,17 @@ async function choose(page: Page, key: string): Promise<void> {
   await page.locator(`.pcat__opt[data-option="${key.replace(/\./g, "\\.")}"]`).click();
 }
 
+/**
+ * Choose a station on a selection Bridge.
+ *
+ * Issue #130 Stage 2 moved two categorical choices, the market family and the
+ * coverage scope, onto the Bridge, where an option carries `data-id` and the
+ * whole node and label block is the target.
+ */
+async function crossTo(page: Page, key: string): Promise<void> {
+  await page.locator(`.brst[data-id="${key}"]`).click();
+}
+
 async function continueOn(page: Page): Promise<void> {
   await page.locator("button.fbtn.fbtn--lg").click();
 }
@@ -179,8 +190,11 @@ test("partner type, sector, coverage and relationship are four separate question
   await continueOn(page);
 
   // Coverage, and the territories a scope that names countries asks for.
-  await expect(page.locator(".pcat__opt")).toHaveCount(7);
-  await choose(page, "countries");
+  // Seven scopes fit a Bridge deck, so Issue #130 Stage 2 asks this one on the
+  // Bridge: the count is of stations now, and there is no boxed list beside it.
+  await expect(page.locator(".brst")).toHaveCount(7);
+  await expect(page.locator(".pcat__opt")).toHaveCount(0);
+  await crossTo(page, "countries");
   // A scope that names countries asks for them, and stores codes rather than a
   // sentence, so a territory can be matched later instead of only read.
   await expect(page.locator(".pcat__write")).toBeVisible();
@@ -238,9 +252,14 @@ test("products open on their own intake, not on either category picker", async (
 // Find, category first
 // ---------------------------------------------------------------------------
 
-test("Find opens on the three market families", async ({ page }) => {
+test("Find opens on the three market families, as a Bridge", async ({ page }) => {
   await page.goto("/find", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".pcat__opt")).toHaveCount(3);
+  // Issue #130 Stage 2. The three families were three boxed rows; they are a
+  // navigate-mode Bridge now, so each is still a real link with its own URL.
+  const stations = page.locator(".brst");
+  await expect(stations).toHaveCount(3);
+  await expect(page.locator(".pcat__opt")).toHaveCount(0);
+  await expect(stations.first()).toHaveAttribute("href", /family=products/);
   await shot(page, "desktop-14-find-families");
 });
 

@@ -58,7 +58,8 @@ const RETIRED_LINK_BASELINE = [
   "components/SiteFooter.tsx",
   "components/home/LiveDealsGrid.tsx",
   "components/structure/StructureComposer.tsx",
-  "components/ListingForm.tsx",
+  // components/ListingForm.tsx was deleted by PL-030 (the retired composer is
+  // unreachable and now gone), so it no longer links a retired route.
 ];
 
 // C2. Redirect entries that still point at another redirect (a double hop).

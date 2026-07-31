@@ -1,6 +1,32 @@
 # Ponte Trade Starter Deal Room Access
 
-- **Status:** Product principle accepted; launch limits proposed for owner approval
+> ## ⚠ Superseded — 31 July 2026. There is no Starter Deal Room.
+>
+> The **Deal Room-Only Pricing Authority** (`PT-COMMERCIAL-2026-07-31-01`,
+> recorded by **ADR-0020**) retires the Starter Deal Room entirely.
+>
+> **Ponte does not issue a public free Starter Deal Room entitlement.** Nothing
+> in this document — the one-room-per-verified-organisation entitlement, the
+> 30-day free term, the 3 sub-rooms, the 2 external guest organisations, the 2
+> internal users, the upgrade ladder or the €0 price — remains in force.
+> Historical Starter-compatible schema values may remain for safe migration and
+> audit purposes only; `deal_room_entitlements.kind = 'starter'` is a legacy
+> value, not a product.
+>
+> **What replaced it:** the pre-activation journey is free for everyone, with no
+> entitlement and no organisation limit. Browsing, publishing, preparing a draft
+> Master Deal Room, creating draft branches, inviting counterparties, accepting
+> invitations and preparing for activation all cost nothing (authority §8).
+> Payment begins only when a credible counterparty branch is ready to enter
+> protected, write-enabled progression, at **$79 USD for 30 active days**.
+>
+> The **anti-abuse reasoning** in §9 and the **read-only expiry** principle in §8
+> survive in the new model; the entitlement they protected does not.
+>
+> Preserved as the historical record. Do not implement from it. See
+> `docs/decisions/ADR-0020-deal-room-only-pricing-authority.md`.
+
+- **Status:** **Superseded on 31 July 2026** by `PT-COMMERCIAL-2026-07-31-01` / ADR-0020. Originally: product principle accepted, launch limits proposed for owner approval
 - **Decision date:** 27 July 2026
 - **Owner:** Giuseppe Funaro
 - **Repository:** `Geppix140269/ponte`

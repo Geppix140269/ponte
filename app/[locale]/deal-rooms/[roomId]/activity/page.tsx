@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Band, Empty, RoomHeader } from "@/components/deal-room/primitives";
+import { Action, Band, Empty, RoomHeader } from "@/components/deal-room/primitives";
 import { listActivity, loadRoom } from "@/lib/deal-room/queries";
 import { ACTIVITY_EVENT_LABEL } from "@/lib/deal-room/activity";
 
@@ -32,6 +32,8 @@ export default async function ActivityPage({
 
   const events = await listActivity(params.roomId, 200);
 
+  const room = `/${params.locale}/deal-rooms/${params.roomId}`;
+
   return (
     <>
       <RoomHeader
@@ -39,6 +41,10 @@ export default async function ActivityPage({
         title="What has happened in this room"
         dealLine="Material events only, each attributed to the person who caused it. This record is append-only: nothing here can be edited or removed, including by Ponte."
       />
+
+      <div className="dr__actions">
+        <Action label="Back to the room" href={room} secondary />
+      </div>
 
       <Band title={events.length === 1 ? "1 event" : `${events.length} events`}>
         {events.length === 0 ? (
