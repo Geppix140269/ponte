@@ -178,9 +178,18 @@ export async function runLevel2(
   }
   const id: string = created.id;
 
-  // 2. Pay for it. A guest already paid at checkout and carries a ledger id.
+  // 2. Pay for it, unless it is the member's own business.
+  //
+  // Verifying the business you represent is FREE and is commercially separate
+  // from checking somebody else's company (ADR-0018, Issue #135). A
+  // member_business run therefore performs no balance read, no spend, no ledger
+  // write and no refund: it cannot reach a credit function at all, which is the
+  // property lib/verification/__tests__/member-business-free.test.ts pins.
+  // A counterparty_check keeps its existing paid rule exactly. A guest already
+  // paid at checkout and carries a ledger id.
   let ledgerId = req.guestLedgerId ?? null;
-  if (req.userId) {
+  const paidPurpose = purpose !== "member_business";
+  if (paidPurpose && req.userId) {
     try {
       ledgerId = await spendCredits(
         req.userId,
@@ -203,7 +212,11 @@ export async function runLevel2(
       throw err;
     }
   }
-  await sb.from("verifications").update({ credit_ledger_id: ledgerId }).eq("id", id);
+  // Only a paid run records a ledger reference. A free member-business case
+  // leaves credit_ledger_id null rather than writing an empty payment record.
+  if (paidPurpose) {
+    await sb.from("verifications").update({ credit_ledger_id: ledgerId }).eq("id", id);
+  }
 
   // 3 onwards. The paid for work. Everything below this line can be re-run on
   // this row without charging again, which is what a resume does.

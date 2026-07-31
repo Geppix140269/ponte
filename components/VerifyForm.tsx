@@ -5,20 +5,26 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { COUNTRIES } from "@/lib/countries";
 import { MEMBER_BUSINESS_ATTESTATION } from "@/lib/verification/purpose";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 
 /** What this check is for. Only 'member_business' can move the member's badge. */
 export type VerifyPurpose = "member_business" | "counterparty_check";
 
 /**
- * The verification request form (Block B), in the Brand v5 heritage-light
- * journey chrome.
+ * The verification request form (Block B), in the Ponte Desk generation.
  *
- * The paint changed; the rules did not. The purposes, the attestation gate, the
- * credit cost stated before anything is spent, the 401/402/429 paths, the
+ * The chrome changed; the rules did not. The purposes, the attestation gate, the
+ * credit cost stated before anything is spent on a PAID counterparty check
+ * (a member-business check is free and shows none of it), the 401/402/429 paths, the
  * candidate disambiguation that resumes the case already paid for, and the
  * three outcomes are exactly as they were. Verified, review and failed keep the
  * reserved semantic colours rather than gold, because gold is a brand signal
  * here and never a verification status.
+ *
+ * Every control below is a Desk primitive: the fields are the Desk's own field
+ * treatment, the actions are `fbtn` and `b`, the outcome sits on a raised
+ * record surface with a reserved status rule. Nothing here is a local
+ * imitation of a control that already exists.
  *
  * Block E folds the remaining English lines into the message fragments; the
  * rest already reads the `verification` namespace.
@@ -91,7 +97,12 @@ export default function VerifyForm({
   purpose,
 }: {
   balance: number | null;
-  cost: number;
+  /**
+   * What this check costs, or null when it is free. Verifying the member's own
+   * business is free (ADR-0018, Issue #135): the page passes null, and no
+   * balance, cost, shortfall or top-up affordance is rendered for it.
+   */
+  cost: number | null;
   purpose: VerifyPurpose;
 }) {
   const t = useTranslations("verification");
@@ -115,7 +126,9 @@ export default function VerifyForm({
   const [picked, setPicked] = useState("");
   const [resuming, setResuming] = useState(false);
 
-  const short = balance !== null && balance < cost;
+  // A free check has no cost, so it can never be short of credits.
+  const isPaid = cost !== null;
+  const short = isPaid && balance !== null && balance < cost;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -241,7 +254,10 @@ export default function VerifyForm({
       <section className="vres">
         <div className="vres__head">
           <span className="vres__eb">{t("request.select.count", { count: total })}</span>
-          <h2 className="vres__t serif">{t("request.select.title")}</h2>
+          <h2 className="vres__t">
+            <PonteIcon name="profile.company" size={18} />
+            {t("request.select.title")}
+          </h2>
         </div>
         <p className="vres__p">{t("request.select.body")}</p>
         <p className="vres__free">{t("request.select.noCharge")}</p>
@@ -323,7 +339,7 @@ export default function VerifyForm({
               ? t("request.select.working")
               : t("request.select.continue")}
           </button>
-          <button type="button" onClick={reset} className="fbtn fbtn--ghost">
+          <button type="button" onClick={reset} className="fbtn fbtn--secondary">
             {t("request.select.startOver")}
           </button>
         </div>
@@ -342,7 +358,7 @@ export default function VerifyForm({
         <div className="vres__head">
           {/* The status rule and the heading carry the outcome between them;
               an eyebrow here would only repeat the heading. */}
-          <h2 className="vres__t serif">
+          <h2 className="vres__t">
             {verified
               ? t("request.result.verifiedTitle")
               : review
@@ -365,7 +381,7 @@ export default function VerifyForm({
         )}
         <p className="vres__meta">{copy.resultNote}</p>
         <div className="vacts">
-          <button type="button" onClick={reset} className="fbtn">
+          <button type="button" onClick={reset} className="b">
             {t("request.result.again")}
           </button>
         </div>
@@ -375,21 +391,38 @@ export default function VerifyForm({
 
   return (
     <form onSubmit={onSubmit} className="vform">
-      {/* Balance and price, stated before anything is spent. */}
-      <div className="vbal">
-        <span className="vbal__l">{t("request.balance.label")}</span>
-        <span className="vbal__n serif">{balance ?? "-"}</span>
-        <span className="vbal__u">{t("request.balance.unit")}</span>
-        <span className="vbal__c">{t("request.balance.cost", { cost })}</span>
-      </div>
+      {/* Balance and price, stated before anything is spent, on the PAID path
+          only. Verifying the member's own business is free (ADR-0018, Issue
+          #135): it shows no balance, no cost, no shortfall and no top-up, and
+          says plainly that it is free instead. */}
+      {isPaid ? (
+        <>
+          <div className="vbal">
+            <span className="vbal__l mono">{t("request.balance.label")}</span>
+            <span className="vbal__n">{balance ?? "-"}</span>
+            <span className="vbal__u">{t("request.balance.unit")}</span>
+            <span className="vbal__c mono">{t("request.balance.cost", { cost })}</span>
+          </div>
 
-      {short && (
-        <div className="vshort">
-          <p className="vshort__p">{t("request.balance.short")}</p>
-          <Link href="/pricing" className="fbtn fbtn--ghost">
-            {t("request.balance.topUp")}
-          </Link>
-        </div>
+          {short && (
+            <div className="notice vshort">
+              <PonteIcon name="evidence.evreview" size={18} />
+              <div>
+                <b>{t("request.balance.short")}</b>
+                <div className="vshort__a">
+                  <Link href="/pricing" className="b b--2">
+                    {t("request.balance.topUp")}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="vfree">
+          Verifying the business you represent is free. It is separate from a
+          paid check on another company.
+        </p>
       )}
 
       <div className="vfields">
@@ -483,7 +516,7 @@ export default function VerifyForm({
       <button
         type="submit"
         disabled={status === "sending" || short || (isBusiness && !attested)}
-        className="fbtn fbtn--lg fbtn--block vsubmit"
+        className="fbtn fbtn--block vsubmit"
       >
         {status === "sending" ? t("request.working") : t("request.submit")}
       </button>

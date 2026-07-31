@@ -1685,7 +1685,9 @@
       "explainerLink": "What each level checks",
       "signedOut": {
         "heading": "Sign in to run a check",
-        "body": "A verification runs against your account, so the result and the credits it spends stay on your record.",
+        "body": "A verification runs against your account, so the result stays on your record.",
+        "bodyBusiness": "Verifying the business you represent is free. It runs against your account, so the result stays on your record.",
+        "bodyCounterparty": "A check on another company runs against your account, so the result and the credits it spends stay on your record.",
         "button": "Sign in"
       },
       "balance": {
