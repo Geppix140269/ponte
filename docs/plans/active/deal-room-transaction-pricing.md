@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stage 1 delivered (this PR). Stages 2–9 not started and not authorised.
+**Status:** Stages 1 and 2 delivered. Stages 3–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -136,7 +136,7 @@ launch records; publish the verified inventory; open this plan.
 
 **Exit:** `npm run verify` green; owner review.
 
-### Stage 2 — Domain model, branch-counting contract and pure pricing engine
+### Stage 2 — Domain model, branch-counting contract and pure pricing engine ✅ **delivered 31 July 2026**
 
 The first substantive design task, and the one most likely to be got wrong.
 
@@ -264,7 +264,61 @@ within scope, none deleted. ADR index, Authority Manifest, Start Here, Current
 State, Decision Log, Open Decisions and both launch registers updated. Inventory
 published. LB-014 proposed; PL-032 to PL-038 opened; OD-011 opened.
 `npm run verify` exits 0. No runtime, schema, Stripe, production or deployment
-change.
+change. PRs #155 (authority) and #160 (reconciliation) merged in that order on
+the owner's instruction; #162 recorded the outcome in the operations log.
+
+**31 July 2026 — Stage 2 delivered, on the owner's instruction.**
+`lib/deal-room/pricing.ts` and `lib/deal-room/__tests__/pricing.test.ts`,
+**50 assertions**, registered in `npm test`. **No schema, no route, no UI, no
+charge, and nothing imports the module** — the last of those is asserted by the
+suite itself, so wiring it is a deliberate act in a later stage rather than a
+drift.
+
+What landed:
+
+- **The pure engine.** `roomPeriodPriceCents(count)`,
+  `additionalBranchChargeCents({paidCapacity, requiredCapacity})`,
+  `isAtPeriodCap()`, `formatUsd()`, the six constants, and
+  `PUBLISHED_PRICE_TABLE` pinned row by row against the engine so the printed
+  table and the arithmetic cannot drift.
+- **The billable-branch predicate.** `branchBillingVerdict()` walks authority §7's
+  five conditions and returns a **named reason** on refusal
+  (`supporting_workspace`, `not_write_enabled`, `invitation_not_accepted`,
+  `no_admitted_counterparty`, `agreements_incomplete`), so the §11
+  administrator-only breakdown can explain a charge later, and so every
+  exclusion in §7 has a test that names it.
+- **The mapping onto the live schema**, made explicit rather than implied:
+  `BILLABLE_SUB_ROOM_KINDS = ['counterparty']`; `BILLABLE_SUB_ROOM_STATES =
+  ['active','blocked','paused','outcome_reached']`;
+  `REQUIRED_AGREEMENTS_FOR_BILLING` = the four-agreement admission gate.
+  All eight sub-room states are decided one way or the other, asserted.
+- **Two non-arithmetic properties**, which matter more than the sums:
+  **purity** (the source may not contain a client, `fetch`, `process.env`,
+  `Date.now`, `new Date` or `Math.random`, and its single import is type-only),
+  and **non-disclosure** (prices are computed from a *count*; the facts types
+  are checked against a **field allowlist** so no identifier can be added
+  without failing).
+
+**Demonstrated rather than trusted.** The suite was proved to fail in three
+directions before being accepted: raising the cap to $200 (6 failures), making
+provider workspaces billable (4 failures), and adding an identifier to the facts
+type. **The third attempt initially passed and should not have** — the
+disclosure check scanned for `ref:` and a field called `subRoomRef` walked past
+it on the capital R. That is why the test is now a field allowlist rather than a
+forbidden-word scan; both `subRoomRef` and `counterpartyName` now fail it, and
+so does a second import appearing in the engine.
+
+**Two process notes worth keeping, because both nearly shipped a false claim.**
+
+1. The first two `npm run verify` runs for this stage **exited 2, not 0**:
+   `[...s.matchAll(re)]` in the test file needs `downlevelIteration` under a
+   tsconfig that declares no `target` (TS2802, two call sites). Replaced with an
+   `exec` loop. The tests themselves had passed both times — it was the
+   typecheck that failed, several minutes later in the run.
+2. That failure was briefly misread as a pass, because the background-task
+   notification reports the **shell's** exit code, and the command ended in an
+   `echo`. The exit code now goes to its own file. A run is green when that file
+   says so, not when the notification does.
 
 ---
 
@@ -287,7 +341,20 @@ change.
 4. **The branch vocabulary was already right.** `sub_rooms.kind` and
    `participants.participant_class` carry the exact distinctions the price needs
    and predate the authority by two days. Verify against §7 rather than assume.
-5. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
+5. **Stage 2 hit one genuine ambiguity, and it decides what members pay: does a
+   broker's branch count? (OD-012.)** Authority §7 condition 1 says a billable
+   branch is a "**principal**-counterparty Deal Branch", which reads like
+   `participant_class = 'principal'` alone. But §4, listing what a Master Deal
+   Room may contain, gives as one of its own examples "a broker acting for a
+   disclosed or controlled principal" — and a broker is an `intermediary` in
+   this schema, not a `principal`. The implemented reading counts intermediaries,
+   because it follows §4's explicit example and because the alternative makes
+   every brokered negotiation free, which is the larger commercial surprise. It
+   is named in `BILLABLE_PARTICIPANT_CLASSES`, documented at the definition and
+   pinned by a test that says so in its title, so reversing it changes one
+   named constant and one named test rather than silently changing bills.
+   **Owner confirmation required.**
+6. **The ADR index is stale beyond the ADR-0012 collision it admits to.**
    ADR-0008, ADR-0009, ADR-0016, both ADR-0018 files and ADR-0019 have no row.
    Recorded as an observation; back-filling accepted decisions is an owner
    action and was not done.
