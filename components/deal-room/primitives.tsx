@@ -262,15 +262,22 @@ export function CommandForm({
   hidden,
   children,
   encType,
+  id,
 }: {
   action: (formData: FormData) => Promise<void>;
   /** Context the command needs: ids, locale, and where to return on refusal. */
   hidden: Record<string, string | null | undefined>;
   children: ReactNode;
   encType?: string;
+  /**
+   * An anchor, so a remedy can point at the exact form that collects the fact
+   * it names rather than at the top of whichever page that form happens to be
+   * on. ADR-0021 ruling 2, controller correction of 31 July 2026.
+   */
+  id?: string;
 }) {
   return (
-    <form action={action} className="dr__form" encType={encType}>
+    <form action={action} className="dr__form" encType={encType} id={id}>
       {Object.entries(hidden).map(([name, value]) =>
         value === null || value === undefined ? null : (
           <input type="hidden" name={name} value={value} key={name} />

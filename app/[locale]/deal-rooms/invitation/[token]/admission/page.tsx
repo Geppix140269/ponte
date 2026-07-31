@@ -124,7 +124,12 @@ export default async function AdmissionPage({
    * not as a refusal at the door: the member can see what is left and complete
    * it on this same page.
    */
-  const admissibility = participantId ? await participantAdmissibility(participantId) : null;
+  // `returnTo` is this page. Six of the nine criteria are collected on the form
+  // below, so their remedies anchor to it rather than sending the member to the
+  // business verification form, which cannot record any of them.
+  const admissibility = participantId
+    ? await participantAdmissibility(participantId, params.locale, returnTo)
+    : null;
   const admissible = admissibility?.admissible ?? false;
 
   return (
@@ -183,7 +188,9 @@ export default async function AdmissionPage({
               </p>
             </div>
 
+            {/* The anchor every room-specific remedy above points at. */}
             <CommandForm
+              id="declaration"
               action={declareParticipation}
               hidden={{ locale: params.locale, participantId, returnTo }}
             >
@@ -281,14 +288,31 @@ export default async function AdmissionPage({
 
           <Band title="3. Enter">
             {admissibility && !admissible ? (
-              <Banner tone="review" title="Still needed before you can enter">
-                {admissibility.summary}{" "}
-                <a className="dr__link" href={`/${params.locale}/verify?for=business`}>
-                  Supply it now
-                </a>
-                . You are not being asked to buy anything: the party who opened this room covers it, and confirming
-                your own business costs nothing. {admissibility.limitation}
-              </Banner>
+              <>
+                {/*
+                  One line per missing criterion, each pointing at the place that
+                  fact is actually supplied. Six of the nine are collected in the
+                  form higher up this same page, so those six anchor to it; the
+                  single link that used to sit here sent all nine to the business
+                  verification form, which cannot record a transaction role, an
+                  authority, a relationship or a room-specific trading name.
+                */}
+                <Banner tone="review" title="Still needed before you can enter">
+                  {admissibility.summary} You are not being asked to buy anything: the party who opened this room
+                  covers it, and confirming your own business costs nothing. {admissibility.limitation}
+                </Banner>
+                <ul className="dr__list">
+                  {admissibility.pending.map((item) => (
+                    <li key={item.criterion} className="dr__check">
+                      <p className="dr__item-title">{item.label}</p>
+                      <p className="dr__check-why">{item.remedy!.statement}</p>
+                      <a className="dr__link" href={item.remedy!.href}>
+                        Supply this
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
             ) : (
               <CommandForm
                 action={completeAdmission}

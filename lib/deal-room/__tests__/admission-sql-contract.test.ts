@@ -299,6 +299,40 @@ test("the admission state ladder is preserved", () => {
   assert.ok(code.includes("set state = 'admitted', admitted_at = now()"));
 });
 
+test("the opener has a real route into criterion 3's 'or'", () => {
+  // Controller ruling, 31 July 2026: an independent professional with no
+  // `profiles.company` could never satisfy "identified business OR declared
+  // professional capacity" at the propose door, because nothing else was read.
+  assert.ok(code.includes("add column if not exists declared_capacity text;"));
+  assert.ok(code.includes("add column if not exists legal_or_trading_name text;"));
+  assert.ok(
+    code.includes("p.declared_capacity, p.legal_or_trading_name"),
+    "the gate must read the opener's own declarations",
+  );
+
+  const business = code.match(/v_business := ([\s\S]*?);/);
+  assert.ok(business, "the business resolution must be readable");
+  assert.ok(
+    business![1].includes("v_profile_capacity"),
+    "criterion 3 must accept the opener's declared capacity, or the 'or' has one working branch",
+  );
+
+  const name = code.match(/v_name := ([\s\S]*?);/);
+  assert.ok(name![1].includes("v_profile_legal_name"), "criterion 4 must accept the opener's own trading name");
+});
+
+test("the opener's participant rows carry declarations, not borrowed facts", () => {
+  const seed = code.match(/select coalesce\(nullif\(btrim\(coalesce\(p\.declared_capacity[\s\S]*?;/);
+  assert.ok(seed, "the initiator's own declarations must be read before the inserts");
+  assert.ok(seed![0].includes("p.legal_or_trading_name"), "the trading name comes from the member's declaration");
+  for (const borrowed of ["submitter_role", "participation_authority", "business_relationship"]) {
+    assert.ok(
+      !seed![0].includes(borrowed),
+      `the capacity and the name must not be taken from ${borrowed}: the controller ruled all three out by name`,
+    );
+  }
+});
+
 test("the two new columns are additive: nullable, no default, no backfill", () => {
   assert.ok(code.includes("add column if not exists represented_legal_name text;"));
   assert.ok(code.includes("add column if not exists business_relationship text;"));

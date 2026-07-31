@@ -1,4 +1,4 @@
-// Falsifiability. Six named ways to break the admission gate, and the proof
+// Falsifiability. Nine named ways to break the admission gate, and the proof
 // that the suite goes red for every one of them.
 //
 // Run: npx tsx lib/deal-room/__tests__/admission-mutation.test.ts
@@ -16,6 +16,13 @@
 //   4. company_verified becomes mandatory
 //   5. the SQL command omits the central gate
 //   6. an overload is introduced
+//
+// The second controller pass, on 31 July 2026, found three more product
+// defects, and their corrections are covered the same way:
+//
+//   7. unrelated evidence is relabelled identity_confirmed
+//   8. every remedy collapses onto one route
+//   9. the opener's route into criterion 3's "or" is closed again
 //
 // Each mutation below is applied to the real file, the relevant suite is run in
 // a child process, and the run is required to FAIL. The file is then restored.
@@ -223,6 +230,38 @@ grant execute on function public.deal_room_admit_participant(uuid, boolean) to a
 
 commit;`,
   [SQL_SUITE, SIGNATURE_SUITE],
+);
+
+// ---------------------------------------------------------------------------
+// 7, 8 and 9. The corrections of the second controller pass
+// ---------------------------------------------------------------------------
+//
+// Not on the controller's original list of six, because the defects they cover
+// were found later. They are here for the same reason the six are: a correction
+// nobody can break on purpose is a correction nobody has tested.
+
+mutation(
+  "7. relabelling unrelated evidence as identity_confirmed is caught",
+  PREDICATE,
+  `      attributable ? "authenticated_member" : "not_confirmed",`,
+  `      attributable ? "identity_confirmed" : "not_confirmed",`,
+  [PREDICATE_SUITE],
+);
+
+mutation(
+  "8. collapsing every remedy onto one route is caught",
+  PREDICATE,
+  "remedy: state === \"pending\" ? { statement, href: routes[criterion] } : null,",
+  "remedy: state === \"pending\" ? { statement, href: routes.identified_business_or_capacity } : null,",
+  [PREDICATE_SUITE],
+);
+
+mutation(
+  "9. closing the opener's route into criterion 3 again is caught",
+  MIGRATION,
+  `                         nullif(btrim(coalesce(v_profile_capacity, '')), ''));`,
+  `                         null);`,
+  [SQL_SUITE],
 );
 
 // ---------------------------------------------------------------------------

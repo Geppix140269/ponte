@@ -31,6 +31,7 @@ import {
   notApplicableUntilPrerequisitesExist,
   type AdmissibilityCriterion,
   type AdmissibilityFacts,
+  type RemedyRoutes,
 } from "../admissibility";
 import {
   canAcceptEvidence,
@@ -128,12 +129,35 @@ const BREAKS: Record<AdmissibilityCriterion, Partial<AdmissibilityFacts>> = {
   room_specific_prerequisite: { roomPrerequisites: null },
 };
 
+/**
+ * A route map where every criterion has a DISTINCT destination.
+ *
+ * Distinct on purpose. If they shared a value, a test asserting that a remedy
+ * points at the right place would pass no matter which key the implementation
+ * looked up, and the defect the controller found - nine criteria all pointing
+ * at `/verify?for=business` - is exactly a wrong-key defect.
+ */
+const TEST_ROUTES: RemedyRoutes = {
+  authenticated_individual: "/en/route-authenticated",
+  confirmed_contact_method: "/en/route-contact",
+  identified_business_or_capacity: "/en/route-business",
+  legal_or_trading_name: "/en/route-name",
+  jurisdiction: "/en/route-jurisdiction",
+  relationship_to_the_business: "/en/route-relationship",
+  transaction_role_declared: "/en/route-role",
+  authority_to_participate_declared: "/en/route-authority",
+  room_specific_prerequisite: "/en/route-prerequisite",
+};
+
+/** The predicate, with the test route map. */
+const judge = (facts: AdmissibilityFacts) => dealRoomAdmissibility(facts, TEST_ROUTES);
+
 // ---------------------------------------------------------------------------
 // The baseline, and the wall that is NOT here
 // ---------------------------------------------------------------------------
 
 test("a member at the floor with the declared facts is admissible", () => {
-  const result = dealRoomAdmissibility(admissible());
+  const result = judge(admissible());
   assert.equal(result.admissible, true);
   assert.deepEqual(result.pending, []);
   assert.equal(result.summary, "");
@@ -176,7 +200,7 @@ test("no verification level is read, requested or requestable", () => {
 });
 
 test("a member who has never verified anything is admissible", () => {
-  const result = dealRoomAdmissibility(admissible());
+  const result = judge(admissible());
   assert.equal(result.admissible, true);
   assert.ok(
     !result.findings.some((f) => f.evidenceState === "business_information_checked"),
@@ -188,12 +212,95 @@ test("a member who has never verified anything is admissible", () => {
   );
 });
 
+// ---------------------------------------------------------------------------
+// The evidence labels say what was actually established
+// ---------------------------------------------------------------------------
+
+test("nothing is ever labelled identity_confirmed", () => {
+  /*
+   * The controller's finding of 31 July 2026: the authenticated session, the
+   * confirmed email and a completed room prerequisite were all labelled
+   * `identity_confirmed`. Three different facts, one word, and the word claimed
+   * the very thing the removed verification wall used to check.
+   *
+   * Driven across every state each criterion can reach, so a single branch
+   * reintroducing the label anywhere fails this.
+   */
+  const cases: AdmissibilityFacts[] = [
+    admissible(),
+    NOTHING,
+    admissible({ roomPrerequisites: { status: "completed", completed: ["Sanctions declaration"] } }),
+    admissible({ roomPrerequisites: { status: "pending", outstanding: ["Sanctions declaration"] } }),
+    admissible({ organisationName: null, declaredCapacity: "Independent broker", legalOrTradingName: "M. Rossi" }),
+  ];
+  for (const facts of cases) {
+    for (const f of judge(facts).findings) {
+      assert.notEqual(
+        f.evidenceState,
+        "identity_confirmed",
+        `${f.criterion} must not claim established identity: nothing in this gate establishes it`,
+      );
+    }
+  }
+});
+
+test("the three formerly-conflated criteria carry three different words", () => {
+  const done = judge(admissible({ roomPrerequisites: { status: "completed", completed: ["Sanctions"] } }));
+  const authenticated = done.findings.find((f) => f.criterion === "authenticated_individual")!;
+  const contact = done.findings.find((f) => f.criterion === "confirmed_contact_method")!;
+  const prerequisite = done.findings.find((f) => f.criterion === "room_specific_prerequisite")!;
+
+  assert.equal(authenticated.evidenceState, "authenticated_member");
+  assert.equal(contact.evidenceState, "contact_confirmed");
+  assert.equal(prerequisite.evidenceState, "prerequisite_completed");
+  assert.equal(
+    new Set([authenticated.evidenceState, contact.evidenceState, prerequisite.evidenceState]).size,
+    3,
+    "three different facts must not share one label",
+  );
+
+  // And `no_prerequisites_apply` stays separate from all three.
+  const none = judge(admissible()).findings.find((f) => f.criterion === "room_specific_prerequisite")!;
+  assert.equal(none.evidenceState, "no_prerequisites_apply");
+  assert.notEqual(none.evidenceState, prerequisite.evidenceState);
+});
+
+// ---------------------------------------------------------------------------
+// Every remedy leads where that exact fact is supplied
+// ---------------------------------------------------------------------------
+
+test("each pending criterion carries its OWN route, never another criterion's", () => {
+  // One criterion at a time, so a wrong lookup cannot hide behind a shared value.
+  for (const criterion of ADMISSIBILITY_CRITERIA) {
+    const result = judge(admissible(BREAKS[criterion]));
+    const finding = result.pending.find((f) => f.criterion === criterion)!;
+    assert.equal(finding.remedy!.href, TEST_ROUTES[criterion], `${criterion} must link to its own destination`);
+  }
+});
+
+test("all nine routes are distinct in the map the predicate is given", () => {
+  // Guards the test above from becoming vacuous: if the map ever collapsed onto
+  // one value, every assertion in it would pass for the wrong reason.
+  const hrefs = ADMISSIBILITY_CRITERIA.map((c) => TEST_ROUTES[c]);
+  assert.equal(new Set(hrefs).size, ADMISSIBILITY_CRITERIA.length);
+});
+
+test("the one-line refusal points at the first missing item, not at one fixed page", () => {
+  const roleOnly = judge(admissible({ transactionRole: null }));
+  const message = admissibilityRefusal(roleOnly);
+  assert.match(message, /route-role/, "a missing transaction role must lead where a role is declared");
+  assert.ok(!message.includes("route-business"), "it must not lead to a page that cannot record it");
+
+  const jurisdictionOnly = judge(admissible({ jurisdiction: null }));
+  assert.match(admissibilityRefusal(jurisdictionOnly), /route-jurisdiction/);
+});
+
 test("criterion 1 is a session user AND an attributable profile, and both are needed", () => {
-  assert.equal(dealRoomAdmissibility(admissible({ authenticatedUserId: null })).admissible, false);
-  assert.equal(dealRoomAdmissibility(admissible({ attributableProfileId: null })).admissible, false);
+  assert.equal(judge(admissible({ authenticatedUserId: null })).admissible, false);
+  assert.equal(judge(admissible({ attributableProfileId: null })).admissible, false);
   // A session attributed to somebody else is not an authenticated individual
   // for the purpose of a record that names who acted.
-  const mismatched = dealRoomAdmissibility(
+  const mismatched = judge(
     admissible({ attributableProfileId: "5f1c2d3e-0000-4000-8000-000000000002" }),
   );
   assert.equal(mismatched.admissible, false);
@@ -207,12 +314,12 @@ test("criterion 2 is independent of criterion 1", () => {
   // Both directions: an attributable member with no confirmed address is
   // blocked on 2 alone, and an unattributable one with a confirmed address is
   // blocked on 1 alone. Neither can carry the other.
-  const noContact = dealRoomAdmissibility(admissible({ emailConfirmedAt: null }));
+  const noContact = judge(admissible({ emailConfirmedAt: null }));
   assert.deepEqual(
     noContact.pending.map((f) => f.criterion),
     ["confirmed_contact_method"],
   );
-  const noProfile = dealRoomAdmissibility(admissible({ attributableProfileId: null }));
+  const noProfile = judge(admissible({ attributableProfileId: null }));
   assert.deepEqual(
     noProfile.pending.map((f) => f.criterion),
     ["authenticated_individual"],
@@ -225,12 +332,12 @@ test("criterion 2 is independent of criterion 1", () => {
 
 test("the opener and the invitee are judged by one predicate, with one outcome", () => {
   const facts = admissible();
-  const opener = dealRoomAdmissibility(facts);
-  const invitee = dealRoomAdmissibility(facts);
+  const opener = judge(facts);
+  const invitee = judge(facts);
   assert.deepEqual(invitee, opener);
 
-  const shortOpener = dealRoomAdmissibility(admissible({ jurisdiction: null }));
-  const shortInvitee = dealRoomAdmissibility(admissible({ jurisdiction: null }));
+  const shortOpener = judge(admissible({ jurisdiction: null }));
+  const shortInvitee = judge(admissible({ jurisdiction: null }));
   assert.deepEqual(shortInvitee, shortOpener);
   assert.equal(shortOpener.admissible, false);
 });
@@ -245,8 +352,8 @@ test("nothing in the facts can express who paid, who sponsored, or who opened", 
 });
 
 test("a sponsored guest is held to exactly the standard the sponsor met", () => {
-  const sponsor = dealRoomAdmissibility(admissible());
-  const guest = dealRoomAdmissibility(admissible({ relationshipToBusiness: null }));
+  const sponsor = judge(admissible());
+  const guest = judge(admissible({ relationshipToBusiness: null }));
   assert.equal(sponsor.admissible, true);
   assert.equal(guest.admissible, false);
   assert.deepEqual(
@@ -268,7 +375,7 @@ test("no credit function is imported, called or named", () => {
 // ---------------------------------------------------------------------------
 
 test("all nine criteria are evaluated, every time, in section 6's order", () => {
-  const result = dealRoomAdmissibility(admissible());
+  const result = judge(admissible());
   assert.deepEqual(
     result.findings.map((f) => f.criterion),
     [...ADMISSIBILITY_CRITERIA],
@@ -284,7 +391,7 @@ test("all nine criteria are evaluated, every time, in section 6's order", () => 
 
 for (const criterion of ADMISSIBILITY_CRITERIA) {
   test(`failing only '${criterion}' reports it, and nothing else, as blocking`, () => {
-    const result = dealRoomAdmissibility(admissible(BREAKS[criterion]));
+    const result = judge(admissible(BREAKS[criterion]));
     assert.equal(result.admissible, false);
     // Every criterion isolates. There is no documented pair any more: the
     // controller required 4 and 6 to stop leaning on 3 and 8, and this is where
@@ -299,7 +406,7 @@ for (const criterion of ADMISSIBILITY_CRITERIA) {
 test("a declared professional capacity satisfies criterion 3 and NOTHING else", () => {
   // The precise conflation the controller struck: a capacity is not a name and
   // not a relationship, and supplying only a capacity must leave both pending.
-  const result = dealRoomAdmissibility(
+  const result = judge(
     admissible({
       organisationName: null,
       legalOrTradingName: null,
@@ -320,7 +427,7 @@ test("a declared professional capacity satisfies criterion 3 and NOTHING else", 
 });
 
 test("the participation authority does not satisfy the relationship either", () => {
-  const result = dealRoomAdmissibility(
+  const result = judge(
     admissible({ relationshipToBusiness: null, participationAuthority: "Board resolution of 12 June" }),
   );
   assert.equal(result.admissible, false);
@@ -336,7 +443,7 @@ test("declared relationship, role and authority each satisfy only their own crit
     ["transactionRole", "transaction_role_declared"],
     ["participationAuthority", "authority_to_participate_declared"],
   ] as const) {
-    const result = dealRoomAdmissibility(admissible({ [field]: null }));
+    const result = judge(admissible({ [field]: null }));
     assert.deepEqual(
       result.pending.map((f) => f.criterion),
       [criterion],
@@ -349,7 +456,7 @@ test("an independent professional with no company is admissible", () => {
   // Section 6's "or declared professional capacity" is not decoration: a broker
   // with no registered entity must get in - once they have named what they
   // trade as and how they stand to it.
-  const result = dealRoomAdmissibility(
+  const result = judge(
     admissible({
       organisationName: null,
       declaredCapacity: "Independent broker",
@@ -398,7 +505,7 @@ test("this release answers not_applicable, explicitly and with a reason", () => 
   assert.equal(evaluation.status, "not_applicable");
   assert.equal(evaluation.status === "not_applicable" && evaluation.reason, NO_PREREQUISITE_MECHANISM);
 
-  const result = dealRoomAdmissibility(admissible());
+  const result = judge(admissible());
   const finding = result.findings.find((f) => f.criterion === "room_specific_prerequisite")!;
   assert.equal(finding.state, "not_applicable");
   assert.equal(finding.evidenceState, "no_prerequisites_apply");
@@ -408,8 +515,8 @@ test("this release answers not_applicable, explicitly and with a reason", () => 
 test("not_applicable is not disguised as confirmed", () => {
   // The distinction the controller asked for: a room that required nothing is
   // reported differently from a room that required something and got it.
-  const none = dealRoomAdmissibility(admissible());
-  const done = dealRoomAdmissibility(
+  const none = judge(admissible());
+  const done = judge(
     admissible({ roomPrerequisites: { status: "completed", completed: ["Sanctions declaration"] } }),
   );
   const noneFinding = none.findings.find((f) => f.criterion === "room_specific_prerequisite")!;
@@ -422,7 +529,7 @@ test("not_applicable is not disguised as confirmed", () => {
 });
 
 test("outstanding prerequisites block and are named", () => {
-  const result = dealRoomAdmissibility(
+  const result = judge(
     admissible({ roomPrerequisites: { status: "pending", outstanding: ["Sanctions declaration"] } }),
   );
   assert.equal(result.admissible, false);
@@ -431,7 +538,7 @@ test("outstanding prerequisites block and are named", () => {
 });
 
 test("a prerequisite evaluation that was never made blocks", () => {
-  const result = dealRoomAdmissibility(admissible({ roomPrerequisites: null }));
+  const result = judge(admissible({ roomPrerequisites: null }));
   assert.equal(result.admissible, false);
   assert.equal(result.pending[0].criterion, "room_specific_prerequisite");
   assert.equal(result.pending[0].state, "pending");
@@ -442,7 +549,7 @@ test("a prerequisite evaluation that was never made blocks", () => {
 // ---------------------------------------------------------------------------
 
 test("a member with nothing readable at all is blocked on every criterion", () => {
-  const result = dealRoomAdmissibility(NOTHING);
+  const result = judge(NOTHING);
   assert.equal(result.admissible, false);
   assert.equal(result.pending.length, 9);
   assert.deepEqual(result.satisfied, []);
@@ -472,16 +579,16 @@ test("no absent, empty or malformed value ever passes", () => {
   ];
   for (const [field, base] of fields) {
     // The baseline itself must pass, or the assertion below proves nothing.
-    assert.equal(dealRoomAdmissibility(admissible(base)).admissible, true, `baseline for ${field}`);
+    assert.equal(judge(admissible(base)).admissible, true, `baseline for ${field}`);
     for (const value of rogue) {
-      const result = dealRoomAdmissibility(admissible({ ...base, [field]: value as never }));
+      const result = judge(admissible({ ...base, [field]: value as never }));
       assert.equal(result.admissible, false, `${field} = ${JSON.stringify(value)} must not pass`);
     }
   }
 });
 
 test("whitespace is not a declaration", () => {
-  const result = dealRoomAdmissibility(admissible({ participationAuthority: "   " }));
+  const result = judge(admissible({ participationAuthority: "   " }));
   assert.equal(result.admissible, false);
   assert.deepEqual(
     result.pending.map((f) => f.criterion),
@@ -502,7 +609,7 @@ test("there is no code path that turns an absence into a pass", () => {
 // ---------------------------------------------------------------------------
 
 test("the result names the missing evidence and contains no number anywhere", () => {
-  const result = dealRoomAdmissibility(admissible({ attributableProfileId: null, jurisdiction: null }));
+  const result = judge(admissible({ attributableProfileId: null, jurisdiction: null }));
 
   assert.deepEqual(
     result.pending.map((f) => f.criterion),
@@ -529,22 +636,24 @@ test("the result names the missing evidence and contains no number anywhere", ()
 });
 
 test("every blocked criterion carries a remedy, and satisfied ones carry none", () => {
-  const result = dealRoomAdmissibility(NOTHING);
+  const result = judge(NOTHING);
   for (const f of result.pending) {
     assert.ok(f.remedy, `${f.criterion} must say what to do`);
     assert.ok(f.remedy!.statement.trim().length > 0, `${f.criterion} remedy is not empty`);
     assert.ok(f.remedy!.href.startsWith("/"), `${f.criterion} remedy points somewhere`);
   }
-  for (const f of dealRoomAdmissibility(admissible()).satisfied) {
+  for (const f of judge(admissible()).satisfied) {
     assert.equal(f.remedy, null, `${f.criterion} is met and needs no remedy`);
   }
 });
 
-test("the refusal never implies a cost, and points at the free surface", () => {
-  const result = dealRoomAdmissibility(admissible({ jurisdiction: null }));
+test("the refusal never implies a cost, and points at the route for what is missing", () => {
+  const result = judge(admissible({ jurisdiction: null }));
   const message = admissibilityRefusal(result);
   assert.match(message, /jurisdiction/);
-  assert.match(message, /\/verify\?for=business/);
+  // The destination is the one for THIS criterion, not a fixed page. The old
+  // version hard-coded `/verify?for=business` here whatever was missing.
+  assert.match(message, /route-jurisdiction/);
   assert.match(message, /free/);
   for (const word of ["pay", "price", "cost", "purchase", "upgrade", "subscription", "credit", "$"]) {
     assert.ok(!message.toLowerCase().includes(word), `the refusal must not say "${word}"`);
@@ -552,7 +661,7 @@ test("the refusal never implies a cost, and points at the free surface", () => {
 });
 
 test("an admissible member gets no refusal sentence at all", () => {
-  assert.equal(admissibilityRefusal(dealRoomAdmissibility(admissible())), "");
+  assert.equal(admissibilityRefusal(judge(admissible())), "");
 });
 
 // ---------------------------------------------------------------------------
@@ -603,7 +712,7 @@ test("protected reads and writes remain unavailable before admission", () => {
 });
 
 test("being admissible is not being admitted", () => {
-  const fullyAdmissible = dealRoomAdmissibility(admissible());
+  const fullyAdmissible = judge(admissible());
   assert.equal(fullyAdmissible.admissible, true);
 
   const notYetAdmitted = viewer({ participantState: "terms_pending", isRequiredApprover: true });

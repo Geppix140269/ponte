@@ -172,6 +172,50 @@ comment on column public.deal_room_participants.business_relationship is
   'Seeded from listings.submitter_role for the member who opens the room.';
 
 -- ---------------------------------------------------------------------------
+-- 0b. The two columns the OPENER needs, so criterion 3's "or" is real for them
+-- ---------------------------------------------------------------------------
+--
+-- Controller ruling, 31 July 2026: "The opener must genuinely have both routes
+-- in criterion 3... an independent professional with no `profiles.company` value
+-- can never use the accepted `identified business OR declared professional
+-- capacity` route."
+--
+-- The invitee declares a capacity on their participant row, because a
+-- participant row exists by the time they are asked. The opener is asked BEFORE
+-- any room or participant row exists, so there is nowhere on a room to put it.
+-- The minimum truthful place is therefore the member's own profile, where
+-- `company` and `country` already live.
+--
+-- Two nullable columns, no default, no backfill, no constraint. They are the
+-- member's own declaration about themselves, not about any one room, which is
+-- what makes the profile the right home rather than an expedient one: an
+-- independent broker is an independent broker in every room they enter.
+--
+-- Neither is derived from anything. `legal_or_trading_name` is NOT defaulted
+-- from `company` at write time - the resolution below prefers it and falls back
+-- to `company`, so a member who has a company keeps working unchanged and a
+-- member who has only a capacity has somewhere to put the name they trade
+-- under. `declared_capacity` is never taken from `submitter_role`, from the
+-- relationship or from the authority, which the controller ruled out by name.
+
+alter table public.profiles
+  add column if not exists declared_capacity text;
+
+alter table public.profiles
+  add column if not exists legal_or_trading_name text;
+
+comment on column public.profiles.declared_capacity is
+  'PT-PRODUCT-2026-07-27-01 section 6 criterion 3, the "or declared professional '
+  'capacity" route, for a member acting without a company - independent broker, '
+  'freight forwarder, adviser. The member''s own declaration. Never derived from '
+  'listings.submitter_role, from a relationship or from an authority.';
+
+comment on column public.profiles.legal_or_trading_name is
+  'PT-PRODUCT-2026-07-27-01 section 6 criterion 4, for a member with no company '
+  'on file. The name they trade under, which is not the capacity they act in. '
+  'Preferred over profiles.company where both exist; never written from it.';
+
+-- ---------------------------------------------------------------------------
 -- 1. The predicate
 -- ---------------------------------------------------------------------------
 --
@@ -233,6 +277,8 @@ declare
   v_profile_id uuid;
   v_company text;
   v_country text;
+  v_profile_capacity text;
+  v_profile_legal_name text;
   v_confirmed timestamptz;
   v_p public.deal_room_participants%rowtype;
   v_org_name text;
@@ -265,8 +311,8 @@ begin
    * whether this act is attributable to a member, which a `profiles` row
    * answers. `v_profile_id` is null when there is no such row, and that blocks.
    */
-  select p.id, p.company, p.country
-    into v_profile_id, v_company, v_country
+  select p.id, p.company, p.country, p.declared_capacity, p.legal_or_trading_name
+    into v_profile_id, v_company, v_country, v_profile_capacity, v_profile_legal_name
     from public.profiles p where p.id = p_profile;
 
   select u.email_confirmed_at into v_confirmed
@@ -303,9 +349,15 @@ begin
    */
   v_business := coalesce(nullif(btrim(coalesce(v_org_name, '')), ''),
                          nullif(btrim(coalesce(v_p.declared_capacity, '')), ''),
-                         nullif(btrim(coalesce(v_company, '')), ''));
+                         nullif(btrim(coalesce(v_company, '')), ''),
+                         -- The opener's route into section 6's "or". Without
+                         -- this, a member with no company on file could never
+                         -- satisfy criterion 3 at the propose door, however
+                         -- clearly they had stated the capacity they act in.
+                         nullif(btrim(coalesce(v_profile_capacity, '')), ''));
   v_name := coalesce(nullif(btrim(coalesce(v_p.represented_legal_name, '')), ''),
                      nullif(btrim(coalesce(v_org_name, '')), ''),
+                     nullif(btrim(coalesce(v_profile_legal_name, '')), ''),
                      nullif(btrim(coalesce(v_company, '')), ''));
   v_jurisdiction := coalesce(nullif(btrim(coalesce(v_org_country, '')), ''),
                              nullif(btrim(coalesce(v_country, '')), ''));
@@ -553,6 +605,10 @@ declare
   v_sub uuid;
   v_ref text;
   v_missing text[];
+  -- The initiator's own declarations, read once and written onto both of their
+  -- participant rows, so the opener carries the same facts an invitee supplies.
+  v_self_capacity text;
+  v_self_name text;
 begin
   if auth.uid() is null then
     raise exception 'Not authenticated' using errcode = '42501';
@@ -731,24 +787,37 @@ begin
   -- The initiator is admitted at master level, as principal, approver and
   -- administrator, and into their own first workspace.
   /*
-   * The initiator's two participant rows, now carrying the same two declared
-   * facts an invitee must supply.
+   * The initiator's two participant rows, now carrying the same declared facts
+   * an invitee must supply.
    *
-   * `represented_legal_name` from `profiles.company` and `business_relationship`
-   * from `listings.submitter_role`: two separate stored columns, neither of them
-   * a re-reading of the capacity or the authority written beside them. The gate
-   * above already refused this call if either was absent, so these are recorded
-   * rather than assumed - and recording them is what lets the invitee's gate and
-   * the opener's gate read the identical columns afterwards.
+   * Read once, from the member's own profile, and written onto both rows so the
+   * opener's participation is described by the same columns the invitee's is.
+   * The gate above already refused this call if any of them was missing, so
+   * these are recorded rather than assumed.
+   *
+   * `declared_capacity` falls back to 'Deal owner' ONLY to keep
+   * `deal_room_participants_identity_when_admitted` satisfied - that constraint
+   * needs an org or a capacity on an admitted row, and 20260731b introduced this
+   * literal to close LB-001. Where the member has actually declared a capacity,
+   * their declaration is recorded instead of the placeholder.
+   *
+   * `business_relationship` comes from `listings.submitter_role` and nothing
+   * else: a separate stored column, not a re-reading of the capacity or the
+   * authority written beside it.
    */
+  select coalesce(nullif(btrim(coalesce(p.declared_capacity, '')), ''), 'Deal owner'),
+         coalesce(nullif(btrim(coalesce(p.legal_or_trading_name, '')), ''),
+                  nullif(btrim(coalesce(p.company, '')), ''))
+    into v_self_capacity, v_self_name
+    from public.profiles p where p.id = auth.uid();
+
   insert into public.deal_room_participants
     (room_id, sub_room_id, profile_id, org_id, participant_class, transaction_role,
      participation_authority, declared_capacity, represented_legal_name, business_relationship,
      is_required_approver, is_room_administrator, state, admitted_at)
   values
     (v_room, null, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', 'Deal owner',
-     nullif(btrim(coalesce((select p.company from public.profiles p where p.id = auth.uid()), '')), ''),
+     'Owner of the published Deal', v_self_capacity, v_self_name,
      nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
      true, true, 'admitted', now());
 
@@ -758,8 +827,7 @@ begin
      is_required_approver, is_room_administrator, state, admitted_at)
   values
     (v_room, v_sub, auth.uid(), v_org, 'principal', 'Deal owner',
-     'Owner of the published Deal', 'Deal owner',
-     nullif(btrim(coalesce((select p.company from public.profiles p where p.id = auth.uid()), '')), ''),
+     'Owner of the published Deal', v_self_capacity, v_self_name,
      nullif(btrim(coalesce(v_l.submitter_role, '')), ''),
      true, true, 'admitted', now());
 

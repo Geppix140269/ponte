@@ -110,7 +110,7 @@ export async function proposeRoom(formData: FormData): Promise<void> {
    * boundary - the same rule is written into the command by
    * `20260731g_deal_room_admission_verification_gate.sql`, which is not applied.
    */
-  const admissibility = await initiatorAdmissibility(listingId);
+  const admissibility = await initiatorAdmissibility(listingId, locale);
   if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
 
   const { data, error } = await supabase.rpc("deal_room_propose", {
@@ -225,6 +225,69 @@ export async function acceptInvitation(formData: FormData): Promise<void> {
   redirect(`/${locale}/deal-rooms/invitation/${token}/admission?participant=${String(data)}`);
 }
 
+/**
+ * The OPENER's declaration, before any room or participant row exists.
+ *
+ * ## Why this action exists at all
+ *
+ * The invitee declares on their participant row, through
+ * `deal_room_declare_participation`. The opener is asked before there is a room
+ * to hang anything on, so until `20260731g` the only facts available to them
+ * were `profiles.company` and `profiles.country` - and a member with no company
+ * could therefore never satisfy section 6's "identified business OR declared
+ * professional capacity", however plainly they had stated the capacity they act
+ * in. The controller struck that on 31 July 2026. This writes the two profile
+ * declarations that close it.
+ *
+ * ## Why a table write and not a command
+ *
+ * `profiles` is the member's own row and carries member policies; the Deal Room
+ * tables do not, which is why everything else here goes through an RPC. Writing
+ * a member's own profile through their own session is the pattern `/account`
+ * already uses, and RLS is the boundary in both places. `deal_room_propose`
+ * keeps its exact signature: it READS these columns rather than taking them as
+ * parameters, so nothing about the command's shape or ACL changes.
+ *
+ * ## Three fields, three separate facts
+ *
+ * The capacity, the trading name and the jurisdiction are written independently
+ * and none is derived from another. In particular the trading name is never
+ * defaulted from the capacity - a capacity is what you do, a name is what you
+ * trade as - and neither is ever taken from `listings.submitter_role`, from the
+ * relationship or from the authority. `null` is written for a blank field, so
+ * clearing one genuinely clears it rather than leaving a stale declaration
+ * standing in for a fact the member has withdrawn.
+ */
+export async function declareOpenerCapacity(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
+  const locale = String(formData.get("locale") ?? "en");
+  const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) fail(back, "Sign in to record this declaration.");
+
+  const clean = (field: string): string | null => {
+    const value = String(formData.get(field) ?? "").trim();
+    return value.length > 0 ? value : null;
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      declared_capacity: clean("declaredCapacity"),
+      legal_or_trading_name: clean("legalName"),
+      country: clean("jurisdiction"),
+    })
+    .eq("id", user!.id);
+
+  if (error) fail(back, readable(error));
+  revalidatePath(`/${locale}/deal-rooms/propose`);
+  redirect(back);
+}
+
 export async function declareParticipation(formData: FormData): Promise<void> {
   const supabase = createClient();
   const back = returnTo(formData, "/");
@@ -293,7 +356,10 @@ export async function completeAdmission(formData: FormData): Promise<void> {
    * access removes payment friction. It does not weaken admission, confidentiality
    * or authority requirements." The predicate has no input for who paid.
    */
-  const admissibility = await participantAdmissibility(participantId);
+  // `back` is the admission page the member is standing on, which is also where
+  // six of the nine criteria are collected - so the refusal's routes point at
+  // the form in front of them rather than at a page that cannot record them.
+  const admissibility = await participantAdmissibility(participantId, locale, back);
   if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
 
   const { error } = await supabase.rpc("deal_room_admit_participant", {

@@ -177,6 +177,26 @@ export function notApplicableUntilPrerequisitesExist(): RoomPrerequisiteEvaluati
  * between "declared" and "sighted" is the point of keeping both words.
  */
 export const EVIDENCE_STATES = [
+  /*
+   * Three facts, three words, because they are three different claims.
+   *
+   * An earlier draft labelled the authenticated session, the confirmed email
+   * and a completed room prerequisite all as `identity_confirmed`. The
+   * controller struck it on 31 July 2026: the label overclaims identity
+   * evidence, and it does so immediately after the identity-verification wall
+   * was deliberately removed. Nothing here establishes identity, so nothing
+   * here says it does.
+   */
+  "authenticated_member",
+  "contact_confirmed",
+  "prerequisite_completed",
+  /*
+   * Section 6's own word for established identity. It stays in the vocabulary
+   * because section 6 puts it there, and it is NEVER produced, for the same
+   * reason `business_information_checked` and `authority_sighted` are never
+   * produced: this gate does not do the thing the word describes. A test
+   * asserts no finding ever carries it.
+   */
   "identity_confirmed",
   "business_information_supplied",
   "business_information_checked",
@@ -439,10 +459,22 @@ export interface AdmissibilityFacts {
   roomPrerequisites: RoomPrerequisiteEvaluation | null;
 }
 
-/** Where the free evidence is supplied. ADR-0018 made this verification free. */
-export const VERIFY_BUSINESS_HREF = "/verify?for=business";
-/** Where a member confirms the address on their account. */
-export const ACCOUNT_HREF = "/account";
+/**
+ * Where each criterion is actually supplied, one route per criterion.
+ *
+ * Controller ruling, 31 July 2026: "Every remedy must lead to where that exact
+ * fact is supplied... do not send a member away to a page that cannot complete
+ * the named item." The invitee page used to send all nine to
+ * `/verify?for=business`, although four of them are collected on the admission
+ * page itself, so four of the nine remedies were dead ends that looked helpful.
+ *
+ * The map is a REQUIRED parameter rather than a default, and `Record` over the
+ * criterion union means TypeScript will not compile a caller that forgets one.
+ * The two doors supply different maps, because the same fact is supplied in
+ * different places depending on who is asking: an invitee declares their
+ * jurisdiction on the admission form, an opener has it on their account.
+ */
+export type RemedyRoutes = Record<AdmissibilityCriterion, string>;
 
 const LIMITATION =
   "Meeting this minimum admits you to the room. It does not prove solvency, product ownership, document authenticity, commercial reliability or authority to execute a final contract, and further evidence may be asked for later as the deal progresses.";
@@ -456,18 +488,27 @@ const LIMITATION =
  */
 const declared = (v: unknown): boolean => v !== null && v !== undefined && String(v).trim() !== "";
 
+/**
+ * One finding, with its remedy pointed at the route for THIS criterion.
+ *
+ * The href is looked up rather than passed, so a criterion can only ever be
+ * given its own route: there is no argument at the call site that could be
+ * copied from the line above, which is how all nine ended up pointing at
+ * `/verify?for=business` in the first place.
+ */
 function finding(
+  routes: RemedyRoutes,
   criterion: AdmissibilityCriterion,
   state: CriterionState,
   evidenceState: EvidenceState,
-  remedy: { statement: string; href: string },
+  statement: string,
 ): AdmissibilityFinding {
   return {
     criterion,
     label: CRITERION_EVIDENCE[criterion].label,
     state,
     evidenceState,
-    remedy: state === "pending" ? remedy : null,
+    remedy: state === "pending" ? { statement, href: routes[criterion] } : null,
   };
 }
 
@@ -479,7 +520,7 @@ function finding(
  * separate items has been failed three times by the interface, not once by the
  * rule.
  */
-export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityResult {
+export function dealRoomAdmissibility(facts: AdmissibilityFacts, routes: RemedyRoutes): AdmissibilityResult {
   const findings: AdmissibilityFinding[] = [];
 
   /*
@@ -498,30 +539,29 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const attributable = uid !== null && pid !== null && uid === pid;
   findings.push(
     finding(
+      routes,
       "authenticated_individual",
       attributable ? "confirmed" : "pending",
-      attributable ? "identity_confirmed" : "not_confirmed",
-      {
-        statement: "Sign in as a Ponte member. A room records who acted, so the act must be attributable to an account.",
-        href: ACCOUNT_HREF,
-      },
+      // `authenticated_member`, NOT `identity_confirmed`. Being signed in is not
+      // evidence of who somebody is, and after the identity wall was removed
+      // this label would have been the only place the product still claimed it.
+      attributable ? "authenticated_member" : "not_confirmed",
+      "Sign in as a Ponte member. A room records who acted, so the act must be attributable to an account.",
     ),
   );
 
   // 2. Confirmed contact method. CONFIRMED: the system holds the timestamp.
   //    An unconfirmed address is an unattributable participant, and the room
-  //    record and the invitation both go to it.
+  //    record and the invitation both go to it. `contact_confirmed` is its own
+  //    word: a reachable address is not an established identity.
   const contact = declared(facts.emailConfirmedAt);
   findings.push(
     finding(
+      routes,
       "confirmed_contact_method",
       contact ? "confirmed" : "pending",
-      contact ? "identity_confirmed" : "not_confirmed",
-      {
-        statement:
-          "Confirm your email address. Ponte sent a confirmation link when you signed up, and it can be sent again.",
-        href: ACCOUNT_HREF,
-      },
+      contact ? "contact_confirmed" : "not_confirmed",
+      "Confirm your email address. Ponte sent a confirmation link when you signed up, and it can be sent again.",
     ),
   );
 
@@ -537,14 +577,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const business = declared(facts.organisationName) || declared(facts.declaredCapacity);
   findings.push(
     finding(
+      routes,
       "identified_business_or_capacity",
       business ? "declared" : "pending",
       business ? "business_information_supplied" : "not_confirmed",
-      {
-        statement:
-          "Name the business you act for, or the professional capacity you act in. Either one satisfies this, and both are not required.",
-        href: VERIFY_BUSINESS_HREF,
-      },
+      "Name the business you act for, or the professional capacity you act in. Either one satisfies this, and both are not required.",
     ),
   );
 
@@ -564,14 +601,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const name = declared(facts.organisationName) || declared(facts.legalOrTradingName);
   findings.push(
     finding(
+      routes,
       "legal_or_trading_name",
       name ? "declared" : "pending",
       name ? "business_information_supplied" : "not_confirmed",
-      {
-        statement:
-          "Give the legal or trading name you act under. This is the name itself, not the capacity you act in, and both are asked for separately.",
-        href: VERIFY_BUSINESS_HREF,
-      },
+      "Give the legal or trading name you act under. This is the name itself, not the capacity you act in, and both are asked for separately.",
     ),
   );
 
@@ -579,10 +613,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const jurisdiction = declared(facts.jurisdiction);
   findings.push(
     finding(
+      routes,
       "jurisdiction",
       jurisdiction ? "declared" : "pending",
       jurisdiction ? "business_information_supplied" : "not_confirmed",
-      { statement: "State the jurisdiction you are established in.", href: VERIFY_BUSINESS_HREF },
+      "State the jurisdiction you are established in.",
     ),
   );
 
@@ -591,13 +626,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const relationship = declared(facts.relationshipToBusiness);
   findings.push(
     finding(
+      routes,
       "relationship_to_the_business",
       relationship ? "declared" : "pending",
       relationship ? "role_declared" : "not_confirmed",
-      {
-        statement: "State how you stand to that business: an office you hold, a mandate, or an engagement.",
-        href: VERIFY_BUSINESS_HREF,
-      },
+      "State how you stand to that business: an office you hold, a mandate, or an engagement.",
     ),
   );
 
@@ -605,13 +638,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const role = declared(facts.transactionRole);
   findings.push(
     finding(
+      routes,
       "transaction_role_declared",
       role ? "declared" : "pending",
       role ? "role_declared" : "not_confirmed",
-      {
-        statement: "Declare your role in this transaction. Responsibilities in the procedure are assigned by role.",
-        href: VERIFY_BUSINESS_HREF,
-      },
+      "Declare your role in this transaction. Responsibilities in the procedure are assigned by role.",
     ),
   );
 
@@ -625,14 +656,11 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
   const authority = declared(facts.participationAuthority);
   findings.push(
     finding(
+      routes,
       "authority_to_participate_declared",
       authority ? "declared" : "pending",
       authority ? "authority_declared" : "not_confirmed",
-      {
-        statement:
-          "Declare what authorises you to act in that role. Ponte records the declaration and does not check it.",
-        href: VERIFY_BUSINESS_HREF,
-      },
+      "Declare what authorises you to act in that role. Ponte records the declaration and does not check it.",
     ),
   );
 
@@ -667,7 +695,9 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
         break;
       case "completed":
         prerequisiteState = "confirmed";
-        prerequisiteEvidence = "identity_confirmed";
+        // `prerequisite_completed`, not `identity_confirmed`. A completed room
+        // prerequisite says nothing whatever about who the member is.
+        prerequisiteEvidence = "prerequisite_completed";
         prerequisiteRemedy = "This room's prerequisites are complete.";
         break;
       case "pending":
@@ -678,10 +708,7 @@ export function dealRoomAdmissibility(facts: AdmissibilityFacts): AdmissibilityR
     }
   }
   findings.push(
-    finding("room_specific_prerequisite", prerequisiteState, prerequisiteEvidence, {
-      statement: prerequisiteRemedy,
-      href: ACCOUNT_HREF,
-    }),
+    finding(routes, "room_specific_prerequisite", prerequisiteState, prerequisiteEvidence, prerequisiteRemedy),
   );
 
   const pending = findings.filter((f) => f.state === "pending");
@@ -717,13 +744,20 @@ export function admissibilitySummary(pending: readonly AdmissibilityFinding[]): 
 /**
  * The single sentence a refused command returns to the member.
  *
- * Both server actions print this. It names the missing evidence and where to
- * supply it, so a refusal is a next step rather than a dead end.
+ * It names the missing evidence and **the route for the first missing item**,
+ * not one route chosen for the whole set. The old version picked between two
+ * fixed pages, so a member missing only their transaction role was sent to the
+ * business-verification form, which does not collect it. Each finding already
+ * carries its own route; this takes the first one rather than inventing a
+ * destination for all of them.
+ *
+ * The per-criterion lines in `result.pending` remain the complete answer. This
+ * is the one-line version for a command that can only return a string.
  */
 export function admissibilityRefusal(result: AdmissibilityResult): string {
   if (result.admissible) return "";
-  const where = result.pending.some((f) => f.remedy?.href === VERIFY_BUSINESS_HREF)
-    ? VERIFY_BUSINESS_HREF
-    : ACCOUNT_HREF;
-  return `${result.summary} Supply it at ${where}.`;
+  const first = result.pending[0];
+  const where = first?.remedy?.href;
+  if (!where) return result.summary;
+  return `${result.summary} Start with ${first.label.toLowerCase()}, at ${where}.`;
 }

@@ -24,7 +24,7 @@ import { templateFor } from "@/lib/deal-room/procedure";
 import { STARTER_LIMITS_PROPOSED } from "@/lib/deal-room/entitlement";
 import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/states";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
-import { proposeRoom } from "../actions";
+import { declareOpenerCapacity, proposeRoom } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -114,8 +114,20 @@ export default async function ProposeRoomPage({
    * Nothing here counts, scores or measures. Product contract section 6: the
    * model stays evidence-specific rather than numerical.
    */
-  const admissibility = selected ? await initiatorAdmissibility(selected.id) : null;
+  const admissibility = selected ? await initiatorAdmissibility(selected.id, params.locale) : null;
   const admissible = admissibility?.admissible ?? false;
+
+  // What the member already declared, so the form below is a correction rather
+  // than a blank slate they have to fill in from memory every time.
+  const { data: me } = selected
+    ? await supabase.from("profiles").select("company, country, declared_capacity, legal_or_trading_name").maybeSingle()
+    : { data: null };
+  const mine = (me ?? {}) as {
+    company?: string | null;
+    country?: string | null;
+    declared_capacity?: string | null;
+    legal_or_trading_name?: string | null;
+  };
 
   return (
     <UnsavedFormGuard>
@@ -252,14 +264,76 @@ export default async function ProposeRoomPage({
             </p>
 
             {admissibility && !admissible ? (
-              <Banner tone="review" title="Before you can open a Deal Room">
-                {admissibility.summary}{" "}
-                <a className="dr__link" href={`/${params.locale}/verify?for=business`}>
-                  Supply it now
-                </a>
-                . {admissibility.limitation}
-              </Banner>
+              <>
+                {/*
+                  One line per missing criterion, each linking to the place that
+                  exact fact is supplied. The single "Supply it now" link that
+                  used to sit here pointed everything at the business
+                  verification form, which cannot record a transaction role or a
+                  submitter relationship - so most of the time it was a dead end
+                  wearing the clothes of a next step.
+                */}
+                <Banner tone="review" title="Before you can open a Deal Room">
+                  {admissibility.summary} {admissibility.limitation}
+                </Banner>
+                <ul className="dr__list">
+                  {admissibility.pending.map((item) => (
+                    <li key={item.criterion} className="dr__check">
+                      <p className="dr__item-title">{item.label}</p>
+                      <p className="dr__check-why">{item.remedy!.statement}</p>
+                      <a className="dr__link" href={item.remedy!.href}>
+                        Supply this
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
             ) : null}
+
+            {/*
+              The opener's own declaration, on the page where they are asked for
+              it. Section 6's "identified business OR declared professional
+              capacity" only became real at this door when there was somewhere
+              for an independent professional to put the capacity: before
+              20260731g this page could read `profiles.company` and nothing
+              else, so a broker with no company was permanently refused.
+
+              It is rendered whether or not the member is admissible, because a
+              declaration is also a thing somebody may want to correct.
+            */}
+            <div id="opener-declaration">
+              <p className="dr__item-meta">
+                Who you act for, under what name, and where you are established. Ponte records these declarations and
+                does not check them. If you act for a company, its name is enough; if you act in your own professional
+                capacity, state that capacity and the name you trade under.
+              </p>
+              <CommandForm
+                action={declareOpenerCapacity}
+                hidden={{
+                  locale: params.locale,
+                  returnTo: `/${params.locale}/deal-rooms/propose?deal=${selected.id}`,
+                }}
+              >
+                <Field
+                  label="The professional capacity you act in"
+                  name="declaredCapacity"
+                  defaultValue={mine.declared_capacity ?? undefined}
+                  help="For example: independent broker, freight forwarder, legal adviser. Leave blank if you act for a company named on your account."
+                />
+                <Field
+                  label="Legal or trading name you act under"
+                  name="legalName"
+                  defaultValue={mine.legal_or_trading_name ?? undefined}
+                  help="The name itself, not the capacity. Leave blank to use the company on your account."
+                />
+                <Field
+                  label="Jurisdiction you are established in"
+                  name="jurisdiction"
+                  defaultValue={mine.country ?? undefined}
+                />
+                <Submit label="Record this declaration" />
+              </CommandForm>
+            </div>
 
             {admissible ? (
             <CommandForm

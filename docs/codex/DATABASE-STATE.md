@@ -56,7 +56,7 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
 ## Written but NOT applied: the Deal Room admission verification gate
 
 `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
-SHA-256 `f1bc5d3b6ddf3c436c256b8377e93dede7c68ec19f3fbf42dc0bb04f5e55a134`, 43675 bytes.
+SHA-256 `694b7141dcddb957791da3977d385fb0880e9cc16d983b0074bc1b5f6e5b4c13`, 47476 bytes.
 
 **Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
 threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
@@ -77,14 +77,25 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    would invalidate rows admitted before the columns existed. The gate is where
    the new facts are required, so no existing admitted participant is
    retroactively expelled.
-2. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
+2. **Two additive columns on `profiles`**: `declared_capacity` and
+   `legal_or_trading_name`, both `text`, nullable, no default, no backfill. The
+   member who OPENS a room is asked before any room or participant row exists,
+   so there is nowhere on a room to record their declaration. Until these
+   existed, `initiatorAdmissibility()` could read only `profiles.company`, and
+   section 6's "identified business **or** declared professional capacity" had
+   one working branch at that door: an independent broker with no company could
+   never open a room. The controller struck that on 31 July 2026. Neither column
+   is ever written from `listings.submitter_role`, from a relationship or from
+   an authority, and `legal_or_trading_name` is never defaulted from
+   `company` — it is preferred over it at read time and falls back to it.
+3. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
    `not_applicable`, `completed` or `pending` for section 6 criterion 9 — a name,
    never a number. This release has one branch and returns `not_applicable`,
    because no prerequisites table and no prerequisite column exist anywhere in
    the schema. It is a claim made out loud rather than a criterion skipped, which
    is what the controller required. Revoked from `public`, `anon` and
    `authenticated`.
-3. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
+4. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
    NAMES of the section 6 entry criteria a member does not meet, or an empty
    array. Never a count, a score or a completeness value. `security definer`
    because it reads `auth.users.email_confirmed_at`; `stable` because it writes
@@ -93,7 +104,7 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    state one profile id at a time. Classified in
    `lib/deal-room/__tests__/grant-signatures.test.ts` and listed as permanently
    internal in `lib/deal-room/__tests__/function-acl.test.ts`.
-4. **`deal_room_declare_participation`**, **re-signed from six parameters to
+5. **`deal_room_declare_participation`**, **re-signed from six parameters to
    eight**, so the legal/trading name and the relationship are declared in the
    same atomic act as the capacity, the role and the authority. This is the one
    signature change in the file and it is deliberate: the six-parameter form is
@@ -102,13 +113,13 @@ policy, trigger, index or row is altered, and nothing is backfilled.
    `anon`, `grant` to `authenticated`). Pinned by `DELIBERATE_RESIGNATURES` in
    `grant-signatures.test.ts`, which also scans every later migration to be sure
    nothing recreates the old form.
-5. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
+6. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
    to the gate, on the same nine-argument signature. The initiator's two
    participant rows now also carry `represented_legal_name` from
    `profiles.company` and `business_relationship` from `listings.submitter_role`
    — separate stored columns, so the opener supplies the same two facts an
    invitee does.
-6. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
+7. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
    plus the same call, on the same one-argument signature.
 
 ### Why it exists at all
@@ -143,10 +154,11 @@ drop function if exists public.deal_room_room_prerequisite_state(uuid);
 drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
 ```
 
-The two columns may be left in place: they are nullable and nothing reads them
-once the functions above are back. Drop them only if the reversal is permanent,
-and note that dropping them **discards member declarations**. The whole file is
-one transaction, so a failure part-way leaves the database exactly as it was.
+The four columns — two on `deal_room_participants`, two on `profiles` — may be
+left in place: they are nullable and nothing reads them once the functions above
+are back. Drop them only if the reversal is permanent, and note that dropping
+them **discards member declarations**. The whole file is one transaction, so a
+failure part-way leaves the database exactly as it was.
 
 ## Written but NOT applied: Deal Room paid room periods and billing events
 
