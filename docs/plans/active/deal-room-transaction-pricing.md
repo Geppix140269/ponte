@@ -1,6 +1,6 @@
 # ExecPlan — Deal Room transaction infrastructure pricing
 
-**Status:** Stages 1, 2, 3, 4a and 5 delivered. Stage 4b and Stages 6–9 not started and not authorised.
+**Status:** Stages 1, 2, 3, 4a, 5 and 6 delivered. Stage 4b and Stages 7–9 not started and not authorised.
 **Opened:** 31 July 2026
 **Owner:** Giuseppe Funaro
 **Commercial authority:** `docs/ponte-authority/PT-COMMERCIAL-2026-07-31-01-DEAL-ROOM-TRANSACTION-INFRASTRUCTURE-PRICING-AUTHORITY.md` (`PT-COMMERCIAL-2026-07-31-01`, delivered by **open PR #155**)
@@ -187,7 +187,7 @@ being opened**, not before.
 - A room with no branch selected for resumption stays readable, free.
 - No silent auto-renewal.
 
-### Stage 6 — Public pricing and Deal Room billing surfaces
+### Stage 6 — Public pricing and Deal Room billing surfaces ✅ **`/pricing` delivered 31 July 2026; visual evidence outstanding**
 
 - `/pricing` rebuilt to **one product and one formula**, carrying authority §19's required statement verbatim in substance. **No multi-plan comparison grid.**
 - Activation offer wording from authority §9.
@@ -493,6 +493,55 @@ The module exists to enforce one sentence from authority §12:
 failures), dropping the window check so a stale `active` row keeps writing (2),
 turning a zero-branch resumption into a $79 charge (1), and charging for a
 released slot (3).
+
+**31 July 2026 — Stage 6 delivered for `/pricing`, on the owner's instruction.
+Visual evidence and design approval are outstanding, by the owner's explicit
+decision to proceed without them.**
+
+- **`/pricing` is one product and one formula.** The four-panel `auto-fit` grid
+  is **gone rather than refilled** — §19 forbids a multi-plan comparison grid,
+  so the shape had to change with the words. One product panel, the formula as
+  three plain sentences plus a worked example, then included / free /
+  never-charged / expiry. Credits, the success fee and the retainer are off the
+  page; the Deal Room is on it for the first time.
+- The **formula is prose, not a table.** A price table beside a product panel
+  reads as a tier ladder, which is the grid §19 forbids, and $79 / $15 / $199 is
+  simple enough that nobody should need to look anything up.
+- **The footer blurb** stops carrying "on a success fee or retainer" onto every
+  page; **two `/about` paragraphs** corrected; the **route manifest** no longer
+  names a retired engagement (**closes PL-038**).
+- **The counterparty check is named, without a number.** OD-011 keeps it paid but
+  it is still priced in credits until Stage 8, and the page may state neither a
+  credit price (§15 prohibits the currency) nor a USD price (none exists yet). So
+  it says the cost is shown before a check runs, which is true now and stays true
+  after Stage 8. Omitting a charge from a fees page would have been worse.
+
+**A finding that de-risked the whole stage.** Before removing the Credits panel
+I checked whether it would strand someone mid-purchase. It does not:
+`POST /api/credits/checkout` has **no caller anywhere** outside its own route
+file, and no component references `CREDIT_PACKS`. Credits are describable but
+**not buyable through the interface**. `VerifyForm`'s "top up" link points at a
+page that never had a purchase button.
+
+**What is outstanding, and why.**
+
+1. **Design Constitution evidence.** `middleware.ts` gates the site behind Basic
+   auth and only the SHA-256 verifier is committed, so the page could not be
+   rendered at desktop or 390 × 844. The gate was **not** weakened. The owner
+   authorised proceeding with the evidence marked outstanding. Conformance was
+   checked as far as it can be statically: every class used is defined in the
+   approved `desk.css`, and no new component, token, icon or motion is
+   introduced.
+2. **Owner design approval**, which follows the evidence.
+3. **The `/about` legal-entity paragraph**, which states the operating companies
+   are "remunerated by success fee on closed deals". A statement about two
+   incorporated entities, not copy — it must change, in the owner's words.
+4. **`VerifyForm`'s credit-shortfall link**, which resolves in Stage 8.
+
+**Not attempted in this stage:** the Deal Room billing surfaces themselves — the
+activation offer, the additional-branch charge and the administrator-only
+breakdown. They render state from `charging.ts` and `period-lifecycle.ts` against
+tables that do not exist in production, and they belong with Stage 4b.
 
 ## 12. Decisions and discoveries
 

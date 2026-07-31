@@ -26,7 +26,7 @@ Discovery alone does not make an issue a blocker. The repository owner has final
 | **Owner** | Giuseppe Funaro |
 | **Evidence** | `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md` §1 and §8 |
 | **Authority** | `PT-COMMERCIAL-2026-07-31-01` §15 and §19; ADR-0020 |
-| **Status** | **Open, unclassified. Deliberately not fixed by the PR that recorded it**, which is authority reconciliation only and is explicitly forbidden from changing `/pricing` |
+| **Status** | **Repository fix delivered by Stage 6 (31 July 2026). Still open**, on two counts: the owner has never classified it, and the Design Constitution evidence it needs has not been captured — see "What still keeps it open" below |
 
 **What is wrong.** `app/[locale]/pricing/page.tsx` renders four engagements from
 the `pricing` message namespace:
@@ -69,13 +69,53 @@ the product the page fails to describe. On that reading the page is wrong but no
 yet harmful, and the fix belongs with Stage 6 of the pricing programme. **The
 owner decides.**
 
-**What closing it requires.** Stage 6 of
-`docs/plans/active/deal-room-transaction-pricing.md`: `/pricing` rebuilt to one
-product and one formula carrying authority §19's statement; the footer blurb
-corrected; the three `/about` paragraphs corrected with the legal-entity sentence
-confirmed rather than edited; the `VerifyForm` top-up path resolved alongside
-OD-011; and the route-manifest note updated. Design Constitution applies in full,
-with desktop and 390 × 844 evidence and owner design approval.
+**What Stage 6 delivered, 31 July 2026.**
+
+- **`/pricing` rebuilt to one product and one formula.** The four-panel
+  `auto-fit` grid is **gone**, not refilled — §19 forbids a multi-plan
+  comparison grid, so the shape had to change with the words. One product panel
+  (Ponte Deal Room, $79 USD, 30 active days), then the formula as three plain
+  sentences and a worked example, then included / free / never-charged /
+  expiry. Credits, the success fee and the retainer are gone from the page.
+- **The footer blurb** no longer carries "on a success fee or retainer" onto
+  every page.
+- **Two `/about` paragraphs** corrected — the credits sentence and the
+  success-fee sentence.
+- **The route manifest** no longer describes `/advisory` as redirecting to "the
+  success-fee option on /pricing" (this closes **PL-038**), and `/pricing`'s own
+  note now cites §19.
+- **A finding that de-risked the change:** `POST /api/credits/checkout` has **no
+  caller anywhere** outside its own file, and no component uses `CREDIT_PACKS`.
+  Credits were describable but **not buyable through the interface**, so
+  removing the Credits panel stranded no purchase path — there was none.
+
+**What still keeps it open.**
+
+1. **The owner has never classified it.** It was recorded as *proposed*, and
+   that has not changed. Classification is the owner's under `AGENTS.md`.
+2. **The Design Constitution evidence does not exist.** `AGENTS.md` and the
+   Constitution require desktop and 390 × 844 evidence, reduced motion, and
+   recorded owner design approval. `middleware.ts` gates the site behind Basic
+   auth and only the SHA-256 verifier is committed, so the password cannot be
+   recovered from the repository and the page could not be rendered. The gate
+   was **not** weakened to work around this. **The owner authorised proceeding
+   without the evidence on 31 July 2026**, with it marked outstanding rather
+   than skipped.
+3. **The `/about` legal-entity paragraph is deliberately unchanged.** It states
+   that the operating companies are "remunerated by success fee on closed
+   deals" — a statement about two incorporated entities' commercial basis, not
+   product copy. Authority §15 retires the success fee, so it must change, but
+   the wording is the owner's to give.
+4. **`components/VerifyForm.tsx:413`** still offers a credit-shortfall "top up"
+   link to `/pricing`, which no longer mentions credits. Harmless today because
+   nothing can buy credits anyway, and it resolves properly in Stage 8 when the
+   counterparty check is repriced in USD (OD-011).
+
+Design conformance was checked as far as it can be without rendering: every
+class the page uses — `panel`, `panel__h`, `sec`, `kicker`, `serif`, `b`,
+`b--2` — is defined in the approved `components/desk/desk.css`, and the change
+introduces no new component, token, icon or motion. The single gold emphasis
+remains the AA-safe `--gold-ink`, as emphasis and never a status.
 
 ### LB-012 — Ponte cannot prove its authentication or transactional email arrives, renders or comes from Ponte
 
