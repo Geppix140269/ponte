@@ -12,12 +12,29 @@ open and unmerged; no SQL has been applied to production.
 The workflow now uses direct `pg_dump --schema-only --schema=public` so the dump
 is truly schema-only before it is restored into the ephemeral local stack.
 
+Run 3 (`30688103557`) then failed at the same step for a different reason:
+
+```
+pg_dump: error: aborting because of server version mismatch
+pg_dump: detail: server version: 17.6; pg_dump version: 16.14
+```
+
+**The workflow must use `pg_dump` 17, because production is PostgreSQL 17.6.**
+`pg_dump` refuses to dump from a server newer than itself — it cannot know what
+a later major added — and `ubuntu-24.04` ships the 16 client. The workflow now
+installs `postgresql-client-17` from the PostgreSQL apt repository in a step of
+its own, proves the binary exists, and calls it by full versioned path so the
+major is never left to whatever `pg_dump` wins on `PATH`.
+
+The ephemeral local Supabase stack reports **PostgreSQL 17.6** as well, so the
+dump and the restore target are the same major end to end.
+
 ## What touches production
 
 One command, in one step:
 
 ```bash
-pg_dump \
+/usr/lib/postgresql/17/bin/pg_dump \
   --dbname="$SOURCE_DB_URL" \
   --schema=public \
   --schema-only \

@@ -35,6 +35,10 @@ jobs:
       LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       STACK_DIR: /tmp/ephemeral-supabase
       SCHEMA_FILE: /tmp/production-public-schema.sql
+      # Production is PostgreSQL 17.6 and ubuntu-24.04 ships the 16 client, which
+      # refuses to dump a newer server. Named once, installed and proved in one
+      # step, and called by full path so the major is never left to PATH.
+      PG_DUMP_17: /usr/lib/postgresql/17/bin/pg_dump
       MIGRATION_PATH: supabase/migrations/20260731g_deal_room_admission_verification_gate.sql
       MIGRATION_SHA256: 68ce6a8d32bc7a3c88e57b964a2a42ef8f95c8b45e59a05cd47cf110c08acb0b
 
@@ -169,7 +173,36 @@ jobs:
           supabase init --force
           supabase start -x realtime,storage-api,imgproxy,studio,inbucket,edge-runtime,logflare,vector,supavisor
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
-          pg_dump --version
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          # Run 30688103557 failed here:
+          #
+          #   pg_dump: error: aborting because of server version mismatch
+          #   detail: server version: 17.6; pg_dump version: 16.14
+          #
+          # `pg_dump` refuses to dump from a server newer than itself, and it is
+          # right to: it cannot know what a later major added. ubuntu-24.04
+          # ships the 16 client, production is 17.6, so the client has to come
+          # from the PostgreSQL apt repository.
+          #
+          # This installs alongside rather than replacing: the versioned binary
+          # is called by full path below, so nothing depends on which `pg_dump`
+          # happens to win on PATH.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+          # Proved, not assumed: the next step depends on this exact binary.
+          if [ ! -x "$PG_DUMP_17" ]; then
+            echo "::error::$PG_DUMP_17 was not installed. Cannot dump a 17.6 server."
+            exit 1
+          fi
+          "$PG_DUMP_17" --version
 
       - name: Dump the production PUBLIC schema only
         env:
@@ -196,7 +229,11 @@ jobs:
           # a reason belonging to the dump rather than to the boundary. The
           # restore step re-establishes schema-level grants itself, so ownership
           # noise is the only thing worth suppressing here.
-          pg_dump \
+          #
+          # Called by full versioned path: production is 17.6 and the runner's
+          # default pg_dump is 16, which refuses outright. The path makes the
+          # major explicit rather than leaving it to whatever PATH resolves to.
+          "$PG_DUMP_17" \
             --dbname="$SOURCE_DB_URL" \
             --schema=public \
             --schema-only \
