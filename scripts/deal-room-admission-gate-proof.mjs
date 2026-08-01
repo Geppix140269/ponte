@@ -392,8 +392,8 @@ async function main() {
              -- Identity arguments carry parameter NAMES as well as types, so
              -- they cannot be compared against a type-only expectation. The
              -- types alone are what make a signature distinct, so read them
-             -- straight from proargtypes and compare on that; `args` stays for
-             -- the human-readable line printed below.
+             -- straight from proargtypes and compare on that. The identity
+             -- string stays for the human-readable line printed below.
              (select string_agg(format_type(t, null), ', ' order by ord)
                 from unnest(p.proargtypes) with ordinality as u(t, ord)) as argtypes,
              p.prosecdef,
