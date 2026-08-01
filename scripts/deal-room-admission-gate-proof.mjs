@@ -152,7 +152,14 @@ const WRITES = [
   },
   {
     table: "public.deal_room_agreement_acceptances",
-    columns: ["participant_id", "agreement_kind", "document_version", "document_sha256"],
+    columns: [
+      "participant_id",
+      "room_id",
+      "agreement_kind",
+      "document_version",
+      "document_sha256",
+      "accepted_as",
+    ],
   },
 ];
 
@@ -595,10 +602,10 @@ async function main() {
       // Acceptances recorded against a version that is not the current one.
       await client.query(
         `insert into public.deal_room_agreement_acceptances
-           (participant_id, agreement_kind, document_version, document_sha256)
-         select $1, d.kind, d.version || '-stale', d.sha256
+           (participant_id, room_id, agreement_kind, document_version, document_sha256, accepted_as)
+         select $1, $2, d.kind, d.version || '-stale', d.sha256, 'buyer'
            from public.deal_room_agreement_documents d where d.current`,
-        [ids.participant],
+        [ids.participant, ids.room],
       );
       await actAs(client, ids.invitee);
       const staleRefusal = await refusalOf(client, `select public.deal_room_admit_participant($1)`, [
@@ -619,10 +626,10 @@ async function main() {
       ]);
       await client.query(
         `insert into public.deal_room_agreement_acceptances
-           (participant_id, agreement_kind, document_version, document_sha256)
-         select $1, d.kind, d.version, d.sha256
+           (participant_id, room_id, agreement_kind, document_version, document_sha256, accepted_as)
+         select $1, $2, d.kind, d.version, d.sha256, 'buyer'
            from public.deal_room_agreement_documents d where d.current`,
-        [ids.participant],
+        [ids.participant, ids.room],
       );
       await actAs(client, ids.invitee);
       const admitError = await refusalOf(client, `select public.deal_room_admit_participant($1)`, [ids.participant]);
