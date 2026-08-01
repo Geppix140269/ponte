@@ -14,7 +14,8 @@ import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { checkPublicationGate } from "@/lib/listings/publication-gate";
-import { publishOrHold } from "@/lib/listings/publish";
+import { publishOrHold, recordListingEvent } from "@/lib/listings/publish";
+import { canTransition } from "@/lib/listings/status";
 import { sendConnectAccepted } from "@/lib/email";
 
 /** The public opportunity board, whose contents these actions can change. */
@@ -40,7 +41,7 @@ const PUBLIC_BOARD = "/find";
  * route alive inside the very allowlist whose job is to bound what redirect()
  * can be given.
  */
-const RETURN_PATHS = ["/opportunities", "/workspace"] as const;
+const RETURN_PATHS = ["/opportunities", "/workspace", "/deal-rooms/propose"] as const;
 const DEFAULT_RETURN = "/opportunities";
 
 function returnPath(formData: FormData): string {
@@ -101,6 +102,81 @@ export async function submitDraftAction(formData: FormData): Promise<void> {
   // A draft that publishes appears on the board, and it leaves the member's
   // "saved privately" state either way.
   revalidateBoardAnd(DEFAULT_RETURN);
+}
+
+/**
+ * A member takes their own record off their list.
+ *
+ * ## It withdraws. It does not delete.
+ *
+ * The owner asked, looking at three stale records on the Deal Room picker:
+ *
+ *   > And how do I delete this? Maybe I just delete them.
+ *
+ * The answer is that Ponte does not delete a commercial record, and should not
+ * offer to. A withdrawn record keeps its reference, its history and its
+ * lifecycle events, which is what makes the reference citable in
+ * correspondence and the audit trail worth having. A member who wants it out
+ * of their way gets exactly that, and can bring it back.
+ *
+ * `withdrawn -> draft` and `withdrawn -> submitted` are both member
+ * transitions in `status.ts`, so nothing here is one-way.
+ *
+ * ## The transition is asked, not assumed
+ *
+ * `canTransition` decides, rather than this function knowing. A record that is
+ * closed, archived or already withdrawn is refused, and refused silently: the
+ * caller re-renders and the record is simply still there. An approved record
+ * that is withdrawn leaves the public board, which is why the board is
+ * revalidated whatever the outcome.
+ *
+ * RLS is the boundary underneath: the update is scoped to the member's own
+ * rows, so a forged id belonging to somebody else matches nothing.
+ */
+export async function withdrawListingAction(formData: FormData): Promise<void> {
+  const user = await getUser();
+  if (!user) return;
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+
+  const supabase = createClient();
+  const { data: current } = await supabase
+    .from("listings")
+    .select("id, status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!current) return;
+
+  // The lifecycle decides, not this function.
+  if (!canTransition(current.status, "withdrawn", "member")) return;
+
+  const { data: updated } = await supabase
+    .from("listings")
+    .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id")
+    .maybeSingle();
+  if (!updated) return;
+
+  // The audit trail is the reason this is a withdrawal rather than a delete,
+  // so it would be incoherent not to write one. Never throws.
+  try {
+    await recordListingEvent(createAdminClient() as never, {
+      listingId: id,
+      event: "listing_withdrawn",
+      fromStatus: current.status,
+      toStatus: "withdrawn",
+      actorType: "member",
+      actorId: user.id,
+      reasonCode: "member_withdrew",
+    });
+  } catch (err) {
+    console.error("[ponte] withdrawal event not recorded:", err);
+  }
+
+  revalidateBoardAnd(returnPath(formData));
 }
 
 /**

@@ -494,6 +494,25 @@ export function evaluateListing(
   //    for the non-product families, which do not have those facts to give.
   const gate = checkPublicationGate(listing, ctx.submitter, now);
   if (!gate.ok) {
+    // Business verification stops withholding a record. ADR-0027 and ADR-0028.
+    //
+    // The owner said it three times on 1 August 2026, the last time looking at
+    // the composer screen that refused his own record:
+    //
+    //   > I do not verify free offer. People are free to publish. The only
+    //   > threshold is that they have to put a minimum of information.
+    //   > Otherwise they cannot be published.
+    //
+    // The 28 July rule this replaces was that automated publication does not
+    // lower the member-business bar. That rule was made when publication was
+    // the product's trust claim. It is not: publication is free and says
+    // nothing about the business, and the trust claim is now carried by the
+    // labels, which still emit "Business checked" ONLY where a verification
+    // genuinely passed. So an unverified member publishes, and their record
+    // does not wear a mark it has not earned.
+    //
+    // Sanctions are NOT in this set and never will be. An unresolved sanctions
+    // screening is an unlawfulness question, not a completeness one.
     // The gate reports a quantity gap as one flat `missing:quantity`. This
     // module says which part of the quantity is wrong and in what way, so the
     // gate's verdict on those two keys is deferred to `familyBlockingIssues`
@@ -515,9 +534,16 @@ export function evaluateListing(
       "missing:route",
       "missing:incoterm",
     ]);
+    const NO_LONGER_WITHHELD = new Set([
+      "no_verified_business",
+      "verification_not_member_business",
+      "verification_not_passing",
+      "verification_not_current",
+    ]);
     for (const failure of gate.failures) {
       if (ownedHere.has(failure)) continue;
       if (family !== "products" && productOnly.has(failure)) continue;
+      if (NO_LONGER_WITHHELD.has(failure)) continue;
       push(gateIssue(failure));
     }
   }
