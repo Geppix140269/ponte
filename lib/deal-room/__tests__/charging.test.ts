@@ -82,11 +82,42 @@ test("charging is off in this repository as it stands", () => {
 test("charging is off unless all four conditions hold", () => {
   withEnv(ALL_ON, () => assert.equal(chargingEnabled(), true, "all four on"));
 
-  for (const missing of Object.keys(ALL_ON)) {
+  // Condition 2 changed shape on 1 August 2026 and is checked separately
+  // below. `NEXT_PUBLIC_DEAL_ROOM` no longer has to be present for the routes
+  // to exist (ADR-0025 inverted that default), so its ABSENCE is no longer a
+  // reason to refuse a charge. Its explicit `off` still is.
+  for (const missing of Object.keys(ALL_ON).filter((k) => k !== "NEXT_PUBLIC_DEAL_ROOM")) {
     const partial = { ...ALL_ON, [missing]: undefined };
     withEnv(partial, () => {
       assert.equal(chargingEnabled(), false, `must be off without ${missing}`);
       assert.match(chargingUnavailableReason() ?? "", new RegExp(missing));
+    });
+  }
+});
+
+test("the route flag closes charging when it is explicitly off, not when it is absent", () => {
+  // The intent of condition 2 is unchanged and is worth restating: billing for
+  // a product nobody can reach is a contradiction. What changed is which value
+  // means unreachable.
+  withEnv({ ...ALL_ON, NEXT_PUBLIC_DEAL_ROOM: "off" }, () => {
+    assert.equal(chargingEnabled(), false, "an explicitly closed Deal Room still took money");
+    assert.match(chargingUnavailableReason() ?? "", /NEXT_PUBLIC_DEAL_ROOM/);
+  });
+
+  withEnv({ ...ALL_ON, NEXT_PUBLIC_DEAL_ROOM: undefined }, () => {
+    assert.equal(chargingEnabled(), true, "an absent route flag now means the room exists");
+  });
+});
+
+test("the billing switch alone decides, and it is never on by default", () => {
+  // The load-bearing property, restated because inverting the route flag put
+  // weight on it that it did not carry before: with every other variable set
+  // and the room wide open, an absent or non-`on` DEAL_ROOM_BILLING must still
+  // refuse. Money does not default to on.
+  for (const value of [undefined, "", "off", "ON", "true", "1", "yes"]) {
+    withEnv({ ...ALL_ON, NEXT_PUBLIC_DEAL_ROOM: undefined, DEAL_ROOM_BILLING: value }, () => {
+      assert.equal(chargingEnabled(), false, `DEAL_ROOM_BILLING="${String(value)}" enabled charging`);
+      assert.match(chargingUnavailableReason() ?? "", /DEAL_ROOM_BILLING/);
     });
   }
 });

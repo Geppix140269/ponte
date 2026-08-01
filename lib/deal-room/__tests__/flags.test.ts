@@ -8,12 +8,32 @@
 // the whole of the staged-rollout control that Approval 4 turns on, and on 31
 // July 2026 nothing exercised it.
 //
-// The property that matters most is the one that is easiest to lose: **a missing
-// or empty `DEAL_ROOM_ALLOWLIST` must mean nobody, not everybody.** An env var
-// that is absent in one environment and set in another is exactly the shape of
-// mistake that opens an unreleased feature to a whole market, and it is a
-// one-character edit away - `allowed.size === 0` returning `true` instead of
-// `false` would do it, and nothing would have noticed.
+// ## The defaults were inverted on 1 August 2026
+//
+// This file used to assert the opposite of what it asserts now, and the
+// original reasoning is kept because it was correct for the situation it was
+// written in: a missing `DEAL_ROOM_ALLOWLIST` had to mean NOBODY, because an
+// env var absent in one environment and set in another is exactly the shape of
+// mistake that opens an unreleased feature to a whole market.
+//
+// The Deal Room stopped being unreleased. The entrance now makes "Open a Deal
+// Room" the largest control on the site, and the empty-means-nobody default
+// therefore made the front page lie: on production the list was never
+// populated, so the primary call to action was unreachable for every human
+// being including the owner. The owner instructed the inversion on 1 August
+// 2026 after following his own CTA into a wall.
+//
+// What still matters, and is asserted below with the same force the old rule
+// had:
+//
+//   1. An anonymous visitor is NEVER admitted. No profile id, no room.
+//   2. An explicit `NEXT_PUBLIC_DEAL_ROOM=off` closes it completely, so there
+//      is always a way back to closed that does not need a code change.
+//   3. A populated allowlist still NARROWS. Setting it must not be a no-op,
+//      or the staged-rollout control would be gone rather than inverted.
+//
+// None of this is a data boundary. RLS is, and it is unchanged: a member let
+// through by this function still sees only rooms they participate in.
 
 import assert from "node:assert/strict";
 import { allowlist, dealRoomAvailableTo, dealRoomRoutesEnabled } from "../flags";
@@ -51,21 +71,34 @@ function withEnv(flag: string | undefined, list: string | undefined, fn: () => v
 }
 
 // ---------------------------------------------------------------------------
-// The default is nobody
+// The default is every signed-in member, and never an anonymous visitor
 // ---------------------------------------------------------------------------
 
-test("an absent allowlist means nobody, not everybody", () => {
-  withEnv("on", undefined, () => {
+test("an absent allowlist admits any signed-in member", () => {
+  withEnv(undefined, undefined, () => {
     assert.equal(allowlist().size, 0);
-    assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, "a missing env var opened the feature");
+    assert.equal(dealRoomAvailableTo(PROFILE, ORG), true, "an unrestricted deployment refused a member");
+    assert.equal(dealRoomAvailableTo(OTHER, null), true, "admission depended on being named somewhere");
   });
 });
 
-test("an empty or whitespace allowlist means nobody", () => {
+test("an empty or whitespace allowlist parses to no restriction", () => {
   for (const value of ["", "   ", ",", " , , "]) {
-    withEnv("on", value, () => {
+    withEnv(undefined, value, () => {
       assert.equal(allowlist().size, 0, `"${value}" parsed to a non-empty allowlist`);
-      assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, `"${value}" opened the feature`);
+      assert.equal(dealRoomAvailableTo(PROFILE, ORG), true, `"${value}" refused a signed-in member`);
+    });
+  }
+});
+
+test("an anonymous visitor is never admitted, however open the deployment is", () => {
+  // The one rule that did not change, and the one that carries the weight now.
+  // There is no profile for the policies to answer for, so there is nothing
+  // that could be safely shown.
+  for (const list of [undefined, "", PROFILE]) {
+    withEnv(undefined, list, () => {
+      assert.equal(dealRoomAvailableTo(null, null), false, "an anonymous visitor reached the room");
+      assert.equal(dealRoomAvailableTo(null, ORG), false, "an org id stood in for a member");
     });
   }
 });
@@ -74,20 +107,29 @@ test("an empty or whitespace allowlist means nobody", () => {
 // The flag
 // ---------------------------------------------------------------------------
 
-test("only exactly `on` turns the routes on", () => {
-  for (const value of [undefined, "", "off", "ON", "true", "1", "yes", " on"]) {
-    withEnv(value, PROFILE, () => {
-      assert.equal(dealRoomRoutesEnabled(), false, `"${String(value)}" was treated as on`);
-      assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, `"${String(value)}" opened the feature`);
+test("only exactly `off` turns the routes off", () => {
+  withEnv("off", undefined, () => {
+    assert.equal(dealRoomRoutesEnabled(), false);
+    assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, "`off` did not close the feature");
+  });
+  // Everything else is on, including absent. The one-variable way back to
+  // closed has to be unambiguous, so near-misses do NOT close it: a deployment
+  // that meant to close the room and typed "OFF" would otherwise think it had.
+  for (const value of [undefined, "", "on", "ON", "OFF", "true", "0", "no", " off"]) {
+    withEnv(value, undefined, () => {
+      assert.equal(dealRoomRoutesEnabled(), true, `"${String(value)}" was treated as off`);
     });
   }
-  withEnv("on", PROFILE, () => assert.equal(dealRoomRoutesEnabled(), true));
 });
 
-test("the flag alone is not enough, and the allowlist alone is not enough", () => {
-  withEnv("on", "", () => assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, "flag on, allowlist empty"));
-  withEnv("off", PROFILE, () => assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, "allowlist set, flag off"));
-  withEnv("on", PROFILE, () => assert.equal(dealRoomAvailableTo(PROFILE, ORG), true, "both set and still refused"));
+test("a populated allowlist still narrows, so the control is inverted and not removed", () => {
+  withEnv(undefined, PROFILE, () => {
+    assert.equal(dealRoomAvailableTo(PROFILE, null), true, "a listed member was refused");
+    assert.equal(dealRoomAvailableTo(OTHER, null), false, "setting the allowlist admitted everybody anyway");
+  });
+  withEnv("off", PROFILE, () => {
+    assert.equal(dealRoomAvailableTo(PROFILE, ORG), false, "the flag lost to the allowlist");
+  });
 });
 
 // ---------------------------------------------------------------------------

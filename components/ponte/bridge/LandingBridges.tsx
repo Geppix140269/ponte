@@ -121,7 +121,16 @@ export default function LandingBridges({ families }: LandingBridgesProps) {
     <div className="pbridge" ref={blockRef}>
       <div className="bhead">
         <h2>Three routes across.</h2>
-        <span>{chosen ? `${chosen.label} selected` : "No route selected"}</span>
+        {/*
+          An instruction before a choice is made, a state after one is.
+
+          "No route selected" reported a state to somebody who had not been
+          told there was anything to select. It is accurate and it is useless
+          as an opening line: it describes the absence of an action rather
+          than offering the action. Once a family IS chosen the state is the
+          useful thing to say, so it says that instead.
+        */}
+        <span>{chosen ? `${chosen.label} selected` : "Choose one of the three"}</span>
       </div>
 
       <BridgeRoute
