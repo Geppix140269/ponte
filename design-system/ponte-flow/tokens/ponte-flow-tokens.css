@@ -78,7 +78,14 @@
 
 [data-theme="dark"], .inverse{
   --pf-ink: #F2EFE8; --pf-ink-2: #CDC8BC; --pf-ink-3: #A7A296; --pf-mute: #7E7A72;
-  --pf-surface: #0E0F0C; --pf-raised: #161813; --pf-sunken: #0A0B09;
+  /* Three grounds that are actually three.
+     These were #0E0F0C, #161813 and #0A0B09: surface and sunken four values
+     apart, which read as one flat black. The landing puts the family bridge on
+     surface and Market Signals on sunken, and with no separation between them
+     the page was monotone and the two sections merged into a single field.
+     Widened so each band is legible as its own plane, while staying a warm
+     near-black rather than becoming grey. */
+  --pf-surface: #26291C; --pf-raised: #343829; --pf-sunken: #080906;
   --pf-rule: rgba(242,239,232,.12); --pf-rule-strong: rgba(242,239,232,.20);
   --pf-gold: #D9AC55; --pf-gold-ink: #E7C173;
   --pf-positive: #4FB07A; --pf-review: #9DB4C0; --pf-danger: #E0674C; --pf-declared: #A7A296;

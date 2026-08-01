@@ -137,4 +137,4 @@ const NOTE: Record<MarketIntent, string> = {
 export const STRUCTURED_JOURNEY = "Private Deal Room";
 
 /** The abutments of the Family Bridge itself. Approved reference copy. */
-export const FAMILY_BRIDGE_ABUTMENTS = { left: "Intent", right: "The market" } as const;
+export const FAMILY_BRIDGE_ABUTMENTS = { left: "Intent", right: "Private Deal Room" } as const;
