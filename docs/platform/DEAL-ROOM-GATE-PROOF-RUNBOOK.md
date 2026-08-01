@@ -1,21 +1,66 @@
 # Running the Deal Room admission gate proof
 
-There are two routes. **Prefer the replay route.** The dump route exists only to
-answer a question the replay route cannot.
+## The blocker, established by run 30692924939
+
+**The repository cannot rebuild its own database.** The migration history begins
+by altering tables that no migration creates. Replaying it onto an empty
+PostgreSQL 17 database fails on the very first file:
+
+```text
+  1/     01_catalogue_fields.sql  FAILED
+psql:supabase/migrations/01_catalogue_fields.sql:4: ERROR:  relation "products" does not exist
+```
+
+This is not new, only newly demonstrated. That file's own header says *"Add
+catalogue fields missing from the initial schema. Run this in the Supabase SQL
+Editor."* The initial schema was applied by hand and never captured. And
+`supabase/schema.sql` has carried the same warning since 2026-07-22:
+
+> KNOWN DRIFT, 2026-07-22: the live `profiles` table carries columns that no file
+> in this repository creates […] Applying this repository to an empty project
+> therefore does NOT reproduce production.
+
+It names eighteen such columns. `supabase/pending/20260722a_drop_legacy_shop.sql`
+is also still unapplied, so production retains shop-era tables that seven
+migrations still reference.
+
+**This is why every proof route kept dragging in a production credential:
+production is currently the only place the schema exists.**
+
+## The fix: commit a baseline snapshot, once
+
+One schema-only dump of production's `public` schema, committed under
+`supabase/schema-snapshots/`. It needs a connection string exactly once, on the
+owner's own machine — never in CI, never in a GitHub secret.
+
+```bash
+pg_dump --dbname="$PROD_URL" --schema=public --schema-only --no-owner \
+  --file=supabase/schema-snapshots/production-public-20260801.sql
+```
+
+Use `pg_dump` 17 or newer; production is PostgreSQL 17.6. Keep `--no-acl`
+absent — the grants are part of what the proof checks. Review the diff before
+committing: it must contain no `COPY`, no `INSERT`, no data section. The replay
+workflow re-checks that on every run and refuses a snapshot carrying rows.
+
+This closes the drift gap recorded in `schema.sql`, makes rebuilding the database
+possible for the first time, and lets every future migration be proved with no
+credential at all.
+
+## The two routes
 
 | | Replay route | Dump route |
 |---|---|---|
 | Workflow | `deal-room-migration-replay.yml` | `deal-room-gate-proof.yml` |
-| Schema source | the repository's own migration history | production, via schema-only `pg_dump` |
+| Schema source | a committed baseline snapshot | production, via live `pg_dump` |
 | Secret required | **none** | `PONTE_SCHEMA_SOURCE_DATABASE_URL` |
-| Touches production | **never** | one read-only dump |
-| Repeatable | yes, on every pull request | one-use, by hand |
-| Proves | the migration works against the schema the repo *claims* production has | the migration works against the schema production *actually* has |
+| Touches production | **never** | one read-only dump per run |
+| Repeatable | yes, freely | one-use, by hand |
+| Status | **blocked until a baseline is committed** | working; run 3 reached the dump step |
 
-Run the replay route first. It costs nothing and needs no credential, so there
-is no reason to spend a production connection before it is green. Reach for the
-dump route only when the question is specifically **drift** — whether production
-has diverged from the migration history.
+Once the baseline exists, prefer the replay route: it costs nothing and spends no
+production connection. Reach for the dump route only to answer **drift** —
+whether production has moved since the snapshot was taken.
 
 ## The replay route
 
@@ -23,30 +68,30 @@ has diverged from the migration history.
 Actions -> Migration replay proof -> Run workflow
 ```
 
-Leave `target_sha` blank to test the selected branch, or paste a full SHA to
-test a specific commit. It also runs automatically on any pull request touching
-`supabase/migrations/**`, `lib/deal-room/**` or the proof script.
+Leave `target_sha` blank to test the selected branch, or paste a full SHA.
+Dispatch-only for now; the `pull_request` trigger is switched off until a
+baseline exists, so this cannot redden unrelated pull requests. Re-enable it in
+the same change that adds the snapshot.
 
-Three phases, so a failure is always attributable:
+Phases, so any failure is attributable to one file:
 
-1. **Historical replay** — every migration except the gate migration is applied
-   to an empty PostgreSQL 17 database, one file at a time, in filename order.
-   A failure here is a finding about the migration history, not about the gate.
-2. **Gate migration** — `20260731g` is applied on top, then applied a second
-   time to check it is safely repeatable after a partial failure.
+0. **Baseline** — the newest snapshot in `supabase/schema-snapshots/` is
+   restored, after being re-checked for data markers.
+1. **Historical replay** — *off by default.* A snapshot taken from production
+   today already contains every migration, so replaying them would be redundant
+   and several would fail on objects that already exist. Turn on `replay_history`
+   only against a baseline that predates the history, to ask whether the
+   repository can rebuild from scratch.
+2. **Gate migration** — `20260731g` applied on top, then applied a second time to
+   check it is safely repeatable after a partial failure.
 3. **Proof** — `npm run deal-room:gate-proof` against that schema.
 
-If the gate migration is absent from the tree under test, phase 1 still runs and
-reports on its own. Dispatching against `main` is therefore a valid way to ask
-"does our migration history replay?" without involving the Deal Room work at all.
+The workflow asserts in its first step that it references no secret, and fails if
+that ever stops being true. That single invariant replaces every credential guard
+the dump route needs.
 
-The workflow asserts in its first step that it references no secret, and fails
-if that ever stops being true. That single invariant is what replaces the
-credential guards the dump route needs.
-
-The grants proof (2b, which reads `pg_proc.proacl`) works naturally here: the
-grants come from the historical migrations, which this route replays in full
-rather than reconstructing from a dump.
+The grants proof (2b, which reads `pg_proc.proacl`) works here because the
+snapshot is taken without `--no-acl`.
 
 ## The dump route
 

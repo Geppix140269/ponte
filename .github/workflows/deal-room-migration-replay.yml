@@ -16,13 +16,33 @@ name: Migration replay proof
 # risk, not because the standard dropped.
 #
 # What it can prove:
-#   phase 1  every historical migration still applies to an empty database
+#   phase 0  a committed baseline snapshot restores
+#   phase 1  every historical migration applies on top of that baseline
 #   phase 2  the admission gate migration applies on top of that history
 #   phase 3  the gate behaves as specified, against that schema
 #
-# What it cannot prove: that production's live schema matches this history.
-# Drift is a separate question and needs a read-only comparison against
-# production, not this job.
+# What it cannot prove: that production's live schema still matches the baseline
+# snapshot. Drift after the snapshot date is a separate question.
+#
+# ---------------------------------------------------------------------------
+# THIS WORKFLOW CANNOT PASS UNTIL A BASELINE SNAPSHOT IS COMMITTED.
+#
+# Run 30692924939 established why. The migration history is not self-contained:
+# it starts by altering tables it never creates. The very first file says so in
+# its own header - "Add catalogue fields missing from the initial schema. Run
+# this in the Supabase SQL Editor" - and `supabase/schema.sql` has recorded the
+# same gap since 2026-07-22: "Applying this repository to an empty project
+# therefore does NOT reproduce production."
+#
+# So the missing input is a one-time, schema-only snapshot of production's
+# public schema, committed under `supabase/schema-snapshots/`. Producing it
+# needs a connection string exactly once, on the owner's own machine, and never
+# in CI. After that this job runs forever with no credential.
+#
+# The `pull_request` trigger is deliberately switched off until the baseline
+# lands, so this does not redden unrelated pull requests. Re-enable it in the
+# same change that adds the snapshot.
+# ---------------------------------------------------------------------------
 
 on:
   workflow_dispatch:
@@ -31,12 +51,11 @@ on:
         description: 'Commit SHA to test. Leave blank to test the branch selected above.'
         required: false
         default: ''
-  pull_request:
-    paths:
-      - 'supabase/migrations/**'
-      - 'lib/deal-room/**'
-      - 'scripts/deal-room-admission-gate-proof.mjs'
-      - '.github/workflows/deal-room-migration-replay.yml'
+      replay_history:
+        description: 'Also replay the historical migrations on top of the baseline. Only meaningful if the baseline predates them.'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -51,6 +70,7 @@ jobs:
       STACK_DIR: /tmp/ephemeral-supabase
       GATE_MIGRATION: 20260731g_deal_room_admission_verification_gate.sql
       PROOF_SCRIPT: scripts/deal-room-admission-gate-proof.mjs
+      BASELINE_DIR: supabase/schema-snapshots
 
     steps:
       - name: Fetch the running workflow definition, to check itself
@@ -130,7 +150,49 @@ jobs:
             exit 1
           fi
 
+      - name: 'Phase 0: restore the committed baseline snapshot'
+        run: |
+          BASELINE="$(ls "$BASELINE_DIR"/*.sql 2>/dev/null | LC_ALL=C sort | tail -1 || true)"
+          if [ -z "$BASELINE" ]; then
+            echo "::error::No baseline snapshot found in $BASELINE_DIR."
+            echo "::error::"
+            echo "::error::The migration history cannot rebuild this database on its own. It"
+            echo "::error::starts by altering tables no migration creates - see the header of"
+            echo "::error::supabase/migrations/01_catalogue_fields.sql, and the KNOWN DRIFT note"
+            echo "::error::in supabase/schema.sql. This is a pre-existing gap, not a fault in"
+            echo "::error::the commit under test."
+            echo "::error::"
+            echo "::error::Fix: commit one schema-only dump of production's public schema as"
+            echo "::error::$BASELINE_DIR/production-public-<date>.sql."
+            echo "::error::See docs/platform/DEAL-ROOM-GATE-PROOF-RUNBOOK.md."
+            exit 1
+          fi
+          echo "baseline : $BASELINE"
+          echo "bytes    : $(wc -c < "$BASELINE")"
+          echo "sha256   : $(sha256sum "$BASELINE" | cut -d' ' -f1)"
+
+          # A snapshot that carries rows is a snapshot that leaked production
+          # data into the repository. Refuse it here as well as at creation.
+          for pattern in '^COPY ' '^INSERT INTO' '^\\\.' '^-- Data for Name:'; do
+            if grep -nE "$pattern" "$BASELINE" | head -3; then
+              echo "::error::The baseline snapshot contains data ($pattern). Refusing."
+              exit 1
+            fi
+          done
+
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$BASELINE"
+          n=$(psql "$LOCAL_DB_URL" -t -A -c \
+            "select count(*) from information_schema.tables where table_schema = 'public';")
+          echo "baseline restored: $n tables in public"
+          echo "BASELINE_FILE=$(basename "$BASELINE")" >> "$GITHUB_ENV"
+
       - name: 'Phase 1: replay the historical migrations'
+        # Off by default. A snapshot taken from production today already
+        # contains every one of these migrations, so replaying them would be
+        # redundant and several would fail on objects that already exist. Turn
+        # it on only against a baseline that predates the history, to answer the
+        # separate question of whether the repository can rebuild from scratch.
+        if: inputs.replay_history
         run: |
           applied=0
           deferred=0
@@ -160,6 +222,8 @@ jobs:
 
       - name: 'Phase 1 check: the expected schema exists, and carries no rows'
         run: |
+          # Runs whether or not phase 1 replayed, because the baseline alone must
+          # already satisfy it.
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
           select 'profiles', count(*) from public.profiles
           union all select 'listings', count(*) from public.listings
@@ -228,7 +292,8 @@ jobs:
             echo
             echo "| Phase | Result |"
             echo "|---|---|"
-            echo "| Historical migrations replayed | ${APPLIED_HISTORICAL:-did not complete} |"
+            echo "| Baseline snapshot | ${BASELINE_FILE:-none committed} |"
+            echo "| Historical migrations replayed | ${APPLIED_HISTORICAL:-not requested} |"
             echo "| Gate migration applied | ${GATE_APPLIED:-no} |"
             echo
             echo "No secret was used. The production database was never contacted."
