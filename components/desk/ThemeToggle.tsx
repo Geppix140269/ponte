@@ -54,38 +54,15 @@ export default function ThemeToggle() {
         setTheme(next);
       }}
     >
-      {/* Two glyphs, one shown. A sun for the light it would switch to, a
-          moon for the dark. Drawn here rather than taken from the icon
-          registry because neither exists in it, and inventing a registry
-          entry for a chrome control is exactly what the Constitution forbids. */}
-      {next === "light" ? (
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <circle cx="8" cy="8" r="3.1" fill="none" stroke="currentColor" strokeWidth="1.3" />
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-            <line
-              key={deg}
-              x1="8"
-              y1="1.6"
-              x2="8"
-              y2="3.3"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              transform={`rotate(${deg} 8 8)`}
-            />
-          ))}
-        </svg>
-      ) : (
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <path
-            d="M13 9.6A5.6 5.6 0 1 1 6.4 3a4.6 4.6 0 0 0 6.6 6.6Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+      {/*
+        A word, not a glyph. Constitution section 7 prohibits ad hoc SVG
+        interface icons, and the Ponte Flow registry has no sun or moon: an
+        icon for this control would have to be invented, which is precisely
+        what that section exists to stop. The label also says which state the
+        control moves to, which no unlabelled sun or moon does without being
+        learned first.
+      */}
+      {next === "light" ? "Light" : "Dark"}
     </button>
   );
 }
