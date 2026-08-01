@@ -847,3 +847,74 @@ body:has(.dr-page) footer.mt-20 {
   border-left: 2px solid var(--pf-rule-strong);
   color: var(--pf-ink-2);
 }
+
+/* A drawn screen inside the walkthrough. The caption comes first in reading
+   order and in the DOM: the reader must know it is an example before they read
+   a figure inside it. */
+.dwt__shot {
+  margin: 24px 0 0;
+  border: 1px solid var(--pf-rule-strong);
+  background: var(--pf-surface);
+  overflow: hidden;
+}
+
+.dwt__shot figcaption {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--pf-rule-strong);
+  background: var(--pf-sunken);
+  font-family: var(--pf-f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+
+/* ----------------------------------------------------------------------
+   The first visit: the crossing, and one thing to press.
+
+   Deliberately short of words. The screen it replaces was, in the owner's
+   count, "99% text": a definition of the product, then the same route stated
+   twice in two bands, and no control that looked like a control. What a
+   visitor who has just pressed "Open a Deal Room" needs is the route drawn and
+   a way onto it.
+   ---------------------------------------------------------------------- */
+
+.ofr { padding: 8px 0 40px; }
+
+.ofr__h { max-width: 34ch; }
+
+.ofr__h h1 {
+  font-family: var(--pf-f-serif);
+  font-size: clamp(30px, 5.4vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  font-weight: 500;
+  color: var(--pf-ink);
+  margin: 0 0 12px;
+}
+
+.ofr__h p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--pf-ink-2);
+  margin: 0 0 30px;
+}
+
+.ofr__cta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid var(--pf-rule);
+}
+
+/* The one reassurance, and it is the one a first-time visitor is carrying:
+   am I about to be asked for an account, or for money. */
+.ofr__f {
+  margin-top: 16px;
+  font-family: var(--pf-f-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--pf-ink-3);
+}

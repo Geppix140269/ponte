@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import BridgeRoute, { type BridgeStation } from "@/components/ponte/bridge/BridgeRoute";
 import { WALKTHROUGH } from "@/lib/deal-room/walkthrough";
+import DraftRoom from "./DraftRoom";
 
 /**
  * The Deal Room, stepped through from nothing to a signature somewhere else.
@@ -112,6 +113,31 @@ export default function Walkthrough({ ctaHref }: { ctaHref: string }) {
             than only by reading all seven.
           */}
           <p className={stage.paid ? "dwt__p dwt__p--paid" : "dwt__p"}>{stage.price}</p>
+
+          {/*
+            The stage that SHOWS rather than describes.
+
+            The owner reached this page and said: "There's nothing in some deal
+            room, is it? Just the process. This is what you do." He was right.
+            A walkthrough of a room that never shows the room is a table of
+            contents.
+
+            Screen 1 of `Ponte Deal Room - Four New Screens v1.html` is drawn
+            here, at the stage it belongs to. The example marker comes before
+            it in reading order, because Constitution section 5 forbids
+            manufactured activity and a room presented as somebody's real one
+            would be exactly that.
+
+            The other three screens - activation, the counterparty preview and
+            the request-to-join inbox - land at their own stages as they are
+            built.
+          */}
+          {stage.key === "build" ? (
+            <figure className="dwt__shot">
+              <figcaption>An example room, in preparation. Not a live deal, and not anybody's data.</figcaption>
+              <DraftRoom idPrefix="wt-draft" />
+            </figure>
+          ) : null}
         </section>
       ))}
 

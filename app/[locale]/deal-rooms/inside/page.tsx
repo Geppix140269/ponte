@@ -3,6 +3,7 @@ import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import { RoomHeader } from "@/components/deal-room/primitives";
 import Walkthrough from "@/components/deal-room/Walkthrough";
+import "@/components/deal-room/draft-room.css";
 
 export const dynamic = "force-static";
 
