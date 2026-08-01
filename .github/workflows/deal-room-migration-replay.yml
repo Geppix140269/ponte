@@ -1,0 +1,242 @@
+name: Migration replay proof
+
+# Replays the repository's own migration history into an ephemeral PostgreSQL 17
+# stack, then applies the Deal Room admission gate migration and runs its proof.
+#
+# THIS WORKFLOW HAS NO SECRETS AND NEVER CONTACTS THE PRODUCTION DATABASE.
+#
+# That single property is what makes it cheap to run and safe to run often, and
+# it is asserted mechanically in the first step rather than merely promised.
+# The credential-boundary guards carried by `deal-room-gate-proof.yml` -
+# dispatch-from-main-only, a 40-hex target_sha, the reviewed-migration checksum,
+# the no-own-workflow check, the never-print and never-write greps - all existed
+# to keep a production connection string away from unreviewed code. With no
+# connection string in play there is nothing for them to protect, so they are
+# deliberately absent here. This is a smaller workflow because it is a smaller
+# risk, not because the standard dropped.
+#
+# What it can prove:
+#   phase 1  every historical migration still applies to an empty database
+#   phase 2  the admission gate migration applies on top of that history
+#   phase 3  the gate behaves as specified, against that schema
+#
+# What it cannot prove: that production's live schema matches this history.
+# Drift is a separate question and needs a read-only comparison against
+# production, not this job.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA to test. Leave blank to test the branch selected above.'
+        required: false
+        default: ''
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'lib/deal-room/**'
+      - 'scripts/deal-room-admission-gate-proof.mjs'
+      - '.github/workflows/deal-room-migration-replay.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      STACK_DIR: /tmp/ephemeral-supabase
+      GATE_MIGRATION: 20260731g_deal_room_admission_verification_gate.sql
+      PROOF_SCRIPT: scripts/deal-room-admission-gate-proof.mjs
+
+    steps:
+      - name: Fetch the running workflow definition, to check itself
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.sha }}
+          path: .workflow-definition
+          sparse-checkout: .github/workflows
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: This job holds no secrets
+        run: |
+          WF=.workflow-definition/.github/workflows/deal-room-migration-replay.yml
+          if [ ! -f "$WF" ]; then
+            echo "::error::Could not fetch this workflow's own definition. Cannot self-check."
+            exit 1
+          fi
+
+          # The invariant that replaces every credential guard in the older
+          # workflow: this file may not reference the secrets context at all.
+          hits=$(grep -cE '\$\{\{[^}]*secrets\.' "$WF" || true)
+          echo "references to the secrets context: $hits"
+          if [ "$hits" -ne 0 ]; then
+            grep -nE '\$\{\{[^}]*secrets\.' "$WF"
+            echo "::error::This workflow must never read a secret. Found $hits reference(s)."
+            exit 1
+          fi
+          echo "confirmed: no secret can reach this job, so no database but the ephemeral one is reachable"
+
+      - name: Check out the tree under test
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.target_sha || github.ref }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Report exactly what is under test
+        run: |
+          echo "requested target_sha : ${{ inputs.target_sha || '(none - using the selected ref)' }}"
+          echo "git rev-parse HEAD   : $(git rev-parse HEAD)"
+          echo "subject              : $(git log -1 --pretty=%s)"
+          echo "migrations present   : $(ls supabase/migrations/*.sql | wc -l)"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.111.0
+
+      - name: Start an ephemeral stack, outside the checkout
+        run: |
+          # Initialised in its own directory so the CLI cannot pick up the
+          # repository's migrations implicitly. Every migration this job applies
+          # is applied explicitly, in a named phase, so a failure is always
+          # attributable to one file.
+          mkdir -p "$STACK_DIR"
+          cd "$STACK_DIR"
+          supabase init --force
+          supabase start -x realtime,storage-api,imgproxy,studio,inbucket,edge-runtime,logflare,vector,supavisor
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
+
+      - name: The stack is empty before anything is applied
+        run: |
+          n=$(psql "$LOCAL_DB_URL" -t -A -c \
+            "select count(*) from information_schema.tables where table_schema = 'public';")
+          echo "tables in public before replay: $n"
+          if [ "$n" != "0" ]; then
+            echo "::error::public is not empty at the start. The baseline is not a clean database."
+            exit 1
+          fi
+
+      - name: 'Phase 1: replay the historical migrations'
+        run: |
+          applied=0
+          deferred=0
+          for f in $(ls supabase/migrations/*.sql | LC_ALL=C sort); do
+            base="$(basename "$f")"
+            if [ "$base" = "$GATE_MIGRATION" ]; then
+              echo "         $base  (deferred to phase 2)"
+              deferred=$((deferred + 1))
+              continue
+            fi
+            printf '%3d/     %s  ' "$((applied + 1))" "$base"
+            if psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$f" > /tmp/apply.log 2>&1; then
+              echo "ok"
+              applied=$((applied + 1))
+            else
+              echo "FAILED"
+              echo "::error::Historical migration $base does not replay onto an empty database."
+              echo "::error::This is a finding about the migration history itself, not about the admission gate."
+              echo "--- last 40 lines of psql output ---"
+              tail -40 /tmp/apply.log
+              exit 1
+            fi
+          done
+          echo
+          echo "phase 1: $applied historical migrations replayed cleanly, $deferred deferred"
+          echo "APPLIED_HISTORICAL=$applied" >> "$GITHUB_ENV"
+
+      - name: 'Phase 1 check: the expected schema exists, and carries no rows'
+        run: |
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
+          select 'profiles', count(*) from public.profiles
+          union all select 'listings', count(*) from public.listings
+          union all select 'deal_rooms', count(*) from public.deal_rooms
+          union all select 'deal_room_participants', count(*) from public.deal_room_participants
+          union all select 'auth.users', count(*) from auth.users;
+          SQL
+          rows=$(psql "$LOCAL_DB_URL" -t -A -c "select (select count(*) from public.profiles) + (select count(*) from public.listings) + (select count(*) from auth.users);")
+          if [ "$rows" != "0" ]; then
+            echo "::error::The replayed database is not empty ($rows rows). A migration is seeding data."
+            exit 1
+          fi
+          echo "schema present, no business rows: as expected from a pure DDL replay"
+
+      - name: 'Phase 2: apply the admission gate migration'
+        run: |
+          GATE="supabase/migrations/$GATE_MIGRATION"
+          if [ ! -f "$GATE" ]; then
+            echo "::notice::$GATE_MIGRATION is not in this tree, so there is nothing to apply."
+            echo "::notice::Phase 1 stands on its own: the history replays cleanly."
+            echo "GATE_APPLIED=no" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "sha256: $(sha256sum "$GATE" | cut -d' ' -f1)"
+          echo "bytes : $(wc -c < "$GATE")"
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$GATE"
+          echo "GATE_APPLIED=yes" >> "$GITHUB_ENV"
+          echo "the admission gate migration applied onto the replayed history"
+
+      - name: 'Phase 2 check: the migration is idempotent under re-application'
+        if: env.GATE_APPLIED == 'yes'
+        run: |
+          # A migration that cannot be applied twice is a migration that cannot
+          # be safely retried after a partial failure. Worth knowing before it
+          # ever runs against production, and free to check here.
+          if psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q \
+               -f "supabase/migrations/$GATE_MIGRATION" > /tmp/reapply.log 2>&1; then
+            echo "re-application succeeded: the migration is safely repeatable"
+          else
+            echo "::warning::Re-applying the migration failed. It is not idempotent."
+            echo "::warning::That is not necessarily wrong, but it means a partial failure cannot simply be retried."
+            tail -20 /tmp/reapply.log
+          fi
+
+      - name: 'Phase 3: run the admission gate proof'
+        if: env.GATE_APPLIED == 'yes'
+        env:
+          DATABASE_URL: ${{ env.LOCAL_DB_URL }}
+          DEAL_ROOM_PROOF_ALLOW: '1'
+        run: |
+          if [ ! -f "$PROOF_SCRIPT" ]; then
+            echo "::error::$PROOF_SCRIPT is missing, but the gate migration was present."
+            exit 1
+          fi
+          case "$DATABASE_URL" in
+            *127.0.0.1*|*localhost*) ;;
+            *) echo "::error::The proof may only run against the ephemeral stack. Refusing."; exit 1 ;;
+          esac
+          npm run deal-room:gate-proof
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Migration replay proof"
+            echo
+            echo "| Phase | Result |"
+            echo "|---|---|"
+            echo "| Historical migrations replayed | ${APPLIED_HISTORICAL:-did not complete} |"
+            echo "| Gate migration applied | ${GATE_APPLIED:-no} |"
+            echo
+            echo "No secret was used. The production database was never contacted."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Destroy the ephemeral stack
+        if: always()
+        run: |
+          cd "$STACK_DIR" 2>/dev/null && supabase stop --no-backup || true
+          rm -rf "$STACK_DIR" || true
+          echo "ephemeral stack stopped and removed"

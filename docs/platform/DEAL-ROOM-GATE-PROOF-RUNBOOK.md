@@ -1,5 +1,55 @@
 # Running the Deal Room admission gate proof
 
+There are two routes. **Prefer the replay route.** The dump route exists only to
+answer a question the replay route cannot.
+
+| | Replay route | Dump route |
+|---|---|---|
+| Workflow | `deal-room-migration-replay.yml` | `deal-room-gate-proof.yml` |
+| Schema source | the repository's own migration history | production, via schema-only `pg_dump` |
+| Secret required | **none** | `PONTE_SCHEMA_SOURCE_DATABASE_URL` |
+| Touches production | **never** | one read-only dump |
+| Repeatable | yes, on every pull request | one-use, by hand |
+| Proves | the migration works against the schema the repo *claims* production has | the migration works against the schema production *actually* has |
+
+Run the replay route first. It costs nothing and needs no credential, so there
+is no reason to spend a production connection before it is green. Reach for the
+dump route only when the question is specifically **drift** — whether production
+has diverged from the migration history.
+
+## The replay route
+
+```text
+Actions -> Migration replay proof -> Run workflow
+```
+
+Leave `target_sha` blank to test the selected branch, or paste a full SHA to
+test a specific commit. It also runs automatically on any pull request touching
+`supabase/migrations/**`, `lib/deal-room/**` or the proof script.
+
+Three phases, so a failure is always attributable:
+
+1. **Historical replay** — every migration except the gate migration is applied
+   to an empty PostgreSQL 17 database, one file at a time, in filename order.
+   A failure here is a finding about the migration history, not about the gate.
+2. **Gate migration** — `20260731g` is applied on top, then applied a second
+   time to check it is safely repeatable after a partial failure.
+3. **Proof** — `npm run deal-room:gate-proof` against that schema.
+
+If the gate migration is absent from the tree under test, phase 1 still runs and
+reports on its own. Dispatching against `main` is therefore a valid way to ask
+"does our migration history replay?" without involving the Deal Room work at all.
+
+The workflow asserts in its first step that it references no secret, and fails
+if that ever stops being true. That single invariant is what replaces the
+credential guards the dump route needs.
+
+The grants proof (2b, which reads `pg_proc.proacl`) works naturally here: the
+grants come from the historical migrations, which this route replays in full
+rather than reconstructing from a dump.
+
+## The dump route
+
 Operational runbook for `.github/workflows/deal-room-gate-proof.yml`.
 
 ## Current status
