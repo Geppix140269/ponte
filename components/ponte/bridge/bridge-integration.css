@@ -417,3 +417,113 @@
 .pbridge:not([data-live]) .brx[hidden] {
   display: block;
 }
+
+/* ----------------------------------------------------------------------
+   9. A station that invites the click it accepts
+
+   Owner decision of 1 August 2026:
+
+   > all the categories do not invite a user that does not know to "click"
+   > ... it is just text on the page and unless you hover over it it does not
+   > necessarily invite to click
+
+   He is describing the approved stylesheet accurately. `.brst` carries
+   `cursor: pointer` and nothing else at rest: EVERY visual difference lives
+   behind `:hover`, `:focus-visible` or `.brst--on`. A visitor who has not yet
+   moved the mouse onto a station sees 15.5px semibold text under a small
+   outlined circle, which is what a diagram looks like. The affordance existed
+   only for people who had already guessed it was there.
+
+   The fix is the oldest one on the web and the only one that needs no legend:
+   an underline. It is added here rather than in the approved source because
+   that file is an approval record, checksum-pinned by `check-governance.mjs`
+   and diff-pinned by `check-bridge-invariance.mjs`.
+
+   Three properties make it safe against the Constitution:
+
+   1. It introduces NO new colour. `--pf-ink-3` at rest and `--pf-ink` on
+      hover are the two values the approved source already uses on this
+      element for exactly this pair of states.
+   2. It is not the only carrier of anything. It says "this is operable",
+      which is orthogonal to every state the bridge already draws in the
+      node, the pier and the word.
+   3. It is DOTTED at rest and solid on engagement, so the resting cue reads
+      as an invitation rather than as a link already followed. The approved
+      source's own focus treatment is a solid 1.5px underline in the focus
+      colour, and that still wins: focus is a stronger statement than
+      availability and must not be quieter than it.
+
+   Scoped to `.brst` inside a bridge that is actually operable. A station in a
+   `progress` or `journey` bridge is a position and not a control, and
+   underlining one would promise a click that is not there. `[disabled]` is
+   excluded for the same reason.
+   ---------------------------------------------------------------------- */
+
+/*
+   One selector shape for all four states, because specificity decides this and
+   getting it wrong is silent.
+
+   The first version scoped the resting rule as
+   `.br[role="radiogroup"] .brst:not([disabled]) .brst__t` - five class-level
+   components - and wrote hover, chosen and focus as `.br .brst... .brst__t`,
+   which is three or four. The resting rule therefore beat all three: a focused
+   station drew its underline in `--pf-ink-3` instead of `--pf-focus`, and a
+   chosen station never went solid. The DS-9 evidence test caught the focus
+   half, which is exactly what it exists for.
+
+   So every state below carries the SAME prefix as the state it overrides, and
+   they are ordered resting, receded, engaged, focused. Read top to bottom, the
+   last one that matches wins, which is the behaviour the source order implies.
+*/
+
+/* Resting: operable, and saying so without being touched. */
+.br[role="radiogroup"] .brst:not([disabled]) .brst__t,
+.br[role="group"] a.brst:not([disabled]) .brst__t {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--pf-ink-3);
+  /*
+     Deliberately NOT transitioned.
+
+     The first version faded `text-decoration-color` over `--pf-dur-micro`.
+     That made the computed value time-dependent, so a test - or a screen
+     reader, or a user pressing Tab quickly - could observe the OLD colour
+     after the state had already changed. DS-9 read `--pf-ink-3` on a station
+     that was already focused, passing locally and failing in CI purely on
+     timing.
+
+     A focus indicator that arrives late is a worse thing than an abrupt one,
+     and the Constitution's motion rules do not ask for movement here. The node
+     and the pier still animate; the affordance underline does not.
+  */
+}
+
+/* Receded: a choice has been made and this is not it. The approved source
+   takes this text to `--pf-ink-3`; the underline follows it rather than
+   staying at the weight of the chosen station. */
+.br--chosen[role="radiogroup"] .brst:not(.brst--on):not([disabled]) .brst__t {
+  text-decoration-color: var(--pf-ink-3);
+}
+
+/* Engaged: the same underline, resolved. Solid and at full ink, which is the
+   value the approved source already moves this text to on hover. */
+.br[role="radiogroup"] .brst:not([disabled]):hover .brst__t,
+.br[role="group"] a.brst:not([disabled]):hover .brst__t,
+.br[role="radiogroup"] .brst--on:not([disabled]) .brst__t {
+  text-decoration-style: solid;
+  text-decoration-color: var(--pf-ink);
+}
+
+/* Focused. Louder than availability, and it must win from any of the above.
+   This is the approved source's own focus treatment - solid, 1.5px, in the
+   focus colour - restated at a specificity that survives the rules above it. */
+.br[role="radiogroup"] .brst:not([disabled]):focus-visible .brst__t,
+.br[role="group"] a.brst:not([disabled]):focus-visible .brst__t {
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--pf-focus);
+}

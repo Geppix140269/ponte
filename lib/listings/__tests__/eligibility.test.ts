@@ -57,6 +57,8 @@ function productListing(over: Partial<EligibilityListing> = {}): EligibilityList
     payment_terms: "LC at sight",
     submitter_role: "Producer",
     origin: "Brazil",
+    // ADR-0026 promoted the delivery basis into the minimum for products.
+    incoterm: "FOB",
     validity_type: "standing",
     valid_until: null,
     desk_version: { qualification: "Confirmed by the member.", limitations: "Not independently verified." },
@@ -266,15 +268,23 @@ test("a minimal publishable listing is scored Basic, and that is honest", () => 
   // stated; a listing carrying only the required core genuinely is basic, and
   // inflating it so that "published" implies "detailed" would be the exact
   // conflation the band labels exist to avoid.
+  // The PROPERTY, not the number. ADR-0026 raised the minimum, which raised
+  // the floor score, and the band threshold moved with it. If the minimum ever
+  // grows again this fails here rather than quietly telling a member at the
+  // floor that their record is Complete.
   const r = evaluateListing(productListing(), VERIFIED);
   assert.equal(r.publishable, true);
-  assert.equal(completenessBand(r.completenessScore), "basic");
+  assert.equal(
+    completenessBand(r.completenessScore),
+    "basic",
+    `a minimum-only record banded above basic at ${r.completenessScore}%`,
+  );
   assert.ok(r.completenessScore > 0 && r.completenessScore < 100);
 });
 
 test("a sparser listing scores lower without becoming unpublishable", () => {
   const sparse = evaluateListing(
-    productListing({ key_notes: null, indicative_value_usd: null, hs_code: null, incoterm: null }),
+    productListing({ key_notes: null, indicative_value_usd: null, hs_code: null }),
     VERIFIED,
   );
   const rich = evaluateListing(

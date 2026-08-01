@@ -41,17 +41,44 @@
  * lookup, so the Next build can still inline the public one.
  */
 
-/** The route flag. Anything other than exactly `on` means off. */
+/**
+ * The route flag. Explicitly `off` means off; anything else means on.
+ *
+ * ## This default was inverted on 1 August 2026, on the owner's instruction
+ *
+ * It used to require exactly `on`, so an absent variable closed the feature.
+ * That is the right default for an UNRELEASED slice, and it was right for as
+ * long as the Deal Room was one. It stopped being right the moment the
+ * entrance made "Open a Deal Room" the largest control on the site: the
+ * product now sells the room on its front page, and a release switch that
+ * defaults to closed makes the front page lie by default.
+ *
+ * The owner, having followed his own call to action:
+ *
+ * > I want to open a Deal Room, and I get this. And this is, like, you know,
+ * > I'm just gonna leave and never come back.
+ *
+ * Closing it again is one variable, `NEXT_PUBLIC_DEAL_ROOM=off`. That is now
+ * the deliberate act, rather than the accident.
+ */
 export function dealRoomRoutesEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_DEAL_ROOM === "on";
+  return process.env.NEXT_PUBLIC_DEAL_ROOM !== "off";
 }
 
 /**
- * Parse the server-side allowlist.
+ * Parse the server-side restriction list.
  *
  * Comma-separated organisation ids or profile ids. Empty, absent or
- * whitespace-only means **nobody**, which is the correct default for an
- * unreleased slice: a missing environment variable must not open a feature.
+ * whitespace-only now means **everybody**, not nobody.
+ *
+ * That inversion is the substantive half of the change. This began as a
+ * staged-rollout control, written when nothing in the product linked to the
+ * room, and "empty means nobody" was correct then. In production it was never
+ * populated, so the site's primary call to action was unreachable for every
+ * human being including the owner.
+ *
+ * It survives as an OPTIONAL narrowing: set it and only those ids get in;
+ * leave it unset and any signed-in member does.
  */
 export function allowlist(): Set<string> {
   const raw = process.env.DEAL_ROOM_ALLOWLIST ?? "";
@@ -66,14 +93,25 @@ export function allowlist(): Set<string> {
 /**
  * Whether this member may reach the Deal Room at all.
  *
- * Checked server-side on every Deal Room route and command. Both the flag and
- * the allowlist must pass: the flag is the build-wide switch, the allowlist is
- * who it is switched on for.
+ * Checked server-side on every Deal Room route and command.
+ *
+ * ## Why opening this is safe
+ *
+ * The reason is the paragraph at the top of this file, written before anybody
+ * needed it: **the flag is not a security boundary. Row Level Security is.**
+ * Letting somebody through shows them an empty portfolio, because the policies
+ * return no rows to a non-participant, and a room they are not in stays
+ * invisible to them. Nothing here grants access to any data.
+ *
+ * A signed-in member is still required, and that requirement is unchanged. An
+ * anonymous visitor has no profile for the policies to answer for, so the
+ * routes send them to sign in rather than into a room.
  */
 export function dealRoomAvailableTo(profileId: string | null, organisationId: string | null): boolean {
   if (!dealRoomRoutesEnabled()) return false;
   if (!profileId) return false;
   const allowed = allowlist();
-  if (allowed.size === 0) return false;
+  // Unrestricted. Any signed-in member; RLS decides what they can then see.
+  if (allowed.size === 0) return true;
   return allowed.has(profileId) || (organisationId !== null && allowed.has(organisationId));
 }

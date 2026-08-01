@@ -77,17 +77,29 @@ export default function DealRoomPreview() {
       <div className="drp__head">
         <h2 id="drp-h">The Deal Room</h2>
         <p>Where every route across ends.</p>
+        {/*
+          The second control used to be "How Deal Rooms work" pointing at
+          `/pricing`. It promised an explanation and delivered a price list,
+          and the owner walked the loop it creates on 1 August 2026: room ->
+          wall -> "how it works" -> a page of text with a figure in it -> back
+          to the wall. A button that answers a question with a different
+          question is worse than no button.
+
+          The room is directly below. "How it works" is answered by showing it,
+          which is the whole reason the preview is on the entrance (ADR-0022),
+          so the control takes the reader there instead of away.
+        */}
         <div className="drp__cta">
           <Link className="b b--lg" href="/deal-rooms/propose">
             Open a Deal Room
           </Link>
-          <Link className="b b--2 b--lg" href="/pricing">
-            How Deal Rooms work
-          </Link>
+          <a className="b b--2 b--lg" href="#drp-room">
+            See inside one
+          </a>
         </div>
       </div>
 
-      <div className="drp__room">
+      <div className="drp__room" id="drp-room">
         {/* The example marker comes before any figure in reading order. */}
         <div className="drp__ex">An example room. Not a live deal.</div>
 
@@ -158,12 +170,22 @@ export default function DealRoomPreview() {
           ))}
         </ul>
 
+        {/*
+          ADR-0025. "Exploring, publishing and preparing a room stay free" was
+          here until 1 August 2026 and is now false in its most important word.
+          Under the crescendo model a member opens and builds a room for
+          nothing, and pays at the moment they publish it and invite somebody
+          in. Preparing is free; publishing is exactly where the money is.
+
+          The order is the order of the journey, so the free steps are read
+          before the charged one rather than after it.
+        */}
         <footer className="drp__ent">
-          <span>
-            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} for {ACTIVE_PERIOD_DAYS} active days
-          </span>
+          <span>Opening a room and building it are free</span>
           <span>Invited counterparties join free</span>
-          <span>Exploring, publishing and preparing a room stay free</span>
+          <span>
+            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} when you publish it, for {ACTIVE_PERIOD_DAYS} active days
+          </span>
         </footer>
       </div>
     </section>

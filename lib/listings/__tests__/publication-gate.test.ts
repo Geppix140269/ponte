@@ -58,6 +58,11 @@ function goodListing(): GateListing {
     chain_depth: null,
     validity_type: "dated",
     valid_until: "2026-08-31",
+    // ADR-0026 moved these two into the minimum: a record stating neither end
+    // of the route cannot be assessed, and a price with no Incoterm does not
+    // say what it includes.
+    origin: "Brazil",
+    incoterm: "CIF",
     desk_version: { qualification: "12,000 MT monthly, CIF.", limitations: "No inspection named." },
   };
 }
@@ -171,21 +176,44 @@ test("missing required facts fail the gate, each reported", () => {
   assert.ok(!r.ok && r.failures.includes("missing:payment_terms"));
 });
 
-test("missing public qualification or limitations text fails the gate", () => {
+// These two tests asserted the opposite until 1 August 2026, and the reversal
+// is the substance of ADR-0026 rather than a relaxation of it.
+//
+// The gate required `desk_version.qualification` and `.limitations`: text a
+// human at Ponte writes for every record before it can go out. That is
+// precisely the manual review the owner says he cannot do and will not pretend
+// to do, and it is why three of his own records sat at "IN REVIEW" with
+// nothing wrong with them.
+//
+// What must NOT follow from this, and is asserted below: a record without desk
+// text must not gain the label that desk text earns.
+
+test("a listing with no desk text publishes anyway", () => {
   const l = goodListing();
   l.desk_version = { qualification: "", limitations: "" };
-  const r = checkPublicationGate(l, goodSubmitter(), NOW);
-  assert.equal(r.ok, false);
-  assert.ok(!r.ok && r.failures.includes("no_public_qualification"));
-  assert.ok(!r.ok && r.failures.includes("no_public_limitations"));
+  assert.deepEqual(checkPublicationGate(l, goodSubmitter(), NOW), { ok: true });
 });
 
-test("a listing with no desk_version at all fails on the public text", () => {
+test("a listing with no desk_version at all publishes anyway", () => {
   const l = goodListing();
   l.desk_version = null;
-  const r = checkPublicationGate(l, goodSubmitter(), NOW);
-  assert.equal(r.ok, false);
-  assert.ok(!r.ok && r.failures.includes("no_public_qualification"));
+  assert.deepEqual(checkPublicationGate(l, goodSubmitter(), NOW), { ok: true });
+});
+
+test("publishing without desk text does not make a record look reviewed", () => {
+  // The half of the old requirement that still matters. A record only carries
+  // "Opportunity reviewed" where a review actually happened, so removing the
+  // blocker cannot quietly promote every record to reviewed.
+  assert.deepEqual(
+    truthfulLabels({
+      businessVerified: true,
+      submitterRole: "Trading company holding title",
+      mandateSighted: false,
+      reviewed: false,
+      lastConfirmed: null,
+    }).map((label) => label.key),
+    ["businessChecked", "roleDeclared"],
+  );
 });
 
 // --- 23 (gate half): an expired opportunity is not current ------------------
@@ -231,6 +259,9 @@ test("a broker must declare chain depth; a principal need not", () => {
     payment_terms: "LC 90 days",
     validity_type: "standing" as const,
     valid_until: null,
+    // ADR-0026 additions to the minimum.
+    destination: "Nigeria",
+    incoterm: "FOB",
   };
   const broker = meetsApprovalMinimum({ ...base, submitter_role: "Broker with a seller mandate" });
   assert.ok(!broker.ok && broker.missing.includes("chain_depth"));

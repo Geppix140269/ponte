@@ -319,10 +319,15 @@ function recommendationsFor(
 
   if (family === "products") {
     if (!has(listing.hs_code)) rec("hs_code", "hs_code", "Add the HS classification so buyers filtering by code can find this.");
-    if (!has(listing.incoterm)) rec("incoterm", "incoterm", "Add an Incoterm so the delivery basis is unambiguous.");
+    // The Incoterm is not here: ADR-0026 made it part of the minimum, and a
+    // required field offered as advice reads as optional.
     if (!(ctx.mediaCount ?? 0)) rec("images", "media", "Add product images.");
     if (!has(listing.destination) || !has(listing.origin)) {
       rec("full_corridor", "destination", "State both ends of the route where you know them.");
+    }
+    // Demoted from the minimum by ADR-0026, so it earns percentage instead.
+    if (!has(listing.frequency)) {
+      rec("frequency", "frequency", "State how often this repeats, if it repeats.");
     }
   }
 
@@ -406,12 +411,45 @@ export function completenessScore(
   return Math.round((got / total) * 100);
 }
 
+/**
+ * Why the percentage matters, in the owner's own terms (ADR-0026).
+ *
+ * > remind the user that an incomplete entry has less chances to be invited to
+ * > a deal room
+ *
+ * Exported so the composer, the workspace and the published-record email all
+ * say the same thing. It is a statement about how counterparties choose, which
+ * is true; it is not a threat, and it is never a fee. Nothing in it implies
+ * Ponte withholds anything from an incomplete record, because it does not.
+ */
+export const COMPLETENESS_INCENTIVE =
+  "A record that states more gets invited into more Deal Rooms. Counterparties open the ones they can act on.";
+
 /** The band a completeness score falls in. Presentation only. */
 export type CompletenessBand = "basic" | "complete" | "highly_detailed";
 
+/**
+ * The bands must be read against the PUBLISHABLE FLOOR, not against zero.
+ *
+ * `complete` began at 60. ADR-0026 promoted the Incoterm and one end of the
+ * route into the minimum, which raised a bare-minimum product record from 58
+ * to 65 - and pushed the floor itself into the "Complete" band. A member who
+ * had stated the least the product will accept would have been told their
+ * record was complete.
+ *
+ * That is not a labelling detail. The whole mechanism the owner asked for is
+ * that the percentage gives a member a reason to state more, because "an
+ * incomplete entry has less chances to be invited to a deal room". A floor
+ * labelled Complete removes the reason.
+ *
+ * So the threshold sits above the floor by construction, and the test in
+ * `__tests__/eligibility.test.ts` asserts the PROPERTY - a minimum-only record
+ * is never banded above `basic` - rather than this number, so a future change
+ * to the minimum fails there rather than quietly re-crossing the line.
+ */
 export function completenessBand(score: number): CompletenessBand {
   if (score >= 85) return "highly_detailed";
-  if (score >= 60) return "complete";
+  if (score >= 70) return "complete";
   return "basic";
 }
 
@@ -461,9 +499,22 @@ export function evaluateListing(
     // gate's verdict on those two keys is deferred to `familyBlockingIssues`
     // rather than reported twice in two different vocabularies.
     const ownedHere = new Set(["missing:quantity", "missing:unit"]);
-    // Frequency is a product fact. A trade service and a distribution
-    // arrangement have no shipped quantity, so they are never short of one.
-    const productOnly = new Set(["missing:quantity", "missing:unit", "missing:frequency"]);
+    // Product facts. A trade service and a distribution arrangement have no
+    // shipped quantity, no shipment route and no delivery basis, so they are
+    // never short of one and must never be asked.
+    //
+    // `missing:route` and `missing:incoterm` joined this set the moment
+    // ADR-0026 promoted them into the minimum. Without them a distribution
+    // listing was refused for having no Incoterm, which is the exact failure
+    // the family rules exist to prevent - inventing a fact the record does not
+    // have and blocking a legitimate member with it.
+    const productOnly = new Set([
+      "missing:quantity",
+      "missing:unit",
+      "missing:frequency",
+      "missing:route",
+      "missing:incoterm",
+    ]);
     for (const failure of gate.failures) {
       if (ownedHere.has(failure)) continue;
       if (family !== "products" && productOnly.has(failure)) continue;
