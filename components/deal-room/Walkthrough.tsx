@@ -5,6 +5,9 @@ import { Link } from "@/i18n/navigation";
 import BridgeRoute, { type BridgeStation } from "@/components/ponte/bridge/BridgeRoute";
 import { WALKTHROUGH } from "@/lib/deal-room/walkthrough";
 import DraftRoom from "./DraftRoom";
+import ActivationScreen from "./ActivationScreen";
+import CounterpartyPreview from "./CounterpartyPreview";
+import JoinInbox from "./JoinInbox";
 
 /**
  * The Deal Room, stepped through from nothing to a signature somewhere else.
@@ -35,6 +38,35 @@ import DraftRoom from "./DraftRoom";
  * no walkthrough. Every stage is drawn from the same tokens and the same
  * components as the room itself, so it cannot drift.
  */
+/**
+ * The drawn screens, by the stage each belongs to.
+ *
+ * Four of the seven stages now SHOW rather than describe. The three that do
+ * not - describing an opportunity, publishing it, and what remains after
+ * signature - are about things that happen outside the room, and drawing a
+ * room for them would be inventing a screen the design package does not have.
+ *
+ * Every caption names the surface as an example before the surface is read.
+ */
+const SHOTS: Record<string, { caption: string; render: () => JSX.Element } | undefined> = {
+  build: {
+    caption: "An example room, in preparation. Not a live deal, and not anybody's data.",
+    render: () => <DraftRoom idPrefix="wt-draft" />,
+  },
+  activate: {
+    caption: "The activation screen, exactly as it is asked. Every control here is inert.",
+    render: () => <ActivationScreen idPrefix="wt-act" />,
+  },
+  languages: {
+    caption: "The counterparty preview. Switch the language to see what they see.",
+    render: () => <CounterpartyPreview idPrefix="wt-pv" />,
+  },
+  branches: {
+    caption: "Example requests to join. Three illustrations, not real members.",
+    render: () => <JoinInbox idPrefix="wt-rq" />,
+  },
+};
+
 export default function Walkthrough({ ctaHref }: { ctaHref: string }) {
   const [active, setActive] = useState<string>(WALKTHROUGH[0].key);
   const [visited, setVisited] = useState<string[]>([WALKTHROUGH[0].key]);
@@ -132,10 +164,16 @@ export default function Walkthrough({ ctaHref }: { ctaHref: string }) {
             the request-to-join inbox - land at their own stages as they are
             built.
           */}
-          {stage.key === "build" ? (
+          {SHOTS[stage.key] ? (
             <figure className="dwt__shot">
-              <figcaption>An example room, in preparation. Not a live deal, and not anybody's data.</figcaption>
-              <DraftRoom idPrefix="wt-draft" />
+              {/*
+                The caption comes FIRST, in the DOM as well as visually.
+                Constitution section 5 forbids manufactured activity, so a
+                reader must know a screen is an example before they read a
+                figure inside it, not after.
+              */}
+              <figcaption>{SHOTS[stage.key]!.caption}</figcaption>
+              {SHOTS[stage.key]!.render()}
             </figure>
           ) : null}
         </section>

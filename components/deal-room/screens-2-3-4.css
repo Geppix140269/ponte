@@ -1,0 +1,169 @@
+/* =====================================================================
+   PONTE TRADE - Deal Room screens 2, 3 and 4
+
+   Vendored from `ponte-draft.css` in the owner's design project, sections 5
+   to 7 of `Ponte Deal Room - Four New Screens v1.html`:
+
+     2  Activation
+     3  Counterparty preview, and the five languages
+     4  Request-to-join inbox
+
+   Screen 1 lives in `draft-room.css` and carries sections 0 to 4, which this
+   file assumes are loaded. Split so a surface that needs only the draft room
+   does not ship the inbox.
+
+   Every value is a `--pf-*` token. The one class of literal is alpha over an
+   ink surface, which the design package's section 02 requires: rules on the
+   inverse are alpha rather than tint, and text printed in `--pf-surface` on
+   `--pf-ink` needs its secondary weights as alpha of the cream, or they break
+   the moment the theme flips.
+   ===================================================================== */
+
+/* ---------- 5 - activation: the one paid moment ---------- */
+.act2 { background: var(--pf-ink); color: var(--pf-surface); padding: 34px 34px 30px; }
+[data-theme="dark"] .act2 { background: var(--pf-raised); color: var(--pf-ink); border-bottom: 1px solid var(--pf-rule-strong); }
+.act2 .k { font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(242,239,232,.55); }
+[data-theme="dark"] .act2 .k { color: var(--pf-ink-3); }
+.act2 h1 { font-family: var(--pf-f-serif); font-size: 34px; line-height: 1.1; letter-spacing: -0.022em; font-weight: 500; margin: 14px 0 12px; max-width: 20ch; color: inherit; }
+.act2 p { font-size: 15px; line-height: 1.65; color: rgba(242,239,232,.78); max-width: 56ch; }
+[data-theme="dark"] .act2 p { color: var(--pf-ink-2); }
+
+/* The price: stated once, large, with no comparison to anything. */
+.price { display: flex; align-items: flex-end; gap: 18px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(242,239,232,.22); flex-wrap: wrap; }
+[data-theme="dark"] .price { border-top-color: var(--pf-rule); }
+.price b { font-family: var(--pf-f-mono); font-size: 40px; font-weight: 500; letter-spacing: -0.025em; line-height: 0.9; }
+.price em { font-style: normal; font-family: var(--pf-f-mono); font-size: 12.5px; color: rgba(242,239,232,.6); line-height: 1.6; max-width: 32ch; }
+[data-theme="dark"] .price em { color: var(--pf-ink-3); }
+.incl { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; }
+.incl li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; font-size: 13px; color: rgba(242,239,232,.78); line-height: 1.5; align-items: baseline; }
+[data-theme="dark"] .incl li { color: var(--pf-ink-2); }
+.incl i { width: 8px; height: 8px; background: rgba(242,239,232,.85); display: block; margin-top: 5px; }
+[data-theme="dark"] .incl i { background: var(--pf-ink-3); }
+
+/* The visibility choice: an explicit pair, both fully explained, never silent. */
+.vis2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.vis2 label { border: 1px solid var(--pf-rule-strong); background: var(--pf-raised); padding: 16px 18px; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 14px; align-items: start; cursor: pointer; }
+.vis2 label:hover { border-color: var(--pf-ink-3); background: var(--pf-sunken); }
+.vis2 input { width: 17px; height: 17px; margin: 2px 0 0; accent-color: var(--pf-ink); }
+.vis2 b { display: block; font-size: 15px; font-weight: 600; line-height: 1.35; margin-bottom: 7px; }
+.vis2 b u { text-decoration: none; display: block; font-family: var(--pf-f-mono); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--pf-ink-3); font-weight: 600; margin-bottom: 6px; }
+.vis2 p { font-size: 12.5px; line-height: 1.6; color: var(--pf-ink-2); }
+.vis2 .d { display: block; font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--pf-rule-strong); line-height: 1.55; }
+.vis2 label:has(input:checked) { border-color: var(--pf-ink); box-shadow: inset 3px 0 0 var(--pf-ink); background: var(--pf-raised); }
+/* The default is marked. Gold marks a POSITION here, never a state. */
+.vis2 .dflt { font-family: var(--pf-f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pf-gold-ink); display: inline-block; margin-inline-start: 8px; }
+
+.confirm { border: 1px solid var(--pf-rule-strong); background: var(--pf-sunken); padding: 15px 18px; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 14px; align-items: start; }
+.confirm input { width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--pf-ink); }
+.confirm b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.5; margin-bottom: 6px; }
+.confirm p { font-size: 12px; line-height: 1.6; color: var(--pf-ink-2); }
+
+.chg2 { border: 1px solid var(--pf-rule); background: var(--pf-raised); }
+.chg2 > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 11px 16px; border-bottom: 1px solid var(--pf-rule); align-items: baseline; }
+.chg2 > div:last-child { border-bottom: 0; background: var(--pf-sunken); }
+.chg2 b { font-size: 13px; font-weight: 500; }
+.chg2 b span { display: block; font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); margin-top: 3px; }
+.chg2 u { text-decoration: none; font-family: var(--pf-f-mono); font-size: 13px; color: var(--pf-ink); font-variant-numeric: tabular-nums; }
+.chg2 > div:last-child b, .chg2 > div:last-child u { font-weight: 700; }
+
+/* ---------- 6 - preview chrome: persistent, and unmistakable ---------- */
+.pv { border: 3px solid var(--pf-ink); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--pf-ink) 6%, transparent) 0 5px, transparent 5px 11px); padding: 0 0 12px; }
+.pv__bar { background: var(--pf-ink); color: var(--pf-surface); padding: 10px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.pv__bar i { width: 10px; height: 10px; border: 1.5px solid rgba(242,239,232,.75); display: block; flex: none; }
+.pv__bar b { font-family: var(--pf-f-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+.pv__bar .w { font-family: var(--pf-f-mono); font-size: 10.5px; color: rgba(242,239,232,.6); letter-spacing: 0.02em; }
+.pv__bar .x { margin-inline-start: auto; display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.pv__in { margin: 12px 14px 0; border: 1px solid var(--pf-rule-strong); background: var(--pf-surface); }
+.pv__foot { margin: 12px 14px 0; font-family: var(--pf-f-mono); font-size: 10px; color: var(--pf-ink-2); letter-spacing: 0.02em; line-height: 1.6; }
+/* On the inverse `--pf-ink` IS the cream, so every value inside the bar has to
+   re-point too, or the caption disappears into its own bar. */
+[data-theme="dark"] .pv__bar { background: var(--pf-raised); border-bottom: 1px solid var(--pf-rule-strong); color: var(--pf-ink); }
+[data-theme="dark"] .pv__bar i { border-color: var(--pf-ink-3); }
+[data-theme="dark"] .pv__bar .w { color: var(--pf-ink-3); }
+[data-theme="dark"] .pv { border-color: var(--pf-rule-strong); background: repeating-linear-gradient(135deg, rgba(242,239,232,.05) 0 5px, transparent 5px 11px); }
+
+.lang { display: flex; border: 1px solid rgba(242,239,232,.34); border-radius: 4px; overflow: hidden; }
+.lang button { background: transparent; border: 0; color: rgba(242,239,232,.66); font-family: var(--pf-f-mono); font-size: 10.5px; padding: 4px 10px; cursor: pointer; border-inline-end: 1px solid rgba(242,239,232,.2); }
+.lang button:last-child { border-inline-end: 0; }
+.lang button[aria-pressed="true"] { background: var(--pf-surface); color: var(--pf-ink); font-weight: 600; }
+[data-theme="dark"] .lang { border-color: var(--pf-rule-strong); }
+[data-theme="dark"] .lang button { color: var(--pf-ink-3); border-inline-end-color: var(--pf-rule); }
+[data-theme="dark"] .lang button[aria-pressed="true"] { background: var(--pf-ink); color: var(--pf-surface); }
+
+/* What stays private: a stated list, never an implication. */
+.priv { border: 1px solid var(--pf-rule-strong); background: var(--pf-sunken); }
+.priv > div { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding: 11px 16px; border-bottom: 1px dashed var(--pf-rule-strong); align-items: start; }
+.priv > div:last-child { border-bottom: 0; }
+.priv i { font-family: var(--pf-f-mono); font-size: 12px; color: var(--pf-ink-3); font-style: normal; line-height: 1.4; }
+.priv b { display: block; font-size: 12.5px; font-weight: 600; line-height: 1.4; }
+.priv span { display: block; font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); line-height: 1.55; margin-top: 3px; }
+
+/* ---------- 7 - request-to-join inbox ---------- */
+.app { border: 1px solid var(--pf-rule); background: var(--pf-raised); }
+.app + .app { margin-top: 10px; }
+.app__h { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--pf-rule); background: var(--pf-sunken); flex-wrap: wrap; }
+.app__h b { font-size: 14.5px; font-weight: 600; }
+.app__h .ref { font-family: var(--pf-f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pf-ink-3); }
+.app__h .age { margin-inline-start: auto; font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); }
+.app__b { display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.app__id { padding: 15px 16px; border-inline-end: 1px solid var(--pf-rule); }
+.app__sum { padding: 15px 16px; }
+.app__f { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; padding: 12px 16px; border-top: 1px solid var(--pf-rule); background: var(--pf-sunken); }
+.app__f .sp { margin-inline-start: auto; display: flex; gap: 9px; flex-wrap: wrap; }
+
+/* Six separate facts, never one badge. Shape-coded as well as worded, so the
+   distinction survives greyscale and colour blindness. */
+.idl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.idl li { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 10px; font-size: 12.5px; line-height: 1.45; color: var(--pf-ink-2); align-items: baseline; }
+.idl li i { width: 10px; height: 10px; display: block; margin-top: 4px; flex: none; border: 1.5px solid var(--pf-rule-strong); }
+.idl li.on i { background: var(--pf-ink); border-color: var(--pf-ink); }
+.idl li.on { color: var(--pf-ink); font-weight: 500; }
+.idl li.decl i { border-style: dashed; border-color: var(--pf-declared); border-radius: 50%; }
+.idl li.no i { border-style: dotted; }
+.idl li.no { color: var(--pf-ink-3); }
+.idl li em { font-style: normal; display: block; font-family: var(--pf-f-mono); font-size: 10px; color: var(--pf-ink-3); margin-top: 3px; }
+.idl__t { font-family: var(--pf-f-mono); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--pf-ink-3); font-weight: 600; margin-bottom: 10px; display: block; }
+
+.sumg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.sumg > div { min-width: 0; }
+.sumg dt { font-family: var(--pf-f-mono); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--pf-mute); margin-bottom: 4px; }
+.sumg dd { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--pf-ink); }
+/* An absence is information, so it is shown muted rather than omitted. */
+.sumg dd.q { color: var(--pf-ink-3); }
+.sumg--wide { grid-column: 1 / -1; }
+
+.ask { border: 1px solid var(--pf-review); background: color-mix(in srgb, var(--pf-review) 8%, transparent); padding: 13px 16px; margin-top: 12px; }
+.ask b { display: block; font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--pf-review); margin-bottom: 8px; }
+.ask p { font-size: 12.5px; line-height: 1.6; color: var(--pf-ink-2); }
+.ask ul { margin: 9px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ask li { font-family: var(--pf-f-mono); font-size: 11px; color: var(--pf-ink-2); padding-inline-start: 16px; position: relative; line-height: 1.5; }
+.ask li::before { content: ""; position: absolute; inset-inline-start: 0; top: 8px; width: 8px; height: 1px; background: var(--pf-review); }
+
+.dmb--q { background: transparent; border-color: transparent; color: var(--pf-ink-2); }
+.dmb--danger { background: var(--pf-raised); color: var(--pf-danger); border-color: color-mix(in srgb, var(--pf-danger) 45%, transparent); }
+
+/* ---------- 9 - language and direction ---------- */
+.dm[lang="ar"] { --pf-f-sans: "Noto Sans Arabic", "Segoe UI", sans-serif; --pf-f-mono: "Noto Sans Arabic", ui-monospace, monospace; --pf-f-serif: "Noto Naskh Arabic", "Noto Sans Arabic", serif; }
+/* The display face has no CJK coverage, so Chinese re-points the serif and
+   drops the negative tracking rather than rendering in a fallback. */
+.dm[lang="zh"] { --pf-f-sans: "Noto Sans SC", "PingFang SC", sans-serif; --pf-f-mono: "Noto Sans SC", ui-monospace, monospace; --pf-f-serif: "Noto Serif SC", "Songti SC", serif; }
+.dm[lang="ar"] h1, .dm[lang="zh"] h1 { letter-spacing: 0; }
+.dm[lang="ar"] .pres h1 { line-height: 1.35; }
+.dm[lang="zh"] .pres h1 { line-height: 1.28; }
+
+/* Mixed-direction metadata. A reference, a date or a quantity keeps its own
+   LTR order inside an RTL sentence, and stays inline with the text around it.
+   Without the isolate, DR-2041 reverses inside an Arabic paragraph. */
+.ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.dm[dir="rtl"] .pres__f > div:first-child { padding-inline-start: 0; }
+
+@media (max-width: 900px) {
+  .vis2, .incl, .sumg { grid-template-columns: 1fr; }
+  .app__b { grid-template-columns: 1fr; }
+  .app__id { border-inline-end: 0; border-bottom: 1px solid var(--pf-rule); }
+  .act2 { padding: 20px 18px 22px; }
+  .act2 h1 { font-size: 25px; }
+  .price b { font-size: 33px; }
+  .pv__in { margin: 10px 10px 0; }
+  .pv { border-width: 2px; }
+}
