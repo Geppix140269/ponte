@@ -405,6 +405,57 @@
 .ponte-desk .sech .d { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; max-width: 620px; line-height: 1.5; }
 .ponte-desk .sech a { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 
+/* A Deal Room shown as a room, on the entrance. ADR-0022, ADR-0024.
+   Raised off the section ground so it reads as an object on the page rather
+   than as more page: a visitor should feel they are looking INTO something. */
+.ponte-desk .drp__room {
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--dk-radius);
+  background: var(--raised);
+  padding: 20px 22px 18px;
+  display: grid;
+  gap: 18px;
+}
+.ponte-desk .drp__ex {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.ponte-desk .drp__id { display: flex; align-items: flex-start; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
+.ponte-desk .drp__ref { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-desk .drp__id h3 { font-family: var(--f-serif); font-size: 21px; font-weight: 500; letter-spacing: -.012em; margin: 5px 0 4px; }
+.ponte-desk .drp__parties { font-size: 12.5px; color: var(--ink-2); }
+.ponte-desk .drp__state {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gold-ink); border: 1px solid var(--gold-rule); border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+}
+
+.ponte-desk .drp__band { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; border-top: 1px solid var(--rule); padding-top: 16px; }
+.ponte-desk .drp__k { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
+.ponte-desk .drp__v { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.ponte-desk .drp__d { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-top: 3px; }
+
+.ponte-desk .drp__now { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; border-top: 1px solid var(--rule); padding-top: 16px; }
+.ponte-desk .drp__blk { border-left: 2px solid var(--pf-danger-line); padding-left: 12px; }
+.ponte-desk .drp__blk .drp__k { color: var(--pf-danger); }
+
+.ponte-desk .drp__regs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; border-top: 1px solid var(--rule); padding-top: 16px; list-style: none; }
+.ponte-desk .drp__regs li { display: grid; gap: 2px; }
+.ponte-desk .drp__n { font-family: var(--f-serif); font-size: 22px; font-weight: 500; }
+.ponte-desk .drp__n i { font-family: var(--f-mono); font-size: 10px; font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.ponte-desk .drp__rn { font-size: 13px; font-weight: 600; }
+
+.ponte-desk .drp__ent {
+  display: flex; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 14px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .05em; color: var(--ink-3);
+}
+.ponte-desk .drp__ent span:first-child { color: var(--ink-2); }
+
+@media (max-width: 900px) {
+  .ponte-desk .drp__band,
+  .ponte-desk .drp__now { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .drp__regs { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* A commercial term the member picks rather than types. ADR-0023.
    Styled as the row's value, not as a form control dropped into a record: the
    member is stating a fact about their deal, and the row should read the same

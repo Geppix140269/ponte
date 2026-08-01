@@ -5,8 +5,8 @@ import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 // From `terms`, not `extract-document`: the extraction reaches the model, which
 // reaches Supabase's admin client, and neither belongs in a browser bundle.
 import { TERM_KEYS, TERM_LABELS, type CommercialTerms } from "@/lib/products/terms";
-import { SOMETHING_ELSE, optionsFor } from "@/lib/products/term-options";
-import { type ReviewState } from "@/lib/products/intake";
+import { SOMETHING_ELSE, inputTypeFor, optionsFor } from "@/lib/products/term-options";
+import { type ProductIntent, type ReviewState } from "@/lib/products/intake";
 import type { Provenance, SourcedValue } from "@/lib/products/model";
 
 /**
@@ -32,6 +32,27 @@ const OPTIONAL_TERM_GROUPS: { label: string; keys: (keyof CommercialTerms)[] }[]
   { label: "Pricing and payment", keys: ["pricingBasis", "paymentStructure"] },
   { label: "Contract detail", keys: ["contractTerm", "validity", "counterparties", "signatories"] },
 ];
+
+/**
+ * Terms that only one side of the trade can answer.
+ *
+ * A seller offering goods and looking for buyers does not know the destination:
+ * that is the buyer's fact, and it is decided by whoever answers the offer.
+ * Symmetrically, a buyer stating a requirement does not know the origin.
+ *
+ * Asking anyway is not merely clutter. A field a member cannot answer teaches
+ * them the product does not understand their side of the trade, and it invites
+ * a guess that then travels into the record as though it were stated.
+ *
+ * This is a product rule, not a layout preference, so it lives beside the terms
+ * rather than in CSS.
+ */
+const NOT_THIS_SIDE: Record<ProductIntent, (keyof CommercialTerms)[]> = {
+  // Selling: the destination belongs to whoever buys.
+  offer_product: ["destination"],
+  // Buying: the origin belongs to whoever supplies.
+  source_product: ["origin"],
+};
 
 /**
  * The trust boundary. Nothing has been created when this renders, and nothing
@@ -146,11 +167,13 @@ function TermRow({
   label,
   value,
   options,
+  inputType = "text",
   onEdit,
 }: {
   label: string;
   value: SourcedValue;
   options?: readonly string[] | null;
+  inputType?: "number" | "date" | "text";
   onEdit: (next: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -198,6 +221,8 @@ function TermRow({
           <input
             className="snote hssearch prow__v"
             style={{ minHeight: "auto", padding: "6px 10px" }}
+            type={inputType}
+            inputMode={inputType === "number" ? "decimal" : undefined}
             aria-label={label}
             value={draft}
             autoFocus
@@ -239,10 +264,12 @@ function TermRow({
 function OptionalTerms({
   keys,
   shared,
+  intent,
   onEditShared,
 }: {
   keys: (keyof CommercialTerms)[];
   shared: CommercialTerms;
+  intent: ProductIntent;
   onEditShared: (key: keyof CommercialTerms, value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -264,6 +291,8 @@ function OptionalTerms({
           on the record when you are ready.
         </p>
         {OPTIONAL_TERM_GROUPS.map((group) => {
+          // Drop the terms this side of the trade cannot answer.
+          group = { ...group, keys: group.keys.filter((k) => !NOT_THIS_SIDE[intent].includes(k)) };
           const groupKeys = group.keys.filter((key) => keys.includes(key));
           if (groupKeys.length === 0) return null;
           return (
@@ -275,6 +304,7 @@ function OptionalTerms({
                   label={TERM_LABELS[key]}
                   value={shared[key]}
                   options={optionsFor(key)}
+                  inputType={inputTypeFor(key)}
                   onEdit={(next) => onEditShared(key, next)}
                 />
               ))}
@@ -289,6 +319,7 @@ function OptionalTerms({
 export interface ReviewPanelProps {
   review: ReviewState;
   intentLabel: string;
+  intent: ProductIntent;
   onEditShared: (key: keyof CommercialTerms, value: string) => void;
   onEditProduct: (id: string, key: keyof CommercialTerms, value: string) => void;
   onToggleProduct: (id: string) => void;
@@ -299,6 +330,7 @@ export interface ReviewPanelProps {
 
 export default function ReviewPanel({
   review,
+  intent,
   intentLabel,
   onEditShared,
   onEditProduct,
@@ -421,6 +453,7 @@ export default function ReviewPanel({
                 label={`${TERM_LABELS[key]}, this product`}
                 value={product.terms[key]}
                 options={optionsFor(key)}
+                  inputType={inputTypeFor(key)}
                 onEdit={(next) => onEditProduct(product.id, key, next)}
               />
             ))}
@@ -444,6 +477,7 @@ export default function ReviewPanel({
                 label={TERM_LABELS[key]}
                 value={review.shared[key]}
                 options={optionsFor(key)}
+                  inputType={inputTypeFor(key)}
                 onEdit={(next) => onEditShared(key, next)}
               />
             ))
@@ -452,7 +486,7 @@ export default function ReviewPanel({
               No commercial terms yet. They are optional: add any below now, or on the draft once it is created.
             </p>
           )}
-          <OptionalTerms keys={optionalShared} shared={review.shared} onEditShared={onEditShared} />
+          <OptionalTerms keys={optionalShared} shared={review.shared} intent={intent} onEditShared={onEditShared} />
         </div>
       </div>
 
