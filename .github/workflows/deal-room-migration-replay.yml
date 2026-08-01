@@ -25,23 +25,22 @@ name: Migration replay proof
 # snapshot. Drift after the snapshot date is a separate question.
 #
 # ---------------------------------------------------------------------------
-# THIS WORKFLOW CANNOT PASS UNTIL A BASELINE SNAPSHOT IS COMMITTED.
+# WHY A BASELINE SNAPSHOT EXISTS AT ALL
 #
-# Run 30692924939 established why. The migration history is not self-contained:
-# it starts by altering tables it never creates. The very first file says so in
-# its own header - "Add catalogue fields missing from the initial schema. Run
+# Run 30692924939 replayed the migration history onto an empty database and
+# failed on the first file. The history is not self-contained: it starts by
+# altering tables it never creates. That file's own header says so - "Add
 # this in the Supabase SQL Editor" - and `supabase/schema.sql` has recorded the
 # same gap since 2026-07-22: "Applying this repository to an empty project
 # therefore does NOT reproduce production."
 #
-# So the missing input is a one-time, schema-only snapshot of production's
-# public schema, committed under `supabase/schema-snapshots/`. Producing it
-# needs a connection string exactly once, on the owner's own machine, and never
-# in CI. After that this job runs forever with no credential.
+# So `supabase/schema-snapshots/` holds a one-time, schema-only dump of
+# production's public schema. Producing it needed a connection string exactly
+# once, on the owner's own machine, and never in CI. From here on this job runs
+# with no credential at all.
 #
-# The `pull_request` trigger is deliberately switched off until the baseline
-# lands, so this does not redden unrelated pull requests. Re-enable it in the
-# same change that adds the snapshot.
+# The snapshot is read from the TRUSTED REF, not from the tree under test, so a
+# feature branch that predates the snapshot can still be proved against it.
 # ---------------------------------------------------------------------------
 
 on:
@@ -56,6 +55,13 @@ on:
         type: boolean
         required: false
         default: false
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/schema-snapshots/**'
+      - 'lib/deal-room/**'
+      - 'scripts/deal-room-admission-gate-proof.mjs'
+      - '.github/workflows/deal-room-migration-replay.yml'
 
 permissions:
   contents: read
@@ -71,21 +77,29 @@ jobs:
       GATE_MIGRATION: 20260731g_deal_room_admission_verification_gate.sql
       PROOF_SCRIPT: scripts/deal-room-admission-gate-proof.mjs
       BASELINE_DIR: supabase/schema-snapshots
+      PSQL_17: /usr/lib/postgresql/17/bin/psql
 
     steps:
-      - name: Fetch the running workflow definition, to check itself
+      - name: Fetch the harness from the trusted ref
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.sha }}
-          path: .workflow-definition
-          sparse-checkout: .github/workflows
+          path: .harness
+          # The workflow definition, to check itself; and the baseline snapshot,
+          # which is harness rather than code under test. Taking the baseline
+          # from here rather than from the tree under test means a commit can be
+          # tested before it carries the snapshot - which is the normal case,
+          # since the snapshot lands on main and feature branches predate it.
+          sparse-checkout: |
+            .github/workflows
+            supabase/schema-snapshots
           sparse-checkout-cone-mode: false
           fetch-depth: 1
           persist-credentials: false
 
       - name: This job holds no secrets
         run: |
-          WF=.workflow-definition/.github/workflows/deal-room-migration-replay.yml
+          WF=.harness/.github/workflows/deal-room-migration-replay.yml
           if [ ! -f "$WF" ]; then
             echo "::error::Could not fetch this workflow's own definition. Cannot self-check."
             exit 1
@@ -128,6 +142,24 @@ jobs:
         with:
           version: 2.111.0
 
+      - name: Install the PostgreSQL 17 client
+        run: |
+          # ubuntu-24.04 ships psql 16, which does not understand the
+          # `\restrict` / `\unrestrict` meta-commands that pg_dump 17.6+ wraps
+          # every dump in. Restoring the baseline with psql 16 fails on line 5.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          if [ ! -x "$PSQL_17" ]; then
+            echo "::error::$PSQL_17 was not installed."
+            exit 1
+          fi
+          "$PSQL_17" --version
+
       - name: Start an ephemeral stack, outside the checkout
         run: |
           # Initialised in its own directory so the CLI cannot pick up the
@@ -138,11 +170,11 @@ jobs:
           cd "$STACK_DIR"
           supabase init --force
           supabase start -x realtime,storage-api,imgproxy,studio,inbucket,edge-runtime,logflare,vector,supavisor
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
 
       - name: The stack is empty before anything is applied
         run: |
-          n=$(psql "$LOCAL_DB_URL" -t -A -c \
+          n=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c \
             "select count(*) from information_schema.tables where table_schema = 'public';")
           echo "tables in public before replay: $n"
           if [ "$n" != "0" ]; then
@@ -152,9 +184,9 @@ jobs:
 
       - name: 'Phase 0: restore the committed baseline snapshot'
         run: |
-          BASELINE="$(ls "$BASELINE_DIR"/*.sql 2>/dev/null | LC_ALL=C sort | tail -1 || true)"
+          BASELINE="$(ls .harness/"$BASELINE_DIR"/*.sql 2>/dev/null | LC_ALL=C sort | tail -1 || true)"
           if [ -z "$BASELINE" ]; then
-            echo "::error::No baseline snapshot found in $BASELINE_DIR."
+            echo "::error::No baseline snapshot found in $BASELINE_DIR on the trusted ref."
             echo "::error::"
             echo "::error::The migration history cannot rebuild this database on its own. It"
             echo "::error::starts by altering tables no migration creates - see the header of"
@@ -173,15 +205,20 @@ jobs:
 
           # A snapshot that carries rows is a snapshot that leaked production
           # data into the repository. Refuse it here as well as at creation.
-          for pattern in '^COPY ' '^INSERT INTO' '^\\\.' '^-- Data for Name:'; do
+          #
+          # The `\.` pattern is anchored to a line that is exactly backslash-dot,
+          # which is what terminates a COPY block. Unanchored it also matches the
+          # `\restrict` / `\unrestrict` meta-commands that pg_dump 17.6+ wraps
+          # every dump in, and would reject a perfectly clean file.
+          for pattern in '^COPY ' '^INSERT INTO' '^\\\.$' '^-- Data for Name:'; do
             if grep -nE "$pattern" "$BASELINE" | head -3; then
               echo "::error::The baseline snapshot contains data ($pattern). Refusing."
               exit 1
             fi
           done
 
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$BASELINE"
-          n=$(psql "$LOCAL_DB_URL" -t -A -c \
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$BASELINE"
+          n=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c \
             "select count(*) from information_schema.tables where table_schema = 'public';")
           echo "baseline restored: $n tables in public"
           echo "BASELINE_FILE=$(basename "$BASELINE")" >> "$GITHUB_ENV"
@@ -204,7 +241,7 @@ jobs:
               continue
             fi
             printf '%3d/     %s  ' "$((applied + 1))" "$base"
-            if psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$f" > /tmp/apply.log 2>&1; then
+            if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$f" > /tmp/apply.log 2>&1; then
               echo "ok"
               applied=$((applied + 1))
             else
@@ -224,14 +261,14 @@ jobs:
         run: |
           # Runs whether or not phase 1 replayed, because the baseline alone must
           # already satisfy it.
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
           select 'profiles', count(*) from public.profiles
           union all select 'listings', count(*) from public.listings
           union all select 'deal_rooms', count(*) from public.deal_rooms
           union all select 'deal_room_participants', count(*) from public.deal_room_participants
           union all select 'auth.users', count(*) from auth.users;
           SQL
-          rows=$(psql "$LOCAL_DB_URL" -t -A -c "select (select count(*) from public.profiles) + (select count(*) from public.listings) + (select count(*) from auth.users);")
+          rows=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c "select (select count(*) from public.profiles) + (select count(*) from public.listings) + (select count(*) from auth.users);")
           if [ "$rows" != "0" ]; then
             echo "::error::The replayed database is not empty ($rows rows). A migration is seeding data."
             exit 1
@@ -249,7 +286,7 @@ jobs:
           fi
           echo "sha256: $(sha256sum "$GATE" | cut -d' ' -f1)"
           echo "bytes : $(wc -c < "$GATE")"
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$GATE"
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$GATE"
           echo "GATE_APPLIED=yes" >> "$GITHUB_ENV"
           echo "the admission gate migration applied onto the replayed history"
 
@@ -259,7 +296,7 @@ jobs:
           # A migration that cannot be applied twice is a migration that cannot
           # be safely retried after a partial failure. Worth knowing before it
           # ever runs against production, and free to check here.
-          if psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q \
+          if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q \
                -f "supabase/migrations/$GATE_MIGRATION" > /tmp/reapply.log 2>&1; then
             echo "re-application succeeded: the migration is safely repeatable"
           else
