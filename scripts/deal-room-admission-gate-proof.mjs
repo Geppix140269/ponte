@@ -183,12 +183,26 @@ function record(proof, ok, detail) {
   console.log(`${ok ? "ok  " : "FAIL"}  ${proof}${detail ? `\n        ${detail}` : ""}`);
 }
 
-/** Run a statement and return the error message, or null when it succeeded. */
+/**
+ * Run a statement and return the error message, or null when it succeeded.
+ *
+ * Wrapped in a savepoint because this proof runs inside one transaction and an
+ * EXPECTED refusal still aborts it - every later statement then fails with
+ * "current transaction is aborted", which reads like a cascade of real
+ * failures. Rolling back to the savepoint undoes the refused statement and
+ * leaves the transaction usable.
+ */
+let savepointSeq = 0;
 async function refusalOf(client, sql, params = []) {
+  const sp = `proof_sp_${++savepointSeq}`;
+  await client.query(`savepoint ${sp}`);
   try {
     await client.query(sql, params);
+    await client.query(`release savepoint ${sp}`);
     return null;
   } catch (err) {
+    await client.query(`rollback to savepoint ${sp}`);
+    await client.query(`release savepoint ${sp}`);
     return err.message;
   }
 }
@@ -375,6 +389,13 @@ async function main() {
     const { rows: fns } = await client.query(`
       select p.proname,
              pg_get_function_identity_arguments(p.oid) as args,
+             -- Identity arguments carry parameter NAMES as well as types, so
+             -- they cannot be compared against a type-only expectation. The
+             -- types alone are what make a signature distinct, so read them
+             -- straight from proargtypes and compare on that; `args` stays for
+             -- the human-readable line printed below.
+             (select string_agg(format_type(t, null), ', ' order by ord)
+                from unnest(p.proargtypes) with ordinality as u(t, ord)) as argtypes,
              p.prosecdef,
              coalesce(array_to_string(p.proacl, ' '), '(default)') as acl
         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -386,7 +407,8 @@ async function main() {
     `);
     for (const f of fns) console.log(`        ${f.proname}(${f.args})  secdef=${f.prosecdef}  acl=${f.acl}`);
 
-    const argsOf = (name) => fns.filter((f) => f.proname === name).map((f) => f.args);
+    const argsOf = (name) =>
+      fns.filter((f) => f.proname === name).map((f) => f.argtypes ?? "");
     const expectations = [
       ["deal_room_propose", "uuid, uuid, text, text, text, text, text, text, text"],
       ["deal_room_admit_participant", "uuid"],
