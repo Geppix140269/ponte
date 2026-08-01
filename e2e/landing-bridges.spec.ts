@@ -72,6 +72,25 @@ const FAMILY_LABELS = {
   distribution: "Distribution and representation",
 } as const;
 
+/**
+ * The order the families are CROSSED in, left to right.
+ *
+ * Owner decision of 1 August 2026: Products is the centre of Ponte and is drawn
+ * at the centre of the bridge. This is deliberately not the taxonomy's `sort`,
+ * which still governs every other surface, so it is stated here once and every
+ * positional assertion in this file reads it.
+ *
+ * Stated ONCE for a reason. Eight tests here previously carried "Products" as a
+ * literal at station 0, including tests about deck measurement, keyboard
+ * traversal and whether destinations survive without JavaScript. None of those
+ * is a claim about which family sits where, and all eight failed when the order
+ * changed, for a reason unrelated to what they exist to prove.
+ */
+const CROSSING_ORDER = ["services", "products", "distribution"] as const;
+
+/** The label at a given station on the deck. */
+const labelAt = (index: number): string => FAMILY_LABELS[CROSSING_ORDER[index]];
+
 test.beforeAll(() => {
   mkdirSync(EVIDENCE, { recursive: true });
 });
@@ -282,7 +301,7 @@ test("desktop evidence: default and each family selected", async ({ page }) => {
   await expect(page.locator(".pbridge .brx:not([hidden])")).toHaveCount(0);
   await shotFramed(page, "desktop-1-family-neutral");
 
-  const families = ["products", "services", "distribution"] as const;
+  const families = CROSSING_ORDER;
   const fileFor = {
     products: "desktop-2-products-selected",
     services: "desktop-3-trade-services-selected",
@@ -429,9 +448,11 @@ test("mobile evidence at 390 x 844: default and selected", async ({ page }) => {
   await reveal(page);
   await shot(page, "mobile-1-family-neutral-390x844");
 
-  await stations(page).nth(0).click();
+  // Products by name, not by position: the evidence file below is named for
+  // it, so the reference render has to keep showing the same family.
+  await stations(page).nth(CROSSING_ORDER.indexOf("products")).click();
   await unhover(page);
-  await expect(page.locator(".pbridge > .br .brst--on .brst__t")).toHaveText("Products");
+  await expect(page.locator(".pbridge > .br .brst--on .brst__t")).toHaveText(FAMILY_LABELS.products);
   await expect(page.locator(".pbridge .brx:not([hidden])")).toHaveCount(1);
   await reveal(page);
   await shot(page, "mobile-2-products-selected-390x844");
@@ -492,7 +513,10 @@ test("keyboard selection: arrows traverse and select, and focus follows", async 
   await stations(page).nth(0).press("ArrowRight");
   await expect(stations(page).nth(1)).toHaveAttribute("aria-checked", "true");
   await expect(stations(page).nth(1)).toBeFocused();
-  await expect(page.locator(".pbridge .brx:not([hidden])")).toHaveAttribute("aria-label", /^Trade services:/);
+  await expect(page.locator(".pbridge .brx:not([hidden])")).toHaveAttribute(
+    "aria-label",
+    new RegExp(`^${labelAt(1)}:`),
+  );
 
   await stations(page).nth(1).press("ArrowRight");
   await expect(stations(page).nth(2)).toBeFocused();
@@ -555,7 +579,7 @@ test("reduced motion evidence: movement removed, settled state complete", async 
   // Every piece of information the animated version conveys is present without
   // it: the chosen family, the gold node at its selected size, the "Selected"
   // word, the drawn deck, and all three destinations.
-  expect(settled.selected).toBe("Products");
+  expect(settled.selected).toBe(labelAt(0));
   expect(settled.nodeWidth).toBe("15px");
   expect(settled.nodeBackground).toBe(await tokenColour(page, "--pf-gold-ink"));
   expect(settled.markOpacity).toBe("1");
@@ -1039,9 +1063,13 @@ test("a live client takes the reveal back, and shows one action bridge at a time
   }));
 
   expect(chosen.visibleBridges, "more than one action bridge is on screen").toBe(1);
-  expect(chosen.label).toMatch(/^Products:/);
-  // Products carries three actions, and only those three are reachable.
-  expect(chosen.reachableLinks, "another family's destinations are reachable too").toBe(3);
+  expect(chosen.label).toMatch(new RegExp(`^${labelAt(0)}:`));
+  // The first station's own actions, and only those, are reachable. Read from
+  // DESTINATIONS rather than written as a number, because the families do not
+  // all carry the same count and the first station is no longer Products.
+  expect(chosen.reachableLinks, "another family's destinations are reachable too").toBe(
+    DESTINATIONS[CROSSING_ORDER[0]].length,
+  );
 });
 
 test("an unmeasurable deck keeps the fallback rather than collapsing onto one point", async ({ page }) => {
@@ -1113,7 +1141,7 @@ test("an unmeasurable deck keeps the fallback rather than collapsing onto one po
   expect(state!.overlaps, "stations collapsed onto one point").toEqual([]);
   expect(state!.stageHeight, "the stage has no height").toBeGreaterThan(0);
   expect(state!.gapToSectionBelow!, "the bridge overlaps the section below it").toBeGreaterThan(0);
-  expect(state!.titles).toEqual(["Products", "Trade services", "Distribution and representation"]);
+  expect(state!.titles).toEqual(CROSSING_ORDER.map((key) => FAMILY_LABELS[key]));
 });
 
 // ---------------------------------------------------------------------------
