@@ -1,0 +1,418 @@
+name: Migration replay proof
+
+# Replays the repository's own migration history into an ephemeral PostgreSQL 17
+# stack, then applies the Deal Room admission gate migration and runs its proof.
+#
+# THIS WORKFLOW HAS NO SECRETS AND NEVER CONTACTS THE PRODUCTION DATABASE.
+#
+# That single property is what makes it cheap to run and safe to run often, and
+# it is asserted mechanically in the first step rather than merely promised.
+# The credential-boundary guards carried by `deal-room-gate-proof.yml` -
+# dispatch-from-main-only, a 40-hex target_sha, the reviewed-migration checksum,
+# the no-own-workflow check, the never-print and never-write greps - all existed
+# to keep a production connection string away from unreviewed code. With no
+# connection string in play there is nothing for them to protect, so they are
+# deliberately absent here. This is a smaller workflow because it is a smaller
+# risk, not because the standard dropped.
+#
+# What it can prove:
+#   phase 0  a committed baseline snapshot restores
+#   phase 1  every historical migration applies on top of that baseline
+#   phase 2  the admission gate migration applies on top of that history
+#   phase 3  the gate behaves as specified, against that schema
+#
+# What it cannot prove: that production's live schema still matches the baseline
+# snapshot. Drift after the snapshot date is a separate question.
+#
+# ---------------------------------------------------------------------------
+# WHY A BASELINE SNAPSHOT EXISTS AT ALL
+#
+# Run 30692924939 replayed the migration history onto an empty database and
+# failed on the first file. The history is not self-contained: it starts by
+# altering tables it never creates. That file's own header says so - "Add
+# this in the Supabase SQL Editor" - and `supabase/schema.sql` has recorded the
+# same gap since 2026-07-22: "Applying this repository to an empty project
+# therefore does NOT reproduce production."
+#
+# So `supabase/schema-snapshots/` holds a one-time, schema-only dump of
+# production's public schema. Producing it needed a connection string exactly
+# once, on the owner's own machine, and never in CI. From here on this job runs
+# with no credential at all.
+#
+# The snapshot is read from the TRUSTED REF, not from the tree under test, so a
+# feature branch that predates the snapshot can still be proved against it.
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA to test. Leave blank to test the branch selected above.'
+        required: false
+        default: ''
+      replay_history:
+        description: 'Also replay the historical migrations on top of the baseline. Only meaningful if the baseline predates them.'
+        type: boolean
+        required: false
+        default: false
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/schema-snapshots/**'
+      - 'lib/deal-room/**'
+      - 'scripts/deal-room-admission-gate-proof.mjs'
+      - '.github/workflows/deal-room-migration-replay.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      STACK_DIR: /tmp/ephemeral-supabase
+      GATE_MIGRATION: 20260731g_deal_room_admission_verification_gate.sql
+      PROOF_SCRIPT: scripts/deal-room-admission-gate-proof.mjs
+      BASELINE_DIR: supabase/schema-snapshots
+      PSQL_17: /usr/lib/postgresql/17/bin/psql
+
+    steps:
+      # The tree under test is checked out FIRST, because actions/checkout
+      # cleans its target directory. Fetching the harness before this would put
+      # `.harness` in the workspace root and the root checkout would delete it -
+      # which is exactly what happened in run 30694586413, where the self-check
+      # passed and phase 0 then found no baseline.
+      - name: Check out the tree under test
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.target_sha || github.ref }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Fetch the harness from the trusted ref
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.sha }}
+          path: .harness
+          # The workflow definition, to check itself; and the baseline snapshot,
+          # which is harness rather than code under test. Taking the baseline
+          # from here rather than from the tree under test means a commit can be
+          # tested before it carries the snapshot - which is the normal case,
+          # since the snapshot lands on main and feature branches predate it.
+          sparse-checkout: |
+            .github/workflows
+            supabase/schema-snapshots
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: This job holds no secrets
+        run: |
+          WF=.harness/.github/workflows/deal-room-migration-replay.yml
+          if [ ! -f "$WF" ]; then
+            echo "::error::Could not fetch this workflow's own definition. Cannot self-check."
+            exit 1
+          fi
+
+          # The invariant that replaces every credential guard in the older
+          # workflow: this file may not reference the secrets context at all.
+          hits=$(grep -cE '\$\{\{[^}]*secrets\.' "$WF" || true)
+          echo "references to the secrets context: $hits"
+          if [ "$hits" -ne 0 ]; then
+            grep -nE '\$\{\{[^}]*secrets\.' "$WF"
+            echo "::error::This workflow must never read a secret. Found $hits reference(s)."
+            exit 1
+          fi
+          echo "confirmed: no secret can reach this job, so no database but the ephemeral one is reachable"
+
+      - name: The baseline survived the checkout
+        run: |
+          # Cheap assertion so an ordering regression fails here, with a clear
+          # cause, rather than four steps later as a missing-baseline error.
+          if [ ! -d ".harness/$BASELINE_DIR" ]; then
+            echo "::error::.harness/$BASELINE_DIR is missing. The harness checkout was clobbered."
+            exit 1
+          fi
+          echo "harness intact: $(ls .harness/"$BASELINE_DIR"/*.sql 2>/dev/null | wc -l) snapshot(s) available"
+
+      - name: Report exactly what is under test
+        run: |
+          echo "requested target_sha : ${{ inputs.target_sha || '(none - using the selected ref)' }}"
+          echo "git rev-parse HEAD   : $(git rev-parse HEAD)"
+          echo "subject              : $(git log -1 --pretty=%s)"
+          echo "migrations present   : $(ls supabase/migrations/*.sql | wc -l)"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.111.0
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          # ubuntu-24.04 ships psql 16, which does not understand the
+          # `\restrict` / `\unrestrict` meta-commands that pg_dump 17.6+ wraps
+          # every dump in. Restoring the baseline with psql 16 fails on line 5.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          if [ ! -x "$PSQL_17" ]; then
+            echo "::error::$PSQL_17 was not installed."
+            exit 1
+          fi
+          "$PSQL_17" --version
+
+      - name: Start an ephemeral stack, outside the checkout
+        run: |
+          # Initialised in its own directory so the CLI cannot pick up the
+          # repository's migrations implicitly. Every migration this job applies
+          # is applied explicitly, in a named phase, so a failure is always
+          # attributable to one file.
+          mkdir -p "$STACK_DIR"
+          cd "$STACK_DIR"
+          supabase init --force
+          supabase start -x realtime,storage-api,imgproxy,studio,inbucket,edge-runtime,logflare,vector,supavisor
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
+
+      - name: The stack is empty before anything is applied
+        run: |
+          n=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c \
+            "select count(*) from information_schema.tables where table_schema = 'public';")
+          echo "tables in public before replay: $n"
+          if [ "$n" != "0" ]; then
+            echo "::error::public is not empty at the start. The baseline is not a clean database."
+            exit 1
+          fi
+
+      - name: 'Phase 0: restore the committed baseline snapshot'
+        run: |
+          BASELINE="$(ls .harness/"$BASELINE_DIR"/*.sql 2>/dev/null | LC_ALL=C sort | tail -1 || true)"
+          if [ -z "$BASELINE" ]; then
+            echo "::error::No baseline snapshot found in $BASELINE_DIR on the trusted ref."
+            echo "::error::"
+            echo "::error::The migration history cannot rebuild this database on its own. It"
+            echo "::error::starts by altering tables no migration creates - see the header of"
+            echo "::error::supabase/migrations/01_catalogue_fields.sql, and the KNOWN DRIFT note"
+            echo "::error::in supabase/schema.sql. This is a pre-existing gap, not a fault in"
+            echo "::error::the commit under test."
+            echo "::error::"
+            echo "::error::Fix: commit one schema-only dump of production's public schema as"
+            echo "::error::$BASELINE_DIR/production-public-<date>.sql."
+            echo "::error::See docs/platform/DEAL-ROOM-GATE-PROOF-RUNBOOK.md."
+            exit 1
+          fi
+          echo "baseline : $BASELINE"
+          echo "bytes    : $(wc -c < "$BASELINE")"
+          echo "sha256   : $(sha256sum "$BASELINE" | cut -d' ' -f1)"
+
+          # A snapshot that carries rows is a snapshot that leaked production
+          # data into the repository. Refuse it here as well as at creation.
+          #
+          # The `\.` pattern is anchored to a line that is exactly backslash-dot,
+          # which is what terminates a COPY block. Unanchored it also matches the
+          # `\restrict` / `\unrestrict` meta-commands that pg_dump 17.6+ wraps
+          # every dump in, and would reject a perfectly clean file.
+          # `if grep ... | head -3` would test head's exit status, not grep's,
+          # and head always succeeds - so that form fires on a clean file. Test
+          # with grep -q, then print the evidence separately.
+          for pattern in '^COPY ' '^INSERT INTO' '^\\\.$' '^-- Data for Name:'; do
+            if grep -qE "$pattern" "$BASELINE"; then
+              grep -nE "$pattern" "$BASELINE" | head -3
+              echo "::error::The baseline snapshot contains data ($pattern). Refusing."
+              exit 1
+            fi
+          done
+          echo "no data markers: structure only"
+
+          # A schema-only dump of one schema carries no CREATE EXTENSION, but
+          # production's public schema depends on three extensions: `vector`
+          # (public.vector columns and match_hs_codes), `pg_trgm` (gin_trgm_ops
+          # indexes and similarity()) and `pgcrypto` (digest()). They must exist
+          # before the first statement that uses them, so the schema is built
+          # here rather than by the dump.
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          drop schema if exists public cascade;
+          create schema public;
+          create extension if not exists vector   with schema public;
+          create extension if not exists pg_trgm  with schema public;
+          create extension if not exists pgcrypto with schema public;
+          SQL
+
+          # Production sets default privileges for `supabase_admin` as well as
+          # for `postgres`. Changing another role's default privileges requires
+          # membership in it, which the ephemeral stack's postgres does not have
+          # by default. Ask for it - if the stack allows it, the snapshot
+          # restores in full.
+          "$PSQL_17" "$LOCAL_DB_URL" -q -c "grant supabase_admin to postgres;" > /dev/null 2>&1 || true
+          MEMBER=$("$PSQL_17" "$LOCAL_DB_URL" -t -A \
+            -c "select pg_has_role('postgres','supabase_admin','MEMBER');" 2>/dev/null || echo f)
+          echo "postgres is a member of supabase_admin: $MEMBER"
+
+          # Since the schema now exists, the dump's own CREATE SCHEMA has to go.
+          # Every exclusion is counted and asserted, so this can never quietly
+          # become a broader edit of the snapshot.
+          PREPARED=/tmp/baseline-prepared.sql
+          EXPECTED=1
+          if [ "$MEMBER" = "t" ]; then
+            grep -v '^CREATE SCHEMA public;$' "$BASELINE" > "$PREPARED"
+          else
+            # Default privileges govern objects created LATER by that role.
+            # Nothing under test is created by supabase_admin - the migration
+            # runs as postgres, whose default privileges DO restore - and the
+            # grants proof reads pg_proc.proacl of existing functions, which is
+            # unaffected. Dropped explicitly and reported, not silently.
+            echo "::notice::The ephemeral stack will not let postgres join supabase_admin."
+            echo "::notice::Dropping 12 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin statements."
+            echo "::notice::They set privileges on objects that role creates later; nothing under"
+            echo "::notice::test is created by it, so the proof is unaffected."
+            grep -v '^CREATE SCHEMA public;$' "$BASELINE" \
+              | grep -v '^ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin ' > "$PREPARED"
+            EXPECTED=13
+          fi
+
+          removed=$(( $(wc -l < "$BASELINE") - $(wc -l < "$PREPARED") ))
+          if [ "$removed" -ne "$EXPECTED" ]; then
+            echo "::error::Expected to drop exactly $EXPECTED line(s) from the snapshot, dropped $removed."
+            exit 1
+          fi
+          echo "restoring ($removed statement(s) replaced by the setup above)"
+
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$PREPARED"
+          rm -f "$PREPARED"
+          n=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c \
+            "select count(*) from information_schema.tables where table_schema = 'public';")
+          echo "baseline restored: $n tables in public"
+          echo "BASELINE_FILE=$(basename "$BASELINE")" >> "$GITHUB_ENV"
+
+      - name: 'Phase 1: replay the historical migrations'
+        # Off by default. A snapshot taken from production today already
+        # contains every one of these migrations, so replaying them would be
+        # redundant and several would fail on objects that already exist. Turn
+        # it on only against a baseline that predates the history, to answer the
+        # separate question of whether the repository can rebuild from scratch.
+        if: inputs.replay_history
+        run: |
+          applied=0
+          deferred=0
+          for f in $(ls supabase/migrations/*.sql | LC_ALL=C sort); do
+            base="$(basename "$f")"
+            if [ "$base" = "$GATE_MIGRATION" ]; then
+              echo "         $base  (deferred to phase 2)"
+              deferred=$((deferred + 1))
+              continue
+            fi
+            printf '%3d/     %s  ' "$((applied + 1))" "$base"
+            if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$f" > /tmp/apply.log 2>&1; then
+              echo "ok"
+              applied=$((applied + 1))
+            else
+              echo "FAILED"
+              echo "::error::Historical migration $base does not replay onto an empty database."
+              echo "::error::This is a finding about the migration history itself, not about the admission gate."
+              echo "--- last 40 lines of psql output ---"
+              tail -40 /tmp/apply.log
+              exit 1
+            fi
+          done
+          echo
+          echo "phase 1: $applied historical migrations replayed cleanly, $deferred deferred"
+          echo "APPLIED_HISTORICAL=$applied" >> "$GITHUB_ENV"
+
+      - name: 'Phase 1 check: the expected schema exists, and carries no rows'
+        run: |
+          # Runs whether or not phase 1 replayed, because the baseline alone must
+          # already satisfy it.
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
+          select 'profiles', count(*) from public.profiles
+          union all select 'listings', count(*) from public.listings
+          union all select 'deal_rooms', count(*) from public.deal_rooms
+          union all select 'deal_room_participants', count(*) from public.deal_room_participants
+          union all select 'auth.users', count(*) from auth.users;
+          SQL
+          rows=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c "select (select count(*) from public.profiles) + (select count(*) from public.listings) + (select count(*) from auth.users);")
+          if [ "$rows" != "0" ]; then
+            echo "::error::The replayed database is not empty ($rows rows). A migration is seeding data."
+            exit 1
+          fi
+          echo "schema present, no business rows: as expected from a pure DDL replay"
+
+      - name: 'Phase 2: apply the admission gate migration'
+        run: |
+          GATE="supabase/migrations/$GATE_MIGRATION"
+          if [ ! -f "$GATE" ]; then
+            echo "::notice::$GATE_MIGRATION is not in this tree, so there is nothing to apply."
+            echo "::notice::Phase 1 stands on its own: the history replays cleanly."
+            echo "GATE_APPLIED=no" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "sha256: $(sha256sum "$GATE" | cut -d' ' -f1)"
+          echo "bytes : $(wc -c < "$GATE")"
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$GATE"
+          echo "GATE_APPLIED=yes" >> "$GITHUB_ENV"
+          echo "the admission gate migration applied onto the replayed history"
+
+      - name: 'Phase 2 check: the migration is idempotent under re-application'
+        if: env.GATE_APPLIED == 'yes'
+        run: |
+          # A migration that cannot be applied twice is a migration that cannot
+          # be safely retried after a partial failure. Worth knowing before it
+          # ever runs against production, and free to check here.
+          if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q \
+               -f "supabase/migrations/$GATE_MIGRATION" > /tmp/reapply.log 2>&1; then
+            echo "re-application succeeded: the migration is safely repeatable"
+          else
+            echo "::warning::Re-applying the migration failed. It is not idempotent."
+            echo "::warning::That is not necessarily wrong, but it means a partial failure cannot simply be retried."
+            tail -20 /tmp/reapply.log
+          fi
+
+      - name: 'Phase 3: run the admission gate proof'
+        if: env.GATE_APPLIED == 'yes'
+        env:
+          DATABASE_URL: ${{ env.LOCAL_DB_URL }}
+          DEAL_ROOM_PROOF_ALLOW: '1'
+        run: |
+          if [ ! -f "$PROOF_SCRIPT" ]; then
+            echo "::error::$PROOF_SCRIPT is missing, but the gate migration was present."
+            exit 1
+          fi
+          case "$DATABASE_URL" in
+            *127.0.0.1*|*localhost*) ;;
+            *) echo "::error::The proof may only run against the ephemeral stack. Refusing."; exit 1 ;;
+          esac
+          npm run deal-room:gate-proof
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Migration replay proof"
+            echo
+            echo "| Phase | Result |"
+            echo "|---|---|"
+            echo "| Baseline snapshot | ${BASELINE_FILE:-none committed} |"
+            echo "| Historical migrations replayed | ${APPLIED_HISTORICAL:-not requested} |"
+            echo "| Gate migration applied | ${GATE_APPLIED:-no} |"
+            echo
+            echo "No secret was used. The production database was never contacted."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Destroy the ephemeral stack
+        if: always()
+        run: |
+          cd "$STACK_DIR" 2>/dev/null && supabase stop --no-backup || true
+          rm -rf "$STACK_DIR" || true
+          echo "ephemeral stack stopped and removed"

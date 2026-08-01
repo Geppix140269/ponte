@@ -245,8 +245,17 @@ jobs:
       - name: Prove the dump carries no data
         run: |
           fail=0
-          for pattern in '^COPY ' '^INSERT INTO' '^\\\.' '^-- Data for Name:'; do
-            if grep -nE "$pattern" "$SCHEMA_FILE" | head -5; then
+          # `if grep ... | head -5` tested head's exit status, not grep's, and
+          # head always succeeds - so this fired on every dump regardless of
+          # content. That is what failed run 30687095503, and the conclusion
+          # drawn from it (that `supabase db dump` had emitted data) was wrong:
+          # the run printed no matching lines because there were none.
+          #
+          # `\.` is anchored now too. Unanchored it also matches the \restrict
+          # and \unrestrict meta-commands pg_dump 17.6+ wraps every dump in.
+          for pattern in '^COPY ' '^INSERT INTO' '^\\\.$' '^-- Data for Name:'; do
+            if grep -qE "$pattern" "$SCHEMA_FILE"; then
+              grep -nE "$pattern" "$SCHEMA_FILE" | head -5
               echo "::error::The dump contains data ($pattern). Refusing to continue."
               fail=1
             fi
@@ -263,15 +272,28 @@ jobs:
 
       - name: Restore that schema into the ephemeral database
         run: |
+          # A schema-only dump of one schema carries no CREATE EXTENSION, but
+          # production's public schema depends on `vector`, `pg_trgm` and
+          # `pgcrypto`, which must exist before the first statement using them.
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
           drop schema if exists public cascade;
           create schema public;
-          alter schema public owner to postgres;
-          grant usage on schema public to anon, authenticated, service_role;
-          grant all on schema public to postgres, service_role;
+          create extension if not exists vector   with schema public;
+          create extension if not exists pg_trgm  with schema public;
+          create extension if not exists pgcrypto with schema public;
           SQL
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$SCHEMA_FILE"
-          rm -f "$SCHEMA_FILE"
+
+          # The schema now exists, so the dump's own CREATE SCHEMA has to go -
+          # exactly that one statement, with the count asserted.
+          PREPARED=/tmp/schema-prepared.sql
+          grep -v '^CREATE SCHEMA public;$' "$SCHEMA_FILE" > "$PREPARED"
+          removed=$(( $(wc -l < "$SCHEMA_FILE") - $(wc -l < "$PREPARED") ))
+          if [ "$removed" -ne 1 ]; then
+            echo "::error::Expected to drop exactly 1 CREATE SCHEMA line, dropped $removed."
+            exit 1
+          fi
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$PREPARED"
+          rm -f "$SCHEMA_FILE" "$PREPARED"
 
       - name: The restored database carries schema and no business rows
         run: |
