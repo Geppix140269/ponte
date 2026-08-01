@@ -405,6 +405,27 @@
 .ponte-desk .sech .d { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; max-width: 620px; line-height: 1.5; }
 .ponte-desk .sech a { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 
+/* The Deal Room entry, under Market Signals. Owner instruction, 1 Aug 2026:
+   the composition from the design package, without its explanatory prose. */
+.ponte-desk .prog { margin-top: 4px; }
+.ponte-desk .prog__d { display: grid; grid-template-columns: repeat(4, 1fr); }
+.ponte-desk .prog__s { position: relative; display: flex; flex-direction: column; gap: 9px; padding: 18px 18px 18px 0; }
+.ponte-desk .prog__s i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--rule-strong); flex: none; }
+.ponte-desk .prog__s--on i { background: var(--gold); border-color: var(--gold); }
+.ponte-desk .prog__s::before { content: ""; position: absolute; top: 21px; left: 11px; right: 0; height: 1px; background: var(--rule); }
+.ponte-desk .prog__s--end::before { display: none; }
+.ponte-desk .prog__s b { font-size: 12.5px; font-weight: 600; line-height: 1.45; letter-spacing: -0.004em; max-width: 22ch; }
+.ponte-desk .prog__s--end b { color: var(--gold-ink); }
+.ponte-desk .prog__a { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--rule); }
+
+@media (max-width: 900px) {
+  .ponte-desk .prog__d { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .prog__s { flex-direction: row; align-items: center; gap: 13px; padding: 11px 0 11px 22px; }
+  .ponte-desk .prog__s i { position: absolute; left: 0; }
+  .ponte-desk .prog__s::before { top: 0; bottom: 0; left: 3px; right: auto; width: 1px; height: auto; }
+  .ponte-desk .prog__s b { max-width: none; }
+}
+
 .ponte-desk .panel {
   background: var(--raised); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); box-shadow: var(--e-1); overflow: hidden;
