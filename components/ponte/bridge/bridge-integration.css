@@ -484,7 +484,20 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
   text-decoration-color: var(--pf-ink-3);
-  transition: text-decoration-color var(--pf-dur-micro) var(--pf-ease);
+  /*
+     Deliberately NOT transitioned.
+
+     The first version faded `text-decoration-color` over `--pf-dur-micro`.
+     That made the computed value time-dependent, so a test - or a screen
+     reader, or a user pressing Tab quickly - could observe the OLD colour
+     after the state had already changed. DS-9 read `--pf-ink-3` on a station
+     that was already focused, passing locally and failing in CI purely on
+     timing.
+
+     A focus indicator that arrives late is a worse thing than an abrupt one,
+     and the Constitution's motion rules do not ask for movement here. The node
+     and the pier still animate; the affordance underline does not.
+  */
 }
 
 /* Receded: a choice has been made and this is not it. The approved source
