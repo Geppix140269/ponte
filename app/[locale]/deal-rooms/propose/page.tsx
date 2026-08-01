@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import NotOpenYet from "@/components/deal-room/NotOpenYet";
+import OpenYourFirstRoom from "@/components/deal-room/OpenYourFirstRoom";
 import { setRequestLocale } from "next-intl/server";
 import {
   Band,
@@ -146,6 +147,22 @@ export default async function ProposeRoomPage({
 
   const dealBlockers = assessment?.blockers.filter((blocker) => !blocker.code.startsWith("no_counterparty")) ?? [];
 
+  /*
+    A first visit is a DIFFERENT SCREEN, not this one with an empty list.
+    Everything below assumes a member choosing between records they already
+    have. Shown to somebody with none it read as a definition of the product
+    followed by the same route stated twice, in utility language, with no
+    control that looked like one.
+  */
+  if (deals.length === 0) {
+    return (
+      <UnsavedFormGuard>
+        <CommandError message={searchParams.error} />
+        <OpenYourFirstRoom locale={params.locale} />
+      </UnsavedFormGuard>
+    );
+  }
+
   return (
     <UnsavedFormGuard>
       <CommandError message={searchParams.error} />
@@ -171,8 +188,7 @@ export default async function ProposeRoomPage({
       */}
       <Band title="Start something new">
         <p className="dr__item-meta">
-          A Deal Room is built around one opportunity. If the deal you have in mind is not below, describe it first and
-          come straight back.
+          If the deal you have in mind is not below, describe it first and come straight back.
         </p>
         <p className="dr__why">
           <a className="dr__link" href={`/${params.locale}/structure`}>
@@ -184,21 +200,7 @@ export default async function ProposeRoomPage({
       </Band>
 
       <Band title="Choose the Deal">
-        {deals.length === 0 ? (
-          <>
-            <Empty>
-              You have not brought a requirement or an offer to the desk yet. A room is built on a snapshot of one, so
-              there has to be one first.
-            </Empty>
-            <p className="dr__why">
-              <a className="dr__link" href={`/${params.locale}/structure`}>
-                Bring a requirement or offer to the desk
-              </a>
-              {" · "}
-              It is free, and it is the only step between here and a room.
-            </p>
-          </>
-        ) : (
+        {(
           <ul className="dr__list">
             {deals.map((deal) => {
               const check = assessCredibleInterest(deal, {

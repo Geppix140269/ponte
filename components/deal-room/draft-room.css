@@ -1,0 +1,140 @@
+/* =====================================================================
+   PONTE TRADE - the private Deal Room draft (the showroom)
+
+   Vendored from `ponte-draft.css` in the owner's design project, screen 1 of
+   `Ponte Deal Room - Four New Screens v1.html`. Section numbering follows the
+   source so the two can be read side by side.
+
+   This is screen 1 only. Sections 5 to 7 of the source - activation, the
+   counterparty preview and the request-to-join inbox - arrive with those
+   screens rather than ahead of them, so nothing unused ships.
+
+   Every value is a `--pf-*` token. The one class of literal is the alpha over
+   an ink surface, which is what the design package's section 02 requires:
+   "rules on the inverse are alpha, not tint", and a masthead printed in
+   `--pf-surface` on `--pf-ink` needs its secondary text as alpha of the cream
+   rather than as a second token that would break when the theme flips.
+   ===================================================================== */
+
+:root { --dm-gut: 26px; --dm-side: 340px; }
+
+/* ---------- 0 - shell ---------- */
+.dm { background: var(--pf-surface); color: var(--pf-ink); font-family: var(--pf-f-sans); font-size: 14px; line-height: 1.5; }
+.dm * { box-sizing: border-box; }
+.dm h1, .dm h2, .dm h3 { margin: 0; font-weight: 600; }
+.dm p { margin: 0; }
+.dm .mono { font-family: var(--pf-f-mono); font-variant-numeric: tabular-nums; }
+.dm2 { display: grid; grid-template-columns: minmax(0, 1fr) var(--dm-side); align-items: start; }
+.dm2__m { padding: var(--dm-gut); min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.dm2__s { border-inline-start: 1px solid var(--pf-rule-strong); padding: var(--dm-gut) 20px 36px; display: flex; flex-direction: column; gap: 18px; align-self: stretch; }
+.dmsec > h3 { font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--pf-ink-3); font-weight: 600; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--pf-rule); display: flex; align-items: baseline; gap: 12px; }
+
+/* ---------- 1 - presentation masthead: the member's deal, presented ---------- */
+.pres { background: var(--pf-ink); color: var(--pf-surface); padding: 26px 30px 28px; position: relative; }
+[data-theme="dark"] .pres { background: var(--pf-raised); border-bottom: 1px solid var(--pf-rule-strong); color: var(--pf-ink); }
+.pres__t { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-family: var(--pf-f-mono); font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: rgba(242,239,232,.55); }
+.pres__t .r { margin-inline-start: auto; }
+.pres h1 { font-family: var(--pf-f-serif); font-size: 31px; line-height: 1.12; letter-spacing: -.02em; font-weight: 500; margin: 13px 0 8px; max-width: 24ch; color: inherit; }
+.pres__by { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-family: var(--pf-f-mono); font-size: 11px; color: rgba(242,239,232,.62); }
+.pres__by i { width: 4px; height: 4px; border-radius: 50%; background: rgba(242,239,232,.34); display: block; flex: none; }
+.pres__f { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 20px; border-top: 1px solid rgba(242,239,232,.22); }
+.pres__f > div { padding: 14px 20px 0; border-inline-end: 1px solid rgba(242,239,232,.16); }
+.pres__f > div:first-child { padding-inline-start: 0; }
+.pres__f > div:last-child { border-inline-end: 0; }
+.pres__f dt { font-family: var(--pf-f-mono); font-size: 8.5px; letter-spacing: .15em; text-transform: uppercase; color: rgba(242,239,232,.46); margin-bottom: 6px; }
+.pres__f dd { margin: 0; font-size: 15px; font-weight: 500; line-height: 1.3; }
+.pres__f dd em { font-style: normal; font-family: var(--pf-f-mono); font-size: 11px; color: rgba(242,239,232,.5); display: block; margin-top: 5px; }
+/* An open fact is DRAWN, not hidden: a question the procedure answers. */
+.pres__f dd.open { color: rgba(242,239,232,.62); font-weight: 400; font-size: 13.5px; }
+.pres__seal { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; border: 1px solid rgba(242,239,232,.34); border-radius: 999px; padding: 4px 11px; color: rgba(242,239,232,.8); }
+.pres__seal i { width: 7px; height: 7px; border: 1.5px dashed rgba(242,239,232,.7); border-radius: 50%; display: block; flex: none; }
+[data-theme="dark"] .pres__t,
+[data-theme="dark"] .pres__by,
+[data-theme="dark"] .pres__f dt,
+[data-theme="dark"] .pres__f dd em { color: var(--pf-ink-3); }
+[data-theme="dark"] .pres__f,
+[data-theme="dark"] .pres__f > div { border-color: var(--pf-rule); }
+[data-theme="dark"] .pres__f dd.open { color: var(--pf-ink-3); }
+[data-theme="dark"] .pres__seal { border-color: var(--pf-rule-strong); color: var(--pf-ink-2); }
+[data-theme="dark"] .pres__seal i { border-color: var(--pf-ink-3); }
+[data-theme="dark"] .pres__by i { background: var(--pf-rule-strong); }
+
+/* ---------- 2 - region: present whether or not it is filled ---------- */
+.rg { border: 1px solid var(--pf-rule); background: var(--pf-raised); }
+.rg__h { display: flex; align-items: baseline; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--pf-rule); background: var(--pf-sunken); flex-wrap: wrap; }
+.rg__h b { font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--pf-ink); font-weight: 600; }
+.rg__h .c { font-family: var(--pf-f-mono); font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--pf-ink-3); border: 1px solid var(--pf-rule-strong); border-radius: 999px; padding: 1px 8px; }
+.rg__h .c--wait { border-style: dashed; }
+.rg__h span { margin-inline-start: auto; font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); }
+.rg__b { padding: 16px; }
+
+/* The empty field: a composed statement, never a collapsed row. */
+.rgz { border: 1px dashed var(--pf-rule-strong); background: var(--pf-surface); padding: 18px; display: grid; gap: 14px; }
+.rgz__l { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
+.rgz__l i { width: 16px; height: 16px; border: 1.5px dashed var(--pf-rule-strong); display: block; margin-top: 2px; flex: none; }
+.rgz__l i.rd { border-radius: 50%; }
+.rgz b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--pf-ink); margin-bottom: 5px; }
+.rgz p { font-size: 12.5px; line-height: 1.6; color: var(--pf-ink-2); max-width: 64ch; }
+.rgz__a { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; padding-top: 2px; }
+.rgz__a .why { font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); margin-inline-start: auto; }
+
+/* The ghost specimen: the SHAPE of a region, permanently tagged as an example. */
+.ghost { position: relative; border: 1px solid var(--pf-rule); background: var(--pf-raised); padding: 0; overflow: hidden; }
+.ghost__in { opacity: .4; filter: saturate(.25); pointer-events: none; user-select: none; }
+.ghost__tag { position: absolute; inset-inline-end: 0; top: 0; font-family: var(--pf-f-mono); font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; background: var(--pf-ink); color: var(--pf-surface); padding: 3px 9px; z-index: 2; }
+.ghost__cap { font-family: var(--pf-f-mono); font-size: 10px; color: var(--pf-ink-3); padding: 8px 14px; border-top: 1px dashed var(--pf-rule-strong); background: var(--pf-sunken); line-height: 1.5; }
+
+.spec { display: grid; grid-template-columns: 22px minmax(0, 1fr) 96px; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--pf-rule); align-items: center; border-inline-start: 3px solid var(--pf-rule-strong); }
+.spec:last-child { border-bottom: 0; }
+.spec i { width: 14px; height: 14px; border: 1.5px solid var(--pf-rule-strong); display: block; }
+.spec b { font-size: 12.5px; font-weight: 600; display: block; }
+.spec span { font-family: var(--pf-f-mono); font-size: 10px; color: var(--pf-ink-3); display: block; margin-top: 3px; }
+.spec u { text-decoration: none; font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--pf-ink-3); text-align: end; }
+
+/* ---------- 3 - recognition: progressive, informational, never a score ---------- */
+.rec { border: 1px solid var(--pf-ink); background: var(--pf-raised); }
+.rec__h { background: var(--pf-ink); color: var(--pf-surface); padding: 9px 16px; display: flex; align-items: center; gap: 10px; font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .15em; text-transform: uppercase; }
+.rec__h span { margin-inline-start: auto; color: rgba(242,239,232,.55); }
+[data-theme="dark"] .rec__h { background: var(--pf-sunken); color: var(--pf-ink); border-bottom: 1px solid var(--pf-rule-strong); }
+[data-theme="dark"] .rec__h span { color: var(--pf-ink-3); }
+.rec ol { list-style: none; margin: 0; padding: 0; }
+.rec li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 13px; padding: 11px 16px; border-bottom: 1px solid var(--pf-rule); align-items: baseline; }
+.rec li:last-child { border-bottom: 0; }
+.rec li i { width: 9px; height: 9px; background: var(--pf-ink); display: block; margin-top: 4px; flex: none; }
+/* The one gold on this screen, and it marks a POSITION, not a state. */
+.rec li.next i { background: none; border: 1.5px solid var(--pf-gold); border-radius: 50%; box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-gold) 20%, transparent); }
+.rec li.wait i { background: none; border: 1.5px dashed var(--pf-rule-strong); }
+.rec li b { font-size: 13px; font-weight: 600; line-height: 1.4; display: block; }
+.rec li b span { display: block; font-weight: 400; font-size: 12px; color: var(--pf-ink-2); margin-top: 4px; line-height: 1.55; }
+.rec li time { font-family: var(--pf-f-mono); font-size: 10px; color: var(--pf-ink-3); white-space: nowrap; }
+.rec li.wait b { color: var(--pf-ink-3); font-weight: 500; }
+.rec li.next { background: var(--pf-sunken); }
+.rec__f { padding: 11px 16px; border-top: 1px solid var(--pf-rule); background: var(--pf-sunken); font-family: var(--pf-f-mono); font-size: 10.5px; color: var(--pf-ink-3); line-height: 1.6; }
+
+/* ---------- 4 - neutral progress: pre-agreement, and no figure ---------- */
+.np { border: 1px solid var(--pf-rule); background: var(--pf-raised); padding: 15px 16px; }
+.np__t { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.np__t b { font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--pf-ink-3); }
+.np__t span { margin-inline-start: auto; font-family: var(--pf-f-mono); font-size: 11px; color: var(--pf-ink-2); }
+.np__r { display: flex; gap: 3px; height: 20px; }
+.np__r i { flex: 1; border: 1px dashed var(--pf-rule-strong); display: block; }
+.np__s { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--pf-f-mono); font-size: 9.5px; color: var(--pf-mute); }
+.np p { font-size: 12.5px; line-height: 1.6; color: var(--pf-ink-2); margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--pf-rule); }
+
+/* ---------- 8 - buttons ---------- */
+.dmb { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 15px; border-radius: 8px; min-height: 38px; font-size: 13px; font-weight: 600; border: 1px solid var(--pf-ink); background: var(--pf-ink); color: var(--pf-surface); cursor: pointer; font-family: inherit; text-decoration: none; }
+.dmb--2 { background: var(--pf-raised); color: var(--pf-ink); border-color: var(--pf-rule-strong); }
+.dmb--sm { min-height: 32px; padding: 6px 11px; font-size: 12px; }
+
+/* ---------- 10 - narrow ---------- */
+@media (max-width: 900px) {
+  .dm2 { grid-template-columns: minmax(0, 1fr); }
+  .dm2__s { border-inline-start: 0; border-top: 1px solid var(--pf-rule-strong); }
+  .pres { padding: 18px 18px 20px; }
+  .pres h1 { font-size: 22px; margin: 9px 0 6px; }
+  .pres__f { grid-template-columns: 1fr 1fr; margin-top: 15px; }
+  .pres__f > div { padding: 12px 14px 0; border-bottom: 1px solid rgba(242,239,232,.14); }
+  .pres__f > div:nth-child(2n) { border-inline-end: 0; }
+  .pres__f > div:nth-child(n+3) { border-bottom: 0; }
+  .rgz { padding: 14px; }
+}
