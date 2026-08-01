@@ -1,12 +1,16 @@
 import { setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
+import { signalSideCounts } from "@/lib/board/inventory";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import DeskShell from "@/components/desk/DeskShell";
+import SignalCrossing from "@/components/ponte/bridge/SignalCrossing";
 import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import LandingBridges from "@/components/ponte/bridge/LandingBridges";
 import { landingFamilies } from "@/lib/landing/families";
 import "@/components/desk/desk.css";
@@ -60,11 +64,12 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
 export default async function HomePage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
-  // Only the strip reads now. `signalSideCounts()` went with the crossing it
-  // fed: counting both sides of the whole table on every landing render, for a
-  // graphic the landing no longer draws, is a database round trip spent on
-  // nothing.
-  const board = await readMarketSignals(STRIP_SIGNALS);
+  // The strip needs records; the crossing needs the two sizes of the whole
+  // table. Issued together so the entrance costs one round trip, not two.
+  const [board, sideCounts] = await Promise.all([
+    readMarketSignals(STRIP_SIGNALS),
+    signalSideCounts(),
+  ]);
   const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
 
   return (
@@ -106,39 +111,96 @@ export default async function HomePage({ params }: { params: { locale: string } 
           </div>
         </section>
 
-        {/*
-          The Market Signals crossing is gone from the landing, by owner
-          decision on 31 July 2026.
+        <section className="sec">
+          <div className="sech">
+            <div>
+              <h2>
+                <PonteIcon name="evidence.evreview" size={18} />
+                Market Signals
+              </h2>
+              <p className="d">
+                Indications read from named public sources. Nothing here has been confirmed with
+                the party named in it, and nobody behind one is a Ponte member.
+              </p>
+            </div>
+            <Link href="/market-signals">
+              All Market Signals<span aria-hidden="true"> &rarr;</span>
+            </Link>
+          </div>
 
-          It drew the demand/supply crossing with its two live counts. The
-          drawing is not wrong, it is premature: the landing's one question is
-          which family you are in, and the same crossing is drawn one step
-          later inside Explore, where a member has already said Products and
-          the two sides mean something specific to them. Asking the
-          demand-or-supply question before the family question put the second
-          question first.
+          {/*
+            The crossing, not a sample of the board.
 
-          So it is removed here rather than duplicated. `/market-signals` and
-          Explore still draw it, and the family crossing above is now the only
-          thing the landing asks.
-        */}
+            This section used to print four RecordCards. Four out of several
+            thousand is not a summary of the inventory, it is an arbitrary
+            handful presented as one, and it implied the board was four records
+            long. The two sides and their real sizes say more about the market
+            in one graphic than four cards do, and the sizes are counted over
+            the whole table rather than over what happened to be newest.
 
-        {/*
-          The closing band is gone, by owner decision on 31 July 2026.
+            Ponte is the bridge between a buyer and a seller. This is the one
+            place that sentence is drawn instead of written.
+          */}
+          {/*
+            Keyed on the counts this section actually draws, not on the strip's
+            read above it. They come from the same database and will usually
+            fail together, but "the crossing could not be drawn" is a statement
+            about the two counts, and deciding it from a different query is how
+            a section comes to report a failure that did not happen to it.
+          */}
+          {sideCounts === null ? (
+            <div className="err">
+              <PonteIcon name="participation.boundary" size={20} label="Boundary of what is known" />
+              <div>
+                <b>The sources could not be read</b>
+                <p>
+                  A technical failure, not a finding. It does not mean nothing was published. The
+                  board itself will say what is live once the read succeeds.
+                </p>
+              </div>
+            </div>
+          ) : sideCounts.total === 0 ? (
+            <div className="empty">
+              <PonteIcon name="participation.boundary" size={24} label="Boundary of what is known" />
+              <div>
+                <b>No signal is currently live on the public board</b>
+                <p>
+                  A signal is published only while it is approved and inside its ninety-day public
+                  life. Nothing found is not the same as nothing happening.
+                </p>
+                <div className="empty__a">
+                  <Link className="b" href="/structure">
+                    Bring a requirement or offer to the desk
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <SignalCrossing counts={sideCounts} />
+          )}
+        </section>
 
-          It read "Bring a requirement, an offer or a service to the desk" over
-          a Start a deal and a How review works control. It stated the platform
-          as three things a member brings to a desk, which is not what Ponte is:
-          the three canonical families are Products, Trade services, and
-          Distribution and representation, and "requirement, offer or service"
-          names neither the families nor the seven intents under them. The band
-          therefore taught a model the product does not have, at the last thing
-          a reader saw on the page.
-
-          Nothing replaces it. The family crossing above is already the route
-          in, and a second entrance restating it in different words is how the
-          two drifted apart in the first place.
-        */}
+        <section className="sec">
+          <div className="panel" style={{ borderColor: "var(--rule-strong)" }}>
+            <div className="closing">
+              <div>
+                <h2 className="serif">Bring a requirement, an offer or a service to the desk.</h2>
+                <p>
+                  Write it in your own words. Ponte structures it, shows exactly what will be
+                  public, private and reviewer-only, and reviews it before anything is published.
+                </p>
+              </div>
+              <div className="closing__a">
+                <Link className="b b--lg" href="/structure">
+                  Start a deal
+                </Link>
+                <Link className="b b--2 b--lg" href="/about">
+                  How review works
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </DeskShell>
 
       <PonteFooter />

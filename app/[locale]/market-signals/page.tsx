@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import {
@@ -143,15 +144,24 @@ export default async function MarketSignalsPage({
           axisClassified={axisClassified}
         />
 
-        {/*
-          The same closing band the landing carried, removed with it by owner
-          decision on 31 July 2026. See the note in app/[locale]/page.tsx: it
-          named the product as "a requirement, an offer or a service", which is
-          neither the three canonical families nor the seven intents beneath
-          them. It is deleted here too rather than left standing, because an
-          identical band surviving on the neighbouring board is exactly how one
-          copy of a retired idea outlives its own removal.
-        */}
+        <section className="sec">
+          <div className="panel">
+            <div className="closing">
+              <div>
+                <h2 className="serif">Bring a requirement, an offer or a service to the desk.</h2>
+                <p>
+                  Write it in your own words. Ponte structures it, shows exactly what will be
+                  public, private and reviewer-only, and reviews it before anything is published.
+                </p>
+              </div>
+              <div className="closing__a">
+                <Link className="b b--lg" href="/structure">
+                  Start a deal
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </DeskShell>
     </div>
   );
