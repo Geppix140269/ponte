@@ -1054,13 +1054,6 @@
   border-top: 1px solid var(--rule);
 }
 
-.ponte-desk .closing {
-  padding: 22px 24px; display: flex; align-items: center;
-  justify-content: space-between; gap: 32px; flex-wrap: wrap;
-}
-.ponte-desk .closing h2 { font-family: var(--f-serif); font-size: 26px; font-weight: 500; margin-bottom: 6px; letter-spacing: -0.014em; }
-.ponte-desk .closing p { font-size: 14px; color: var(--ink-2); max-width: 660px; }
-.ponte-desk .closing__a { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* Detail page: main plus the ink boundary. */
 .ponte-desk .detail { display: grid; grid-template-columns: minmax(0, 1fr) var(--dk-boundary); align-items: start; }
