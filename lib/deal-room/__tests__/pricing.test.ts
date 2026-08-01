@@ -7,7 +7,7 @@
 
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   ACTIVE_PERIOD_DAYS,
@@ -604,34 +604,97 @@ test("the engine charges for nothing the authority forbids charging for", () => 
   }
 });
 
+/**
+ * Every file under `dir` that IMPORTS the pricing module.
+ *
+ * Two rewrites, both worth recording because each failure mode is worse than
+ * the one before it.
+ *
+ * The first version shelled out to `git grep` for the bare path. It matched
+ * PROSE - it reported `deal-rooms/inside/page.tsx`, whose doc comment says the
+ * price is read from this module - and it missed every relative import, so
+ * `lib/deal-room/walkthrough.ts` was invisible to it. A guard that fires on a
+ * comment and stays silent on code trains its reader to work around it.
+ *
+ * The second version fixed the pattern and broke the shell quoting on Windows.
+ * `git grep` exited non-zero, the catch below returned an empty list, and the
+ * assertion PASSED. A boundary that reports success when its own machinery has
+ * failed is worse than no boundary at all, because it is believed.
+ *
+ * So there is no shell. It reads the files and matches an import statement.
+ */
 function importersUnder(dir: string): string[] {
-  try {
-    const out = execSync(`git grep -l "deal-room/pricing" -- ${dir}`, {
-      encoding: "utf8",
-      cwd: process.cwd(),
-    });
-    return out.split("\n").filter(Boolean);
-  } catch {
-    return []; // git grep exits 1 when it finds nothing, which is the pass.
-  }
+  const out: string[] = [];
+  const walk = (path: string) => {
+    for (const entry of readdirSync(path, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
+      const full = `${path}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!/\.(ts|tsx)$/.test(entry.name)) continue;
+      const source = readFileSync(full, "utf8");
+      // An import specifier ending in the module, by either route:
+      //   "@/lib/deal-room/pricing"   from anywhere
+      //   "./pricing"                 from a sibling
+      if (/from\s+["'](?:[^"']*deal-room\/pricing|\.\/pricing)["']/.test(source)) {
+        out.push(full);
+      }
+    }
+  };
+  walk(dir);
+  return out;
 }
 
 test("nothing is wired to this module yet, which is the Stage 2 boundary", () => {
   // Stage 2 delivers the engine and its proof. Charging, entitlements, Stripe
   // and every surface are later stages behind their own owner approval, so a
-  // caller appearing here without one is a scope breach, not progress. When
-  // Stage 4 or 6 legitimately wires it, this assertion is the thing that has to
+  // caller appearing here without one is a scope breach, not progress. When a
+  // later stage legitimately wires it, this assertion is the thing that has to
   // be changed deliberately.
-  // One caller is now approved, and only one. ADR-0022 puts the Deal Room on
-  // the entrance and binds the price shown there to this module rather than to
-  // a literal, precisely so the landing cannot quote a figure the product does
-  // not charge. Everything else - charging, entitlements, Stripe, the room
-  // surfaces - remains behind its own owner approval, so a second name
-  // appearing here is still a scope breach.
+  //
+  // What this boundary is actually about: SURFACES, and modules outside the
+  // pricing engine's own directory. Siblings inside `lib/deal-room/` compose
+  // each other by design - billing, charging and period-lifecycle all read the
+  // constants, and always did - so scanning them produces noise rather than a
+  // finding. They are excluded by path, not listed by name, so a new sibling
+  // does not have to be added here to be legitimate.
+  //
+  // One surface is approved, and only one:
+  //
+  //   DealRoomPreview.tsx   ADR-0022. The room on the entrance. It prints the
+  //                         price, and binding that to this module rather than
+  //                         to a literal is precisely how a surface is stopped
+  //                         from quoting a figure the product does not charge.
+  //
+  // `lib/deal-room/walkthrough.ts` also prints prices, under ADR-0028, and is
+  // inside the directory. That is deliberate: the walkthrough's copy is data
+  // about the commercial model, and it belongs beside the model rather than in
+  // a component.
+  //
+  // Charging, entitlements, Stripe and the room surfaces remain behind their
+  // own owner approval. A second SURFACE name here is still a scope breach.
   const APPROVED = ["components/home/landing/DealRoomPreview.tsx"];
-  const callers = ["app", "components"]
-    .flatMap(importersUnder)
-    .filter((f) => !APPROVED.some((a) => f.split("\\").join("/").endsWith(a)));
+  const found = ["app", "components", "lib"].flatMap(importersUnder)
+    .map((f) => f.split(String.fromCharCode(92)).join("/"));
+
+  // The machinery proves itself before it is believed.
+  //
+  // The previous version of this guard broke its own shell command, found
+  // nothing, and passed. An empty result is indistinguishable from a working
+  // scan unless the scan is known to be able to find something, so it is
+  // asserted against the two importers that certainly exist.
+  for (const known of ["components/home/landing/DealRoomPreview.tsx", "lib/deal-room/walkthrough.ts"]) {
+    assert.ok(
+      found.some((f) => f.endsWith(known)),
+      `the importer scan is broken: it did not find ${known}, so an empty result proves nothing`,
+    );
+  }
+
+  const callers = found
+    .filter((f) => !f.startsWith("lib/deal-room/"))
+    .filter((f) => !APPROVED.some((a) => f.endsWith(a)));
   assert.deepEqual(callers, [], `nothing else may import deal-room/pricing yet, found: ${callers}`);
 });
 
