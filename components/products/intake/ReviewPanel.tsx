@@ -292,7 +292,7 @@ function OptionalTerms({
         </p>
         {OPTIONAL_TERM_GROUPS.map((group) => {
           // Drop the terms this side of the trade cannot answer.
-          group = { ...group, keys: group.keys.filter((k) => !NOT_THIS_SIDE[intent].includes(k)) };
+          group = { ...group, keys: group.keys.filter((k) => !(NOT_THIS_SIDE[intent] ?? []).includes(k)) };
           const groupKeys = group.keys.filter((key) => keys.includes(key));
           if (groupKeys.length === 0) return null;
           return (

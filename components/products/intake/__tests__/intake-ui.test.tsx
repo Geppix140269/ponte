@@ -291,6 +291,7 @@ test("the review shows four provenance states, each distinct in words", () => {
   const session = { stage: { kind: "review" as const, review: documentReview() } };
 
   const page = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    intent: "source_product",
     review: session.stage.review,
     intentLabel: "This will become a supply offer.",
     onEditShared: noop,
@@ -341,6 +342,7 @@ test("a catalogue attribute is never presented as a claim the document made", ()
   // all, rather than labelling them extracted or confirmed. Both would be
   // untrue: the document did not say them and the member has not agreed yet.
   const page = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    intent: "source_product",
     review,
     intentLabel: "x",
     onEditShared: noop,
@@ -356,6 +358,7 @@ test("a catalogue attribute the document repeated verbatim is not printed twice"
   const review = documentReview();
   const product = review.products.find((p) => p.id === "gasoil-10ppm-en590")!;
   const page = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    intent: "source_product",
     review,
     intentLabel: "x",
     onEditShared: noop,
@@ -381,6 +384,7 @@ test("a catalogue attribute the document repeated verbatim is not printed twice"
     products: [{ ...product, documentAttributes: [{ key: "s", label: "Sulphur content", value: "50 ppm maximum" }] }],
   };
   const second = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    intent: "source_product",
     review: disagreeing,
     intentLabel: "x",
     onEditShared: noop,
@@ -410,6 +414,7 @@ test("every provenance state has a word of its own", () => {
 
 test("each provenance carries its own marker class, so colour is not the only carrier", () => {
   const page = mount(ReviewPanel as unknown as (p: Record<string, unknown>) => unknown, {
+    intent: "source_product",
     review: documentReview(),
     intentLabel: "x",
     onEditShared: noop,
