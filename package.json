@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/check-dev-env.mjs && next dev",
+    "dev:audit": "node scripts/dev-audit.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
