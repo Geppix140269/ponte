@@ -712,14 +712,15 @@
     "backToStart": "Back to start",
     "backAriaLabel": "Go back to the previous step",
     "unsaved": {
-      "title": "You have unsaved changes",
-      "body": "Leaving this page may cause you to lose the information you have entered.",
+      "title": "Your work is kept on this device",
+      "body": "You can leave and come back to it. To keep it beyond this browser, and to reach it from anywhere, save it to your account.",
       "continueEditing": "Continue editing",
       "saveDraft": "Save as draft",
-      "leave": "Leave without saving",
-      "signInAndSave": "Sign in and save",
-      "signInToSave": "Sign in to save this as a draft and continue later.",
-      "dialogAriaLabel": "Unsaved changes"
+      "leave": "Leave for now",
+      "signInAndSave": "Keep it to my account",
+      "signInToSave": "Takes a minute. Nothing is published and nothing is charged.",
+      "thanks": "Thanks for spending time with Ponte.",
+      "dialogAriaLabel": "Leaving the composer"
     },
     "error": {
       "title": "Something went wrong",
