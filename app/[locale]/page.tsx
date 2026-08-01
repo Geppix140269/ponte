@@ -12,7 +12,6 @@ import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import LandingBridges from "@/components/ponte/bridge/LandingBridges";
-import DealRoomEntry from "@/components/home/landing/DealRoomEntry";
 import { landingFamilies } from "@/lib/landing/families";
 import "@/components/desk/desk.css";
 // The approved Bridge stylesheet, imported from the authority package rather
@@ -179,11 +178,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
           ) : (
             <SignalCrossing counts={sideCounts} />
           )}
-        </section>
-
-        {/* The Deal Room, under Market Signals. Owner instruction, 1 Aug 2026. */}
-        <section className="sec">
-          <DealRoomEntry />
         </section>
 
       </DeskShell>
