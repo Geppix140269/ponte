@@ -245,8 +245,17 @@ jobs:
       - name: Prove the dump carries no data
         run: |
           fail=0
-          for pattern in '^COPY ' '^INSERT INTO' '^\\\.' '^-- Data for Name:'; do
-            if grep -nE "$pattern" "$SCHEMA_FILE" | head -5; then
+          # `if grep ... | head -5` tested head's exit status, not grep's, and
+          # head always succeeds - so this fired on every dump regardless of
+          # content. That is what failed run 30687095503, and the conclusion
+          # drawn from it (that `supabase db dump` had emitted data) was wrong:
+          # the run printed no matching lines because there were none.
+          #
+          # `\.` is anchored now too. Unanchored it also matches the \restrict
+          # and \unrestrict meta-commands pg_dump 17.6+ wraps every dump in.
+          for pattern in '^COPY ' '^INSERT INTO' '^\\\.$' '^-- Data for Name:'; do
+            if grep -qE "$pattern" "$SCHEMA_FILE"; then
+              grep -nE "$pattern" "$SCHEMA_FILE" | head -5
               echo "::error::The dump contains data ($pattern). Refusing to continue."
               fail=1
             fi

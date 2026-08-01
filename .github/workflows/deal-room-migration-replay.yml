@@ -225,12 +225,17 @@ jobs:
           # which is what terminates a COPY block. Unanchored it also matches the
           # `\restrict` / `\unrestrict` meta-commands that pg_dump 17.6+ wraps
           # every dump in, and would reject a perfectly clean file.
+          # `if grep ... | head -3` would test head's exit status, not grep's,
+          # and head always succeeds - so that form fires on a clean file. Test
+          # with grep -q, then print the evidence separately.
           for pattern in '^COPY ' '^INSERT INTO' '^\\\.$' '^-- Data for Name:'; do
-            if grep -nE "$pattern" "$BASELINE" | head -3; then
+            if grep -qE "$pattern" "$BASELINE"; then
+              grep -nE "$pattern" "$BASELINE" | head -3
               echo "::error::The baseline snapshot contains data ($pattern). Refusing."
               exit 1
             fi
           done
+          echo "no data markers: structure only"
 
           "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$BASELINE"
           n=$("$PSQL_17" "$LOCAL_DB_URL" -t -A -c \
