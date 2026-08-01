@@ -180,27 +180,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
           )}
         </section>
 
-        <section className="sec">
-          <div className="panel" style={{ borderColor: "var(--rule-strong)" }}>
-            <div className="closing">
-              <div>
-                <h2 className="serif">Bring a requirement, an offer or a service to the desk.</h2>
-                <p>
-                  Write it in your own words. Ponte structures it, shows exactly what will be
-                  public, private and reviewer-only, and reviews it before anything is published.
-                </p>
-              </div>
-              <div className="closing__a">
-                <Link className="b b--lg" href="/structure">
-                  Start a deal
-                </Link>
-                <Link className="b b--2 b--lg" href="/about">
-                  How review works
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
       </DeskShell>
 
       <PonteFooter />
