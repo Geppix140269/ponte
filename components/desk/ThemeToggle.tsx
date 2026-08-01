@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
  * Dark is the ground the product is designed on and the server always renders
  * it. This control only records a departure from that, so the stored value is
  * read and written by the inline script in `app/[locale]/layout.tsx` as well as
- * here — that script runs before first paint, which is what stops a member who
+ * here. That script runs before first paint, which is what stops a member who
  * chose light from seeing a dark frame first.
  *
  * The button renders `null` until mounted. Server and client would otherwise
