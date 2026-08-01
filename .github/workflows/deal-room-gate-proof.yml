@@ -45,8 +45,24 @@ name: Deal Room admission gate proof
 on:
   # Manual only. No push, no pull_request, no schedule: this reads a production
   # connection string, and nothing should be able to start it by merging.
+  #
+  # ## Dispatch from `main`, test any commit
+  #
+  # For `workflow_dispatch`, GitHub runs the workflow DEFINITION AT THE
+  # DISPATCHED REF. Selecting a feature branch in "Use workflow from" would
+  # therefore execute that branch's copy of this file - with the production
+  # database secret available to it. A branch nobody has merged could rewrite
+  # what happens to that credential, and the review that approved this file
+  # would have approved nothing.
+  #
+  # So the ref is fixed at `main` and the commit under test arrives as an input
+  # instead. `main` supplies the definition; `target_sha` supplies the tree.
   workflow_dispatch:
     inputs:
+      target_sha:
+        description: 'Full 40-character commit SHA to test (the controller-approved PR #198 head)'
+        required: true
+        default: ''
       confirm:
         description: 'Type PROVE to confirm this runs the admission-gate proof once'
         required: true
@@ -67,14 +83,55 @@ jobs:
       # A scratch project, deliberately outside the checkout.
       STACK_DIR: /tmp/ephemeral-supabase
       SCHEMA_FILE: /tmp/production-public-schema.sql
+      # The migration this job exists to prove, and the exact bytes it must be.
+      # Checked after checkout and before anything else runs.
+      MIGRATION_PATH: supabase/migrations/20260731g_deal_room_admission_verification_gate.sql
+      MIGRATION_SHA256: 68ce6a8d32bc7a3c88e57b964a2a42ef8f95c8b45e59a05cd47cf110c08acb0b
 
     steps:
+      # ---------------------------------------------------------------------
+      # Everything in this block runs BEFORE the secret is reachable.
+      #
+      # The secret is bound to exactly one later step. These four gates decide
+      # whether the run gets that far, and each fails closed.
+      # ---------------------------------------------------------------------
+
       - name: Confirm the dispatch was deliberate
         run: |
           if [ "${{ inputs.confirm }}" != "PROVE" ]; then
             echo "::error::Type PROVE in the confirm input to run this. Nothing has been done."
             exit 1
           fi
+
+      - name: Refuse to run from anywhere but main
+        run: |
+          # `workflow_dispatch` runs the definition at the dispatched ref, so a
+          # run started from a branch would be running THAT branch's copy of
+          # this file with the production credential available. Nothing below
+          # can be trusted unless this holds, so it is checked first and by
+          # value rather than by pattern.
+          echo "dispatched ref: $GITHUB_REF"
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::This workflow may only be dispatched from main. Set 'Use workflow from' to main."
+            echo "::error::The commit under test goes in the target_sha input, not in the branch selector."
+            exit 1
+          fi
+
+      - name: Validate target_sha
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          # A full 40-character hex commit id, and nothing else. Not a branch
+          # name, not a tag, not an abbreviated SHA: each of those is a moving
+          # or ambiguous pointer, and the whole point of this input is that the
+          # tree under test is decided by the controller and cannot change
+          # between approval and execution.
+          if ! printf '%s' "$TARGET_SHA" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "::error::target_sha must be exactly 40 lowercase hexadecimal characters."
+            echo "::error::Received a value of length ${#TARGET_SHA}. Branch names and short SHAs are rejected."
+            exit 1
+          fi
+          echo "target_sha accepted: $TARGET_SHA"
 
       # ## Why every action below is pinned to a commit SHA
       #
@@ -92,7 +149,66 @@ jobs:
       # repository's own CI already runs on `ubuntu-latest`, so the pin
       # preserves behaviour that is known to work here. Later majors exist and
       # moving to them is a separate, testable change.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Check out the commit under test, and only that commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The tree comes from the input; the workflow definition came from
+          # main. That separation is the whole correction: a branch cannot
+          # supply the code that handles the credential, only the code that is
+          # tested by it.
+          ref: ${{ inputs.target_sha }}
+          # One commit is all this job reads. Nothing here walks history, so
+          # deeper is slower and no safer.
+          fetch-depth: 1
+          # No git credential left on disk. This job never pushes.
+          persist-credentials: false
+
+      - name: The checkout is exactly the requested commit
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          # `ref:` resolving is done by the action; this proves what landed.
+          HEAD_SHA="$(git rev-parse HEAD)"
+          echo "git rev-parse HEAD = $HEAD_SHA"
+          echo "target_sha         = $TARGET_SHA"
+          if [ "$HEAD_SHA" != "$TARGET_SHA" ]; then
+            echo "::error::The checked-out commit is not the requested one. Refusing."
+            exit 1
+          fi
+          echo "the tree under test is the approved commit"
+
+      - name: The commit under test carries the reviewed migration, byte for byte
+        run: |
+          # Before npm ci, before the Supabase stack, and long before the source
+          # database is contacted. The controller approved a specific migration;
+          # if the tree does not contain exactly those bytes, this run would
+          # prove something nobody reviewed.
+          if [ ! -f "$MIGRATION_PATH" ]; then
+            echo "::error::$MIGRATION_PATH is not present in the commit under test."
+            exit 1
+          fi
+          ACTUAL="$(sha256sum "$MIGRATION_PATH" | cut -d' ' -f1)"
+          echo "expected SHA-256: $MIGRATION_SHA256"
+          echo "actual   SHA-256: $ACTUAL"
+          if [ "$ACTUAL" != "$MIGRATION_SHA256" ]; then
+            echo "::error::The migration does not match the reviewed checksum. Refusing."
+            exit 1
+          fi
+          echo "migration matches the reviewed checksum"
+
+      - name: The commit under test supplies no workflow definition of its own
+        run: |
+          # Belt and braces for the rule above. The definition running right now
+          # came from main, so a copy in the tree could not have replaced it -
+          # but a credentialed workflow file sitting on an unmerged branch is a
+          # standing invitation to dispatch from the wrong ref, and this fails
+          # the run rather than leaving it there to be found later.
+          if [ -e .github/workflows/deal-room-gate-proof.yml ]; then
+            echo "::error::The commit under test contains its own copy of this workflow."
+            echo "::error::Remove it from that branch: the definition must come from main alone."
+            exit 1
+          fi
+          echo "no competing workflow definition in the tree under test"
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -102,6 +218,21 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Fetch the running workflow definition from main, to check itself
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The definition that is running came from main, and the workspace now
+          # holds the commit under test - which does not contain it, and must
+          # not. So the self-checks below need main's copy, fetched to a scratch
+          # path. `github.sha` is main's head here, because the step above
+          # refused to run from any other ref.
+          ref: ${{ github.sha }}
+          path: .workflow-definition
+          sparse-checkout: .github/workflows
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: The source secret reaches exactly one step, and is never printed
         run: |
           # A self-check, because the rule is easy to break by adding a helpful
@@ -109,7 +240,15 @@ jobs:
           # but how many steps actually READ the secret - so this counts
           # `secrets.` uses. The pattern below is written with an escaped dot so
           # this line cannot match itself and inflate its own count.
-          WF=.github/workflows/deal-room-gate-proof.yml
+          #
+          # It reads main's copy, which is the definition actually executing.
+          # Checking the workspace copy would prove nothing about this run and,
+          # after the correction above, there is no workspace copy to read.
+          WF=.workflow-definition/.github/workflows/deal-room-gate-proof.yml
+          if [ ! -f "$WF" ]; then
+            echo "::error::main's copy of this workflow was not fetched. Cannot self-check."
+            exit 1
+          fi
           uses=$(grep -cE 'secrets\.PONTE_SCHEMA_SOURCE_DATABASE_URL' "$WF" || true)
           echo "steps reading the source secret: $uses"
           if [ "$uses" -ne 1 ]; then

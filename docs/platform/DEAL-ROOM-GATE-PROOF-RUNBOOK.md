@@ -75,10 +75,11 @@ mean applying an unproved boundary first. Landing the workflow separately is the
 only order that proves the gate before it lands. **Merging this is the owner's
 call; PR #198 stays open and unmerged either way.**
 
-Once the workflow is on `main`, dispatch it against the feature branch — the
-**Use workflow from** selector runs the workflow definition from `main` but
-checks out whichever branch is chosen, so the proof still exercises this PR's
-migration.
+Once the workflow is on `main`, dispatch it **from `main`** and name the commit
+to test in the `target_sha` input — never by selecting the feature branch. See
+step 2 for why: the branch selector chooses the workflow definition, not just
+the tree, and a feature branch must never supply the code that handles the
+production credential.
 
 ### 1. Create the secret
 
@@ -119,16 +120,49 @@ one exists, use it.
 
 **Actions → Deal Room admission gate proof → Run workflow**
 
-- **Use workflow from**: `claude/deal-room-verification-gate` — the definition
-  comes from `main`, the checkout comes from this branch, so the migration under
-  test is the one in PR #198.
-- `confirm`: type `PROVE`
+| Field | Value |
+|---|---|
+| **Use workflow from** | **`main`** — never a feature branch |
+| `target_sha` | the controller-approved immutable PR #198 head, as a full 40-character commit SHA |
+| `confirm` | `PROVE` |
+
+**Why the branch selector must be `main`.** For `workflow_dispatch`, GitHub runs
+the workflow **definition at the dispatched ref**. Choosing a feature branch
+would execute *that branch's* copy of this workflow while the production
+database secret is available to it — so an unmerged branch could rewrite what
+happens to the credential, and the review that approved this file would have
+approved nothing. The workflow refuses to start unless `GITHUB_REF` is exactly
+`refs/heads/main`, and it fails there before the secret is reachable.
+
+The commit under test therefore arrives as `target_sha` instead: `main` supplies
+the definition, `target_sha` supplies the tree. It must be a full 40-character
+lowercase hex SHA — a branch name, a tag or an abbreviated SHA is rejected,
+because each is a moving or ambiguous pointer and the point of this input is
+that the tree cannot change between approval and execution.
+
+Get the value from the PR page, or:
+
+```bash
+gh pr view 198 --repo Geppix140269/ponte --json headRefOid --jq .headRefOid
+```
+
+After checkout the job prints `git rev-parse HEAD` and stops unless it equals
+`target_sha`, then verifies the migration's SHA-256 against the reviewed value —
+both before `npm ci`, before the Supabase stack starts and long before the
+source database is contacted.
 
 The confirm input exists so an accidental click does nothing.
 
 ### 3. Read the result
 
-The job prints every preflight line and every proof result. Expect, in order:
+Four gates run first, all of them before the secret is reachable: the `PROVE`
+confirmation, the `refs/heads/main` check, the 40-hex `target_sha` validation,
+and — after checkout — `git rev-parse HEAD` matched against `target_sha`
+followed by the migration checksum. Any of them failing stops the run without
+the source database being contacted.
+
+Then the job prints every preflight line and every proof result. Expect, in
+order:
 
 ```
 ok    0. the database carries the production-equivalent schema
