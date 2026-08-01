@@ -251,17 +251,44 @@ jobs:
           create extension if not exists pgcrypto with schema public;
           SQL
 
+          # Production sets default privileges for `supabase_admin` as well as
+          # for `postgres`. Changing another role's default privileges requires
+          # membership in it, which the ephemeral stack's postgres does not have
+          # by default. Ask for it - if the stack allows it, the snapshot
+          # restores in full.
+          "$PSQL_17" "$LOCAL_DB_URL" -q -c "grant supabase_admin to postgres;" > /dev/null 2>&1 || true
+          MEMBER=$("$PSQL_17" "$LOCAL_DB_URL" -t -A \
+            -c "select pg_has_role('postgres','supabase_admin','MEMBER');" 2>/dev/null || echo f)
+          echo "postgres is a member of supabase_admin: $MEMBER"
+
           # Since the schema now exists, the dump's own CREATE SCHEMA has to go.
-          # Exactly that one statement, and the count is asserted so this can
-          # never quietly become a broader edit of the snapshot.
+          # Every exclusion is counted and asserted, so this can never quietly
+          # become a broader edit of the snapshot.
           PREPARED=/tmp/baseline-prepared.sql
-          grep -v '^CREATE SCHEMA public;$' "$BASELINE" > "$PREPARED"
+          EXPECTED=1
+          if [ "$MEMBER" = "t" ]; then
+            grep -v '^CREATE SCHEMA public;$' "$BASELINE" > "$PREPARED"
+          else
+            # Default privileges govern objects created LATER by that role.
+            # Nothing under test is created by supabase_admin - the migration
+            # runs as postgres, whose default privileges DO restore - and the
+            # grants proof reads pg_proc.proacl of existing functions, which is
+            # unaffected. Dropped explicitly and reported, not silently.
+            echo "::notice::The ephemeral stack will not let postgres join supabase_admin."
+            echo "::notice::Dropping 12 ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin statements."
+            echo "::notice::They set privileges on objects that role creates later; nothing under"
+            echo "::notice::test is created by it, so the proof is unaffected."
+            grep -v '^CREATE SCHEMA public;$' "$BASELINE" \
+              | grep -v '^ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin ' > "$PREPARED"
+            EXPECTED=13
+          fi
+
           removed=$(( $(wc -l < "$BASELINE") - $(wc -l < "$PREPARED") ))
-          if [ "$removed" -ne 1 ]; then
-            echo "::error::Expected to drop exactly 1 CREATE SCHEMA line, dropped $removed."
+          if [ "$removed" -ne "$EXPECTED" ]; then
+            echo "::error::Expected to drop exactly $EXPECTED line(s) from the snapshot, dropped $removed."
             exit 1
           fi
-          echo "restoring, with CREATE SCHEMA public replaced by the extension-aware setup above"
+          echo "restoring ($removed statement(s) replaced by the setup above)"
 
           "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$PREPARED"
           rm -f "$PREPARED"
