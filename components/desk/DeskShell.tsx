@@ -2,6 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import JourneyRail from "./JourneyRail";
+import ThemeToggle from "@/components/desk/ThemeToggle";
 import DeskAccount from "./DeskAccount";
 import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import type { Rail } from "@/lib/desk/journey";
@@ -96,6 +97,8 @@ export default async function DeskShell({ children, rail, current, objective }: 
             </Link>
           ))}
         </nav>
+
+        <ThemeToggle />
 
         {/* Suspense because the control reads the current search params to
             build its return path, and useSearchParams opts a subtree into

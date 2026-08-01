@@ -73,7 +73,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
 
   return (
-    <div className={`ponte-desk ${landingFontVars}`} data-theme="dark">
+    <div className={`ponte-desk ${landingFontVars}`}>
       {/* rail is omitted, not empty: no journey has started. */}
       <DeskShell rail={null}>
         {/* Directly below the navigation. Real records only: when the read
