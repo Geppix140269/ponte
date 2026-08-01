@@ -51,6 +51,34 @@ Three self-checks run before anything connects:
 
 ## What the owner must do
 
+### 0. Get the workflow onto `main` first — it cannot be dispatched from a branch
+
+GitHub registers a `workflow_dispatch` workflow only when the file exists on the
+**default branch**. Verified on 31 July 2026 while this file was written: with
+the workflow present on `claude/deal-room-verification-gate` and pushed,
+`GET /repos/Geppix140269/ponte/actions/workflows/deal-room-gate-proof.yml`
+returns **404**, and it does not appear in `gh workflow list`. There is no
+**Run workflow** button to press, on any branch, until it is on `main`.
+
+That is a property of GitHub, not of this workflow, and no wording change fixes
+it. The options are:
+
+- **Land the workflow on `main` on its own**, in a small pull request containing
+  only `.github/workflows/deal-room-gate-proof.yml` and this runbook. It is
+  inert until three separate things are true — the secret exists, somebody
+  dispatches it manually, and they type `PROVE` — so merging it changes no
+  behaviour and deploys nothing. PR #198 stays open and unmerged.
+- Or defer the proof until PR #198 itself is merged, which the controller has
+  not authorised and which would mean applying an unproved boundary first.
+
+The first is the only order that proves the gate before it lands. **This is the
+owner's call, and nothing here should be merged without it.**
+
+Once the workflow is on `main`, dispatch it against the feature branch — the
+**Use workflow from** selector runs the workflow definition from `main` but
+checks out whichever branch is chosen, so the proof still exercises this PR's
+migration.
+
 ### 1. Create the secret
 
 **Repository → Settings → Secrets and variables → Actions → New repository secret**
@@ -72,7 +100,9 @@ one exists, use it.
 
 **Actions → Deal Room admission gate proof → Run workflow**
 
-- Branch: `claude/deal-room-verification-gate`
+- **Use workflow from**: `claude/deal-room-verification-gate` — the definition
+  comes from `main`, the checkout comes from this branch, so the migration under
+  test is the one in PR #198.
 - `confirm`: type `PROVE`
 
 The confirm input exists so an accidental click does nothing.
