@@ -1,0 +1,57 @@
+import { setRequestLocale } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
+import { alternatesFor } from "@/lib/seo";
+import { RoomHeader } from "@/components/deal-room/primitives";
+import Walkthrough from "@/components/deal-room/Walkthrough";
+
+export const dynamic = "force-static";
+
+/**
+ * See inside a Deal Room.
+ *
+ * ## It is public, deliberately
+ *
+ * No session, no gate, no allowlist. This is the page a visitor reads BEFORE
+ * deciding whether Ponte is for them, and the entrance links to it as "See
+ * inside one". A walkthrough of the product that requires an account to read
+ * is a brochure locked in the shop.
+ *
+ * It replaces the second landing control's old destination, `/pricing`, which
+ * promised an explanation and delivered a price list. The owner walked that
+ * loop on 1 August 2026 and left.
+ *
+ * ## What it must never become
+ *
+ * A page of screenshots. Every stage is drawn with the product's own approved
+ * components from `lib/deal-room/walkthrough.ts`, so it cannot show a room the
+ * product no longer builds.
+ *
+ * A sales page. The prices are stated at every stage, read from
+ * `lib/deal-room/pricing.ts`, including the two stages that cost nothing. A
+ * reader should finish it knowing exactly where the money starts, which is
+ * when a room goes live and not before.
+ */
+
+export async function generateMetadata({ params }: { params: { locale: Locale } }) {
+  return {
+    title: "Inside a Deal Room | Ponte Trade",
+    description:
+      "How a deal is built on Ponte: from an offer or a requirement, through credible interest, into one Master Deal Room with a separate branch for each counterparty, to signature elsewhere.",
+    alternates: alternatesFor("/deal-rooms/inside", params.locale),
+  };
+}
+
+export default function InsideADealRoomPage({ params }: { params: { locale: string } }) {
+  setRequestLocale(params.locale);
+
+  return (
+    <>
+      <RoomHeader
+        reference="Deal Rooms"
+        title="Inside a Deal Room"
+        dealLine="Six stages, from a deal you want to a contract signed somewhere else. Nothing here is a mock-up: every stage is drawn with the same components the room itself is built from."
+      />
+      <Walkthrough ctaHref="/deal-rooms/propose" />
+    </>
+  );
+}

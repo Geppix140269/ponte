@@ -94,6 +94,17 @@ const FEATURE_GATED: RouteEntry[] = [
     note: "Counterparty check journey. Feature-gated until independently approved and deployable.",
   },
   {
+    // Public, and deliberately ahead of the subtree entry below it.
+    //
+    // The walkthrough is what a visitor reads BEFORE deciding whether Ponte is
+    // for them, and the entrance links to it as "See inside one". Gating an
+    // explanation of the product behind the product is a brochure locked in
+    // the shop.
+    path: "/deal-rooms/inside",
+    classification: "canonical",
+    note: "Public walkthrough of the Deal Room. No session, no flag, no allowlist.",
+  },
+  {
     path: "/deal-rooms",
     classification: "feature_gated",
     subtree: true,
