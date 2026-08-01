@@ -131,8 +131,28 @@ export default async function LocaleLayout({
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
       className={`${inter.variable} ${spaceGrotesk.variable}`}
+      /*
+        Dark is the product's ground. Set on the server so the first paint is
+        already dark; the script below only overrides it when the member has
+        chosen light, which keeps the common case free of a flash.
+      */
+      data-theme="dark"
     >
       <body className="flex min-h-screen flex-col">
+        {/*
+          Runs before first paint, so a member who chose light never sees a
+          dark frame first. Deliberately not a React effect: an effect runs
+          after paint, which is precisely the flash this avoids. Wrapped in
+          try/catch because localStorage throws in a partitioned or blocked
+          context, and a theme preference is never worth a blank page.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('ponte-theme');" +
+              "if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}",
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

@@ -86,6 +86,35 @@
   /* Interaction blue, lifted for the dark ground (ADR-0015 Stage 2). */
   --pf-interact: #7FB0E6; --pf-interact-border: #5C93CF;
   --pf-interact-active: #A9CBEE; --pf-interact-tint: rgba(127,176,230,.18);
+
+  /* State tints and lines.
+     Without these the dark theme inherited the LIGHT tints, so a status panel
+     on a near-black ground rendered as a pale pink or pale green slab - the
+     error box on the landing was the visible case. Each is the state's own
+     dark hue at low alpha, the same construction --pf-interact-tint already
+     uses, so a tint is always a quiet wash of its own colour rather than a
+     second colour introduced to the palette. */
+  --pf-gold-tint: rgba(217,172,85,.14);
+  --pf-danger-tint: rgba(224,103,76,.14);
+  --pf-positive-tint: rgba(79,176,122,.14);
+  --pf-review-tint: rgba(157,180,192,.14);
+  --pf-declared-tint: rgba(167,162,150,.14);
+  --pf-danger-line: rgba(224,103,76,.42);
+  --pf-positive-line: rgba(79,176,122,.42);
+  --pf-review-line: rgba(157,180,192,.42);
+  --pf-gold-rule: rgba(217,172,85,.46);
+  --pf-line: rgba(242,239,232,.16);
+  --pf-keyline: rgba(242,239,232,.28);
+
+  /* Glassmorphism, on dark only.
+     A raised surface becomes a translucent pane over the ground rather than a
+     solid block. Neutral white alpha, no colour of its own and no glow: the
+     depth comes from blur and a hairline edge, which is what the Constitution
+     means by elevation being a border and a background shift. */
+  --pf-glass: rgba(242,239,232,.045);
+  --pf-glass-strong: rgba(242,239,232,.075);
+  --pf-glass-edge: rgba(242,239,232,.11);
+  --pf-glass-blur: blur(18px) saturate(118%);
 }
 
 /* icon host — colour is inherited, never set on the SVG */

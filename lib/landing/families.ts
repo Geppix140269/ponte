@@ -117,8 +117,24 @@ const NOTE: Record<MarketIntent, string> = {
   seek_brands_or_products_to_represent: "You are looking for a line.",
 };
 
-/** The abutment every Action Bridge crosses to. Approved reference copy. */
-export const STRUCTURED_JOURNEY = "Structured journey";
+/**
+ * The abutment every Action Bridge crosses to.
+ *
+ * "Private Deal Room", not "Structured journey", per the owner's design package
+ * — `Ponte Deal Room - Design Review v3.html`, deliverable I, which recommends
+ * Option A, the destination node:
+ *
+ *   "The Action Bridge's right abutment already existed and already read
+ *   'Structured journey' — relabelling it 'Private Deal Room' is the smallest
+ *   possible change with the largest gain in meaning, because the member is
+ *   looking at that deck at the moment they decide."
+ *
+ * This is how the Deal Room becomes visible on the entrance without a section
+ * or a control: the crossing a member has just chosen is shown ending at the
+ * room. A journey that is merely "structured" names a quality; a Private Deal
+ * Room names a place, and the place is the product.
+ */
+export const STRUCTURED_JOURNEY = "Private Deal Room";
 
 /** The abutments of the Family Bridge itself. Approved reference copy. */
 export const FAMILY_BRIDGE_ABUTMENTS = { left: "Intent", right: "The market" } as const;

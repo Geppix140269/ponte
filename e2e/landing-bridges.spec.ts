@@ -24,6 +24,30 @@ import { mkdirSync } from "node:fs";
 
 const EVIDENCE = "docs/codex/audits/constitution-rebuild/evidence/landing-bridges";
 
+/**
+ * The colour a token resolves to, in the theme the page is actually in.
+ *
+ * These assertions used to carry light-theme literals like `rgb(126, 89, 20)`.
+ * That was a hidden second declaration of the palette: the moment the product
+ * moved to a dark ground the tests failed on values that were correct, and they
+ * would have gone on passing if someone changed the token to the wrong colour
+ * but left the literal alone. Constitution section 6 makes the approved tokens
+ * the sole source, so the expectation is read from the same place the browser
+ * reads it.
+ */
+async function tokenColour(page: Page, token: string): Promise<string> {
+  return page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    probe.style.position = "absolute";
+    probe.style.opacity = "0";
+    document.documentElement.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  }, token);
+}
+
 /** The nine destinations the replaced card grid carried, in reading order. */
 const DESTINATIONS = {
   products: [
@@ -310,8 +334,9 @@ test("DS-8: hovering the chosen station does not demote it", async ({ page }) =>
   const expectSelectedNode = async () => {
     await expect(node).toHaveCSS("width", "15px");
     await expect(node).toHaveCSS("height", "15px");
-    await expect(node).toHaveCSS("background-color", "rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914)
-    await expect(node).toHaveCSS("border-top-color", "rgb(126, 89, 20)");
+    const goldInk = await tokenColour(page, "--pf-gold-ink");
+    await expect(node).toHaveCSS("background-color", goldInk);
+    await expect(node).toHaveCSS("border-top-color", goldInk);
     await expect(pier).toHaveCSS("opacity", "1");
     await expect(pier).toHaveCSS("width", "2px");
   };
@@ -334,7 +359,10 @@ test("DS-8: hovering the chosen station does not demote it", async ({ page }) =>
   const other = stations(page).nth(1);
   await other.hover();
   await expect(other.locator(".brst__n")).toHaveCSS("width", "13px");
-  await expect(other.locator(".brst__n")).toHaveCSS("background-color", "rgb(226, 219, 196)"); // --pf-sunken (#E2DBC4, ADR-0015 Stage 1)
+  await expect(other.locator(".brst__n")).toHaveCSS(
+    "background-color",
+    await tokenColour(page, "--pf-sunken"),
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -364,9 +392,10 @@ test("DS-9: a focused station carries one focus treatment, and it is strong", as
 
   // And what remains is the approved Bridge treatment, still two carriers: a
   // ring on the node and an underline on the title, both in --pf-focus.
-  expect(focus.nodeShadow).toContain("rgb(30, 95, 168)"); // --pf-focus
+  const focusColour = await tokenColour(page, "--pf-focus");
+  expect(focus.nodeShadow).toContain(focusColour);
   expect(focus.titleDecoration).toBe("underline");
-  expect(focus.titleDecorationColour).toBe("rgb(30, 95, 168)");
+  expect(focus.titleDecorationColour).toBe(focusColour);
 });
 
 test("DS-9: no other Desk control lost its focus ring", async ({ page }) => {
@@ -382,7 +411,9 @@ test("DS-9: no other Desk control lost its focus ring", async ({ page }) => {
     return getComputedStyle(link).boxShadow;
   });
   expect(navShadow, "no command-bar link found to check").not.toBeNull();
-  expect(navShadow, "a Desk control outside the bridge lost its focus ring").toContain("rgb(30, 95, 168)");
+  expect(navShadow, "a Desk control outside the bridge lost its focus ring").toContain(
+    await tokenColour(page, "--pf-focus"),
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -526,7 +557,7 @@ test("reduced motion evidence: movement removed, settled state complete", async 
   // word, the drawn deck, and all three destinations.
   expect(settled.selected).toBe("Products");
   expect(settled.nodeWidth).toBe("15px");
-  expect(settled.nodeBackground).toBe("rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914)
+  expect(settled.nodeBackground).toBe(await tokenColour(page, "--pf-gold-ink"));
   expect(settled.markOpacity).toBe("1");
   expect(settled.markText).toBe("Selected route");
   expect(settled.liveDeckDrawn).toBe(true);
@@ -1159,6 +1190,7 @@ test("the approved gold italic headline emphasis is intact", async ({ page }) =>
     return { colour: c.color, style: c.fontStyle, family: c.fontFamily };
   });
   expect(style.style).toBe("italic");
-  expect(style.colour).toBe("rgb(126, 89, 20)"); // --pf-gold-ink (#7E5914, ADR-0015 Stage 1), AA on cream
+  // Read from the token, so this holds on either ground.
+  expect(style.colour).toBe(await tokenColour(page, "--pf-gold-ink"));
   expect(style.family.toLowerCase()).toContain("playfair");
 });
