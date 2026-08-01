@@ -39,12 +39,32 @@ import type { Rail } from "@/lib/desk/journey";
  * responsible for not creating. It returns when Explore is rebuilt on the Desk,
  * which is not this slice.
  */
+/**
+ * Two places, and the second one is the product.
+ *
+ * "Start a deal" is gone, by owner decision of 1 August 2026. It pointed at
+ * `/structure`, the composer, so a member reading the bar was offered "start a
+ * deal" and arrived at a form for describing a product. What Ponte sells is the
+ * room; the entrance now says so at the scale of the product, and the bar has
+ * to agree with the entrance rather than contradict it one line above.
+ *
+ * `/structure` is not orphaned. Every action on the entrance's Family Bridge
+ * lands in the composer, and the Deal Room surfaces link to it directly for the
+ * member who has nothing published yet. What is removed is the claim that
+ * composing a listing is what starting a deal means.
+ *
+ * "How Ponte works" moved to the footer, where `/about` already sits. It is
+ * read once, before committing, and a permanent slot in a short bar is the
+ * wrong weight for a page nobody returns to.
+ *
+ * `about` stays in `DeskNavKey` so a page may still mark itself as the current
+ * place without the bar having to carry a link to it.
+ */
 export type DeskNavKey = "market" | "deal" | "about";
 
 const NAV: { key: DeskNavKey; label: string; href: string }[] = [
   { key: "market", label: "Market Signals", href: "/market-signals" },
-  { key: "deal", label: "Start a deal", href: "/structure" },
-  { key: "about", label: "How Ponte works", href: "/about" },
+  { key: "deal", label: "Open a Deal Room", href: "/deal-rooms/propose" },
 ];
 
 export interface DeskShellProps {

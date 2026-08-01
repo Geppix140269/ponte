@@ -108,8 +108,14 @@ test("every action destination is exactly what the canonical taxonomy produces",
 test("the nine destinations are, literally, these nine", () => {
   // Written out so a change to any one of them fails here with the old and new
   // URL side by side, rather than passing because both sides moved together.
+  //
+  // Compared as a SET. The claim is that these nine destinations exist and no
+  // tenth does, which is a claim about the destinations; the sequence they are
+  // listed in is decided by the crossing order, and that is asserted where the
+  // crossing order is decided. Before this, moving Products to the centre of
+  // the bridge failed a test about URLs.
   assert.deepEqual(
-    families.flatMap((f) => f.actions.map((a) => a.href)),
+    families.flatMap((f) => f.actions.map((a) => a.href)).sort(),
     [
       "/market-signals",
       "/structure?family=products&intent=source_product",
@@ -119,7 +125,7 @@ test("the nine destinations are, literally, these nine", () => {
       "/structure?family=distribution&intent=seek_distribution_partner",
       "/structure?family=distribution&intent=offer_distribution_or_representation",
       "/structure?family=distribution&intent=seek_brands_or_products_to_represent",
-    ],
+    ].sort(),
   );
 });
 
@@ -171,13 +177,35 @@ test("only Products opens with a discovery entrance", () => {
   }
 });
 
-test("the three canonical families are present, in canonical order, with their approved names", () => {
+test("the three canonical families are present, with their approved names, Products at the centre", () => {
+  // The SET is the taxonomy's. Nothing may be added to it or dropped from it.
   assert.deepEqual(
-    families.map((f) => f.key),
-    MARKET_FAMILIES.map((f) => f.key),
+    [...families.map((f) => f.key)].sort(),
+    [...MARKET_FAMILIES.map((f) => f.key)].sort(),
+    "the landing shows a different set of families from the taxonomy",
   );
-  assert.deepEqual(families.map((f) => f.label), ["Products", "Trade services", "Distribution and representation"]);
   assert.equal(families.length, 3);
+
+  // The ORDER is the landing's own, by owner decision of 1 August 2026:
+  // Products is the centre of Ponte and is drawn at the centre of the bridge.
+  // The taxonomy's `sort` still governs every other surface, which is why this
+  // states the crossing order rather than deferring to it.
+  assert.deepEqual(families.map((f) => f.key), ["services", "products", "distribution"]);
+  assert.equal(families[1].key, "products", "Products is not the middle station");
+  assert.deepEqual(families.map((f) => f.label), ["Trade services", "Products", "Distribution and representation"]);
+});
+
+test("every family carries its taxonomy icon onto its station", () => {
+  // ADR-0019 permits a marker on a classification station, and a market family
+  // is the classification. The key must be the taxonomy's own: a landing that
+  // picked its own icon would be a second source for a fact the taxonomy holds.
+  // Until 1 August 2026 none was passed at all, so all three stations rendered
+  // bare while the crossing below them carried demand and supply markers.
+  for (const family of families) {
+    const canonical = MARKET_FAMILIES.find((f) => f.key === family.key)!;
+    assert.equal(family.icon, canonical.icon, `${family.key} carries an icon the taxonomy did not give it`);
+  }
+  assert.equal(new Set(families.map((f) => f.icon)).size, 3, "two families share one icon");
 });
 
 test("every family carries at least one action, and the two- and three-action variants both exist", () => {
@@ -307,11 +335,18 @@ test("arrow keys traverse the group and select as they go", () => {
   const prevented: string[] = [];
   const event = (key: string) => ({ key, preventDefault: () => prevented.push(key) });
 
+  // Expectations are read from the rendered order rather than named, because
+  // traversal is a statement about adjacency on the deck and not about which
+  // family happens to sit where. Naming them pinned the old taxonomy order into
+  // two keyboard tests, so moving Products to the centre failed them for a
+  // reason that had nothing to do with the keyboard.
+  const order = families.map((f) => f.key);
+
   fire(stationsOf(bridge)[0], "onKeyDown", event("ArrowRight"));
-  assert.deepEqual(chosen, ["services"], "ArrowRight did not move to the next station");
+  assert.deepEqual(chosen, [order[1]], "ArrowRight did not move to the next station");
 
   fire(stationsOf(bridge)[1], "onKeyDown", event("ArrowLeft"));
-  assert.deepEqual(chosen, ["services", "products"], "ArrowLeft did not move back");
+  assert.deepEqual(chosen, [order[1], order[0]], "ArrowLeft did not move back");
 
   assert.deepEqual(prevented, ["ArrowRight", "ArrowLeft"], "arrow keys must not also scroll the page");
 });
@@ -321,11 +356,13 @@ test("traversal wraps at both ends, and Home and End are not bound", () => {
   const bridge = mountFamilyBridge(null, (key: string) => { chosen.push(key); });
   const event = (key: string) => ({ key, preventDefault: () => {} });
 
+  const order = families.map((f) => f.key);
+
   fire(stationsOf(bridge)[0], "onKeyDown", event("ArrowLeft"));
-  assert.equal(chosen.at(-1), "distribution", "ArrowLeft from the first station should wrap to the last");
+  assert.equal(chosen.at(-1), order[2], "ArrowLeft from the first station should wrap to the last");
 
   fire(stationsOf(bridge)[2], "onKeyDown", event("ArrowRight"));
-  assert.equal(chosen.at(-1), "products", "ArrowRight from the last station should wrap to the first");
+  assert.equal(chosen.at(-1), order[0], "ArrowRight from the last station should wrap to the first");
 
   // The approved engine binds ArrowRight, ArrowDown, ArrowLeft and ArrowUp and
   // nothing else. Home and End are absent from it, so they are absent here: this

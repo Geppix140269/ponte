@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "ponte-audit",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:audit"],
+      "port": 3000
     }
   ]
 }

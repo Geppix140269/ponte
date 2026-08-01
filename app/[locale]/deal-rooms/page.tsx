@@ -1,24 +1,35 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { getUser } from "@/lib/auth";
 import { dealRoomGate, listRooms } from "@/lib/deal-room/queries";
 import { ROOM_STAGE_LABEL } from "@/lib/deal-room/states";
 import { Band, Empty, RoomHeader } from "@/components/deal-room/primitives";
+import NotOpenYet from "@/components/deal-room/NotOpenYet";
 
 export const dynamic = "force-dynamic";
 
 /**
  * The member's rooms.
  *
- * `notFound()` when the flag is off or the member is not allowlisted, rather
- * than a "coming soon" page. An unreleased slice should be indistinguishable
- * from a route that does not exist, and turning the flag off must leave nothing
- * behind that hints at it.
+ * `dealRoomGate()` returns null for three different reasons and this page used
+ * to answer all three with `notFound()`:
+ *
+ *   1. nobody is signed in;
+ *   2. the route flag `NEXT_PUBLIC_DEAL_ROOM` is not `on`;
+ *   3. the member is not in `DEAL_ROOM_ALLOWLIST`.
+ *
+ * None of the three means "this page does not exist", and each has a different
+ * correct answer. See `NotOpenYet` for why concealment stopped being the right
+ * behaviour the moment the entrance made "Open a Deal Room" its primary action.
  */
 export default async function DealRoomsPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
+  const signedIn = await getUser();
+  if (!signedIn) redirect(`/${params.locale}/login?next=/deal-rooms`);
+
   const gate = await dealRoomGate();
-  if (!gate) notFound();
+  if (!gate) return <NotOpenYet locale={params.locale} />;
 
   const rooms = await listRooms();
 

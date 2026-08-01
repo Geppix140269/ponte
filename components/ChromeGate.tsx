@@ -81,7 +81,15 @@ function rendersOwnChrome(path: string): boolean {
     path === "/contact" ||
     path === "/learn/duties" ||
     path === "/learn/trade-data" ||
-    path === "/offline"
+    path === "/offline" ||
+    // The Deal Room. It was built while the slice was concealed behind a flag,
+    // so nothing linked to it and nobody ever saw what framed it: every room
+    // surface rendered inside the retired obsidian chrome, beneath a MARKETPLACE
+    // nav pointing at a board that no longer exists. The entrance now makes
+    // "Open a Deal Room" its primary action, which makes this the first thing a
+    // member sees after pressing the largest control on the site.
+    path === "/deal-rooms" ||
+    path.startsWith("/deal-rooms/")
   );
 }
 export default function ChromeGate({
