@@ -184,15 +184,23 @@ jobs:
           # THE ONLY OPERATION THIS JOB PERFORMS AGAINST THE SOURCE DATABASE.
           # Use pg_dump directly because the previous `supabase db dump --schema
           # public` invocation emitted data markers in run 30687095503. This is
-          # explicitly schema-only, public-only, no owner and no ACL restore
-          # noise. The migration proof checks the grants it creates after it
-          # applies.
+          # explicitly schema-only and public-only.
+          #
+          # `--no-owner` yes, `--no-acl` NO. The grants ARE the thing under test:
+          # proof 2b reads `pg_proc.proacl` and requires an explicit
+          # `authenticated=X` on `deal_room_propose` and
+          # `deal_room_admit_participant`. Those grants come from historical
+          # migrations - 20260731g only `create or replace`s the two functions,
+          # which preserves an existing ACL and cannot invent one - so a dump
+          # that omits GRANTs would restore them with a null ACL and fail 2b for
+          # a reason belonging to the dump rather than to the boundary. The
+          # restore step re-establishes schema-level grants itself, so ownership
+          # noise is the only thing worth suppressing here.
           pg_dump \
             --dbname="$SOURCE_DB_URL" \
             --schema=public \
             --schema-only \
             --no-owner \
-            --no-acl \
             --file="$SCHEMA_FILE"
 
           echo "dump written: $(wc -c < "$SCHEMA_FILE") bytes, $(wc -l < "$SCHEMA_FILE") lines"
