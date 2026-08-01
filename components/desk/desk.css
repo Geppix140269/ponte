@@ -405,6 +405,27 @@
 .ponte-desk .sech .d { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; max-width: 620px; line-height: 1.5; }
 .ponte-desk .sech a { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 
+/* Glass, dark only.
+   The raised surfaces of the Desk become translucent panes over the ground.
+   Scoped to [data-theme="dark"] so the light theme is untouched, and gated on
+   backdrop-filter support so a browser without it gets the solid raised
+   surface rather than a transparent panel with unreadable text behind it. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .ponte-desk[data-theme="dark"] .panel,
+  .ponte-desk[data-theme="dark"] .err,
+  .ponte-desk[data-theme="dark"] .empty {
+    background: var(--pf-glass);
+    border-color: var(--pf-glass-edge);
+    backdrop-filter: var(--pf-glass-blur);
+    -webkit-backdrop-filter: var(--pf-glass-blur);
+  }
+  .ponte-desk[data-theme="dark"] .cmd {
+    background: var(--pf-glass-strong);
+    backdrop-filter: var(--pf-glass-blur);
+    -webkit-backdrop-filter: var(--pf-glass-blur);
+  }
+}
+
 .ponte-desk .panel {
   background: var(--raised); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); box-shadow: var(--e-1); overflow: hidden;
