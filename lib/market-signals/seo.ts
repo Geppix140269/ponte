@@ -1,3 +1,4 @@
+import { publicRef } from "@/lib/desk/adapter";
 import type { MarketSignal } from "./logic";
 
 /**
@@ -149,8 +150,11 @@ export function signalJsonLd(signal: MarketSignal, url: string): Record<string, 
     description: signalDescription(signal),
     itemOffered: product,
     availabilityStarts: signal.spottedAt,
-    // The identifier a member and a crawler both see on the page.
-    ...(signal.canonicalId ? { identifier: signal.canonicalId } : {}),
+    // The identifier a member and a crawler both see on the page, with the
+    // source platform removed: an imported id is minted EXT-<SOURCE>-<NUMBER>,
+    // and emitting it raw published the portal's name into structured data
+    // where it outlives the page. Same masking as the Desk adapter.
+    ...(signal.canonicalId ? { identifier: publicRef(signal.canonicalId) } : {}),
   };
 
   if (signal.publicExpiresAt) node.validThrough = signal.publicExpiresAt;

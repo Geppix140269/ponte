@@ -327,6 +327,7 @@ export default function ProductIntake({
       <div className="pintake">
         <ReviewPanel
           review={stage.review}
+          intent={session.intent}
           intentLabel={copy.reviewLead}
           onEditShared={(key, next) => dispatch({ type: "editTerm", scope: "shared", key, value: next })}
           onEditProduct={(id, key, next) => dispatch({ type: "editTerm", scope: id, key, value: next })}

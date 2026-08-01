@@ -32,6 +32,31 @@
 import type { MarketSignal } from "@/lib/market-signals/logic";
 import type { DeskClassification, FactBag } from "./facts";
 
+/**
+ * The reference a member sees, with the source platform removed.
+ *
+ * Imported ids are minted as `EXT-<SOURCE>-<NUMBER>`, so a signal read from
+ * Go4WorldBusiness reached the screen as `EXT-G4WB-000156`. That token is the
+ * portal's name in an abbreviation, printed on every card, every register row
+ * and every detail page.
+ *
+ * It contradicts the rule stated at the top of this file: provenance does not
+ * cross this boundary, and a Desk record carries a read date and never a source
+ * name. The read date was implemented correctly; the identifier was not, and it
+ * leaked the same fact more durably, because a reference is quoted, bookmarked
+ * and pasted into correspondence.
+ *
+ * The vendor token is matched by shape rather than by name, so the next import
+ * source cannot reintroduce the leak by not being called G4WB.
+ *
+ * Only the DISPLAY is changed here. Stored ids and the URLs already published
+ * against them are unchanged, because rewriting an identifier that members and
+ * search engines already hold is a separate decision with its own migration.
+ */
+export function publicRef(id: string): string {
+  return id.replace(/^EXT-[A-Z0-9]{2,8}-(?=\d)/i, "EXT-");
+}
+
 /** A record as every Desk surface sees it. Facts are read only by `factsFor`. */
 export interface DeskRecord {
   /** The stable public reference shown beside the classification. */
@@ -162,7 +187,7 @@ export function toDeskRecord(signal: MarketSignal): DeskRecord {
   };
 
   return {
-    ref: signal.canonicalId ?? signal.id,
+    ref: publicRef(signal.canonicalId ?? signal.id),
     cls,
     clsLabel: classificationLabel(cls),
     title: clean(signal.summaryLine) ?? signal.product,
