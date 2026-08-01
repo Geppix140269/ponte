@@ -22,7 +22,6 @@ pg_dump \
   --schema=public \
   --schema-only \
   --no-owner \
-  --no-acl \
   --file="$SCHEMA_FILE"
 ```
 
@@ -31,9 +30,16 @@ This reads only the `public` schema DDL. It does not dump table rows, `auth`,
 source database. The workflow still rejects the file if it contains `COPY`,
 `INSERT`, `\.` or `-- Data for Name:` before restore.
 
-`--no-owner` and `--no-acl` avoid restore noise from production ownership or ACL
-state. The migration proof checks the grants created by the migration after it
-applies.
+`--no-owner` avoids restore noise from production role ownership, which nothing
+in the proof reads.
+
+**`--no-acl` is deliberately absent.** The grants are part of what is under
+test: proof 2b reads `pg_proc.proacl` and requires an explicit
+`authenticated=X` on `deal_room_propose` and `deal_room_admit_participant`.
+Those grants come from historical migrations — `20260731g` only
+`create or replace`s the two functions, which preserves an existing ACL and
+cannot invent one. A dump that omitted `GRANT`s would restore them with a null
+ACL and fail 2b for a reason belonging to the dump rather than to the boundary.
 
 ## Secret handling
 
