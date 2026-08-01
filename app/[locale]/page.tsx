@@ -3,6 +3,10 @@ import type { Locale } from "@/i18n/routing";
 import { alternatesFor } from "@/lib/seo";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { readMarketSignals } from "@/lib/board/market-signals";
+import { countSignalInventory } from "@/lib/board/inventory";
+import DealRoomDestination from "@/components/home/landing/DealRoomDestination";
+import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
+import Link from "next/link";
 import { toDeskRecord } from "@/lib/desk/adapter";
 import DeskShell from "@/components/desk/DeskShell";
 import SignalStrip from "@/components/desk/SignalStrip";
@@ -67,6 +71,15 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const board = await readMarketSignals(STRIP_SIGNALS);
   const live = board.state === "ok" ? board.signals.map(toDeskRecord) : [];
 
+  // The liquidity. ADR-0022 makes this half of the funnel: visible public
+  // activity is what makes a member fall into a Deal Room rather than be asked
+  // to. Counted over the whole table, not over what the strip happened to read,
+  // because "how much is out there" is a different question from "what is
+  // newest" and answering it from the strip's rows would understate it by
+  // orders of magnitude. `null` means the count could not be read, and the
+  // section says so rather than printing a number it cannot stand behind.
+  const signalCount = await countSignalInventory();
+
   return (
     <div className={`ponte-desk ${landingFontVars}`}>
       {/* rail is omitted, not empty: no journey has started. */}
@@ -102,26 +115,74 @@ export default async function HomePage({ params }: { params: { locale: string } 
                   replaced grid did, so every route and query string is the one
                   that shipped before. */}
               <LandingBridges families={landingFamilies()} />
+
+              {/* Where the route ends. ADR-0022: the entrance exists to funnel
+                  members into a Master Deal Room, and this names the
+                  destination immediately under the question that leads to it. */}
+              <DealRoomDestination />
             </div>
           </div>
         </section>
 
         {/*
-          The Market Signals crossing is gone from the landing, by owner
-          decision on 31 July 2026.
+          The liquidity. ADR-0022.
 
-          It drew the demand/supply crossing with its two live counts. The
-          drawing is not wrong, it is premature: the landing's one question is
-          which family you are in, and the same crossing is drawn one step
-          later inside Explore, where a member has already said Products and
-          the two sides mean something specific to them. Asking the
-          demand-or-supply question before the family question put the second
-          question first.
+          The demand/supply crossing that used to sit here was removed on
+          31 July 2026 along with the closing band, and between them they took
+          out both halves of the funnel - the liquidity and the destination -
+          leaving most of a viewport empty. This restores the liquidity in the
+          form the approved composition uses: not a crossing, and not a sample
+          of four records dressed up as a summary, but the size of what Ponte
+          has actually read, with the route to all of it.
 
-          So it is removed here rather than duplicated. `/market-signals` and
-          Explore still draw it, and the family crossing above is now the only
-          thing the landing asks.
+          A count is a claim about the market. It is read over the whole table
+          and, when it cannot be read, this section says so instead of showing
+          a number.
         */}
+        <section className="sec" id="signals">
+          <div className="sech">
+            <div>
+              <h2>
+                <PonteIcon name="evidence.evreview" size={18} />
+                Market Signals
+              </h2>
+              <p className="d">
+                Detected in public sources. A signal is evidence that commercial activity
+                exists &mdash; it is not a reviewed opportunity, and no counterparty has
+                been approached.
+              </p>
+            </div>
+            {signalCount === null ? null : (
+              <Link href="/market-signals">
+                All {signalCount.toLocaleString("en")} signals
+                <span aria-hidden="true"> &rarr;</span>
+              </Link>
+            )}
+          </div>
+
+          {signalCount === null ? (
+            <div className="err">
+              <PonteIcon
+                name="participation.boundary"
+                size={20}
+                label="Boundary of what is known"
+              />
+              <div>
+                <b>The signal count could not be read</b>
+                <p>
+                  Ponte will not state a size for a market it cannot currently count.
+                  Market Signals themselves are unaffected and can still be browsed.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <p className="d">
+            Every signal carries the source it was read from and the date it was read.
+            Ponte does not restate a source as a fact of its own, and does not hold a
+            commercial position in any signal shown here.
+          </p>
+        </section>
 
         {/*
           The closing band is gone, by owner decision on 31 July 2026.

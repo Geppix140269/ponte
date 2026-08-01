@@ -405,6 +405,82 @@
 .ponte-desk .sech .d { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; max-width: 620px; line-height: 1.5; }
 .ponte-desk .sech a { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 
+/*
+  The Deal Room destination, under the family bridge. ADR-0022.
+
+  Four stations drawn as a progression, so the route to a Deal Room is shown
+  rather than described. The connector is a rule between stations and stops
+  before the last one, because the last station IS the destination and a line
+  leaving it would imply somewhere further to go.
+
+  Only `--on` carries the gold dot. Nothing has started on the entrance, so
+  marking later stations would claim progress that has not happened - the same
+  rule the omitted journey rail follows.
+*/
+.ponte-desk .prog { margin-top: 34px; border-top: 1px solid var(--rule); }
+.ponte-desk .prog__d { display: grid; grid-template-columns: repeat(4, 1fr); }
+.ponte-desk .prog__s {
+  position: relative;
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 16px 18px 16px 0;
+}
+.ponte-desk .prog__s i {
+  width: 7px; height: 7px; border-radius: 50%;
+  border: 1px solid var(--rule-strong); background: transparent; flex: none;
+}
+.ponte-desk .prog__s--on i { background: var(--gold); border-color: var(--gold); }
+.ponte-desk .prog__s::before {
+  content: ""; position: absolute;
+  top: 19px; left: 11px; right: 0; height: 1px; background: var(--rule);
+}
+.ponte-desk .prog__s--end::before { display: none; }
+.ponte-desk .prog__s b {
+  font-size: 12.5px; font-weight: 600; line-height: 1.45;
+  letter-spacing: -0.004em; max-width: 22ch;
+}
+.ponte-desk .prog__s--end b { color: var(--gold-ink); }
+
+.ponte-desk .prog__f {
+  display: flex; align-items: flex-end; gap: 30px;
+  padding: 14px 0 2px; border-top: 1px solid var(--rule);
+}
+.ponte-desk .prog__f p {
+  margin: 0; font-size: 13px; color: var(--ink-2);
+  max-width: 62ch; line-height: 1.6;
+}
+.ponte-desk .prog__f > div {
+  margin-left: auto; text-align: right;
+  display: flex; flex-direction: column; gap: 6px; flex: none;
+}
+.ponte-desk .prog__f a {
+  font-family: var(--f-mono); font-size: 11.5px; font-weight: 600;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: 2px; white-space: nowrap; align-self: flex-end;
+}
+.ponte-desk .prog__f span {
+  font-family: var(--f-mono); font-size: 10px;
+  letter-spacing: 0.05em; color: var(--ink-3);
+}
+/* The free half of the offer reads first, and is not the faintest thing here. */
+.ponte-desk .prog__f .prog__free { color: var(--ink-2); }
+
+@media (max-width: 900px) {
+  .ponte-desk .prog__d { grid-template-columns: minmax(0, 1fr); }
+  .ponte-desk .prog__s {
+    flex-direction: row; align-items: center; gap: 13px;
+    padding: 11px 0 11px 22px;
+  }
+  .ponte-desk .prog__s i { position: absolute; left: 0; }
+  /* Vertical on narrow: the connector runs down the left instead of across. */
+  .ponte-desk .prog__s::before {
+    top: 0; bottom: 0; left: 3px; right: auto; width: 1px; height: auto;
+  }
+  .ponte-desk .prog__s b { max-width: none; }
+  .ponte-desk .prog__f { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .ponte-desk .prog__f > div { margin-left: 0; text-align: left; align-items: flex-start; }
+  .ponte-desk .prog__f a { align-self: flex-start; }
+}
+
 .ponte-desk .panel {
   background: var(--raised); border: 1px solid var(--rule);
   border-radius: var(--dk-radius); box-shadow: var(--e-1); overflow: hidden;
