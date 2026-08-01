@@ -1081,10 +1081,40 @@
   to { transform: translateX(-50%); }
 }
 
+/* ----------------------------------------------------------------------
+   The strip on a phone: all of the width, and bigger.
+
+   It used to keep the "Read most recently" plate in the row and then SHRINK
+   the signals to 42px to make room. On a 390 screen that plate took very
+   nearly half the width, so the thing a member came for got the other half at
+   a smaller size than on desktop. The owner asked for the opposite, and the
+   opposite is right: the label is chrome, the signals are the content.
+
+   The plate is removed from the flow and kept for assistive technology, so a
+   screen reader still hears what the strip is before it reads what is in it.
+   The row is then taller than desktop rather than shorter, and the title has
+   the full width to run into.
+   ---------------------------------------------------------------------- */
+
 @media (max-width: 860px) {
-  .ponte-desk .strip__k { padding: 0 12px; height: 42px; }
-  .ponte-desk .strip__i { height: 42px; line-height: 42px; padding: 0 14px; }
-  .ponte-desk .strip__t { max-width: 34ch; }
+  /* Not `display: none`: that would take the label out of the accessibility
+     tree along with the layout, and the strip would announce itself as a bare
+     list of product names. */
+  .ponte-desk .strip__k {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .ponte-desk .strip__w { flex: 1 1 100%; }
+  .ponte-desk .strip__i { height: 52px; line-height: 52px; padding: 0 16px; }
+  .ponte-desk .strip__t { font-size: 14.5px; max-width: none; }
+  .ponte-desk .strip__r { font-size: 11.5px; }
 }
 
 /* Reduced motion is a different presentation, not a slower one: the track

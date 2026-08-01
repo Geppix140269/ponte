@@ -918,3 +918,31 @@ body:has(.dr-page) footer.mt-20 {
   line-height: 1.6;
   color: var(--pf-ink-3);
 }
+
+/* ----------------------------------------------------------------------
+   A drawn screen keeps its designed width.
+
+   The screens are 1280-wide compositions with their own internal grids: the
+   draft room is `1fr + 340px`, the inbox `300px + 1fr`. Inside the
+   walkthrough's reading column those grids are squeezed to a few hundred
+   pixels and collapse into overlapping text, which is what the owner saw.
+
+   A viewport media query cannot fix it, because the viewport is wide while the
+   CONTAINER is narrow. So the figure scrolls: the screen is shown at the width
+   it was drawn for, and a narrow reader pans it, exactly as they would pan a
+   screenshot. Nothing is reflowed into a composition nobody designed.
+   ---------------------------------------------------------------------- */
+
+.dwt__shot { overflow-x: auto; }
+
+.dwt__shot > .dm {
+  min-width: 940px;
+}
+
+/* The scroll is announced rather than discovered, and only where it applies. */
+@media (max-width: 1040px) {
+  .dwt__shot figcaption::after {
+    content: " Scroll sideways to see the whole screen.";
+    color: var(--pf-ink-2);
+  }
+}
