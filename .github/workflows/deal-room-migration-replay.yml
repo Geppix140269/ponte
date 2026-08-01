@@ -349,44 +349,33 @@ jobs:
           fi
           echo "schema present, no business rows: as expected from a pure DDL replay"
 
-      - name: 'Phase 2: apply the admission gate migration'
+      - name: Is the gate migration in this tree?
         run: |
           GATE="supabase/migrations/$GATE_MIGRATION"
           if [ ! -f "$GATE" ]; then
-            echo "::notice::$GATE_MIGRATION is not in this tree, so there is nothing to apply."
-            echo "::notice::Phase 1 stands on its own: the history replays cleanly."
-            echo "GATE_APPLIED=no" >> "$GITHUB_ENV"
+            echo "::notice::$GATE_MIGRATION is not in this tree, so there is nothing to prove."
+            echo "::notice::Phase 0 stands on its own: the baseline restores."
+            echo "GATE_PRESENT=no" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "sha256: $(sha256sum "$GATE" | cut -d' ' -f1)"
           echo "bytes : $(wc -c < "$GATE")"
-          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f "$GATE"
-          echo "GATE_APPLIED=yes" >> "$GITHUB_ENV"
-          echo "the admission gate migration applied onto the replayed history"
+          echo "GATE_PRESENT=yes" >> "$GITHUB_ENV"
 
-      - name: 'Phase 2 check: the migration is idempotent under re-application'
-        if: env.GATE_APPLIED == 'yes'
-        run: |
-          # A migration that cannot be applied twice is a migration that cannot
-          # be safely retried after a partial failure. Worth knowing before it
-          # ever runs against production, and free to check here.
-          if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q \
-               -f "supabase/migrations/$GATE_MIGRATION" > /tmp/reapply.log 2>&1; then
-            echo "re-application succeeded: the migration is safely repeatable"
-          else
-            echo "::warning::Re-applying the migration failed. It is not idempotent."
-            echo "::warning::That is not necessarily wrong, but it means a partial failure cannot simply be retried."
-            tail -20 /tmp/reapply.log
-          fi
-
-      - name: 'Phase 3: run the admission gate proof'
-        if: env.GATE_APPLIED == 'yes'
+      # The proof runs BEFORE the migration is applied for real, because the
+      # proof applies the migration itself inside a transaction and rolls the
+      # whole thing back - that rollback is what its proof 9 checks. Applying
+      # the migration first made the proof's own apply fail with "function
+      # deal_room_declare_participation already exists", which is the workflow's
+      # fault and not the migration's. Run 30695955269.
+      - name: 'Phase 2: run the admission gate proof'
+        if: env.GATE_PRESENT == 'yes'
         env:
           DATABASE_URL: ${{ env.LOCAL_DB_URL }}
           DEAL_ROOM_PROOF_ALLOW: '1'
         run: |
           if [ ! -f "$PROOF_SCRIPT" ]; then
-            echo "::error::$PROOF_SCRIPT is missing, but the gate migration was present."
+            echo "::error::$PROOF_SCRIPT is missing, but the gate migration is present."
             exit 1
           fi
           case "$DATABASE_URL" in
@@ -394,6 +383,26 @@ jobs:
             *) echo "::error::The proof may only run against the ephemeral stack. Refusing."; exit 1 ;;
           esac
           npm run deal-room:gate-proof
+
+      # Safe to apply for real now: the proof rolled its own application back
+      # and asserted the database was left clean.
+      - name: 'Phase 3: apply the migration for real, then again'
+        if: env.GATE_PRESENT == 'yes'
+        run: |
+          GATE="supabase/migrations/$GATE_MIGRATION"
+          "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$GATE"
+          echo "applied onto the production-equivalent schema"
+
+          # A migration that cannot be applied twice cannot be safely retried
+          # after a partial failure. Worth knowing before it ever runs against
+          # production, and free to check here.
+          if "$PSQL_17" "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -q -f "$GATE" > /tmp/reapply.log 2>&1; then
+            echo "re-application succeeded: the migration is safely repeatable"
+          else
+            echo "::warning::Re-applying the migration failed. It is not idempotent."
+            echo "::warning::Not necessarily wrong, but a partial failure cannot simply be retried."
+            tail -20 /tmp/reapply.log
+          fi
 
       - name: Summary
         if: always()
@@ -405,7 +414,7 @@ jobs:
             echo "|---|---|"
             echo "| Baseline snapshot | ${BASELINE_FILE:-none committed} |"
             echo "| Historical migrations replayed | ${APPLIED_HISTORICAL:-not requested} |"
-            echo "| Gate migration applied | ${GATE_APPLIED:-no} |"
+            echo "| Gate migration present | ${GATE_PRESENT:-no} |"
             echo
             echo "No secret was used. The production database was never contacted."
           } >> "$GITHUB_STEP_SUMMARY"
