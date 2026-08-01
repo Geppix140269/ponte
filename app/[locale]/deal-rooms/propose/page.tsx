@@ -28,6 +28,7 @@ import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/st
 import { MARKET_FAMILIES, MARKET_INTENTS } from "@/lib/taxonomy/market";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { proposeRoom } from "../actions";
+import { withdrawListingAction } from "../../_actions/listings";
 
 export const dynamic = "force-dynamic";
 
@@ -70,33 +71,32 @@ export default async function ProposeRoomPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { deal?: string; error?: string };
+  searchParams: { deal?: string; error?: string; remove?: string };
 }) {
   setRequestLocale(params.locale);
 
   /*
-   * A signed-out visitor is sent to sign in, not to a 404.
+   * A signed-out visitor is NOT sent to sign in.
    *
-   * `dealRoomGate()` returns null for two different reasons - no session, or
-   * the room is not available to this member - and this page answered both
-   * with notFound(). That told a visitor who followed "Open a Deal Room" from
-   * the entrance that the page does not exist, which is untrue: it exists and
-   * they are not signed in. The allocation is only meaningful once we know who
-   * is asking, so the session is checked first.
-   */
-  const signedIn = await getUser();
-  if (!signedIn) redirect(`/${params.locale}/login?next=/deal-rooms/propose`);
-
-  /*
-   * Signed in, but the room is not open to this member yet.
+   * This page redirected to /login this morning, which was an improvement on
+   * the 404 it replaced and still the wrong answer. The owner named the rule:
    *
-   * The redirect above fixed only the signed-OUT half. A signed-in member who
-   * is not in `DEAL_ROOM_ALLOWLIST` - which on production is everybody,
-   * including the owner - still met `notFound()`, so the entrance's primary
-   * call to action answered 404 for every human who pressed it.
+   *   > Don't use frustration to create an offer or to see how it works. That
+   *   > creates friction. They have to click, they have to play ... It's the
+   *   > moment they make a public offer, or they want to open a Deal Room,
+   *   > that triggers the next phase.
+   *
+   * It is not a new rule. `components/AccountGate.tsx` has stated it since C7:
+   * "the gate fires at the moment of irreversible action and nowhere else."
+   * The redirect added here was a regression against an accepted design.
+   *
+   * So a visitor with no session reads this page. They have no Deals, so the
+   * list is empty and the route into the composer above it is what they take.
+   * Opening a room is a privileged write and is refused in `proposeRoom`,
+   * which asks `dealRoomGate()` for itself: the boundary is on the action, not
+   * on the reading of the page.
    */
   const gate = await dealRoomGate();
-  if (!gate) return <NotOpenYet locale={params.locale} />;
 
   const supabase = createClient();
   const { data: rows } = await supabase
@@ -104,7 +104,7 @@ export default async function ProposeRoomPage({
     .select(
       "id, status, market_family, market_intent, product, user_id, valid_until, quantity, unit, incoterm, origin_country, destination_country, service_category_key, coverage_scope_key, distribution_partner_type_key, territory_codes, product_sector_key",
     )
-    .eq("user_id", gate.profileId)
+    .eq("user_id", gate?.profileId ?? "00000000-0000-0000-0000-000000000000")
     .order("created_at", { ascending: false })
     .limit(25);
 
@@ -155,6 +155,34 @@ export default async function ProposeRoomPage({
         dealLine="A Deal Room is a protected workspace for one defined Deal. The party you invite can join without buying anything."
       />
 
+      {/*
+        A room does not have to be built on something already here.
+
+        The owner asked, looking at three old records: "What if I want to open
+        a new deal room and not based on the things that I have inserted
+        previously?" A picker that only offers the past is a dead end for
+        anybody whose next deal is not in it.
+
+        A room is still built around an opportunity (ADR-0028), so the honest
+        answer is not a room from nothing: it is a route to describe the new
+        thing, which takes a minute and is free. Stated before the list rather
+        than under it, so it is found by somebody who has already decided none
+        of these is the one.
+      */}
+      <Band title="Start something new">
+        <p className="dr__item-meta">
+          A Deal Room is built around one opportunity. If the deal you have in mind is not below, describe it first and
+          come straight back.
+        </p>
+        <p className="dr__why">
+          <a className="dr__link" href={`/${params.locale}/structure`}>
+            Describe a new requirement or offer
+          </a>
+          {" · "}
+          Free, and it stays private until you publish it.
+        </p>
+      </Band>
+
       <Band title="Choose the Deal">
         {deals.length === 0 ? (
           <>
@@ -192,7 +220,7 @@ export default async function ProposeRoomPage({
                   1 August 2026 and read it exactly that way: "that's another
                   way for me just to leave and don't come back".
                 */
-                <li key={deal.id}>
+                <li key={deal.id} className="dr__rowwrap">
                   <a className="dr__pick" href={`/${params.locale}/deal-rooms/propose?deal=${deal.id}`}>
                     <span>
                       <span className="dr__item-title">
@@ -218,6 +246,42 @@ export default async function ProposeRoomPage({
                       {ready ? "Ready" : open.length === 1 ? "1 detail to add" : `${open.length} details to add`}
                     </span>
                   </a>
+                  {/*
+                    Taking a record off the list, in two steps and with no
+                    JavaScript.
+
+                    The first step is a link that adds `?remove=<id>`; the
+                    second is the form it reveals. A one-click destructive
+                    control that needs a script to confirm is a control that
+                    fires unconfirmed the day the script does not arrive.
+
+                    It is a WITHDRAWAL, and the copy says so. Ponte does not
+                    delete a commercial record: the reference stays citable and
+                    the history stays worth having, and `withdrawn -> draft` is
+                    a member transition, so nothing here is one way.
+                  */}
+                  {searchParams.remove === deal.id ? (
+                    <form action={withdrawListingAction} className="dr__rm dr__rm--ask">
+                      <input type="hidden" name="id" value={deal.id} />
+                      <input type="hidden" name="returnTo" value="/deal-rooms/propose" />
+                      <span>
+                        Take this off your list? It is withdrawn, not deleted, and you can bring it back from your
+                        records.
+                      </span>
+                      <button className="b b--sm" type="submit">
+                        Withdraw it
+                      </button>
+                      <a className="dr__link" href={`/${params.locale}/deal-rooms/propose`}>
+                        Keep it
+                      </a>
+                    </form>
+                  ) : (
+                    <p className="dr__rm">
+                      <a className="dr__link" href={`/${params.locale}/deal-rooms/propose?remove=${deal.id}`}>
+                        Take this off my list
+                      </a>
+                    </p>
+                  )}
                 </li>
               );
             })}

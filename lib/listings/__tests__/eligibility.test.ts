@@ -16,6 +16,7 @@ import {
 import { runSafetyChecks, flagsBlockPublication } from "../safety";
 import { canTransition, isMemberWritableStatus, memberStatusLabel } from "../status";
 import { meetsMemberBusinessFloor } from "../../verification/level";
+import { truthfulLabels } from "../public-labels";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -140,18 +141,31 @@ test("the member declaration is required before Ponte publishes on their behalf"
 
 // ---- verification stays blocking (owner decision, 28 July 2026) ------------
 
-test("an unverified member does not publish, and is routed to verification", () => {
+// These two tests asserted the opposite until 1 August 2026. The reversal is
+// the substance of ADR-0027 and ADR-0028, not a relaxation of them.
+//
+// The 28 July rule was that automated publication does not lower the
+// member-business bar. That rule was made when publication was the product's
+// trust claim. It is not: publishing is free, says nothing about the business,
+// and the owner said so three times in one day, the last time looking at the
+// composer refusing his own record.
+//
+// What must NOT follow, and is asserted here: an unverified member's record
+// must not wear a mark it has not earned.
+
+test("an unverified member publishes", () => {
   const r = evaluateListing(productListing(), {
     ...VERIFIED,
     submitter: { verificationLevel: "unverified", business_verification_id: null, verification: null },
   });
-  assert.equal(r.publishable, false);
-  const issue = r.blockingIssues.find((i) => i.code === "business_verification_required");
-  assert.ok(issue, "an unverified member must be told what to do about it");
-  assert.equal(issue?.field, "verification");
+  assert.equal(r.publishable, true, "an unverified member was refused publication");
+  assert.ok(
+    !r.blockingIssues.some((i) => i.field === "verification"),
+    "verification is still being reported as a reason a record cannot publish",
+  );
 });
 
-test("a suspended verification does not publish", () => {
+test("a suspended verification publishes too, because publication is not a trust claim", () => {
   const r = evaluateListing(productListing(), {
     ...VERIFIED,
     submitter: {
@@ -160,8 +174,43 @@ test("a suspended verification does not publish", () => {
       verification: { purpose: "member_business", status: "review", sanctions_hits: { clean: true, strongCount: 0 } },
     },
   });
-  assert.equal(r.publishable, false);
-  assert.ok(r.blockingIssues.some((i) => i.code === "business_verification_not_current"));
+  assert.equal(r.publishable, true);
+});
+
+test("publishing unverified does not earn the Business checked mark", () => {
+  // The half of the old rule that still matters, and the reason removing the
+  // blocker is safe. `truthfulLabels` is the only thing that may say a business
+  // was checked, and it says it only where one was.
+  assert.deepEqual(
+    truthfulLabels({
+      businessVerified: false,
+      submitterRole: "Producer",
+      mandateSighted: false,
+      reviewed: false,
+      lastConfirmed: null,
+    }).map((l) => l.key),
+    ["roleDeclared"],
+  );
+});
+
+test("an unresolved sanctions screening still withholds the record", () => {
+  // Never in the set that stopped withholding. An unresolved sanctions hit is
+  // an unlawfulness question, not a completeness one, and no owner decision
+  // about free publication touches it.
+  const r = evaluateListing(productListing(), {
+    ...VERIFIED,
+    submitter: {
+      verificationLevel: "company_verified",
+      business_verification_id: "v-1",
+      verification: {
+        purpose: "member_business",
+        status: "verified",
+        sanctions_hits: { clean: false, strongCount: 2 },
+      },
+    },
+  });
+  assert.equal(r.publishable, false, "a record with an unresolved sanctions candidate published");
+  assert.ok(r.blockingIssues.some((i) => i.code === "sanctions_unresolved"));
 });
 
 // ---- family conditionality -------------------------------------------------
@@ -343,27 +392,19 @@ test("the member floor is semantic, and every legacy form fails closed", () => {
   assert.equal(meetsMemberBusinessFloor("2"), false);
 });
 
-test("the canonical level publishes, and a legacy numeric one does not", () => {
-  // This test previously asserted the opposite, under the interim numeric model
-  // in which a finite number >= 2 passed and every stored text value failed.
-  // The property it protects is unchanged: the level condition must be capable
-  // of failing. What changed is which values are real.
-  const ok = evaluateListing(productListing(), {
-    ...VERIFIED,
-    submitter: { ...VERIFIED.submitter, verificationLevel: "company_verified" },
-  });
-  assert.equal(ok.publishable, true, "company_verified is the floor and must publish");
-
-  for (const legacy of [2, "2", 1, "fully_verified", null]) {
+test("the verification level no longer decides whether a record publishes", () => {
+  // This test has now asserted three different rules, which is worth recording.
+  // It began under an interim numeric model, was corrected to the semantic
+  // vocabulary, and is corrected again here: the level does not gate
+  // publication at all. `lib/verification/level.ts` still owns the ranking, and
+  // the level still decides what a record may CLAIM. It no longer decides
+  // whether the record exists publicly.
+  for (const level of ["company_verified", 2, "2", 1, "fully_verified", null]) {
     const r = evaluateListing(productListing(), {
       ...VERIFIED,
-      submitter: { ...VERIFIED.submitter, verificationLevel: legacy as never },
+      submitter: { ...VERIFIED.submitter, verificationLevel: level as never },
     });
-    assert.equal(r.publishable, false, `${JSON.stringify(legacy)} must not publish`);
-    assert.ok(
-      r.blockingIssues.some((i) => i.code === "business_verification_not_current"),
-      `${JSON.stringify(legacy)} must fail on the level`,
-    );
+    assert.equal(r.publishable, true, `${JSON.stringify(level)} was refused publication`);
   }
 });
 

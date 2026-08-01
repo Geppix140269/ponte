@@ -820,3 +820,30 @@ body:has(.dr-page) footer.mt-20 {
   padding-left: 14px;
   border-left: 2px solid var(--pf-rule-strong);
 }
+
+/* The picker row, with its own remove control below the link. The wrapper
+   exists because a form cannot live inside the anchor that covers the row. */
+.dr__rowwrap { display: block; }
+
+.dr__rowwrap .dr__pick { border-bottom: 0; }
+
+.dr__rm {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 0 14px;
+  margin: 0;
+  border-bottom: 1px solid var(--pf-rule);
+  font-size: 13px;
+  color: var(--pf-ink-3);
+}
+
+/* The confirmation. Marked by a leading rule rather than by colour: a question
+   is not a state and must not borrow a state's token. */
+.dr__rm--ask {
+  padding-left: 14px;
+  padding-bottom: 16px;
+  border-left: 2px solid var(--pf-rule-strong);
+  color: var(--pf-ink-2);
+}

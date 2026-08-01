@@ -1563,7 +1563,7 @@
       "title": "Ready when the record is.",
       "sub": "{n, plural, =1 {One thing} other {# things}} must be resolved before Ponte can publish. You can save a draft now and finish later.",
       "resolve": "Resolve",
-      "submit": "Submit for Ponte review",
+      "submit": "Publish this opportunity",
       "saveDraft": "Save draft",
       "verifyNow": "Verify my business",
       "declarationAccept": "I accept these terms."
@@ -1593,8 +1593,8 @@
       "distributionTerritoryDesc": "State where the arrangement applies. Return to the coverage question to name it.",
       "declaration": "Accept the listing declaration",
       "declarationDesc": "Confirm the information is accurate, that you are authorised to submit it, and that publication is not verification by Ponte.",
-      "businessVerification": "Business not yet verified",
-      "businessVerificationDesc": "Publication needs a current member-business verification. You can still submit for review now."
+      "businessVerification": "Business verification not completed",
+      "businessVerificationDesc": "Your opportunity publishes without it. Verifying your business adds a Business checked mark that counterparties look for, and it is needed later to activate a Deal Room."
     },
     "received": {
       "eyebrow": "Submitted",

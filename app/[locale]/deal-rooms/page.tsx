@@ -25,11 +25,18 @@ export const dynamic = "force-dynamic";
 export default async function DealRoomsPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
 
+  /*
+   * No login wall here either. See the note in `propose/page.tsx`: the account
+   * gate fires at the moment of irreversible action, not at the door.
+   *
+   * A visitor with no session has no rooms, which is the empty state below and
+   * an honest one. `NotOpenYet` is kept for the case it was written for: a
+   * deployment that has explicitly closed the Deal Room with
+   * NEXT_PUBLIC_DEAL_ROOM=off.
+   */
   const signedIn = await getUser();
-  if (!signedIn) redirect(`/${params.locale}/login?next=/deal-rooms`);
-
   const gate = await dealRoomGate();
-  if (!gate) return <NotOpenYet locale={params.locale} />;
+  if (signedIn && !gate) return <NotOpenYet locale={params.locale} />;
 
   const rooms = await listRooms();
 
