@@ -80,6 +80,18 @@ jobs:
       PSQL_17: /usr/lib/postgresql/17/bin/psql
 
     steps:
+      # The tree under test is checked out FIRST, because actions/checkout
+      # cleans its target directory. Fetching the harness before this would put
+      # `.harness` in the workspace root and the root checkout would delete it -
+      # which is exactly what happened in run 30694586413, where the self-check
+      # passed and phase 0 then found no baseline.
+      - name: Check out the tree under test
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.target_sha || github.ref }}
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Fetch the harness from the trusted ref
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -116,12 +128,15 @@ jobs:
           fi
           echo "confirmed: no secret can reach this job, so no database but the ephemeral one is reachable"
 
-      - name: Check out the tree under test
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          ref: ${{ inputs.target_sha || github.ref }}
-          fetch-depth: 1
-          persist-credentials: false
+      - name: The baseline survived the checkout
+        run: |
+          # Cheap assertion so an ordering regression fails here, with a clear
+          # cause, rather than four steps later as a missing-baseline error.
+          if [ ! -d ".harness/$BASELINE_DIR" ]; then
+            echo "::error::.harness/$BASELINE_DIR is missing. The harness checkout was clobbered."
+            exit 1
+          fi
+          echo "harness intact: $(ls .harness/"$BASELINE_DIR"/*.sql 2>/dev/null | wc -l) snapshot(s) available"
 
       - name: Report exactly what is under test
         run: |
