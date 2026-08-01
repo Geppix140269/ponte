@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getUser } from "@/lib/auth";
 import { setRequestLocale } from "next-intl/server";
 import {
   Band,
@@ -50,6 +51,19 @@ export default async function ProposeRoomPage({
   searchParams: { deal?: string; error?: string };
 }) {
   setRequestLocale(params.locale);
+
+  /*
+   * A signed-out visitor is sent to sign in, not to a 404.
+   *
+   * `dealRoomGate()` returns null for two different reasons - no session, or
+   * the room is not available to this member - and this page answered both
+   * with notFound(). That told a visitor who followed "Open a Deal Room" from
+   * the entrance that the page does not exist, which is untrue: it exists and
+   * they are not signed in. The allocation is only meaningful once we know who
+   * is asking, so the session is checked first.
+   */
+  const signedIn = await getUser();
+  if (!signedIn) redirect(`/${params.locale}/login?next=/deal-rooms/propose`);
 
   const gate = await dealRoomGate();
   if (!gate) notFound();
