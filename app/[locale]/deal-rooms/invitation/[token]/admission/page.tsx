@@ -17,6 +17,7 @@ import { resolveInvitation } from "@/lib/deal-room/invitation-server";
 import { INVITATION_FAILURE_MESSAGE } from "@/lib/deal-room/invitation";
 import { AGREEMENT_KIND_LABEL, REQUIRED_AGREEMENT_KINDS } from "@/lib/deal-room/states";
 import { AGREEMENT_DOCUMENTS } from "@/lib/deal-room/agreements";
+import { participantAdmissibility } from "@/lib/deal-room/queries";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { acceptAgreement, completeAdmission, declareParticipation } from "../../../actions";
 
@@ -81,7 +82,7 @@ export default async function AdmissionPage({
     ? await supabase
         .from("deal_room_participants")
         .select(
-          "id, room_id, sub_room_id, org_id, declared_capacity, transaction_role, participation_authority, state, profile_id",
+          "id, room_id, sub_room_id, org_id, declared_capacity, represented_legal_name, business_relationship, transaction_role, participation_authority, state, profile_id",
         )
         .eq("id", participantId)
         .maybeSingle()
@@ -97,12 +98,39 @@ export default async function AdmissionPage({
   const acceptedKinds = new Set(((accepted ?? []) as { agreement_kind: string }[]).map((row) => row.agreement_kind));
 
   const hasIdentity = Boolean(participant?.org_id) || Boolean(participant?.declared_capacity);
+  // The name and the relationship are counted separately from the capacity, on
+  // purpose: the chip must not read "Complete" while two of the nine criteria
+  // are still pending underneath it.
+  const hasNameAndRelationship =
+    (Boolean(participant?.org_id) || Boolean(participant?.represented_legal_name)) &&
+    Boolean(participant?.business_relationship);
   const hasRoleAndAuthority =
     Boolean(participant?.transaction_role) && Boolean(participant?.participation_authority);
   const allAgreementsAccepted = REQUIRED_AGREEMENT_KINDS.every((kind) => acceptedKinds.has(kind));
   const admitted = participant?.state === "admitted" || participant?.state === "active";
 
   const returnTo = `/${params.locale}/deal-rooms/invitation/${params.token}/admission?participant=${participantId}`;
+
+  /*
+   * ADR-0021 ruling 2. The Deal Room-ready minimum, unchanged by the fact that
+   * this participant pays nothing.
+   *
+   * Branching model section 6: "Sponsored access removes payment friction. It
+   * does not weaken admission, confidentiality or authority requirements." An
+   * invited counterparty meets exactly what the member who opened the room met.
+   *
+   * It is read after the declaration above, because that declaration is what
+   * supplies most of the minimum. So this is stated as a live checklist item and
+   * not as a refusal at the door: the member can see what is left and complete
+   * it on this same page.
+   */
+  // `returnTo` is this page. Six of the nine criteria are collected on the form
+  // below, so their remedies anchor to it rather than sending the member to the
+  // business verification form, which cannot record any of them.
+  const admissibility = participantId
+    ? await participantAdmissibility(participantId, params.locale, returnTo)
+    : null;
+  const admissible = admissibility?.admissible ?? false;
 
   return (
     <UnsavedFormGuard>
@@ -137,13 +165,15 @@ export default async function AdmissionPage({
           <Band title="1. Who you act for, and in what role">
             <div className="dr__check">
               <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
-                <p className="dr__item-title">Organisation or declared capacity, role, and authority</p>
+                <p className="dr__item-title">Who you act for, under what name, in what relationship, role and authority</p>
                 <span
                   className={
-                    hasIdentity && hasRoleAndAuthority ? "dr__chip dr__chip--done" : "dr__chip dr__chip--declared"
+                    hasIdentity && hasNameAndRelationship && hasRoleAndAuthority
+                      ? "dr__chip dr__chip--done"
+                      : "dr__chip dr__chip--declared"
                   }
                 >
-                  {hasIdentity && hasRoleAndAuthority ? "Complete" : "Not yet"}
+                  {hasIdentity && hasNameAndRelationship && hasRoleAndAuthority ? "Complete" : "Not yet"}
                 </span>
               </div>
               <p className="dr__check-why">
@@ -158,7 +188,9 @@ export default async function AdmissionPage({
               </p>
             </div>
 
+            {/* The anchor every room-specific remedy above points at. */}
             <CommandForm
+              id="declaration"
               action={declareParticipation}
               hidden={{ locale: params.locale, participantId, returnTo }}
             >
@@ -173,6 +205,26 @@ export default async function AdmissionPage({
                 label="Or, the professional capacity you act in"
                 name="declaredCapacity"
                 help="For example: independent broker, freight forwarder, legal adviser. One of this or an organisation is required."
+              />
+              {/*
+                Two fields the capacity above must not answer for.
+
+                Section 6 lists the legal or trading name and the relationship
+                to the business as their own criteria, and the controller ruled
+                on 31 July 2026 that neither may be derived from the capacity or
+                the authority. So they are asked here, in their own words, and
+                the command refuses the declaration if either is blank.
+              */}
+              <Field
+                label="Legal or trading name you act under"
+                name="legalName"
+                help="The name itself, not the capacity. Leave blank only if you named an organisation above, whose name is used."
+              />
+              <TextField
+                label="How you stand to that business"
+                name="businessRelationship"
+                required
+                help="An office you hold, a mandate you were given, or an engagement you were retained under. This is not your role in the transaction and not your authority to commit."
               />
               <Field
                 label="Your role in this transaction"
@@ -235,17 +287,45 @@ export default async function AdmissionPage({
           </Band>
 
           <Band title="3. Enter">
-            <CommandForm
-              action={completeAdmission}
-              hidden={{
-                locale: params.locale,
-                participantId,
-                roomId: participant.room_id as string,
-                returnTo,
-              }}
-            >
-              <Submit label="Enter private Deal Room" />
-            </CommandForm>
+            {admissibility && !admissible ? (
+              <>
+                {/*
+                  One line per missing criterion, each pointing at the place that
+                  fact is actually supplied. Six of the nine are collected in the
+                  form higher up this same page, so those six anchor to it; the
+                  single link that used to sit here sent all nine to the business
+                  verification form, which cannot record a transaction role, an
+                  authority, a relationship or a room-specific trading name.
+                */}
+                <Banner tone="review" title="Still needed before you can enter">
+                  {admissibility.summary} You are not being asked to buy anything: the party who opened this room
+                  covers it, and confirming your own business costs nothing. {admissibility.limitation}
+                </Banner>
+                <ul className="dr__list">
+                  {admissibility.pending.map((item) => (
+                    <li key={item.criterion} className="dr__check">
+                      <p className="dr__item-title">{item.label}</p>
+                      <p className="dr__check-why">{item.remedy!.statement}</p>
+                      <a className="dr__link" href={item.remedy!.href}>
+                        Supply this
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <CommandForm
+                action={completeAdmission}
+                hidden={{
+                  locale: params.locale,
+                  participantId,
+                  roomId: participant.room_id as string,
+                  returnTo,
+                }}
+              >
+                <Submit label="Enter private Deal Room" />
+              </CommandForm>
+            )}
             <p className="dr__why">
               {hasIdentity && hasRoleAndAuthority && allAgreementsAccepted
                 ? "Everything above is complete. Admission is checked again when you press this, and the room records it."

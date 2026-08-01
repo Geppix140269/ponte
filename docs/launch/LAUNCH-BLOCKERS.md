@@ -238,6 +238,55 @@ Until a Vercel deployment procedure is confirmed and its outcomes are written to
 the operations log, treat "merged" and "deployed" as separate facts and never
 cite one as evidence of the other.
 
+### LB-015 — PROPOSED — A room initiator can carry a procedure to `agreed` alone, before the counterparty is admitted
+
+| Field | Record |
+|---|---|
+| **Discovered** | 2026-07-31, while reading `deal_room_propose_procedure` for the admission-gate work (PR #198) |
+| **Core journey or system** | PROGRESS: the agreed procedure, which is what makes a Deal Room govern anything |
+| **Classification** | **PROPOSED. Not classified by the owner.** Recorded here rather than fixed because the correction is a product decision about when a procedure may be proposed, and the controller directed on 31 July 2026 that PR #198 must not broaden to cover it |
+| **Owner** | Giuseppe Funaro |
+| **Status** | **Open, unfixed, and deliberately out of scope for PR #198.** No code, migration or production action has been taken on it |
+
+**Evidence, exact.** In the applied copy of `deal_room_propose_procedure`
+(`supabase/migrations/20260731d_deal_room_approver_row_visibility.sql`, carried
+forward from `20260731c`), the approval rows are seeded only for participants
+who are already admitted:
+
+```sql
+insert into public.deal_room_procedure_approvals (procedure_id, participant_id, response)
+select distinct on (p.profile_id) v_id, p.id, 'pending'
+from public.deal_room_participants p
+where p.room_id = p_room_id and p.is_required_approver and p.state in ('admitted','active')
+```
+
+`deal_room_propose` admits the initiator immediately, and the invited principal
+reaches `admitted` only at the end of `deal_room_admit_participant`. So in the
+window between room creation and the counterparty's admission — which is exactly
+the window product contract §4 describes as "one party may prepare the room
+before the other accepts" — the initiator is the **only** participant matching
+that `where`, receives the only approval row, and `deal_room_approve_procedure`
+can drive `v_outstanding` to zero on their approval alone. The procedure reaches
+`agreed` with one principal's assent.
+
+**Why this is not the same defect as the ones LB-001 records.** Those were
+rows-versus-persons errors: the initiator holding two approval obligations, and
+an admitted counterparty never being marked `is_required_approver`. Both were
+corrected by `20260731c` and `20260731d`, and Approval 3 passes 109 of 109. This
+one survives those fixes, because it is not about which rows a required approver
+holds — it is about **when** the set of required approvers is captured.
+
+**Why it was not fixed here.** The correction is a choice between at least three
+different products: refuse to propose a procedure until every required principal
+is admitted; seed approval rows for invited-but-not-yet-admitted principals so
+the count is complete from the start; or re-seed on each admission. Each says
+something different about whether a room can be prepared before the other party
+arrives, and §4 explicitly permits preparation. That is the owner's call.
+
+**Why the admission gate does not mask it.** PR #198 gates who may *enter*. This
+defect is about what a single admitted principal may *conclude* while alone, so a
+correctly gated initiator in a correctly gated room can still reach it.
+
 ## Resolved blockers
 
 Move resolved items here; do not delete their history.

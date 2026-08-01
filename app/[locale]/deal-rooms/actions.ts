@@ -4,7 +4,8 @@ import { randomUUID, createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { dealRoomGate } from "@/lib/deal-room/queries";
+import { dealRoomGate, initiatorAdmissibility, participantAdmissibility } from "@/lib/deal-room/queries";
+import { admissibilityRefusal } from "@/lib/deal-room/admissibility";
 import { mintInvitationToken } from "@/lib/deal-room/invitation";
 import { templateFor, type MarketFamily } from "@/lib/deal-room/procedure";
 
@@ -93,8 +94,27 @@ export async function proposeRoom(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+  const listingId = String(formData.get("listingId") ?? "");
+
+  /*
+   * ADR-0021 ruling 2. The member who OPENS the room is held to the same
+   * threshold as the member who is invited into it.
+   *
+   * `deal_room_propose` admits the initiator at creation, as an admitted
+   * participant in two rows, so product contract section 5's "Every participant
+   * must" applies to them at this moment and not later. There is no other point
+   * at which their admission could be checked.
+   *
+   * The check is here rather than only on the surface because the surface can be
+   * skipped: a form post reaches this action directly. It is still not the
+   * boundary - the same rule is written into the command by
+   * `20260731g_deal_room_admission_verification_gate.sql`, which is not applied.
+   */
+  const admissibility = await initiatorAdmissibility(listingId, locale);
+  if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
+
   const { data, error } = await supabase.rpc("deal_room_propose", {
-    p_listing_id: String(formData.get("listingId") ?? ""),
+    p_listing_id: listingId,
     p_counterparty_profile: String(formData.get("counterpartyProfileId") ?? "") || null,
     p_counterparty_email: String(formData.get("counterpartyEmail") ?? ""),
     p_counterparty_name: String(formData.get("counterpartyName") ?? ""),
@@ -205,6 +225,109 @@ export async function acceptInvitation(formData: FormData): Promise<void> {
   redirect(`/${locale}/deal-rooms/invitation/${token}/admission?participant=${String(data)}`);
 }
 
+/**
+ * The OPENER's declaration, before any room or participant row exists.
+ *
+ * ## Why this action exists at all
+ *
+ * The invitee declares on their participant row, through
+ * `deal_room_declare_participation`. The opener is asked before there is a room
+ * to hang anything on, so until `20260731g` the only facts available to them
+ * were `profiles.company` and `profiles.country` - and a member with no company
+ * could therefore never satisfy section 6's "identified business OR declared
+ * professional capacity", however plainly they had stated the capacity they act
+ * in. The controller struck that on 31 July 2026. This writes the two profile
+ * declarations that close it.
+ *
+ * ## Why a table write and not a command
+ *
+ * `profiles` is the member's own row and carries member policies; the Deal Room
+ * tables do not, which is why everything else here goes through an RPC. Writing
+ * a member's own profile through their own session is the pattern `/account`
+ * already uses, and RLS is the boundary in both places. `deal_room_propose`
+ * keeps its exact signature: it READS these columns rather than taking them as
+ * parameters, so nothing about the command's shape or ACL changes.
+ *
+ * ## Three fields, three separate facts
+ *
+ * The capacity, the trading name and the jurisdiction are written independently
+ * and none is derived from another. In particular the trading name is never
+ * defaulted from the capacity - a capacity is what you do, a name is what you
+ * trade as - and neither is ever taken from `listings.submitter_role`, from the
+ * relationship or from the authority. `null` is written for a blank field, so
+ * clearing one genuinely clears it rather than leaving a stale declaration
+ * standing in for a fact the member has withdrawn.
+ */
+export async function declareOpenerCapacity(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
+  const locale = String(formData.get("locale") ?? "en");
+  const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) fail(back, "Sign in to record this declaration.");
+
+  const clean = (field: string): string | null => {
+    const value = String(formData.get(field) ?? "").trim();
+    return value.length > 0 ? value : null;
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      declared_capacity: clean("declaredCapacity"),
+      legal_or_trading_name: clean("legalName"),
+      country: clean("jurisdiction"),
+    })
+    .eq("id", user!.id);
+
+  if (error) fail(back, readable(error));
+  revalidatePath(`/${locale}/deal-rooms/propose`);
+  redirect(back);
+}
+
+/**
+ * The opener's declaration about THIS Deal: relationship, role, authority.
+ *
+ * ## Why this is an RPC while the one above is a table write
+ *
+ * `declareOpenerCapacity` writes the member's own `profiles` row, which carries
+ * member policies. `deal_room_opener_declarations` deliberately has no member
+ * INSERT or UPDATE policy, following the rule the rest of the cluster follows:
+ * the only way in is a command, and a command validates before it writes. So
+ * this calls `deal_room_declare_opening_intent`, which proves the caller owns
+ * the Deal and refuses each of the three facts by name if it is blank.
+ *
+ * ## Why the three are not defaulted from anything
+ *
+ * They used to be. Owning an approved Deal produced a relationship read from
+ * `listings.submitter_role` and the literals `'Deal owner'` and `'Owner of the
+ * published Deal'`, and the gate counted all three as satisfied. The controller
+ * struck it on 31 July 2026: owning a listing is not a declaration of authority
+ * to act for the business behind it, and a string the system wrote is not
+ * something the member said. Nothing here supplies a value the member did not
+ * type.
+ */
+export async function declareOpeningIntent(formData: FormData): Promise<void> {
+  if (!(await gate())) fail(returnTo(formData, "/"), "The Deal Room is not available to you.");
+  const locale = String(formData.get("locale") ?? "en");
+  const back = returnTo(formData, `/${locale}/deal-rooms/propose`);
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("deal_room_declare_opening_intent", {
+    p_listing_id: String(formData.get("listingId") ?? ""),
+    p_relationship: String(formData.get("businessRelationship") ?? ""),
+    p_role: String(formData.get("transactionRole") ?? ""),
+    p_authority: String(formData.get("participationAuthority") ?? ""),
+  });
+
+  if (error) fail(back, readable(error));
+  revalidatePath(`/${locale}/deal-rooms/propose`);
+  redirect(back);
+}
+
 export async function declareParticipation(formData: FormData): Promise<void> {
   const supabase = createClient();
   const back = returnTo(formData, "/");
@@ -215,6 +338,12 @@ export async function declareParticipation(formData: FormData): Promise<void> {
     p_declared_capacity: String(formData.get("declaredCapacity") ?? ""),
     p_role: String(formData.get("role") ?? ""),
     p_authority: String(formData.get("authority") ?? ""),
+    // Section 6 criteria 4 and 6, each on its own field. They are NOT defaulted
+    // from the capacity or the authority above: the controller struck exactly
+    // that on 31 July 2026, and an empty string here is refused by the command
+    // rather than quietly standing in for one of the others.
+    p_legal_name: String(formData.get("legalName") ?? ""),
+    p_relationship: String(formData.get("businessRelationship") ?? ""),
   });
 
   if (error) fail(back, readable(error));
@@ -253,8 +382,28 @@ export async function completeAdmission(formData: FormData): Promise<void> {
   const locale = String(formData.get("locale") ?? "en");
   const supabase = createClient();
   const back = returnTo(formData, "/");
+  const participantId = String(formData.get("participantId") ?? "");
+
+  /*
+   * ADR-0021 ruling 2, the invitee half.
+   *
+   * The gate is HERE and deliberately not on `declareParticipation`, which is
+   * the act of supplying the very facts six of the nine criteria are made of.
+   * Gating that would make the threshold unreachable: a member would have to be
+   * admissible before they were allowed to become admissible.
+   *
+   * Being a sponsored guest changes nothing. Branching model section 6: "Sponsored
+   * access removes payment friction. It does not weaken admission, confidentiality
+   * or authority requirements." The predicate has no input for who paid.
+   */
+  // `back` is the admission page the member is standing on, which is also where
+  // six of the nine criteria are collected - so the refusal's routes point at
+  // the form in front of them rather than at a page that cannot record them.
+  const admissibility = await participantAdmissibility(participantId, locale, back);
+  if (!admissibility.admissible) fail(back, admissibilityRefusal(admissibility));
+
   const { error } = await supabase.rpc("deal_room_admit_participant", {
-    p_participant_id: String(formData.get("participantId") ?? ""),
+    p_participant_id: participantId,
   });
 
   if (error) fail(back, readable(error));

@@ -122,6 +122,17 @@ const STORAGE_POLICY_HELPERS = ["deal_room_is_writable(uuid)", "deal_room_uuid_o
 /** Reachable by no member role, permanently. */
 const PERMANENTLY_INTERNAL = [
   "deal_room_events_append_only()",
+  // ADR-0021 ruling 2, 20260731g. Written, NOT applied. Reads
+  // `auth.users.email_confirmed_at` and a participant row for a given profile
+  // id, so a member who could call it directly could probe another member's
+  // admission state one id at a time. The two commands that need it are
+  // SECURITY DEFINER and call it internally.
+  "deal_room_admission_minimum_missing(uuid, uuid, uuid)",
+  // The section 6 criterion 9 evaluator, 20260731g. Written, NOT applied.
+  // Internal for the same reason: it answers a question about a room the caller
+  // may have no part in, and it is one branch of the gate rather than a
+  // member-facing capability.
+  "deal_room_room_prerequisite_state(uuid)",
   "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)",
   // Reads a name out of `profiles`, which is readable only to its owner. A
   // member who could call it directly could enumerate names - which is exactly
@@ -133,6 +144,28 @@ const PERMANENTLY_INTERNAL = [
   // that nothing classifies - which is the property that made it worth widening.
   "deal_room_billing_append_only()",
 ];
+
+/**
+ * Member commands introduced AFTER `20260729b`, with why each one exists.
+ *
+ * The whole arithmetic below is anchored on `20260729b`'s fifteen commands and
+ * `20260730b`'s nineteen grants, because those are the applied files. A later
+ * migration adding a command is not a defect - but it is new reachable surface
+ * granted to `authenticated`, which is precisely what LB-008 was, so it does not
+ * get to appear silently. Each entry says what the command is and why a member
+ * needs it, and the checks below fail on a granted command that is neither in
+ * `20260729b` nor listed here.
+ */
+const MEMBER_COMMANDS_SINCE_20260729B: Record<string, string> = {
+  "deal_room_declare_opening_intent(uuid, text, text, text)":
+    "20260731g (WRITTEN, NOT APPLIED): the opener's own declaration of relationship " +
+    "to the represented business, transaction role and authority to participate, for " +
+    "one Deal. Controller ruling of 31 July 2026: those three facts were previously " +
+    "inferred from owning an approved listing and filled with the literals 'Deal " +
+    "owner' and 'Owner of the published Deal', which is not the member's declaration. " +
+    "Granted to authenticated because the member is the only person who can make it; " +
+    "it proves listing ownership and refuses each of the three by name when blank.",
+};
 
 /** An ordered list of argument types, as Postgres would identify the function. */
 function typeList(args: string): string {
@@ -149,9 +182,35 @@ function typeList(args: string): string {
     .join(", ");
 }
 
+/**
+ * Signatures a later migration replaces DELIBERATELY, old form to new.
+ *
+ * This file models the END STATE of the ACL - what `authenticated` may execute
+ * once every migration has run - so a command that was re-signed appears in
+ * earlier migrations under its old argument list and in the tree under its new
+ * one. Without this map the same command counts twice: once as a grant on a
+ * signature nothing declares, once as a declaration nothing grants.
+ *
+ * It is NOT a way to wave through an overload. The proof that the old signature
+ * stops existing lives in `grant-signatures.test.ts`, which requires the
+ * re-signing migration to drop the old form by name, requires the new form to
+ * be re-granted and re-revoked, and scans every later migration to be sure
+ * nothing recreates the old one. This map only says "these two names are the
+ * same command at two points in time", which is what makes the arithmetic below
+ * mean anything.
+ */
+const RE_SIGNED: Record<string, string> = {
+  // 20260731g: two parameters added so the legal/trading name and the
+  // relationship to the business are declared independently of the capacity and
+  // the authority. Controller ruling, 31 July 2026.
+  "deal_room_declare_participation(uuid, text, text, text, text, text)":
+    "deal_room_declare_participation(uuid, text, text, text, text, text, text, text)",
+};
+
 /** `name(type, type)` - the key both sides are compared on. */
 function key(name: string, args: string): string {
-  return `${name}(${typeList(args)})`;
+  const signature = `${name}(${typeList(args)})`;
+  return RE_SIGNED[signature] ?? signature;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,8 +230,25 @@ function declaredFunctions(): Set<string> {
     .sort()
     .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8"));
   for (const sql of migrations) {
-    const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
+    // `create function` as well as `create or replace function`. A signature is
+    // legitimately changed by dropping and creating, and a scan blind to the
+    // bare form would call the new signature undeclared while still seeing its
+    // grant - which is the same invisibility described above, one shape along.
+    const pattern = /create (?:or replace )?function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(sql.matchAll(pattern))) found.add(key(m[1], m[2]));
+    // A dropped signature is no longer declared. `key()` has already folded a
+    // deliberately re-signed name onto its new form, so this only removes a
+    // signature that is genuinely gone.
+    //
+    // Anchored to the start of a line so a `drop` written inside a `--` comment
+    // - the reversal notes at the top of 20260731g are full of them - is not
+    // read as a real statement. Reading one would remove a function from the
+    // inventory and quietly disable its ACL check.
+    const dropped = /^[ \t]*drop function if exists public\.(deal_room_\w+)\(([^)]*)\)\s*;/gm;
+    for (const m of Array.from(sql.matchAll(dropped))) {
+      const signature = `${m[1]}(${typeList(m[2])})`;
+      if (!RE_SIGNED[signature]) found.delete(signature);
+    }
   }
   return found;
 }
@@ -226,6 +302,25 @@ function memberCommands(): Set<string> {
 // That is what turns "these 15 are the commands" from an assertion into a
 // finding, and it is what fails when somebody adds an RPC call without a grant,
 // or deletes a call and leaves the grant behind.
+
+/**
+ * The full intended member surface: `20260729b`'s fifteen plus every command a
+ * later migration deliberately added and classified above.
+ *
+ * `memberCommands()` stays exactly what it was - what the APPLIED file grants -
+ * because several assertions below are claims about that file specifically.
+ * This is the claim about the end state.
+ */
+function intendedMemberCommands(): Set<string> {
+  const all = new Set(memberCommands());
+  for (const sig of Object.keys(MEMBER_COMMANDS_SINCE_20260729B)) all.add(sig);
+  return all;
+}
+
+/** Commands the application calls that `20260729b` never granted. */
+function newSinceApplied(commands: Set<string>): Set<string> {
+  return new Set(Array.from(commands).filter((sig) => !memberCommands().has(sig)));
+}
 
 const SOURCE_ROOTS = ["app", "lib"];
 
@@ -372,12 +467,14 @@ const LOGGER = "deal_room_log_event(uuid, uuid, text, text, uuid, text, jsonb)";
 
 test("the inventory, the policy helpers and the commands are all found", () => {
   const declared = declaredFunctions();
-  // 25: the original 23, plus `deal_room_display_label` (20260731f) and the
-  // pricing lane's `deal_room_billing_append_only` (20260731e). Neither is
-  // applied yet. The number is asserted rather than derived so that a function
-  // appearing or vanishing is a failure somebody has to look at - which is how
-  // both of these were noticed at all.
-  assert.equal(declared.size, 25, `expected 25 declared deal_room_* functions, found ${declared.size}`);
+  // 28: the original 23, plus `deal_room_display_label` (20260731f), the
+  // pricing lane's `deal_room_billing_append_only` (20260731e), and the
+  // admission gate's `deal_room_admission_minimum_missing` and
+  // `deal_room_room_prerequisite_state` and `deal_room_declare_opening_intent`
+  // (20260731g). None of the five is applied yet. The number is asserted rather than derived so that a function appearing
+  // or vanishing is a failure somebody has to look at - which is how all four
+  // were noticed at all.
+  assert.equal(declared.size, 28, `expected 28 declared deal_room_* functions, found ${declared.size}`);
   assert.ok(declared.has(LOGGER), "the event logger is not in the declared inventory; the parser has drifted");
 
   const helpers = policyHelpers();
@@ -550,7 +647,7 @@ test("every function a policy expression calls remains executable by authenticat
 
 test("the migrations together leave authenticated with exactly the 21", () => {
   const effective = effectiveAuthenticatedGrants();
-  const expected = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const expected = new Set(Array.from(policyHelpers()).concat(Array.from(intendedMemberCommands())));
 
   const surplus = Array.from(effective)
     .filter((sig) => !expected.has(sig))
@@ -559,7 +656,7 @@ test("the migrations together leave authenticated with exactly the 21", () => {
     .filter((sig) => !effective.has(sig))
     .map((sig) => `authenticated would NOT end with EXECUTE on ${sig}, which a policy or the application needs`);
   assert.deepEqual([...surplus, ...missing], []);
-  assert.equal(effective.size, 21, `expected 21, the migrations produce ${effective.size}`);
+  assert.equal(effective.size, 22, `expected 22, the migrations produce ${effective.size}`);
 
   for (const sig of PERMANENTLY_INTERNAL) {
     assert.ok(!effective.has(sig), `${sig} must never end up executable by authenticated`);
@@ -593,11 +690,12 @@ test("the migration text GRANTS authenticated nothing beyond the helpers and the
   // What follows is therefore scoped to what the file SAYS. The end state is
   // proved by `scripts/deal-room-acl-verify.mjs` against `pg_proc.proacl`, and
   // nothing in this suite may be read as a substitute for it.
-  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(intendedMemberCommands())));
   assert.equal(
     allowed.size,
-    21,
-    `the allowlist should be 4 RLS helpers + 2 Storage policy helpers + 15 commands = 21, got ${allowed.size}`,
+    22,
+    `the allowlist should be 4 RLS helpers + 2 Storage policy helpers + 15 applied commands + ` +
+      `1 classified later command = 22, got ${allowed.size}`,
   );
 
   // `aclCode`, not the every-migration default: the two assertions below are
@@ -615,7 +713,7 @@ test("the migration text GRANTS authenticated nothing beyond the helpers and the
 });
 
 test("the migration text never GRANTS a member role an internal function", () => {
-  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(intendedMemberCommands())));
   const internal = Array.from(declaredFunctions()).filter((sig) => !allowed.has(sig));
   assert.deepEqual(
     internal.sort(),
@@ -666,9 +764,9 @@ test("every Deal Room RPC the application calls resolves to exactly one declared
   assert.deepEqual(applicationCommands().problems, []);
 });
 
-test("the application calls exactly the 15 commands the applied migration grants", () => {
+test("the application calls exactly the commands the migrations grant", () => {
   const { commands } = applicationCommands();
-  const granted = memberCommands();
+  const granted = intendedMemberCommands();
 
   const calledNotGranted = Array.from(commands)
     .filter((sig) => !granted.has(sig))
@@ -678,7 +776,13 @@ test("the application calls exactly the 15 commands the applied migration grants
     .map((sig) => `${sig} is granted to authenticated by ${RLS} but called nowhere in the application. A grant with no caller is reachable surface nobody needs`);
 
   assert.deepEqual([...calledNotGranted, ...grantedNotCalled], []);
-  assert.equal(commands.size, 15, `expected 15 Deal Room commands, the application calls ${commands.size}`);
+  // 15 from 20260729b, plus every command a later migration added and this file
+  // classified. A command appearing in neither fails the two checks above.
+  assert.equal(
+    commands.size,
+    15 + Object.keys(MEMBER_COMMANDS_SINCE_20260729B).length,
+    `expected the applied 15 plus the classified later commands, the application calls ${commands.size}`,
+  );
 });
 
 test("the corrective migration grants exactly the commands the application calls, plus the policy helpers", () => {
@@ -693,7 +797,14 @@ test("the corrective migration grants exactly the commands the application calls
   const tableHelpers = new Set(
     Array.from(helpers).filter((sig) => !STORAGE_POLICY_HELPERS.includes(sig)),
   );
-  const expected = new Set(Array.from(commands).concat(Array.from(tableHelpers)));
+  // 20260730b predates any later command, so a command introduced after it is
+  // not its job to grant. Subtracting them keeps this a claim about that file.
+  const later = newSinceApplied(commands);
+  const expected = new Set(
+    Array.from(commands)
+      .filter((sig) => !later.has(sig))
+      .concat(Array.from(tableHelpers)),
+  );
   const missing = Array.from(expected)
     .filter((sig) => !corrective.has(sig))
     .map((sig) => `${sig} is needed by the application or by a table policy but ${ACL} does not grant it to authenticated`);
@@ -726,7 +837,14 @@ test("the applied grant list and the corrective allowlist do not diverge", () =>
 });
 
 test("all three sources agree, function for function", () => {
-  const fromApp = Array.from(applicationCommands().commands).sort();
+  const appCommands = applicationCommands().commands;
+  const later = newSinceApplied(appCommands);
+  // Compared without the later additions, because two of the three sources are
+  // files written before those commands existed. The later ones are held to the
+  // same standard by the classified-surface checks above.
+  const fromApp = Array.from(appCommands)
+    .filter((sig) => !later.has(sig))
+    .sort();
   const fromApplied = Array.from(memberCommands()).sort();
   const helpers = policyHelpers();
   const fromCorrective = Array.from(correctiveAllowlist())
@@ -827,7 +945,7 @@ test("the ACL migrations together account for every declared function, by outcom
   // one is legitimate history - it is exactly what 20260730c and 20260731a do -
   // so the old "never both" rule was wrong once a correction existed. What must
   // hold is that every declared function ends up deliberately on one side.
-  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(memberCommands())));
+  const allowed = new Set(Array.from(policyHelpers()).concat(Array.from(intendedMemberCommands())));
   const effective = effectiveAuthenticatedGrants();
 
   const unaccounted = Array.from(declaredFunctions())
@@ -844,7 +962,7 @@ test("the ACL migrations together account for every declared function, by outcom
   assert.deepEqual(
     denied.slice().sort(),
     PERMANENTLY_INTERNAL.slice().sort(),
-    "exactly two functions should end up denied to authenticated: the event logger and the append-only trigger function",
+    "the set of functions denied to authenticated has changed. Every entry must be in PERMANENTLY_INTERNAL with a reason",
   );
   assert.equal(allowed.size + denied.length, declaredFunctions().size);
 });

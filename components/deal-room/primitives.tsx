@@ -262,15 +262,22 @@ export function CommandForm({
   hidden,
   children,
   encType,
+  id,
 }: {
   action: (formData: FormData) => Promise<void>;
   /** Context the command needs: ids, locale, and where to return on refusal. */
   hidden: Record<string, string | null | undefined>;
   children: ReactNode;
   encType?: string;
+  /**
+   * An anchor, so a remedy can point at the exact form that collects the fact
+   * it names rather than at the top of whichever page that form happens to be
+   * on. ADR-0021 ruling 2, controller correction of 31 July 2026.
+   */
+  id?: string;
 }) {
   return (
-    <form action={action} className="dr__form" encType={encType}>
+    <form action={action} className="dr__form" encType={encType} id={id}>
       {Object.entries(hidden).map(([name, value]) =>
         value === null || value === undefined ? null : (
           <input type="hidden" name={name} value={value} key={name} />
@@ -334,12 +341,20 @@ export function TextField({
   help,
   required,
   rows = 3,
+  defaultValue,
 }: {
   label: string;
   name: string;
   help?: string;
   required?: boolean;
   rows?: number;
+  /**
+   * What the member declared last time, so a form they are sent back to is a
+   * correction rather than a blank slate they refill from memory. `Field` has
+   * carried this since it was written; the textarea had not needed it until the
+   * opener began declaring a relationship and an authority here.
+   */
+  defaultValue?: string;
 }) {
   const id = `f-${name}`;
   return (
@@ -359,6 +374,7 @@ export function TextField({
         name={name}
         rows={rows}
         required={required}
+        defaultValue={defaultValue}
         aria-describedby={help ? `${id}-help` : undefined}
       />
     </p>

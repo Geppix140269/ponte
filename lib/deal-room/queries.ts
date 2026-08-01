@@ -3,6 +3,12 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { dealRoomAvailableTo } from "./flags";
+import {
+  dealRoomAdmissibility,
+  notApplicableUntilPrerequisitesExist,
+  type AdmissibilityResult,
+  type RemedyRoutes,
+} from "./admissibility";
 import { countMaterialEventsSince, earnedMilestones, type ActivityEvent, type ActivityEventType } from "./activity";
 import { bridgeModel, type BridgeModel, type BridgeParticipant } from "./bridge";
 import { momentumFor, procedureProgress, type ProcedureProgress } from "./progress";
@@ -642,4 +648,273 @@ export async function loadOverview(access: RoomAccess): Promise<RoomOverview> {
     participants,
     subRooms,
   };
+}
+
+/* ------------------------------------------------------------------ *
+ * ADR-0021 ruling 2: the admission verification gate
+ * ------------------------------------------------------------------ *
+ *
+ * Two readers, one predicate. `lib/deal-room/admissibility.ts` decides; these
+ * functions only fetch the stored facts it names and hand them over.
+ *
+ * Both are fail-closed by construction. Every field of `AdmissibilityFacts` is
+ * required and `null` means "not readable", so a failed query, a missing row or
+ * a policy returning zero rows produces `pending` on the affected criteria and
+ * blocks. There is no path through either function that turns an absent value
+ * into a pass.
+ *
+ * ## The routes, and why they live here rather than in the predicate
+ *
+ * Controller ruling, 31 July 2026: a remedy must lead to where that exact fact
+ * is supplied. The predicate knows WHICH fact is missing; only the caller knows
+ * where the member currently is and therefore where that fact is collected. The
+ * same criterion has two different answers at the two doors - an invitee
+ * declares their jurisdiction on the admission form, an opener has it on their
+ * account - so the map is built per door, here, next to the reads it mirrors.
+ */
+
+/**
+ * Where each of the nine is supplied when the member is OPENING a room.
+ *
+ * Two forms, because the facts are about two different things. `#opener-about`
+ * holds what is true of the member in every Deal - the capacity they act in,
+ * the name they trade under, where they are established. `#opener-intent` holds
+ * what is true of them in THIS Deal - how they stand to the business they
+ * represent, their role, and what authorises it.
+ *
+ * Criteria 6, 7 and 8 used to point at the Deal record, because the relationship
+ * was read from `listings.submitter_role` and the role and authority were
+ * manufactured from ownership. The controller struck that on 31 July 2026, so
+ * they now point where the member states them.
+ */
+function openerRoutes(locale: string, listingId: string): RemedyRoutes {
+  const account = `/${locale}/account`;
+  const page = `/${locale}/deal-rooms/propose?deal=${listingId}`;
+  const about = `${page}#opener-about`;
+  const intent = `${page}#opener-intent`;
+  return {
+    authenticated_individual: account,
+    confirmed_contact_method: account,
+    identified_business_or_capacity: about,
+    legal_or_trading_name: about,
+    jurisdiction: about,
+    relationship_to_the_business: intent,
+    transaction_role_declared: intent,
+    authority_to_participate_declared: intent,
+    room_specific_prerequisite: page,
+  };
+}
+
+/**
+ * Where each of the nine is supplied when the member is BEING ADMITTED.
+ *
+ * Six of them are collected on the admission page itself, so six point back at
+ * it by anchor. Sending those six to `/verify?for=business` - which is what this
+ * did before - was a dead end wearing the clothes of a next step: that form
+ * cannot record a transaction role for a room it has never heard of.
+ */
+function inviteeRoutes(locale: string, admissionHref: string): RemedyRoutes {
+  const account = `/${locale}/account`;
+  const declaration = `${admissionHref}#declaration`;
+  return {
+    authenticated_individual: account,
+    confirmed_contact_method: account,
+    identified_business_or_capacity: declaration,
+    legal_or_trading_name: declaration,
+    jurisdiction: declaration,
+    relationship_to_the_business: declaration,
+    transaction_role_declared: declaration,
+    authority_to_participate_declared: declaration,
+    room_specific_prerequisite: admissionHref,
+  };
+}
+
+/**
+ * The initiator's admissibility, before a room or a participant row exists.
+ *
+ * ## Ownership is not evidence
+ *
+ * An earlier version re-proved that the caller owned an approved Deal and then
+ * supplied criteria 6, 7 and 8 from that: the relationship from
+ * `listings.submitter_role`, the role and the authority from the literals
+ * `deal_room_propose` was about to write. The controller struck all three on
+ * 31 July 2026 - "owning the Ponte listing is not the same fact as declaring
+ * authority to participate for the represented business, and a system-generated
+ * string is not the member's declaration."
+ *
+ * So this function no longer reads the listing at all. The three come from
+ * `deal_room_opener_declarations`, keyed to the member and this Deal, which the
+ * member wrote through `deal_room_declare_opening_intent`. No row means three
+ * pending criteria, which is what "has not declared" should look like.
+ *
+ * `declaredCapacity` and `legalOrTradingName` come from the member's own profile
+ * declarations, added by `20260731g`. Before them this function always passed
+ * `declaredCapacity: null`, so section 6's "identified business OR declared
+ * professional capacity" had only one working branch at this door and an
+ * independent professional with no company could never open a room. The
+ * controller struck that on 31 July 2026.
+ */
+export async function initiatorAdmissibility(listingId: string, locale: string): Promise<AdmissibilityResult> {
+  const user = await getUser();
+  const supabase = createClient();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("id, company, country, declared_capacity, legal_or_trading_name")
+        .eq("id", user.id)
+        .maybeSingle()
+    : { data: null };
+
+  // The member's own declaration for THIS Deal. Read through their own session,
+  // and the table's only policy is select-your-own, so somebody else's
+  // declaration cannot be read and cannot satisfy anything.
+  const { data: declaration } = user
+    ? await supabase
+        .from("deal_room_opener_declarations")
+        .select("business_relationship, transaction_role, participation_authority")
+        .eq("profile_id", user.id)
+        .eq("listing_id", listingId)
+        .maybeSingle()
+    : { data: null };
+
+  const row = (profile ?? {}) as {
+    id?: string | null;
+    company?: string | null;
+    country?: string | null;
+    declared_capacity?: string | null;
+    legal_or_trading_name?: string | null;
+  };
+  const declared = (declaration ?? {}) as {
+    business_relationship?: string | null;
+    transaction_role?: string | null;
+    participation_authority?: string | null;
+  };
+
+  return dealRoomAdmissibility(
+    {
+      authenticatedUserId: user?.id ?? null,
+      // The profile row read back, not the session id repeated: this criterion
+      // asks whether the act is attributable, and a session with no profile row
+      // is not. `row.id` is null when the read found nothing, which blocks.
+      attributableProfileId: row.id ?? null,
+      emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
+      organisationName: row.company ?? null,
+      // Section 6's "or", now real at this door too.
+      declaredCapacity: row.declared_capacity ?? null,
+      // Its own declaration first, the company name second. The capacity is NOT
+      // a fallback here, which is the independence the controller required.
+      legalOrTradingName: row.legal_or_trading_name ?? row.company ?? null,
+      jurisdiction: row.country ?? null,
+      // The member's own words, for this Deal. No literal, and no inference from
+      // owning the listing: the controller ruled out both on 31 July 2026.
+      relationshipToBusiness: declared.business_relationship ?? null,
+      transactionRole: declared.transaction_role ?? null,
+      participationAuthority: declared.participation_authority ?? null,
+      roomPrerequisites: notApplicableUntilPrerequisitesExist(),
+    },
+    openerRoutes(locale, listingId),
+  );
+}
+
+/**
+ * An invited participant's admissibility, from their own declaration.
+ *
+ * Read through the caller's own session, so a participant row that is not
+ * theirs returns nothing and every criterion blocks.
+ *
+ * `legal_or_trading_name` and `relationship_to_the_business` each read their own
+ * column - `represented_legal_name` and `business_relationship`, added by
+ * `20260731g` - rather than borrowing the capacity or the authority. The
+ * controller struck the borrowing on 31 July 2026, and a member who supplies
+ * only a capacity now sees those two criteria pending as their own lines.
+ */
+export async function participantAdmissibility(
+  participantId: string,
+  locale: string,
+  admissionHref: string,
+): Promise<AdmissibilityResult> {
+  const user = await getUser();
+  const supabase = createClient();
+  const routes = inviteeRoutes(locale, admissionHref);
+
+  const { data: participant } = user && participantId
+    ? await supabase
+        .from("deal_room_participants")
+        .select(
+          "id, profile_id, org_id, declared_capacity, represented_legal_name, business_relationship, transaction_role, participation_authority",
+        )
+        .eq("id", participantId)
+        .maybeSingle()
+    : { data: null };
+
+  const part = (participant ?? {}) as {
+    profile_id?: string | null;
+    org_id?: string | null;
+    declared_capacity?: string | null;
+    represented_legal_name?: string | null;
+    business_relationship?: string | null;
+    transaction_role?: string | null;
+    participation_authority?: string | null;
+  };
+
+  // Somebody else's admission is not readable and must not be evaluated.
+  const mine = Boolean(user) && part.profile_id === user!.id;
+
+  const { data: profile } = mine
+    ? await supabase.from("profiles").select("id, company, country").eq("id", user!.id).maybeSingle()
+    : { data: null };
+
+  const { data: organisation } = mine && part.org_id
+    ? await supabase.from("organizations").select("name, country").eq("id", part.org_id).maybeSingle()
+    : { data: null };
+
+  const row = (profile ?? {}) as { id?: string | null; company?: string | null; country?: string | null };
+  const org = (organisation ?? {}) as { name?: string | null; country?: string | null };
+
+  if (!mine) {
+    /*
+     * Somebody else's participation, or none. Every fact null, INCLUDING the
+     * prerequisite evaluation, which is `null` rather than
+     * `notApplicableUntilPrerequisitesExist()`: this caller established nothing
+     * about this room, so it must not make a claim about it. Nine pending
+     * criteria and a refusal that names them.
+     */
+    return dealRoomAdmissibility(
+      {
+        authenticatedUserId: null,
+        attributableProfileId: null,
+        emailConfirmedAt: null,
+        organisationName: null,
+        declaredCapacity: null,
+        legalOrTradingName: null,
+        jurisdiction: null,
+        relationshipToBusiness: null,
+        transactionRole: null,
+        participationAuthority: null,
+        roomPrerequisites: null,
+      },
+      routes,
+    );
+  }
+
+  return dealRoomAdmissibility(
+    {
+      authenticatedUserId: user?.id ?? null,
+      attributableProfileId: row.id ?? null,
+      emailConfirmedAt: (user?.email_confirmed_at as string | undefined) ?? null,
+      organisationName: org.name ?? row.company ?? null,
+      declaredCapacity: part.declared_capacity ?? null,
+      // Its own column first. `profiles.company` is the fallback for a member who
+      // named a company on their account and an organisation for the room; the
+      // capacity is NOT a fallback, and that is the point of the correction.
+      legalOrTradingName: part.represented_legal_name ?? org.name ?? row.company ?? null,
+      jurisdiction: org.country ?? row.country ?? null,
+      relationshipToBusiness: part.business_relationship ?? null,
+      transactionRole: part.transaction_role ?? null,
+      participationAuthority: part.participation_authority ?? null,
+      roomPrerequisites: notApplicableUntilPrerequisitesExist(),
+    },
+    routes,
+  );
 }

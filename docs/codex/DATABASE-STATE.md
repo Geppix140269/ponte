@@ -53,6 +53,213 @@ hand and never recorded, so the ledger, not the schema, was the broken thing.
   in production that no repository file creates. Treated as a separate
   workstream; no schema dump is to be generated or applied without review.
 
+## Written but NOT applied: the Deal Room admission verification gate
+
+`supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`
+SHA-256 `68ce6a8d32bc7a3c88e57b964a2a42ef8f95c8b45e59a05cd47cf110c08acb0b`, 59497 bytes.
+
+**Executed nowhere.** Written 31 July 2026 for ADR-0021 ruling 2, whose
+threshold is `PT-PRODUCT-2026-07-27-01` section 6 as restated by the owner on
+the same day, and **amended the same day** on controller review. **Applying it is
+a separate owner approval.** What it changes, in full:
+
+- **four additive nullable columns** — two on `deal_room_participants`, two on
+  `profiles`;
+- **one new table**, `deal_room_opener_declarations`, which brings with it a
+  primary key, a unique constraint on `(profile_id, listing_id)`, three
+  non-blank `check` constraints, two foreign keys with `on delete cascade`,
+  **Row Level Security enabled**, and **one `select`-own policy**;
+- **two new internal functions**, `deal_room_room_prerequisite_state` and
+  `deal_room_admission_minimum_missing`, both revoked from every member role;
+- **one new member command**, `deal_room_declare_opening_intent`, granted to
+  `authenticated`;
+- **two `security definer` functions replaced in place** at their exact existing
+  signatures, `deal_room_propose` and `deal_room_admit_participant`, each
+  granted to `authenticated` in three applied migrations;
+- **one `security definer` function dropped and recreated** at a wider
+  signature, `deal_room_declare_participation`, with its ACL re-issued.
+
+No **existing** constraint, policy, trigger or index is altered, no existing row
+is changed, and nothing is backfilled. The constraints and the policy listed
+above belong to the new table and did not exist before it.
+
+### What it does
+
+1. **Two additive columns on `deal_room_participants`**:
+   `represented_legal_name` and `business_relationship`, both `text`, both
+   nullable, no default, no backfill. They exist because the controller ruled on
+   31 July 2026 that section 6 criteria 4 and 6 must be held independently and
+   may not be derived from the declared capacity or the participation authority.
+   `deal_room_participants_identity_when_admitted` is **not** widened: doing so
+   would invalidate rows admitted before the columns existed. The gate is where
+   the new facts are required, so no existing admitted participant is
+   retroactively expelled.
+2. **Two additive columns on `profiles`**: `declared_capacity` and
+   `legal_or_trading_name`, both `text`, nullable, no default, no backfill. The
+   member who OPENS a room is asked before any room or participant row exists,
+   so there is nowhere on a room to record their declaration. Until these
+   existed, `initiatorAdmissibility()` could read only `profiles.company`, and
+   section 6's "identified business **or** declared professional capacity" had
+   one working branch at that door: an independent broker with no company could
+   never open a room. The controller struck that on 31 July 2026. Neither column
+   is ever written from `listings.submitter_role`, from a relationship or from
+   an authority, and `legal_or_trading_name` is never defaulted from
+   `company` — it is preferred over it at read time and falls back to it.
+3. **`deal_room_opener_declarations`**, a new table keyed to `(profile_id,
+   listing_id)`, holding what the member who OPENS a room states about
+   themselves in one Deal: relationship to the represented business,
+   transaction role, authority to participate. Row Level Security on, one
+   select-own policy, and **no member INSERT or UPDATE policy** — the only
+   writer is **`deal_room_declare_opening_intent(uuid, text, text, text)`**, a
+   new command granted to `authenticated` which proves listing ownership and
+   refuses each of the three by name when blank. Before this, the propose path
+   read the relationship from `listings.submitter_role` and manufactured the
+   other two as the literals `'Deal owner'` and `'Owner of the published Deal'`;
+   the controller ruled on 31 July 2026 that owning a listing is not a
+   declaration of authority to act for the business behind it, and that a string
+   the system wrote is not something the member said. The gate now reads no
+   listing column at all.
+4. **`deal_room_room_prerequisite_state(uuid)`**, new. Returns exactly one of
+   `not_applicable`, `completed` or `pending` for section 6 criterion 9 — a name,
+   never a number. This release has one branch and returns `not_applicable`,
+   because no prerequisites table and no prerequisite column exist anywhere in
+   the schema. It is a claim made out loud rather than a criterion skipped, which
+   is what the controller required. Revoked from `public`, `anon` and
+   `authenticated`.
+5. **`deal_room_admission_minimum_missing(uuid, uuid, uuid)`**, new. Returns the
+   NAMES of the section 6 entry criteria a member does not meet, or an empty
+   array. Never a count, a score or a completeness value. `security definer`
+   because it reads `auth.users.email_confirmed_at`; `stable` because it writes
+   nothing. Revoked from `public`, `anon` and `authenticated` in the same file:
+   a member who could call it directly could probe another member's admission
+   state one profile id at a time. Classified in
+   `lib/deal-room/__tests__/grant-signatures.test.ts` and listed as permanently
+   internal in `lib/deal-room/__tests__/function-acl.test.ts`.
+6. **`deal_room_declare_participation`**, **re-signed from six parameters to
+   eight**, so the legal/trading name and the relationship are declared in the
+   same atomic act as the capacity, the role and the authority. This is the one
+   signature change in the file and it is deliberate: the six-parameter form is
+   **dropped by name in the same transaction**, so no overload survives, and the
+   ACL that `drop function` discards is re-issued (`revoke` from `public` and
+   `anon`, `grant` to `authenticated`). Pinned by `DELIBERATE_RESIGNATURES` in
+   `grant-signatures.test.ts`, which also scans every later migration to be sure
+   nothing recreates the old form.
+7. **`deal_room_propose`**, replaced with `20260731b`'s body verbatim plus a call
+   to the gate, on the same nine-argument signature. It now also reads the
+   opener's own declarations and copies them onto **both** of the initiator's
+   participant rows:
+   - `transaction_role`, `participation_authority` and `business_relationship`
+     from that member's row in **`deal_room_opener_declarations` for this Deal**.
+     No literal is written for any of the three, and `listings.submitter_role`
+     is not read: the two seats carry what the member stated, exactly as an
+     invitee's seat carries what they stated.
+   - `represented_legal_name` from `profiles.legal_or_trading_name`, falling
+     back to `profiles.company`.
+   - `declared_capacity` from `profiles.declared_capacity`, falling back to the
+     `'Deal owner'` literal `20260731b` introduced. That fallback exists solely
+     to satisfy `deal_room_participants_identity_when_admitted`, the constraint
+     that closed LB-001, and the gate never reads that column as evidence for
+     the opener.
+8. **`deal_room_admit_participant`**, replaced with `20260731f`'s body verbatim
+   plus the same call, on the same one-argument signature.
+
+### Why it exists at all
+
+`app/[locale]/deal-rooms/actions.ts` holds the gate today, in
+`lib/deal-room/admissibility.ts`. Both commands are granted to `authenticated`,
+so a member with a session can call either directly and never reach that file.
+Until this migration is applied, the application check is defence in depth over
+an ungated command, not enforcement.
+
+### The floor it encodes
+
+**No verification level at all.** Not `company_verified`, which is the
+publication floor, and not `identity_verified` either. An earlier draft required
+the latter; the controller struck it on 31 July 2026 as "a stricter
+identity-verification wall that the owner did not approve". Criterion 1 is a
+session user plus a `profiles` row to attribute the act to; criterion 2 is the
+confirmed contact method, evaluated on its own. Six of the nine criteria are
+satisfied by a member declaration, because section 6 asks for a declaration and
+nothing more, and all nine are independent — a test breaks each one in isolation
+and requires exactly that one to be reported.
+
+### Execution status: NOT PROVED IN A DATABASE
+
+`scripts/deal-room-admission-gate-proof.mjs` (`npm run deal-room:gate-proof`)
+carries the proofs the controller requires: schema preflight, clean
+application, signatures and grants read from `pg_proc`, direct-RPC refusal for
+an inadmissible opener and an inadmissible invitee, both admissible paths, the
+stale-agreement refusal, and rollback.
+
+It is **self-contained**: it creates its own synthetic `auth.users`, `profiles`,
+approved products Deal and the four current agreement documents, and reads
+nothing it did not create. It therefore needs a production-equivalent **schema**
+and no business or user data at all, which is what a Supabase preview branch
+is. Everything runs inside one transaction that is always rolled back, and the
+rollback is verified by re-reading the catalogue and the fixture ids.
+
+The preflight assumes nothing about the tables it writes. For each one it
+checks, against the live catalogue, that every column it writes still exists,
+that every NOT NULL column without a default is one it supplies, and that each
+`ON CONFLICT` target really is backed by a unique or primary-key index on
+exactly those columns. A database missing any of that fails immediately with the
+object named and exit code 3, **before the transaction opens** - so a fixture
+that cannot be built is never mistaken for a boundary that does not hold.
+
+It has **never been executed.** There is no PostgreSQL, no container runtime and
+no Supabase CLI on the machine this branch was written on, so there is nowhere
+to run it, and the Supabase Preview for the branch fails in an unrelated
+historical migration.
+
+Until that script runs green against a disposable production-equivalent schema,
+the SQL boundary is **written and unproved**, and no part of this record should
+be read as saying otherwise.
+
+### Reversal
+
+**Step 1 — restore the three replaced functions.** Re-apply `20260731b` and
+`20260731f` in that order, then re-apply the `deal_room_declare_participation`
+block of `20260729b` to restore the six-parameter form.
+
+**Step 2 — remove everything this migration created.** Every object, named:
+
+```sql
+-- the two internal helpers
+drop function if exists public.deal_room_admission_minimum_missing(uuid, uuid, uuid);
+drop function if exists public.deal_room_room_prerequisite_state(uuid);
+
+-- the new member command, and the eight-parameter form step 1 superseded
+drop function if exists public.deal_room_declare_opening_intent(uuid, text, text, text);
+drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text, text, text);
+```
+
+**Step 3 — decide about the data.** Nothing below is required for the reversal
+to work, and each item discards something a member wrote:
+
+| Object | May remain? | What dropping it discards |
+|---|---|---|
+| `deal_room_opener_declarations` (table, its unique and check constraints, its RLS policy) | **Yes.** Nothing reads it once the functions above are restored | Every opener's relationship, transaction role and authority, for every Deal |
+| `profiles.declared_capacity` | Yes, nullable | Each member's stated professional capacity |
+| `profiles.legal_or_trading_name` | Yes, nullable | Each member's stated trading name |
+| `deal_room_participants.represented_legal_name` | Yes, nullable | The name each participant acts under, per room |
+| `deal_room_participants.business_relationship` | Yes, nullable | How each participant stands to their business, per room |
+
+```sql
+-- ONLY if the reversal is permanent. This is destructive.
+drop table if exists public.deal_room_opener_declarations;
+alter table public.profiles
+  drop column if exists declared_capacity,
+  drop column if exists legal_or_trading_name;
+alter table public.deal_room_participants
+  drop column if exists represented_legal_name,
+  drop column if exists business_relationship;
+```
+
+Dropping the table takes its RLS policy, its unique constraint and its three
+check constraints with it; no separate statement is needed. The whole file is
+one transaction, so a
+failure part-way leaves the database exactly as it was.
+
 ## Written but NOT applied: Deal Room paid room periods and billing events
 
 `supabase/migrations/20260731e_deal_room_paid_room_periods.sql`
