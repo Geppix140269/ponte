@@ -66,6 +66,7 @@ import JourneyBack from "@/components/ponte/nav/JourneyBack";
 import UnsavedChangesDialog from "@/components/ponte/nav/UnsavedChangesDialog";
 import { useUnsavedGuard } from "@/components/ponte/nav/useUnsavedGuard";
 import { structureDirty } from "@/lib/nav/dirty";
+import { forgetDraft, keepDraft, readKeptDraft } from "@/lib/structure/draft-store";
 // The stylesheet is imported by the route, not here, matching find.css and
 // structure.css: a component that pulls CSS cannot be mounted by the unit
 // tests, which run under tsx and have no CSS loader.
@@ -80,6 +81,17 @@ const codeForName = (name: string | null): string =>
   ISO_COUNTRIES.find((c) => c.name === name)?.code ?? "";
 
 type Step = "intent" | "structuring" | "facts" | "complete" | "preview" | "submit" | "received" | "error";
+
+/**
+ * The steps this build understands.
+ *
+ * A kept draft may carry a stack written by an older build. Its FACTS are
+ * still worth restoring; its steps are not worth trusting, so they are filtered
+ * against this set. Declared beside the type so the two cannot drift.
+ */
+const KNOWN_STEPS = new Set<Step>([
+  "intent", "structuring", "facts", "complete", "preview", "submit", "received", "error",
+]);
 
 /**
  * A write to the draft: a patch, or a function of the current draft.
@@ -185,6 +197,41 @@ export default function StructureComposer({
   });
   const [stack, setStack] = useState<Step[]>(["intent"]);
   const step = stack[stack.length - 1];
+
+  /*
+    Bringing back what the device kept.
+    ----------------------------------
+    Until now a part-built record lived only in this component's state, so a
+    reload, a restored tab or a phone locking discarded minutes of work.
+    `useUnsavedGuard` warns before a navigation it can SEE, and it cannot see
+    any of those. The owner found it by pressing back at the end and landing on
+    the entrance: "I've lost everything. That is absurd."
+
+    Restored in an effect rather than in the `useState` initialiser on purpose.
+    The initialiser runs on the server too, where there is no `localStorage`,
+    and a client that started from a different value than the server rendered
+    is a hydration mismatch. So the first paint is always the server's, and the
+    kept draft arrives immediately after it.
+
+    A SERVER draft wins and nothing is restored over it. `initial` is the row
+    the member deliberately saved; the kept copy is only the gap between typing
+    something and saving it. An entrance choice does not win: picking a family
+    on the way in is not work, and it is exactly what a returning member is
+    about to do again.
+  */
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || initial) return;
+    restored.current = true;
+    const kept = readKeptDraft<StructureDraft>();
+    if (!kept || !structureDirty(kept.draft)) return;
+    setDraft(kept.draft);
+    // Only steps this build knows. A stack from an older shape is ignored
+    // rather than trusted, and the member simply starts at the beginning with
+    // their facts intact, which is recoverable; an unknown step is not.
+    const steps = kept.stack.filter((v): v is Step => KNOWN_STEPS.has(v as Step));
+    if (steps.length > 0 && steps[steps.length - 1] !== "received") setStack(steps);
+  }, [initial]);
   /**
    * Write to the draft, from a patch or from the draft itself.
    *
@@ -207,6 +254,29 @@ export default function StructureComposer({
   // something beyond the family/intent they picked on the way in, and never
   // after a successful submit (received) or on the error acknowledgement.
   const dirty = step !== "received" && step !== "error" && structureDirty(draft);
+
+  /*
+    Keeping it, as it is built.
+    ---------------------------
+    Written on every change rather than on a timer: the whole point is to
+    survive the events nobody gets a callback for, and a timer loses whatever
+    happened since it last ran.
+
+    `received` and `error` clear it instead. On `received` the record is on the
+    server and a second copy on the device would be the stale one; on `error`
+    the member is about to retry from the same state, which is still in memory.
+    A draft that is not dirty is not kept either: a bare family choice is not
+    work, and offering it back would be noise.
+  */
+  useEffect(() => {
+    if (step === "received") {
+      forgetDraft();
+      return;
+    }
+    if (step === "error") return;
+    if (!structureDirty(draft)) return;
+    keepDraft(draft, stack);
+  }, [draft, stack, step]);
   const { guard, promptOpen, onContinueEditing, leaveNow } = useUnsavedGuard(dirty);
 
   /**
@@ -312,6 +382,19 @@ export default function StructureComposer({
         {stack.length > 1 && step !== "received" ? (
           // A labelled control, not a bare arrow: the previous step in words.
           // Back within the composer never loses work, so it is not guarded.
+          <JourneyBack onClick={back} label={t("bar.back")} />
+        ) : step === "received" && stack.length > 1 ? (
+          /*
+            The final screen had NO back control, only the wordmark, which goes
+            to the entrance. The owner pressed it and said: "it goes back to my
+            home page. So I've lost everything. That is absurd. Maybe I want to
+            edit. I want to change what I put there."
+
+            Nothing was actually lost - the record is on the server - but
+            nothing on the screen said so, and there was no way to look at it
+            again. Back returns to the record, which is what the word means
+            everywhere else in this composer.
+          */
           <JourneyBack onClick={back} label={t("bar.back")} />
         ) : (
           // The wordmark is the way home. It is a button, not a raw link, so a
