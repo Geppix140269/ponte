@@ -12,6 +12,7 @@ import SignalStrip from "@/components/desk/SignalStrip";
 import PonteFooter from "@/components/PonteFooter";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import LandingBridges from "@/components/ponte/bridge/LandingBridges";
+import DealRoomPreview from "@/components/home/landing/DealRoomPreview";
 import { landingFamilies } from "@/lib/landing/families";
 import "@/components/desk/desk.css";
 // The approved Bridge stylesheet, imported from the authority package rather
@@ -179,6 +180,11 @@ export default async function HomePage({ params }: { params: { locale: string } 
             <SignalCrossing counts={sideCounts} />
           )}
         </section>
+
+        {/* The room itself, not a word for it. ADR-0022, ADR-0024: the landing
+            is the discovery half and the room is where the second half begins,
+            so a visitor sees the room before deciding to want one. */}
+        <DealRoomPreview />
 
       </DeskShell>
 

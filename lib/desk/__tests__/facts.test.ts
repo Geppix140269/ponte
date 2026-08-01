@@ -292,8 +292,20 @@ test("a Desk record carries a read date and never a source name", () => {
 });
 
 test("the reference prefers the canonical id and falls back to the row id", () => {
-  assert.equal(toDeskRecord(signal()).ref, "EXT-G4WB-000123");
+  // Masked: the source platform never reaches a member-visible reference.
+  assert.equal(toDeskRecord(signal()).ref, "EXT-000123");
   assert.equal(toDeskRecord(signal({ canonicalId: null })).ref, signal().id);
+});
+
+test("the reference never carries the source platform", () => {
+  for (const [id, shown] of [
+    ["EXT-G4WB-000123", "EXT-000123"],
+    ["EXT-FIX-000001", "EXT-000001"],
+    // Not an import id: left exactly as it is.
+    ["PT-1234", "PT-1234"],
+  ] as const) {
+    assert.equal(toDeskRecord(signal({ canonicalId: id })).ref, shown);
+  }
 });
 
 console.log(`ok  ${passed} passed`);
