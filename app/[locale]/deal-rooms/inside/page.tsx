@@ -6,7 +6,22 @@ import Walkthrough from "@/components/deal-room/Walkthrough";
 import "@/components/deal-room/draft-room.css";
 import "@/components/deal-room/screens-2-3-4.css";
 
-export const dynamic = "force-static";
+/*
+  Dynamic, and it has to be.
+
+  This was `force-static`, which is what a page of fixed content wants until
+  you notice that `DeskShell` reads the session to decide whether the command
+  bar says "Account" or "Sign in". A statically rendered page has no session,
+  so a signed-in member arriving here was shown a Sign in button and reasonably
+  concluded they had been logged out.
+
+  The owner hit it on mobile on 1 August 2026: Account on the entrance, Sign in
+  one tap later on the same site.
+
+  The page's own content is still fixed and still public. Only the chrome needs
+  the request, and the chrome is on every Desk surface.
+*/
+export const dynamic = "force-dynamic";
 
 /**
  * See inside a Deal Room.
