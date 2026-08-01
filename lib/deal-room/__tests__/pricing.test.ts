@@ -622,8 +622,17 @@ test("nothing is wired to this module yet, which is the Stage 2 boundary", () =>
   // caller appearing here without one is a scope breach, not progress. When
   // Stage 4 or 6 legitimately wires it, this assertion is the thing that has to
   // be changed deliberately.
-  const callers = ["app", "components"].flatMap(importersUnder);
-  assert.deepEqual(callers, [], `nothing may import deal-room/pricing yet, found: ${callers}`);
+  // One caller is now approved, and only one. ADR-0022 puts the Deal Room on
+  // the entrance and binds the price shown there to this module rather than to
+  // a literal, precisely so the landing cannot quote a figure the product does
+  // not charge. Everything else - charging, entitlements, Stripe, the room
+  // surfaces - remains behind its own owner approval, so a second name
+  // appearing here is still a scope breach.
+  const APPROVED = ["components/home/landing/DealRoomPreview.tsx"];
+  const callers = ["app", "components"]
+    .flatMap(importersUnder)
+    .filter((f) => !APPROVED.some((a) => f.split("\\").join("/").endsWith(a)));
+  assert.deepEqual(callers, [], `nothing else may import deal-room/pricing yet, found: ${callers}`);
 });
 
 console.log(`ok   deal-room pricing: ${passed} assertions passed`);
