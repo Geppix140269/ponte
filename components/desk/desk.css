@@ -408,6 +408,41 @@
 /* A Deal Room shown as a room, on the entrance. ADR-0022, ADR-0024.
    Raised off the section ground so it reads as an object on the page rather
    than as more page: a visitor should feel they are looking INTO something. */
+/* The Deal Room heading. Centred and oversized, deliberately: this is the one
+   place on the entrance that is allowed to be loud, because it is the thing the
+   whole page routes to. It was set at the same 17px as the section above it,
+   which read as a footnote to the page rather than as its destination. */
+.ponte-desk .drp__head { text-align: center; margin: 6px 0 22px; }
+.ponte-desk .drp__head h2 {
+  font-family: var(--f-serif);
+  font-size: clamp(34px, 6vw, 64px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+  margin: 0 0 10px;
+}
+.ponte-desk .drp__head p {
+  font-size: 15px;
+  color: var(--ink-2);
+  margin: 0 auto 14px;
+  max-width: 46ch;
+}
+.ponte-desk .drp__head a { font-size: 13px; font-weight: 600; }
+.ponte-desk .drp__cta {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 4px;
+}
+/* The room draws itself in on arrival, using the approved bridge verbs
+   (br-reveal, br-draw) rather than a new animation. Removed entirely under
+   prefers-reduced-motion: the Bridge rule is that reduced motion is a removal,
+   never a substitution, and the composition is authored in its end state so
+   nothing is lost when it does not run. */
+@media (prefers-reduced-motion: no-preference) {
+  .ponte-desk .drp__head h2 { animation: br-reveal var(--pf-dur-deliberate, 420ms) var(--pf-ease) both; }
+  .ponte-desk .drp__head p { animation: br-reveal var(--pf-dur-deliberate, 420ms) var(--pf-ease) 90ms both; }
+  .ponte-desk .drp__cta { animation: br-reveal var(--pf-dur-deliberate, 420ms) var(--pf-ease) 180ms both; }
+  .ponte-desk .drp__room { animation: br-fade-in var(--pf-dur-crossing, 900ms) var(--pf-ease) 240ms both; }
+}
+
 .ponte-desk .drp__room {
   border: 1px solid var(--rule-strong);
   border-radius: var(--dk-radius);

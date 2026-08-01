@@ -66,17 +66,25 @@ const ROOM = {
 export default function DealRoomPreview() {
   return (
     <section className="sec drp" id="deal-room" aria-labelledby="drp-h">
-      <div className="sech">
-        <div>
-          <h2 id="drp-h">A private Deal Room</h2>
-          <p className="d">
-            Where every route across ends. One agreed procedure, evidence with provenance,
-            decisions and blockers on the record.
-          </p>
+      {/*
+        The one place on the entrance that is allowed to be loud.
+
+        Every route across ends here, and the section that says so was set at
+        the same 17px as "Market Signals" above it - which read as a footnote to
+        the page rather than as its destination. It is the product, so it is
+        stated at the scale of the product.
+      */}
+      <div className="drp__head">
+        <h2 id="drp-h">The Deal Room</h2>
+        <p>Where every route across ends.</p>
+        <div className="drp__cta">
+          <Link className="b b--lg" href="/deal-rooms/propose">
+            Open a Deal Room
+          </Link>
+          <Link className="b b--2 b--lg" href="/pricing">
+            How Deal Rooms work
+          </Link>
         </div>
-        <Link href="/pricing">
-          How Deal Rooms work<span aria-hidden="true"> &rarr;</span>
-        </Link>
       </div>
 
       <div className="drp__room">
