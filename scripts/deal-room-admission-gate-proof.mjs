@@ -282,7 +282,7 @@ async function preflight(client) {
             and (i.indisunique or i.indisprimary)
             and i.indnatts = i.indnkeyatts
             and (
-              select array_agg(a.attname order by a.attname)
+              select array_agg(a.attname::text order by a.attname::text)
                 from unnest(i.indkey) as k(attnum)
                 join pg_attribute a on a.attrelid = t.oid and a.attnum = k.attnum
             ) = (select array_agg(c order by c) from unnest($3::text[]) as c)
