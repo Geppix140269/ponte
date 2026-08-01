@@ -132,7 +132,19 @@ test("the six-parameter declaration command is dropped by name", () => {
 });
 
 test("the eight-parameter form is created, and the old one is never recreated", () => {
-  assert.ok(code.includes(`create function public.deal_room_declare_participation(`));
+  // `or replace`, deliberately. The drop above targets only the old six-parameter
+  // signature, so on a second pass there is nothing to drop and a bare `create`
+  // fails with "already exists with same argument types" - leaving a migration
+  // that cannot be retried after a partial failure. Proved by the idempotency
+  // check in the migration replay workflow.
+  assert.ok(
+    code.includes(`create or replace function public.deal_room_declare_participation(`),
+    "the eight-parameter form must be re-runnable, so it is created with or replace",
+  );
+  assert.ok(
+    !/^create function public\.deal_room_declare_participation\(/m.test(code),
+    "a bare create would make the migration non-idempotent",
+  );
   const created = Array.from(
     code.matchAll(/create (?:or replace )?function public\.deal_room_declare_participation\(([\s\S]*?)\)\s*returns/g),
   );

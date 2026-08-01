@@ -699,9 +699,15 @@ revoke execute on function public.deal_room_admission_minimum_missing(uuid, uuid
 -- screen asked for and the gate then refuses without explaining why. One
 -- statement writes all six declared facts or none of them.
 
+-- The drop targets the OLD six-parameter signature only, so the re-signature is
+-- explicit and cannot happen by accident. The create below is `or replace` so
+-- the migration can be re-run after a partial failure: on a second pass the old
+-- signature is already gone and a plain `create` would fail with "function
+-- deal_room_declare_participation already exists with same argument types",
+-- leaving a half-applied migration that cannot simply be retried.
 drop function if exists public.deal_room_declare_participation(uuid, text, text, text, text, text);
 
-create function public.deal_room_declare_participation(
+create or replace function public.deal_room_declare_participation(
   p_participant_id   uuid,
   p_org_name         text,
   p_org_country      text,
