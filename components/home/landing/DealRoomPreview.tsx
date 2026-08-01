@@ -85,17 +85,21 @@ export default function DealRoomPreview() {
           to the wall. A button that answers a question with a different
           question is worse than no button.
 
-          The room is directly below. "How it works" is answered by showing it,
-          which is the whole reason the preview is on the entrance (ADR-0022),
-          so the control takes the reader there instead of away.
+          It first became an anchor to the room directly below. That was
+          honest but thin: the room shown here is one frame of a six-stage
+          journey, and a visitor asking how it works is asking about the
+          journey. It now opens the walkthrough, which steps from an offer
+          through credible interest into the Master Deal Room, its branches,
+          the agreed procedure and the ending, and states the price at every
+          stage including the stages that are free.
         */}
         <div className="drp__cta">
           <Link className="b b--lg" href="/deal-rooms/propose">
             Open a Deal Room
           </Link>
-          <a className="b b--2 b--lg" href="#drp-room">
+          <Link className="b b--2 b--lg" href="/deal-rooms/inside">
             See inside one
-          </a>
+          </Link>
         </div>
       </div>
 
