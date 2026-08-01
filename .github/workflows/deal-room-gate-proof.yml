@@ -3,60 +3,15 @@ name: Deal Room admission gate proof
 # One-use, manually dispatched execution proof for
 # `supabase/migrations/20260731g_deal_room_admission_verification_gate.sql`.
 #
-# ## Why this exists
+# This workflow must be dispatched from `main`. The commit under test arrives as
+# `target_sha`, so the reviewed workflow definition on `main` is the only code
+# that ever receives the production schema-source credential.
 #
-# The migration changes three SECURITY DEFINER command surfaces that are granted
-# to `authenticated`, so the durable boundary can only be proved by running it.
-# There is no PostgreSQL, container runtime or Supabase CLI on the authoring
-# machine, and Supabase Branching needs a paid plan the owner is not taking. A
-# GitHub-hosted runner has all three for the length of one job, and is destroyed
-# afterwards whatever happens.
-#
-# ## What it takes from production, and what it refuses to take
-#
-# ONE operation touches the source database: `supabase db dump --schema public`,
-# which is schema-only. No table data, no `auth` schema, no users, no storage
-# objects, no business records, and nothing that writes. The dump is asserted to
-# contain no `COPY` and no `INSERT` before it is restored, so "schema-only" is
-# checked rather than trusted.
-#
-# The connection string arrives only as the masked secret
-# `PONTE_SCHEMA_SOURCE_DATABASE_URL`, is referenced by exactly one step, is
-# never echoed, and is never given to the proof. A step below fails the run if a
-# future edit references it anywhere else.
-#
-# ## Where the proof actually runs
-#
-# Against an ephemeral local Supabase stack started inside the runner, whose
-# `public` schema is replaced by the restored production schema. That gives the
-# proof a production-equivalent schema with none of the data, which is exactly
-# what `scripts/deal-room-admission-gate-proof.mjs` asks for.
-#
-# The stack is initialised in a SCRATCH directory, not the repository. Running
-# `supabase start` inside the checkout would apply `supabase/migrations/*`
-# automatically - including the migration under test - and the proof would then
-# be applying it to a database that already had it.
-#
-# ## STATUS: NEVER RUN
-#
-# This workflow has not been dispatched. Until it has, the migration remains
-# written, unapplied and unproved.
+# The source database operation is deliberately narrow: `pg_dump` is run with
+# `--schema-only --schema=public`, and the resulting dump is rejected if it
+# contains data markers before anything is restored into the ephemeral stack.
 
 on:
-  # Manual only. No push, no pull_request, no schedule: this reads a production
-  # connection string, and nothing should be able to start it by merging.
-  #
-  # ## Dispatch from `main`, test any commit
-  #
-  # For `workflow_dispatch`, GitHub runs the workflow DEFINITION AT THE
-  # DISPATCHED REF. Selecting a feature branch in "Use workflow from" would
-  # therefore execute that branch's copy of this file - with the production
-  # database secret available to it. A branch nobody has merged could rewrite
-  # what happens to that credential, and the review that approved this file
-  # would have approved nothing.
-  #
-  # So the ref is fixed at `main` and the commit under test arrives as an input
-  # instead. `main` supplies the definition; `target_sha` supplies the tree.
   workflow_dispatch:
     inputs:
       target_sha:
@@ -77,25 +32,13 @@ jobs:
     timeout-minutes: 25
 
     env:
-      # The local stack's own database. This is what the proof connects to, and
-      # it is the ONLY connection string the proof is ever given.
       LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
-      # A scratch project, deliberately outside the checkout.
       STACK_DIR: /tmp/ephemeral-supabase
       SCHEMA_FILE: /tmp/production-public-schema.sql
-      # The migration this job exists to prove, and the exact bytes it must be.
-      # Checked after checkout and before anything else runs.
       MIGRATION_PATH: supabase/migrations/20260731g_deal_room_admission_verification_gate.sql
       MIGRATION_SHA256: 68ce6a8d32bc7a3c88e57b964a2a42ef8f95c8b45e59a05cd47cf110c08acb0b
 
     steps:
-      # ---------------------------------------------------------------------
-      # Everything in this block runs BEFORE the secret is reachable.
-      #
-      # The secret is bound to exactly one later step. These four gates decide
-      # whether the run gets that far, and each fails closed.
-      # ---------------------------------------------------------------------
-
       - name: Confirm the dispatch was deliberate
         run: |
           if [ "${{ inputs.confirm }}" != "PROVE" ]; then
@@ -105,11 +48,6 @@ jobs:
 
       - name: Refuse to run from anywhere but main
         run: |
-          # `workflow_dispatch` runs the definition at the dispatched ref, so a
-          # run started from a branch would be running THAT branch's copy of
-          # this file with the production credential available. Nothing below
-          # can be trusted unless this holds, so it is checked first and by
-          # value rather than by pattern.
           echo "dispatched ref: $GITHUB_REF"
           if [ "$GITHUB_REF" != "refs/heads/main" ]; then
             echo "::error::This workflow may only be dispatched from main. Set 'Use workflow from' to main."
@@ -121,11 +59,6 @@ jobs:
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
-          # A full 40-character hex commit id, and nothing else. Not a branch
-          # name, not a tag, not an abbreviated SHA: each of those is a moving
-          # or ambiguous pointer, and the whole point of this input is that the
-          # tree under test is decided by the controller and cannot change
-          # between approval and execution.
           if ! printf '%s' "$TARGET_SHA" | grep -qE '^[0-9a-f]{40}$'; then
             echo "::error::target_sha must be exactly 40 lowercase hexadecimal characters."
             echo "::error::Received a value of length ${#TARGET_SHA}. Branch names and short SHAs are rejected."
@@ -133,41 +66,17 @@ jobs:
           fi
           echo "target_sha accepted: $TARGET_SHA"
 
-      # ## Why every action below is pinned to a commit SHA
-      #
-      # This job is handed a production database credential. A tag is a moving
-      # pointer: whoever can move `v4` can change what runs in a job holding
-      # that credential, with no change landing in this repository and nothing
-      # to review. A commit SHA cannot be moved, so the reviewed code is the
-      # code that runs.
-      #
-      # Each pin names the release it came from. Updating one means changing the
-      # SHA and the comment together, which is a reviewable diff rather than a
-      # silent upstream event.
-      #
-      # The v4 line is deliberate for these two: it is the major this
-      # repository's own CI already runs on `ubuntu-latest`, so the pin
-      # preserves behaviour that is known to work here. Later majors exist and
-      # moving to them is a separate, testable change.
       - name: Check out the commit under test, and only that commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          # The tree comes from the input; the workflow definition came from
-          # main. That separation is the whole correction: a branch cannot
-          # supply the code that handles the credential, only the code that is
-          # tested by it.
           ref: ${{ inputs.target_sha }}
-          # One commit is all this job reads. Nothing here walks history, so
-          # deeper is slower and no safer.
           fetch-depth: 1
-          # No git credential left on disk. This job never pushes.
           persist-credentials: false
 
       - name: The checkout is exactly the requested commit
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
-          # `ref:` resolving is done by the action; this proves what landed.
           HEAD_SHA="$(git rev-parse HEAD)"
           echo "git rev-parse HEAD = $HEAD_SHA"
           echo "target_sha         = $TARGET_SHA"
@@ -179,10 +88,6 @@ jobs:
 
       - name: The commit under test carries the reviewed migration, byte for byte
         run: |
-          # Before npm ci, before the Supabase stack, and long before the source
-          # database is contacted. The controller approved a specific migration;
-          # if the tree does not contain exactly those bytes, this run would
-          # prove something nobody reviewed.
           if [ ! -f "$MIGRATION_PATH" ]; then
             echo "::error::$MIGRATION_PATH is not present in the commit under test."
             exit 1
@@ -198,11 +103,6 @@ jobs:
 
       - name: The commit under test supplies no workflow definition of its own
         run: |
-          # Belt and braces for the rule above. The definition running right now
-          # came from main, so a copy in the tree could not have replaced it -
-          # but a credentialed workflow file sitting on an unmerged branch is a
-          # standing invitation to dispatch from the wrong ref, and this fails
-          # the run rather than leaving it there to be found later.
           if [ -e .github/workflows/deal-room-gate-proof.yml ]; then
             echo "::error::The commit under test contains its own copy of this workflow."
             echo "::error::Remove it from that branch: the definition must come from main alone."
@@ -221,11 +121,6 @@ jobs:
       - name: Fetch the running workflow definition from main, to check itself
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          # The definition that is running came from main, and the workspace now
-          # holds the commit under test - which does not contain it, and must
-          # not. So the self-checks below need main's copy, fetched to a scratch
-          # path. `github.sha` is main's head here, because the step above
-          # refused to run from any other ref.
           ref: ${{ github.sha }}
           path: .workflow-definition
           sparse-checkout: .github/workflows
@@ -235,67 +130,46 @@ jobs:
 
       - name: The source secret reaches exactly one step, and is never printed
         run: |
-          # A self-check, because the rule is easy to break by adding a helpful
-          # debug line. What matters is not how often the NAME appears in prose,
-          # but how many steps actually READ the secret - so this counts
-          # `secrets.` uses. The pattern below is written with an escaped dot so
-          # this line cannot match itself and inflate its own count.
-          #
-          # It reads main's copy, which is the definition actually executing.
-          # Checking the workspace copy would prove nothing about this run and,
-          # after the correction above, there is no workspace copy to read.
           WF=.workflow-definition/.github/workflows/deal-room-gate-proof.yml
           if [ ! -f "$WF" ]; then
             echo "::error::main's copy of this workflow was not fetched. Cannot self-check."
             exit 1
           fi
+
           uses=$(grep -cE 'secrets\.PONTE_SCHEMA_SOURCE_DATABASE_URL' "$WF" || true)
           echo "steps reading the source secret: $uses"
           if [ "$uses" -ne 1 ]; then
             echo "::error::Expected exactly 1 step to read the source connection string. Found $uses."
-            echo "::error::Its only permitted use is the schema-only dump."
+            echo "::error::Its only permitted use is the schema-only pg_dump."
             exit 1
           fi
 
-          # And its VALUE must never be written to the log. Naming the secret in
-          # an error message is fine and necessary - what is forbidden is
-          # expanding it, so this matches the `$` sigil and the `secrets.`
-          # expression rather than the bare name.
           if grep -nE '(echo|printf|cat|env|set -x)[^|&;]*(\$\{?SOURCE_DB_URL|secrets\.PONTE_SCHEMA_SOURCE)' "$WF" \
                | grep -v 'add-mask'; then
             echo "::error::The source connection string must never be printed."
             exit 1
           fi
 
-          # The source is read-only. Any of these against it would be a write.
-          if grep -nE 'SOURCE_DB_URL[^|&;]*(psql|db push|db reset|db execute|migration up)' "$WF"; then
-            echo "::error::The only permitted source operation is a schema-only dump."
+          # pg_dump with --schema-only is the one permitted source operation.
+          # The source URL must not reach psql, Supabase migration commands, or
+          # any other writer-shaped command.
+          if grep -nE 'SOURCE_DB_URL[^|&;]*(psql|supabase db|db push|db reset|db execute|migration up)' "$WF"; then
+            echo "::error::The source connection string may only be used by schema-only pg_dump."
             exit 1
           fi
 
-      # Pinned to the current release rather than to the v1 line: this action
-      # has no prior use in this repository, so there is no proven behaviour to
-      # preserve, and v3 is the line aligned with current CLI releases.
       - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
         with:
-          # An exact CLI version, never `latest`. `latest` resolves at run time,
-          # so the binary that reads the production connection string would be
-          # whatever shipped that morning - chosen after review, by somebody
-          # else. This is the version this workflow was reviewed against.
           version: 2.111.0
 
       - name: Start an ephemeral local Supabase stack, outside the checkout
         run: |
-          # Outside the checkout on purpose: `supabase start` inside the repo
-          # would apply supabase/migrations/*, including the migration this job
-          # exists to prove, and the proof would then be re-applying it.
           mkdir -p "$STACK_DIR"
           cd "$STACK_DIR"
           supabase init --force
           supabase start -x realtime,storage-api,imgproxy,studio,inbucket,edge-runtime,logflare,vector,supavisor
-          # The stack supplies the `auth` schema, `auth.uid()` and the anon,
-          # authenticated and service_role roles the restored schema depends on.
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database(), version();"
+          pg_dump --version
 
       - name: Dump the production PUBLIC schema only
         env:
@@ -305,22 +179,26 @@ jobs:
             echo "::error::The PONTE_SCHEMA_SOURCE_DATABASE_URL secret is not set on this repository."
             exit 1
           fi
-          # Masked again defensively: GitHub masks configured secrets, and a
-          # tool that prints a URL in an error message should still be covered.
           echo "::add-mask::$SOURCE_DB_URL"
 
           # THE ONLY OPERATION THIS JOB PERFORMS AGAINST THE SOURCE DATABASE.
-          # `supabase db dump` without --data-only emits DDL only, and --schema
-          # public keeps auth, storage and every other schema out of it.
-          supabase db dump --db-url "$SOURCE_DB_URL" --schema public -f "$SCHEMA_FILE"
+          # Use pg_dump directly because the previous `supabase db dump --schema
+          # public` invocation emitted data markers in run 30687095503. This is
+          # explicitly schema-only, public-only, no owner and no ACL restore
+          # noise. The migration proof checks the grants it creates after it
+          # applies.
+          pg_dump \
+            --dbname="$SOURCE_DB_URL" \
+            --schema=public \
+            --schema-only \
+            --no-owner \
+            --no-acl \
+            --file="$SCHEMA_FILE"
 
           echo "dump written: $(wc -c < "$SCHEMA_FILE") bytes, $(wc -l < "$SCHEMA_FILE") lines"
 
       - name: Prove the dump carries no data
         run: |
-          # "Schema-only" is checked, not trusted. Any of these would mean rows
-          # left the production database, which is the one thing this job must
-          # never do.
           fail=0
           for pattern in '^COPY ' '^INSERT INTO' '^\\\.' '^-- Data for Name:'; do
             if grep -nE "$pattern" "$SCHEMA_FILE" | head -5; then
@@ -332,7 +210,6 @@ jobs:
             rm -f "$SCHEMA_FILE"
             exit 1
           fi
-          # And it must genuinely be the public schema, not an empty file.
           if ! grep -q 'CREATE TABLE' "$SCHEMA_FILE"; then
             echo "::error::The dump contains no CREATE TABLE. The source schema did not arrive."
             exit 1
@@ -341,8 +218,6 @@ jobs:
 
       - name: Restore that schema into the ephemeral database
         run: |
-          # Replace the local stack's empty public schema with production's, so
-          # the proof runs against a production-equivalent schema and no data.
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
           drop schema if exists public cascade;
           create schema public;
@@ -355,9 +230,6 @@ jobs:
 
       - name: The restored database carries schema and no business rows
         run: |
-          # Belt and braces: even a schema-only dump would be a data leak if it
-          # somehow arrived populated. Assert the tables the proof reads are
-          # empty before it starts, so anything it finds later, it created.
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -t -A -F' ' <<'SQL'
           select 'profiles', count(*) from public.profiles
           union all select 'listings', count(*) from public.listings
@@ -375,9 +247,6 @@ jobs:
 
       - name: Run the admission gate proof, exactly once
         env:
-          # The LOCAL stack, never the source. The proof's own guards still
-          # apply: it refuses the production project ref by name and requires
-          # the explicit allow flag below.
           DATABASE_URL: ${{ env.LOCAL_DB_URL }}
           DEAL_ROOM_PROOF_ALLOW: '1'
         run: |
@@ -390,8 +259,6 @@ jobs:
       - name: Destroy the ephemeral stack
         if: always()
         run: |
-          # `--no-backup` so no volume survives the job. The runner itself is
-          # discarded either way; this is the part that does not depend on that.
           cd "$STACK_DIR" 2>/dev/null && supabase stop --no-backup || true
           rm -rf "$STACK_DIR" "$SCHEMA_FILE" || true
           echo "ephemeral stack stopped and removed"
