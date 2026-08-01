@@ -141,11 +141,23 @@ export function checkPublicationGate(
     for (const key of min.missing) failures.push(`missing:${key}` as GateFailure);
   }
 
-  // 5. The public qualification and limitations text is present. This is the
-  //    desk-approved text, written by a human from the fact-only draft; the
-  //    gate does not accept raw model output in its place.
-  if (!has(listing.desk_version?.qualification)) failures.push("no_public_qualification");
-  if (!has(listing.desk_version?.limitations)) failures.push("no_public_limitations");
+  // 5. The desk-approved public text.
+  //
+  //    NO LONGER A FAILURE, by ADR-0026. This required a human at Ponte to
+  //    write a qualification and a limitations statement for every record
+  //    before it could go out, which is precisely the manual review the owner
+  //    says he cannot do and will not pretend to do:
+  //
+  //      > I will never be able to review personally every entry.
+  //
+  //    It is the reason PT-0108, PT-0109 and PT-0110 sat at "IN REVIEW" with
+  //    nothing wrong with them. A record now publishes without it.
+  //
+  //    The purpose it served survives elsewhere and is not weakened: a
+  //    published record shows the member's statements AS the member's, and
+  //    `truthfulLabels` still emits "Opportunity reviewed" only where desk text
+  //    genuinely exists. So a reviewed record still reads as reviewed, and an
+  //    unreviewed one no longer waits forever to become one.
 
   // 6. The opportunity is current: validity declared, and a dated one not past.
   if (!isListingCurrent(listing.validity_type, listing.valid_until, now)) {

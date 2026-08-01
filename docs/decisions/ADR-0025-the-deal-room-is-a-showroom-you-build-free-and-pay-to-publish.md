@@ -1,8 +1,35 @@
-# ADR-0025: The Deal Room is a showroom. You build it free, and pay to publish it
+# ADR-0025: The Deal Room is a showroom. You build it free, and pay when it goes live
 
 - Status: ACCEPTED
 - Date: 2026-08-01
 - Owner statement, recorded within minutes of being made.
+- **Amended the same day.** See "Correction: what is actually charged" below.
+  The first draft of this document used the word "publish" for both a Deal Room
+  and a member's offer. Those are two different events with two different
+  prices, and one of them is free.
+
+## Correction: what is actually charged
+
+> Nobody's gonna get charged for publishing. When the Deal Room becomes
+> **active**, that Deal Room costs. But you can put an offer out there ... the
+> publishing of this offer is free. It's the Deal Room that costs.
+
+So, precisely:
+
+| Act | Price |
+| --- | --- |
+| Opening a Deal Room | free |
+| Building a Deal Room | free |
+| Publishing a member offer or requirement | **free, always** |
+| A Deal Room becoming **active** | charged |
+
+The charged event is a Deal Room going live, not any act of publishing. A
+member may publish as many offers and requirements as they like, forever, at no
+cost. That is the top of the funnel and charging for it would close the funnel.
+
+Everywhere below that says "pay to publish", read "pay when the room becomes
+active". The four-step crescendo is unchanged; only the name of step 4 is
+wrong, and it is corrected here rather than by rewriting the owner's words.
 
 ## The decision, in the owner's words
 

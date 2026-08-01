@@ -5,18 +5,34 @@
 // half of the publication gate; the other half is who the submitter is and
 // whether the desk has written the public text (see publication-gate.ts).
 //
-// Two kinds of requirement live in 5.2, and they are treated differently:
+// ## The list is the owner's, verbatim (ADR-0026)
 //
-//   HARD  — a fact without which a counterparty cannot act, or which the brief
-//           makes unconditional: the side, the product, quantity and unit and
-//           frequency for goods, a payment stance, the submitter's role, the
-//           chain when the submitter is not the principal, and a declared
-//           validity horizon. Missing any of these blocks approval.
+// On 1 August 2026 the owner named the minimum himself, and it is transcribed
+// rather than interpreted:
 //
-//   SOFT  — "where known" / "where applicable" facts: the corridor, the
-//           Incoterm, delivery timing, the HS code. These are recorded and
-//           shown, but a genuine "not stated yet" is a legitimate commercial
-//           state, so they do not block approval on their own.
+//   > If you don't arrive to at least the minimum - let's say quantity,
+//   > destination or origin, Incoterm, payment terms, validity and role -
+//   > these are the details that are absolutely necessary. Otherwise you
+//   > cannot publish.
+//
+// Three things moved on that instruction:
+//
+//   ORIGIN OR DESTINATION became HARD. It was soft, on the reading that a
+//   half-stated route is a legitimate commercial state. It is, but a record
+//   that states NEITHER end cannot be assessed for duty, corridor or
+//   feasibility by anybody reading it. One end is now required; two is still
+//   only worth percentage.
+//
+//   INCOTERM became HARD, for the same reason: without it the price means
+//   nothing, because nobody knows what it includes.
+//
+//   FREQUENCY became SOFT. It is not in the owner's list, it is not needed to
+//   act on a single shipment, and every extra hurdle above the named minimum
+//   works against a record going live at all.
+//
+// Everything else above this line raises the completeness percentage and holds
+// nothing back. That is the whole of ADR-0026: publish above the minimum, and
+// let the percentage carry the difference.
 //
 // Pure except for the quantity model, which is itself pure, for the same reason
 // as validity.ts.
@@ -26,6 +42,9 @@ import { quantityFromRow, validateQuantity } from "./quantity";
 export type ApprovalFacts = {
   type?: string | null;
   product?: string | null;
+  origin?: string | null;
+  destination?: string | null;
+  incoterm?: string | null;
   quantity?: number | string | null;
   quantity_mode?: string | null;
   quantity_min?: number | string | null;
@@ -93,7 +112,12 @@ export function meetsApprovalMinimum(listing: ApprovalFacts): ApprovalMinimum {
       if (issues.some((i) => i !== "unit_required")) missing.push("quantity");
       if (issues.includes("unit_required")) missing.push("unit");
     }
-    if (!has(listing.frequency)) missing.push("frequency");
+    // ADR-0026. At least one end of the route, and the delivery basis. A
+    // record stating neither end cannot be assessed by a reader; a price with
+    // no Incoterm does not say what it includes.
+    if (!has(listing.origin) && !has(listing.destination)) missing.push("route");
+    if (!has(listing.incoterm)) missing.push("incoterm");
+    // `frequency` is deliberately NOT required. See the note at the top.
   }
 
   // Payment terms, or an explicit decision not to state them yet. An empty

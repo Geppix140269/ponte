@@ -7,6 +7,8 @@ import FindChrome from "@/components/find/FindChrome";
 import { getUser, isSupabaseConfigured } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
+import { memberStatusLabel } from "@/lib/listings/status";
+import { COMPLETENESS_INCENTIVE } from "@/lib/listings/eligibility";
 import { INTEREST_ROLE_LABELS, type InterestRole } from "@/lib/interest/expression";
 import { connectDecisionAction } from "../_actions/listings";
 import "@/components/find/find.css";
@@ -40,7 +42,15 @@ type Decision = {
  * wheat offer saw two identical rows before this: the same title treatment,
  * the same status, and nothing saying which market either belonged to.
  */
-type Mine = { id: string; ref: string; product: string; status: string; kind: string };
+type Mine = {
+  id: string;
+  ref: string;
+  product: string;
+  status: string;
+  kind: string;
+  /** 0-100, or null on a row that predates the score. Never rendered as 0. */
+  completeness: number | null;
+};
 
 function fmtDate(iso: string, locale: string): string {
   const d = new Date(iso);
@@ -139,7 +149,7 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
     // them and falls back to the legacy `type` for rows that predate them.
     const { data: own } = await sb
       .from("listings")
-      .select("id, ref, product, status, type, market_family, market_intent")
+      .select("id, ref, product, status, type, market_family, market_intent, completeness_score")
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -149,6 +159,7 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
       product: l.product,
       status: l.status,
       kind: presentRecord(l as FactsRow).kindLabel,
+      completeness: (l as { completeness_score?: number | null }).completeness_score ?? null,
     }));
   }
 
@@ -262,13 +273,29 @@ export default async function WorkspacePage({ params }: { params: { locale: stri
               <div className="wsrow" key={m.id}>
                 <div className="wsrow__top">
                   <span className="wsrow__title serif">{m.product}</span>
-                  <span className="wsrow__status">
-                    {m.status === "approved" ? t("workspace.mineStatusApproved") : t("workspace.mineStatusSubmitted")}
-                  </span>
+                  {/*
+                    Every non-approved status used to render as "In review",
+                    which named a queue that does not exist and implied a person
+                    was looking. `memberStatusLabel` is the one place that
+                    decides what a member is told a status means, and it
+                    distinguishes "Needs information" (their move) from
+                    "Being checked" (transient) from "Published".
+                  */}
+                  <span className="wsrow__status">{memberStatusLabel(m.status)}</span>
                 </div>
                 <p className="wsrow__meta">
                   {m.ref} · {m.kind}
+                  {/*
+                    ADR-0026. A published record carries its completeness, so
+                    the member sees what a counterparty sees. Shown only where
+                    it was actually computed: a legacy row with no score says
+                    nothing rather than "0%".
+                  */}
+                  {m.completeness !== null ? ` · ${m.completeness}% complete` : ""}
                 </p>
+                {m.status === "approved" && m.completeness !== null && m.completeness < 85 ? (
+                  <p className="wsrow__meta">{COMPLETENESS_INCENTIVE}</p>
+                ) : null}
               </div>
             ))
           ) : (
