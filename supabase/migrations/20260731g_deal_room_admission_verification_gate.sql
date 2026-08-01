@@ -592,46 +592,46 @@ begin
 
   -- 1. An authenticated, attributable member. No level, by controller ruling.
   if v_profile_id is null then
-    v_missing := v_missing || 'an authenticated member';
+    v_missing := v_missing || 'an authenticated member'::text;
   end if;
 
   -- 2. Confirmed contact method. CONFIRMED evidence.
   if v_confirmed is null then
-    v_missing := v_missing || 'confirmed contact method';
+    v_missing := v_missing || 'confirmed contact method'::text;
   end if;
 
   -- 3. Identified business OR declared professional capacity. DECLARED.
   if v_business is null then
-    v_missing := v_missing || 'business or professional capacity';
+    v_missing := v_missing || 'business or professional capacity'::text;
   end if;
 
   -- 4. Legal or trading name. DECLARED, and on its own facts. A member with no
   --    company states the name they trade under; no registry is consulted, so
   --    this is still not the full-Passport wall.
   if v_name is null then
-    v_missing := v_missing || 'legal or trading name';
+    v_missing := v_missing || 'legal or trading name'::text;
   end if;
 
   -- 5. Jurisdiction. DECLARED.
   if v_jurisdiction is null then
-    v_missing := v_missing || 'jurisdiction';
+    v_missing := v_missing || 'jurisdiction'::text;
   end if;
 
   -- 6. Relationship to the business. DECLARED.
   if v_relationship is null then
-    v_missing := v_missing || 'relationship to the business';
+    v_missing := v_missing || 'relationship to the business'::text;
   end if;
 
   -- 7. Transaction role declared. DECLARED.
   if v_role is null then
-    v_missing := v_missing || 'transaction role';
+    v_missing := v_missing || 'transaction role'::text;
   end if;
 
   -- 8. Authority to participate declared. DECLARED, and only ever declared.
   --    Section 6 keeps `authority declared` and `authority sighted` apart so
   --    that nothing can imply the stronger one. Nothing here sights anything.
   if v_authority is null then
-    v_missing := v_missing || 'authority to participate';
+    v_missing := v_missing || 'authority to participate'::text;
   end if;
 
   /*
@@ -646,7 +646,7 @@ begin
    */
   v_prerequisites := public.deal_room_room_prerequisite_state(v_p.room_id);
   if v_prerequisites is null or v_prerequisites not in ('not_applicable', 'completed') then
-    v_missing := v_missing || 'room prerequisites';
+    v_missing := v_missing || 'room prerequisites'::text;
   end if;
 
   return v_missing;
