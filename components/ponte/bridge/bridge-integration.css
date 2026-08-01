@@ -459,6 +459,24 @@
    excluded for the same reason.
    ---------------------------------------------------------------------- */
 
+/*
+   One selector shape for all four states, because specificity decides this and
+   getting it wrong is silent.
+
+   The first version scoped the resting rule as
+   `.br[role="radiogroup"] .brst:not([disabled]) .brst__t` - five class-level
+   components - and wrote hover, chosen and focus as `.br .brst... .brst__t`,
+   which is three or four. The resting rule therefore beat all three: a focused
+   station drew its underline in `--pf-ink-3` instead of `--pf-focus`, and a
+   chosen station never went solid. The DS-9 evidence test caught the focus
+   half, which is exactly what it exists for.
+
+   So every state below carries the SAME prefix as the state it overrides, and
+   they are ordered resting, receded, engaged, focused. Read top to bottom, the
+   last one that matches wins, which is the behaviour the source order implies.
+*/
+
+/* Resting: operable, and saying so without being touched. */
 .br[role="radiogroup"] .brst:not([disabled]) .brst__t,
 .br[role="group"] a.brst:not([disabled]) .brst__t {
   text-decoration: underline;
@@ -469,26 +487,27 @@
   transition: text-decoration-color var(--pf-dur-micro) var(--pf-ease);
 }
 
+/* Receded: a choice has been made and this is not it. The approved source
+   takes this text to `--pf-ink-3`; the underline follows it rather than
+   staying at the weight of the chosen station. */
+.br--chosen[role="radiogroup"] .brst:not(.brst--on):not([disabled]) .brst__t {
+  text-decoration-color: var(--pf-ink-3);
+}
+
 /* Engaged: the same underline, resolved. Solid and at full ink, which is the
    value the approved source already moves this text to on hover. */
 .br[role="radiogroup"] .brst:not([disabled]):hover .brst__t,
 .br[role="group"] a.brst:not([disabled]):hover .brst__t,
-.br .brst--on .brst__t {
+.br[role="radiogroup"] .brst--on:not([disabled]) .brst__t {
   text-decoration-style: solid;
   text-decoration-color: var(--pf-ink);
 }
 
-/* Once a choice is made the unchosen stations recede, and their underline
-   recedes with them rather than staying at the weight of the chosen one. The
-   approved source takes their text to `--pf-ink-3`; this follows it. */
-.br--chosen .brst:not(.brst--on):not([disabled]) .brst__t {
-  text-decoration-color: var(--pf-ink-3);
-}
-
-/* Focus is louder than availability. The approved source draws focus as a
-   solid 1.5px underline in `--pf-focus`, and restating it here keeps it
-   winning over the two rules above regardless of source order. */
-.br .brst:focus-visible .brst__t {
+/* Focused. Louder than availability, and it must win from any of the above.
+   This is the approved source's own focus treatment - solid, 1.5px, in the
+   focus colour - restated at a specificity that survives the rules above it. */
+.br[role="radiogroup"] .brst:not([disabled]):focus-visible .brst__t,
+.br[role="group"] a.brst:not([disabled]):focus-visible .brst__t {
   text-decoration: underline;
   text-decoration-style: solid;
   text-decoration-thickness: 1.5px;
