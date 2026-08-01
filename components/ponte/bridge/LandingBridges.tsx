@@ -17,7 +17,7 @@ import { FAMILY_BRIDGE_ABUTMENTS, STRUCTURED_JOURNEY } from "@/lib/landing/famil
  * The composition follows the approved reference renders now in
  * `design/authority/bridge/v1/reference/`: a heading, the family bridge crossing
  * from **Intent** to **The market**, and on selection an Action Bridge crossing
- * from the chosen family to the **Structured journey**.
+ * from the chosen family to the **Private Deal Room**.
  *
  * ## Working without a client
  *
