@@ -92,7 +92,7 @@ const REQUIRED_TABLES = [
   "public.deal_room_entitlements",
   "public.deal_room_agreement_documents",
   "public.deal_room_agreement_acceptances",
-  "public.deal_room_activity",
+  "public.deal_room_activity_events",
 ];
 
 const REQUIRED_FUNCTIONS = [
