@@ -1,5 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
+import NotOpenYet from "@/components/deal-room/NotOpenYet";
 import { setRequestLocale } from "next-intl/server";
 import {
   Band,
@@ -65,8 +66,16 @@ export default async function ProposeRoomPage({
   const signedIn = await getUser();
   if (!signedIn) redirect(`/${params.locale}/login?next=/deal-rooms/propose`);
 
+  /*
+   * Signed in, but the room is not open to this member yet.
+   *
+   * The redirect above fixed only the signed-OUT half. A signed-in member who
+   * is not in `DEAL_ROOM_ALLOWLIST` - which on production is everybody,
+   * including the owner - still met `notFound()`, so the entrance's primary
+   * call to action answered 404 for every human who pressed it.
+   */
   const gate = await dealRoomGate();
-  if (!gate) notFound();
+  if (!gate) return <NotOpenYet locale={params.locale} />;
 
   const supabase = createClient();
   const { data: rows } = await supabase

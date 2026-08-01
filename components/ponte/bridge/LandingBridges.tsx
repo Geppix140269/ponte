@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import BridgeRoute, { type BridgeStation } from "./BridgeRoute";
 import { FAMILY_BRIDGE_ABUTMENTS, STRUCTURED_JOURNEY } from "@/lib/landing/families";
+import type { TaxonomyIcon } from "@/lib/taxonomy/market";
 
 /**
  * The landing's Family Bridge and the Action Bridge it reveals.
@@ -51,6 +52,8 @@ import { FAMILY_BRIDGE_ABUTMENTS, STRUCTURED_JOURNEY } from "@/lib/landing/famil
 export interface LandingFamily {
   key: string;
   label: string;
+  /** The taxonomy's registered icon for this family. ADR-0019: a key, nothing else. */
+  icon: TaxonomyIcon;
   /** What the family covers. Approved reference copy. */
   scope: string;
   /** The abutment the family's Action Bridge starts from. */
@@ -101,6 +104,10 @@ export default function LandingBridges({ families }: LandingBridgesProps) {
     title: family.label,
     description: family.scope,
     index: `${String(index + 1).padStart(2, "0")} · Market family`,
+    // ADR-0019 permits a marker on classification stations, and a market family
+    // is the classification. The key comes from the taxonomy; nothing is chosen
+    // here and nothing is drawn here.
+    icon: family.icon,
     // Named in a word, so the chosen route is not carried by gold alone.
     mark: "Selected route",
   }));

@@ -38,9 +38,14 @@ import type { MarketIntent } from "@/lib/taxonomy/market";
  * entrance for the other two would lead a member into an empty result.
  */
 export function landingFamilies(): LandingFamily[] {
-  return marketEntrances().map((family) => ({
+  const byKey = new Map(marketEntrances().map((family) => [family.key, family]));
+  return LANDING_ORDER.map((key) => byKey.get(key)!).map((family) => ({
     key: family.key,
     label: family.label,
+    // The taxonomy's own icon for the family, not one chosen here. Every family
+    // has carried one since `MARKET_FAMILIES` was written; the landing simply
+    // never passed it through, so three classification stations arrived bare.
+    icon: family.icon,
     scope: SCOPE[family.key],
     abutment: ABUTMENT[family.key],
     countNote: COUNT_NOTE[family.key] ?? null,
@@ -64,6 +69,19 @@ export function landingFamilies(): LandingFamily[] {
     ],
   }));
 }
+
+/**
+ * The order the three families are CROSSED in, which is not their taxonomy sort.
+ *
+ * Products is the centre of Ponte and is drawn at the centre of the bridge. The
+ * taxonomy's `sort` is its own ordering — it decides validation, admin lists and
+ * every non-landing surface — and it is deliberately not disturbed here: this is
+ * a statement about composition on one screen, not a re-ranking of the market.
+ *
+ * The station numbers follow this order, because a member reads "01" as the
+ * first thing on the deck, not as a taxonomy identifier.
+ */
+const LANDING_ORDER = ["services", "products", "distribution"] as const;
 
 /** What each family covers. Approved reference copy. */
 const SCOPE: Record<string, string> = {

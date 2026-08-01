@@ -78,14 +78,25 @@
 
 [data-theme="dark"], .inverse{
   --pf-ink: #F2EFE8; --pf-ink-2: #CDC8BC; --pf-ink-3: #A7A296; --pf-mute: #7E7A72;
-  /* Three grounds that are actually three.
-     These were #0E0F0C, #161813 and #0A0B09: surface and sunken four values
-     apart, which read as one flat black. The landing puts the family bridge on
-     surface and Market Signals on sunken, and with no separation between them
-     the page was monotone and the two sections merged into a single field.
-     Widened so each band is legible as its own plane, while staying a warm
-     near-black rather than becoming grey. */
-  --pf-surface: #26291C; --pf-raised: #343829; --pf-sunken: #080906;
+  /* The design package's own inverse grounds. Section 02, "Inverse tokens".
+     `Ponte Trade - Design Package.html` publishes these by name AND by value:
+     surface #0E0F0C, raised #161813, with the sunken well beneath them.
+
+     They were briefly widened to #26291C / #343829 to answer a real complaint:
+     the family bridge and the Market Signals crossing are adjacent full-bleed
+     bands, and on one near-black they merged into a single monotone field.
+     Two different blacks is not the package's answer to that, and the invented
+     olive-grey is visible in the seam - the bands read as two unrelated
+     palettes stacked rather than as one surface.
+
+     The package's answer is the note printed directly beneath these tokens:
+     rules on the inverse are ALPHA, not tint, so `--pf-rule` "sits on any ink
+     value without banding". A plane on the inverse is separated by its
+     hairline, exactly as a record on cream is - section 01 calls the rule "the
+     hairline that does the work shadow would otherwise do". `.hero` already
+     carries that boundary as `--rule-strong`; with these values it is the thing
+     doing the separating, which is what it is for. */
+  --pf-surface: #0E0F0C; --pf-raised: #161813; --pf-sunken: #0A0B09;
   --pf-rule: rgba(242,239,232,.12); --pf-rule-strong: rgba(242,239,232,.20);
   --pf-gold: #D9AC55; --pf-gold-ink: #E7C173;
   --pf-positive: #4FB07A; --pf-review: #9DB4C0; --pf-danger: #E0674C; --pf-declared: #A7A296;
