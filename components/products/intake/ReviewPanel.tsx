@@ -5,6 +5,7 @@ import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 // From `terms`, not `extract-document`: the extraction reaches the model, which
 // reaches Supabase's admin client, and neither belongs in a browser bundle.
 import { TERM_KEYS, TERM_LABELS, type CommercialTerms } from "@/lib/products/terms";
+import { SOMETHING_ELSE, optionsFor } from "@/lib/products/term-options";
 import { type ReviewState } from "@/lib/products/intake";
 import type { Provenance, SourcedValue } from "@/lib/products/model";
 
@@ -124,22 +125,75 @@ function statesSame(
   return a === b || a.startsWith(b) || b.startsWith(a);
 }
 
+/**
+ * One commercial term, and how the member states it.
+ *
+ * A member never types a value the product already knows. Where the term has a
+ * vocabulary - Incoterm, Unit, Origin, Destination, Recurrence, Availability -
+ * this offers that vocabulary and the member picks. Typing is reached only
+ * through "Something else", for the case the list does not cover.
+ *
+ * Every row here used to be a blank box, including the ones whose answers are
+ * fixed international codes. That asked a trader to spell FOB, and let two
+ * members write "MT" and "metric tonnes" for the same thing.
+ *
+ * Terms with no canonical vocabulary yet - a quantity, a date range, a pricing
+ * basis - stay typed, because a list invented here would teach a vocabulary the
+ * product does not hold. `lib/products/term-options.ts` records which are which,
+ * and why.
+ */
 function TermRow({
   label,
   value,
+  options,
   onEdit,
 }: {
   label: string;
   value: SourcedValue;
+  options?: readonly string[] | null;
   onEdit: (next: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value.value ?? "");
+  // Set when the member picks "Something else", so the text box appears only
+  // once they have said the list does not cover them.
+  const [freeText, setFreeText] = useState(false);
+
+  const save = (next: string) => {
+    onEdit(next);
+    setEditing(false);
+    setFreeText(false);
+  };
+
+  const picking = editing && options && options.length > 0 && !freeText;
 
   return (
     <div className="prow">
       <span className="prow__k">{label}</span>
-      {editing ? (
+      {picking ? (
+        <select
+          className="prow__v prow__sel"
+          aria-label={label}
+          autoFocus
+          defaultValue={value.value && options.includes(value.value) ? value.value : ""}
+          onChange={(e) => {
+            if (e.target.value === SOMETHING_ELSE) {
+              setDraft(value.value ?? "");
+              setFreeText(true);
+              return;
+            }
+            if (e.target.value !== "") save(e.target.value);
+          }}
+        >
+          <option value="">Choose {label.toLowerCase()}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+          <option value={SOMETHING_ELSE}>Something else, let me type it</option>
+        </select>
+      ) : editing ? (
         <>
           <input
             className="snote hssearch prow__v"
@@ -149,14 +203,7 @@ function TermRow({
             autoFocus
             onChange={(e) => setDraft(e.target.value)}
           />
-          <button
-            type="button"
-            className="prow__e"
-            onClick={() => {
-              onEdit(draft);
-              setEditing(false);
-            }}
-          >
+          <button type="button" className="prow__e" onClick={() => save(draft)}>
             Save
           </button>
         </>
@@ -227,6 +274,7 @@ function OptionalTerms({
                   key={key}
                   label={TERM_LABELS[key]}
                   value={shared[key]}
+                  options={optionsFor(key)}
                   onEdit={(next) => onEditShared(key, next)}
                 />
               ))}
@@ -372,6 +420,7 @@ export default function ReviewPanel({
                 key={key}
                 label={`${TERM_LABELS[key]}, this product`}
                 value={product.terms[key]}
+                options={optionsFor(key)}
                 onEdit={(next) => onEditProduct(product.id, key, next)}
               />
             ))}
@@ -394,6 +443,7 @@ export default function ReviewPanel({
                 key={key}
                 label={TERM_LABELS[key]}
                 value={review.shared[key]}
+                options={optionsFor(key)}
                 onEdit={(next) => onEditShared(key, next)}
               />
             ))

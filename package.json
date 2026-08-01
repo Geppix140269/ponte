@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/check-dev-env.mjs && next dev",
     "dev:audit": "node scripts/dev-audit.mjs",
+    "check": "node scripts/check-deps.mjs && node scripts/check-messages.mjs && node scripts/check-encoding.mjs && node scripts/check-migrations.mjs && node scripts/check-governance.mjs && node scripts/check-launch-mode.mjs && node scripts/check-contrast.mjs && node scripts/check-token-adoption.mjs && node scripts/check-bridge-invariance.mjs && node lib/verification/__tests__/guard.mjs && tsc --noEmit",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -1,0 +1,45 @@
+#!/bin/sh
+# Ponte pre-push guard.
+#
+# Runs the checks that CI runs, here, before the push, so a failure costs
+# seconds instead of a six-minute round trip.
+#
+# Written on 1 August 2026 after an afternoon lost to exactly that. CI failed
+# three times in a row, each on something this would have caught instantly:
+#
+#   an em dash in a code comment          check-encoding
+#   a hand-authored SVG icon              check-governance
+#   a colour literal instead of a token   check-contrast / token-adoption
+#
+# Each cost a push, a wait, a log read and a fix. None needed the cloud.
+#
+# What it does NOT run: the test suite, Playwright and `next build`. Those are
+# minutes, and a hook people wait minutes for is a hook people bypass. CI stays
+# the place they run. This is the fast half, and the fast half is what keeps
+# failing.
+#
+# To skip it deliberately: `git push --no-verify`.
+
+if [ -n "$PONTE_SKIP_PREPUSH" ]; then
+  echo "pre-push: skipped by PONTE_SKIP_PREPUSH"
+  exit 0
+fi
+
+# Nothing to check when the push deletes a ref.
+if [ -z "$(git rev-parse --verify HEAD 2>/dev/null)" ]; then
+  exit 0
+fi
+
+echo "pre-push: running npm run check (the static half of CI)"
+echo "          skip with --no-verify if you know what you are doing"
+echo
+
+if ! npm run --silent check; then
+  echo >&2
+  echo "pre-push: BLOCKED. The same failure would have come back from CI in six minutes." >&2
+  echo "          Fix it above, or push with --no-verify to override." >&2
+  exit 1
+fi
+
+echo
+echo "pre-push: static checks pass"
