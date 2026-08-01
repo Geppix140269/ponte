@@ -585,7 +585,9 @@ test("reduced motion evidence: movement removed, settled state complete", async 
   expect(settled.markOpacity).toBe("1");
   expect(settled.markText).toBe("Selected route");
   expect(settled.liveDeckDrawn).toBe(true);
-  expect(settled.actionsVisible).toBe(3);
+  // The chosen family's own actions. Station 0 is no longer the three-action
+  // family, so this is read from DESTINATIONS rather than written as a number.
+  expect(settled.actionsVisible).toBe(DESTINATIONS[CROSSING_ORDER[0]].length);
   expect(settled.anyRunningAnimation).toBe(false);
 
   await shotFramed(page, "desktop-6-reduced-motion");
@@ -725,9 +727,8 @@ test("all nine action destinations are preserved exactly", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await landing(page);
 
-  const order = ["products", "services", "distribution"] as const;
-  for (let index = 0; index < order.length; index++) {
-    const family = order[index];
+  for (let index = 0; index < CROSSING_ORDER.length; index++) {
+    const family = CROSSING_ORDER[index];
     await stations(page).nth(index).click();
     const links = page.locator(".pbridge .brx:not([hidden]) a");
     await expect(links).toHaveCount(DESTINATIONS[family].length);
@@ -761,11 +762,9 @@ test("without JavaScript every destination is still a link", async ({ browser })
   const hrefs = await page.locator(".pbridge .brx a").evaluateAll((nodes) =>
     nodes.map((n) => (n as HTMLAnchorElement).getAttribute("href")),
   );
-  expect(hrefs).toEqual([
-    ...DESTINATIONS.products,
-    ...DESTINATIONS.services,
-    ...DESTINATIONS.distribution,
-  ]);
+  // In crossing order, because that is the order the action bridges are laid
+  // out in the document, and without a client every one of them is present.
+  expect(hrefs).toEqual(CROSSING_ORDER.flatMap((key) => [...DESTINATIONS[key]]));
   await context.close();
 });
 
