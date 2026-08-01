@@ -779,8 +779,18 @@
 /* The request sheet. */
 .ponte-desk .sigsheet {
   position: fixed; inset: 0; z-index: 90; background: rgba(15, 15, 14, 0.55);
+  /* The scrim was authored against the cream ground, where 55% of near-black
+     is a clear veil. On the dark ground it is barely a tint, so the page read
+     straight through the sheet and the two compositions overlapped. Raised on
+     dark only, and given a blur so the separation survives at any scroll
+     position. */
   display: flex; align-items: flex-end; justify-content: center; padding: 0;
   overflow-y: auto;
+}
+[data-theme="dark"] .ponte-desk .sigsheet {
+  background: rgba(0, 0, 0, 0.74);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .ponte-desk .sigsheet__panel {
   background: var(--surface); border: 1px solid var(--rule-strong);
@@ -854,6 +864,27 @@
   text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
 }
 .ponte-desk .boundary__f p { font-size: 12.5px; line-height: 1.6; color: rgba(242, 239, 232, 0.68); }
+
+/*
+  The boundary panel on the dark ground.
+
+  It is a hand-built inverse surface: `background: var(--ink)` with its text
+  written as literal `rgba(242, 239, 232, ...)`. On the light ground that is a
+  near-black panel with warm off-white text, which is correct. Under
+  [data-theme="dark"] the token flips to near-white while the literals stay
+  light, so the whole column went light-on-light and read as blank - which is
+  how it shipped to production.
+
+  The panel is meant to be the dark, quiet statement of a limit, so on the dark
+  ground it keeps that intent by sitting BELOW the page rather than above it:
+  the sunken surface, with the light text the literals already assume.
+*/
+[data-theme="dark"] .ponte-desk .boundary {
+  background: var(--sunken);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+}
+[data-theme="dark"] .ponte-desk .boundary h2 { color: var(--ink); }
 
 /* ======================================================================
    8. STATES: loading, empty, error
