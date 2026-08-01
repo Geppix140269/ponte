@@ -648,3 +648,53 @@ body:has(.dr-page) footer.mt-20 {
   color: var(--pf-ink-2);
   max-height: 22rem;
 }
+
+/* ----------------------------------------------------------------------
+   The Deal picker row.
+
+   `.dr__item` was a passive row with a link inside its title. On 1 August 2026
+   the owner opened this screen, saw three rows each stamped "Incomplete", and
+   read it as three refusals: nothing announced itself as operable, and the
+   chip named a verdict instead of a next step.
+
+   The row is now the control. Same hairline construction as `.dr__item` - no
+   box, no card - with the resting affordance the bridge stations gained on the
+   same day, for the same reason and in the same two ink values.
+   ---------------------------------------------------------------------- */
+
+.dr__pick {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--pf-rule);
+  color: inherit;
+  text-decoration: none;
+}
+
+.dr__pick .dr__item-title {
+  display: block;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--pf-ink-3);
+}
+
+.dr__pick:hover .dr__item-title {
+  text-decoration-style: solid;
+  text-decoration-color: var(--pf-ink);
+}
+
+.dr__pick:focus-visible .dr__item-title {
+  text-decoration-style: solid;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: var(--pf-focus);
+}
+
+.dr__pick .dr__item-meta {
+  display: block;
+  margin-top: 4px;
+}

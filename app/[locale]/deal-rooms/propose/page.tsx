@@ -25,10 +25,31 @@ import {
 import { templateFor } from "@/lib/deal-room/procedure";
 import { STARTER_LIMITS_PROPOSED } from "@/lib/deal-room/entitlement";
 import { LAUNCH_OPERATING_MODES, OPERATING_MODE_LABEL } from "@/lib/deal-room/states";
+import { MARKET_FAMILIES, MARKET_INTENTS } from "@/lib/taxonomy/market";
 import UnsavedFormGuard from "@/components/ponte/nav/UnsavedFormGuard";
 import { proposeRoom } from "../actions";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * A Deal described in the taxonomy's words, never in the database's.
+ *
+ * This line printed the stored keys: "services offer_trade_service", and for a
+ * row created before the family columns existed, "No family recorded No intent
+ * recorded". Both are the schema talking to a member in its own vocabulary,
+ * which is the same leak `publicRef` was written to close for imported
+ * references.
+ *
+ * A row that genuinely records neither says so once, plainly, rather than
+ * twice in the negative. It is not an error and it is not the member's fault:
+ * those rows predate the columns.
+ */
+function describeDeal(deal: DealFacts): string {
+  const family = MARKET_FAMILIES.find((f) => f.key === deal.marketFamily)?.label ?? null;
+  const intent = MARKET_INTENTS.find((i) => i.key === deal.marketIntent)?.label ?? null;
+  if (family && intent) return `${family} · ${intent}`;
+  return family ?? intent ?? "Created before markets were recorded";
+}
 
 /**
  * DR-01 and DR-02: the entry decision and the proposed master-room builder.
@@ -136,10 +157,19 @@ export default async function ProposeRoomPage({
 
       <Band title="Choose the Deal">
         {deals.length === 0 ? (
-          <Empty>
-            You have no published Deal to take forward. A Deal Room begins from a Deal that is complete and published,
-            because the room is built on a snapshot of it that later edits cannot rewrite.
-          </Empty>
+          <>
+            <Empty>
+              You have not brought a requirement or an offer to the desk yet. A room is built on a snapshot of one, so
+              there has to be one first.
+            </Empty>
+            <p className="dr__why">
+              <a className="dr__link" href={`/${params.locale}/structure`}>
+                Bring a requirement or offer to the desk
+              </a>
+              {" · "}
+              It is free, and it is the only step between here and a room.
+            </p>
+          </>
         ) : (
           <ul className="dr__list">
             {deals.map((deal) => {
@@ -150,22 +180,44 @@ export default async function ProposeRoomPage({
                 statedObjective: "To be recorded when the counterparty is named.",
                 counterpartyProfileId: "pending",
               });
-              const eligible = check.blockers.filter((b) => !b.code.startsWith("no_counterparty")).length === 0;
+              const open = check.blockers.filter((b) => !b.code.startsWith("no_counterparty"));
+              const ready = open.length === 0;
               return (
-                <li className="dr__item" key={deal.id}>
-                  <div>
-                    <p className="dr__item-title">
-                      <a className="dr__link" href={`/${params.locale}/deal-rooms/propose?deal=${deal.id}`}>
+                /*
+                  The WHOLE row is the control, not the title alone.
+
+                  Only the title was a link, and it carried no affordance, so a
+                  member looking at three rows marked "Incomplete" saw three
+                  verdicts and no way forward. The owner reached this screen on
+                  1 August 2026 and read it exactly that way: "that's another
+                  way for me just to leave and don't come back".
+                */
+                <li key={deal.id}>
+                  <a className="dr__pick" href={`/${params.locale}/deal-rooms/propose?deal=${deal.id}`}>
+                    <span>
+                      <span className="dr__item-title">
                         {check.scope?.subject ?? deal.product ?? "Untitled Deal"}
-                      </a>
-                    </p>
-                    <p className="dr__item-meta">
-                      {deal.marketFamily ?? "No family recorded"} · {deal.marketIntent ?? "No intent recorded"}
-                    </p>
-                  </div>
-                  <span className={eligible ? "dr__chip dr__chip--done" : "dr__chip dr__chip--declared"}>
-                    {eligible ? "Ready" : "Incomplete"}
-                  </span>
+                      </span>
+                      {/*
+                        The taxonomy's own labels. This printed the stored keys
+                        - "services offer_trade_service", and "No family
+                        recorded No intent recorded" for a row predating the
+                        columns - which is the database talking to a member in
+                        its own vocabulary, the same leak as the source-platform
+                        reference in `publicRef`.
+                      */}
+                      <span className="dr__item-meta">{describeDeal(deal)}</span>
+                    </span>
+                    {/*
+                      What is missing, and how many. "Incomplete" is a verdict
+                      with no remedy and reads as a refusal; every row here is
+                      selectable whatever it says, and choosing one shows the
+                      list of what it needs with a route to each.
+                    */}
+                    <span className={ready ? "dr__chip dr__chip--done" : "dr__chip dr__chip--declared"}>
+                      {ready ? "Ready" : open.length === 1 ? "1 detail to add" : `${open.length} details to add`}
+                    </span>
+                  </a>
                 </li>
               );
             })}
@@ -174,9 +226,23 @@ export default async function ProposeRoomPage({
       </Band>
 
       {selected && dealBlockers.length > 0 ? (
-        <Banner tone="review" title="This Deal is not ready for a room yet">
-          {dealBlockers.map((blocker) => `${blocker.message}${blocker.remedy ? ` ${blocker.remedy}` : ""}`).join(" ")}
-        </Banner>
+        <>
+          <Banner tone="review" title="This Deal needs a few more details first">
+            {dealBlockers.map((blocker) => `${blocker.message}${blocker.remedy ? ` ${blocker.remedy}` : ""}`).join(" ")}
+          </Banner>
+          {/*
+            A banner that names a problem and offers no way to fix it is a
+            wall. The composer is where every one of these is resolved, so the
+            screen says so and links there.
+          */}
+          <p className="dr__why">
+            <a className="dr__link" href={`/${params.locale}/structure?listing=${selected.id}`}>
+              Add the missing details to this Deal
+            </a>
+            {" · "}
+            Everything else about the room is ready when the Deal is.
+          </p>
+        </>
       ) : null}
 
       {selected && dealBlockers.length === 0 && assessment ? (
