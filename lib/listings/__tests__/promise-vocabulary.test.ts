@@ -196,7 +196,7 @@ test("the landing states the three actions in the approved words", () => {
   const preview = readFileSync("components/home/landing/DealRoomPreview.tsx", "utf8");
   assert.match(preview, /Opening a room and building it are free\./);
   assert.match(preview, /Invited counterparties join free\./);
-  assert.match(preview, /to activate it, for \{ACTIVE_PERIOD_DAYS\} calendar days\./);
+  assert.match(preview, /to activate it, for \{PERIOD_CALENDAR_DAYS\} calendar days\./);
 });
 
 test('"active days" is gone from every member-facing string', () => {

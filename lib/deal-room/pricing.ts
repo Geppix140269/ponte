@@ -65,8 +65,26 @@ export const ADDITIONAL_BRANCH_PRICE_CENTS = 1500;
 /** $199 USD per Master Deal Room per 30-day period. A price cap, not a limit. */
 export const MAXIMUM_ROOM_PERIOD_PRICE_CENTS = 19900;
 
-/** The paid period, in days. */
-export const ACTIVE_PERIOD_DAYS = 30;
+/**
+ * The paid period: 30 **calendar** days, anchored in UTC.
+ *
+ * Was `ACTIVE_PERIOD_DAYS`, renamed under `ADR-0029`. "Active days" reads as
+ * days on which the room was used, and the clock has never worked that way -
+ * expiry is `activatedAt + 30 x 24h`, which is elapsed time. The behaviour was
+ * always right and only the name was wrong, which is the worst combination:
+ * nothing failed, and everyone reading it learned something untrue. `P1` had
+ * already retired the phrase from member-facing copy on 2 August.
+ *
+ * **UTC is not incidental.** 30 x 24h is not 30 civil days in a timezone that
+ * observes daylight saving, so an expiry shown in local civil time can be an
+ * hour out. `ADR-0029` anchors and displays in UTC, which has no DST, and
+ * forbids displaying an expiry in a local civil timezone without its offset.
+ *
+ * Note that `INCLUDED_ACTIVE_BRANCHES` above keeps "active", correctly: those
+ * genuinely are concurrently *active* branches. It is only days that were never
+ * counted that way.
+ */
+export const PERIOD_CALENDAR_DAYS = 30;
 
 /**
  * Every amount is an integer number of cents. Authority section 6 is explicit,
@@ -371,3 +389,133 @@ export const PUBLISHED_PRICE_TABLE: readonly { branches: number; cents: number }
   { branches: 12, cents: 18400 },
   { branches: 13, cents: 19900 },
 ];
+
+/* ------------------------------------------------------------------ *
+ * 6. The first-activation waiver (ADR-0029)
+ *
+ * A DISCOUNT ON THE CURVE ABOVE, NOT A SECOND PRODUCT.
+ *
+ * `ADR-0029` reconciles `AUTH-01`'s free first activation with `ADR-0020`'s
+ * branch model. They were treated as a contest between a flat price and a
+ * tiered one and they are not in contest: one is a waiver of a fee, the other
+ * is what the fee buys.
+ *
+ * So nothing above changes. `roomPeriodPriceCents` is still the whole price
+ * curve, `PUBLISHED_PRICE_TABLE` is still the published table, and everything
+ * here computes on top of them. The owner explicitly refused the alternative -
+ * charging $15 from the second branch once the waiver lapses - because it would
+ * charge separately for branches already inside the standard $79 package and
+ * would create a second curve to maintain forever.
+ *
+ * THE LIST PRICE IS ALWAYS REAL. `ADR-0020` section 17 requires the activation
+ * screen to show `$79` list, `minus $79`, `$0` due, and never a silently free
+ * room. That presentation needs a genuine list price behind it, which is why
+ * nothing here returns a discounted figure without also being able to state
+ * what was taken off.
+ *
+ * A VOCABULARY NOTE, because a test enforces it. The word section 17 uses for
+ * that middle line is on the forbidden-vocabulary list in
+ * `__tests__/pricing.test.ts`, which exists so the retired usage-currency
+ * subsystem cannot reappear inside the pricing engine by drift. The guard is
+ * right, and this comment deliberately does not spell out the list it is
+ * describing - naming those words here would trip the very check being
+ * explained.
+ *
+ * So: here the reduction is a DISCOUNT. Whatever the activation screen calls
+ * it belongs in `messages/en.json`, not in this file.
+ *
+ * WHAT IS NOT HERE: eligibility. Whether a given organisation still holds its
+ * waiver is a database question with an unresolved uniqueness rule behind it -
+ * see `docs/codex/audits/pricing/WO-7-1-ORGANISATION-UNIQUENESS-2026-08-02.md`.
+ * These functions take eligibility as a BOOLEAN the caller has already decided.
+ * That keeps this module what it has always been: pure, clockless, and with no
+ * opinion about the database.
+ *
+ * DISCLOSURE: counts, never collections. `ADR-0020` sections 4 and 11 forbid a
+ * participant learning branch count, including through a total. Nothing here
+ * accepts or returns a branch identifier.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Active branches permitted while the waiver holds.
+ *
+ * One. Requesting a second is what ends it.
+ */
+export const FIRST_ACTIVATION_WAIVED_BRANCHES = 1;
+
+/**
+ * The additional-branch charge cap inside a waived period, in cents.
+ *
+ * $120, so that a waived period reaches the same $199 ceiling as any other at
+ * thirteen or more branches: the $79 base becomes due when the waiver lapses,
+ * and $79 + $120 = $199. Derived rather than typed, so the three numbers cannot
+ * drift apart.
+ */
+export const WAIVED_PERIOD_ADDITIONAL_CAP_CENTS =
+  MAXIMUM_ROOM_PERIOD_PRICE_CENTS - BASE_ROOM_PRICE_CENTS;
+
+/** What a period costs, and what it would have cost. */
+export interface PeriodCharge {
+  /** Always the real, undiscounted curve price. Never zero. */
+  listCents: number;
+  /** What the waiver takes off. Zero when no waiver applies. */
+  discountCents: number;
+  /** `listCents - discountCents`. What is actually taken. */
+  amountDueCents: number;
+  /** True only when the waiver is both held and still intact. */
+  waiverApplied: boolean;
+}
+
+/**
+ * The charge for one room period, with the waiver applied where it holds.
+ *
+ * `waiverEligible` means the organisation still holds its once-and-forever
+ * waiver. It is the CALLER's job to establish that; see the note above.
+ *
+ * The waiver survives only at a single active branch. At two or more the base
+ * fee becomes due and the standard five-branch allowance applies from that
+ * moment - which is simply the unwaived curve, so there is nothing to special
+ * case. That is the point of expressing this as a discount.
+ */
+export function periodCharge(activeBranchCount: number, waiverEligible: boolean): PeriodCharge {
+  assertBranchCount(activeBranchCount, "activeBranchCount");
+  const listCents = roomPeriodPriceCents(activeBranchCount);
+
+  const waiverApplied = waiverEligible && activeBranchCount <= FIRST_ACTIVATION_WAIVED_BRANCHES;
+  // The whole base fee, never a part of it. Below the included five the curve
+  // IS the base fee, so this discounts to exactly zero without hard-coding it.
+  const discountCents = waiverApplied ? listCents : 0;
+
+  return {
+    listCents,
+    discountCents,
+    amountDueCents: listCents - discountCents,
+    waiverApplied,
+  };
+}
+
+/**
+ * What is actually taken for one room period, in cents.
+ *
+ * The convenience form of {@link periodCharge} for callers that need only the
+ * number. Anything rendering an activation screen should use `periodCharge`
+ * instead, because section 17 requires the list price and the reduction to be
+ * shown alongside the total.
+ */
+export function amountDueCents(activeBranchCount: number, waiverEligible: boolean): number {
+  return periodCharge(activeBranchCount, waiverEligible).amountDueCents;
+}
+
+/**
+ * Would moving to this many branches end the waiver?
+ *
+ * For the notice that `WO-7.5` requires **before** the action rather than after
+ * it. A member who asks for a second branch is about to owe $79, and finding
+ * that out afterwards is the kind of surprise this product does not permit.
+ *
+ * False when no waiver is held: nothing to end.
+ */
+export function wouldEndWaiver(requestedBranchCount: number, waiverEligible: boolean): boolean {
+  assertBranchCount(requestedBranchCount, "requestedBranchCount");
+  return waiverEligible && requestedBranchCount > FIRST_ACTIVATION_WAIVED_BRANCHES;
+}

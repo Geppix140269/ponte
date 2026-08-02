@@ -1,13 +1,24 @@
 # ADR-0006 — Starter Deal Room Access
 
-> ## ⚠ Superseded by ADR-0020 — 31 July 2026. There is no Starter Deal Room.
+> ## ⚠ Superseded by ADR-0020 — 31 July 2026. Revised by ADR-0029 — 2 August 2026.
 >
-> ADR-0020 and `PT-COMMERCIAL-2026-07-31-01` retire the Starter entitlement
-> entirely. **Ponte issues no public free Starter Deal Room.** The organisation
-> entitlement, the 30-day free term, the 3 sub-rooms, the 2 external guest
-> organisations, the 2 internal users, the conversion points and the upgrade
-> ladder are all superseded. `deal_room_entitlements.kind = 'starter'` is a
-> legacy schema value retained for migration and audit, not a product.
+> **What comes back, and what does not.**
+>
+> ADR-0029 **withdraws** the abolition of the free first activation. One
+> activation per uniquely verified organisation carries a **waiver of the $79
+> base fee while it has a single active branch**, consumed once and forever. So
+> the *organisation entitlement* and a *30-day free term* return — as **30
+> calendar days**, anchored in UTC.
+>
+> **The Starter feature set does not return.** The 3 sub-rooms, the 2 external
+> guest organisations, the 2 internal users, the conversion points and the
+> upgrade ladder **remain superseded**. ADR-0029 is explicit that the waiver
+> restricts *capacity*, not *capability*: there is no Starter interface and no
+> reduced product. A waived room is a full room with one branch.
+>
+> `deal_room_entitlements.kind = 'starter'` remains a legacy schema value.
+> Whether the waived activation uses it or a distinct value is an open question
+> under `WO-7.4` and is not decided here.
 >
 > **The problem this ADR was solving is solved differently, and more
 > generously.** Instead of one free room per verified organisation, the entire

@@ -28,9 +28,29 @@ import { expiryLine } from "./moment";
  * **Proposed, not owner-accepted.** They are applied by the launch slice
  * because a Starter room has to have some bound, and they are the only numbers
  * any authority has written down. Changing them is a commercial decision.
+ *
+ * ## `ADR-0029`, 2 August 2026: only ONE of these survives
+ *
+ * The free first activation is back, as a **waiver of the $79 base fee while
+ * the room has a single active branch**. But `ADR-0029` is explicit that the
+ * waiver restricts **capacity, not capability**: there is no Starter interface
+ * and no reduced product, and a waived room is a full room with one branch.
+ *
+ * | Field | Status |
+ * | --- | --- |
+ * | `calendarDays` | **Survives.** 30 calendar days, anchored in UTC. |
+ * | `subRooms`, `externalOrganisations`, `internalUsers` | **Still superseded.** Feature limits, not reinstated. |
+ *
+ * `calendarDays` was `activeDays`, renamed under the same decision. The clock
+ * has always been `activatedAt + 30 x 24h`, which is elapsed time; the name
+ * said otherwise and nothing failed, which is how it survived this long.
+ *
+ * The single-branch condition is **not** here, because it is a branch condition
+ * rather than a term limit. It lives in `pricing.ts` as
+ * `FIRST_ACTIVATION_WAIVED_BRANCHES`, beside the curve it discounts.
  */
 export const STARTER_LIMITS_PROPOSED = {
-  activeDays: 30,
+  calendarDays: 30,
   subRooms: 3,
   externalOrganisations: 2,
   internalUsers: 2,
@@ -67,7 +87,7 @@ export function daysRemaining(entitlement: Entitlement, now: Date = new Date()):
  * member's one Starter room on an invitation.
  */
 export function starterExpiryFrom(activatedAt: Date): Date {
-  return new Date(activatedAt.getTime() + STARTER_LIMITS_PROPOSED.activeDays * 24 * 60 * 60 * 1000);
+  return new Date(activatedAt.getTime() + STARTER_LIMITS_PROPOSED.calendarDays * 24 * 60 * 60 * 1000);
 }
 
 /**
