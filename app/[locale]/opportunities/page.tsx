@@ -160,7 +160,7 @@ export default async function OpportunitiesPage({
                 different thing from a Market Signal that Ponte observed in a public source.
               </p>
             </div>
-            <Link href="/structure">
+            <Link href="/structure?from=opportunities">
               Start a new record<span aria-hidden="true"> &rarr;</span>
             </Link>
           </div>
@@ -303,7 +303,7 @@ export default async function OpportunitiesPage({
                           central publication validator. */}
                       {r.status !== "closed" ? (
                         <div className="empty__a">
-                          <Link className="b b--2 b--sm" href={`/structure?edit=${r.id}`}>
+                          <Link className="b b--2 b--sm" href={`/structure?edit=${r.id}&from=opportunities`}>
                             Open in the composer
                           </Link>
                           {r.status === "draft" ? (

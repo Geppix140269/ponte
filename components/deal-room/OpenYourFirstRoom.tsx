@@ -1,7 +1,7 @@
 "use client";
 
 import BridgeRoute, { type BridgeStation } from "@/components/ponte/bridge/BridgeRoute";
-import { Link } from "@/i18n/navigation";
+import RouteLink from "@/components/ponte/nav/RouteLink";
 
 /**
  * What a first-time visitor sees when they press "Open a Deal Room".
@@ -47,14 +47,14 @@ export default function OpenYourFirstRoom({ locale }: { locale: string }) {
       title: "Describe it",
       description: "What you sell, need, or can carry. In your own words.",
       index: "01 · Free",
-      href: "/structure",
+      href: "/structure?from=deal-rooms",
     },
     {
       key: "publish",
       title: "Publish it",
       description: "It goes live once it carries the facts a counterparty can act on.",
       index: "02 · Free",
-      href: "/structure",
+      href: "/structure?from=deal-rooms",
     },
     {
       key: "room",
@@ -86,13 +86,23 @@ export default function OpenYourFirstRoom({ locale }: { locale: string }) {
         rightDashed
       />
 
+      {/*
+        `RouteLink`, not `Link`, and this is the one place it matters most.
+
+        `/structure` is `force-dynamic` and mounts the whole composer, so this
+        press is a blocking round trip with the previous screen left on the
+        display for the whole of it. Measured 2 August 2026: 2,638 ms of
+        nothing. The design director pressed it on production, waited past ten
+        seconds, pressed again, and filed it as a dead control - which is what
+        a silent control is, from outside.
+      */}
       <div className="ofr__cta">
-        <Link className="b b--lg" href="/structure">
+        <RouteLink className="b b--lg" href="/structure?from=deal-rooms">
           Describe what you trade
-        </Link>
-        <Link className="b b--2 b--lg" href="/deal-rooms/inside">
+        </RouteLink>
+        <RouteLink className="b b--2 b--lg" href="/deal-rooms/inside">
           See inside a Deal Room
-        </Link>
+        </RouteLink>
       </div>
 
       <p className="ofr__f">

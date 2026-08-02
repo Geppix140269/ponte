@@ -53,7 +53,7 @@ export default function NotOpenYet({ locale }: { locale: string }) {
           already published, so the work you do now is the work a room begins from.
         </p>
         <p className="dr__item-meta">
-          <Link className="dr__link" href="/structure">
+          <Link className="dr__link" href="/structure?from=deal-rooms">
             Bring a requirement or offer to the desk
           </Link>
           {" · "}

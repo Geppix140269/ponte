@@ -44,7 +44,7 @@ import {
   FREQUENCIES,
   type TapGroup,
 } from "@/lib/structure/vocabulary";
-import { legacyTypeForIntent, needsHsCode } from "@/lib/structure/draft";
+import { legacyTypeForIntent, needsHsCode, sourcingProduct } from "@/lib/structure/draft";
 import { DECLARATION_TERMS } from "@/lib/listings/declaration";
 import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
 import { MARKET_INTENTS } from "@/lib/taxonomy/market";
@@ -67,6 +67,7 @@ import UnsavedChangesDialog from "@/components/ponte/nav/UnsavedChangesDialog";
 import { useUnsavedGuard } from "@/components/ponte/nav/useUnsavedGuard";
 import { structureDirty } from "@/lib/nav/dirty";
 import { forgetDraft, keepDraft, readKeptDraft } from "@/lib/structure/draft-store";
+import { DEFAULT_COMPOSER_EXIT, type ComposerExit } from "@/lib/structure/exit";
 // The stylesheet is imported by the route, not here, matching find.css and
 // structure.css: a component that pulls CSS cannot be mounted by the unit
 // tests, which run under tsx and have no CSS loader.
@@ -153,6 +154,7 @@ export default function StructureComposer({
   entrance = null,
   initial = null,
   icons = {},
+  exit = DEFAULT_COMPOSER_EXIT,
 }: {
   /**
    * The canonical family and intent a landing entrance carried in, already
@@ -176,6 +178,13 @@ export default function StructureComposer({
    * in as props rather than by import. One renderer, one registry.
    */
   icons?: CategoryIconMap;
+  /**
+   * Where Back goes from the FIRST step, and what it is called.
+   *
+   * Resolved on the server from `?from=` against an allowlist, so nothing the
+   * URL says can become a destination. See `lib/structure/exit.ts`.
+   */
+  exit?: ComposerExit;
 } = {}) {
   const t = useTranslations("structure");
   const tj = useTranslations("journey");
@@ -397,18 +406,33 @@ export default function StructureComposer({
           */
           <JourneyBack onClick={back} label={t("bar.back")} />
         ) : (
-          // The wordmark is the way home. It is a button, not a raw link, so a
-          // member who has started building a record is asked before it is lost
-          // rather than dropped onto the landing with an empty hand.
-          <button
-            type="button"
-            className="sbar__title serif"
-            aria-label={t("bar.home")}
-            onClick={() => guard(() => router.push("/"))}
-            style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}
-          >
-            Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span>
-          </button>
+          /*
+            STEP ONE, and the bar used to be the wordmark alone.
+
+            The wordmark IS a control - a guarded button that goes home - but it
+            does not look like one and it does not mean "back". So the intake
+            screen read as a room with no door: the design director walked it on
+            2 August 2026 and reported that once you are in the flow there is no
+            way out except the browser's own control.
+
+            Both are shown now. Back names where it goes, resolved on the server
+            from `?from=` against an allowlist, and it is guarded exactly as the
+            wordmark is. Nothing is lost by taking it: the composer writes the
+            draft to the device on every change and restores it on return, so
+            leaving and coming back brings the record with you.
+          */
+          <>
+            <JourneyBack onClick={() => guard(() => router.push(exit.href))} label={exit.label} />
+            <button
+              type="button"
+              className="sbar__title serif"
+              aria-label={t("bar.home")}
+              onClick={() => guard(() => router.push("/"))}
+              style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}
+            >
+              Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span>
+            </button>
+          </>
         )}
         {STEP_MARK[step] && <span className="sbar__step">{STEP_MARK[step]}</span>}
       </div>
@@ -514,7 +538,16 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
   // The product intake carries its own principal heading, and it is the one the
   // Constitution's editorial emphasis belongs to. Printing the composer's
   // heading above it would put two h1s and two propositions on one screen.
-  const intakeOwnsHeading = classify && !draft.product;
+  //
+  // It may only own the heading once the member has SAID what they are doing.
+  // Before that this handed the screen to the intake's "Tell Ponte what you
+  // supply, in your own words." - an answer, printed above the question, to a
+  // question nobody had answered - and it suppressed "What do you want to do?",
+  // which is the actual heading of the actual step. A visitor who then pressed
+  // "Source a product" saw a heading that had been wrong before they chose and
+  // was still wrong after.
+  const stated = draft.canonical !== null || draft.intent !== null;
+  const intakeOwnsHeading = classify && !draft.product && stated;
 
   return (
     <section className="sstep reveal">
@@ -541,6 +574,26 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
             <button key={it.key} className="tapopt" aria-pressed={draft.intent === it.key} onClick={() => set({ intent: it.key })}>
               <span className="tapopt__t serif">{it.label}</span>
               <span className="tapopt__d">{it.desc}</span>
+              {/*
+                The chosen row says so in a word.
+
+                It already carried two non-colour signals - a gold rule at the
+                left edge and the title in gold ink - and they were still
+                missed: the design director walked this screen on 2 August 2026
+                and reported the options as giving no feedback at all. Part of
+                that was the heading contradicting the choice, fixed above. The
+                rest is that a 3px rule at the far left of a 640px row is a
+                long way from the thing that was pressed.
+
+                `aria-hidden`, because `aria-pressed` on the row already tells
+                assistive technology the same thing and saying it twice is
+                noise. This is for the eye that scanned past the rule.
+              */}
+              {draft.intent === it.key ? (
+                <span className="tapopt__on" aria-hidden="true">
+                  {t("classify.chosen")}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -570,7 +623,23 @@ function IntentStep({ draft, set, icons, onNext, t }: { draft: StructureDraft; s
             // Continue underneath it: the intake has its own confirmation, and
             // a second one would be a weaker confirmation of the same thing.
             <ProductIntake
-              intent={draft.canonical?.intent === "source_product" ? "source_product" : "offer_product"}
+              /*
+                THE INTENT THE MEMBER CHOSE, from whichever of the two pickers
+                they used.
+
+                This read `draft.canonical` alone, which is only ever set by a
+                family entrance. A member who came in with no entrance and
+                chose "Source a product" from the three rows above set
+                `draft.intent`, not `draft.canonical` - so this fell through to
+                `offer_product` and the screen answered a buyer with "Tell
+                Ponte what you SUPPLY, in your own words."
+
+                Choosing an option and watching the heading contradict you is
+                worse than no feedback at all: it reads as the tap not having
+                registered. The design director filed it on 2 August 2026 as
+                the option giving no feedback, which is exactly how it looks.
+              */
+              intent={sourcingProduct(draft) ? "source_product" : "offer_product"}
               renderBrowse={() => <HsDrill draft={draft} set={set} t={t} />}
               onResolved={(result) => {
                 set(applyResolution(draft, result));

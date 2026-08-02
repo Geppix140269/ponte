@@ -10,6 +10,7 @@ import ResumeNotice from "@/components/structure/ResumeNotice";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { draftFromRow } from "@/lib/structure/resume";
+import { composerExit } from "@/lib/structure/exit";
 import type { StructureDraft } from "@/lib/structure/draft";
 import "@/components/find/find.css";
 import "@/components/structure/structure.css";
@@ -46,7 +47,7 @@ export default async function StructurePage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams?: { family?: string; intent?: string; edit?: string };
+  searchParams?: { family?: string; intent?: string; edit?: string; from?: string };
 }) {
   setRequestLocale(params.locale);
 
@@ -93,7 +94,19 @@ export default async function StructurePage({
       {resumeFailure ? (
         <ResumeNotice failure={resumeFailure} locale={params.locale} reference={searchParams?.edit ?? ""} />
       ) : null}
-      <StructureComposer entrance={entrance} initial={initial} icons={categoryIcons()} />
+      <StructureComposer
+        entrance={entrance}
+        initial={initial}
+        icons={categoryIcons()}
+        /*
+          Where "Back" goes from step one. Resolved here, on the server, against
+          an allowlist, so nothing the URL says can become a destination: a
+          "starts with /" test would accept `//evil.example`, which a browser
+          reads as a host. An absent or unknown value falls back to the
+          entrance rather than failing.
+        */
+        exit={composerExit(searchParams?.from)}
+      />
     </div>
   );
 }

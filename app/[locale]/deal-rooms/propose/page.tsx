@@ -191,7 +191,7 @@ export default async function ProposeRoomPage({
           If the deal you have in mind is not below, describe it first and come straight back.
         </p>
         <p className="dr__why">
-          <a className="dr__link" href={`/${params.locale}/structure`}>
+          <a className="dr__link" href={`/${params.locale}/structure?from=deal-rooms`}>
             Describe a new requirement or offer
           </a>
           {" · "}
@@ -302,7 +302,7 @@ export default async function ProposeRoomPage({
             screen says so and links there.
           */}
           <p className="dr__why">
-            <a className="dr__link" href={`/${params.locale}/structure?listing=${selected.id}`}>
+            <a className="dr__link" href={`/${params.locale}/structure?listing=${selected.id}&from=deal-rooms`}>
               Add the missing details to this Deal
             </a>
             {" · "}
