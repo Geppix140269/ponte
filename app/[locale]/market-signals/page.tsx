@@ -149,9 +149,24 @@ export default async function MarketSignalsPage({
             <div className="closing">
               <div>
                 <h2 className="serif">Bring a requirement, an offer or a service to the desk.</h2>
+                {/*
+                  This promised that Ponte "reviews it before anything is
+                  published". It does not, and has not since ADR-0013 made
+                  publication automatic: a submission that clears the automated
+                  checks goes live without a person seeing it, and only a
+                  flagged one is looked at by hand.
+
+                  Advertising a review nobody performs is the worst of both.
+                  It is a promise we break on every ordinary submission, and it
+                  spends the credibility of the exceptional review that IS
+                  performed, which is the one worth selling.
+
+                  Wording approved by the owner, 2 August 2026, verbatim.
+                */}
                 <p>
-                  Write it in your own words. Ponte structures it, shows exactly what will be
-                  public, private and reviewer-only, and reviews it before anything is published.
+                  Ponte structures your submission, shows what will be public and private, and
+                  automatically checks it for completeness, quality and risk before publication.
+                  Flagged submissions may require additional information or human review.
                 </p>
               </div>
               <div className="closing__a">

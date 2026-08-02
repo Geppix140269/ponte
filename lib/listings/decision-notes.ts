@@ -95,13 +95,13 @@ export function draftListingNotes(l: ListingCase): ListingDrafts {
   const noun = kind(l.type);
 
   /*
-   * Approve. Says what is live and, where the vetting left open questions,
+   * Approve. Says what is live and, where the checks left open questions,
    * says those too. A listing can be good enough to circulate and still have
-   * gaps, and a buyer who asks about one the desk already knew about makes the
+   * gaps, and a buyer who asks about one Ponte already knew about makes the
    * member look unprepared. Better they hear it from us first.
    */
   const approve = paragraphs([
-    sentence(`Your ${noun} ${l.ref}, ${l.product}, has been vetted and is now live on the board`),
+    sentence(`Your ${noun} ${l.ref}, ${l.product}, has cleared Ponte's checks and is now live on the board`),
     routeLine(l),
     missing.length
       ? sentence(

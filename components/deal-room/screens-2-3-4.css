@@ -34,6 +34,46 @@
 .price b { font-family: var(--pf-f-mono); font-size: 40px; font-weight: 500; letter-spacing: -0.025em; line-height: 0.9; }
 .price em { font-style: normal; font-family: var(--pf-f-mono); font-size: 12.5px; color: rgba(242,239,232,.6); line-height: 1.6; max-width: 32ch; }
 [data-theme="dark"] .price em { color: var(--pf-ink-3); }
+/* ----------------------------------------------------------------------
+   The two statements between the price and the control (P1-3).
+
+   `.privnote` is the non-disclosure statement. It is set at reading size, not
+   as fine print, because it corrects a live ambiguity: this screen said
+   "publish" for this action until 2 August 2026, and a member who read that
+   could reasonably have concluded that paying makes their confidential deal
+   public. Fine print is what you use for something you would rather not be
+   read.
+
+   `.expiry` states the instant the period ends. A member buying a period is
+   entitled to the date, not to the duration and a calendar.
+
+   Both sit ABOVE the control, so neither is read after the decision.
+   ---------------------------------------------------------------------- */
+.privnote {
+  margin-top: 18px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(242, 239, 232, 0.5);
+  /* `.privnote` is (0,1,0) and `.act2 p` is (0,0,1,1), so this wins on its own.
+     No `!important`: a state that needs one is a state that will be overridden
+     by the next rule somebody adds. */
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 54ch;
+}
+[data-theme="dark"] .privnote { border-left-color: var(--pf-ink-3); }
+
+.expiry { display: grid; gap: 3px; margin-top: 18px; }
+.expiry .expiry__k {
+  font-family: var(--pf-f-mono); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: rgba(242, 239, 232, 0.55);
+}
+[data-theme="dark"] .expiry .expiry__k { color: var(--pf-ink-3); }
+.expiry b { font-family: var(--pf-f-mono); font-size: 15px; letter-spacing: -0.01em; }
+.expiry .expiry__d {
+  font-size: 12.5px; line-height: 1.55; color: rgba(242, 239, 232, 0.6); max-width: 54ch;
+}
+[data-theme="dark"] .expiry .expiry__d { color: var(--pf-ink-3); }
+
 .incl { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; }
 .incl li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; font-size: 13px; color: rgba(242,239,232,.78); line-height: 1.5; align-items: baseline; }
 [data-theme="dark"] .incl li { color: var(--pf-ink-2); }

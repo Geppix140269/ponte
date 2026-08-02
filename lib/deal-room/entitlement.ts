@@ -18,6 +18,7 @@
  */
 
 import type { EntitlementKind, EntitlementState } from "./states";
+import { expiryLine } from "./moment";
 
 /**
  * The proposed Starter limits, from
@@ -137,7 +138,20 @@ export function guestOrganisationLimit(usage: EntitlementUsage, entitlement: Ent
  * this screen "factual and calm" and the sentence structure here is the reason
  * it can be.
  */
-export function usageSummary(entitlement: Entitlement, usage: EntitlementUsage): string[] {
+export function usageSummary(
+  entitlement: Entitlement,
+  usage: EntitlementUsage,
+  /*
+    The reader's own IANA zone and clock, for the expiry line.
+
+    Passed in rather than read here for the reason every other clock in this
+    module is passed in: a function that asks what time it is cannot be tested
+    against a date, and a function that asks where the reader is cannot be
+    called on a server. Omitted formats in UTC, labelled as UTC, which is
+    complete rather than ambiguous.
+  */
+  at?: { now: Date; timeZone?: string },
+): string[] {
   if (entitlement.kind !== "starter") {
     return ["This room is open under an authorised waiver. No term is running."];
   }
@@ -148,7 +162,20 @@ export function usageSummary(entitlement: Entitlement, usage: EntitlementUsage):
   } else if (days === 0) {
     lines.push("The term has ended. The room is read-only and nothing has been deleted.");
   } else {
-    lines.push(days === 1 ? "1 active day remaining" : `${days} active days remaining`);
+    /*
+      A COUNT AND A MOMENT, never a count alone.
+
+      This said "3 days remaining" and nothing else. Three days from when,
+      ending at what hour, in whose morning? A buyer in Hamburg and a seller in
+      Singapore read that as two different deadlines, and the one who is wrong
+      finds out when the room turns read-only. P1-3, owner approved 2 August
+      2026: every Deal Room expiry display carries the date, the time and the
+      zone.
+    */
+    const line = entitlement.expiresAt
+      ? expiryLine(entitlement.expiresAt, at?.now ?? new Date(), at?.timeZone)
+      : null;
+    lines.push(line ?? (days === 1 ? "1 day remaining" : `${days} days remaining`));
   }
   lines.push(`${usage.subRoomsUsed} of ${STARTER_LIMITS_PROPOSED.subRooms} private workspaces used`);
   lines.push(

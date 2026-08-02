@@ -2,7 +2,7 @@
   "marketplace": {
     "meta": {
       "title": "Marketplace",
-      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is reviewed by Ponte, and the public record states which evidence Ponte reviewed and what remains unverified."
+      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is checked by Ponte, and the public record states which evidence Ponte checked and what remains unverified."
     },
     "type": {
       "offer": "offer",
@@ -19,15 +19,15 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every published <em>opportunity</em> reviewed by Ponte.",
+      "heading": "Every published <em>opportunity</em> checked by Ponte.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
     },
     "rules": {
       "vetted": {
-        "title": "Vetted before live",
-        "body": "The public record states which evidence Ponte reviewed and what remains unverified."
+        "title": "Checked before live",
+        "body": "The public record states which evidence Ponte checked and what remains unverified."
       },
       "anonymous": {
         "title": "Anonymized always",
@@ -44,11 +44,11 @@
     },
     "board": {
       "eyebrow": "Live now",
-      "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
-      "headingLive": "Vetted listings, live on the board.",
+      "heading": "{count, plural, one {# checked listing on the board.} other {# checked listings on the board.}}",
+      "headingLive": "Checked listings, live on the board.",
       "headingEmpty": "The board opens soon.",
       "signInFull": "Sign in for full listings",
-      "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
+      "empty": "The board opens once the first listings clear Ponte's checks. Submissions are open now, and early listings get the most attention when it goes live.",
       "signInToRespond": "Sign in to respond",
       "signInToRead": "Sign in to read the full listing.",
       "open": "Open listing {ref}",
@@ -68,20 +68,20 @@
       "heading": "Where things stand.",
       "headingEmpty": "Nothing submitted yet.",
       "newListing": "New listing",
-      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. The desk takes it from there.",
+      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. Ponte checks it and publishes it from there.",
       "status": {
         "draft": "Draft · only you see this",
-        "submitted": "In vetting",
-        "approved": "Approved · live with the desk",
-        "rejected": "Not approved",
+        "submitted": "Being checked",
+        "approved": "Checked · live on the board",
+        "rejected": "Not published",
         "closed": "Closed"
       },
-      "submitForVetting": "Submit for vetting →",
+      "submitForVetting": "Submit →",
       "shareWhatsApp": "Share on WhatsApp",
-      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "shareText": "{product} · checked listing {ref} on Ponte",
       "connect": {
-        "request": "A vetted member wants to connect. Accept and you both receive each other's contact. Free.",
-        "requestNumbered": "A vetted member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
+        "request": "A member wants to connect. Accept and you both receive each other's contact. Free.",
+        "requestNumbered": "A member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
         "accept": "Accept",
         "decline": "Decline"
       }
@@ -95,7 +95,7 @@
     "new": {
       "meta": {
         "title": "New listing",
-        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish for vetting by the Ponte desk."
+        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish it."
       },
       "pill": "New listing",
       "heading": "Build it. See it. Publish it.",
@@ -104,10 +104,10 @@
     "detail": {
       "meta": {
         "notFound": "Listing not found",
-        "description": "Vetted {type} on Ponte. {teaser}"
+        "description": "Checked {type} on Ponte. {teaser}"
       },
-      "pill": "Vetted listing",
-      "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "pill": "Checked listing",
+      "assurance": "Checked automatically for completeness, quality and risk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
       "terms": {
         "heading": "Trade terms",
         "quantity": "Quantity",
@@ -130,7 +130,7 @@
       "machineTranslation": "Machine translation. The original wording governs.",
       "interested": "I am interested",
       "shareWhatsApp": "Share on WhatsApp",
-      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "shareText": "{product} · checked listing {ref} on Ponte",
       "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
     },
     "interest": {

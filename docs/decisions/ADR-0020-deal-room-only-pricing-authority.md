@@ -320,3 +320,80 @@ the trade's value rather than a supplier of infrastructure to it.
 - `docs/codex/audits/deal-room-pricing/INVENTORY-2026-07-31.md`
 - `docs/operations/OPEN_DECISIONS.md` — OD-011
 - `docs/launch/LAUNCH-BLOCKERS.md` — LB-014 (proposed)
+
+---
+
+## Amendment 3, 2 August 2026: the period is stated as 30 CALENDAR days
+
+**Owner approved, 2 August 2026, on a correction raised by the design director.**
+
+The price does not change. The period does not change. What changes is the
+phrase used to describe it, because the phrase described something the product
+has never done.
+
+### What was wrong
+
+This authority, and every surface quoting it, said **"30 active days"**. A
+reader takes that to mean a clock that stops: days on which the room is used,
+or days excluding some paused state. Nothing in Ponte has ever implemented
+that. `periodEndFrom` in `lib/deal-room/billing.ts` is, and always has been:
+
+```
+start + ROOM_PERIOD_DAYS * 24 * 60 * 60 * 1000
+```
+
+Thirty days of wall time from the start of the period, which does not pause for
+a blocked step, a paused branch, an unanswered invitation or anything else. The
+interface was advertising a more generous accounting model than the code
+implements, which is the direction of error that becomes a refund argument.
+
+### What the interface says now
+
+> "Activate this Deal Room for $79. Full functionality remains available for 30
+> calendar days from activation."
+
+And the **exact expiry date and time** is shown before any amount is taken. A
+member buying a period is entitled to the instant it ends, not to a duration
+and a calendar.
+
+### Scope
+
+This is a wording correction to match the implementation. It is **not** a
+repricing and **not** a change to `ROOM_PERIOD_DAYS`, to `periodEndFrom`, to any
+migration, or to any stored value. The title of this ADR and the quotations
+inside it are left as they were written: they are the record of what was decided
+on 31 July 2026, and rewriting an accepted decision to look like it always said
+something else is not an amendment.
+
+`lib/listings/__tests__/promise-vocabulary.test.ts` pins both halves: no
+member-facing string says "active days", and the copy's promise is asserted
+against the arithmetic in `periodEndFrom`, so the two cannot part again.
+
+## Amendment 4, 2 August 2026: "publish" is never the paid room action
+
+**Owner approved, 2 August 2026.** The entrance said **"$79 when you publish
+it"**. Publish, everywhere else on the internet, means make publicly visible. A
+Deal Room is private and stays private, so that line could reasonably be read
+as *pay $79 to make my confidential deal public* — the opposite of the product,
+offered at the exact moment a member decides whether to pay.
+
+The three public actions, in these words, everywhere:
+
+| Action | Object | Price |
+| --- | --- | --- |
+| **Publish a listing** | Member opportunity | Free |
+| **Create a Deal Room** | Deal Room, draft | Free |
+| **Activate a Deal Room** | Deal Room, active | $79 for 30 calendar days |
+
+Because a member who read the old wording carries the old expectation, the
+correction is also stated positively at the activation moment, beside the price
+and **above** the payment control:
+
+> "Activating does not make this room public. Its contents stay visible only to
+> admitted participants."
+
+The persisted vocabulary was already correct and is **not** swept:
+`activation_pending`, `declined_before_activation`, `cancelled_before_activation`,
+`room_activation`, `reactivation`. `listings.status = 'published'` also stays,
+because a listing genuinely does publish and it is genuinely free; renaming it
+would rename a free act to a paid one in the database to fix a caption.

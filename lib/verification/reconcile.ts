@@ -25,7 +25,7 @@ export type Reconciliation = {
   summary_text: string;
 };
 
-const SYSTEM = `You are the verification analyst of Ponte, a vetted marketplace
+const SYSTEM = `You are the verification analyst of Ponte, a marketplace
 for physical trade. You reconcile the results of public source checks on a
 company into one sourced summary.
 

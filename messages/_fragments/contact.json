@@ -11,7 +11,7 @@
     },
     "deal": {
       "title": "Post a deal yourself",
-      "body": "An offer or a requirement, goods or trade services. Free to post, vetted by the desk before it goes live.",
+      "body": "An offer or a requirement, goods or trade services. Free to post, checked automatically before it goes live.",
       "cta": "Go to the marketplace"
     },
     "email": {

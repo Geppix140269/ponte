@@ -145,7 +145,7 @@ export async function vetListing(listing: {
 // the moment they finish typing, signed in or not.
 
 const ASSESS_SYSTEM = `You are the listing coach of Ponte (ponte.trade), a
-vetted marketplace for physical goods and trade services. A trader has just
+marketplace for physical goods and trade services, where listings are checked automatically before publication. A trader has just
 composed a listing and wants to know how strong it is before publishing.
 
 Return STRICT JSON only, exactly these keys:
@@ -272,7 +272,7 @@ export type AccountBrief = {
 };
 
 const ACCOUNT_SYSTEM = `You are the account manager of Ponte (ponte.trade),
-a free vetted marketplace for physical trade with an optional paid desk
+a free marketplace for physical trade, where listings are checked automatically before publication, with an optional paid desk
 (success fee or retainer) for managed deals.
 
 You are given a member's account: their listings with statuses, drafts,
@@ -290,7 +290,7 @@ and pending connection requests. Return STRICT JSON only:
 
 Rules: max 4 next_actions, most valuable first. Ground every point in the
 data given, never invent listings. Statuses: draft (only they see it),
-submitted (in vetting), approved (live on the board), rejected, closed.
+submitted (being checked automatically), approved (checked and live on the board), rejected, closed.
 Pending connection requests are other members wanting to connect: urgent.
 Mention the optional desk only when a deal looks big or stuck. Plain
 language, never em dashes.`;

@@ -102,7 +102,7 @@ const organizationJsonLd = {
   logo: `${APP_URL}/icon.png`,
   email: "hello@ponte.trade",
   description:
-    "Ponte is the free, vetted marketplace for physical goods and trade services, operated by 1402 Celsius Ltd. Every listing is verified by AI and a human desk before circulation; members connect directly at no cost, anonymous until both sides agree. The Ponte desk manages deals end to end on request, on a success fee or retainer.",
+    "Ponte is the free marketplace for physical goods and trade services, operated by 1402 Celsius Ltd. Every listing is checked automatically for completeness, quality and risk before circulation, and flagged listings may require additional information or human review; members connect directly at no cost, anonymous until both sides agree. The Ponte desk manages deals end to end on request, on a success fee or retainer.",
 };
 
 const websiteJsonLd = {

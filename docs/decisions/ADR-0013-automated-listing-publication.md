@@ -164,3 +164,52 @@ See `docs/plans/active/automated-listing-publication-and-email-system.md`.
 Migration: `supabase/migrations/20260728c_automated_listing_publication.sql`.
 Not applied to production by this change set; production application requires
 owner approval per `AGENTS.md`.
+
+---
+
+## Amendment, 2 August 2026: the site stops promising a review it does not perform
+
+**Owner approved, 2 August 2026, on a correction raised by the design director.**
+
+This ADR made publication automatic. The interface never caught up. On 2 August
+2026 the live site still told members, in several places including the foot of
+`/market-signals`, that Ponte:
+
+> "...reviews it before anything is published."
+
+It does not, and has not since this decision was accepted. A submission that
+clears the automated checks goes live without a person seeing it. Only a flagged
+submission is looked at by hand.
+
+Advertising a review nobody performs is the worst of both outcomes. It is a
+promise broken on every ordinary submission, and it spends the credibility of
+the exceptional review that IS performed, which is the part worth selling.
+
+### The approved wording, verbatim
+
+> "Ponte structures your submission, shows what will be public and private, and
+> automatically checks it for completeness, quality and risk before publication.
+> Flagged submissions may require additional information or human review."
+
+### Status labels
+
+A submission that has cleared the automated checks is **Checked**, not
+`Approved`, `Vetted` or `Reviewed`, none of which is true of a machine outcome
+and each of which implies a queue for a person.
+
+This is a **label** change. The stored value stays `approved`: it is a value
+behind a CHECK constraint and it describes the right domain state, so changing
+it would be a migration to fix a caption. Human-review language is kept for the
+flagged path, where it is accurate.
+
+### Not in scope
+
+The Market Signals honesty disclaimer is correct and is unchanged:
+
+> "Indications read from named public sources. Nothing here has been confirmed
+> with the party named in it, and nothing here is a Ponte member."
+
+Pinned by `lib/listings/__tests__/promise-vocabulary.test.ts`, which also covers
+the AI system prompts: `lib/ai-vet.ts` told the model that `submitted` means
+"in vetting" and then asked it for member-facing text, so the promise was being
+regenerated on every account brief.

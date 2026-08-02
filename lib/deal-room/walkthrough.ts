@@ -101,13 +101,13 @@ export const WALKTHROUGH: WalkthroughStage[] = [
     title: "Build your Deal Room, privately",
     summary: "A real room around your real opportunity. Not a demo.",
     body:
-      "This is your showroom, and nobody else can see it yet. It is built on your actual opportunity, not a sample: the deal snapshot, its structured facts, the evidence areas, the procedure, the branch structure and the progress model. You can prepare it, change it and live in it for as long as you like.",
+      "This is your showroom, and nobody else can see it yet. It is built on your actual opportunity, not a sample: the deal snapshot, its structured facts, the evidence areas, the procedure, the branch structure and the progress model. Building the room is free. No activation period begins until payment.",
     facts: [
       { label: "Built from", value: "Your opportunity, not a demonstration" },
       { label: "You can", value: "Prepare, edit and explore it freely" },
       { label: "Nobody else", value: "Can see it, or know it exists" },
     ],
-    price: `${FREE} Creating and preparing a room costs nothing.`,
+    price: `${FREE} Building the room is free. No activation period begins until payment.`,
   },
   {
     key: "languages",
@@ -133,7 +133,7 @@ export const WALKTHROUGH: WalkthroughStage[] = [
       { label: "Unlocks", value: "Invitations, admission and shared progression" },
       { label: "Never silent", value: "You confirm the payment. Nothing activates on its own" },
     ],
-    price: `${ROOM} for ${ACTIVE_PERIOD_DAYS} active days, including ${INCLUDED_ACTIVE_BRANCHES} active counterparty branches and all five languages.`,
+    price: `${ROOM} for ${ACTIVE_PERIOD_DAYS} calendar days, including ${INCLUDED_ACTIVE_BRANCHES} active counterparty branches and all five languages.`,
     paid: true,
   },
   {

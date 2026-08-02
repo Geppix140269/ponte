@@ -1,6 +1,6 @@
 {
   "footer": {
-    "blurb": "Cross-border trade, with greater clarity. Find opportunities and establish credible interest for free. A Ponte Deal Room costs $79 USD for 30 active days.",
+    "blurb": "Cross-border trade, with greater clarity. Find opportunities and establish credible interest for free. A Ponte Deal Room costs $79 USD for 30 calendar days.",
     "deskHeading": "The desk",
     "deskMarketplace": "The Marketplace",
     "deskFees": "Fees",
@@ -23,7 +23,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
+    "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is checked automatically for completeness, quality and risk before it goes live; flagged listings may require additional information or human review. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   }
 }

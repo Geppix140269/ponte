@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Ponte Trade",
     short_name: "Ponte",
     description:
-      "The vetted marketplace for physical trade. Counterparties checked against company registries and sanctions lists, members connect directly, no commission.",
+      "The marketplace for physical trade. Listings checked automatically before circulation, counterparties checked against company registries and sanctions lists, members connect directly, no commission.",
     // The query is how the analytics tell an installed launch from a browser
     // visit. It is harmless if it survives into a shared URL.
     start_url: "/?source=pwa",
