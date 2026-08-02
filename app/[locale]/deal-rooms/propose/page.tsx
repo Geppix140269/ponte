@@ -16,7 +16,7 @@ import {
   TextField,
 } from "@/components/deal-room/primitives";
 import { dealRoomGate } from "@/lib/deal-room/queries";
-import { createClient } from "@/lib/supabase/server";
+import { createClientOrNull } from "@/lib/supabase/server";
 import {
   assessCredibleInterest,
   INTEREST_ROUTES,
@@ -99,15 +99,29 @@ export default async function ProposeRoomPage({
    */
   const gate = await dealRoomGate();
 
-  const supabase = createClient();
-  const { data: rows } = await supabase
-    .from("listings")
+  /*
+    Null when this BUILD carries no Supabase configuration.
+
+    `NEXT_PUBLIC_*` values are inlined at build time, so a deployment built
+    without them holds `undefined` and `createClient()` throws "Your project's
+    URL and Key are required to create a Supabase client!". This page called it
+    unguarded and answered a hard 500, which is how a Vercel Preview built
+    without those variables took down the entire Deal Room entrance on 2 August
+    2026.
+
+    No client means no rows, and no rows is a state this page already handles
+    perfectly: it renders the first-visit screen. A configuration problem now
+    degrades to "you have nothing here yet" rather than to a dead page.
+  */
+  const supabase = createClientOrNull();
+  const { data: rows } = (await supabase
+    ?.from("listings")
     .select(
       "id, status, market_family, market_intent, product, user_id, valid_until, quantity, unit, incoterm, origin_country, destination_country, service_category_key, coverage_scope_key, distribution_partner_type_key, territory_codes, product_sector_key",
     )
     .eq("user_id", gate?.profileId ?? "00000000-0000-0000-0000-000000000000")
     .order("created_at", { ascending: false })
-    .limit(25);
+    .limit(25)) ?? { data: null };
 
   const deals: DealFacts[] = ((rows ?? []) as Record<string, unknown>[]).map((row) => ({
     id: row.id as string,

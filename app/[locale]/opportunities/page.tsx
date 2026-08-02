@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
-import { createClient } from "@/lib/supabase/server";
+import { createClientOrNull } from "@/lib/supabase/server";
 import { isMissingColumnError } from "@/lib/listings/classification";
 import { presentRecord, type FactsRow } from "@/lib/listings/record-facts";
 import { reconfirmationLapsed } from "@/lib/listings/validity";
@@ -81,8 +81,15 @@ export default async function OpportunitiesPage({
 }) {
   setRequestLocale(params.locale);
 
-  const supabase = createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  /*
+    Null when this build carries no Supabase configuration. See
+    `createClientOrNull`: the values are inlined at build time, so a build made
+    without them throws on every `createClient()` and this page answered a 500.
+    No client means no session and no records, which is the signed-out state
+    this page already renders.
+  */
+  const supabase = createClientOrNull();
+  const { data: auth } = (await supabase?.auth.getUser()) ?? { data: null };
   const user = auth?.user ?? null;
 
   // The member's own records, read with their own session. RLS decides.
@@ -113,15 +120,24 @@ export default async function OpportunitiesPage({
     "distribution_relationship_terms, coverage_scope_key, territory_codes, product_sector_key, " +
     "custom_category_label";
 
-  const readOwn = (columns: string) =>
-    supabase
-      .from("listings")
-      .select(columns)
-      .eq("user_id", user!.id)
-      .order("created_at", { ascending: false });
-
   let rows: Record<string, unknown>[] | null = null;
-  if (user) {
+  /*
+    `supabase` is narrowed here rather than asserted with `!`.
+
+    A non-null assertion is a claim the compiler accepts and the runtime does
+    not check, and one of those is exactly what crashed `/deal-rooms/propose`
+    today: `row.market_family as MarketFamily` let an unrecognised value
+    through into a three-key lookup. The condition is free; the assertion is
+    only free until it is wrong.
+  */
+  if (supabase && user) {
+    const readOwn = (columns: string) =>
+      supabase
+        .from("listings")
+        .select(columns)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
     let { data, error } = await readOwn(`${BASE}, service_terms, distribution_terms`);
     if (error && isMissingColumnError(error)) ({ data, error } = await readOwn(BASE));
     rows = (data as Record<string, unknown>[] | null) ?? null;
@@ -129,7 +145,7 @@ export default async function OpportunitiesPage({
 
   // The bound member-business verification, which is what decides whether an
   // approved record may be published. Read for explanation, never to override.
-  const { data: verification } = user
+  const { data: verification } = supabase && user
     ? await supabase
         .from("verifications")
         .select("id, purpose, status, subject_name, created_at")
