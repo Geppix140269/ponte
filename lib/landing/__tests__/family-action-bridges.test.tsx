@@ -420,7 +420,31 @@ test("action stations are real links, so routing behaviour is preserved", () => 
   );
   for (const station of stations) {
     assert.notEqual(station.props.role, "radio", "an action station is a destination, not a choice");
-    assert.equal(station.props.onClick, undefined, "an action station must navigate by href, not by handler");
+  }
+
+  /*
+    This asserted `onClick === undefined`, and the reason it gave was the right
+    one: an action station must not navigate BY HANDLER, because a visitor
+    whose bundle has not arrived would then be looking at a control that does
+    nothing.
+
+    A handler now exists, and the reason is intact. `/structure` is
+    force-dynamic and mounts the whole composer, so a press on one of these
+    stations is a blocking round trip: 2,638 ms measured on 2 August 2026, with
+    the previous screen left completely unchanged for the whole of it. The
+    handler exists to SAY that, not to navigate: it takes the plain left click,
+    marks the station pending, and pushes the station's own href.
+
+    So the invariant is restated rather than dropped. The href is still the
+    destination, it is still what the browser uses with no script, and every
+    click that belongs to the browser is still left to the browser.
+  */
+  const source = readFileSync("components/ponte/bridge/BridgeRoute.tsx", "utf8");
+  const navigate = source.slice(source.indexOf('if (mode === "navigate")'), source.indexOf("<button"));
+  assert.match(navigate, /href=\{href\}/, "a navigate station no longer carries a real href");
+  assert.match(navigate, /router\.push\(href\)/, "the handler navigates somewhere other than the station's href");
+  for (const escape of ["defaultPrevented", "metaKey", "ctrlKey", "shiftKey", "altKey", "event.button !== 0"]) {
+    assert.ok(navigate.includes(escape), `the handler swallows a click it should leave alone (${escape})`);
   }
 });
 

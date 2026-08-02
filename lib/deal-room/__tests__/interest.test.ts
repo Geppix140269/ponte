@@ -222,4 +222,64 @@ test("every snapshot carries the deal id, family and subject", () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// A stored family this build does not recognise must not end the render
+//
+// Found by the DECISION-27 human check on PR #225 on 2 August 2026.
+// `/deal-rooms/propose` answered "An error occurred in the Server Components
+// render" for a signed-in member. The throw was:
+//
+//     REQUIRED_BY_FAMILY[deal.marketFamily] is not iterable
+//
+// `DealFacts.marketFamily` is typed `MarketFamily | null`, and every caller
+// that builds one from a database row does it with a CAST rather than a check.
+// A cast is a claim, not a validation, so whatever the column actually holds
+// arrives here wearing a type it may not have. Indexing a three-key map with
+// it gives `undefined`, and `for (const x of undefined)` ends the render.
+//
+// Why nothing caught it: invisible signed out, because the query returns no
+// rows and a different branch renders. Invisible in CI, for the same reason.
+// Invisible locally, because there is no development database (issue #84), so
+// there is no session and there are no rows. Only a person, signed in, against
+// a real deployment, could see it - which is the argument for DECISION-27,
+// and it was made in the first minute of the first check.
+// ---------------------------------------------------------------------------
+
+test("an unrecognised stored family is a blocker, never a throw", () => {
+  // Plausible real values: an older taxonomy, a hand-edited row, an import.
+  for (const family of ["goods", "trade_services", "product", "PRODUCTS", "services "]) {
+    const deal = { ...PRODUCTS, marketFamily: family } as unknown as DealFacts;
+    let result: ReturnType<typeof assessCredibleInterest> | null = null;
+    assert.doesNotThrow(() => {
+      result = assessCredibleInterest(deal, INTEREST);
+    }, `a stored family of "${family}" still ends the render`);
+
+    const outcome = result as unknown as ReturnType<typeof assessCredibleInterest>;
+    const codes = outcome.blockers.map((b) => b.code);
+    assert.ok(codes.includes("unknown_family"), `"${family}" produced no unknown_family blocker`);
+    assert.equal(outcome.eligible, false, `"${family}" was judged eligible`);
+    // Scope must stay null: `templateFor` indexes another family-keyed map with
+    // it, so a scope here would simply move the same crash one line down.
+    assert.equal(outcome.scope, null, `"${family}" produced a scope`);
+  }
+});
+
+test("unknown_family is distinct from no_family, because the causes differ", () => {
+  // Absent means the record predates the family entrances and is product
+  // shaped, which is ordinary. Unrecognised means a data-integrity problem.
+  // One code for both would hide the second behind the first's routine
+  // incomplete-record message.
+  const absent = assessCredibleInterest({ ...PRODUCTS, marketFamily: null }, INTEREST);
+  const codes = absent.blockers.map((b) => b.code);
+  assert.ok(codes.includes("no_family"), "an absent family lost its own blocker");
+  assert.ok(!codes.includes("unknown_family"), "an absent family is being reported as unrecognised");
+});
+
+test("the guard changes nothing for the three real families", () => {
+  for (const deal of [PRODUCTS, SERVICES, DISTRIBUTION]) {
+    const codes = assessCredibleInterest(deal, INTEREST).blockers.map((b) => b.code);
+    assert.ok(!codes.includes("unknown_family"), `${deal.marketFamily} is being treated as unrecognised`);
+  }
+});
+
 console.log(`ok   deal-room interest: ${passed} assertions passed`);

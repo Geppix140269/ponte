@@ -20,6 +20,31 @@ import "@/components/desk/desk.css";
 // change to it is a change to the authority, which is what CODEOWNERS protects.
 import "@/design/authority/bridge/v1/source/ponte-bridge.css";
 import "@/components/ponte/bridge/bridge-integration.css";
+/*
+  The Task Completion Bridge's own stylesheet, which this route rendered
+  WITHOUT for as long as the example room has been on the entrance.
+
+  Nothing failed and nothing warned. The component just fell back to the user
+  agent's defaults, and the entrance carried three symptoms that read as three
+  unrelated content bugs:
+
+    "58%of the approved procedure"  - `.tcb__top` is a flex row with a gap, and
+                                      without the rule it is `display: block`,
+                                      so the value and its band abut.
+    "Procedure agreedReady"         - the same, for `.tcb__abut`, which is
+                                      `space-between` and became two adjacent
+                                      inline spans.
+    a stray dot above the line      - `.tcb__node` is the signal on the deck. It
+                                      takes its fill from CSS, so it painted in
+                                      the UA default black; the deck itself
+                                      takes its STROKE from CSS, so the arch it
+                                      sits on did not paint at all.
+
+  `lib/ponte/__tests__/progress.test.ts` now pins the pairing: a route that
+  renders the component and does not import this file fails there rather than
+  on the entrance.
+*/
+import "@/components/ponte/bridge/completion-bridge.css";
 
 /**
  * The entrance, in The Desk.

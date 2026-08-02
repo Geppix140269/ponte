@@ -2,28 +2,70 @@
    Task Completion Bridge (ADR-0016, Bridge System v1 component #3).
 
    Layout and the lawful gold signal only. Every value is an existing token
-   from the Brand v5 heritage-light block the composer route already loads
-   (find.css) and the Ponte Flow bundle. No page-local colour, radius, shadow,
-   font, easing or duration is invented here.
+   from the Brand v5 heritage-light block and the Ponte Flow bundle. No
+   page-local colour, radius, shadow, font, easing or duration is invented here.
 
-   Scoped under `.ponte-find .tcb` so nothing here reaches another route.
+   ----------------------------------------------------------------------
+   WHY THESE SELECTORS CARRY NO WORLD PREFIX
+
+   Every rule here used to begin `.ponte-find .tcb`, on the reasoning that
+   scoping stops a stylesheet reaching a route it was not written for. That is
+   sound for a surface. It is wrong for a Bridge System primitive, whose whole
+   job is to be the same thing in every world it appears in.
+
+   `TaskCompletionBridge` appears in two: the composer (`.ponte-find`) and the
+   entrance's example room (`.ponte-desk`). On the entrance EVERY rule here was
+   inert. The component rendered, the classes were in the DOM, and none of them
+   matched anything, so the browser drew it with its own defaults. On 2 August
+   2026 the design director reported the result as three unrelated content bugs:
+
+     "58%of the approved procedure"  `.tcb__top` is a flex row with a gap; as
+                                     `display: block` the value and band abut.
+     "Procedure agreedReady"         the same for `.tcb__abut`, which is
+                                     `space-between`.
+     a stray dot with no label       `.tcb__node` takes its fill from here, so
+                                     it painted in UA black; `.tcb__deck` takes
+                                     its STROKE from here, so the arch it sits
+                                     on did not paint at all.
+
+   Adding the import to the landing route was necessary and was not enough: a
+   scoped rule that is loaded and does not match is indistinguishable from one
+   that was never loaded. So the scope goes. `tcb` is a unique prefix, and a
+   primitive should look the same wherever it is drawn.
+
+   `components/ponte/bridge/__tests__/stylesheet-pairing.test.ts` pins both
+   halves: the route imports the file, and the file scopes itself to no world.
    ====================================================================== */
 
-.ponte-find .tcb {
+.tcb {
+  /*
+    The 4px spacing scale, aliased locally.
+
+    `--s-2`, `--s-3` and `--s-5` are declared by find.css, so in the composer
+    they resolve and this passes them straight through. They are NOT declared
+    in the Desk's obsidian block, where they resolved to nothing and every
+    margin in this file collapsed. The fallbacks are find.css's own values,
+    unchanged, so this is value-neutral where the tokens exist and correct
+    where they do not.
+  */
+  --tcb-s-2: var(--s-2, 8px);
+  --tcb-s-3: var(--s-3, 12px);
+  --tcb-s-5: var(--s-5, 24px);
+
   display: block;
-  margin: 0 0 var(--s-5);
+  margin: 0 0 var(--tcb-s-5);
 }
 
 /* The neutral null state: one line, a dot, no arch and no percentage. */
-.ponte-find .tcb--neutral {
+.tcb--neutral {
   display: flex;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--tcb-s-3);
   font-size: 13px;
   color: var(--ink-3);
 }
 
-.ponte-find .tcb__dot {
+.tcb__dot {
   width: 8px;
   height: 8px;
   flex: none;
@@ -31,61 +73,61 @@
   border: 1px solid var(--rule-strong);
 }
 
-.ponte-find .tcb__neutral {
+.tcb__neutral {
   max-width: 60ch;
 }
 
 /* Value and band. */
-.ponte-find .tcb__top {
+.tcb__top {
   display: flex;
   align-items: baseline;
-  gap: var(--s-3);
+  gap: var(--tcb-s-3);
 }
 
-.ponte-find .tcb__pct {
+.tcb__pct {
   font-family: var(--f-serif);
   font-size: 28px;
   line-height: 1;
   color: var(--gold-ink);
 }
 
-.ponte-find .tcb__pctn {
+.tcb__pctn {
   font-family: var(--f-mono);
   font-size: 13px;
   margin-left: 2px;
 }
 
-.ponte-find .tcb__band {
+.tcb__band {
   font-size: 12px;
   color: var(--ink-3);
 }
 
 /* The deck. */
-.ponte-find .tcb__arc {
-  margin-top: var(--s-2);
+.tcb__arc {
+  margin-top: var(--tcb-s-2);
 }
 
-.ponte-find .tcb__deck {
+.tcb__deck {
   stroke: var(--rule-strong);
   stroke-width: 1.5;
 }
 
-.ponte-find .tcb__trav {
+.tcb__trav {
   stroke: var(--gold-ink);
   stroke-width: 2.5;
   stroke-linecap: round;
   transition: stroke-dasharray 500ms ease;
 }
 
-.ponte-find .tcb__node {
+.tcb__node {
   fill: var(--gold-ink);
 }
 
 /* The two ends of the crossing. */
-.ponte-find .tcb__abut {
+.tcb__abut {
   display: flex;
   justify-content: space-between;
-  margin-top: var(--s-2);
+  margin-top: var(--tcb-s-2);
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -96,7 +138,7 @@
 /* Movement is meaning here, but it is not information: the settled position is
    the same with motion removed. */
 @media (prefers-reduced-motion: reduce) {
-  .ponte-find .tcb__trav {
+  .tcb__trav {
     transition: none;
   }
 }

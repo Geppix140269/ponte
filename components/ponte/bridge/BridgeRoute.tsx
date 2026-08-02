@@ -1,7 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Link } from "@/i18n/navigation";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react";
+import { Link, useRouter } from "@/i18n/navigation";
 import PonteIcon from "@/design-system/ponte-flow/components/PonteIcon";
 import type { FlowIconKey, FlowLabelledKey } from "@/design-system/ponte-flow/generated/flow-icon-keys";
 import {
@@ -165,6 +174,23 @@ export default function BridgeRoute({
 
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const tabStop = focusKey ?? selected ?? stations[0]?.key ?? null;
+
+  /*
+    A pressed navigate station says so while its route is being fetched.
+
+    The three stations on the Deal Room entrance point at `/structure`, which
+    is `force-dynamic` and mounts the whole composer: measured at 2,638 ms on
+    2 August 2026, during which the App Router leaves the previous screen
+    entirely unchanged. `useTransition` reports the router's own navigation, so
+    the state clears itself if the route never arrives; a hand-held boolean
+    would strand a station saying "Opening" forever.
+
+    The key is tracked separately because one transition covers the whole
+    component and only the station that was pressed should draw.
+  */
+  const router = useRouter();
+  const [routing, startRouting] = useTransition();
+  const [routingKey, setRoutingKey] = useState<string | null>(null);
 
   /** Bumped on every selection so the runner remounts and replays. */
   const [travel, setTravel] = useState(0);
@@ -537,17 +563,37 @@ export default function BridgeRoute({
     };
 
     if (mode === "navigate") {
+      const href = station.href ?? "/";
+      const isRouting = routing && routingKey === station.key;
       return (
         <Link
           key={station.key}
-          href={station.href ?? "/"}
+          href={href}
           className={classes}
           data-id={station.key}
+          data-pending={isRouting ? "true" : undefined}
+          aria-busy={isRouting || undefined}
           aria-labelledby={titleId}
           aria-describedby={station.description ? descriptionId : undefined}
           ref={ref}
+          onClick={(event) => {
+            // A modifier or middle click belongs to the browser, and an
+            // already-prevented click belongs to a guard above us. Both are
+            // left exactly alone; only the plain press is taken over, and it
+            // is taken over so that it can be acknowledged.
+            if (event.defaultPrevented) return;
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            setRoutingKey(station.key);
+            startRouting(() => router.push(href));
+          }}
         >
           {inner}
+          {isRouting ? (
+            <span className="rlink__p" role="status">
+              Opening
+            </span>
+          ) : null}
         </Link>
       );
     }

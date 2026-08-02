@@ -36,6 +36,44 @@
 
 .ponte-find .sstep { max-width: 640px; margin: 0 auto; padding: var(--s-6) 0 var(--s-8); }
 
+/* ----------------------------------------------------------------------
+   The route's own loading and error states (`loading.tsx`, `error.tsx`).
+
+   Neither existed. The composer route is `force-dynamic`, so a client
+   navigation to it held the PREVIOUS page on screen, unchanged, for the whole
+   round trip - 2,638 ms on a warm dev server, measured 2 August 2026 - and an
+   error fell through to the locale boundary, which offers "home" as its way
+   out from a half-built record.
+   ---------------------------------------------------------------------- */
+.ponte-find .sload {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+/* The mark travels, so the state reads as progress rather than as a stall. It
+   is a rule, not a spinner: the composer has no circles in it. */
+.ponte-find .sload__m {
+  flex: none; width: 40px; height: 2px; background: var(--rule); position: relative; overflow: hidden;
+}
+.ponte-find .sload__m::after {
+  /* Blue, the interaction family (ADR-0015 Stage 2). Gold means arrival at a
+     completed state, and a screen that is still opening has arrived nowhere. */
+  content: ""; position: absolute; inset: 0; background: var(--interact);
+  transform-origin: left center; animation: sload-travel 900ms ease-in-out infinite;
+}
+@keyframes sload-travel {
+  0% { transform: scaleX(0); }
+  55% { transform: scaleX(1); }
+  100% { transform: scaleX(1); transform-origin: right center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ponte-find .sload__m::after { animation: none; transform: none; }
+}
+.ponte-find .sload__b { margin-top: 14px; max-width: 54ch; color: var(--ink-2); line-height: 1.55; }
+.ponte-find .sload__a {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 26px;
+}
+
 /* S01 intent tap rows, gold left status-rule on the chosen one */
 .ponte-find .tapopts { margin: var(--s-5) 0; }
 .ponte-find .tapopt {
@@ -51,6 +89,17 @@
   content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--gold-rule);
 }
 .ponte-find .tapopt[aria-pressed="true"] .tapopt__t { color: var(--gold-ink); }
+/* The word, beside the thing that was pressed rather than at the far left edge
+   of a 640px row. Two carriers were already here - the rule and the gold ink -
+   and both were reported as absent on 2 August 2026, which is the only evidence
+   that matters about whether a signal reads. */
+.ponte-find .tapopt__on {
+  position: absolute; right: 0; top: var(--s-4);
+  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--gold-ink);
+}
+/* Pressed. Painted by the browser at pointer-down, so it cannot arrive late. */
+.ponte-find .tapopt:active { transform: translateY(1px); }
 
 /* Constitution 6c: container opacity over a subtree containing text multiplies
    every descendant's contrast, and this block held labels at 1.61:1. Recession is

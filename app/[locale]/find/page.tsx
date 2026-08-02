@@ -277,7 +277,7 @@ async function Results({ q }: { q: FindQuery }) {
               <span className="fstate__badge">{t("qualified.emptyBadge")}</span>
               <h3 className="fstate__h serif">{t("qualified.emptyTitle")}</h3>
               <p className="fstate__p">{t("qualified.emptyBody")}</p>
-              <Link className="fbtn fbtn--secondary" href="/structure">
+              <Link className="fbtn fbtn--secondary" href="/structure?from=find">
                 {t("nav.submit")}
               </Link>
             </div>

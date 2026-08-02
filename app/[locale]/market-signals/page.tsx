@@ -155,7 +155,7 @@ export default async function MarketSignalsPage({
                 </p>
               </div>
               <div className="closing__a">
-                <Link className="b b--lg" href="/structure">
+                <Link className="b b--lg" href="/structure?from=market-signals">
                   Start a deal
                 </Link>
               </div>

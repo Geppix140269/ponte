@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createClientOrNull } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { dealRoomAvailableTo } from "./flags";
 import { countMaterialEventsSince, earnedMilestones, type ActivityEvent, type ActivityEventType } from "./activity";
@@ -159,7 +159,18 @@ export async function dealRoomGate(): Promise<{ profileId: string; organisationI
  * than an error.
  */
 export async function listRooms(): Promise<{ id: string; ref: string; title: string; state: RoomState }[]> {
-  const supabase = createClient();
+  /*
+    Null when this BUILD has no Supabase configuration.
+
+    `dealRoomGate()` above is already safe, because `getUser()` checks the
+    configuration and returns null before any client is built. This function
+    had no such path and was called straight from the page, so `/deal-rooms`
+    answered a hard 500 on a deployment built without the public Supabase
+    variables. No rooms is the correct answer to "there is no database"; a dead
+    page is not.
+  */
+  const supabase = createClientOrNull();
+  if (!supabase) return [];
   const { data } = await supabase
     .from("deal_rooms")
     .select("id, ref, title, state")

@@ -18,8 +18,9 @@ import type { SignalSideCounts } from "@/lib/board/inventory";
  *
  * So the first thing the route offers is that choice. Each door carries its own
  * live count, because a door with no number on it asks a member to guess whether
- * it is worth opening, and its own search field, because the search a member
- * wants is almost always inside one side rather than across both.
+ * it is worth opening. Each also carried its own search field, on the reasoning
+ * that the search a member wants is almost always inside one side; that half is
+ * still true and the field was still the wrong way to serve it. See below.
  *
  * This band sits ABOVE the board, never instead of it. Offering the choice is
  * worth a screenful; charging a click for the inventory somebody came for is
@@ -37,9 +38,10 @@ import type { SignalSideCounts } from "@/lib/board/inventory";
  * the deck. Ponte is the bridge between a buyer and a seller, and this is the
  * one place the sentence is drawn rather than written.
  *
- * Only the search survives as its own control, because a station on a deck
- * cannot hold a text input and drawing a panel round the bridge to make room
- * would have put back the box the change exists to remove.
+ * The search survived that change as its own control, because a station on a
+ * deck cannot hold a text input and drawing a panel round the bridge to make
+ * room would have put back the box the change exists to remove. It has since
+ * gone too, for a different reason, given below.
  *
  * Nothing here is distinguished by colour. The approved palette reserves its
  * status colours for verification, approval, warning and success, and
@@ -47,49 +49,31 @@ import type { SignalSideCounts } from "@/lib/board/inventory";
  * a direction, not a state.
  */
 
-/**
- * The search for one side of the market.
+/*
+ * ---------------------------------------------------------------------------
+ * The two side searches were removed on 2 August 2026, and this is where
+ * ---------------------------------------------------------------------------
+ * There were THREE search inputs on `/market-signals`: "Search buyer
+ * requirements" and "Search seller offers" here, and "Search Market Signals"
+ * on the board immediately below. The design director found all three on one
+ * screen and the finding is right. Three fields is three answers to "where do
+ * I type", and two of them were worse answers.
  *
- * All that is left of the boxed door: the crossing above now carries the side,
- * its size and its sentence, so repeating them here would say everything twice.
- * No card, no border, no count. A label and a field.
+ * `SignalSearch` is the real one. It runs the trade vocabulary, so `gas oil`
+ * also finds `EN590`; it says when a query was widened and by what; it says
+ * when a query was too short to run; it carries every structured filter across
+ * the submission; and it offers Clear search and Clear all. The two removed
+ * here did none of that. They were a bare `q` and a hidden `intent`, so
+ * searching from one of them silently discarded whatever the member had already
+ * narrowed by.
  *
- * Still a plain GET form, for the reasons `SignalSearch` gives: Enter submits,
- * the state is the URL, and it works with no JavaScript. The hidden `intent` is
- * what keeps the search inside this side, because a GET form replaces the query
- * string wholesale and would otherwise drop it.
+ * The side is not lost, and it was never really the search's job. The crossing
+ * above is a real Bridge whose two stations link to `?intent=requirement` and
+ * `?intent=offer`, and the board carries the same choice in its lane selector.
+ * `SignalSearch` carries `intent` across in its hidden fields, so choosing a
+ * side and then searching stays inside that side, which is what the two forms
+ * were approximating, badly.
  */
-function SideSearch({
-  intent,
-  title,
-  placeholder,
-}: {
-  intent: "requirement" | "offer";
-  title: string;
-  placeholder: string;
-}) {
-  return (
-    <form className="sgate__f" action="/market-signals" method="get" role="search">
-      <input type="hidden" name="intent" value={intent} />
-      {/*
-        Labelled by `aria-label`: the crossing names this side two lines above,
-        and the placeholder is not relied on for the accessible name because a
-        placeholder disappears the moment anybody types.
-      */}
-      <input
-        className="sgate__i"
-        type="search"
-        name="q"
-        aria-label={`Search ${title.toLowerCase()}`}
-        placeholder={placeholder}
-        autoComplete="off"
-      />
-      <button className="sgate__b" type="submit">
-        Search
-      </button>
-    </form>
-  );
-}
 
 export default function SignalGates({ counts }: { counts: SignalSideCounts | null }) {
   const total = counts?.total ?? null;
@@ -110,27 +94,13 @@ export default function SignalGates({ counts }: { counts: SignalSideCounts | nul
       </div>
 
       {/*
-        The crossing carries the two sides and their sizes; the two search
-        fields below carry the action. They were one boxed card each until the
-        owner asked for the bridge, and splitting them this way is what let the
-        box go: a station on a deck cannot hold a text input, and drawing a
-        panel round the bridge to make room would have put back the box the
-        change exists to remove.
+        The crossing carries the two sides, their sizes and the route into each.
+        It was two boxed cards until the owner asked for the bridge; the two
+        search fields that survived that change have now gone too, because the
+        board's own search does everything they did and five things they did
+        not. Choosing a side here and searching below stays inside the side.
       */}
       <SignalCrossing counts={counts} />
-
-      <div className="sgates">
-        <SideSearch
-          intent="requirement"
-          title="Buyer requirements"
-          placeholder="Search buyer requirements…"
-        />
-        <SideSearch
-          intent="offer"
-          title="Seller offers"
-          placeholder="Search seller offers…"
-        />
-      </div>
 
       <div className="sgates__all">
         <PonteIcon

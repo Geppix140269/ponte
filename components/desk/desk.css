@@ -360,6 +360,53 @@
   transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
 }
 .ponte-desk .b:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+/* ----------------------------------------------------------------------
+   Pressed, and pending.
+
+   `.fbtn` had a pressed state. `.b` did not - and `.b` is the control on the
+   entrance to the only revenue path on the site. A press on "Describe what you
+   trade" leads to `/structure`, which is `force-dynamic` and mounts the whole
+   composer: 2,638 ms measured on 2 August 2026, with the previous screen left
+   completely unchanged for the whole of it. The design director pressed it on
+   production, waited past ten seconds, pressed again, and filed the control as
+   dead. A silent control and a dead control are the same control, from outside.
+
+   `:active` is painted by the browser at pointer-DOWN with no JavaScript in
+   the path, so it is the one acknowledgement that cannot arrive late.
+
+   `[data-pending]` is set by `RouteLink` from the router's own transition, so
+   it clears itself when a navigation fails instead of stranding the control.
+   These rules sit here, beside `.b`, rather than in a stylesheet of their own:
+   a state rule that can go missing separately from the class it decorates is
+   the exact shape of the bug that left the Task Completion Bridge unstyled on
+   the landing.
+   ---------------------------------------------------------------------- */
+.ponte-desk .b:active { transform: translateY(1px); }
+.ponte-desk .b[data-pending="true"] { position: relative; }
+.ponte-desk .b[data-pending="true"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  /* The blue interaction family (ADR-0015 Stage 2), not gold. Gold carries
+     movement across a Bridge and arrival at a completed state; a navigation
+     that has been asked for and not yet answered is neither. Blue is what this
+     product already uses for "you did something and it is being handled". */
+  background: var(--pf-interact); transform-origin: left center;
+  animation: dk-pending 900ms ease-in-out infinite;
+}
+/* The word, so the state is read as well as seen. Additive: the control's own
+   label never changes, so nothing resizes under a second press. */
+.ponte-desk .rlink__p {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+@keyframes dk-pending {
+  0% { transform: scaleX(0); }
+  55% { transform: scaleX(1); }
+  100% { transform: scaleX(1); transform-origin: right center; }
+}
+/* Reduced motion is a different presentation, not a slower one: the hairline is
+   simply there, for as long as the navigation is. */
+@media (prefers-reduced-motion: reduce) {
+  .ponte-desk .b[data-pending="true"]::after { animation: none; transform: none; }
+}
 .ponte-desk .b--2 { background: var(--raised); color: var(--ink); border-color: var(--rule-strong); }
 .ponte-desk .b--2:hover { background: var(--sunken); border-color: var(--ink-2); color: var(--ink); }
 .ponte-desk .b--lg { min-height: 46px; padding: 12px 20px; font-size: 14px; }
@@ -443,11 +490,36 @@
   .ponte-desk .drp__room { animation: br-fade-in var(--pf-dur-crossing, 900ms) var(--pf-ease) 240ms both; }
 }
 
+/* ----------------------------------------------------------------------
+   The example room, separated by hairlines rather than drawn as a card.
+
+   It was a 1px border and a 9px radius on a raised ground: a rounded rectangle,
+   on an entrance where nothing else has container chrome. ADR-0002 opens on
+   exactly this drift - "implementation has repeatedly drifted toward generic
+   SaaS cards" - and names substituting a card for an approved treatment as the
+   thing the Constitution exists to stop. The design director flagged it in
+   light mode on 2 August 2026; it was in both.
+
+   Separation now comes from two full-width hairlines and a tone shift, which
+   is the treatment the rest of this surface already uses. Nothing is lost: the
+   room is still distinct from the page, and it is distinct in the product's own
+   language rather than in a borrowed one.
+
+   The bleed is what makes the rules FULL width. The room sits inside the Desk's
+   reading column, so a rule drawn at the element's own edges would be a short
+   line floating in the middle of the page - which is a card again, with three
+   sides missing.
+   ---------------------------------------------------------------------- */
 .ponte-desk .drp__room {
-  border: 1px solid var(--rule-strong);
-  border-radius: var(--dk-radius);
-  background: var(--raised);
-  padding: 20px 22px 18px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--sunken);
+  /* Out to the gutter and back, so the hairlines cross the full measure while
+     the content keeps the column it shares with everything above it.
+     `--dk-gut` is the same token `.sec` pads with, so the two cancel exactly at
+     every breakpoint; a hard-coded value overshot by 6px on a 390 screen. */
+  margin-inline: calc(var(--dk-gut) * -1);
+  padding: 26px var(--dk-gut) 24px;
   display: grid;
   gap: 18px;
 }
@@ -1052,7 +1124,29 @@
   text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
 }
 .ponte-desk .strip__k .pf-icon { color: var(--review); }
-.ponte-desk .strip__w { flex: 1; min-width: 0; overflow: hidden; }
+/* ----------------------------------------------------------------------
+   The window the marquee runs behind, and why it is masked.
+
+   A marquee has a leading edge, and at any instant the item crossing it is cut
+   in half by it: the design director read the first visible signal as "...ndia"
+   on 2 August 2026 and filed it as items being clipped at both ends. They are,
+   and they always will be - that is what a continuous marquee is. Snapping
+   items to the edge would stop the movement being continuous, which is the one
+   thing the strip is for.
+
+   So the edge stops being an edge. The track fades into the surface over 48px
+   at each end, and an item leaves by dissolving rather than by being cut. The
+   same mask covers the trailing edge, where the identical fault existed and
+   was not noticed because a half-item on the way out reads as intentional.
+
+   `-webkit-mask-image` is carried alongside for Safari, which still needs the
+   prefix for mask-image on a gradient.
+   ---------------------------------------------------------------------- */
+.ponte-desk .strip__w {
+  flex: 1; min-width: 0; overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+}
 .ponte-desk .strip__track {
   display: flex; align-items: stretch; width: max-content;
   animation: dk-strip 90s linear infinite;
@@ -1120,7 +1214,15 @@
 /* Reduced motion is a different presentation, not a slower one: the track
    stops being a marquee and becomes a list the member scrolls themselves. */
 @media (prefers-reduced-motion: reduce) {
-  .ponte-desk .strip__w { overflow-x: auto; }
+  /* No mask here. Under reduced motion the strip is a list the member scrolls
+     themselves, and a faded leading edge on a list the reader controls hides
+     the item they just scrolled to. The mask exists for movement nobody asked
+     for; there is none here. */
+  .ponte-desk .strip__w {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
   .ponte-desk .strip__track { animation: none; transform: none; }
   .ponte-desk .strip__half { display: none; }
 }

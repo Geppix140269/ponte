@@ -232,10 +232,54 @@ export function assessCredibleInterest(deal: DealFacts, interest: InterestFacts)
   }
 
   if (deal.marketFamily) {
-    for (const requirement of REQUIRED_BY_FAMILY[deal.marketFamily]) {
-      const value = requirement.read(deal);
-      if (value === null || value === undefined || value === "") {
-        blockers.push({ code: requirement.code, message: requirement.message, remedy: "Complete the Deal." });
+    /*
+      A STORED FAMILY THIS BUILD DOES NOT RECOGNISE.
+
+      `DealFacts.marketFamily` is typed `MarketFamily | null`, and every caller
+      that builds one from a database row does it with a CAST rather than a
+      check - `row.market_family as DealFacts["marketFamily"]`. A cast is a
+      claim, not a validation, so any value the column actually holds arrives
+      here wearing a type it may not have.
+
+      This line used to index straight into `REQUIRED_BY_FAMILY` and iterate
+      the result. For a family outside the three keys that map has, the result
+      is `undefined`, and `for (const x of undefined)` is a TypeError: the
+      whole render dies.
+
+      That is not theoretical. On 2 August 2026 the DECISION-27 human check on
+      PR #225 failed on `/deal-rooms/propose` with "An error occurred in the
+      Server Components render", and this is the throw. It only fires for a
+      SIGNED-IN member who holds at least one listing with such a value, which
+      is why it is invisible signed out, invisible in every automated check,
+      and invisible locally - there is no development database (issue #84), so
+      no session and no rows.
+
+      An unrecognised family is now what an absent one already was: a stated
+      blocker on that one Deal. The member sees a Deal that cannot go forward
+      and is told why; the other Deals in the list still render; the page
+      lives. It fails closed WITHOUT failing loudly at the reader.
+
+      The code is distinct from `no_family` on purpose. Absent and unrecognised
+      have different causes and different fixes, and collapsing them would hide
+      a data-integrity problem behind an ordinary incomplete-record message.
+    */
+    const requirements = REQUIRED_BY_FAMILY[deal.marketFamily] as
+      | (typeof REQUIRED_BY_FAMILY)[MarketFamily]
+      | undefined;
+
+    if (!requirements) {
+      blockers.push({
+        code: "unknown_family",
+        message:
+          "This Deal carries a market family Ponte does not recognise, so it cannot tell which procedure applies.",
+        remedy: "Open the Deal and choose what it is again.",
+      });
+    } else {
+      for (const requirement of requirements) {
+        const value = requirement.read(deal);
+        if (value === null || value === undefined || value === "") {
+          blockers.push({ code: requirement.code, message: requirement.message, remedy: "Complete the Deal." });
+        }
       }
     }
   }

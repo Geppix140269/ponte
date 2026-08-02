@@ -338,6 +338,29 @@ export function needsHsCode(draft: StructureDraft): boolean {
   return draft.canonical.family === "products";
 }
 
+/**
+ * Is this draft a member LOOKING for a product, rather than offering one?
+ *
+ * The composer has two ways of learning that and it was only reading one.
+ *
+ *   - A family entrance sets `canonical.intent` to `source_product`.
+ *   - The composer's own three rows set `intent` to `"requirement"`.
+ *
+ * The product intake asked `draft.canonical?.intent === "source_product"` and
+ * nothing else, so a member who arrived with no entrance, pressed "Source a
+ * product" and watched the row take its selected treatment was then asked
+ * "Tell Ponte what you SUPPLY, in your own words." The screen contradicted the
+ * choice it had just accepted, which reads as the choice not registering - and
+ * that is precisely how it was reported on 2 August 2026.
+ *
+ * The canonical pair wins where it exists, because it is the richer statement
+ * and the one a resumed record carries. The legacy field answers otherwise.
+ */
+export function sourcingProduct(draft: StructureDraft): boolean {
+  if (draft.canonical) return draft.canonical.intent === "source_product";
+  return draft.intent === "requirement";
+}
+
 // ---------------------------------------------------------------------------
 // Classification: what the record IS, chosen before anything is described
 // ---------------------------------------------------------------------------
