@@ -182,8 +182,19 @@ confident guess is not.
 | Whether RLS in force matches what the repository expects | Sections 6 and 6b of the export. **This is the one with a security consequence**: RLS is the mandatory permission boundary for the Deal Room. |
 | Member-data integrity | Not answerable within the export boundary. Requires a separately authorised, human-run aggregate. |
 
-`scripts/schema-export.sql` (PR #227) produces every section named above, and
-its read-only boundary is enforced by a test rather than asserted.
+Two export scripts produce every section named above, and the same read-only
+boundary is enforced on both by a test rather than asserted:
+
+| Script | For |
+| --- | --- |
+| `scripts/schema-export-web.sql` | **The Supabase SQL editor.** One statement, one row, one column. Paste, run, copy the cell. |
+| `scripts/schema-export.sql` | A terminal with `psql`. Thirteen statements, easier to read section by section. |
+
+The web version exists because the psql one cannot be used in the dashboard:
+it carries `pset`, `	iming` and `echo`, which are psql meta-commands the
+server never sees, and the editor returns only the LAST result set of a
+multi-statement paste. Twelve of the thirteen sections would have been
+silently discarded, which is the failure mode that looks like success.
 
 ---
 

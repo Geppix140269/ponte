@@ -30,19 +30,37 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const PATH = "scripts/schema-export.sql";
-const RAW = readFileSync(PATH, "utf8");
+/*
+  BOTH export scripts, because both are run against production.
+
+  The psql version is thirteen statements interleaved with meta-commands. The
+  web version is ONE statement returning one row, because the Supabase SQL
+  editor does not implement pset, 	iming or echo and returns only the LAST
+  result set of a multi-statement paste - which would have silently discarded
+  twelve of the thirteen sections while looking like it worked.
+
+  A boundary that only guarded the file nobody uses would be decoration.
+*/
+const PATHS = ["scripts/schema-export.sql", "scripts/schema-export-web.sql"];
 
 /** SQL with comments removed, so a comment explaining a ban is not a ban. */
-const SQL = RAW.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+function sqlOf(path: string): string {
+  return readFileSync(path, "utf8")
+    .replace(/--[^\n]*/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+}
 
-test("the file exists and is not empty", () => {
+for (const PATH of PATHS) {
+const RAW = readFileSync(PATH, "utf8");
+const SQL = sqlOf(PATH);
+
+test(`${PATH}: exists and is not empty`, () => {
   // A silent zero would make every assertion below pass by reading nothing.
   assert.ok(RAW.length > 2000, `${PATH} is ${RAW.length} bytes; it should be the full export`);
   assert.ok(SQL.includes("select"), "no SELECT survived comment stripping; the stripper is wrong");
 });
 
-test("every statement is a read", () => {
+test(`${PATH}: every statement is a read`, () => {
   /*
     Split on the STATEMENT boundary, not on newlines.
 
@@ -76,7 +94,27 @@ test("every statement is a read", () => {
     })
     .filter(Boolean);
 
-  assert.ok(statements.length >= 10, `only ${statements.length} statements parsed; the split is wrong`);
+  /*
+    The two files have opposite shapes, and each shape is a requirement.
+
+    The psql version is many statements, one per section, because psql runs
+    them in order and prints each result. The web version must be EXACTLY ONE,
+    because the Supabase SQL editor returns only the last result set of a
+    multi-statement paste - so a second statement there would silently discard
+    everything before it while appearing to succeed.
+
+    Asserting a floor of ten against both would have passed the wrong file for
+    the wrong reason, which is how the count got written in the first place.
+  */
+  if (PATH.endsWith("-web.sql")) {
+    assert.equal(
+      statements.length,
+      1,
+      `the web export is ${statements.length} statements; the editor would return only the last`,
+    );
+  } else {
+    assert.ok(statements.length >= 10, `only ${statements.length} statements parsed; the split is wrong`);
+  }
 
   for (const statement of statements) {
     const first = statement.split(/[\s(]/)[0].toLowerCase();
@@ -84,7 +122,7 @@ test("every statement is a read", () => {
   }
 });
 
-test("no write verb appears anywhere, including privilege changes", () => {
+test(`${PATH}: no write verb anywhere, including privilege changes`, () => {
   /*
     A privilege change IS a production write. `CREATE ROLE` and `GRANT` are not
     exempt because they are not data migrations, and the standing constraint is
@@ -103,7 +141,7 @@ test("no write verb appears anywhere, including privilege changes", () => {
   }
 });
 
-test("no table that holds member data is selected from", () => {
+test(`${PATH}: no table holding member data is selected from`, () => {
   /*
     The catalogs are metadata about the shape of the data and are safe. A
     Ponte table is the data. `storage.objects` is on this list for a reason
@@ -129,7 +167,7 @@ test("no table that holds member data is selected from", () => {
   assert.ok(SQL.includes("storage.buckets"), "bucket configuration is no longer exported");
 });
 
-test("counts are catalog estimates, never exact", () => {
+test(`${PATH}: counts are catalog estimates, never exact`, () => {
   /*
     A SELECT grant that permits an exact COUNT(*) also permits reading the
     rows, so asking for exact counts would ask for the grant this boundary
@@ -140,7 +178,7 @@ test("counts are catalog estimates, never exact", () => {
   assert.match(SQL, /reltuples/, "the export no longer reports estimated row counts at all");
 });
 
-test("function and view bodies travel as digests, not as text", () => {
+test(`${PATH}: bodies travel as digests, not as text`, () => {
   // A body can embed a key, a webhook secret or a hard-coded address. A digest
   // proves drift against the repository without carrying any of that.
   assert.match(SQL, /sha256\(convert_to\(coalesce\(p\.prosrc/, "function bodies are no longer digested");
@@ -155,17 +193,19 @@ test("function and view bodies travel as digests, not as text", () => {
   }
 });
 
-test("SECURITY DEFINER functions are reported", () => {
+test(`${PATH}: SECURITY DEFINER functions are reported`, () => {
   // They bypass RLS by design, and RLS is the mandatory permission boundary
   // for the Deal Room. A reconciliation that cannot list them is incomplete.
   assert.match(SQL, /prosecdef/, "the export no longer reports which functions bypass RLS");
 });
 
-test("whether RLS is ENABLED is asked separately from what policies exist", () => {
+test(`${PATH}: RLS enablement is asked separately from the policies`, () => {
   // A table with policies and RLS disabled is wide open, and reading only
   // `pg_policies` would show a full policy list on a table enforcing none.
   assert.match(SQL, /relrowsecurity/, "the export does not report whether RLS is enabled");
   assert.match(SQL, /pg_policies/, "the export does not report the policies");
 });
+
+}
 
 console.log(`ok   schema export boundary: ${passed} assertions passed`);
