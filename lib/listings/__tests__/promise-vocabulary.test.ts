@@ -343,6 +343,52 @@ test("nothing promises unlimited or indefinite retention", () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// The end-to-end specs, which pin copy and do not run in this suite
+// ---------------------------------------------------------------------------
+
+test("no end-to-end spec REQUIRES wording that has been corrected", () => {
+  /*
+    The gap this closes.
+
+    `e2e/pricing-fees.spec.ts` asserted `toContainText("30 active days")`. It
+    passed every local run because Playwright specs are not in `npm test`: they
+    need a built server and the site-gate password, so they run only in the
+    gated `landing evidence` job. The correction therefore looked complete
+    locally and failed in CI.
+
+    A spec is allowed to MENTION a retired phrase - proving it is gone is the
+    honest way to pin a correction - so this bans requiring it, not naming it.
+    The distinction is `.not` on the same line.
+  */
+  const retired = [
+    "30 active days",
+    "reviews it before anything is published",
+    "when you publish it",
+    "vetted by the desk",
+  ];
+  for (const spec of walk("e2e", /\.spec\.ts$/)) {
+    // Block comments are blanked rather than removed, so the line numbers in a
+    // failure message still point at the real line. A `/* */` explaining the
+    // correction quotes the retired phrase on its FIRST line, which a
+    // per-line `startsWith("*")` test does not catch.
+    const source = readFileSync(spec, "utf8").replace(/\/\*[\s\S]*?\*\//g, (block) =>
+      "\n".repeat((block.match(/\n/g) ?? []).length),
+    );
+    source.split("\n").forEach((line, index) => {
+      // A line comment explaining the correction necessarily quotes it.
+      if (line.trim().startsWith("//") || line.trim().startsWith("*")) return;
+      for (const phrase of retired) {
+        if (!line.includes(phrase)) continue;
+        assert.ok(
+          line.includes(".not"),
+          `${spec}:${index + 1} requires retired wording: "${phrase}"`,
+        );
+      }
+    });
+  }
+});
+
 test("the free draft room says exactly what is true of it", () => {
   const walk = readFileSync("lib/deal-room/walkthrough.ts", "utf8");
   assert.match(

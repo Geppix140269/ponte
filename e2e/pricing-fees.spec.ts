@@ -77,12 +77,25 @@ test("the page presents exactly one product panel, not a comparison grid", async
   await expect(page.locator(".panel")).toHaveCount(1);
 });
 
-test("the one product is the Deal Room, at $79 USD for 30 active days", async ({ page }) => {
+test("the one product is the Deal Room, at $79 USD for 30 calendar days", async ({ page }) => {
   await fees(page);
   const panel = page.locator(".panel").first();
   await expect(panel).toContainText("Ponte Deal Room");
   await expect(panel).toContainText("$79 USD");
-  await expect(panel).toContainText("30 active days");
+  /*
+    "30 active days" until 2 August 2026, corrected on owner approval.
+
+    The phrase implied a clock that stops. It never has: `periodEndFrom` is
+    `start + 30 x 24h` of wall time and does not pause for a blocked step, a
+    paused branch or an unanswered invitation. The fees page was advertising a
+    more generous accounting model than the product implements, which is the
+    direction of error that becomes a refund argument.
+
+    So this is the copy being corrected to the code, not a repricing. The price
+    and the period are unchanged. See ADR-0020 Amendment 3.
+  */
+  await expect(panel).toContainText("30 calendar days");
+  await expect(panel).not.toContainText("30 active days");
 });
 
 test("the formula states the included five, the $15 branch and the $199 cap", async ({ page }) => {
