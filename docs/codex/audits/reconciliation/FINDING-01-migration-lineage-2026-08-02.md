@@ -213,3 +213,63 @@ silently discarded, which is the failure mode that looks like success.
 rebuilding the schema from the repository is **demonstrated impossible**, not
 suspected. Issues #48, #49 and #50 all descend from this single finding: #50
 (rehearse a restore) cannot be attempted at all while it stands.
+
+---
+
+## 12. Annotation, 2 August 2026, after the reconciliation report
+
+**Not a rewrite.** The finding above stands as written and as dated. This
+section records what the WO-2 report established afterwards, because two of its
+results qualify what is above and one of them is a correction.
+
+The report was produced from the owner's own hand-run `ponte_schema_export` at
+2026-08-02 16:40:37 UTC — production's catalogue, no AI connection, `DECISION-22`
+option A held. **It supersedes this document wherever the two differ.**
+
+### What it corrected
+
+**The applied lineage is materially better than this finding implied.** 52 of
+the 53 recorded migrations checksum-match the repository file exactly. Nobody
+has edited an applied migration; there are zero orphan records. The report
+classifies applied lineage as **minor**, not severe. Section 2 above reasoned
+only about what the *tool* would read and was silent about what had actually
+been applied, and read on its own it invites the harsher conclusion.
+
+### What it confirmed, from a second source
+
+**There is no genesis.** No file in the chain creates `profiles`,
+`organizations`, `products`, `categories`, `orders`, `order_items`,
+`order_notes`, `bundle_items` or `newsletter_subscribers`. The repository cannot
+build the schema from nothing. The report classifies **reproducibility** as
+SEVERE, which is this finding's substance, reached independently.
+
+It also found a cause this document did not: `public.schema_migrations` holds 53
+rows and `supabase_migrations.schema_migrations` — the store the CLI actually
+reads — holds **one**. The CLI believes this database is at `01`. That is a
+second, sufficient reason it cannot be used here, and it does not depend on the
+filename-pattern argument at all.
+
+### The severity line, restated
+
+| Axis | Report's classification |
+| --- | --- |
+| Applied lineage | Minor |
+| Ledger consistency | Material |
+| **Reproducibility** | **SEVERE** |
+| Member-data integrity | Minor, one unknown |
+| Safe rollback | Cannot be demonstrated |
+
+**Overall: material, with one severe finding.** This document's blanket SEVERE
+was right about the axis that matters and wrong to imply the lineage itself was
+unproven. `DECISION-24`'s second-reviewer requirement is live either way.
+
+### What changed in the repository as a result
+
+`npm run dev:db` no longer replays the migrations. It restores the committed
+baseline snapshot, exactly as CI's `deal-room-migration-replay.yml` phase 0 has
+since PR #203. See `docs/codex/DEVELOPMENT-DATABASE.md`.
+
+**This resolves nothing above.** It is a way to work while the finding stands,
+and the runner prints that on every run rather than letting a working
+development database be mistaken for a working migration history. No file was
+renamed, reordered or edited, per the owner's instruction and per `DECISION-26`.

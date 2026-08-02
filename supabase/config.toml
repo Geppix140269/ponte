@@ -61,7 +61,31 @@ max_client_conn = 100
 
 [db.migrations]
 # If disabled, migrations will be skipped during a db push or reset.
-enabled = true
+#
+# DISABLED, DELIBERATELY. The local schema is restored from the committed
+# baseline snapshot in `supabase/schema-snapshots/`, not replayed from
+# `supabase/migrations/`, because the migration history cannot rebuild the
+# database on its own. See:
+#
+#   docs/codex/audits/reconciliation/FINDING-01-migration-lineage-2026-08-02.md
+#   the KNOWN DRIFT note in supabase/schema.sql
+#
+# Two independent reasons, either of which is sufficient:
+#
+#   1. The CLI reads a version from the characters before the first underscore
+#      and requires them to be digits, so 45 of the 55 files are SILENTLY
+#      skipped. Leaving this enabled means the CLI reports success having
+#      applied ten files and ignored the rest.
+#   2. The history is not self-contained. The first file it does accept alters
+#      tables that no migration creates.
+#
+# Turning this off does not hide the problem, it stops the local stack
+# pretending to have solved it. `npm run dev:db` prints the baseline it
+# restored and the fact that the history was not replayed, every run.
+#
+# NOTHING HERE RENAMES OR EDITS A MIGRATION. The remedy for FINDING-01 belongs
+# to the WO-2 reconciliation report and is not this file's to choose.
+enabled = false
 # Specifies an ordered list of schema files, directories, or glob patterns that describe your database.
 # Supports paths relative to supabase directory: "./schemas/*.sql", "./database".
 schema_paths = []
@@ -241,6 +265,16 @@ max_frequency = "1s"
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
+#
+# A FIXED code for the development account would be better than a mailbox, and
+# is not available: `[auth.email.test_otp]` is rejected by this CLI with
+# "'auth.email' has invalid keys: test_otp". Only `[auth.sms.test_otp]` exists.
+# Confirmed by trying it - `supabase start` accepts the key silently and
+# `supabase db reset` then refuses to parse the file, which is the worse of the
+# two failures because the stack looks fine until the next rebuild.
+#
+# So sign-in reads the code from Mailpit on :54324. `npm run dev:code` fetches
+# it, so nothing about the loop needs a human to open a mailbox.
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -252,10 +286,34 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# THE SIGN-IN EMAIL. Not decoration - without this, local sign-in cannot work.
+#
+# Ponte sends a six-digit CODE and never a sign-in link. `supabase/templates/`
+# holds the one template that does that, `auth-otp.html`, whose only variable is
+# `{{ .Token }}`.
+#
+# The local stack ships Supabase's own defaults, which send
+# `{{ .ConfirmationURL }}`. So `npm run dev:code` found the email, found no code
+# in it, and said so - a link cannot be typed into a six-box OTP field, and
+# local sign-in was impossible until this was pointed at the repository's own
+# template.
+#
+# BOTH templates carry the same document, exactly as the dashboard does.
+# `signInWithOtp()` chooses between them on whether Supabase has seen the
+# address before, which is bookkeeping the member cannot observe.
+#
+# This is the local half of the two surfaces in
+# supabase/templates/README.md: nothing here writes a dashboard template, and
+# production still has to be pasted by hand. What it does mean is that the
+# template a developer sees locally is the file under review, rather than a
+# Supabase default nobody has read.
+[auth.email.template.magic_link]
+subject = "Your Ponte Trade sign-in code"
+content_path = "./supabase/templates/auth-otp.html"
+
+[auth.email.template.confirmation]
+subject = "Your Ponte Trade sign-in code"
+content_path = "./supabase/templates/auth-otp.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -395,7 +453,16 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# OFF. Logflare and its vector shipper are a log aggregator for a hosted
+# project, and nothing in the development loop reads them. Left on, they are the
+# most common way this stack fails to start:
+#
+#   supabase_analytics_ponte-trade-dev: container is not ready: unhealthy
+#
+# which stops the database, the seed and the app for the sake of a service
+# nobody was going to open. `deal-room-migration-replay.yml` excludes the same
+# pair in CI, for the same reason.
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"

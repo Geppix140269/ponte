@@ -41,8 +41,15 @@ import { createClient } from "@supabase/supabase-js";
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-/** The account every signed-in check uses. Credentials are not a secret: this
- *  account exists only in a database that lives on one machine. */
+/**
+ * The account every signed-in check uses. Not a secret: it exists only in a
+ * database that lives on one machine.
+ *
+ * The password is here because `auth.admin.createUser` accepts one and it makes
+ * the account usable from a script. It is NOT how anybody signs in. Ponte
+ * authenticates by email OTP and has no password field anywhere in the product,
+ * so the way in is the address plus a six-digit code - `npm run dev:code`.
+ */
 export const TEST_ACCOUNT = {
   email: "dev@ponte.local",
   password: "ponte-dev-password",
@@ -79,25 +86,63 @@ function assertLocal(url) {
  * ------------------------------------------------------------------ */
 
 /**
- * Three listings, one per market family.
+ * The two HS codes the product fixtures reference.
  *
- * Not three products. The families take different journeys, ask for different
+ * `listings.hs_code` is a foreign key to `hs_codes(code)`, and the baseline
+ * snapshot is structure only, so that table is empty. Seeding the two rows the
+ * fixtures need is better than dropping `hs_code` from them: the code drives
+ * classification display and the tariff lookups, and a fixture set with no HS
+ * code at all leaves that whole surface untestable.
+ *
+ * Only two. This is not an import of the tariff schedule.
+ */
+const HS_CODES = [
+  {
+    code: "150910",
+    display: "1509.10",
+    chapter: "15",
+    chapter_title: "Animal or vegetable fats and oils",
+    heading: "1509",
+    heading_title: "Olive oil and its fractions",
+    description: "Olive oil, virgin",
+    unit: "kg",
+  },
+  {
+    code: "170199",
+    display: "1701.99",
+    chapter: "17",
+    chapter_title: "Sugars and sugar confectionery",
+    heading: "1701",
+    heading_title: "Cane or beet sugar and chemically pure sucrose, in solid form",
+    description: "Cane or beet sugar, refined, other",
+    unit: "kg",
+  },
+];
+
+/**
+ * One listing per market family, plus one that is deliberately incomplete.
+ *
+ * Not five products. The families take different journeys, ask for different
  * facts and render different screens, so a fixture set that is all products
  * leaves two thirds of the intake untested and every family-specific bug
  * invisible.
  *
- * The fourth is the one that matters most: a record whose `market_family` is a
- * value this build does not recognise. That exact shape crashed
- * `/deal-rooms/propose` for signed-in members, and a seed that only contains
- * well-formed rows would never have caught it.
+ * Every field here has been checked against production's own constraints rather
+ * than against what the columns are called. Three of the five did not write on
+ * the first run, and each failure named a real disagreement between these
+ * fixtures and the schema. The notes are inline where each one was found.
  */
 function listingsFor(userId) {
+  // `details` is NOT NULL with no default, and `status` must be one of a
+  // checked set. Both were found by running this against the restored schema
+  // for the first time; the previous fixtures wrote nothing at all.
   const base = { user_id: userId, status: "approved", payment_terms: "30% advance, 70% against documents" };
   return [
     {
       ...base,
       type: "offer",
       product: "Organic extra virgin olive oil",
+      details: "Single-estate, cold pressed, harvest 2025. Analysis certificate per lot.",
       market_family: "products",
       market_intent: "offer_product",
       quantity: 24,
@@ -111,6 +156,7 @@ function listingsFor(userId) {
       ...base,
       type: "requirement",
       product: "Refined cane sugar ICUMSA 45",
+      details: "Monthly requirement, 12-month term. Inspection at load port.",
       market_family: "products",
       market_intent: "source_product",
       quantity: 500,
@@ -124,15 +170,30 @@ function listingsFor(userId) {
       ...base,
       type: "offer",
       product: "Freight forwarding, Europe to South America",
+      details: "FCL and LCL, customs clearance both ends, bonded warehousing available.",
       market_family: "services",
       market_intent: "offer_trade_service",
       service_category_key: "freight_forwarding",
-      coverage_scope_key: "europe_south_america",
+      /*
+        `coverage_scope_key` used to be set here, and the database refuses it:
+
+          listings_distribution_family_coherent
+            CHECK ((distribution_partner_type_key IS NULL
+                    AND distribution_relationship_terms IS NULL
+                    AND coverage_scope_key IS NULL)
+                   OR market_family = 'distribution')
+
+        Coverage scope is a DISTRIBUTION field, not a service one. Services
+        carry `service_category_key` and `service_subcategory_keys`, governed by
+        listings_service_family_coherent. The fixture had borrowed a column from
+        the wrong family, and only a real schema could say so.
+      */
     },
     {
       ...base,
       type: "offer",
       product: "Distribution partner sought, food and beverage",
+      details: "Iberian coverage, existing retail listings, own cold chain preferred.",
       market_family: "distribution",
       market_intent: "seek_distribution_partner",
       distribution_partner_type_key: "importer_distributor",
@@ -142,12 +203,34 @@ function listingsFor(userId) {
     {
       ...base,
       type: "offer",
-      product: "Legacy record with an unrecognised family",
-      // NOT a typo. This is the shape that crashed /deal-rooms/propose for
-      // signed-in members on 2 August 2026, and it is seeded on purpose so the
-      // regression is reachable by hand as well as by test.
-      market_family: "goods",
-      market_intent: "offer_product",
+      product: "Legacy record that carries no market family",
+      details: "Seeded deliberately incomplete. Opening a Deal Room from this must refuse, and say why.",
+      /*
+        NOT an oversight, and NOT the fixture that used to be here.
+
+        This slot held `market_family: "goods"` - an unrecognised family - to
+        reproduce the TypeError that killed the /deal-rooms/propose render on
+        2 August 2026. Restoring production's own schema showed that row can
+        never exist:
+
+          listings_market_family_check
+            CHECK (market_family IS NULL
+                   OR market_family IN ('products','services','distribution'))
+
+        The constraint is validated, so no production row violates it either.
+        `unknown_family` in lib/deal-room/interest.ts guards a shape the
+        database refuses; the reachable defect is the one below, a NULL family,
+        which the column expressly permits.
+
+        The defensive branch stays - a cheap guard against a cast that is a
+        claim rather than a check - but the fixture now reproduces something
+        that can actually happen.
+
+        `market_intent` is null and must be: listings_intent_needs_family
+        forbids an intent without a family.
+      */
+      market_family: null,
+      market_intent: null,
       quantity: 10,
       unit: "t",
     },
@@ -185,10 +268,17 @@ async function main() {
     console.log(`user      ${TEST_ACCOUNT.email} (created)`);
   }
 
-  // The profile row. Upserted rather than inserted, for the same reason.
+  /*
+    The profile row. Upserted rather than inserted, for the same reason.
+
+    `profiles` has NO `email` column - the address lives on `auth.users` and
+    nowhere else. Writing one here failed every run and was reported as a
+    warning, so the account existed with no profile and nobody noticed. That is
+    the first thing restoring the real schema found.
+  */
   const { error: profileError } = await admin
     .from("profiles")
-    .upsert({ id: userId, email: TEST_ACCOUNT.email, full_name: TEST_ACCOUNT.fullName }, { onConflict: "id" });
+    .upsert({ id: userId, full_name: TEST_ACCOUNT.fullName, company: TEST_ACCOUNT.company }, { onConflict: "id" });
   if (profileError) {
     // Reported, not fatal: the column set differs across schema generations and
     // a missing optional column should not stop the account being usable.
@@ -197,26 +287,51 @@ async function main() {
     console.log("profile   ok");
   }
 
+  // Before the listings, because listings.hs_code references this table.
+  const { error: hsError } = await admin.from("hs_codes").upsert(HS_CODES, { onConflict: "code" });
+  if (hsError) throw new Error(`could not seed hs_codes: ${hsError.message}`);
+  console.log(`hs_codes  ${HS_CODES.length} written`);
+
   const { error: clearError } = await admin.from("listings").delete().eq("user_id", userId);
   if (clearError) console.warn(`listings  could not clear existing (${clearError.message})`);
 
+  const fixtures = listingsFor(userId);
   let written = 0;
-  for (const listing of listingsFor(userId)) {
+  for (const listing of fixtures) {
     const { error } = await admin.from("listings").insert(listing);
     if (error) {
       // One failing fixture must not lose the rest. A schema that has moved on
-      // is a finding to report, not a reason to seed nothing.
+      // is a finding to report, not a reason to seed nothing - so every fixture
+      // is attempted and every error is printed, rather than stopping at the
+      // first and hiding the other four.
       console.warn(`listing   "${listing.product}" skipped (${error.message})`);
       continue;
     }
     written++;
   }
-  console.log(`listings  ${written} of ${listingsFor(userId).length} written`);
+  console.log(`listings  ${written} of ${fixtures.length} written`);
+
+  /*
+    But a skipped fixture is still a failure, and it must exit non-zero.
+
+    The first run of this against the restored schema wrote ZERO listings and
+    reported no profile, and still exited 0 - so `npm run dev:db` printed
+    sign-in credentials for an account with nothing behind it and called itself
+    finished. Warning about something and then succeeding anyway is how the
+    signup trigger stayed broken in production for weeks.
+  */
+  if (written < fixtures.length) {
+    throw new Error(
+      `${fixtures.length - written} of ${fixtures.length} fixtures did not write.\n` +
+        "The schema and these fixtures disagree. The messages above name every column\n" +
+        "involved. Nothing is wrong with the database: fix the fixtures to match it.",
+    );
+  }
 
   console.log("");
   console.log("Sign in at http://localhost:3000/login");
   console.log(`  email     ${TEST_ACCOUNT.email}`);
-  console.log(`  password  ${TEST_ACCOUNT.password}`);
+  console.log("  code      npm run dev:code    (Ponte is OTP only; there is no password field)");
 }
 
 main().catch((err) => {

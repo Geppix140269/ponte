@@ -44,7 +44,52 @@ function constantTimeEqual(left: string, right: string): boolean {
   return difference === 0;
 }
 
+/**
+ * The gate does not apply to a development server on this machine.
+ *
+ * It exists to hide the DEPLOYED site while an external commercial situation is
+ * resolved. It cannot hide a server that is only listening on loopback, and
+ * challenging one has a real cost: `npm run dev:local` answered 401 to every
+ * request, so the development database built for issue #84 - a seeded account
+ * whose whole purpose is that signed-in pages can be checked without the owner
+ * present - could not reach a single page without a human typing a password
+ * into a browser first.
+ *
+ * BOTH conditions, deliberately, and neither alone:
+ *
+ *   - `NODE_ENV === "development"`. Set by `next dev` and by nothing else.
+ *     `next build`, `next start`, CI's Playwright server and every Vercel
+ *     deployment run as "production", so none of them is affected by this.
+ *   - a loopback host. A dev server bound to 0.0.0.0 and reached across the
+ *     network is still challenged, so this is not "development means open".
+ *
+ * Remove it with the rest of the gate when public access is restored.
+ */
+const LOOPBACK = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+
+/**
+ * Read the host the client actually addressed.
+ *
+ * From the `Host` HEADER, not from `request.nextUrl.hostname`. The first
+ * version of this used nextUrl, and `curl -H 'Host: ponte.trade'` against the
+ * dev server was let straight through: in development nextUrl reports the
+ * server's own binding rather than what the client asked for, so the loopback
+ * half of the condition was not testing anything.
+ */
+function addressedHost(request: NextRequest): string {
+  const header = request.headers.get("host") ?? "";
+  // Strip the port. Bracketed IPv6 keeps its brackets, which is why `[::1]` is
+  // in the set alongside `::1`.
+  return header.replace(/:\d+$/, "").toLowerCase();
+}
+
+function isLocalDevelopment(request: NextRequest): boolean {
+  return process.env.NODE_ENV === "development" && LOOPBACK.has(addressedHost(request));
+}
+
 async function passesSiteGate(request: NextRequest): Promise<boolean> {
+  if (isLocalDevelopment(request)) return true;
+
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Basic ")) return false;
 
