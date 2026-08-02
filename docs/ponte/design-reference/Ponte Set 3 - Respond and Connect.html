@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ponte — Set 3 · respond and connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="brand/favicons/favicon-32.png" />
+<link rel="stylesheet" href="ponte-flow/tokens/ponte-flow-tokens.css" />
+<link rel="stylesheet" href="ponte-system.css" />
+<link rel="stylesheet" href="ponte-bridge.css" />
+<link rel="stylesheet" href="ponte-set1.css?v=2" />
+<link rel="stylesheet" href="ponte-set2.css?v=1" />
+<link rel="stylesheet" href="ponte-set3.css?v=1" />
+<style>
+html,body{height:100%}
+body{background:#E8E4DA;margin:0;font-family:var(--f-sans);color:#0F0F0E}
+a{color:#8A6520}a:hover{color:#0F0F0E}
+.bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 20px;background:#0F0F0E;color:#F2EFE8;border-bottom:1px solid rgba(242,239,232,.18)}
+.bar .t{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(242,239,232,.55)}
+.bar select,.bar button{font-family:var(--f-mono);font-size:11px;background:#1B1B19;color:#F2EFE8;border:1px solid rgba(242,239,232,.24);border-radius:4px;padding:6px 9px;cursor:pointer}
+.bar .m{margin-inline-start:auto;font-family:var(--f-mono);font-size:10.5px;color:rgba(242,239,232,.55)}
+.head{padding:26px 22px 4px;max-width:104ch}
+.head .k{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#8A6520;display:block;margin-bottom:9px}
+.head h2{font-family:var(--f-serif);font-size:27px;font-weight:500;letter-spacing:-.018em;margin:0 0 9px}
+.head p{font-size:13.5px;line-height:1.7;color:#3A3733;margin:0;text-wrap:pretty}
+.sheet{display:flex;gap:26px;align-items:flex-start;padding:22px;overflow-x:auto;width:100%}
+.cell{flex:none}
+.pair{display:flex;align-items:stretch;border:1px solid #C9C2B0}
+.pair>div{position:relative}
+.pair>div+div{border-inline-start:1px solid #C9C2B0}
+.cap{display:flex;align-items:baseline;gap:12px;padding:0 0 8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A61}
+.cap b{color:#0F0F0E;font-size:11.5px}
+.cap span{margin-inline-start:auto;text-transform:none;letter-spacing:.02em}
+.doc{max-width:1080px;padding:24px 22px 70px}
+.doc h1{font-family:var(--f-serif);font-size:32px;font-weight:500;letter-spacing:-.02em;margin:0 0 12px;max-width:26ch}
+.doc h3{font-size:13px;font-weight:600;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid #D5CEBC;font-family:var(--f-mono);letter-spacing:.13em;text-transform:uppercase;color:#6E6A61}
+.doc p{font-size:13.5px;line-height:1.72;color:#3A3733;margin:0 0 12px;max-width:82ch;text-wrap:pretty}
+.tt{width:100%;border-collapse:collapse;font-size:12.5px;background:#FCFBF7;border:1px solid #E5DFD2}
+.tt th{text-align:start;font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A61;padding:9px 13px;background:#F2EFE6;border-bottom:1px solid #D5CEBC;font-weight:600}
+.tt td{padding:10px 13px;border-bottom:1px solid #E5DFD2;color:#3A3733;line-height:1.55;vertical-align:top}
+.tt tr:last-child td{border-bottom:0}
+.tt td b{color:#0F0F0E}
+.tt code,.doc code{font-family:var(--f-mono);font-size:11.5px;background:#F2EFE6;padding:1px 5px}
+.intent{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0 30px}
+.intent li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:11px;padding:10px 0;border-bottom:1px dashed #D5CEBC;font-size:12.5px;line-height:1.6;color:#3A3733;text-wrap:pretty}
+.intent li i{font-family:var(--f-mono);font-size:9.5px;font-style:normal;width:19px;height:19px;border-radius:50%;border:1px solid #6E6A61;color:#3A3733;display:flex;align-items:center;justify-content:center}
+.intent li b{color:#0F0F0E}
+</style>
+</head>
+<body>
+
+<div class="bar" role="toolbar" aria-label="Review">
+  <span class="t">Set 3 · respond and connect</span>
+  <select id="sel" aria-label="Surface"></select>
+  <span class="t">State</span>
+  <select id="state" aria-label="State"></select>
+  <span class="t">View</span>
+  <select id="view" aria-label="View"><option value="pair">Light + dark</option><option value="light">Light only</option><option value="dark">Dark only</option></select>
+  <button type="button" id="prev" aria-label="Previous">←</button>
+  <button type="button" id="next" aria-label="Next">→</button>
+  <span class="m" id="meta"></span>
+</div>
+
+<div id="stage"></div>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="#0F0F0E"/><g transform="translate(28,34)"><rect x="0" y="0" width="26" height="2" fill="#8A6520"/><rect x="0" y="10" width="40" height="7" fill="#FCFBF7"/><rect x="0" y="26" width="64" height="1" fill="#6E6A61"/><circle cx="5" cy="38" r="5" fill="none" stroke="#8A6520" stroke-width="1.6"/><rect x="16" y="35" width="34" height="5" fill="#8A8579"/><rect x="0" y="50" width="64" height="1" fill="#6E6A61"/><circle cx="5" cy="62" r="5" fill="#4FB07A"/><rect x="16" y="59" width="28" height="5" fill="#8A8579"/><rect x="0" y="76" width="64" height="1" fill="#6E6A61"/><path d="M8 88 h20 M22 84 l6 4 -6 4" stroke="#FCFBF7" stroke-width="1.6" fill="none"/><path d="M56 88 h-20 M42 84 l-6 4 6 4" stroke="#FCFBF7" stroke-width="1.6" fill="none"/></g></svg>
+</template>
+
+<script src="ponte-set3-screens.js?v=2"></script>
+<script src="ponte-set3-screens-d.js?v=2"></script>
+<script>
+(function(){
+var P = window.PS3;
+var NOTES = {
+ A05:[
+  '<b>The two record types are separated before any fact is read.</b> A provenance band sits above the statement on every record and carries the type name, a mark, the reference and the honesty copy. A user cannot reach a fact without passing it.',
+  '<b>The distinction is not colour.</b> Signal takes the attention wash, a dashed-circle mark and a <code>PONTE-SUP</code> reference; member opportunity takes the raised tone, a checked mark and a <code>PT</code> reference. Wording, mark shape and reference form all differ independently.',
+  '<b>The disclaimer is carried verbatim and unsoftened</b>: \u201cNothing has been confirmed with the party named in it, and nobody behind one is a Ponte member.\u201d It is bold within its own band, not a footnote.',
+  '<b>A signal holds five facts and says so.</b> Chapter is 2-digit, every row is labelled Read, an absent origin is drawn as \u201cNot stated in the source\u201d rather than omitted, and the perimeter line names what a signal can never contain.',
+  '<b>A member opportunity carries the family\u2019s full schema</b>, drawn in three variants \u2014 product, trade service, distribution. Held-back fields are named and marked Hidden, so a reader knows what exists behind acceptance.',
+  'The primary action never differs in label between the two types \u2014 it is \u201cChoose what to do next\u201d on both \u2014 but its sub-label states the honest cost: <b>$49 and no interest on a signal, free interest on an opportunity</b>.'
+ ],
+ A06:[
+  '<b>Interest is not offered on a signal, and is not shown greyed out either.</b> A disabled control is still an advertisement. The signal list explains instead: \u201cThere is no one to express interest to.\u201d',
+  '<b>The price sits on the row, not behind the tap.</b> $49 in mono on the investigate row; \u201cFree\u201d on every free one, so no action\u2019s cost is discovered later.',
+  '<b>Both perimeter lines are on the surface where the decision is made.</b> \u201cPayment buys the investigation, not a guaranteed opportunity, response or introduction\u201d on the signal; \u201cPonte does not promise that an owner will reply\u201d on the opportunity.',
+  'The provenance band is repeated in short form, so the record type travels with the decision rather than being remembered from the previous screen.',
+  '<b>Saving is a real third route, treated as an R2-shaped acknowledgement without pretending to be a milestone</b> \u2014 and it says plainly that saving tells the owner nothing.'
+ ],
+ D01:[
+  '<b>All four gating variants are drawn as surfaces, not as disabled states.</b> Signed out states what signing in unlocks; unverified names the one missing step; eligible is the full action; payment failure names the failure and charges nothing.',
+  '<b>Business verification is never asked for here.</b> The eligible state shows it explicitly as \u201cNot required to respond\u201d, on the record, so its absence is a stated decision rather than an omission (<code>DECISION-09</code>).',
+  '<b>The consequence is stated before sending, on this screen.</b> \u201cIf the owner accepts your interest, your company identities will be revealed to each other\u201d \u2014 in an attention band above the action, with the second half that matters: nothing is revealed while pending, declined or withdrawn.',
+  '<b>The structured statement is three labelled answers</b>, each with a hint that says what a good answer contains. Voice is offered first as a real row \u2014 Ponte writes speech into the three answers \u2014 and typing is always there.',
+  '<b>The investigation copy describes the deliverable and nothing more</b>: source and freshness check, a result of confirmed / not confirmed / unable to confirm, an evidence trail, a recommended next action. \u201cUnable to confirm\u201d is named as a real, common, full-price result.',
+  'Every failure state carries the saved / not-saved register: <b>statement saved, owner not notified, identity not revealed, nothing charged</b> \u2014 and the retry continues from the statement rather than restarting it.'
+ ],
+ D02:[
+  '<b>Pending is drawn without a single hopeful word.</b> \u201cPonte does not promise that an owner will reply. Some do within a day, some never do.\u201d The primary action on a pending request is to go and find others.',
+  '<b>The reminder schedule is shown, and its end is shown.</b> Two reminders, then Ponte stops \u2014 drawn as a timeline where the last item is future and unfilled, so the member can see there is no third.',
+  '<b>Lapsed is said, not left silent</b>, and it distinguishes itself from a decline: never declined, never accepted, nowhere left to go, no identity revealed. The statement is reusable as written.',
+  '<b>Accepted is a state, not an inbox.</b> It carries the mutually disclosed fields and one action \u2014 Create the Deal Room. There is no message field, no thread and no reply affordance anywhere on it.',
+  '<b>Mutuality is stated from the receiving side too</b>: \u201cThey received the same disclosure about you at the same moment. Neither side saw the other first.\u201d',
+  '<b>No investigation lifecycle is invented.</b> A paid investigation has no owner to accept it, so it does not appear in this list of states at all \u2014 the purpose line says so explicitly, and the surface stops at the D01 purchase commitment.'
+ ],
+ D02O:[
+  '<b>Drawn as the owner-side variant of D02, not as a new ID.</b> It carries the D02 label, the owner\u2019s own three-segment rule, and the accepted-interest reference rather than a new one.',
+  '<b>The release list is the screen.</b> Before accepting, the owner reads exactly what opens: both identities mutually, price, certificate \u2014 each on its own row with the Set 2 visibility mark \u2014 and one row for what acceptance never releases.',
+  '<b>The consequence is written on the primary control itself.</b> \u201cAccept \u2014 and reveal our companies to each other\u201d, with the sub-label naming the fields. Not a tooltip, not a confirmation afterwards.',
+  '<b>Intermediary status is restated at the moment identity is given</b>, in an attention band above the statement, with what Ponte knows and does not: declared by the respondent, not confirmed, principal unknown. The control changes with it: \u201creveal our companies to an intermediary\u201d.',
+  '<b>Requiring business verification is the owner\u2019s discretion, and the screen says it is not a Ponte rule.</b> It releases nothing, does not commit to an acceptance, and names the real outcome if they decline to verify.',
+  '<b>Failure is drawn as atomic.</b> \u201cPonte could not disclose both sides at once, so it disclosed neither\u201d \u2014 there is no state in which one identity is out and the other is not.'
+ ],
+ D03:[
+  '<b>Two ledgers, never a score.</b> What Ponte checked, then what remains unproved, in the same row form so neither can be read as the summary of the other. No number, no rating, no badge appears anywhere.',
+  '<b>The unproved ledger has its own honest framing</b>: \u201cTheir absence is not a warning, and their presence on this list is not a reassurance \u2014 it is the boundary of what was checked.\u201d',
+  '<b>R2, all five elements</b>: milestone (credible interest confirmed), what completed, why it matters, what is preserved and carries into the room, and one next action with an owner named. The reference wording is met \u2014 the surface explains why the path is credible and what remains unknown.',
+  '<b>A state is drawn where the unproved column is longer than the checked one</b>, and it says so in words. Ponte does not only draw the flattering case.',
+  '<b>Position is drawn facing, not listed.</b> On distribution, principal and distributor sit either side of a double arrow above both ledgers, and the copy states the rule: two principals are not counterparties however well the categories match.',
+  '<b>Both parties see the same surface.</b> Nothing here is owner-only or respondent-only, and the perimeter line closes it: \u201cA credible path is a reason to talk, not evidence that a counterparty is sound.\u201d'
+ ],
+ D04:[
+  '<b>Idempotency is drawn, not just asserted.</b> The initiating state states the rule before the tap; the \u201calready open\u201d state resolves into the same room and names who opened it; the loading state says a retry cannot produce two.',
+  '<b>Per accepted interest, not per listing</b> \u2014 stated on the surface, and demonstrated by a state showing one listing with three respondents, three accepted-interest IDs and three separate rooms.',
+  '<b>A second room from one accepted interest needs both parties.</b> It is drawn as a request to the other side with a plain reason, never as a unilateral control.',
+  '<b>\u201cNothing is re-entered\u201d is shown as a list, not a claim.</b> Five rows, each marked Carried: the listing, the statement, both identities, the opened fields, both references and every timestamp.',
+  '<b>Room behaviour is not invented.</b> Set 3 stops at the door: what carries in, who may open it, and how many rooms exist. Nothing about what happens inside is drawn, per <code>DECISION-25</code>.'
+ ]
+};
+
+var ITEMS = P.order.map(function(k){ return { k:k, s:P[k] }; });
+ITEMS.push({ k:'notes', s:{ n:'\u2014', id:'', title:'Set 3 notes' } });
+
+var sel = document.getElementById('sel'), view = document.getElementById('view'),
+    stSel = document.getElementById('state'), stage = document.getElementById('stage'),
+    meta = document.getElementById('meta');
+var cur = 0, mode = 'pair', curState = null;
+sel.innerHTML = ITEMS.map(function(it,i){
+  return '<option value="'+i+'">'+(it.s.n==='\u2014'?'':it.s.n+' \u00b7 ')+it.s.title+'</option>'; }).join('');
+
+function cap(a,b){ return '<div class="cap"><b>'+a+'</b><span>'+b+'</span></div>'; }
+function sheet(s){
+  var list = curState === '*' ? s.states : s.states.filter(function(x){ return x[0] === curState; });
+  return '<div class="sheet">'+list.map(function(st){
+    var l = '<div>'+s.build(st[0],'light')+'</div>', d = '<div>'+s.build(st[0],'dark')+'</div>';
+    var inner = mode==='light' ? l : mode==='dark' ? d : l+d;
+    return '<div class="cell">'+cap(st[1], mode==='pair'?'light \u00b7 dark':mode)+'<div class="pair">'+inner+'</div></div>';
+  }).join('')+'</div>';
+}
+
+function notesDoc(){
+  var rows = function(t){ return t.map(function(r){ return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'; }).join(''); };
+  return '<div class="doc"><span class="k" style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#8A6520">Set 3 \u00b7 the last set before the hold</span>'
+  + '<h1>Respond and connect, in all three families</h1>'
+  + '<p>Seven surfaces, 40 states, both themes, 390px. Set 3 uses the Set 1 and Set 2 patterns and changes none of them: the segmented journey rule, the fact-line hierarchy, the visibility ladder, the saved / not-saved register and the R2 recognition band are inherited as drawn. <code>ponte-set3.css</code> only adds what the responding side had no equivalent for.</p>'
+
+  + '<h3>The one thing this set is judged on</h3>'
+  + '<p><b>A Market Signal and a member opportunity are never conflated.</b> They share a pattern and nothing else. Four independent signals separate them, so that removing any one of them still leaves the distinction intact:</p>'
+  + '<table class="tt"><thead><tr><th style="width:150px">Carried by</th><th style="width:270px">Market Signal</th><th>Member opportunity</th></tr></thead><tbody>'
+  + rows([
+    ['Band and mark','Attention wash, dashed-circle mark \u2014 the same mark Set 1 uses for anything inferred','Raised tone, checked mark \u2014 the mark Set 2 uses for a passed screening check'],
+    ['Reference form','<code>PONTE-SUP-#######</code> / <code>EXT-######</code>, mono','<code>PT-####</code>, mono'],
+    ['Honesty copy','\u201cRead from a public source. Not confirmed.\u201d plus the disclaimer in full, in bold','\u201cPublished by a Ponte member. Screening checked.\u201d plus the perimeter statement'],
+    ['Facts held','2-digit chapter, quantity, origin or destination, delivery term, read date \u2014 every row labelled Read','The family\u2019s full published schema, with held-back fields named and marked Hidden'],
+    ['What can be done','Investigate, $49. No interest action exists, and none is shown disabled','Express interest, free. No investigation action exists']])
+  + '</tbody></table>'
+
+  + '<h3>What Set 3 adds to the system</h3>'
+  + '<table class="tt"><thead><tr><th style="width:180px">Addition</th><th style="width:250px">Why it was needed</th><th>How it holds the laws</th></tr></thead><tbody>'
+  + rows([
+    ['Provenance band','Record type had to be unmissable before any fact is read','A full-bleed tone or wash band with a hairline beneath. No border, no card. Type name, mark, reference, honesty copy.'],
+    ['Read-only fact list','A record is read, not corrected \u2014 so its rows must not look tappable','Same grid as the Set 2 layer list, but <code>div</code> rows at 48px with no active state. Buttons remain reserved for what changes.'],
+    ['Consequence band','Disclosure must be stated before the send, on the same screen','Attention wash, two paragraphs: what happens on acceptance, and what does not happen otherwise.'],
+    ['Structured statement','Three short answers, spoken or typed','Set 1 sign-in field pattern with a hint line, plus a 64px voice row above the keyboard route.'],
+    ['Release ledger','Acceptance must show precisely what it opens','Set 2 visibility marks reused unchanged: filled circle mutual, half circle opens, struck circle stays private.'],
+    ['Facing positions','Two positions are a relationship, not two facts','Three-column tone band, both sides equal, a double arrow between. Only on distribution.'],
+    ['Two-ledger fit','Checked and unproved must be equally legible','Identical row form for both, distinguished by mark and by weight. No score, no total, no badge.'],
+    ['Carry list','\u201cNothing is re-entered\u201d had to be shown','Five rows, each marked Carried, above the room action.']])
+  + '</tbody></table>'
+
+  + '<h3>Copy constraints, held</h3>'
+  + '<table class="tt"><thead><tr><th style="width:190px">Constraint</th><th colspan="2">Where Set 3 is exposed to it, and what it says</th></tr></thead><tbody>'
+  + [['Never claim comprehensive screening','D03 carries two ledgers and closes with \u201cThis is not comprehensive screening and Ponte does not claim it is.\u201d The unproved ledger names financial standing, the goods, document contents and respondent-side business verification as unchecked (<code>DECISION-19</code>).'],
+     ['Never promise a reply','D02 pending: \u201cPonte does not promise that an owner will reply. Some do within a day, some never do.\u201d The reminder schedule shows its own end, and the primary action is to look elsewhere.'],
+     ['Never promise an outcome','D01 investigation: \u201cPayment buys the investigation, not a guaranteed opportunity, response or introduction\u201d, and \u201cunable to confirm\u201d is named as a real, full-price result.'],
+     ['Business verification not required to respond','D01 shows it on the record as \u201cNot required to respond \u00b7 Not asked\u201d. It appears only as an owner\u2019s discretionary request on the acceptance variant (<code>DECISION-09</code>).'],
+     ['No messaging product','The accepted state carries disclosed fields and one action. There is no message field, thread, reply or notification-style affordance anywhere in the set.'],
+     ['Retention stated','Unauthenticated states carry the 7-day line verbatim; every signed-in state carries 90 days from last meaningful edit.']]
+     .map(function(r){ return '<tr><td><b>'+r[0]+'</b></td><td colspan="2">'+r[1]+'</td></tr>'; }).join('')
+  + '</tbody></table>'
+
+  + '<h3>Momentum</h3>'
+  + '<p><b>R2 <code>credible_interest_confirmed</code> is D03</b>, with all five elements and the reference wording met: it explains why the counterparty path is credible and what remains unknown, and its next action is to prepare the Deal Room. A second R2 sits on the accepted state of D02, where the milestone is the acceptance itself. R1 is carried by every storage line, and RX by every failure state \u2014 each names what was saved, what was not sent, what was not revealed and what was not charged, then continues rather than restarting.</p>'
+  + '<p>Two deliberate restraints. <b>D04 is not a recognition</b>: opening a room is a decision, not a milestone, so it takes a plain surface and the carry list. And the \u201calready open\u201d state <i>is</i> drawn as a recognition, because arriving in a room someone else opened is a real completion for both parties.</p>'
+
+  + '<h3>The journey rule in Set 3</h3>'
+  + '<p>The respondent journey draws <b>five segments</b> \u2014 read the record, choose, send, response, room \u2014 and the owner-side acceptance variant draws <b>three</b>, because the owner is on a different and shorter journey that begins at an interest already received. Both carry <b>no numeral and no percentage</b>. The step label beside the rule is in words, as approved, and reads \u201cOwner \u00b7 step 2 of 3\u201d on the variant so the two journeys are never mistaken for one.</p>'
+
+  + '<h3>Flagged, not assumed</h3>'
+  + '<p><b>Owner acceptance is drawn as a variant of D02, not a new ID</b>, as instructed \u2014 it carries the D02 label, the accepted-interest reference and its own progress rule. If it should instead be numbered, the only change required is the label.</p>'
+  + '<p><b>The intermediary case is drawn as a separate state rather than a conditional band</b>, so it can be reviewed on its own. In build it is the same surface with the band inserted and the primary control\u2019s wording changed. Both variants of that control are drawn.</p>'
+  + '<p><b>Investigation delivery time is drawn as \u201c3 working days, estimate\u201d.</b> No lifecycle beyond the purchase commitment is drawn anywhere, per the scope note. The estimate itself is a placeholder \u2014 confirm or remove it.</p>'
+  + '<p><b>Reference forms for accepted interest and rooms are inventions of convenience</b>: <code>AI-#####</code> and <code>DR-####</code>. They are needed on-screen for idempotency to be legible, and they touch schema, so they are flagged rather than assumed \u2014 replace them with the real forms when the reconciliation report lands.</p>'
+  + '<p><b>Set 3 stops at the door of the room.</b> No room behaviour, no room schema and no post-entry state appears anywhere in the set, per <code>DECISION-25</code>. What is drawn is only what is true before entry: what carries in, who may open, and how many rooms exist.</p>'
+  + '</div>';
+}
+
+function paint(){
+  var it = ITEMS[cur], s = it.s;
+  Array.prototype.forEach.call(sel.options, function(o){ o.selected = parseInt(o.value,10) === cur; });
+  view.disabled = it.k === 'notes'; stSel.disabled = it.k === 'notes';
+  if(it.k === 'notes'){ stage.innerHTML = notesDoc(); }
+  else {
+    var keys = s.states.map(function(x){ return x[0]; });
+    if(curState !== '*' && keys.indexOf(curState) < 0) curState = keys[0];
+    stSel.innerHTML = s.states.map(function(x){
+      return '<option value="'+x[0]+'"'+(x[0]===curState?' selected':'')+'>'+x[1]+'</option>'; }).join('')
+      + '<option value="*"'+(curState==='*'?' selected':'')+'>All states</option>';
+    stage.innerHTML = '<div class="head"><span class="k">'+s.id+' \u00b7 '+s.states.length+' states \u00b7 390 px</span>'
+      + '<h2>'+s.title+'</h2><p>'+s.purpose+'</p>'
+      + '<ul class="intent">'+NOTES[it.k].map(function(n,i){ return '<li><i>'+(i+1)+'</i><span>'+n+'</span></li>'; }).join('')+'</ul></div>'
+      + sheet(s);
+  }
+  meta.textContent = (cur+1)+' / '+ITEMS.length;
+  window.scrollTo(0,0);
+}
+function go(i){ cur = (i + ITEMS.length) % ITEMS.length; paint(); }
+sel.addEventListener('change', function(){ go(parseInt(sel.value,10)); });
+stSel.addEventListener('change', function(){ curState = stSel.value; paint(); });
+view.addEventListener('change', function(){ mode = view.value; paint(); });
+document.getElementById('prev').addEventListener('click', function(){ go(cur-1); });
+document.getElementById('next').addEventListener('click', function(){ go(cur+1); });
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName === 'SELECT') return;
+  if(e.key === 'ArrowRight') go(cur+1);
+  if(e.key === 'ArrowLeft') go(cur-1);
+});
+go(0);
+})();
+</script>
+</body>
+</html>
