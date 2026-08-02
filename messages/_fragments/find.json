@@ -2,7 +2,7 @@
   "find": {
     "meta": {
       "title": "Find demand and supply",
-      "description": "Search cross-border demand and supply. Qualified Opportunities Ponte has reviewed, and external Market Signals, kept separate."
+      "description": "Search cross-border demand and supply. Qualified Opportunities Ponte has checked, and external Market Signals, kept separate."
     },
     "nav": {
       "opportunities": "Qualified Opportunities",
@@ -16,7 +16,7 @@
     "family": {
       "eyebrow": "Find",
       "title": "What are you looking for?",
-      "lead": "Choose a market. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "lead": "Choose a market. Ponte returns checked Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
       "legend": "Choose a market",
       "products": "Requirements and offers for physical goods.",
       "services": "Freight, customs, inspection, finance and the rest of the trade stack.",
@@ -60,7 +60,7 @@
     "entry": {
       "eyebrow": "Find",
       "title": "What are you looking for?",
-      "lead": "Name a product. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "lead": "Name a product. Ponte returns checked Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
       "pickerLabel": "Choose a product",
       "pickerHint": "Tap a category, then a product. Or speak it.",
       "searchPlaceholder": "Product or HS code",
@@ -72,7 +72,7 @@
     "results": {
       "eyebrow": "First results",
       "titleFor": "Demand and supply for {product}",
-      "definition": "Two kinds of result, never blended: opportunities Ponte has reviewed, and external signals Ponte has not.",
+      "definition": "Two kinds of result, never blended: opportunities Ponte has checked, and external signals Ponte has not.",
       "editSearch": "Change search",
       "crumbProduct": "Product",
       "crumbIntent": "Direction",
@@ -91,7 +91,7 @@
       "ref": "Ref. {ref}",
       "emptyBadge": "No current match",
       "emptyTitle": "No qualified opportunity matches yet",
-      "emptyBody": "Ponte publishes an opportunity only after the opportunity and the business behind it have been reviewed. Market Signals below may still be relevant.",
+      "emptyBody": "Ponte publishes an opportunity only after it has cleared Ponte's automated checks. Market Signals below may still be relevant.",
       "launchTitle": "The first Qualified Opportunities are being prepared",
       "launchBody": "Ponte publishes only after review. Submit an opportunity to be among the first."
     },
@@ -168,8 +168,8 @@
       "roleDeclaredBody": "The submitting member states the role they act in. This is a declaration, not an external confirmation.",
       "authoritySighted": "Authority sighted",
       "authoritySightedBody": "Ponte sighted evidence of authority to act. This does not authenticate every statement or guarantee continuing authority.",
-      "opportunityReviewed": "Opportunity reviewed",
-      "opportunityReviewedBody": "Ponte reviewed the structured commercial record before publication.",
+      "opportunityReviewed": "Opportunity checked",
+      "opportunityReviewedBody": "Ponte checked the structured commercial record automatically before publication.",
       "lastConfirmed": "Last confirmed",
       "lastConfirmedBody": "The owner confirmed the requirement remained current on this date.",
       "on": "on {date}"

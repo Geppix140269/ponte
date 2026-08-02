@@ -2,7 +2,7 @@
   "pricing": {
     "meta": {
       "title": "Fees",
-      "description": "A Ponte Deal Room costs $79 USD for 30 active days and includes five active private counterparty branches. Additional branches are $15 USD each, capped at $199 USD per room per 30-day period."
+      "description": "A Ponte Deal Room costs $79 USD for 30 calendar days and includes five active private counterparty branches. Additional branches are $15 USD each, capped at $199 USD per room per 30-day period."
     },
     "pill": "Fees",
     "title": "One opportunity. Multiple confidential negotiations. <em>Five languages.</em>",
@@ -10,13 +10,13 @@
     "product": {
       "name": "Ponte Deal Room",
       "price": "$79 USD",
-      "terms": "30 active days",
-      "body": "One structured commercial opportunity, with confidential parallel counterparty negotiations beneath it. Controlled admission, an agreed procedure, evidence, clarifications, blockers and decisions, durable multilingual records, and a permanent read-only history after the room closes.",
+      "terms": "30 calendar days",
+      "body": "One structured commercial opportunity, with confidential parallel counterparty negotiations beneath it. Controlled admission, an agreed procedure, evidence, clarifications, blockers and decisions, durable multilingual records, and a read-only history after the room closes.",
       "cta": "See how a Deal Room works"
     },
     "formula": {
       "heading": "How the price is worked out",
-      "included": "$79 USD covers 30 active days and up to five concurrently active private counterparty branches.",
+      "included": "$79 USD covers 30 calendar days and up to five concurrently active private counterparty branches.",
       "additional": "Each additional concurrently active branch costs $15 USD for the rest of that 30-day period.",
       "cap": "The most a Master Deal Room can cost is $199 USD per 30-day period, however many branches are running.",
       "worked": "So five branches cost $79 USD. Seven cost $109 USD. Thirteen or more cost $199 USD."
@@ -27,7 +27,7 @@
     },
     "free": {
       "heading": "What carries no charge",
-      "body": "Browsing, publishing opportunities, preparing a Deal Room, inviting counterparties, receiving and accepting invitations, participants, advisers and specialists, documents, translations, and permanent read-only history. Verifying your own business is free. An invitation that is unanswered, declined or expired never generates a charge."
+      "body": "Browsing, publishing opportunities, preparing a Deal Room, inviting counterparties, receiving and accepting invitations, participants, advisers and specialists, documents, translations, and read-only history. Verifying your own business is free. An invitation that is unanswered, declined or expired never generates a charge."
     },
     "never": {
       "heading": "What Ponte does not charge for",

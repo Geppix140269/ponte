@@ -72,9 +72,9 @@ export const ABOUT: LegalDoc = {
       t: "list",
       items: [
         "Market Signal. An indication Ponte has seen in the open market and has not confirmed. Nobody behind it has been contacted, and nothing about them is disclosed.",
-        "Member Requirement. A requirement posted by a member, reviewed by the desk before publication.",
-        "Member Offer. An offer posted by a member, reviewed by the desk before publication.",
-        "Service Requirement. A trade service a member is looking for, reviewed on the same terms.",
+        "Member Requirement. A requirement posted by a member, checked automatically for completeness, quality and risk before publication. A flagged requirement may require additional information or human review.",
+        "Member Offer. An offer posted by a member, checked automatically for completeness, quality and risk before publication. A flagged offer may require additional information or human review.",
+        "Service Requirement. A trade service a member is looking for, checked on the same terms.",
       ],
     },
     {

@@ -45,6 +45,32 @@ export default function ActivationScreen({ idPrefix = "act" }: { idPrefix?: stri
           <em>{ACTIVATION.period}</em>
         </p>
 
+        {/*
+          The two things a member must be told BEFORE the control, not after
+          it: that paying does not make the room public, and the exact instant
+          the period ends.
+
+          Both are adjacent to the figure on purpose. This screen said
+          "publish" for this action until 2 August 2026, and publish means make
+          publicly visible; anybody who read the old wording could reasonably
+          have concluded that paying exposes their confidential deal. Fixing
+          the verb does not reach the person who already formed that belief, so
+          the correction is stated positively at the moment the money is asked
+          for. A reassurance placed below the button is read after the decision.
+
+          The date is stated rather than the duration alone. A member buying a
+          period is entitled to the instant it ends, not to arithmetic.
+        */}
+        <p className="privnote" role="note">
+          {ACTIVATION.privacy}
+        </p>
+
+        <p className="expiry">
+          <span className="expiry__k">{ACTIVATION.expiry.label}</span>
+          <b className="mono">{ACTIVATION.expiry.value}</b>
+          <span className="expiry__d">{ACTIVATION.expiry.note}</span>
+        </p>
+
         <ul className="incl">
           {ACTIVATION.included.map((line) => (
             <li key={line}>

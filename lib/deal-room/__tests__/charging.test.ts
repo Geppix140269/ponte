@@ -159,7 +159,13 @@ test("opening a room charges $79 and says so", () => {
   assert.equal(intent.currency, "usd");
   assert.equal(intent.kind, "room_activation");
   assert.match(intent.description, /\$79 USD/);
-  assert.match(intent.description, /30 active days/);
+  // "30 active days" until 2 August 2026, corrected on owner approval: the
+  // period has always been wall time (see `periodEndFrom`), so the phrase
+  // described an accounting model the product does not implement. This string
+  // reaches a Stripe receipt, so it names the act as well as the period.
+  assert.match(intent.description, /30 calendar days/);
+  assert.match(intent.description, /activation/i);
+  assert.ok(!/publish/i.test(intent.description), "a receipt line says publish");
 });
 
 test("nobody can buy fewer than the five branches the base price includes", () => {
@@ -244,7 +250,8 @@ test("reactivation prices the branches chosen to resume, not the old period", ()
   if (!intent.chargeable) return;
   assert.equal(intent.amountCents, 7900, "two branches resume at the base price");
   assert.equal(intent.kind, "reactivation");
-  assert.match(intent.description, /new 30-day period/);
+  assert.match(intent.description, /new 30 calendar day period/);
+  assert.match(intent.description, /reactivation/i, "the receipt line does not name the act");
 });
 
 test("no checkout function accepts an amount from its caller", () => {

@@ -81,8 +81,11 @@ export const ROOM_PERIOD_DAYS = 30;
  * When a period bought at `start` ends.
  *
  * Takes the start rather than reading a clock, so the window is a function of
- * its argument. Thirty days of wall time; the authority says "30 active days"
- * and does not stop the clock for a paused branch.
+ * its argument. Thirty CALENDAR days: wall time from the start, which does
+ * not stop for a paused branch and never did. The authority used to say "30
+ * active days", which described an accounting model this function has never
+ * implemented; the wording was corrected on owner approval, 2 August 2026, to
+ * match what the code has always computed.
  */
 export function periodEndFrom(start: Date): Date {
   return new Date(start.getTime() + ROOM_PERIOD_DAYS * 24 * 60 * 60 * 1000);

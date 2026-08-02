@@ -1,3 +1,4 @@
+import { formatRoomMoment } from "./moment";
 import {
   ACTIVE_PERIOD_DAYS,
   ADDITIONAL_BRANCH_PRICE_CENTS,
@@ -31,6 +32,10 @@ function money(cents: number, currency: string): string {
   return `${symbol}${cents % 100 === 0 ? cents / 100 : (cents / 100).toFixed(2)}`;
 }
 
+/** The illustrative room's activation instant. An example, and labelled as one
+ *  everywhere it is drawn: 1 August 2026, 14:32 UTC. */
+const EXAMPLE_ACTIVATION_INSTANT = new Date("2026-08-01T14:32:00Z");
+
 const ROOM = money(BASE_ROOM_PRICE_CENTS, CURRENCY);
 const BRANCH = money(ADDITIONAL_BRANCH_PRICE_CENTS, CURRENCY);
 const CEILING = money(MAXIMUM_ROOM_PERIOD_PRICE_CENTS, CURRENCY);
@@ -43,9 +48,56 @@ export const ACTIVATION = {
   kicker: "Activation",
   head: "Your Deal Room is ready.",
   body:
-    "Activate it to invite counterparties, open private negotiations and begin protected commercial progression.",
+    "Activate it to invite counterparties, open private negotiations and begin protected commercial progression. Full functionality remains available for 30 calendar days from activation.",
   price: `${ROOM} USD`,
-  period: `for ${ACTIVE_PERIOD_DAYS} active days`,
+  period: `for ${ACTIVE_PERIOD_DAYS} calendar days`,
+  /**
+   * The non-disclosure statement (P1-3), beside the price and above the
+   * control.
+   *
+   * Required because the interface said "publish" for this action until 2
+   * August 2026, and publish means make publicly visible. A member who read
+   * that could reasonably have concluded that paying makes their confidential
+   * deal public, which is the exact opposite of the product. Correcting the
+   * verb is necessary and is not sufficient: anybody who saw the old wording
+   * carries the old expectation, so the correction is stated positively at the
+   * moment the money is asked for.
+   *
+   * It sits next to the figure and BEFORE the payment control, not in the
+   * "what does not change" list at the foot of the screen, because a
+   * reassurance below the button is a reassurance read after the decision.
+   */
+  privacy:
+    "Activating does not make this room public. Its contents stay visible only to admitted participants.",
+  /**
+   * When the period ends, in words, before any amount is taken.
+   *
+   * A member is entitled to know the exact instant they are buying to, not to
+   * be handed a duration and left to do the arithmetic. The live screen
+   * computes this from `periodEndFrom(activationInstant)` in the member's own
+   * timezone; the example below is the design package's illustrative room, and
+   * is labelled as an example everywhere it is drawn.
+   */
+  expiry: {
+    label: "Full functionality until",
+    /*
+      Formatted by the one formatter, not written out here.
+
+      P1-3 requires a date, a time AND a zone on every Deal Room expiry
+      display, so that a buyer in Hamburg and a seller in Singapore cannot read
+      the same deadline differently. Producing that shape by hand in an example
+      is how the example and the product drift apart, so this runs the real
+      `formatRoomMoment` over the illustrative room's own activation instant.
+
+      The zone is fixed here because this is a DRAWING of the screen inside the
+      walkthrough, and a drawing that changed with the reader's location would
+      make the example unreproducible. The live screen passes the viewer's own
+      IANA zone, which is the whole point of the rule.
+    */
+    value:
+      formatRoomMoment(EXAMPLE_ACTIVATION_INSTANT, "Europe/Rome")?.full ?? "",
+    note: `Counted as ${ACTIVE_PERIOD_DAYS} calendar days from the moment you activate. The clock does not pause.`,
+  },
   included: [
     `Up to ${INCLUDED_ACTIVE_BRANCHES} active private counterparty branches`,
     "All five supported languages, including right-to-left Arabic",
@@ -96,7 +148,7 @@ export const ACTIVATION = {
       detail: "You can change this at any point during the period, in either direction.",
     },
   ],
-  confirm: `I am authorising a charge of ${ROOM} USD to activate this Deal Room for ${ACTIVE_PERIOD_DAYS} active days.`,
+  confirm: `I am authorising a charge of ${ROOM} USD to activate this Deal Room for ${ACTIVE_PERIOD_DAYS} calendar days.`,
   confirmSub:
     "Activation is a deliberate act. Ponte will not charge this account on any other trigger, and no amount is taken before you confirm here.",
 } as const;

@@ -12,7 +12,7 @@
     },
     "what": {
       "label": "01 / What it is",
-      "body": "A public board of vetted deals. Anyone can read it, without an account. Members post an offer or a requirement, the desk reviews it before it goes live, and a counterparty who wants to talk asks for a connection. Nobody pays to be introduced and nobody pays to be found."
+      "body": "A public board of checked deals. Anyone can read it, without an account. Members post an offer or a requirement, Ponte checks it automatically for completeness, quality and risk before publication, and a counterparty who wants to talk asks for a connection. Nobody pays to be introduced and nobody pays to be found."
     },
     "principles": {
       "label": "02 / Principles",
@@ -20,7 +20,7 @@
       "i": {
         "n": "i.",
         "title": "Free where it counts",
-        "body": "Nothing that creates liquidity sits behind a paywall. Browsing, posting, connecting and verifying your own business are free. Ponte is paid for one thing: a Deal Room, at $79 USD for 30 active days. Every price is printed on the button before you press it."
+        "body": "Nothing that creates liquidity sits behind a paywall. Browsing, posting, connecting and verifying your own business are free. Ponte is paid for one thing: a Deal Room, at $79 USD for 30 calendar days. Every price is printed on the button before you press it."
       },
       "ii": {
         "n": "ii.",
@@ -250,7 +250,7 @@
     },
     "deal": {
       "title": "Post a deal yourself",
-      "body": "An offer or a requirement, goods or trade services. Free to post, vetted by the desk before it goes live.",
+      "body": "An offer or a requirement, goods or trade services. Free to post, checked automatically before it goes live.",
       "cta": "Go to the marketplace"
     },
     "email": {
@@ -336,7 +336,7 @@
   "find": {
     "meta": {
       "title": "Find demand and supply",
-      "description": "Search cross-border demand and supply. Qualified Opportunities Ponte has reviewed, and external Market Signals, kept separate."
+      "description": "Search cross-border demand and supply. Qualified Opportunities Ponte has checked, and external Market Signals, kept separate."
     },
     "nav": {
       "opportunities": "Qualified Opportunities",
@@ -350,7 +350,7 @@
     "family": {
       "eyebrow": "Find",
       "title": "What are you looking for?",
-      "lead": "Choose a market. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "lead": "Choose a market. Ponte returns checked Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
       "legend": "Choose a market",
       "products": "Requirements and offers for physical goods.",
       "services": "Freight, customs, inspection, finance and the rest of the trade stack.",
@@ -394,7 +394,7 @@
     "entry": {
       "eyebrow": "Find",
       "title": "What are you looking for?",
-      "lead": "Name a product. Ponte returns reviewed Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
+      "lead": "Name a product. Ponte returns checked Qualified Opportunities and external Market Signals, kept separate, with what is known about each.",
       "pickerLabel": "Choose a product",
       "pickerHint": "Tap a category, then a product. Or speak it.",
       "searchPlaceholder": "Product or HS code",
@@ -406,7 +406,7 @@
     "results": {
       "eyebrow": "First results",
       "titleFor": "Demand and supply for {product}",
-      "definition": "Two kinds of result, never blended: opportunities Ponte has reviewed, and external signals Ponte has not.",
+      "definition": "Two kinds of result, never blended: opportunities Ponte has checked, and external signals Ponte has not.",
       "editSearch": "Change search",
       "crumbProduct": "Product",
       "crumbIntent": "Direction",
@@ -425,7 +425,7 @@
       "ref": "Ref. {ref}",
       "emptyBadge": "No current match",
       "emptyTitle": "No qualified opportunity matches yet",
-      "emptyBody": "Ponte publishes an opportunity only after the opportunity and the business behind it have been reviewed. Market Signals below may still be relevant.",
+      "emptyBody": "Ponte publishes an opportunity only after it has cleared Ponte's automated checks. Market Signals below may still be relevant.",
       "launchTitle": "The first Qualified Opportunities are being prepared",
       "launchBody": "Ponte publishes only after review. Submit an opportunity to be among the first."
     },
@@ -502,8 +502,8 @@
       "roleDeclaredBody": "The submitting member states the role they act in. This is a declaration, not an external confirmation.",
       "authoritySighted": "Authority sighted",
       "authoritySightedBody": "Ponte sighted evidence of authority to act. This does not authenticate every statement or guarantee continuing authority.",
-      "opportunityReviewed": "Opportunity reviewed",
-      "opportunityReviewedBody": "Ponte reviewed the structured commercial record before publication.",
+      "opportunityReviewed": "Opportunity checked",
+      "opportunityReviewedBody": "Ponte checked the structured commercial record automatically before publication.",
       "lastConfirmed": "Last confirmed",
       "lastConfirmedBody": "The owner confirmed the requirement remained current on this date.",
       "on": "on {date}"
@@ -571,7 +571,7 @@
     "trust": "Start freely. Join only when an introduction needs to be sent."
   },
   "footer": {
-    "blurb": "Cross-border trade, with greater clarity. Find opportunities and establish credible interest for free. A Ponte Deal Room costs $79 USD for 30 active days.",
+    "blurb": "Cross-border trade, with greater clarity. Find opportunities and establish credible interest for free. A Ponte Deal Room costs $79 USD for 30 calendar days.",
     "deskHeading": "The desk",
     "deskMarketplace": "The Marketplace",
     "deskFees": "Fees",
@@ -594,7 +594,7 @@
         "registration": "Reg. 12475013 · VAT GB 343 1702 32"
       }
     },
-    "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is reviewed by the desk before it goes live. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
+    "disclaimer": "A verified network for cross-border trade, grounded in official sources. Every listing is checked automatically for completeness, quality and risk before it goes live; flagged listings may require additional information or human review. Where the desk is engaged on a deal it acts as intermediary only, never as principal.",
     "copyright": "© {year} Ponte · a trading name of 1402 Celsius Ltd · ponte.trade"
   },
   "founding": {
@@ -1062,7 +1062,7 @@
   "marketplace": {
     "meta": {
       "title": "Marketplace",
-      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is reviewed by Ponte, and the public record states which evidence Ponte reviewed and what remains unverified."
+      "description": "Submit offers and requirements to the Ponte marketplace. Every published opportunity is checked by Ponte, and the public record states which evidence Ponte checked and what remains unverified."
     },
     "type": {
       "offer": "offer",
@@ -1079,15 +1079,15 @@
     },
     "hero": {
       "pill": "Marketplace",
-      "heading": "Every published <em>opportunity</em> reviewed by Ponte.",
+      "heading": "Every published <em>opportunity</em> checked by Ponte.",
       "intro": "Post what you sell or what you need, free. AI and the desk verify every listing before it goes live, you stay anonymous until both sides agree to connect, and connecting costs nothing. Want the deal managed end to end? The desk steps in on a success fee or retainer, only when you ask.",
       "newListing": "New listing",
       "signIn": "Sign in to submit"
     },
     "rules": {
       "vetted": {
-        "title": "Vetted before live",
-        "body": "The public record states which evidence Ponte reviewed and what remains unverified."
+        "title": "Checked before live",
+        "body": "The public record states which evidence Ponte checked and what remains unverified."
       },
       "anonymous": {
         "title": "Anonymized always",
@@ -1104,11 +1104,11 @@
     },
     "board": {
       "eyebrow": "Live now",
-      "heading": "{count, plural, one {# vetted listing on the board.} other {# vetted listings on the board.}}",
-      "headingLive": "Vetted listings, live on the board.",
+      "heading": "{count, plural, one {# checked listing on the board.} other {# checked listings on the board.}}",
+      "headingLive": "Checked listings, live on the board.",
       "headingEmpty": "The board opens soon.",
       "signInFull": "Sign in for full listings",
-      "empty": "The board opens once the first vetted listings clear the desk. Submissions are open now, and early listings get the most attention when it goes live.",
+      "empty": "The board opens once the first listings clear Ponte's checks. Submissions are open now, and early listings get the most attention when it goes live.",
       "signInToRespond": "Sign in to respond",
       "signInToRead": "Sign in to read the full listing.",
       "open": "Open listing {ref}",
@@ -1128,20 +1128,20 @@
       "heading": "Where things stand.",
       "headingEmpty": "Nothing submitted yet.",
       "newListing": "New listing",
-      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. The desk takes it from there.",
+      "empty": "Your first listing takes five minutes: the product, the terms, and any documents that prove you are serious. Ponte checks it and publishes it from there.",
       "status": {
         "draft": "Draft · only you see this",
-        "submitted": "In vetting",
-        "approved": "Approved · live with the desk",
-        "rejected": "Not approved",
+        "submitted": "Being checked",
+        "approved": "Checked · live on the board",
+        "rejected": "Not published",
         "closed": "Closed"
       },
-      "submitForVetting": "Submit for vetting →",
+      "submitForVetting": "Submit →",
       "shareWhatsApp": "Share on WhatsApp",
-      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "shareText": "{product} · checked listing {ref} on Ponte",
       "connect": {
-        "request": "A vetted member wants to connect. Accept and you both receive each other's contact. Free.",
-        "requestNumbered": "A vetted member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
+        "request": "A member wants to connect. Accept and you both receive each other's contact. Free.",
+        "requestNumbered": "A member wants to connect ({n}). Accept and you both receive each other's contact. Free.",
         "accept": "Accept",
         "decline": "Decline"
       }
@@ -1155,7 +1155,7 @@
     "new": {
       "meta": {
         "title": "New listing",
-        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish for vetting by the Ponte desk."
+        "description": "Build your offer or requirement, preview it as it will appear on the board, then publish it."
       },
       "pill": "New listing",
       "heading": "Build it. See it. Publish it.",
@@ -1164,10 +1164,10 @@
     "detail": {
       "meta": {
         "notFound": "Listing not found",
-        "description": "Vetted {type} on Ponte. {teaser}"
+        "description": "Checked {type} on Ponte. {teaser}"
       },
-      "pill": "Vetted listing",
-      "assurance": "Reviewed by the Ponte desk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
+      "pill": "Checked listing",
+      "assurance": "Checked automatically for completeness, quality and risk before going live. Counterparties stay anonymous until both sides agree to connect; connecting is free.",
       "terms": {
         "heading": "Trade terms",
         "quantity": "Quantity",
@@ -1190,7 +1190,7 @@
       "machineTranslation": "Machine translation. The original wording governs.",
       "interested": "I am interested",
       "shareWhatsApp": "Share on WhatsApp",
-      "shareText": "{product} · vetted listing {ref} on Ponte",
+      "shareText": "{product} · checked listing {ref} on Ponte",
       "footer": "Have something to sell or source yourself? <link>Build your listing in three steps</link>, no account needed until you publish."
     },
     "interest": {
@@ -1224,7 +1224,7 @@
   "pricing": {
     "meta": {
       "title": "Fees",
-      "description": "A Ponte Deal Room costs $79 USD for 30 active days and includes five active private counterparty branches. Additional branches are $15 USD each, capped at $199 USD per room per 30-day period."
+      "description": "A Ponte Deal Room costs $79 USD for 30 calendar days and includes five active private counterparty branches. Additional branches are $15 USD each, capped at $199 USD per room per 30-day period."
     },
     "pill": "Fees",
     "title": "One opportunity. Multiple confidential negotiations. <em>Five languages.</em>",
@@ -1232,13 +1232,13 @@
     "product": {
       "name": "Ponte Deal Room",
       "price": "$79 USD",
-      "terms": "30 active days",
-      "body": "One structured commercial opportunity, with confidential parallel counterparty negotiations beneath it. Controlled admission, an agreed procedure, evidence, clarifications, blockers and decisions, durable multilingual records, and a permanent read-only history after the room closes.",
+      "terms": "30 calendar days",
+      "body": "One structured commercial opportunity, with confidential parallel counterparty negotiations beneath it. Controlled admission, an agreed procedure, evidence, clarifications, blockers and decisions, durable multilingual records, and a read-only history after the room closes.",
       "cta": "See how a Deal Room works"
     },
     "formula": {
       "heading": "How the price is worked out",
-      "included": "$79 USD covers 30 active days and up to five concurrently active private counterparty branches.",
+      "included": "$79 USD covers 30 calendar days and up to five concurrently active private counterparty branches.",
       "additional": "Each additional concurrently active branch costs $15 USD for the rest of that 30-day period.",
       "cap": "The most a Master Deal Room can cost is $199 USD per 30-day period, however many branches are running.",
       "worked": "So five branches cost $79 USD. Seven cost $109 USD. Thirteen or more cost $199 USD."
@@ -1249,7 +1249,7 @@
     },
     "free": {
       "heading": "What carries no charge",
-      "body": "Browsing, publishing opportunities, preparing a Deal Room, inviting counterparties, receiving and accepting invitations, participants, advisers and specialists, documents, translations, and permanent read-only history. Verifying your own business is free. An invitation that is unanswered, declined or expired never generates a charge."
+      "body": "Browsing, publishing opportunities, preparing a Deal Room, inviting counterparties, receiving and accepting invitations, participants, advisers and specialists, documents, translations, and read-only history. Verifying your own business is free. An invitation that is unanswered, declined or expired never generates a charge."
     },
     "never": {
       "heading": "What Ponte does not charge for",

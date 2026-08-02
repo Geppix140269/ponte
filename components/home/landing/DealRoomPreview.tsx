@@ -175,20 +175,32 @@ export default function DealRoomPreview() {
         </ul>
 
         {/*
-          ADR-0025. "Exploring, publishing and preparing a room stay free" was
-          here until 1 August 2026 and is now false in its most important word.
-          Under the crescendo model a member opens and builds a room for
-          nothing, and pays at the moment they publish it and invite somebody
-          in. Preparing is free; publishing is exactly where the money is.
+          THE THREE PUBLIC ACTIONS, in the words ADR-0028 fixes for them.
 
-          The order is the order of the journey, so the free steps are read
-          before the charged one rather than after it.
+          This line said "$79 when you publish it, for 30 active days", and
+          both halves were wrong in a way that costs money.
+
+          "Publish" everywhere else on the internet means make publicly
+          visible. A Deal Room is private and stays private, so the line could
+          be read as "pay $79 to make my confidential deal public" - the exact
+          opposite of the product, offered at the exact moment a member is
+          deciding whether to pay. Publishing is what a LISTING does, and it is
+          free. A room is created free and ACTIVATED for $79.
+
+          "Active days" implied a clock that stops. It never has:
+          `periodEndFrom` is `start + 30 x 24h` of wall time and does not pause
+          for anything, so the interface was describing an accounting model the
+          code does not implement. Calendar days is what it always was.
+
+          Wording approved by the owner, 2 August 2026, verbatim. The order is
+          the order of the journey, so the free steps are read before the
+          charged one rather than after it.
         */}
         <footer className="drp__ent">
-          <span>Opening a room and building it are free</span>
-          <span>Invited counterparties join free</span>
+          <span>Opening a room and building it are free.</span>
+          <span>Invited counterparties join free.</span>
           <span>
-            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} when you publish it, for {ACTIVE_PERIOD_DAYS} active days
+            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} to activate it, for {ACTIVE_PERIOD_DAYS} calendar days.
           </span>
         </footer>
       </div>

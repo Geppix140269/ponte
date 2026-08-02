@@ -126,7 +126,7 @@ export function roomActivationCharge(args: { requestedCapacity: number }): Charg
     kind: "room_activation",
     amountCents,
     currency: "usd",
-    description: `Ponte Deal Room — ${formatUsd(amountCents)} for 30 active days`,
+    description: `Ponte Deal Room activation — ${formatUsd(amountCents)} for 30 calendar days`,
     capacityBefore: 0,
     capacityAfter,
   };
@@ -183,7 +183,7 @@ export function reactivationCharge(args: { branchesToResume: number }): ChargeIn
     kind: "reactivation",
     amountCents,
     currency: "usd",
-    description: `Ponte Deal Room — a new 30-day period, ${formatUsd(amountCents)}`,
+    description: `Ponte Deal Room reactivation — a new 30 calendar day period, ${formatUsd(amountCents)}`,
     capacityBefore: 0,
     capacityAfter,
   };
