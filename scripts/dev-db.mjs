@@ -326,13 +326,74 @@ function dateOf(name) {
 }
 
 /**
+ * Migrations dated BEFORE the snapshot that are nevertheless not in it.
+ *
+ * The cut-line rule below assumes every migration older than the snapshot was
+ * applied to production. That assumption is **wrong for exactly these two**,
+ * and it is wrong knowably: the WO-2 reconciliation read production's ledger
+ * and its catalogue and found both written, reviewed and never run. Each says
+ * so in its own header.
+ *
+ *   20260730a  "NOT APPLIED. Written and reviewed; not run against production."
+ *              None of its nine indexes exist.
+ *   20260731e  "WRITTEN AND NOT APPLIED."
+ *              deal_room_room_periods and deal_room_billing_events do not exist.
+ *
+ * This list is not a guess and not a heuristic. It is transcribed from a report
+ * built on production's own catalogue, and it is the only place the cut-line
+ * rule is allowed an exception.
+ *
+ * ## Why they are applied here anyway
+ *
+ * Because the local database's job is to be the schema you are BUILDING
+ * against, and `WO-6.4` is explicit that `20260731e` is extended rather than
+ * replaced. A migration written today on top of it - `20260802a` is exactly
+ * that - cannot be tested at all against a database that lacks it.
+ *
+ * The cost is that local is then production PLUS two unapplied files, which is
+ * not production. So it is printed, every run, by name.
+ */
+const WRITTEN_NOT_APPLIED = ["20260731e_deal_room_paid_room_periods.sql"];
+
+/**
+ * Written, unapplied, and **known not to work**. Skipped, with the reason.
+ *
+ * `20260730a_market_signal_search.sql` creates `pg_trgm` `with schema
+ * extensions` and then references `extensions.gin_trgm_ops`. Production already
+ * has `pg_trgm` installed **in `public`**, so `create extension if not exists`
+ * is a silent no-op and the operator class never resolves under `extensions.`.
+ * Every index statement in the file then fails.
+ *
+ * ## This is now demonstrated rather than predicted
+ *
+ * The WO-2 reconciliation reasoned it out from production's catalogue and
+ * recorded it as blocker 2. Running it here **executed** it:
+ *
+ *   ERROR: operator class "extensions.gin_trgm_ops" does not exist
+ *          for access method "gin"
+ *
+ * Same failure, reached independently, with no production access. That is the
+ * first time this repository has been able to prove a migration is broken
+ * without running it against the live database, and it is worth more than the
+ * inconvenience of skipping the file.
+ *
+ * **Not fixed here.** The standing instruction is that migration remedies
+ * belong to the reconciliation, not to whoever trips over them.
+ */
+const KNOWN_BROKEN = {
+  "20260730a_market_signal_search.sql":
+    "creates pg_trgm in `extensions`; production has it in `public`, so extensions.gin_trgm_ops does not resolve (WO-2 blocker 2, reproduced here)",
+};
+
+/**
  * The snapshot is production as it stood on its own date, so every migration
  * dated on or before that is already in it and replaying one would collide with
  * an object that exists. Anything dated after it is work done since, and has to
  * be applied for the local database to be current.
  *
  * The rule is the two filenames and nothing else - no manifest to maintain and
- * forget - and the boundary is printed on every run so it is never invisible.
+ * forget - plus the named exceptions above, and the boundary is printed on
+ * every run so it is never invisible.
  *
  * Applied one at a time, in order, by this file rather than by the CLI. That is
  * what sidesteps FINDING-01's filename-pattern trap without renaming anything:
@@ -342,9 +403,31 @@ function dateOf(name) {
 function applyNewerMigrations(container, snapshotFile) {
   const boundary = dateOf(snapshotFile.replace(/^production-public-/, ""));
   const all = readdirSync(MIGRATIONS_DIR).filter((name) => name.endsWith(".sql")).sort();
-  const newer = all.filter((name) => dateOf(name) > boundary);
 
-  console.log(`  baseline   current to ${boundary}; ${all.length - newer.length} migration(s) already in it`);
+  const skip = (name) => WRITTEN_NOT_APPLIED.includes(name) || name in KNOWN_BROKEN;
+  const pending = all.filter((name) => WRITTEN_NOT_APPLIED.includes(name));
+  const newer = all.filter((name) => dateOf(name) > boundary && !skip(name));
+
+  console.log(
+    `  baseline   current to ${boundary}; ${all.length - newer.length - pending.length} migration(s) already in it`,
+  );
+
+  for (const [name, reason] of Object.entries(KNOWN_BROKEN)) {
+    if (all.includes(name)) console.log(`  skipped    ${name}\n             ${reason}`);
+  }
+
+  // The order matters: a file written today may build on one of these.
+  for (const name of pending) {
+    const sql = readFileSync(join(MIGRATIONS_DIR, name), "utf8");
+    const applied = psql(container, sql, { label: name });
+    if (applied.status !== 0) {
+      fail(
+        `Written-but-unapplied migration ${name} does not apply to the baseline.`,
+        (applied.stderr ?? "").split("\n").slice(-20).join("\n"),
+      );
+    }
+    console.log(`  pending    ${name}  (NOT in production)`);
+  }
 
   if (newer.length === 0) {
     console.log("  newer      none");
@@ -498,6 +581,9 @@ function createBuckets(container) {
  * A gap somebody can read is worth more than a reconstruction nobody can check.
  */
 function reportNonPublicGap() {
+  console.log("");
+  console.log("  This database is production PLUS two written-but-unapplied migrations,");
+  console.log("    named above. It is the schema you are BUILDING against, not production's.");
   console.log("");
   console.log("  Still missing: the policies on storage.objects.");
   console.log("    The seven buckets are seeded from production's own catalogue (WO-2 export,");
