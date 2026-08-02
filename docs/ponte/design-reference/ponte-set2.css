@@ -1,0 +1,109 @@
+/* =====================================================================
+   PONTE · SET 2 — publish a listing, end to end, three families.
+   Extends ponte-set1.css. Adds nothing that changes a Set 1 pattern.
+   Same laws: no boxes, one primary action, hairlines and tone only.
+   ===================================================================== */
+
+/* ---------- VISIBILITY LADDER — shape carries the degree, not colour ---------- */
+.s1 .mk--pub::before{content:"";position:absolute;inset:2px;background:currentColor;border-radius:50%}
+.s1 .mk--pub{color:var(--pf-ink)}
+.s1 .mk--acc{color:var(--pf-ink-2)}
+.s1 .mk--acc::before{content:"";position:absolute;inset:2px;border:1.5px solid currentColor;border-radius:50%}
+.s1 .mk--acc::after{content:"";position:absolute;inset-inline-start:8px;top:2px;width:6px;height:12px;background:currentColor;border-radius:0 999px 999px 0}
+.s1 .mk--priv{color:var(--pf-ink-3)}
+.s1 .mk--priv::before{content:"";position:absolute;inset:2px;border:1.5px solid currentColor;border-radius:50%}
+.s1 .mk--priv::after{content:"";position:absolute;inset-inline-start:1px;top:7px;width:14px;height:1.5px;background:currentColor;transform:rotate(-45deg)}
+.s1 .mk--lock{color:var(--pf-ink-2)}
+.s1 .mk--lock::before{content:"";position:absolute;inset-inline-start:2px;top:7px;width:12px;height:8px;border:1.5px solid currentColor}
+.s1 .mk--lock::after{content:"";position:absolute;inset-inline-start:5px;top:2px;width:6px;height:7px;border:1.5px solid currentColor;border-block-end:0;border-radius:999px 999px 0 0}
+
+/* ---------- LAYER GROUPS (Deal Preview) ---------- */
+.lay__h{padding:22px 20px 11px;display:flex;align-items:flex-start;gap:11px}
+.lay__h .mk{margin-top:2px}
+.lay__h b{display:block;font-size:var(--t4);font-weight:600;line-height:1.4;color:var(--pf-ink)}
+.lay__h span{display:block;font-size:12.5px;line-height:1.55;color:var(--pf-ink-2);margin-top:4px;max-width:36ch}
+.lay__h .fixed{margin-inline-start:auto;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.1em;text-transform:uppercase;color:var(--pf-ink-3);flex:none;display:inline-flex;align-items:center;gap:6px}
+.lay__l{display:flex;flex-direction:column}
+.lay__l>div,.lay__l>button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:13px 20px;border-block-start:1px solid var(--rule);background:none;border-inline:0;border-block-end:0;text-align:start;color:inherit;width:100%;min-height:48px}
+.lay__l>button{min-height:64px;transition:background var(--dur) var(--ease)}
+.lay__l>button:active{background:var(--tone)}
+.lay__l:last-of-type>div:last-child,.lay__l>*:last-child{border-block-end:1px solid var(--rule)}
+.lay__l .k{display:block;font-size:12.5px;color:var(--pf-ink-2);line-height:1.4}
+.lay__l .v{display:block;font-size:15px;color:var(--pf-ink);line-height:1.4;margin-top:3px}
+/* the digits are proof — they never split from their prefix */
+.lay__l .v .hs{font-family:var(--f-mono);font-size:var(--t5);color:var(--pf-ink-3);margin-inline-start:7px;white-space:nowrap;display:inline-block}
+.lay__l .ctl{font-size:13.5px;color:var(--pf-ink);white-space:nowrap;align-self:center;position:relative}
+.lay__l .ctl::after{content:"";position:absolute;inset-inline:0;bottom:-3px;height:1px;background:var(--pf-ink-3)}
+.lay__l .fx{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.1em;text-transform:uppercase;color:var(--pf-ink-3);align-self:center}
+.lay--pub{background:var(--tone)}
+
+/* ---------- ASSETS (B06) ---------- */
+.ast{display:flex;flex-direction:column}
+.ast__i{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:15px;align-items:center;padding:13px 20px;border-block-start:1px solid var(--rule);background:none;border-inline:0;border-block-end:0;width:100%;text-align:start;color:inherit;min-height:64px;transition:background var(--dur) var(--ease)}
+.ast__i:last-child{border-block-end:1px solid var(--rule)}
+.ast__i:active{background:var(--tone)}
+.ast__t{width:64px;height:48px;background:var(--tone);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pf-ink-3)}
+.ast__i b{display:block;font-size:15px;font-weight:500;line-height:1.35}
+.ast__i small{display:block;font-size:12.5px;color:var(--pf-ink-2);margin-top:3px;display:flex;align-items:center;gap:6px}
+.ast__drop{margin:16px 20px 4px;border:1px dashed var(--pf-ink-3);padding:24px 18px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;background:none;width:calc(100% - 40px);text-align:start;color:inherit;min-height:64px}
+.ast__drop b{font-size:var(--t4);font-weight:600}
+.ast__drop span{font-size:12.5px;color:var(--pf-ink-2);line-height:1.55}
+
+/* ---------- SEGMENTED DIRECTION CHOICE (B01) ---------- */
+.dir{display:flex;flex-direction:column;border-block-start:1px solid var(--rule)}
+.dir button{display:grid;grid-template-columns:minmax(0,1fr) 20px;gap:14px;align-items:center;min-height:64px;padding:17px 20px;background:none;border:0;border-block-end:1px solid var(--rule);text-align:start;color:inherit;transition:background var(--dur) var(--ease)}
+.dir button:active{background:var(--tone)}
+.dir button b{font-family:var(--f-serif);font-size:var(--t2);font-weight:500;line-height:1.2;display:block}
+.dir button small{display:block;font-size:12.5px;color:var(--pf-ink-2);margin-top:5px;line-height:1.5}
+.dir button[aria-pressed="true"]{background:var(--tone)}
+.dir button[aria-pressed="true"] b{color:var(--pf-ink)}
+
+/* ---------- SUGGESTION (capacity) — offered, never applied ---------- */
+.sug{padding:17px 20px 18px;background:var(--tone);border-block:1px solid var(--rule)}
+.sug .lab{margin-bottom:8px}
+.sug b{display:block;font-size:var(--t3);font-weight:500;line-height:1.35}
+.sug p{font-size:12.5px;color:var(--pf-ink-2);line-height:1.55;margin-top:7px;max-width:38ch}
+.sug .acts{display:flex;gap:28px;margin-top:6px}
+.sug .acts span{font-size:var(--t4);color:var(--pf-ink);min-height:48px;display:inline-flex;align-items:center;position:relative}
+.sug .acts span::after{content:"";position:absolute;inset-inline:0;bottom:11px;height:1px;background:var(--pf-ink-3)}
+
+/* authority declaration, inline */
+.auth{padding:17px 20px 19px;border-block-end:1px solid var(--rule);background:var(--attention-wash)}
+.auth .lab{color:var(--attention);margin-bottom:9px}
+.auth p{font-size:13.5px;line-height:1.6;color:var(--pf-ink);max-width:38ch}
+.auth label{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;align-items:start;margin-top:14px;min-height:48px;font-size:13.5px;line-height:1.5;color:var(--pf-ink)}
+.auth label i{width:18px;height:18px;border:1.5px solid var(--pf-ink-2);display:block;margin-top:2px;flex:none}
+.auth label.on i{background:var(--pf-ink);border-color:var(--pf-ink);position:relative}
+.auth label.on i::after{content:"";position:absolute;inset-inline-start:3px;top:7px;width:11px;height:1.6px;background:var(--pf-surface);transform:rotate(-45deg)}
+.auth input{width:100%;border:0;border-block-end:1px solid var(--pf-ink-3);background:none;font-family:inherit;font-size:var(--t4);color:var(--pf-ink);padding:12px 0;min-height:48px;margin-top:12px}
+.auth input::placeholder{color:var(--pf-ink-3)}
+
+/* ---------- SCREENING ---------- */
+.scr{display:flex;flex-direction:column}
+.scr__i{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:13px;align-items:baseline;padding:14px 20px;border-block-start:1px solid var(--rule)}
+.scr__i:last-child{border-block-end:1px solid var(--rule)}
+.scr__i .mk{align-self:center}
+.scr__i b{font-size:var(--t4);font-weight:400;color:var(--pf-ink);line-height:1.45}
+.scr__i small{display:block;font-size:12.5px;color:var(--pf-ink-2);margin-top:3px;line-height:1.5}
+.scr__i .st{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.1em;text-transform:uppercase;color:var(--pf-ink-3);align-self:center}
+.scr__i .st.ok{color:var(--done)}
+.scr__i .st.no{color:var(--blocked)}
+.scr__i .st.run{color:var(--pf-ink-2)}
+.perim{padding:15px 20px 18px;border-block-start:1px solid var(--rule)}
+.perim p{font-size:12.5px;line-height:1.6;color:var(--pf-ink-2);max-width:40ch}
+
+/* ---------- SHORTCUT (returning member) ---------- */
+.sc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-block-start:1px solid var(--rule)}
+.sc button{min-height:64px;padding:14px 16px;background:none;border:0;border-block-end:1px solid var(--rule);border-inline-end:1px solid var(--rule);text-align:start;color:inherit;transition:background var(--dur) var(--ease)}
+.sc button:nth-child(2n){border-inline-end:0}
+.sc button:active{background:var(--tone)}
+.sc button b{display:block;font-size:14px;font-weight:500;line-height:1.35}
+.sc button span{display:block;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.08em;text-transform:uppercase;color:var(--pf-ink-3);margin-top:5px}
+
+/* ---------- VALIDITY ---------- */
+.val{padding:16px 20px 20px;border-block-start:1px solid var(--rule)}
+.val .pills{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.val .pills button{min-height:48px;padding:12px 17px;background:none;border:1px solid var(--rule);color:var(--pf-ink);font-family:var(--f-mono);font-size:12px;letter-spacing:.04em;transition:background var(--dur) var(--ease)}
+.val .pills button[aria-pressed="true"]{background:var(--pf-ink);color:var(--pf-surface);border-color:var(--pf-ink)}
+.val .exp{display:block;font-size:13.5px;color:var(--pf-ink);margin-top:14px;line-height:1.5}
+.val .exp b{font-weight:600}

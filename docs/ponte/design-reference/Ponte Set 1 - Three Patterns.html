@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ponte — Set 1 · three reusable patterns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="brand/favicons/favicon-32.png" />
+<link rel="stylesheet" href="ponte-flow/tokens/ponte-flow-tokens.css" />
+<link rel="stylesheet" href="ponte-system.css" />
+<link rel="stylesheet" href="ponte-bridge.css" />
+<link rel="stylesheet" href="ponte-set1.css?v=1" />
+<style>
+html,body{height:100%}
+body{background:#E8E4DA;margin:0;font-family:var(--f-sans);color:#0F0F0E}
+.bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 20px;background:#0F0F0E;color:#F2EFE8;border-bottom:1px solid rgba(242,239,232,.18)}
+.bar .t{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(242,239,232,.55)}
+.bar select,.bar button{font-family:var(--f-mono);font-size:11px;background:#1B1B19;color:#F2EFE8;border:1px solid rgba(242,239,232,.24);border-radius:4px;padding:6px 9px;cursor:pointer}
+.bar .m{margin-inline-start:auto;font-family:var(--f-mono);font-size:10.5px;color:rgba(242,239,232,.55)}
+.head{padding:26px 22px 4px;max-width:104ch}
+.head .k{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#8A6520;display:block;margin-bottom:9px}
+.head h2{font-family:var(--f-serif);font-size:27px;font-weight:500;letter-spacing:-.018em;margin:0 0 9px}
+.head p{font-size:13.5px;line-height:1.7;color:#3A3733;margin:0}
+.sheet{display:flex;gap:26px;align-items:flex-start;padding:22px;overflow-x:auto;width:100%}
+.cell{flex:none}
+.doc{max-width:1080px;margin:0;padding:24px 22px 70px}
+.doc h1{font-family:var(--f-serif);font-size:32px;font-weight:500;letter-spacing:-.02em;margin:0 0 12px;max-width:24ch}
+.doc h3{font-size:13px;font-weight:600;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid #D5CEBC;font-family:var(--f-mono);letter-spacing:.13em;text-transform:uppercase;color:#6E6A61}
+.doc p{font-size:13.5px;line-height:1.72;color:#3A3733;margin:0 0 12px;max-width:82ch}
+.tt{width:100%;border-collapse:collapse;font-size:12.5px;background:#FCFBF7;border:1px solid #E5DFD2}
+.tt th{text-align:start;font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A61;padding:9px 13px;background:#F2EFE6;border-bottom:1px solid #D5CEBC;font-weight:600}
+.tt td{padding:10px 13px;border-bottom:1px solid #E5DFD2;color:#3A3733;line-height:1.55;vertical-align:top}
+.tt tr:last-child td{border-bottom:0}
+.tt td b{color:#0F0F0E}
+.tt code,.doc code{font-family:var(--f-mono);font-size:11.5px;background:#F2EFE6;padding:1px 5px}
+.sw{display:flex;align-items:center;gap:9px}
+.sw i{width:26px;height:26px;display:block;border:1px solid rgba(15,15,14,.2)}
+.scale{background:#FCFBF7;border:1px solid #E5DFD2}
+.scale>div{display:grid;grid-template-columns:120px 78px minmax(0,1fr);gap:18px;align-items:baseline;padding:14px 16px;border-bottom:1px solid #E5DFD2}
+.scale>div:last-child{border-bottom:0}
+.scale .n{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A61}
+.scale .v{font-family:var(--f-mono);font-size:11px;color:#3A3733}
+.intent{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 30px}
+.intent li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:11px;padding:10px 0;border-bottom:1px dashed #D5CEBC;font-size:12.5px;line-height:1.6;color:#3A3733}
+.intent li i{font-family:var(--f-mono);font-size:9.5px;font-style:normal;width:19px;height:19px;border-radius:50%;border:1px solid #6E6A61;color:#3A3733;display:flex;align-items:center;justify-content:center}
+.intent li b{color:#0F0F0E}
+/* review-harness caption. Not product type — it sits outside the 11px product floor on purpose. */
+.cap{display:flex;align-items:baseline;gap:12px;padding:0 0 8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A61}
+.cap b{color:#0F0F0E;font-size:11.5px}
+.cap span{margin-inline-start:auto;text-transform:none;letter-spacing:.02em}
+</style>
+</head>
+<body>
+
+<div class="bar" role="toolbar" aria-label="Review">
+  <span class="t">Set 1 · three patterns</span>
+  <select id="sel" aria-label="Screen"></select>
+  <span class="t">State</span>
+  <select id="state" aria-label="State"></select>
+  <span class="t">View</span>
+  <select id="view" aria-label="View"><option value="pair">Light + dark</option><option value="light">Light only</option><option value="dark">Dark only</option></select>
+  <button type="button" id="prev" aria-label="Previous">←</button>
+  <button type="button" id="next" aria-label="Next">→</button>
+  <span class="m" id="meta"></span>
+</div>
+
+<div id="stage"></div>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="#0F0F0E"/><g transform="translate(30,30)"><rect x="0" y="0" width="60" height="2" fill="#C9973A"/><rect x="0" y="14" width="44" height="7" fill="#FCFBF7"/><rect x="0" y="30" width="60" height="1" fill="#6E6A61"/><rect x="0" y="42" width="34" height="5" fill="#FCFBF7"/><rect x="0" y="56" width="60" height="1" fill="#6E6A61"/><rect x="0" y="66" width="24" height="5" fill="#FCFBF7"/></g></svg>
+</template>
+
+<script src="ponte-set1-screens.js?v=1"></script>
+<script>
+(function(){
+var P = window.PS1;
+var NOTES = {
+ S1:[
+  '<b>Speak it is the hero</b>, not a button in a row of four. It is a full-bleed tone band with the largest glyph and the only serif label on the screen — priority is carried by size and position, never by a "recommended" tag.',
+  '<b>Camera before file picker.</b> The second route says "photograph or upload" in that order, because a broker is holding paper, not a PDF.',
+  '<b>The document route is gated, and says so before the tap</b> — "Sign in first, so the file is held against your account" sits under the route, in the same voice as the others. <b>Speak, browse and type are ungated.</b> The hero and the fastest route stay open to an anonymous user, so the entry screen is not weakened.',
+  'Disclosure is drawn <b>before the send</b>, on the screen, in four lines: what is sent, what is kept, for how long, who sees it. It is not a link to terms. It is now a <b>signed-in</b> state, and the retention line states 90 days from last edit with warnings at 14 and 3 days — the real policy, not a placeholder.',
+  '<b>Nothing restarts.</b> Voice-unclear offers correction of the two uncertain words and an "add to what you said" route. Microphone-denied re-offers the other three routes intact.',
+  'Errors state <b>what was saved and what was not</b>, as a two-line register with a reference. No apology, no "oops".',
+  'The cut copy is cut: no "three ways in", no changelog paragraph about browsing still working.'
+ ],
+ S2:[
+  '<b>Missing rises, confirmed recedes.</b> A needed fact is a serif 22px question on an attention wash; a confirmed fact is 15px Inter in secondary ink at two-thirds the row height. The hierarchy holds at six gaps.',
+  '<b>Inference is stated, not hidden.</b> "Inferred, not read" sits in the label row with a dashed circle, the value carries a dashed underline, and one tap confirms it.',
+  '<b>HS digits are proof, not content.</b> "Rice, semi-milled or wholly milled" is the value; <code>HS 1006.30</code> sits beside it in mono at half size.',
+  'Correction opens <b>in place, as rows and a stepper</b> — unit rows at 64px, a ±72px stepper, a "say it instead" route, and search underneath. Never a bare text field.',
+  'Loading is <b>hairlines resolving</b>, and shows the facts already read above the skeleton, so the user watches work arrive rather than a spinner.',
+  '<b>Three tiers, no colour dependency:</b> triangle = needed, dashed circle = inferred, check = confirmed. Removing colour leaves the hierarchy intact.'
+ ],
+ S3:[
+  'The label is <b>"Continue to publication"</b>, never "Save". It describes the destination and does not imply the work is finished.',
+  '<b>The storage claim is now true.</b> Before sign-in: "Saved in this browser." No duration, no other devices. After: "Saved to your account. Continue on any device."',
+  '<b>Returning mid-flow names the draft</b> — product, quantity, terms, ref and 9 facts — so the user recognises their own work before typing a password.',
+  '<b>Session-expired returns to the line</b>, not the home page: "Returning to — The listing so far, Quantity."',
+  'Failure is <b>specific and calm</b>: the email is recognised, the password is not, the listing is untouched, and the two alternative routes are offered rather than a retry loop.',
+  'No copy anywhere promises unlimited or permanent storage. <b>Retention is an unset parameter and is not claimed.</b>'
+ ]
+};
+
+var ITEMS = P.order.map(function(k){ return { k:k, s:P[k] }; });
+ITEMS.push({ k:'tokens', s:{ n:'—', id:'S-00', title:'Tokens resolved' } });
+
+var sel = document.getElementById('sel'), view = document.getElementById('view'),
+    stSel = document.getElementById('state'),
+    stage = document.getElementById('stage'), meta = document.getElementById('meta');
+var cur = 0, mode = 'pair', curState = null;
+sel.innerHTML = ITEMS.map(function(it,i){
+  return '<option value="'+i+'">'+(it.s.n==='—'?'':'Screen '+it.s.n+' · ')+it.s.title+'</option>'; }).join('');
+
+function cap(a,b){ return '<div class="cap"><b>'+a+'</b><span>'+b+'</span></div>'; }
+
+function sheet(s){
+  var list = curState === '*' ? s.states : s.states.filter(function(x){ return x[0] === curState; });
+  return '<div class="sheet">'+list.map(function(st){
+    var l = '<div>'+s.build(st[0],'light')+'</div>', d = '<div>'+s.build(st[0],'dark')+'</div>';
+    var inner = mode==='light' ? l : mode==='dark' ? d : l+d;
+    return '<div class="cell">'+cap(st[1], mode==='pair'?'light · dark':mode)+'<div class="pair">'+inner+'</div></div>';
+  }).join('')+'</div>';
+}
+
+function tokensDoc(){
+  var rows = function(t){ return t.map(function(r){ return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'; }).join(''); };
+  return '<div class="doc"><span class="k" style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#8A6520">Blocking tokens</span>'
+  + '<h1>Five token decisions, resolved inside Set 1</h1>'
+  + '<p>These were named as blocking and part of the deliverable. Each is declared on the <code>.s1</code> frame in <code>ponte-set1.css</code>, so a screen cannot be drawn without them, and each is answered in both themes.</p>'
+
+  + '<h3>1 · Type — five steps, held</h3>'
+  + '<p>Serif for statements. Inter for prose and values. <b>Monospace is restricted to identifiers and system labels only</b> — refs, HS codes, dates, incoterms, quantities, and uppercase section labels. <b>No sentence anywhere in this set is set in mono</b>, including the storage statement and every footer note, which were the worst offenders on the live site.</p>'
+  + '<div class="scale">'
+  + '<div><span class="n">t1 · 30px</span><span class="v">Playfair 500</span><span style="font-family:var(--f-serif);font-size:30px;line-height:1.14;letter-spacing:-.02em">Tell Ponte what you supply</span></div>'
+  + '<div><span class="n">t2 · 22px</span><span class="v">Playfair 500</span><span style="font-family:var(--f-serif);font-size:22px">The listing so far</span></div>'
+  + '<div><span class="n">t3 · 17px</span><span class="v">Inter 500</span><span style="font-size:17px">Rice, semi-milled or wholly milled</span></div>'
+  + '<div><span class="n">t4 · 14.5px</span><span class="v">Inter 400</span><span style="font-size:14.5px">Prose, explanation and secondary description.</span></div>'
+  + '<div><span class="n">t5 · 11px</span><span class="v">JetBrains Mono</span><span style="font-family:var(--f-mono);font-size:11px;letter-spacing:.02em">HS 1006.30 · DR-4471-08 · FOB · 24 t · 1 OCT 2026</span></div>'
+  + '</div>'
+  + '<p style="margin-top:12px">11px is a <b>floor, not a default</b>: mono never appears below it, and never in a sentence a user has to read to understand the screen.</p>'
+
+  + '<h3>2 · Contrast — measured, on both grounds</h3>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Role</th><th style="width:230px">Light on #FCFBF7</th><th>Dark on #0E0F0C</th></tr></thead><tbody>'
+  + rows([
+    ['Primary text','#0F0F0E — 18.4:1','#F2EFE8 — 17.1:1'],
+    ['Secondary prose','#3A3733 — 11.1:1','#CDC8BC — 11.8:1'],
+    ['Mono labels + identifiers','#6E6A61 — 5.0:1','#A7A296 — 7.4:1'],
+    ['Attention','#8A6520 — 5.3:1','#E7C173 — 10.6:1'],
+    ['Blocked','#B4402A — 5.4:1','#E0674C — 6.6:1'],
+    ['Done','#0F6E3D — 5.6:1','#4FB07A — 7.7:1']])
+  + '</tbody></table>'
+  + '<p style="margin-top:12px"><b><code>--pf-mute</code> is withdrawn from all text.</b> At 2.6:1 it fails, and every use in this set that would have taken it now takes <code>--pf-ink-3</code>. Mute survives only as a non-text rule tone.</p>'
+
+  + '<h3>3 · State colour — three semantics, never decorative, never alone</h3>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Token</th><th style="width:230px">Means</th><th>Carried also by</th></tr></thead><tbody>'
+  + rows([
+    ['<span class="sw"><i style="background:#8A6520"></i>--attention</span>','Ponte needs something from you before this can proceed','Filled triangle, the word "Needed to publish", and a background wash'],
+    ['<span class="sw"><i style="background:#B4402A"></i>--blocked</span>','Something failed or is refused. Nothing can proceed here.','Cross mark, a named cause, and a saved/not-saved register'],
+    ['<span class="sw"><i style="background:#0F6E3D"></i>--done</span>','Confirmed, read from source, or complete','Check mark, and recession in size and weight'],
+    ['<span class="sw"><i style="background:#C9973A"></i>--pf-gold</span>','<b>Brand only.</b> Withdrawn from link, selection and emphasis.','Appears once, in the home hero arc — which is not in this set']])
+  + '</tbody></table>'
+  + '<p style="margin-top:12px">Selection is now carried by a background tone shift and a check mark. Links are carried by a 1px underline in body ink. <b>Gold does not appear anywhere in Set 1.</b></p>'
+
+  + '<h3>4 · Hairlines — one weight, one opacity, full width</h3>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Property</th><th style="width:230px">Light</th><th>Dark</th></tr></thead><tbody>'
+  + rows([
+    ['Weight','1px, all instances','1px, all instances'],
+    ['Colour','<code>rgba(15,15,14,.14)</code>','<code>rgba(242,239,232,.16)</code>'],
+    ['Extent','Full width, or full column. Never partial, never inset.','Same'],
+    ['Journey rule','2px, three segments, 2px gaps, ink fill','Same. The single 2px exception.'],
+    ['Tone shifts','<code>#F2EFE6</code> raised band','<code>#161813</code> raised band']])
+  + '</tbody></table>'
+  + '<p style="margin-top:12px">This is the only container the system has. <b>Zero container chrome: no card, no bordered box, no shadowed surface.</b> <code>ponte-set1.css</code> does carry a handful of <code>border-radius</code> and <code>box-shadow</code> declarations and every one is <b>icon geometry</b> — the microphone capsule, the camera lens, the magnifier circle, the dashed inferred marker, the grid squares. <b>Do not enforce the no-box law by grep</b>, or the icons flatten. Enforce it on containers.</p>'
+
+  + '<h3>5 · Motion — one duration, one easing</h3>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Case</th><th style="width:230px">Value</th><th>Purpose</th></tr></thead><tbody>'
+  + rows([
+    ['Every transition','<code>180ms cubic-bezier(.2,.6,.2,1)</code>','The only duration and the only easing in the set'],
+    ['Tap acknowledgement','Background or opacity shift on <code>:active</code>, no delay','Fires before any data arrives — under 100ms by construction'],
+    ['Arrival','Skeleton hairlines resolve into fact lines','Shows work landing, not that a machine is busy'],
+    ['Indeterminate','A single travelling hairline segment','Used only where duration is genuinely unknown'],
+    ['Reduced motion','All loops stop and rest at a legible state','<code>prefers-reduced-motion</code> honoured throughout']])
+  + '</tbody></table>'
+
+  + '<h3>Rules held</h3>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Rule</th><th colspan="2">How Set 1 holds it</th></tr></thead><tbody>'
+  + [['No boxes','No card, no rounded rectangle, no bordered container, no shadow. Every division is a full-width hairline or a background tone shift. The primary action is a full-bleed ink band, not a button shape.'],
+     ['One primary action','One ink band per screen. Secondary actions are underlined text rows on the surface; tertiary routes are 64px hairline rows.'],
+     ['Tap and voice first','Voice is the hero on Screen 1 and reappears inside the Screen 2 picker. Typing and search are present on every surface where a value can be entered, and never the largest.'],
+     ['Back never loses work','Every error and interruption state names what was saved. Sign-in states the draft survives the round trip and returns to the exact node.'],
+     ['One hairline journey rule','2px across the top, <b>three segments, one filled per step</b>. It carries no numeral and encodes no percentage — a step is whole or it is not. Distinct in form from any Deal Room procedural measure, so the two can never read as the same measurement at different values.'],
+     ['Tap targets','Choice rows 64px, all other controls 48px minimum, stepper 72 × 64.'],
+     ['Arc appears once','Not in this set.']]
+     .map(function(r){ return '<tr><td><b>'+r[0]+'</b></td><td colspan="2">'+r[1]+'</td></tr>'; }).join('')
+  + '</tbody></table>'
+  + '<h3>Recognition \u2014 Momentum standard, R2</h3>'
+  + '<p>R1 and RX were already carried by the set: \u201cSaved in this browser.\u201d is R1, and the saved / not-saved registers with \u201ccontinues from the four facts already read\u201d are RX. <b>R2 was missing and is now drawn</b>, as two states on Screen 2 rather than two new screens.</p>'
+  + '<table class="tt"><thead><tr><th style="width:210px">Event</th><th style="width:230px">Where</th><th>Behaviour</th></tr></thead><tbody>'
+  + [['<code>objective_captured</code>','Screen 2, first arrival only','A band at the head of the fact list. Completing Screen 1 <i>is</i> arriving on Screen 2, so no separate screen exists. It gives way to the facts on first scroll or first correction, and says so.'],
+     ['<code>deal_structured</code>','Screen 2, \u201cAll confirmed\u201d','Rides the existing state. Fires when every needed fact is satisfied \u2014 no ninth state was created.']]
+     .map(function(r){ return '<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'; }).join('')
+  + '</tbody></table>'
+  + '<p style="margin-top:12px">Both carry all five elements: milestone, what completed, why it matters, <b>what remains preserved or unresolved</b>, and exactly one next action with an owner. The fourth element does real work in each \u2014 on capture it names the two gaps and the one inference and states they do not block leaving; on structure it names what was <i>not</i> required and that the figure stays private.</p>'
+  + '<p><b>Subordinate to the facts, and never colour alone.</b> The band is a raised tone with a serif statement and a labelled next action; the milestone is legible with colour removed. There is no animation, so the reduced-motion rendering is identical. No coins, points, streaks, confetti or congratulation \u2014 it is a report.</p>'
+  + '<h3>Open, for Giuseppe</h3>'
+  + '<p><b>Draft retention before sign-in.</b> The screens claim only "Saved in this browser" and make no duration promise, which is safe but incomplete. A number is needed before Set 2 — the sign-in screen has a place for it and currently says nothing.</p>'
+  + '<p><b>Desktop adaptation</b> is not drawn here, per the brief. It follows approval of these 390px versions.</p>'
+  + '</div>';
+}
+
+function paint(){
+  var it = ITEMS[cur], s = it.s;
+  Array.prototype.forEach.call(sel.options, function(o){ o.selected = parseInt(o.value,10) === cur; });
+  view.disabled = it.k === 'tokens';
+  stSel.disabled = it.k === 'tokens';
+  if(it.k !== 'tokens'){
+    var keys = s.states.map(function(x){ return x[0]; });
+    if(curState !== '*' && keys.indexOf(curState) < 0) curState = keys[0];
+    stSel.innerHTML = s.states.map(function(x){
+      return '<option value="'+x[0]+'"'+(x[0]===curState?' selected':'')+'>'+x[1]+'</option>'; }).join('')
+      + '<option value="*"'+(curState==='*'?' selected':'')+'>All states (slow)</option>';
+  }
+  if(it.k === 'tokens'){
+    stage.innerHTML = tokensDoc();
+  } else {
+    stage.innerHTML = '<div class="head"><span class="k">Screen '+s.n+' · '+s.id+' · '+s.states.length+' states · 390 px</span>'
+      + '<h2>'+s.title+'</h2><p>'+s.purpose+'</p>'
+      + '<ul class="intent">'+NOTES[it.k].map(function(n,i){ return '<li><i>'+(i+1)+'</i><span>'+n+'</span></li>'; }).join('')+'</ul></div>'
+      + sheet(s);
+  }
+  meta.textContent = (cur+1)+' / '+ITEMS.length;
+  window.scrollTo(0,0);
+}
+function go(i){ cur = (i + ITEMS.length) % ITEMS.length; paint(); }
+sel.addEventListener('change', function(){ go(parseInt(sel.value,10)); });
+stSel.addEventListener('change', function(){ curState = stSel.value; paint(); });
+view.addEventListener('change', function(){ mode = view.value; paint(); });
+document.getElementById('prev').addEventListener('click', function(){ go(cur-1); });
+document.getElementById('next').addEventListener('click', function(){ go(cur+1); });
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName === 'SELECT') return;
+  if(e.key === 'ArrowRight') go(cur+1);
+  if(e.key === 'ArrowLeft') go(cur-1);
+});
+go(0);
+})();
+</script>
+</body>
+</html>

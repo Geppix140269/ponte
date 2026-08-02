@@ -1,0 +1,278 @@
+/* =====================================================================
+   PONTE · SET 1 — three reusable full-screen patterns at 390px
+   S1 Tell Ponte · S2 The X so far · S3 Sign in
+   Absolute rule: NO BOXES. Structure is type, scale, whitespace,
+   full-width hairlines and background tone shifts. Nothing else.
+   Built on --pf-* tokens. Both themes carried on the frame element.
+   ===================================================================== */
+
+/* ---------- 0 · SET 1 TOKENS (the blocking resolutions) ---------- */
+.s1{
+  /* type — five steps, held */
+  --t1:30px;   /* serif statement */
+  --t2:22px;   /* serif section statement */
+  --t3:17px;   /* Inter value */
+  --t4:14.5px; /* Inter prose */
+  --t5:11px;   /* mono identifier / label — floor */
+  /* hairline — one weight, one opacity */
+  --rule:rgba(15,15,14,.14);
+  /* state colour — semantic only, never decorative, never alone */
+  --attention:#8A6520; --blocked:#B4402A; --done:#0F6E3D;
+  --attention-wash:rgba(201,151,58,.10);
+  --blocked-wash:rgba(180,64,42,.08);
+  /* motion — one duration, one easing */
+  --dur:180ms; --ease:cubic-bezier(.2,.6,.2,1);
+  /* one raised tone, the only alternative to the surface */
+  --tone:#F2EFE6;
+}
+.s1[data-theme="dark"]{
+  --rule:rgba(242,239,232,.16);
+  --attention:#E7C173; --blocked:#E0674C; --done:#4FB07A;
+  --attention-wash:rgba(217,172,85,.12);
+  --blocked-wash:rgba(224,103,76,.12);
+  --tone:#161813;
+}
+
+/* ---------- 1 · FRAME ---------- */
+.s1{width:390px;min-height:844px;background:var(--pf-surface);color:var(--pf-ink);font-family:var(--f-sans);font-size:var(--t4);line-height:1.55;display:flex;flex-direction:column;position:relative;-webkit-font-smoothing:antialiased}
+.s1 *{box-sizing:border-box}
+.s1 h1,.s1 h2{margin:0;font-weight:500}
+.s1 p{margin:0}
+.s1 button{font-family:inherit;cursor:pointer}
+.s1 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.s1 :where(button,a,[tabindex]):focus-visible{outline:2px solid var(--pf-focus);outline-offset:-3px}
+.s1__st{display:flex;justify-content:space-between;align-items:center;padding:11px 20px 6px;font-family:var(--f-mono);font-size:var(--t5);color:var(--pf-ink);font-weight:600;letter-spacing:.02em}
+.s1__st span{display:flex;gap:5px;align-items:center}
+.s1__st i{display:block;width:15px;height:8px;border:1px solid var(--pf-ink);position:relative}
+.s1__st i::after{content:"";position:absolute;inset:1.5px;background:var(--pf-ink)}
+/* One hairline journey rule. Three segments, one per step, filled or not.
+   It carries NO numeral and encodes no percentage — a step is whole or it is not.
+   Deliberately distinct in FORM from any Deal Room procedural measure. */
+.s1__prog{height:2px;display:flex;gap:2px;flex:none;padding:0 20px}
+.s1__prog i{flex:1;background:var(--rule);transition:background var(--dur) var(--ease)}
+.s1__prog i[data-on]{background:var(--pf-ink)}
+.s1__nav{display:flex;align-items:center;gap:14px;min-height:48px;padding:6px 20px;flex:none}
+.s1__back{background:none;border:0;padding:0;display:inline-flex;align-items:center;gap:9px;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.12em;text-transform:uppercase;color:var(--pf-ink-2);min-height:48px;transition:color var(--dur) var(--ease)}
+.s1__back:active{color:var(--pf-ink)}
+.s1__back u{text-decoration:none;font-size:14px;line-height:1}
+.s1__nav .step{margin-inline-start:auto;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.12em;text-transform:uppercase;color:var(--pf-ink-3)}
+.s1__c{flex:1;display:flex;flex-direction:column;min-width:0}
+.s1__pad{padding:10px 20px 24px}
+
+/* ---------- 2 · TYPE ---------- */
+.s1 .stmt{font-family:var(--f-serif);font-size:var(--t1);line-height:1.14;letter-spacing:-.02em;font-weight:500;max-width:15ch}
+.s1 .stmt--2{font-size:var(--t2);line-height:1.22;max-width:20ch}
+.s1 .lede{font-size:var(--t4);line-height:1.6;color:var(--pf-ink-2);margin-top:12px;max-width:38ch}
+.s1 .lab{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.14em;text-transform:uppercase;color:var(--pf-ink-3);font-weight:600;display:block}
+.s1 .id{font-family:var(--f-mono);font-size:var(--t5);color:var(--pf-ink-3);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.s1 .val{font-size:var(--t3);line-height:1.35;color:var(--pf-ink);display:block}
+/* prose micro — Inter, never mono. Mono is identifiers and system labels only. */
+.s1 .note{font-size:12.5px;line-height:1.6;color:var(--pf-ink-2)}
+.s1 .act-txt{font-size:13.5px;line-height:1.5;color:var(--pf-ink);min-height:48px;display:inline-flex;align-items:center;position:relative}
+.s1 .act-txt::after{content:"";position:absolute;inset-inline:0;bottom:11px;height:1px;background:var(--pf-ink-3)}
+.s1 .prose{font-size:var(--t4);line-height:1.62;color:var(--pf-ink-2);text-wrap:pretty}
+
+/* ---------- 3 · HAIRLINES + TONE SHIFTS (the only containers) ---------- */
+.s1 .hr{height:1px;background:var(--rule);flex:none}
+.s1 .band{background:var(--tone)}
+.s1 .band--attention{background:var(--attention-wash)}
+.s1 .band--blocked{background:var(--blocked-wash)}
+
+/* ---------- 4 · CHOICE ROWS — 64px, tap acknowledged in 100ms ---------- */
+.s1 .rows{display:flex;flex-direction:column}
+.s1 .row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:16px;align-items:center;min-height:64px;padding:15px 20px;border-top:1px solid var(--rule);background:none;border-inline:0;border-bottom:0;text-align:start;width:100%;color:inherit;transition:background var(--dur) var(--ease)}
+.s1 .row:last-child{border-bottom:1px solid var(--rule)}
+.s1 .row:active{background:var(--tone)}
+.s1 .row b{font-size:var(--t3);font-weight:500;line-height:1.3;display:block}
+.s1 .row small{display:block;font-size:12.5px;line-height:1.5;color:var(--pf-ink-2);margin-top:4px}
+.s1 .row .go{font-family:var(--f-mono);font-size:13px;color:var(--pf-ink-3)}
+.s1 .row--sel{background:var(--tone)}
+.s1 .row[aria-disabled="true"]{opacity:.5;pointer-events:none}
+
+/* glyph marks — shape carries meaning, colour only reinforces */
+.s1 .gl{width:22px;height:22px;display:block;position:relative;color:var(--pf-ink-2)}
+.s1 .gl--mic::before{content:"";position:absolute;inset-inline-start:7px;top:2px;width:8px;height:11px;border:1.5px solid currentColor;border-radius:999px}
+.s1 .gl--mic::after{content:"";position:absolute;inset-inline-start:4px;top:12px;width:14px;height:7px;border:1.5px solid currentColor;border-block-start:0;border-radius:0 0 999px 999px}
+.s1 .gl--cam::before{content:"";position:absolute;inset-inline-start:1px;top:5px;width:20px;height:13px;border:1.5px solid currentColor}
+.s1 .gl--cam::after{content:"";position:absolute;inset-inline-start:8px;top:9px;width:6px;height:6px;border:1.5px solid currentColor;border-radius:50%}
+.s1 .gl--grid::before{content:"";position:absolute;inset-inline-start:2px;top:3px;width:8px;height:8px;border:1.5px solid currentColor;box-shadow:10px 0 0 -0.5px currentColor,0 10px 0 -0.5px currentColor,10px 10px 0 -0.5px currentColor}
+.s1 .gl--find::before{content:"";position:absolute;inset-inline-start:2px;top:2px;width:13px;height:13px;border:1.5px solid currentColor;border-radius:50%}
+.s1 .gl--find::after{content:"";position:absolute;inset-inline-start:13px;top:14px;width:8px;height:1.5px;background:currentColor;transform:rotate(45deg);transform-origin:0 50%}
+.s1 .gl--file::before{content:"";position:absolute;inset-inline-start:4px;top:2px;width:14px;height:18px;border:1.5px solid currentColor}
+.s1 .gl--file::after{content:"";position:absolute;inset-inline-start:7px;top:8px;width:8px;height:1.5px;background:currentColor;box-shadow:0 4px 0 currentColor}
+
+/* state marks */
+.s1 .mk{width:16px;height:16px;display:inline-block;position:relative;flex:none;vertical-align:-2px}
+.s1 .mk--done{color:var(--done)}
+.s1 .mk--done::before{content:"";position:absolute;inset-inline-start:2px;top:8px;width:5px;height:1.6px;background:currentColor;transform:rotate(45deg);transform-origin:0 50%}
+.s1 .mk--done::after{content:"";position:absolute;inset-inline-start:5px;top:11px;width:10px;height:1.6px;background:currentColor;transform:rotate(-50deg);transform-origin:0 50%}
+.s1 .mk--need{color:var(--attention)}
+.s1 .mk--need::before{content:"";position:absolute;inset-inline-start:1px;top:2px;border-inline:7px solid transparent;border-block-end:12px solid currentColor}
+.s1 .mk--inferred{color:var(--pf-ink-3)}
+.s1 .mk--inferred::before{content:"";position:absolute;inset:1px;border:1.5px dashed currentColor;border-radius:50%}
+.s1 .mk--blocked{color:var(--blocked)}
+.s1 .mk--blocked::before,.s1 .mk--blocked::after{content:"";position:absolute;inset-inline-start:2px;top:7px;width:12px;height:1.6px;background:currentColor}
+.s1 .mk--blocked::before{transform:rotate(45deg)}
+.s1 .mk--blocked::after{transform:rotate(-45deg)}
+
+/* ---------- 5 · PRIMARY ACTION — a full-bleed tone band, not a card ---------- */
+.s1__f{margin-top:auto;flex:none}
+.s1__act{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;padding:18px 20px;border:0;background:var(--pf-ink);color:var(--pf-surface);font-size:var(--t3);font-weight:600;letter-spacing:-.005em;transition:opacity var(--dur) var(--ease)}
+.s1__act:active{opacity:.78}
+.s1__act[aria-disabled="true"]{background:var(--tone);color:var(--pf-ink-3);border-block-start:1px solid var(--rule);pointer-events:none}
+.s1__act small{display:block;font-size:12.5px;font-weight:400;opacity:.78;margin-top:4px;line-height:1.45}
+.s1__2nd{display:block;width:100%;min-height:48px;padding:14px 20px;background:none;border:0;border-block-start:1px solid var(--rule);color:var(--pf-ink-2);font-size:var(--t4);text-align:center;transition:background var(--dur) var(--ease)}
+.s1__2nd:active{background:var(--tone)}
+.s1__foot{padding:13px 20px 17px;border-block-start:1px solid var(--rule);display:flex;gap:10px;align-items:baseline}
+.s1__foot .note{flex:1}
+
+/* ---------- 6 · SPEAK BAND (screen 1 hero) ---------- */
+.spk{background:var(--tone);border-block:1px solid var(--rule);padding:26px 20px 28px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;width:100%;text-align:start;color:inherit;transition:background var(--dur) var(--ease)}
+.spk:active{background:var(--pf-rule)}
+.spk__g{width:44px;height:44px;position:relative;color:var(--pf-ink)}
+.spk__g::before{content:"";position:absolute;inset-inline-start:15px;top:4px;width:14px;height:20px;border:2px solid currentColor;border-radius:999px}
+.spk__g::after{content:"";position:absolute;inset-inline-start:9px;top:22px;width:26px;height:13px;border:2px solid currentColor;border-block-start:0;border-radius:0 0 999px 999px}
+.spk b{font-size:var(--t2);font-weight:500;font-family:var(--f-serif);line-height:1.2;display:block}
+.spk p{font-size:13.5px;color:var(--pf-ink-2);line-height:1.55;max-width:34ch;margin-top:6px}
+/* listening — motion acknowledges and shows arrival, nothing decorative */
+.wave{display:flex;align-items:flex-end;gap:4px;height:34px;width:100%}
+.wave i{flex:1;background:var(--pf-ink);height:100%;transform:scaleY(.2);transform-origin:50% 100%;animation:s1wave 1.1s var(--ease) infinite alternate;will-change:transform}
+@keyframes s1wave{to{transform:scaleY(1)}}
+.wave i:nth-child(3n){animation-delay:.18s}
+.wave i:nth-child(3n+1){animation-delay:.36s}
+.wave i:nth-child(4n){animation-delay:.09s}
+@media (prefers-reduced-motion:reduce){.wave i{animation:none;transform:scaleY(.6)}}
+.tscript{font-size:var(--t3);line-height:1.5;color:var(--pf-ink)}
+.tscript em{font-style:normal;border-block-end:1.5px dashed var(--attention);color:var(--pf-ink)}
+.tscript .caret{display:inline-block;width:1.5px;height:17px;background:var(--pf-ink);vertical-align:-3px;animation:s1blink 1s steps(1) infinite}
+@keyframes s1blink{50%{opacity:0}}
+
+/* ---------- 7 · FACT LINES (screen 2) ---------- */
+.fl{display:flex;flex-direction:column}
+.fl__i{display:block;width:100%;text-align:start;background:none;border:0;border-block-start:1px solid var(--rule);padding:15px 20px;color:inherit;min-height:64px;transition:background var(--dur) var(--ease)}
+.fl__i:last-child{border-block-end:1px solid var(--rule)}
+.fl__i:active{background:var(--tone)}
+.fl__k{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.fl__k .lab{color:var(--pf-ink-3)}
+.fl__k .r{margin-inline-start:auto;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.1em;text-transform:uppercase}
+.fl__v{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.fl__v b{font-size:var(--t3);font-weight:500;line-height:1.35}
+.fl__v .hs{font-family:var(--f-mono);font-size:var(--t5);color:var(--pf-ink-3);letter-spacing:.02em}
+/* tier 1 — missing and required: loudest */
+.fl__i--need{background:var(--attention-wash)}
+.fl__i--need .lab,.fl__i--need .r{color:var(--attention)}
+.fl__i--need .fl__v b{font-size:var(--t2);font-family:var(--f-serif);font-weight:500;color:var(--pf-ink)}
+.fl__i--need .ask{display:block;font-size:12.5px;color:var(--pf-ink-2);margin-top:6px;line-height:1.5}
+/* tier 2 — inferred: marked, one tap to confirm */
+.fl__i--inf .r{color:var(--pf-ink-2)}
+.fl__i--inf .fl__v b{border-block-end:1.5px dashed var(--pf-ink-3);padding-bottom:1px}
+.fl__i--inf .prov{display:block;font-size:12.5px;line-height:1.5;color:var(--pf-ink-2);margin-top:7px}
+.fl__i--inf .conf{display:flex;align-items:stretch;gap:28px;margin-top:8px}
+.fl__i--inf .conf span{font-size:var(--t4);color:var(--pf-ink);min-height:48px;display:inline-flex;align-items:center;position:relative}
+.fl__i--inf .conf span::after{content:"";position:absolute;inset-inline:0;bottom:11px;height:1px;background:var(--pf-ink-3)}
+/* tier 3 — confirmed or read: quietest */
+.fl__i--ok{padding-block:12px;min-height:0}
+.fl__i--ok .fl__k{margin-bottom:4px}
+.fl__i--ok .fl__v b{font-size:15px;color:var(--pf-ink-2);font-weight:400}
+.fl__i--ok .r{color:var(--done)}
+.fl__hd{padding:14px 20px 16px}
+.fl__hd .cnt{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap}
+.fl__hd .cnt span{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.06em;color:var(--pf-ink-2);display:inline-flex;align-items:center;gap:7px}
+.fl__grp{padding:20px 20px 9px;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.14em;text-transform:uppercase;color:var(--pf-ink-3);font-weight:600}
+
+/* ---------- 7b · R2 RECOGNITION (Momentum standard) ----------
+   Report, not reward. Five elements, always. No colour-only signal:
+   the milestone is carried by a serif statement and a labelled next action. */
+.r2{background:var(--tone);border-block-end:1px solid var(--rule);padding:20px 20px 2px}
+.r2__m{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.r2__m .lab{color:var(--done)}
+.r2 h2{font-family:var(--f-serif);font-size:var(--t2);font-weight:500;line-height:1.24;letter-spacing:-.012em;max-width:22ch}
+.r2 p{font-size:13.5px;line-height:1.6;color:var(--pf-ink-2);margin-top:10px;max-width:40ch;text-wrap:pretty}
+.r2 .held{display:grid;grid-template-columns:16px minmax(0,1fr);gap:11px;margin-top:13px;font-size:13.5px;line-height:1.55;color:var(--pf-ink-2)}
+.r2 .held i{width:6px;height:6px;background:var(--pf-ink-3);display:block;margin-top:7px}
+.r2__next{display:flex;align-items:flex-start;gap:12px;min-height:48px;margin-top:14px;border-block-start:1px solid var(--rule);padding:6px 0}
+.r2__next .lab{color:var(--pf-ink-3);flex:none;margin-top:5px}
+.r2__next b{font-size:var(--t4);font-weight:500;color:var(--pf-ink);line-height:1.5}
+.r2__meta{display:flex;gap:18px;flex-wrap:wrap;padding:0 0 13px}
+.r2__meta span{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.06em;color:var(--pf-ink-3)}
+.r2__dismiss{display:block;width:100%;text-align:start;background:none;border:0;border-block-start:1px solid var(--rule);padding:0;min-height:48px;font-size:12.5px;color:var(--pf-ink-2)}
+
+/* skeleton — loading is hairlines resolving, never a spinner alone */
+.sk{display:flex;flex-direction:column}
+.sk>div{border-block-start:1px solid var(--rule);padding:17px 20px}
+.sk i{display:block;height:9px;background:var(--rule);width:34%;margin-bottom:11px}
+.sk u{display:block;height:15px;background:var(--rule);width:68%;opacity:.7;text-decoration:none;animation:s1pulse 1.4s var(--ease) infinite alternate}
+.sk>div:nth-child(2n) u{width:52%}
+@keyframes s1pulse{to{opacity:.28}}
+@media (prefers-reduced-motion:reduce){.sk u{animation:none}}
+
+/* ---------- 8 · CORRECTION IN PLACE — a sheet of rows, never a bare field ---------- */
+.pick{position:absolute;inset-inline:0;inset-block-end:0;background:var(--pf-surface);border-block-start:1px solid var(--pf-ink);display:flex;flex-direction:column;max-height:74%}
+.pick__h{padding:15px 20px 13px;display:flex;align-items:baseline;gap:12px}
+.pick__h b{font-size:var(--t3);font-weight:500}
+.pick__h button{margin-inline-start:auto;background:none;border:0;font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.12em;text-transform:uppercase;color:var(--pf-ink-2);min-height:48px;padding:0 0 0 12px}
+.pick__s{display:flex;align-items:center;gap:12px;padding:0 20px 13px}
+.pick__s .gl{flex:none}
+.pick__s input{flex:1;border:0;border-block-end:1px solid var(--rule);background:none;font-family:inherit;font-size:var(--t4);color:var(--pf-ink);padding:13px 0;min-height:48px}
+.pick__s input::placeholder{color:var(--pf-ink-3)}
+.pick__b{overflow:auto;flex:1}
+.pick__scrim{position:absolute;inset:0;background:rgba(15,15,14,.42)}
+.s1[data-theme="dark"] .pick__scrim{background:rgba(0,0,0,.6)}
+/* stepper — tap first, typing available */
+.step2{display:flex;align-items:center;gap:0;border-block:1px solid var(--rule)}
+.step2 button{flex:none;width:72px;min-height:64px;background:none;border:0;border-inline-end:1px solid var(--rule);font-size:22px;color:var(--pf-ink);transition:background var(--dur) var(--ease)}
+.step2 button:last-child{border-inline-end:0;border-inline-start:1px solid var(--rule)}
+.step2 button:active{background:var(--tone)}
+.step2 span{flex:1;text-align:center;font-family:var(--f-mono);font-size:var(--t2);color:var(--pf-ink);font-variant-numeric:tabular-nums}
+
+/* ---------- 9 · DISCLOSURE + STATEMENT LISTS ---------- */
+.disc{padding:18px 20px 20px;border-block:1px solid var(--rule);background:var(--tone)}
+.disc ul{list-style:none;margin:13px 0 0;padding:0;display:flex;flex-direction:column;gap:11px}
+.disc li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:12px;font-size:13.5px;line-height:1.5;color:var(--pf-ink-2)}
+.disc li b{color:var(--pf-ink);font-weight:600}
+.disc li i{width:6px;height:6px;background:var(--pf-ink-3);display:block;margin-top:7px}
+/* determinate upload rule */
+.upl{padding:20px 20px 22px;display:flex;flex-direction:column;gap:13px}
+.upl__bar{height:2px;background:var(--rule);position:relative;overflow:hidden}
+.upl__bar i{position:absolute;inset-block:0;inset-inline-start:0;background:var(--pf-ink)}
+.upl__bar--ind i{inline-size:38%;animation:s1slide 1.5s var(--ease) infinite;will-change:transform}
+@keyframes s1slide{0%{transform:translateX(-100%)}100%{transform:translateX(263%)}}
+@media (prefers-reduced-motion:reduce){.upl__bar--ind i{animation:none;transform:none}}
+.upl__m{display:flex;justify-content:space-between;align-items:center;gap:12px}
+
+/* ---------- 10 · MESSAGE BLOCK (empty, error, blocked) ---------- */
+.msg{padding:26px 20px 22px}
+.msg .mk{margin-bottom:14px}
+.msg h2{font-family:var(--f-serif);font-size:var(--t2);line-height:1.24;font-weight:500;max-width:19ch;letter-spacing:-.012em}
+.msg p{font-size:var(--t4);line-height:1.62;color:var(--pf-ink-2);margin-top:11px;max-width:38ch}
+.msg dl{margin:18px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 14px;align-items:baseline}
+.msg dt{font-family:var(--f-mono);font-size:var(--t5);letter-spacing:.1em;text-transform:uppercase;color:var(--pf-ink-3)}
+.msg dd{margin:0;font-size:13.5px;color:var(--pf-ink);line-height:1.5}
+.msg dd.was{color:var(--done)}
+.msg dd.wasnt{color:var(--blocked)}
+
+/* ---------- 11 · SIGN IN ---------- */
+.si__f{display:flex;flex-direction:column}
+.si__f label{display:block;border-block-start:1px solid var(--rule);padding:13px 20px 15px}
+.si__f label:last-of-type{border-block-end:1px solid var(--rule)}
+.si__f .lab{margin-bottom:7px}
+.si__f input{width:100%;border:0;background:none;font-family:inherit;font-size:var(--t3);color:var(--pf-ink);padding:11px 0;min-height:48px}
+.si__f input::placeholder{color:var(--pf-ink-3)}
+.si__f label.bad{background:var(--blocked-wash)}
+.si__f label.bad .lab{color:var(--blocked)}
+.store{padding:15px 20px 18px;display:grid;grid-template-columns:16px minmax(0,1fr);gap:12px;align-items:start;border-block-start:1px solid var(--rule)}
+.store b{display:block;font-size:var(--t4);font-weight:600;line-height:1.5;color:var(--pf-ink);font-family:var(--f-sans)}
+.store>span>span{display:block;font-size:12.5px;color:var(--pf-ink-2);line-height:1.6;margin-top:5px;font-family:var(--f-sans)}
+.resume{padding:18px 20px 20px;background:var(--tone);border-block:1px solid var(--rule)}
+.resume .lab{margin-bottom:9px}
+.resume b{display:block;font-family:var(--f-serif);font-size:var(--t2);font-weight:500;line-height:1.25}
+.resume .id{display:block;margin-top:9px}
+.alt{display:flex;flex-direction:column}
+.alt button{width:100%;text-align:start;background:none;border:0;border-block-start:1px solid var(--rule);padding:16px 20px;min-height:64px;font-size:var(--t3);color:var(--pf-ink);display:flex;align-items:center;gap:14px;transition:background var(--dur) var(--ease)}
+.alt button:active{background:var(--tone)}
+.alt button .go{margin-inline-start:auto;font-family:var(--f-mono);font-size:13px;color:var(--pf-ink-3)}
+
+/* ---------- 12 · REVIEW-DOCUMENT CHROME (not part of the product) ---------- */
+.pair{display:flex;gap:0;align-items:stretch;border:1px solid var(--pf-rule-strong)}
+.pair>div{position:relative}
+.pair>div+div{border-inline-start:1px solid var(--pf-rule-strong)}
