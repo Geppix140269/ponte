@@ -36,9 +36,21 @@ const MAILPIT = process.env.PONTE_MAILPIT_URL ?? "http://127.0.0.1:54324";
 */
 const MEMBER = (process.env.PONTE_DEV_MEMBER_EMAIL ?? "dev@ponte.local").toLowerCase();
 
+/**
+ * Three shells, and the widest is first-class rather than an afterthought.
+ *
+ * 2560 is the width the owner actually works at, and every proof before this
+ * was 1440 and 390. A composition designed at two widths and photographed at
+ * two widths will fail at the third, which is exactly what happened: at a
+ * 1,960px span the arch flattened to a 6% rise and read as a sagging wire, and
+ * the headline sat in the left third with two thirds of empty ink beside it.
+ * Neither was visible in any evidence we had. A proof without 2560 does not
+ * count.
+ */
 const SHELLS = [
   { name: "phone", width: 390, height: 844 },
   { name: "desktop", width: 1440, height: 900 },
+  { name: "wide", width: 2560, height: 1440 },
 ];
 
 test.beforeAll(() => mkdirSync(OUT, { recursive: true }));
@@ -205,6 +217,13 @@ async function completeTheFacts(page: Page): Promise<void> {
 
 for (const shell of SHELLS) {
   test(`the path, signed out, ${shell.name}`, async ({ page }) => {
+    /*
+      Eighteen full-page captures, and at 2560 each one is a 2,560 x 3,000
+      raster. The default 60s covers the phone and the desktop and does not
+      cover the wide shell, which failed as a timeout inside a settle rather
+      than as anything to do with the path.
+    */
+    test.setTimeout(300_000);
     await page.setViewportSize({ width: shell.width, height: shell.height });
     await signOut(page);
     await freshDraft(page);
@@ -268,6 +287,13 @@ for (const shell of SHELLS) {
   });
 
   test(`the path, signed in, through B09, ${shell.name}`, async ({ page }) => {
+    /*
+      Eighteen full-page captures, and at 2560 each one is a 2,560 x 3,000
+      raster. The default 60s covers the phone and the desktop and does not
+      cover the wide shell, which failed as a timeout inside a settle rather
+      than as anything to do with the path.
+    */
+    test.setTimeout(300_000);
     await page.setViewportSize({ width: shell.width, height: shell.height });
     await signIn(page);
     await freshDraft(page);

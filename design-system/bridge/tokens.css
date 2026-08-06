@@ -80,6 +80,26 @@
   .brg { --brg-pad: 22px; }
 }
 
+/* ---- Surplus width, answered rather than left over ----
+   Three shells, and the third is not the second stretched either.
+
+   At 2560 the composition sat in a 1,560px measure with 500px of unused
+   ink on each side, which is not a decision, it is what happens when a page
+   is designed at one width. The answer has two halves and both are
+   deliberate:
+
+   1. The measure OPENS, to 1,840px, and the gutter opens with it. The
+      crossing gets more span, the columns get more room, and the type
+      scales with the viewport rather than staying at its 1,440 size.
+   2. Then it STOPS. Beyond 1,840px the surplus is margin, on purpose. An
+      arch spanning 2,400px needs a 400px rise to still read as an arch, and
+      a 400px arch pushes the first line of type below the fold on the very
+      screens that have the width to spare. The limit is the arch's, and the
+      margin is what keeps the arch honest. */
+@media (min-width: 1920px) {
+  .brg { --brg-max: 1840px; --brg-pad: 72px; }
+}
+
 /* ---- Per-script faces and tracking ----
    Arabic: tracking to zero, both axes. Letter-spacing on a joined script
    pulls the joins apart and the word stops being a word. This is the one

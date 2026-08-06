@@ -3,11 +3,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ARC_METRICS,
-  HERO_PHONE,
   arc,
   arcPoint,
   deckFraction,
+  heightFor,
   nodeStates,
+  riseFor,
   type ArcSize,
 } from "@/lib/bridge/arc";
 
@@ -54,6 +55,21 @@ export interface ArcProps {
   labels?: readonly string[];
   /** Progress THROUGH the current span, 0 to 1, so the deck moves as answers land. */
   within?: number;
+  /**
+   * The crossing as IDENTITY rather than as progress.
+   *
+   * `ADR-0032`: *"Landing: one iconic crossing, drawn on load."* On the
+   * entrance nothing has started, so there is no position to report, and the
+   * deck derived from `current` is therefore zero: the front door rendered a
+   * 13%-opacity ghost and no span at all, which is a drawing of the absence of
+   * a bridge on the page that exists to say Ponte is one.
+   *
+   * In this mode the deck draws whole and no node is marked reached. The
+   * distinction matters: a full deck says "this is the crossing", and a lit
+   * node would say "you are here", which would be a claim about a visitor who
+   * has not begun.
+   */
+  identity?: boolean;
   /** Vehicles crossing the deck. Off by default; never on under reduced motion. */
   traffic?: boolean;
 }
@@ -109,25 +125,25 @@ function useMeasuredWidth(): [React.RefObject<HTMLDivElement>, number] {
   return [ref, width];
 }
 
-export default function Arc({ size, total, current, labels, within = 0, traffic = false }: ArcProps) {
+export default function Arc({
+  size,
+  total,
+  current,
+  labels,
+  within = 0,
+  traffic = false,
+  identity = false,
+}: ArcProps) {
   const [ref, width] = useMeasuredWidth();
   const reduced = usePrefersReducedMotion();
   const deck = useRef<SVGPathElement>(null);
-  /*
-    The shell is decided by the arc's OWN measured width, not by the window.
-    Reading window.innerWidth gave a different answer on the server and the
-    client, so the wrapper took its height from the CSS media query while the
-    viewBox took its height from the desktop metrics: the arc was scaled to fit
-    a box 68px shorter than it thought it was, letterboxed, and stopped spanning
-    the shore to shore. It also collided with whatever sat under it.
-  */
-  const metrics = size === "hero" && width > 0 && width < 620 ? HERO_PHONE : ARC_METRICS[size];
+  const metrics = ARC_METRICS[size];
 
   useEffect(() => {
     const path = deck.current;
     if (!path || width === 0) return;
     const length = path.getTotalLength();
-    const drawn = length * deckFraction(total, current, within);
+    const drawn = identity ? length : length * deckFraction(total, current, within);
     path.style.strokeDasharray = `${length}`;
     if (reduced) {
       // Already crossed. The length carries the information; the drawing was
@@ -146,12 +162,7 @@ export default function Arc({ size, total, current, labels, within = 0, traffic 
       }),
     );
     return () => cancelAnimationFrame(frame);
-  }, [width, total, current, within, reduced]);
-
-  const height = metrics.height;
-  const x0 = metrics.inset;
-  const baseline = height - metrics.water;
-  const waterline = height - 2;
+  }, [width, total, current, within, reduced, identity]);
 
   /*
     There is ALWAYS a span. A container that cannot be measured yet draws at the
@@ -166,12 +177,31 @@ export default function Arc({ size, total, current, labels, within = 0, traffic 
   */
   const measured = width > metrics.inset * 2 + 8;
   const drawWidth = measured ? width : FALLBACK_WIDTH;
+  const x0 = metrics.inset;
   const x1 = drawWidth - metrics.inset;
-  const geometry = arc(x0, x1, baseline, metrics.rise);
-  const states = nodeStates(total, current);
+
+  /*
+    The rise is a function of the CHORD, so the shape holds from 390 to 2560
+    rather than only at the width it was drawn at. `lib/bridge/arc.ts` states
+    the ratio and the reason; here it means the band's height is decided by the
+    arch and never the other way round, which is what the phone media query got
+    wrong when it declared a height the geometry disagreed with.
+  */
+  const rise = riseFor(x1 - x0, metrics);
+  const height = heightFor(rise, metrics);
+  const baseline = height - metrics.water;
+  const waterline = height - 2;
+  const geometry = arc(x0, x1, baseline, rise);
+  /*
+    In identity mode no node is reached. The deck says "this is the crossing";
+    a lit node would say "you are here", to a visitor who has not begun.
+  */
+  const states = identity
+    ? Array.from({ length: total + 1 }, () => "todo" as const)
+    : nodeStates(total, current);
 
   return (
-    <div className="brg-arc" ref={ref} data-size={size} style={{ blockSize: metrics.height }}>
+    <div className="brg-arc" ref={ref} data-size={size} style={{ blockSize: height }}>
       {(
         <svg
           viewBox={`0 0 ${drawWidth} ${height}`}

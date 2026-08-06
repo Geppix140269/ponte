@@ -74,14 +74,26 @@ function cell(shell, slug, label) {
   return `<figure class="c"><figcaption>${label}</figcaption><img alt="${escape(label)}" src="${url}"></figure>`;
 }
 
+/**
+ * The three shells, widest first.
+ *
+ * 2,560 leads because it is the width the owner works at and the width every
+ * proof before this one omitted. Reading left to right is then reading from the
+ * screen the page was hardest to get right on to the one it was easiest.
+ */
+const SHELLS = [
+  ["wide", "2560 x 1440"],
+  ["desktop", "1440 x 900"],
+  ["phone", "390 x 844"],
+];
+
 function rows(steps) {
   return steps
     .map(([slug, id, screen, state]) => {
       return `<section class="r">
   <h3><span class="id">${id}</span> ${escape(screen)} <span class="st">${escape(state)}</span></h3>
-  <div class="pair">
-    ${cell("desktop", slug, "Desktop, 1440 x 900")}
-    ${cell("phone", slug, "Phone, 390 x 844")}
+  <div class="trio">
+    ${SHELLS.map(([shell, label]) => cell(shell, slug, label)).join("\n    ")}
   </div>
 </section>`;
     })
@@ -96,28 +108,28 @@ const body = `<!doctype html>
 <title>Ponte: the listing path B01 to B09, on the bridge</title>
 <style>
   body { font: 14px/1.5 -apple-system, system-ui, "Segoe UI", sans-serif; margin: 0; padding: 28px; background: #fff; color: #111; }
-  header { max-width: 1100px; margin: 0 auto 34px; }
+  header { max-width: 1500px; margin: 0 auto 34px; }
   h1 { font-size: 20px; margin: 0 0 8px; }
   header p { margin: 0 0 6px; color: #444; max-width: 80ch; }
-  h2 { max-width: 1100px; margin: 44px auto 6px; font-size: 15px; border-top: 1px solid #ccc; padding-top: 14px; }
-  h2 + p { max-width: 1100px; margin: 0 auto 16px; color: #444; }
-  .r { max-width: 1100px; margin: 0 auto 30px; }
+  h2 { max-width: 1500px; margin: 44px auto 6px; font-size: 15px; border-top: 1px solid #ccc; padding-top: 14px; }
+  h2 + p { max-width: 1500px; margin: 0 auto 16px; color: #444; }
+  .r { max-width: 1500px; margin: 0 auto 30px; }
   .r h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
   .id { display: inline-block; min-width: 62px; font-family: ui-monospace, Consolas, monospace; color: #a06a10; }
   .st { font-weight: 400; color: #666; }
-  .pair { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
-  @media (max-width: 800px) { .pair { grid-template-columns: 1fr; } }
+  .trio { display: grid; grid-template-columns: 2.2fr 1.5fr 0.6fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .trio { grid-template-columns: 1fr; } }
   .c { margin: 0; }
   figcaption { font-size: 11px; color: #666; margin-bottom: 5px; }
   img { width: 100%; height: auto; display: block; border: 1px solid #ddd; }
   .none { border: 1px dashed #c00; padding: 14px; font-size: 12px; color: #900; }
-  footer { max-width: 1100px; margin: 40px auto 0; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 14px; }
+  footer { max-width: 1500px; margin: 40px auto 0; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 14px; }
 </style>
 </head>
 <body>
 <header>
   <h1>The listing path, B01 to B09, on the bridge</h1>
-  <p>Every surface of <code>/publish</code>, walked rather than mounted: one flow holding one record, captured at each state it passes through. Desktop is 1440 x 900, phone is 390 x 844, and both are full-page stills of the same walk.</p>
+  <p>Every surface of <code>/publish</code>, walked rather than mounted: one flow holding one record, captured at each state it passes through. Three shells, widest first: 2560 x 1440, 1440 x 900 and 390 x 844. All three are full-page stills of the same walk.</p>
   <p>There is no light and dark pair. The bridge has one ground; the cream is a plane within it rather than a theme.</p>
   <p>This page is a viewer. Nothing about how it looks is part of what it is showing.</p>
 </header>

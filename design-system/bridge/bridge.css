@@ -204,6 +204,35 @@
   font-size: clamp(38px, 4.6vw, 52px); line-height: 1.02;
   letter-spacing: var(--brg-tight); max-width: 14ch; text-wrap: balance;
 }
+
+/* Display type scales with the viewport ABOVE 1,920 and not below it.
+   Two reasons for the seam rather than one continuous clamp. The first is that
+   58px and 52px are the sizes the owner accepted at 1,440, and a continuous
+   clamp would have changed them on the way to fixing 2,560. The second is that
+   a headline dominating a 1,440 screen is simply small on a 2,560 one: the type
+   has to grow with the ink around it or the page reads as a 1,440 layout that
+   somebody stretched.
+
+   RAISES A CONFLICT with ADR-0032-AMENDMENT-1 section 6, which caps the
+   headline at 60px and the question at 52px. Those caps were written before
+   2,560 was a shell. Reported, not resolved here: an amendment is the owner's.
+   Nothing at or below 1,440 changes, so the conflict is confined to the new
+   shell. */
+@media (min-width: 1920px) {
+  .brg-headline { font-size: min(3.8vw, 88px); }
+  .brg-question { font-size: min(2.9vw, 70px); }
+  /* The action grows with the page. A 520px hairline under an 88px headline
+     reads as a footnote rather than as the one thing to do. */
+  .brg-act { max-width: 720px; font-size: 13px; padding-block-start: 24px; }
+  .brg-act small { font-size: 14px; }
+  .brg-snd { font-size: 11px; }
+  /* The text measure opens with the page, but by less than the page does: a
+     column that grew in step would put 22 words on a line. */
+  .brg-column { max-inline-size: 1120px; }
+  .brg-note, .brg-zone__detail { font-size: 13.5px; }
+  .brg-zone__title { font-size: 32px; }
+  .brg-zone[data-lead="true"] .brg-zone__title { font-size: 54px; }
+}
 .brg-headline em, .brg-question em { font-style: italic; color: var(--brg-bronze); }
 /* Neither script has a true italic; a synthesised slant is a defect, not an
    accent. The bronze carries the emphasis on its own. */
@@ -227,11 +256,42 @@
   .brg-band__now { max-width: none; }
 }
 
-.brg-shores { display: flex; justify-content: space-between; gap: 30px; }
+.brg-shores { display: flex; justify-content: space-between; gap: 30px; margin-block-start: -6px; }
 .brg-shore { inline-size: 320px; }
 .brg-shore[data-side="far"] { text-align: end; }
+.brg-shore__n { font-family: var(--brg-serif); font-size: 20px; line-height: 1.2; margin-block-start: 6px; }
 /* The phone does not get two shores side by side; it gets the ledger instead. */
 @media (max-width: 899px) { .brg-shores { display: none; } }
+@media (min-width: 1920px) { .brg-shore { inline-size: 460px; } .brg-shore__n { font-size: 24px; } }
+
+/* The lede beside the headline. Longer measure than a note, quieter than a
+   question: it is what fills the width the headline deliberately does not. */
+.brg-lede {
+  font-size: 14px; font-weight: 300; line-height: 1.55; opacity: .55;
+  margin-block-start: 10px; max-width: 46ch;
+}
+@media (min-width: 1920px) { .brg-lede { font-size: 16.5px; } .brg-band__now { max-width: 520px; } }
+
+/* A column's heading: what it is, and how many. */
+.brg-sechead {
+  display: flex; justify-content: space-between; margin-block-end: 16px;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; color: var(--brg-bronze);
+}
+.brg-sechead span:last-child { color: var(--brg-figure); opacity: .34; }
+
+.brg-item__r {
+  display: flex; justify-content: space-between; gap: 14px;
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track); opacity: .4;
+}
+.brg-item__n { display: block; font-family: var(--brg-serif); font-size: 20px; line-height: 1.2; margin-block-start: 7px; }
+.brg-item__f { display: block; font-size: 12px; opacity: .5; margin-block-start: 6px; font-weight: 300; }
+.brg-row__n { font-family: var(--brg-serif); font-size: 19px; font-weight: 400; }
+@media (min-width: 1920px) {
+  .brg-item__n { font-size: 23px; }
+  .brg-row__n { font-size: 22px; }
+  .brg-row__label { font-size: 14.5px; }
+}
 
 .brg-cols { padding-block-start: 52px; display: grid; grid-template-columns: 1fr 1fr 1fr; }
 /* A grid item's minimum size defaults to its CONTENT's minimum, so any
