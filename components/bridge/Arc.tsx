@@ -52,6 +52,8 @@ export interface ArcProps {
   current: number;
   /** Stage names. Ignored at `mini`, which has no room and says so. */
   labels?: readonly string[];
+  /** Progress THROUGH the current span, 0 to 1, so the deck moves as answers land. */
+  within?: number;
   /** Vehicles crossing the deck. Off by default; never on under reduced motion. */
   traffic?: boolean;
 }
@@ -107,18 +109,25 @@ function useMeasuredWidth(): [React.RefObject<HTMLDivElement>, number] {
   return [ref, width];
 }
 
-export default function Arc({ size, total, current, labels, traffic = false }: ArcProps) {
+export default function Arc({ size, total, current, labels, within = 0, traffic = false }: ArcProps) {
   const [ref, width] = useMeasuredWidth();
   const reduced = usePrefersReducedMotion();
   const deck = useRef<SVGPathElement>(null);
-  const isPhone = typeof window !== "undefined" && window.innerWidth < 900;
-  const metrics = size === "hero" && isPhone ? HERO_PHONE : ARC_METRICS[size];
+  /*
+    The shell is decided by the arc's OWN measured width, not by the window.
+    Reading window.innerWidth gave a different answer on the server and the
+    client, so the wrapper took its height from the CSS media query while the
+    viewBox took its height from the desktop metrics: the arc was scaled to fit
+    a box 68px shorter than it thought it was, letterboxed, and stopped spanning
+    the shore to shore. It also collided with whatever sat under it.
+  */
+  const metrics = size === "hero" && width > 0 && width < 620 ? HERO_PHONE : ARC_METRICS[size];
 
   useEffect(() => {
     const path = deck.current;
     if (!path || width === 0) return;
     const length = path.getTotalLength();
-    const drawn = length * deckFraction(total, current);
+    const drawn = length * deckFraction(total, current, within);
     path.style.strokeDasharray = `${length}`;
     if (reduced) {
       // Already crossed. The length carries the information; the drawing was
@@ -137,7 +146,7 @@ export default function Arc({ size, total, current, labels, traffic = false }: A
       }),
     );
     return () => cancelAnimationFrame(frame);
-  }, [width, total, current, reduced]);
+  }, [width, total, current, within, reduced]);
 
   const height = metrics.height;
   const x0 = metrics.inset;
@@ -162,7 +171,7 @@ export default function Arc({ size, total, current, labels, traffic = false }: A
   const states = nodeStates(total, current);
 
   return (
-    <div className="brg-arc" ref={ref} data-size={size}>
+    <div className="brg-arc" ref={ref} data-size={size} style={{ blockSize: metrics.height }}>
       {(
         <svg
           viewBox={`0 0 ${drawWidth} ${height}`}

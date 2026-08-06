@@ -171,8 +171,15 @@ export function nodeStates(total: number, current: number): NodeState[] {
  * The deck is the only progress indicator in the system: it draws itself as the
  * member answers and there is no numeral in a progress role anywhere near it.
  * `ADR-0032`.
+ *
+ * `within` is progress THROUGH the current span, 0 to 1. It exists because the
+ * publish path asks several questions inside one stage: without it the deck
+ * would sit still through all three of B01 and then jump, which is a stage
+ * indicator wearing a drawing. The nodes still light on whole stages; only the
+ * deck moves continuously.
  */
-export function deckFraction(total: number, current: number): number {
+export function deckFraction(total: number, current: number, within = 0): number {
   if (total <= 0) return 0;
-  return Math.min(1, Math.max(0, current / total));
+  const clamped = Math.min(1, Math.max(0, within));
+  return Math.min(1, Math.max(0, (current + clamped) / total));
 }

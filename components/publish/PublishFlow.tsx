@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import ChooseDealIntent from "./ChooseDealIntent";
+import BridgeIntent from "../bridge/publish/BridgeIntent";
 import DeclareCapacity from "./DeclareCapacity";
 import TellPonte from "./TellPonte";
 import ListingSoFar from "./ListingSoFar";
@@ -23,6 +23,7 @@ import { keepDraft, readKeptDraft, forgetDraft } from "@/lib/structure/draft-sto
 import { resolveFrom, type ProductCandidate } from "@/lib/products/model";
 import type { CompletionField } from "@/lib/structure/procedures/types";
 import { MARKET_INTENTS, type MarketFamily, type MarketIntent } from "@/lib/taxonomy/market";
+import type { Signal } from "../bridge/Chrome";
 
 /**
  * The listing path, `B01` through `B09`, as one flow.
@@ -48,6 +49,21 @@ import { MARKET_INTENTS, type MarketFamily, type MarketIntent } from "@/lib/taxo
  * accident, and it would have been: the natural implementation stamps the
  * clock on every persist and every screen persists on mount.
  */
+
+/**
+ * The tape's copy on the publish path.
+ *
+ * Fixtures, and named as such: the live market signals feed is its own surface
+ * in Phase 3. Nothing on the tape is presented as confirmed, which is the same
+ * promise the board makes about every signal it carries.
+ */
+const PUBLISH_SIGNALS: readonly Signal[] = [
+  { subject: "Gas oil EN 590", volume: "30,000 MT", corridor: "TR to CIF" },
+  { subject: "Sunflower oil", volume: "5,000 MT", corridor: "to EG" },
+  { subject: "Freight forwarding", volume: "Adriatic", corridor: "to Levant" },
+  { subject: "Urea 46%", volume: "12,500 MT", corridor: "to BR" },
+  { subject: "White sugar I45", volume: "25,000 MT", corridor: "to DZ" },
+];
 
 interface PersistedFlow {
   node: PublishNode;
@@ -269,9 +285,9 @@ export default function PublishFlow({
 
   if (node === "intent") {
     return (
-      <ChooseDealIntent
+      <BridgeIntent
         signedIn={signedIn}
-        lastTime={lastTime}
+        signals={PUBLISH_SIGNALS}
         onResolved={({ intent, family: chosen }: { intent: MarketIntent; family: MarketFamily }) => {
           const next: StructureDraft = { ...draft, canonical: { family: chosen, intent } };
           setDraft(next);

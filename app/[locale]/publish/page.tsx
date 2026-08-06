@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { landingFontVars } from "@/components/home/landing/fonts";
+import { bridgeFontVars } from "@/components/bridge/fonts";
 import PublishFlow from "@/components/publish/PublishFlow";
 import { getUser } from "@/lib/auth";
 import "@/components/publish/publish.css";
 import "@/components/publish/publish-path.css";
+import "@/design-system/bridge/tokens.css";
+import "@/design-system/bridge/bridge.css";
 
 /**
  * Publish a listing. Build 1, `B01` through `B09`.
@@ -52,7 +54,7 @@ export default async function PublishPage({ params }: { params: { locale: string
   const user = await getUser().catch(() => null);
 
   return (
-    <div className={`pb-page ${landingFontVars}`}>
+    <div className={bridgeFontVars}>
       <PublishFlow signedIn={Boolean(user)} />
     </div>
   );

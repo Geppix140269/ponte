@@ -126,11 +126,11 @@
 .brg-tape__pause:hover, .brg-tape__pause:focus-visible { color: var(--brg-bronze); }
 
 /* ---- The arc's paint ---- */
+/* The height comes from the component, which owns the metrics. It was declared
+   here as well and the two disagreed on a phone: the CSS said 128 and the
+   viewBox said 196, so the arc was scaled to fit and stopped spanning. One
+   source, and it is the one the geometry is computed from. */
 .brg-arc { inline-size: 100%; }
-.brg-arc[data-size="hero"] { block-size: 196px; }
-.brg-arc[data-size="procedure"] { block-size: 168px; }
-.brg-arc[data-size="mini"] { block-size: 30px; }
-@media (max-width: 899px) { .brg-arc[data-size="hero"] { block-size: 128px; } }
 
 /* THE ARC IS NEVER A TARGET. Amendment section 1. A row that happens to
    contain an arc may be; the arc itself can never be the thing hit.
@@ -274,4 +274,72 @@
   .brg-arc__vehicle, .brg-arc__traffic { display: none; }
   .brg-rise { opacity: 1; transform: none; }
   .brg-item, .brg-item::before, .brg-rise[data-in="true"] { transition: none; }
+}
+
+/* ---- Zones: the publish path's choices ----
+   A row indents, lights its leading hairline, and slides out when another is
+   chosen. Selection is the indent, the hairline and a tone shift: no box, no
+   mark, no outline. `<button>`, never a div with a handler, so a keyboard can
+   reach it: the prototype uses a div and cannot be operated without a mouse. */
+.brg-zone {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  background: none;
+  border: 0;
+  border-block-end: 1px solid var(--brg-hairline);
+  color: inherit;
+  padding-block: 19px;
+  position: relative;
+  transition:
+    padding-inline-start 420ms var(--brg-ease),
+    opacity 340ms var(--brg-ease),
+    transform 420ms var(--brg-ease);
+}
+.brg-zone::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  background: var(--brg-bronze);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 320ms var(--brg-ease);
+}
+.brg-zone:hover, .brg-zone:focus-visible { padding-inline-start: 22px; }
+.brg-zone:hover::before, .brg-zone:focus-visible::before { transform: scaleY(1); }
+.brg-zone[data-chosen="true"] { padding-inline-start: 22px; }
+.brg-zone[data-chosen="true"]::before { transform: scaleY(1); }
+/* The alternatives leave. The chosen one stays and the next question rises
+   into the space, which is what makes it a passage rather than a page swap. */
+.brg-zone[data-leaving="true"] { opacity: 0; transform: translateX(24px); }
+.brg:dir(rtl) .brg-zone[data-leaving="true"] { transform: translateX(-24px); }
+
+.brg-zone__index {
+  display: block;
+  font-family: var(--brg-mono); font-size: 9px;
+  letter-spacing: var(--brg-track); opacity: .4;
+  margin-block-end: 6px;
+}
+.brg-zone__title {
+  display: block;
+  font-family: var(--brg-serif); font-size: 27px; line-height: 1.14;
+  letter-spacing: var(--brg-tight);
+}
+.brg-zone__detail {
+  display: block; font-size: 13px; font-weight: 300; opacity: .5;
+  margin-block-start: 7px; max-width: 46ch; line-height: 1.5;
+}
+@media (max-width: 899px) { .brg-zone__title { font-size: 24px; } }
+
+/* ---- The ledger's own rows ----
+   The member's record, growing. On the phone it rises from the bottom; on the
+   desktop it sits under the band. Same content, two compositions. */
+.brg-ledger__line { display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 14px; align-items: baseline; padding-block: 9px; border-block-end: 1px solid var(--brg-hairline); }
+.brg-ledger__line dt { font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track); text-transform: uppercase; opacity: .45; }
+.brg-ledger__line dd { margin: 0; font-family: var(--brg-serif); font-size: 17px; line-height: 1.3; }
+@media (max-width: 899px) {
+  .brg-ledger__line { grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
+  .brg-ledger__line dd { font-size: 16px; }
 }
