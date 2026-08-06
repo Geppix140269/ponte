@@ -1,0 +1,332 @@
+/* =====================================================================
+   BUILD 1: the listing path, ported from the design reference.
+
+   Source: docs/ponte/design-reference/ponte-set1.css (three patterns, 23
+   states) and ponte-set2.css (six surfaces, 31 states). Those files are the
+   SPECIFICATION, not production code: the tokens, structure, state coverage
+   and copy are taken verbatim; the delivery is rewritten for the app.
+
+   ABSOLUTE RULE, from the reference's own header and ADR-0002: NO BOXES.
+   Structure is type, scale, whitespace, full-width hairlines and background
+   tone shifts. Nothing else. No cards, no rounded rectangles, no shadows.
+
+   The reference frames at a fixed 390px because it is a spec sheet. Here the
+   frame is fluid with 390px as its design width, because a real member has a
+   360px phone and a desktop browser, and the brief requires both.
+   ===================================================================== */
+
+/* ---- The page behind the frame ----
+   `/publish` is bared from `ChromeGate`, so it supplies its own chrome and
+   nothing else paints the page. The app's default `body` background is the
+   retired obsidian, which showed as a dark band under the cream frame wherever
+   the document was taller than the frame: 58px of it on `B01`, and a hard edge
+   at the bottom of every surface.
+
+   The frame carries its own surface colour and always did; what was missing was
+   anything painting the page AROUND it. A route that renders its own chrome
+   owns its own background. */
+.pb-page {
+  background: var(--pf-surface);
+  min-height: 100vh;
+}
+
+/* The body itself, because a shell 100vh tall does not cover a document that is
+   taller than the viewport. `--pf-surface` is a root token, so this follows the
+   theme without restating either value. */
+body:has(.pb-page) { background: var(--pf-surface); }
+
+/* `globals.css` reserves `--bottom-nav-h` at the foot of every mobile page, for
+   a bar this route does not render: `ChromeGate` bares `/publish`, so the strip
+   was 58px of empty obsidian under the cream.
+
+   The phone's OWN reservation is kept. Dropping both would put the primary
+   action under the home indicator on a notched phone, which is a worse defect
+   than the one being fixed. */
+@media (max-width: 767px) {
+  body:has(.pb-page) { padding-block-end: env(safe-area-inset-bottom, 0px); }
+}
+
+.pb {
+  /* ---- The type faces ----
+     Defined HERE and not inherited, because the `--f-*` aliases live on
+     `.ponte-desk` and this route is not inside it. Without these the serif
+     statement silently fell back to Inter - which is item 1 of the thirteen
+     things this build exists to remove, reintroduced by the build removing it.
+     It passed every source test and was caught only by rendering the page.
+
+     `landingFontVars` on the route publishes the three Next font variables;
+     these map them onto the token names the reference uses. Same values as
+     `components/desk/desk.css`, deliberately, so the two scopes cannot drift
+     apart in appearance. */
+  --f-serif: var(--font-playfair), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --f-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+  --f-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* Type: five steps, held. Nothing between them. */
+  --t1: 30px;   /* serif statement */
+  --t2: 22px;   /* serif section statement */
+  --t3: 17px;   /* value */
+  --t4: 14.5px; /* prose */
+  --t5: 11px;   /* mono label. The floor: nothing smaller ships. */
+
+  /* One hairline weight, one opacity. Every rule in the path is this rule. */
+  --rule: rgba(15, 15, 14, .14);
+
+  /* Semantic only. Never decorative, and never the only carrier of meaning. */
+  --attention: #8A6520;
+  --blocked: #B4402A;
+  --done: #0F6E3D;
+  --attention-wash: rgba(201, 151, 58, .10);
+  --blocked-wash: rgba(180, 64, 42, .08);
+
+  /* One duration, one easing. */
+  --dur: 180ms;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+
+  /* The single raised tone. The only alternative to the surface. */
+  --tone: #F2EFE6;
+
+  width: 100%;
+  max-width: 430px;
+  margin-inline: auto;
+  min-height: 100vh;
+  background: var(--pf-surface);
+  color: var(--pf-ink);
+  font-family: var(--f-sans);
+  font-size: var(--t4);
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Both themes are carried on the frame, exactly as the reference does it, so a
+   surface can be proved in both without a page reload. */
+:root[data-theme="dark"] .pb,
+.pb[data-theme="dark"] {
+  --rule: rgba(242, 239, 232, .16);
+  --attention: #E7C173;
+  --blocked: #E0674C;
+  --done: #4FB07A;
+  --attention-wash: rgba(217, 172, 85, .12);
+  --blocked-wash: rgba(224, 103, 76, .12);
+  --tone: #161813;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pb {
+    --rule: rgba(242, 239, 232, .16);
+    --attention: #E7C173;
+    --blocked: #E0674C;
+    --done: #4FB07A;
+    --attention-wash: rgba(217, 172, 85, .12);
+    --blocked-wash: rgba(224, 103, 76, .12);
+    --tone: #161813;
+  }
+}
+
+.pb * { box-sizing: border-box; }
+/* ---- Headings ----
+   The COLOUR is declared here, and it has to be. `app/[locale]/layout.css`
+   carries a global `h1, h2, h3, h4 { color: var(--ink) }` from the retired
+   obsidian chrome, where `--ink` is a near-white meant for a dark surface. On
+   this cream frame every serif statement rendered at rgb(238,241,245) against
+   rgb(242,238,226): present, correctly set in Playfair, and effectively
+   invisible.
+
+   This is the same defect as the Inter fallback and it survived the fix for it,
+   because that fix set the FACE and this rule sets the COLOUR. A token test
+   cannot see either one: `font-family` resolved, the heading existed, the
+   markup was right. It was caught by photographing the screen and looking at
+   it. `e2e/build-1-listing-path.spec.ts` now measures the contrast of every
+   statement it captures, so neither half can come back unnoticed. */
+.pb h1, .pb h2 { margin: 0; font-weight: 500; color: var(--pf-ink); }
+.pb p { margin: 0; }
+.pb button { font-family: inherit; cursor: pointer; }
+.pb .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.pb :where(button, a, [tabindex]):focus-visible { outline: 2px solid var(--pf-focus); outline-offset: -3px; }
+
+/* ---------- The journey rule ----------
+   One hairline, one segment per step, filled or not. It carries NO numeral and
+   encodes no percentage: a step is whole or it is not. Deliberately distinct in
+   FORM from any Deal Room procedural measure, so the two are never confused. */
+.pb__prog { height: 2px; display: flex; gap: 2px; flex: none; padding: 0 20px; }
+.pb__prog i { flex: 1; background: var(--rule); transition: background var(--dur) var(--ease); }
+.pb__prog i[data-on] { background: var(--pf-ink); }
+
+.pb__nav { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 6px 20px; flex: none; }
+.pb__back {
+  background: none; border: 0; padding: 0;
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pf-ink-2); min-height: 48px;
+  transition: color var(--dur) var(--ease);
+}
+.pb__back:active { color: var(--pf-ink); }
+.pb__back u { text-decoration: none; font-size: 14px; line-height: 1; }
+.pb__nav .lab, .pb__nav .step {
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--pf-ink-3);
+}
+.pb__nav .step { margin-inline-start: auto; }
+
+.pb__c { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.pb__pad { padding: 10px 20px 24px; }
+.pb__f { flex: none; padding: 0 20px 22px; }
+
+/* ---------- Statement ---------- */
+.pb .stmt {
+  font-family: var(--f-serif);
+  font-size: var(--t1);
+  line-height: 1.16;
+  letter-spacing: -.01em;
+  font-weight: 400;
+}
+.pb .stmt--2 { font-size: var(--t2); line-height: 1.25; }
+.pb .lab {
+  display: block;
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pf-ink-3);
+}
+.pb .prose { font-size: var(--t4); color: var(--pf-ink-2); }
+
+/* ---------- Choice rows ----------
+   64px minimum, per the brief. A row is separated from the next by a
+   full-width hairline and by nothing else: no border, no radius, no fill. */
+.pb .rows { display: flex; flex-direction: column; border-block-start: 1px solid var(--rule); }
+.pb .row {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 64px; padding: 14px 20px;
+  background: none; border: 0;
+  border-block-end: 1px solid var(--rule);
+  text-align: start; width: 100%; color: inherit;
+  transition: background var(--dur) var(--ease);
+}
+.pb .row:active { background: var(--tone); }
+/* Selection is a tone shift and a mark, never a box and never colour alone. */
+.pb .row[aria-pressed="true"] { background: var(--tone); }
+.pb .row b { display: block; font-size: var(--t3); font-weight: 500; }
+.pb .row small { display: block; font-size: var(--t4); color: var(--pf-ink-2); margin-block-start: 2px; }
+.pb .row .go { margin-inline-start: auto; color: var(--pf-ink-3); font-size: 18px; line-height: 1; }
+
+/* The mark. Shape carries the state; colour only reinforces it. */
+.pb .mk { inline-size: 18px; block-size: 18px; flex: none; position: relative; }
+.pb .mk::before {
+  content: ""; position: absolute; inset: 3px;
+  border: 1px solid var(--pf-ink-3);
+}
+.pb .mk--done::before { border-color: var(--done); background: var(--done); }
+.pb .mk--done::after {
+  content: ""; position: absolute; inset-block-start: 7px; inset-inline-start: 6px;
+  inline-size: 6px; block-size: 3px;
+  border-inline-start: 1.5px solid var(--pf-surface);
+  border-block-end: 1.5px solid var(--pf-surface);
+  transform: rotate(-45deg);
+}
+.pb .mk--blocked::before { border-color: var(--blocked); background: var(--blocked-wash); }
+
+/* ---------- Direction: the two openers ---------- */
+.pb .dir { display: flex; flex-direction: column; border-block-start: 1px solid var(--rule); }
+.pb .dir button {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 88px; padding: 18px 20px;
+  background: none; border: 0; border-block-end: 1px solid var(--rule);
+  text-align: start; width: 100%; color: inherit;
+  transition: background var(--dur) var(--ease);
+}
+.pb .dir button:active { background: var(--tone); }
+.pb .dir b { display: block; font-family: var(--f-serif); font-size: var(--t2); font-weight: 400; }
+.pb .dir small { display: block; font-size: var(--t4); color: var(--pf-ink-2); margin-block-start: 4px; }
+
+/* ---------- Group heading inside a list ---------- */
+.pb .grp {
+  padding: 18px 20px 8px;
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--pf-ink-3);
+}
+
+/* ---------- Primary action ----------
+   One per screen. Full-bleed, square, no radius anywhere. */
+.pb .act {
+  display: block; width: 100%; min-height: 56px;
+  padding: 16px 20px; border: 0; border-radius: 0;
+  background: var(--pf-ink); color: var(--pf-surface);
+  font-size: var(--t3); font-weight: 500; text-align: start;
+  transition: opacity var(--dur) var(--ease);
+}
+.pb .act small { display: block; font-size: var(--t4); font-weight: 400; opacity: .75; margin-block-start: 2px; }
+.pb .act[aria-disabled="true"] { background: var(--tone); color: var(--pf-ink-3); }
+.pb .act:active:not([aria-disabled="true"]) { opacity: .85; }
+.pb .snd {
+  display: block; width: 100%; min-height: 48px;
+  background: none; border: 0; color: var(--pf-ink-2);
+  font-size: var(--t4); text-align: start; padding: 12px 0 0;
+}
+
+.pb .note { font-size: var(--t4); color: var(--pf-ink-3); padding-block-start: 14px; }
+
+/* ---------- Skeleton and indeterminate bar ---------- */
+.pb .sk { display: flex; flex-direction: column; border-block-start: 1px solid var(--rule); }
+.pb .sk div { min-height: 64px; padding: 18px 20px; border-block-end: 1px solid var(--rule); }
+.pb .sk i, .pb .sk u {
+  display: block; background: var(--tone);
+  animation: pb-pulse 1.4s var(--ease) infinite;
+}
+.pb .sk i { inline-size: 55%; block-size: 12px; }
+.pb .sk u { inline-size: 78%; block-size: 9px; margin-block-start: 8px; opacity: .7; }
+@keyframes pb-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+.pb .ind { block-size: 2px; background: var(--rule); overflow: hidden; margin: 0 20px 18px; }
+.pb .ind i { display: block; block-size: 100%; inline-size: 40%; background: var(--pf-ink); animation: pb-slide 1.2s var(--ease) infinite; }
+@keyframes pb-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pb .sk i, .pb .sk u, .pb .ind i { animation: none; }
+}
+
+/* ---------- Message surface: empty, error ---------- */
+.pb .msg { padding: 24px 20px; }
+.pb .msg .mk { margin-block-end: 14px; }
+.pb .msg h2 { font-family: var(--f-serif); font-size: var(--t2); font-weight: 400; line-height: 1.25; }
+.pb .msg p { font-size: var(--t4); color: var(--pf-ink-2); margin-block-start: 8px; }
+.pb .msg dl { margin: 18px 0 0; border-block-start: 1px solid var(--rule); }
+.pb .msg dt {
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--pf-ink-3);
+  padding-block-start: 14px;
+}
+.pb .msg dd { margin: 4px 0 14px; font-size: var(--t4); border-block-end: 1px solid var(--rule); padding-block-end: 14px; }
+.pb .msg dd.id { font-family: var(--f-mono); color: var(--pf-ink-2); }
+.pb .msg dd.wasnt { color: var(--pf-ink-3); }
+
+/* ---------- The returning-member suggestion ----------
+   A suggestion is never pre-selected. ADR-0023: members choose. The previous
+   answer is shown so it can be CONFIRMED, which is a different act. */
+.pb .sug { padding: 20px; background: var(--tone); border-block-end: 1px solid var(--rule); }
+.pb .sug b { display: block; font-family: var(--f-serif); font-size: var(--t2); font-weight: 400; margin-block-start: 6px; }
+.pb .sug p { font-size: var(--t4); color: var(--pf-ink-2); margin-block-start: 8px; }
+
+/* ---------- The direct shortcut list ---------- */
+.pb .sc { display: flex; flex-direction: column; border-block-start: 1px solid var(--rule); }
+.pb .sc button {
+  display: flex; align-items: baseline; gap: 12px;
+  min-height: 56px; padding: 14px 20px;
+  background: none; border: 0; border-block-end: 1px solid var(--rule);
+  text-align: start; width: 100%; color: inherit;
+  transition: background var(--dur) var(--ease);
+}
+.pb .sc button:active { background: var(--tone); }
+.pb .sc b { font-size: var(--t3); font-weight: 500; }
+.pb .sc span {
+  margin-inline-start: auto;
+  font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .08em; color: var(--pf-ink-3);
+}
+
+/* ---------- Pending acknowledgement ----------
+   Every tap acknowledged inside 100ms. This is the acknowledgement, and it is
+   deliberately not gold: gold means arrival at a completed state. */
+.pb .pending { color: var(--pf-interact); }

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ponte, the arch</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0E0F0C;--cream:#F2EFE6;--bronze:#C79A4C;--live:#5E9B78;
+  --serif:"Playfair Display",Georgia,serif;--sans:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --ease:cubic-bezier(.19,1,.22,1);
+}
+html,body{height:100%}
+body{background:#050504;display:flex;align-items:flex-start;justify-content:center;gap:34px;flex-wrap:wrap;padding:26px 26px 70px;font-family:var(--sans)}
+.wrap{position:relative}
+.cap{position:absolute;bottom:-24px;left:0;font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:rgba(255,255,255,.32);text-transform:uppercase}
+.phone{width:390px;height:844px;position:relative;overflow-y:auto;overflow-x:hidden;background:var(--ink);color:var(--cream);box-shadow:0 0 0 1px rgba(255,255,255,.06);scrollbar-width:none}
+.phone::-webkit-scrollbar{display:none}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.15;mix-blend-mode:overlay;z-index:30}
+
+nav{position:sticky;top:0;z-index:14;display:flex;justify-content:space-between;align-items:center;padding:18px 24px 12px;background:linear-gradient(to bottom,var(--ink) 66%,transparent)}
+.mark{font-family:var(--mono);font-size:10.5px;letter-spacing:.44em;text-transform:uppercase}
+.enter{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze);border:0;background:transparent;cursor:pointer}
+
+.tick{position:sticky;top:52px;z-index:13;border-top:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09);background:var(--ink);overflow:hidden;height:34px;display:flex;align-items:center}
+.tickmask{position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(to right,var(--ink) 0,transparent 42px,transparent calc(100% - 42px),var(--ink) 100%)}
+.tape{display:flex;white-space:nowrap;animation:tape 46s linear infinite}
+.tape:hover{animation-play-state:paused}
+@keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ti{display:inline-flex;align-items:baseline;gap:9px;padding:0 20px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+.ti b{font-weight:500;opacity:.95}.ti .u{color:var(--bronze)}
+.ti .dot{width:3px;height:3px;background:var(--live);border-radius:50%;display:inline-block;animation:blip 2.6s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:.25}50%{opacity:1}}
+
+.hero{position:relative;padding:30px 24px 0;min-height:560px}
+.bridge{position:absolute;left:0;right:0;top:104px;height:300px;pointer-events:none}
+.bridge svg{width:100%;height:100%;overflow:visible}
+
+.deck{fill:none;stroke:var(--bronze);stroke-width:1.4;stroke-linecap:round}
+.arch{fill:none;stroke:var(--cream);stroke-width:1;opacity:.17}
+.arch.lit{stroke:var(--bronze);opacity:.55}
+.pier{stroke:var(--cream);stroke-width:1;opacity:.2}
+.water{stroke:var(--cream);stroke-width:1;opacity:.10}
+.nd{fill:var(--bronze)}
+.nd.off{fill:none;stroke:var(--cream);stroke-width:1;opacity:.28}
+.veh{fill:var(--bronze)}
+.halo{fill:var(--bronze);opacity:.16}
+
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze)}
+h1{font-family:var(--serif);font-weight:400;font-size:52px;line-height:.96;letter-spacing:-.026em;margin-top:18px;position:relative;z-index:3}
+h1 em{font-style:italic;color:var(--bronze)}
+.lede{font-size:15px;line-height:1.55;font-weight:300;opacity:.6;margin-top:212px;max-width:30ch;position:relative;z-index:3}
+.act{margin-top:28px;position:relative;z-index:3}
+.primary{display:block;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--cream);padding:20px 0 0;font-family:var(--mono);font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--cream);cursor:pointer;position:relative}
+.primary::after{content:"";position:absolute;left:0;top:0;height:1px;width:0;background:var(--bronze);transition:width 620ms var(--ease)}
+.primary:hover::after{width:100%}
+.primary .sub{display:block;font-family:var(--sans);font-size:12px;letter-spacing:0;text-transform:none;opacity:.45;margin-top:8px;font-weight:300}
+
+section{padding:46px 24px 0}
+.sechead{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);margin-bottom:14px;display:flex;justify-content:space-between}
+.sechead span:last-child{color:var(--cream);opacity:.36}
+.demo{border-top:1px solid rgba(255,255,255,.1);padding-top:16px}
+.demo .t{font-family:var(--serif);font-size:20px;line-height:1.2}
+.demo .d{font-size:12px;opacity:.5;margin-top:6px;font-weight:300;line-height:1.5}
+.progwrap{height:104px;margin-top:14px}
+.progwrap svg{width:100%;height:100%;overflow:visible}
+.step{margin-top:14px;display:flex;gap:8px}
+.step button{flex:1;background:transparent;border:0;border-top:1px solid rgba(255,255,255,.16);color:var(--cream);font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:11px 0 0;cursor:pointer;opacity:.5;transition:opacity 300ms}
+.step button:hover{opacity:1;border-top-color:var(--bronze)}
+
+.miniwrap{height:40px;margin-top:12px}
+.miniwrap svg{width:100%;height:100%;overflow:visible}
+footer{padding:44px 24px 70px;opacity:.3;font-size:11px;line-height:1.6;font-weight:300}
+
+@media (prefers-reduced-motion:reduce){.tape{animation:none}.veh,.halo{display:none}*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="4"/></filter></svg>
+<div class="wrap"><div class="phone" id="p"></div><div class="cap">true arc &middot; roman arches &middot; no angles</div></div>
+
+<script>
+/* ---------------------------------------------------------
+   A true circular arc. Chord c, rise h, radius R = (c^2/4 + h^2) / 2h
+   Drawn with one SVG A command, so it is mathematically smooth.
+----------------------------------------------------------*/
+function archPath(x0,x1,yBase,rise){
+  const c=x1-x0, R=(c*c/4 + rise*rise)/(2*rise);
+  return {d:`M ${x0} ${yBase} A ${R} ${R} 0 0 1 ${x1} ${yBase}`, R};
+}
+/* height of that arc at fraction t across the chord */
+function archY(x0,x1,yBase,rise,t){
+  const c=x1-x0, R=(c*c/4+rise*rise)/(2*rise);
+  const cx=(x0+x1)/2, cy=yBase+ (R-rise);
+  const x=x0+c*t;
+  return cy - Math.sqrt(Math.max(R*R-(x-cx)*(x-cx),0));
+}
+
+/* ---------------- hero bridge: one arc, roman arches under ---------------- */
+function heroBridge(){
+  const x0=26,x1=364,yBase=250,rise=104, BAYS=5, waterY=286;
+  const main=archPath(x0,x1,yBase,rise);
+  let arches="",piers="",caps="";
+  for(let b=0;b<BAYS;b++){
+    const a=x0+(x1-x0)*(b/BAYS), z=x0+(x1-x0)*((b+1)/BAYS);
+    const ya=archY(x0,x1,yBase,rise,b/BAYS), yz=archY(x0,x1,yBase,rise,(b+1)/BAYS);
+    const springY=Math.max(ya,yz)+26;
+    const r=(z-a)/2;
+    arches+=`<path class="arch" d="M ${a+3} ${waterY} L ${a+3} ${springY} A ${r-3} ${r-3} 0 0 1 ${z-3} ${springY} L ${z-3} ${waterY}"/>`;
+    if(b>0) piers+=`<line class="pier" x1="${a}" y1="${waterY}" x2="${a}" y2="${ya}"/>`;
+  }
+  piers+=`<line class="pier" x1="${x0}" y1="${waterY}" x2="${x0}" y2="${yBase}"/>`;
+  piers+=`<line class="pier" x1="${x1}" y1="${waterY}" x2="${x1}" y2="${yBase}"/>`;
+  const nodes=[0,.5,1].map(t=>`<circle class="nd" cx="${x0+(x1-x0)*t}" cy="${archY(x0,x1,yBase,rise,t)}" r="3.4"/>`).join("");
+  const traffic=[{d:16,b:0},{d:21,b:-7},{d:27,b:-14}].map(t=>`
+    <g>
+      <circle class="halo" r="7"><animateMotion dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"><mpath href="#mainarc"/></animateMotion>
+        <animate attributeName="opacity" values="0;.18;.18;0" keyTimes="0;.12;.88;1" dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"/></circle>
+      <circle class="veh" r="2.4"><animateMotion dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"><mpath href="#mainarc"/></animateMotion>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.9;1" dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"/></circle>
+    </g>`).join("");
+  return `<svg viewBox="0 0 390 300" preserveAspectRatio="none">
+    <line class="water" x1="8" y1="${waterY}" x2="382" y2="${waterY}"/>
+    <line class="water" x1="8" y1="${waterY+7}" x2="382" y2="${waterY+7}" style="opacity:.05"/>
+    ${arches}${piers}
+    <path id="mainarc" class="deck" d="${main.d}"/>
+    ${nodes}${traffic}
+  </svg>`;
+}
+
+/* ---------------- progress arc: smooth, fills as you answer ---------------- */
+function progArc(total,at,h,labels){
+  const W=342,x0=8,x1=W-8,yBase=h-14,rise=h-46;
+  const {d}=archPath(x0,x1,yBase,rise);
+  const nodes=[...Array(total+1)].map((_,n)=>{
+    const t=n/total,x=x0+(x1-x0)*t,y=archY(x0,x1,yBase,rise,t);
+    return n<=at?`<circle class="nd" cx="${x}" cy="${y}" r="3.2"/>`
+                :`<circle class="nd off" cx="${x}" cy="${y}" r="2.7"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="none">
+    <path class="arch" d="${d}"/>
+    <path class="deck" id="pa" d="${d}"/>
+    ${nodes}</svg>`;
+}
+
+const TAPE=[["Gas oil EN 590","30,000 MT","Türkiye → CIF"],["Sunflower oil","5,000 MT","→ Egypt"],["Freight forwarding","Adriatic","→ Levant"],["Urea 46%","12,500 MT","→ Brazil"],["White sugar I45","25,000 MT","→ Algeria"],["Distribution, olive oil","private label","→ DACH"]];
+const ti=t=>`<span class="ti"><span class="dot"></span><b>${t[0]}</b><span>${t[1]}</span><span class="u">${t[2]}</span></span>`;
+
+document.getElementById("p").innerHTML=`
+<div class="grain" style="filter:url(#g)"></div>
+<nav><div class="mark">Ponte</div><button class="enter">Sign in</button></nav>
+<div class="tick"><div class="tickmask"></div><div class="tape">${TAPE.map(ti).join("")}${TAPE.map(ti).join("")}</div></div>
+
+<div class="hero">
+  <div class="eyebrow">Cross-border trade</div>
+  <h1>Two sides.<br>One <em>crossing.</em></h1>
+  <div class="bridge">${heroBridge()}</div>
+  <div class="lede">Ponte reads the market, publishes your opportunity, and gives you a controlled room to close it in. Everything up to that room is free.</div>
+  <div class="act"><button class="primary">Publish an opportunity<span class="sub">Four questions. No account needed to start.</span></button></div>
+</div>
+
+<section>
+  <div class="sechead"><span>The same arc, as progress</span><span>Tap to advance</span></div>
+  <div class="demo">
+    <div class="t">It fills as you answer.</div>
+    <div class="d">One continuous curve. Nothing is drawn in segments, so there is nothing to look angular.</div>
+    <div class="progwrap" id="pw">${progArc(4,0,104,true)}</div>
+    <div class="step">
+      <button id="less">Back</button>
+      <button id="more">Answer</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><span>And at portfolio size</span><span>03</span></div>
+  <div class="demo">
+    <div class="t">Gas oil EN 590, 30,000 MT</div>
+    <div class="miniwrap">${progArc(5,3,40,false)}</div>
+  </div>
+  <div class="demo" style="margin-top:20px">
+    <div class="t">Freight forwarding, Adriatic</div>
+    <div class="miniwrap">${progArc(5,1,40,false)}</div>
+  </div>
+</section>
+
+<footer>A true circular arc, radius derived from chord and rise, drawn with a single SVG arc command. Roman arches below spring from the piers.</footer>
+`;
+
+/* draw the hero arc in */
+const m=document.querySelector("#mainarc");
+const L=m.getTotalLength(); m.style.strokeDasharray=L; m.style.strokeDashoffset=L;
+m.style.transition="stroke-dashoffset 2400ms var(--ease)";
+setTimeout(()=>m.style.strokeDashoffset=0,260);
+
+/* interactive progress */
+let at=0; const TOTAL=4, pw=document.getElementById("pw");
+function paint(){
+  pw.innerHTML=progArc(TOTAL,at,104,true);
+  const p=pw.querySelector("#pa"); const l=p.getTotalLength();
+  p.style.strokeDasharray=l;
+  p.style.strokeDashoffset=l-(l*(at/TOTAL));
+  p.style.transition="stroke-dashoffset 900ms var(--ease)";
+}
+paint();
+document.getElementById("more").onclick=()=>{at=Math.min(TOTAL,at+1);paint()};
+document.getElementById("less").onclick=()=>{at=Math.max(0,at-1);paint()};
+
+/* mini arcs partially drawn */
+document.querySelectorAll(".miniwrap svg .deck").forEach((p,i)=>{
+  const at=[3,1][i], l=p.getTotalLength();
+  p.style.strokeDasharray=l; p.style.strokeDashoffset=l-(l*(at/5));
+});
+</script>
+</body>
+</html>

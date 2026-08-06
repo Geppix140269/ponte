@@ -1,0 +1,408 @@
+/* =====================================================================
+   BUILD 1, the surfaces: B01b, B02, B03-B05, B06, B07, B08, B09.
+
+   `publish.css` holds the frame and the primitives every surface shares.
+   This holds the surfaces themselves. Both are scoped to `.pb` and both
+   are loaded wherever the path renders; splitting them is about reading
+   them, not about loading them.
+
+   Ported from `docs/ponte/design-reference/ponte-set1.css` (patterns 1-3)
+   and `ponte-set2.css` (surfaces 2-6).
+
+   THREE DEVIATIONS FROM THE REFERENCE, all in one direction: the
+   reference draws three bounded rectangles that its own header forbids,
+   and they are rebuilt here as hairlines and tone bands.
+
+     1. `.ast__drop`, a dashed rectangle, becomes a full-bleed tone band
+        with block-edge hairlines - the same shape as the speak band,
+        which is the path's established "largest affordance" pattern.
+     2. `.ast__t`, a bordered 64x48 file-type block, becomes a mono label
+        in the row. Nothing is lost: it carried three letters.
+     3. `.val .pills`, bordered pill buttons, become choice rows. They
+        also gain 16px of tap target, which matters more on a 360px
+        phone than the pill shape does.
+
+   The one bounded shape that survives is the 18px state mark, granted by
+   selector and fenced to a fixed size by test so it cannot grow into a
+   container.
+   ===================================================================== */
+
+/* ---------- State marks: the rest of the ladder ---------- */
+.pb .mk--need::before { border-color: var(--attention); background: var(--attention-wash); }
+.pb .mk--need::after {
+  content: ""; position: absolute; inset-inline-start: 8px; inset-block-start: 6px;
+  inline-size: 2px; block-size: 5px; background: var(--attention);
+  box-shadow: 0 7px 0 var(--attention);
+}
+.pb .mk--inferred::before { border-style: dashed; border-color: var(--pf-ink-3); }
+
+/* Visibility ladder. Shape carries the degree; colour only reinforces it. */
+.pb .mk--pub::before { border-color: var(--pf-ink); background: var(--pf-ink); border-radius: 50%; }
+.pb .mk--acc::before { border-color: var(--pf-ink-2); border-radius: 50%; }
+.pb .mk--acc::after {
+  content: ""; position: absolute; inset-inline-start: 9px; inset-block-start: 3px;
+  inline-size: 6px; block-size: 12px; background: var(--pf-ink-2);
+  border-start-end-radius: 999px; border-end-end-radius: 999px;
+}
+.pb .mk--priv::before { border-color: var(--pf-ink-3); border-radius: 50%; }
+.pb .mk--priv::after {
+  content: ""; position: absolute; inset-inline-start: 2px; inset-block-start: 8px;
+  inline-size: 14px; block-size: 1.5px; background: var(--pf-ink-3);
+  transform: rotate(-45deg);
+}
+.pb .mk--lock::before { inset: 8px 4px 3px; border-color: var(--pf-ink-2); }
+.pb .mk--lock::after {
+  content: ""; position: absolute; inset-inline-start: 6px; inset-block-start: 3px;
+  inline-size: 6px; block-size: 6px;
+  border: 1.5px solid var(--pf-ink-2); border-block-end: 0;
+  border-start-start-radius: 999px; border-start-end-radius: 999px;
+}
+
+/* ---------- Route glyphs: drawn shape, never an icon font ---------- */
+.pb .gl { inline-size: 22px; block-size: 22px; flex: none; position: relative; color: var(--pf-ink-2); }
+.pb .gl--mic::before {
+  content: ""; position: absolute; inset-inline-start: 7px; inset-block-start: 2px;
+  inline-size: 8px; block-size: 11px; border: 1.5px solid currentColor; border-radius: 999px;
+}
+.pb .gl--mic::after {
+  content: ""; position: absolute; inset-inline-start: 4px; inset-block-start: 12px;
+  inline-size: 14px; block-size: 7px; border: 1.5px solid currentColor;
+  border-block-start: 0; border-end-start-radius: 999px; border-end-end-radius: 999px;
+}
+.pb .gl--cam::before {
+  content: ""; position: absolute; inset-inline-start: 1px; inset-block-start: 5px;
+  inline-size: 20px; block-size: 13px; border: 1.5px solid currentColor;
+}
+.pb .gl--cam::after {
+  content: ""; position: absolute; inset-inline-start: 8px; inset-block-start: 9px;
+  inline-size: 6px; block-size: 6px; border: 1.5px solid currentColor; border-radius: 50%;
+}
+.pb .gl--grid::before {
+  content: ""; position: absolute; inset-inline-start: 2px; inset-block-start: 3px;
+  inline-size: 8px; block-size: 8px; border: 1.5px solid currentColor;
+  box-shadow: 10px 0 0 -0.5px currentColor, 0 10px 0 -0.5px currentColor, 10px 10px 0 -0.5px currentColor;
+}
+.pb .gl--find::before {
+  content: ""; position: absolute; inset-inline-start: 2px; inset-block-start: 2px;
+  inline-size: 13px; block-size: 13px; border: 1.5px solid currentColor; border-radius: 50%;
+}
+.pb .gl--find::after {
+  content: ""; position: absolute; inset-inline-start: 13px; inset-block-start: 14px;
+  inline-size: 8px; block-size: 1.5px; background: currentColor;
+  transform: rotate(45deg); transform-origin: 0 50%;
+}
+.pb .gl--file::before {
+  content: ""; position: absolute; inset-inline-start: 4px; inset-block-start: 2px;
+  inline-size: 14px; block-size: 18px; border: 1.5px solid currentColor;
+}
+.pb .gl--file::after {
+  content: ""; position: absolute; inset-inline-start: 7px; inset-block-start: 8px;
+  inline-size: 8px; block-size: 1.5px; background: currentColor; box-shadow: 0 4px 0 currentColor;
+}
+
+/* ---------- B02: the speak band ----------
+   Full-bleed tone with block-edge hairlines. It reads as the largest thing on
+   the screen because it IS the largest thing, not because it is boxed. */
+.pb .spk {
+  background: var(--tone); border: 0; border-block: 1px solid var(--rule);
+  padding: 26px 20px 28px; display: flex; flex-direction: column;
+  gap: 16px; align-items: flex-start; width: 100%; text-align: start;
+  color: inherit; transition: background var(--dur) var(--ease);
+}
+.pb .spk:active { background: var(--pf-rule); }
+.pb .spk__g { inline-size: 44px; block-size: 44px; position: relative; color: var(--pf-ink); }
+.pb .spk__g::before {
+  content: ""; position: absolute; inset-inline-start: 15px; inset-block-start: 4px;
+  inline-size: 14px; block-size: 20px; border: 2px solid currentColor; border-radius: 999px;
+}
+.pb .spk__g::after {
+  content: ""; position: absolute; inset-inline-start: 9px; inset-block-start: 22px;
+  inline-size: 26px; block-size: 13px; border: 2px solid currentColor;
+  border-block-start: 0; border-end-start-radius: 999px; border-end-end-radius: 999px;
+}
+.pb .spk b { display: block; font-family: var(--f-serif); font-size: var(--t2); font-weight: 500; line-height: 1.2; }
+.pb .spk p { font-size: 13.5px; color: var(--pf-ink-2); line-height: 1.55; max-width: 34ch; margin-block-start: 6px; }
+
+.pb .wave { display: flex; align-items: flex-end; gap: 4px; block-size: 34px; width: 100%; }
+.pb .wave i {
+  flex: 1; background: var(--pf-ink); block-size: 100%;
+  transform: scaleY(.2); transform-origin: 50% 100%;
+  animation: pb-wave 1.1s var(--ease) infinite alternate;
+}
+@keyframes pb-wave { to { transform: scaleY(1); } }
+.pb .wave i:nth-child(3n) { animation-delay: .18s; }
+.pb .wave i:nth-child(3n+1) { animation-delay: .36s; }
+.pb .wave i:nth-child(4n) { animation-delay: .09s; }
+.pb .tscript { font-size: var(--t3); line-height: 1.5; color: var(--pf-ink); }
+.pb .tscript em { font-style: normal; border-block-end: 1.5px dashed var(--attention); }
+@media (prefers-reduced-motion: reduce) {
+  .pb .wave i { animation: none; transform: scaleY(.6); }
+}
+
+/* ---------- B03-B05: the fact lines ----------
+   One fact per line. The tiers are ordered loudest first: missing and required
+   above uncertain above confirmed. That order IS the work order. */
+.pb .fl { display: flex; flex-direction: column; }
+.pb .fl__i {
+  display: block; width: 100%; text-align: start; background: none;
+  border: 0; border-block-start: 1px solid var(--rule);
+  padding: 15px 20px; color: inherit; min-height: 64px;
+  transition: background var(--dur) var(--ease);
+}
+.pb .fl__i:last-child { border-block-end: 1px solid var(--rule); }
+.pb .fl__i:active { background: var(--tone); }
+.pb .fl__k { display: flex; align-items: center; gap: 8px; margin-block-end: 7px; }
+.pb .fl__k .lab { color: var(--pf-ink-3); }
+.pb .fl__k .r {
+  margin-inline-start: auto; font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.pb .fl__v { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.pb .fl__v b { font-size: var(--t3); font-weight: 500; line-height: 1.35; }
+.pb .fl__v .hs { font-family: var(--f-mono); font-size: var(--t5); color: var(--pf-ink-3); }
+/* Tier 1, missing and required. */
+.pb .fl__i--need { background: var(--attention-wash); }
+.pb .fl__i--need .lab, .pb .fl__i--need .r { color: var(--attention); }
+.pb .fl__i--need .fl__v b { font-family: var(--f-serif); font-size: var(--t2); font-weight: 400; color: var(--pf-ink); }
+.pb .fl__i--need .ask { display: block; font-size: 12.5px; color: var(--pf-ink-2); margin-block-start: 6px; line-height: 1.5; }
+/* Tier 2, inferred. Marked distinctly from read, and one tap from confirmed. */
+.pb .fl__i--inf .r { color: var(--pf-ink-2); }
+.pb .fl__i--inf .fl__v b { border-block-end: 1.5px dashed var(--pf-ink-3); padding-block-end: 1px; }
+.pb .fl__i--inf .prov { display: block; font-size: 12.5px; line-height: 1.5; color: var(--pf-ink-2); margin-block-start: 7px; }
+.pb .conf { display: flex; align-items: stretch; gap: 28px; margin-block-start: 8px; }
+.pb .conf button {
+  background: none; border: 0; padding: 0; font-size: var(--t4); color: var(--pf-ink);
+  min-height: 48px; display: inline-flex; align-items: center; position: relative;
+}
+.pb .conf button::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block-end: 11px;
+  block-size: 1px; background: var(--pf-ink-3);
+}
+/* Tier 3, confirmed or read. Quietest. */
+.pb .fl__i--ok { padding-block: 12px; min-height: 0; }
+.pb .fl__i--ok .fl__k { margin-block-end: 4px; }
+.pb .fl__i--ok .fl__v b { font-size: 15px; color: var(--pf-ink-2); font-weight: 400; }
+.pb .fl__i--ok .r { color: var(--done); }
+.pb .fl__hd { padding: 14px 20px 16px; }
+.pb .fl__hd .cnt { display: flex; gap: 20px; margin-block-start: 12px; flex-wrap: wrap; }
+.pb .fl__hd .cnt span {
+  font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .06em;
+  color: var(--pf-ink-2); display: inline-flex; align-items: center; gap: 7px;
+}
+
+/* ---------- R2 recognition. Report, not reward ----------
+   Five elements, always: milestone, what completed, why it matters, what is
+   preserved, one next action with an owner. No coins, points or streaks. */
+.pb .r2 { background: var(--tone); border-block-end: 1px solid var(--rule); padding: 20px 20px 2px; }
+.pb .r2__m { display: flex; align-items: center; gap: 9px; margin-block-end: 11px; }
+.pb .r2__m .lab { color: var(--done); }
+.pb .r2 h2 { font-family: var(--f-serif); font-size: var(--t2); line-height: 1.24; max-width: 22ch; }
+.pb .r2 p { font-size: 13.5px; line-height: 1.6; color: var(--pf-ink-2); margin-block-start: 10px; max-width: 40ch; }
+.pb .r2 .held {
+  display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 11px;
+  margin-block-start: 13px; font-size: 13.5px; line-height: 1.55; color: var(--pf-ink-2);
+}
+.pb .r2 .held i { inline-size: 6px; block-size: 6px; background: var(--pf-ink-3); display: block; margin-block-start: 7px; }
+.pb .r2__next {
+  display: flex; align-items: flex-start; gap: 12px; min-height: 48px;
+  margin-block-start: 14px; border-block-start: 1px solid var(--rule); padding: 6px 0;
+}
+.pb .r2__next .lab { color: var(--pf-ink-3); flex: none; margin-block-start: 5px; }
+.pb .r2__next b { font-size: var(--t4); font-weight: 500; color: var(--pf-ink); line-height: 1.5; }
+.pb .r2__meta { display: flex; gap: 18px; flex-wrap: wrap; padding-block-end: 13px; }
+.pb .r2__meta span { font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .06em; color: var(--pf-ink-3); }
+
+/* ---------- Correction in place: a sheet of rows, never a bare field ---------- */
+.pb .pick {
+  position: absolute; inset-inline: 0; inset-block-end: 0;
+  background: var(--pf-surface); border-block-start: 1px solid var(--pf-ink);
+  display: flex; flex-direction: column; max-height: 74%; z-index: 2;
+}
+.pb .pick__h { padding: 15px 20px 13px; display: flex; align-items: baseline; gap: 12px; }
+.pb .pick__h b { font-size: var(--t3); font-weight: 500; }
+.pb .pick__h button {
+  margin-inline-start: auto; background: none; border: 0;
+  font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--pf-ink-2); min-height: 48px; padding-inline-start: 12px;
+}
+.pb .pick__s { display: flex; align-items: center; gap: 12px; padding: 0 20px 13px; }
+.pb .pick__s input {
+  flex: 1; border: 0; border-block-end: 1px solid var(--rule); background: none;
+  font-family: inherit; font-size: var(--t4); color: var(--pf-ink); padding-block: 13px; min-height: 48px;
+}
+.pb .pick__b { overflow: auto; flex: 1; }
+.pb .pick__scrim { position: absolute; inset: 0; background: rgba(15, 15, 14, .42); z-index: 1; border: 0; }
+:root[data-theme="dark"] .pb .pick__scrim,
+.pb[data-theme="dark"] .pick__scrim { background: rgba(0, 0, 0, .6); }
+.pb .step2 { display: flex; align-items: center; border-block: 1px solid var(--rule); }
+.pb .step2 button {
+  flex: none; inline-size: 72px; min-height: 64px; background: none; border: 0;
+  border-inline-end: 1px solid var(--rule); font-size: 22px; color: var(--pf-ink);
+}
+.pb .step2 button:last-child { border-inline-end: 0; border-inline-start: 1px solid var(--rule); }
+.pb .step2 button:active { background: var(--tone); }
+.pb .step2 span { flex: 1; text-align: center; font-family: var(--f-mono); font-size: var(--t2); font-variant-numeric: tabular-nums; }
+
+/* ---------- Disclosure and the upload rule ---------- */
+.pb .disc { padding: 18px 20px 20px; border-block: 1px solid var(--rule); background: var(--tone); }
+.pb .disc ul { list-style: none; margin: 13px 0 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.pb .disc li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 12px; font-size: 13.5px; line-height: 1.5; color: var(--pf-ink-2); }
+.pb .disc li b { color: var(--pf-ink); font-weight: 600; }
+.pb .disc li i { inline-size: 6px; block-size: 6px; background: var(--pf-ink-3); display: block; margin-block-start: 7px; }
+.pb .upl { padding: 20px; display: flex; flex-direction: column; gap: 13px; }
+.pb .upl__bar { block-size: 2px; background: var(--rule); position: relative; overflow: hidden; }
+.pb .upl__bar i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--pf-ink); }
+.pb .upl__m { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pb .upl__m .id { font-family: var(--f-mono); font-size: var(--t5); color: var(--pf-ink-2); }
+.pb .upl__m button { background: none; border: 0; padding: 0; min-height: 48px; color: var(--pf-ink-2); font-size: var(--t4); }
+
+/* ---------- B07: the three visibility layers ---------- */
+.pb .lay__h { padding: 22px 20px 11px; display: flex; align-items: flex-start; gap: 11px; }
+.pb .lay__h .mk { margin-block-start: 2px; }
+.pb .lay__h b { display: block; font-size: var(--t4); font-weight: 600; line-height: 1.4; color: var(--pf-ink); }
+.pb .lay__h > span > span { display: block; font-size: 12.5px; line-height: 1.55; color: var(--pf-ink-2); margin-block-start: 4px; max-width: 36ch; }
+/* NOT `.fixed`. That is the reference's name for it and it is also Tailwind's
+   utility for `position: fixed`, which is in this project's stylesheet. The
+   element left the flow, pinned itself to the viewport and printed "Fixed" on
+   top of "Public: anyone browsing Ponte" at the head of the most important
+   surface in Set 2. Every rule below applied exactly as written; the collision
+   was with a class nobody on this path declared. */
+.pb .lay__h .lay__fixed {
+  margin-inline-start: auto; font-family: var(--f-mono); font-size: var(--t5);
+  letter-spacing: .1em; text-transform: uppercase; color: var(--pf-ink-3);
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.pb .lay__l { display: flex; flex-direction: column; }
+.pb .lay__l > div, .pb .lay__l > button {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px;
+  align-items: baseline; padding: 13px 20px;
+  border: 0; border-block-start: 1px solid var(--rule);
+  background: none; text-align: start; color: inherit; width: 100%; min-height: 48px;
+}
+.pb .lay__l > button { min-height: 64px; transition: background var(--dur) var(--ease); }
+.pb .lay__l > button:active { background: var(--tone); }
+.pb .lay__l > *:last-child { border-block-end: 1px solid var(--rule); }
+.pb .lay__l .k { display: block; font-size: 12.5px; color: var(--pf-ink-2); line-height: 1.4; }
+.pb .lay__l .v { display: block; font-size: 15px; color: var(--pf-ink); line-height: 1.4; margin-block-start: 3px; }
+.pb .lay__l .v .hs { font-family: var(--f-mono); font-size: var(--t5); color: var(--pf-ink-3); margin-inline-start: 7px; white-space: nowrap; }
+.pb .lay__l .ctl { font-size: 13.5px; color: var(--pf-ink); white-space: nowrap; align-self: center; position: relative; }
+.pb .lay__l .ctl::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: -3px; block-size: 1px; background: var(--pf-ink-3); }
+.pb .lay__l .fx { font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .1em; text-transform: uppercase; color: var(--pf-ink-3); align-self: center; }
+.pb .lay--pub { background: var(--tone); }
+
+/* ---------- B06: assets ----------
+   Deviation 2: the reference's bordered file-type block is a mono label.
+   Deviation 1: its dashed-rectangle drop target is a tone band. */
+.pb .ast { display: flex; flex-direction: column; }
+.pb .ast__i {
+  display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 15px;
+  align-items: center; padding: 13px 20px;
+  border: 0; border-block-start: 1px solid var(--rule);
+  background: none; width: 100%; text-align: start; color: inherit;
+  min-height: 64px; transition: background var(--dur) var(--ease);
+}
+.pb .ast__i:last-of-type { border-block-end: 1px solid var(--rule); }
+.pb .ast__i:active { background: var(--tone); }
+.pb .ast__t { font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .1em; color: var(--pf-ink-3); }
+.pb .ast__i b { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; }
+.pb .ast__i small { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--pf-ink-2); margin-block-start: 3px; }
+.pb .ast__add {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+  width: 100%; padding: 24px 20px; text-align: start; color: inherit;
+  background: var(--tone); border: 0; border-block: 1px solid var(--rule);
+  min-height: 64px; transition: background var(--dur) var(--ease);
+}
+.pb .ast__add:active { background: var(--pf-rule); }
+.pb .ast__add b { font-size: var(--t4); font-weight: 600; color: var(--pf-ink); }
+.pb .ast__add span { font-size: 12.5px; color: var(--pf-ink-2); line-height: 1.55; }
+
+/* ---------- B01b: the authority declaration, inline ---------- */
+.pb .auth { padding: 17px 20px 19px; border-block-end: 1px solid var(--rule); background: var(--attention-wash); }
+.pb .auth .lab { color: var(--attention); margin-block-end: 9px; }
+.pb .auth p { font-size: 13.5px; line-height: 1.6; color: var(--pf-ink); max-width: 38ch; }
+.pb .auth input[type="text"] {
+  width: 100%; border: 0; border-block-end: 1px solid var(--pf-ink-3); background: none;
+  font-family: inherit; font-size: var(--t4); color: var(--pf-ink);
+  padding-block: 12px; min-height: 48px; margin-block-start: 12px;
+}
+.pb .auth label {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px;
+  align-items: start; margin-block-start: 14px; min-height: 48px;
+  font-size: 13.5px; line-height: 1.5; color: var(--pf-ink);
+  cursor: pointer; position: relative;
+}
+/* The authority tick. A state mark by another name, so it is named one: it is
+   18px, it carries state by shape, and it is fenced to a fixed size by test
+   exactly as `.mk` is. */
+.pb .auth label .mk--tick { inline-size: 18px; block-size: 18px; border: 1.5px solid var(--pf-ink-2); display: block; margin-block-start: 2px; }
+.pb .auth label.on .mk--tick { background: var(--pf-ink); border-color: var(--pf-ink); position: relative; }
+.pb .auth label.on .mk--tick::after {
+  content: ""; position: absolute; inset-inline-start: 3px; inset-block-start: 7px;
+  inline-size: 11px; block-size: 1.6px; background: var(--pf-surface); transform: rotate(-45deg);
+}
+.pb .auth label input[type="checkbox"] { position: absolute; opacity: 0; inline-size: 18px; block-size: 18px; margin: 0; }
+
+/* ---------- B09s: screening ---------- */
+.pb .scr { display: flex; flex-direction: column; }
+.pb .scr__i {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 13px;
+  align-items: baseline; padding: 14px 20px; border-block-start: 1px solid var(--rule);
+}
+.pb .scr__i:last-child { border-block-end: 1px solid var(--rule); }
+.pb .scr__i .mk { align-self: center; }
+.pb .scr__i b { font-size: var(--t4); font-weight: 400; color: var(--pf-ink); line-height: 1.45; }
+.pb .scr__i small { display: block; font-size: 12.5px; color: var(--pf-ink-2); margin-block-start: 3px; line-height: 1.5; }
+.pb .scr__i .st {
+  font-family: var(--f-mono); font-size: var(--t5); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--pf-ink-3); align-self: center;
+}
+.pb .scr__i .st.ok { color: var(--done); }
+.pb .scr__i .st.no { color: var(--blocked); }
+.pb .scr__i .st.run { color: var(--pf-ink-2); }
+.pb .perim { padding: 15px 20px 18px; border-block-start: 1px solid var(--rule); }
+.pb .perim p { font-size: 12.5px; line-height: 1.6; color: var(--pf-ink-2); max-width: 40ch; }
+.pb .perim b { color: var(--pf-ink); font-weight: 600; }
+
+/* ---------- B08: sign in ---------- */
+.pb .si__f { display: flex; flex-direction: column; }
+.pb .si__f label { display: block; border-block-start: 1px solid var(--rule); padding: 13px 20px 15px; }
+.pb .si__f label:last-of-type { border-block-end: 1px solid var(--rule); }
+.pb .si__f .lab { margin-block-end: 7px; }
+.pb .si__f input {
+  width: 100%; border: 0; background: none; font-family: inherit;
+  font-size: var(--t3); color: var(--pf-ink); padding-block: 11px; min-height: 48px;
+}
+.pb .si__f label.bad { background: var(--blocked-wash); }
+.pb .si__f label.bad .lab { color: var(--blocked); }
+.pb .store {
+  padding: 15px 20px 18px; display: grid; grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px; align-items: start; border-block-start: 1px solid var(--rule);
+}
+.pb .store b { display: block; font-size: var(--t4); font-weight: 600; line-height: 1.5; color: var(--pf-ink); }
+.pb .store > span > span { display: block; font-size: 12.5px; color: var(--pf-ink-2); line-height: 1.6; margin-block-start: 5px; }
+.pb .resume { padding: 18px 20px 20px; background: var(--tone); border-block: 1px solid var(--rule); }
+.pb .resume b { display: block; font-family: var(--f-serif); font-size: var(--t2); font-weight: 400; line-height: 1.25; margin-block-start: 9px; }
+.pb .resume .id { display: block; margin-block-start: 9px; font-family: var(--f-mono); font-size: var(--t5); color: var(--pf-ink-2); }
+.pb .alt { display: flex; flex-direction: column; }
+.pb .alt button {
+  width: 100%; text-align: start; background: none; border: 0;
+  border-block-start: 1px solid var(--rule); padding: 16px 20px; min-height: 64px;
+  font-size: var(--t3); color: var(--pf-ink); display: flex; align-items: center; gap: 14px;
+  transition: background var(--dur) var(--ease);
+}
+.pb .alt button:active { background: var(--tone); }
+.pb .alt button .go { margin-inline-start: auto; font-family: var(--f-mono); font-size: 13px; color: var(--pf-ink-3); }
+
+/* ---------- Shared small parts ---------- */
+.pb .hr { block-size: 1px; background: var(--rule); }
+.pb .sug .acts { display: flex; gap: 28px; margin-block-start: 6px; }
+.pb .sug .acts button {
+  background: none; border: 0; padding: 0; font-size: var(--t4); color: var(--pf-ink);
+  min-height: 48px; display: inline-flex; align-items: center; position: relative;
+}
+.pb .sug .acts button::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block-end: 11px;
+  block-size: 1px; background: var(--pf-ink-3);
+}
+.pb .band--attention { background: var(--attention-wash); padding: 18px 20px 20px; border-block-start: 1px solid var(--rule); }
+.pb .band--attention .prose { color: var(--pf-ink); }

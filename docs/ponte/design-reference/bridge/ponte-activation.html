@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ponte, activation</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0E0F0C;--cream:#F2EFE6;--bronze:#C79A4C;--bronze-deep:#8A6520;
+  --checked:#5E9B78;--unproved:#C4664E;
+  --serif:"Playfair Display",Georgia,serif;--sans:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --ease:cubic-bezier(.19,1,.22,1);
+}
+html,body{height:100%}
+body{background:#050504;display:flex;align-items:flex-start;justify-content:center;gap:34px;flex-wrap:wrap;padding:26px 26px 70px;font-family:var(--sans)}
+.wrap{position:relative}
+.cap{position:absolute;bottom:-24px;left:0;font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:rgba(255,255,255,.32);text-transform:uppercase}
+.phone{width:390px;height:844px;position:relative;overflow-y:auto;overflow-x:hidden;background:var(--ink);color:var(--cream);box-shadow:0 0 0 1px rgba(255,255,255,.06);scrollbar-width:none}
+.phone::-webkit-scrollbar{display:none}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.15;mix-blend-mode:overlay;z-index:30}
+
+nav{position:sticky;top:0;z-index:12;padding:18px 24px 14px;background:linear-gradient(to bottom,var(--ink) 70%,transparent);display:flex;justify-content:space-between;align-items:baseline}
+.mark{font-family:var(--mono);font-size:10px;letter-spacing:.42em;text-transform:uppercase;opacity:.5}
+.ref{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--bronze)}
+
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);padding:0 24px}
+h1{font-family:var(--serif);font-weight:400;font-size:38px;line-height:1.02;letter-spacing:-.022em;padding:16px 24px 0}
+h1 em{font-style:italic;color:var(--bronze)}
+.lede{padding:16px 24px 0;font-size:14px;line-height:1.55;font-weight:300;opacity:.6;max-width:33ch}
+
+/* what activation opens */
+section{padding:38px 24px 0}
+.sechead{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);margin-bottom:16px;display:flex;justify-content:space-between}
+.sechead span:last-child{color:var(--cream);opacity:.36}
+.opens{display:flex;gap:14px;align-items:baseline;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.opens .i{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--bronze);width:22px;flex:0 0 auto}
+.opens .t{font-size:13.5px;font-weight:300;line-height:1.45}
+.opens .t b{font-weight:400;opacity:1}
+.stays{opacity:.45}
+
+/* the money, on cream */
+.bill{background:var(--cream);color:var(--ink);margin-top:40px;padding:34px 24px 30px}
+.bill .sechead{color:var(--bronze-deep)}
+.bill .sechead span:last-child{color:var(--ink);opacity:.35}
+.line{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(0,0,0,.11)}
+.line .l{font-size:13.5px;font-weight:300}
+.line .l small{display:block;font-size:11px;opacity:.5;margin-top:4px}
+.line .r{font-family:var(--serif);font-size:21px;white-space:nowrap}
+.total{border-bottom:0;padding-top:18px;margin-top:4px;border-top:1px solid var(--ink)}
+.total .l{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;opacity:.6}
+.total .r{font-family:var(--serif);font-size:34px;letter-spacing:-.018em}
+.until{margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.11)}
+.until .k{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.45}
+.until .v{font-family:var(--serif);font-size:20px;margin-top:7px;line-height:1.25}
+.until .n{font-size:11.5px;opacity:.5;margin-top:9px;line-height:1.55;font-weight:300}
+
+/* branches */
+.br{padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+.br .l{font-size:13px;font-weight:300;opacity:.82}
+.br .r{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;opacity:.5;white-space:nowrap}
+
+/* confirm */
+.confirm{padding:36px 24px 0}
+.check{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px solid rgba(255,255,255,.12);cursor:pointer}
+.tick{width:15px;height:15px;flex:0 0 auto;margin-top:2px;position:relative}
+.tick::before{content:"";position:absolute;left:0;top:7px;width:15px;height:1px;background:rgba(242,239,232,.32);transition:all 340ms var(--ease)}
+.check.on .tick::before{background:var(--bronze);height:1px;width:15px}
+.check.on .tick::after{content:"";position:absolute;left:0;top:7px;width:15px;height:1px;background:var(--bronze);transform:rotate(90deg);opacity:0}
+.check .x{font-size:12.5px;line-height:1.5;font-weight:300;opacity:.6;transition:opacity 340ms var(--ease)}
+.check.on .x{opacity:1}
+
+.pay{width:100%;text-align:left;background:transparent;border:0;border-top:1px solid rgba(242,239,232,.22);color:rgba(242,239,232,.3);
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;padding:22px 24px 0;margin-top:12px;cursor:not-allowed;position:relative;display:block}
+.pay.live{color:var(--cream);border-top-color:var(--cream);cursor:pointer}
+.pay::after{content:"";position:absolute;left:24px;right:24px;top:0;height:1px;background:var(--bronze);transform:scaleX(0);transform-origin:left;transition:transform 620ms var(--ease)}
+.pay.live:hover::after{transform:scaleX(1)}
+.pay .s{display:block;font-family:var(--sans);font-size:11.5px;letter-spacing:0;text-transform:none;opacity:.45;margin-top:8px;font-weight:300}
+
+.later{width:100%;text-align:left;background:transparent;border:0;color:rgba(242,239,232,.38);
+  font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;padding:20px 24px 0;cursor:pointer}
+
+footer{padding:32px 24px 70px;opacity:.3;font-size:11px;line-height:1.6;font-weight:300}
+
+.rise{opacity:0;transform:translateY(15px)}
+.rise.on{opacity:1;transform:none;transition:opacity 600ms var(--ease),transform 600ms var(--ease)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="4"/></filter></svg>
+<div class="wrap"><div class="phone" id="p"></div><div class="cap">activation &middot; the only screen that takes money</div></div>
+
+<script>
+document.getElementById("p").innerHTML=`
+<div class="grain" style="filter:url(#g)"></div>
+<nav><span class="mark">Ponte</span><span class="ref">DR-0042 · Draft</span></nav>
+
+<div class="rise">
+  <div class="eyebrow">You have built the room</div>
+  <h1>Open it to<br><em>the other side.</em></h1>
+  <div class="lede">Everything so far has been yours alone. Activation is the moment a counterparty can be invited in, and it is the only thing Ponte charges for.</div>
+</div>
+
+<section class="rise">
+  <div class="sechead"><span>What activation opens</span><span></span></div>
+  <div class="opens"><span class="i">01</span><span class="t">Send the first <b>live invitation</b></span></div>
+  <div class="opens"><span class="i">02</span><span class="t">Admit an external participant to a <b>protected branch</b></span></div>
+  <div class="opens"><span class="i">03</span><span class="t">Agree a procedure and hold both sides to it</span></div>
+  <div class="opens"><span class="i">04</span><span class="t">Exchange evidence that never crosses a branch boundary</span></div>
+  <div class="opens stays"><span class="i">—</span><span class="t">Building, editing and previewing the room stays free, always</span></div>
+</section>
+
+<div class="bill rise">
+  <div class="sechead"><span>What it costs</span><span>USD</span></div>
+  <div class="line"><span class="l">Ponte Deal Room<small>30 calendar days, from the moment you confirm</small></span><span class="r">$79</span></div>
+  <div class="line"><span class="l">Active counterparty branches<small>Five included in the price</small></span><span class="r">Included</span></div>
+  <div class="line"><span class="l">Each additional active branch<small>Charged only when you open a sixth</small></span><span class="r">$15</span></div>
+  <div class="line total"><span class="l">Due now</span><span class="r">$79 USD</span></div>
+
+  <div class="until">
+    <div class="k">Active until</div>
+    <div class="v">3 September 2026, 14:32 UTC</div>
+    <div class="n">No room ever costs more than $199 USD in a 30-day period, whatever it grows into. No subscription, no credits, no commission, no success fee. When the period ends the room becomes permanently read only. It is never deleted.</div>
+  </div>
+</div>
+
+<section class="rise">
+  <div class="sechead"><span>Ready to enter</span><span>02</span></div>
+  <div class="br"><span class="l">Kefalonia Marine Fuels<small></small></span><span class="r">Interest accepted</span></div>
+  <div class="br"><span class="l">Levant Energy Trading</span><span class="r">Interest accepted</span></div>
+  <p style="font-size:11px;opacity:.4;margin-top:14px;line-height:1.6;font-weight:300">Nobody is invited until you activate, and nobody is invited automatically. You choose who, one at a time.</p>
+</section>
+
+<div class="confirm rise">
+  <div class="check" id="c1"><span class="tick"></span><span class="x">I am authorised to commit 1402 Celsius Ltd to this room and to this charge.</span></div>
+  <div class="check" id="c2"><span class="tick"></span><span class="x">I understand Ponte checks what it says it checks, and that no check here is a guarantee about a counterparty.</span></div>
+</div>
+
+<button class="pay" id="pay">Activate for $79 USD
+  <span class="s">You will be asked to confirm payment. Nothing is charged until you do.</span>
+</button>
+
+<button class="later">Keep building, do not activate yet</button>
+
+<footer>DR-0042 holds deal PD-0042, carried from your published opportunity PT-0105. Activation does not publish anything. Your listing stays exactly as it is.</footer>
+`;
+
+const st={c1:false,c2:false};
+["c1","c2"].forEach(id=>{
+  const n=document.getElementById(id);
+  n.onclick=()=>{st[id]=!st[id];n.classList.toggle("on",st[id]);
+    document.getElementById("pay").classList.toggle("live",st.c1&&st.c2);};
+});
+document.querySelectorAll(".rise").forEach((n,i)=>setTimeout(()=>n.classList.add("on"),80+i*110));
+</script>
+</body>
+</html>

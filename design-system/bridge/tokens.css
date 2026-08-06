@@ -1,0 +1,128 @@
+/* =====================================================================
+   THE BRIDGE SYSTEM: tokens.
+   Authority: ADR-0032 and ADR-0032-AMENDMENT-1.
+   Reference: docs/ponte/design-reference/bridge/ponte-platform.html
+
+   Scoped to `.brg`. Nothing here leaks into the app: the fourteen bared
+   ChromeGate route families keep their own surfaces until each is
+   rebuilt, one at a time (amendment section 3).
+   ===================================================================== */
+
+.brg {
+  /* ---- Ground ---- */
+  --brg-ink: #0E0F0C;
+  --brg-cream: #F2EFE6;
+
+  /* ---- Bronze: ONE colour at two ground levels, not two colours ----
+     Amendment section 2. `#8A6520` is unreadable on ink; `#C79A4C` is the
+     same intent made legible on a dark ground. Neither acquires a second
+     meaning, and ADR-0015's reservation of gold for ARRIVAL is untouched:
+     bronze marks the live edge, the eyebrow and completed nodes. */
+  --pf-bronze-on-cream: #8A6520;
+  --pf-bronze-on-ink: #C79A4C;
+
+  /* ---- State: the existing two, paired for the ink ground ----
+     Amendment section 5 discarded `#5E9B78` and `#C4664E` as invented at
+     the drawing board, and required the existing `--done` and `--blocked`
+     paired for ink IF legibility needs it. It does, badly:
+
+       --done    #0F6E3D on ink = 2.43:1 through the grain
+       --blocked #B4402A on ink = 2.95:1 through the grain
+
+     Both far under 4.5. The pairs below are those same colours with hue
+     and saturation held EXACTLY and lightness raised by the smallest step
+     that clears the threshold, measured at the worst point of the grain
+     rather than against the flat token. Derivation and measurement:
+     `scripts/derive-ink-pair.mjs`, which is run by the test.
+
+       --pf-done-on-ink    #159E57  4.61:1  hue 149, drift 0
+       --pf-blocked-on-ink #D5624D  4.54:1  hue 10,  drift 0
+
+     Zero hue drift is what makes them the same green and the same red
+     rather than a third colour arriving by stealth. */
+  --pf-done-on-cream: #0F6E3D;
+  --pf-blocked-on-cream: #B4402A;
+  --pf-done-on-ink: #159E57;
+  --pf-blocked-on-ink: #D5624D;
+
+  /* ---- Faces ----
+     Self-hosted through `next/font/google`. The prototype pulls five
+     families from `fonts.gstatic.com`; doing that in production would put
+     a third-party request on every visit, which is a privacy change as
+     much as a performance one. The variables are published by the route. */
+  --brg-serif: var(--font-playfair), "Iowan Old Style", Georgia, serif;
+  --brg-sans: var(--font-inter), -apple-system, system-ui, "Segoe UI", sans-serif;
+  --brg-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Tracking ----
+     `--brg-track` is the wide mono tracking; `--brg-tight` is the display
+     negative tracking. Both go to ZERO for Arabic: tracking breaks the
+     letter joins and the words come apart. Reduced, not zeroed, for
+     Chinese. Set per script below, never per component. */
+  --brg-track: .28em;
+  --brg-tight: -.024em;
+
+  /* ---- Motion ---- */
+  --brg-ease: cubic-bezier(.19, 1, .22, 1);
+  --brg-stagger: 90ms;
+  --brg-draw: 1600ms;
+
+  /* ---- Rules and measure ---- */
+  --brg-rule: rgba(242, 239, 232, .12);
+  --brg-rule-cream: rgba(14, 15, 12, .12);
+  --brg-pad: 40px;
+  --brg-max: 1560px;
+}
+
+/* The phone gutter. The breakpoint is 900px throughout: one shell is not
+   the other stretched. */
+@media (max-width: 899px) {
+  .brg { --brg-pad: 22px; }
+}
+
+/* ---- Per-script faces and tracking ----
+   Arabic: tracking to zero, both axes. Letter-spacing on a joined script
+   pulls the joins apart and the word stops being a word. This is the one
+   typographic rule in the system that is a correctness matter rather than
+   a taste one. */
+.brg:lang(ar) {
+  --brg-serif: var(--font-amiri), Georgia, serif;
+  --brg-sans: var(--font-noto-arabic), system-ui, sans-serif;
+  --brg-mono: var(--font-noto-arabic), ui-monospace, monospace;
+  --brg-track: 0;
+  --brg-tight: 0;
+}
+
+/* Chinese: reduced rather than zero. The glyphs are not joined, so tracking
+   is legible, but mono tracking at .28em on Han characters reads as broken
+   spacing rather than as a label. */
+.brg:lang(zh) {
+  --brg-serif: var(--font-noto-serif-sc), Georgia, serif;
+  --brg-sans: var(--font-noto-sans-sc), system-ui, sans-serif;
+  --brg-mono: var(--font-noto-sans-sc), ui-monospace, monospace;
+  --brg-track: .06em;
+  --brg-tight: 0;
+}
+
+/* ---- Ground levels ----
+   A surface declares which ground it is on, and the semantic tokens
+   resolve to the pair for that ground. A component never chooses between
+   `#8A6520` and `#C79A4C`: it uses `--brg-bronze` and is correct on both. */
+.brg,
+.brg [data-ground="ink"] {
+  --brg-bronze: var(--pf-bronze-on-ink);
+  --brg-done: var(--pf-done-on-ink);
+  --brg-blocked: var(--pf-blocked-on-ink);
+  --brg-ground: var(--brg-ink);
+  --brg-figure: var(--brg-cream);
+  --brg-hairline: var(--brg-rule);
+}
+
+.brg [data-ground="cream"] {
+  --brg-bronze: var(--pf-bronze-on-cream);
+  --brg-done: var(--pf-done-on-cream);
+  --brg-blocked: var(--pf-blocked-on-cream);
+  --brg-ground: var(--brg-cream);
+  --brg-figure: var(--brg-ink);
+  --brg-hairline: var(--brg-rule-cream);
+}

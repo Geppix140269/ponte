@@ -67,6 +67,15 @@ const CANONICAL: RouteEntry[] = [
   { path: "/find", classification: "canonical", note: "Public opportunity board (Journey 1)." },
   { path: "/find/o/[ref]", classification: "canonical", note: "Public Member Opportunity detail. The one public record surface." },
   { path: "/structure", classification: "canonical", note: "The one commercial-record creation and edit surface (Journey 2)." },
+  {
+    path: "/publish",
+    classification: "canonical",
+    note:
+      "Build 1 B01, Choose Deal Intent. The entry of the listing path: six presented choices " +
+      "resolving to the seven stored market_intent values, with the position question asked only " +
+      "in the distribution branch. Replaces the three-option intent screen, which could not " +
+      "express DECISION-17. Hands off to /structure until B02 lands.",
+  },
   { path: "/opportunities", classification: "canonical", note: "Member-owned records and operations." },
   { path: "/workspace", classification: "canonical", note: "Inbound requests, decisions, actions requiring attention." },
   { path: "/login", classification: "canonical", note: "Sign in. No valid `next` must land on /opportunities (cutover PR 2)." },

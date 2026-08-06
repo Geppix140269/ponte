@@ -86,15 +86,29 @@ function assertLocal(url) {
  * ------------------------------------------------------------------ */
 
 /**
- * The two HS codes the product fixtures reference.
+ * The HS codes the fixtures reference, plus the ones the product catalogue can
+ * actually produce.
  *
  * `listings.hs_code` is a foreign key to `hs_codes(code)`, and the baseline
- * snapshot is structure only, so that table is empty. Seeding the two rows the
+ * snapshot is structure only, so that table is empty. Seeding the rows the
  * fixtures need is better than dropping `hs_code` from them: the code drives
  * classification display and the tariff lookups, and a fixture set with no HS
  * code at all leaves that whole surface untestable.
  *
- * Only two. This is not an import of the tariff schedule.
+ * ## Why the catalogue's codes are here too
+ *
+ * The submit route refuses any code that is not a row in this table WHENEVER
+ * the table is non-empty (`isHsCatalogReady`). With only the two fixture codes
+ * seeded, that check was live and every product a member could actually reach
+ * through `lib/products/catalogue.ts` was refused: walking the listing path
+ * locally ended at "271019 is not a valid HS 2022 code", which is correct
+ * behaviour against a table that is 2 rows deep and useless as a development
+ * environment.
+ *
+ * These are the codes `PRODUCT_CATALOGUE` assigns, so the path a member walks
+ * is the path a developer can walk. It is still not an import of the tariff
+ * schedule: production carries HS 2022 in full and this is the subset the
+ * committed catalogue can reach.
  */
 const HS_CODES = [
   {
@@ -117,6 +131,37 @@ const HS_CODES = [
     description: "Cane or beet sugar, refined, other",
     unit: "kg",
   },
+  // Every code `lib/products/catalogue.ts` can assign. Chapter and heading are
+  // derived from the code, which is what the WCO structure guarantees: the
+  // first two digits are the chapter and the first four are the heading.
+  ...[
+    ["271019", "Petroleum oils, other than crude: gas oils", "Mineral fuels, mineral oils", "Petroleum oils, other than crude"],
+    ["271112", "Liquefied propane", "Mineral fuels, mineral oils", "Petroleum gases and other gaseous hydrocarbons"],
+    ["270900", "Petroleum oils, crude", "Mineral fuels, mineral oils", "Petroleum oils, crude"],
+    ["310210", "Urea, whether or not in aqueous solution", "Fertilisers", "Mineral or chemical fertilisers, nitrogenous"],
+    ["281511", "Sodium hydroxide, solid", "Inorganic chemicals", "Sodium hydroxide, potassium hydroxide, peroxides"],
+    ["100590", "Maize (corn), other than seed", "Cereals", "Maize (corn)"],
+    ["100199", "Wheat and meslin, other", "Cereals", "Wheat and meslin"],
+    ["170114", "Raw cane sugar, not containing added flavouring or colouring", "Sugars and sugar confectionery", "Cane or beet sugar and chemically pure sucrose, in solid form"],
+    ["151219", "Sunflower-seed or safflower oil, other than crude", "Animal or vegetable fats and oils", "Sunflower-seed, safflower or cotton-seed oil"],
+    ["090111", "Coffee, not roasted, not decaffeinated", "Coffee, tea, mate and spices", "Coffee, whether or not roasted or decaffeinated"],
+    ["720839", "Flat-rolled iron or steel, hot-rolled, in coils", "Iron and steel", "Flat-rolled products of iron or non-alloy steel, hot-rolled"],
+    ["740311", "Refined copper cathodes and sections of cathodes", "Copper and articles thereof", "Refined copper and copper alloys, unwrought"],
+    ["760110", "Aluminium, not alloyed, unwrought", "Aluminium and articles thereof", "Unwrought aluminium"],
+    ["252329", "Portland cement, other", "Salt, sulphur, earths and stone, lime and cement", "Portland cement, aluminous cement and similar hydraulic cements"],
+    ["520512", "Cotton yarn, single, uncombed, of a specified decitex", "Cotton", "Cotton yarn, containing 85 percent or more by weight of cotton"],
+    ["390120", "Polyethylene having a specific gravity of 0.94 or more", "Plastics and articles thereof", "Polymers of ethylene, in primary forms"],
+    ["854143", "Photovoltaic cells assembled in modules or made up into panels", "Electrical machinery and equipment", "Semiconductor devices, photovoltaic cells, light-emitting diodes"],
+  ].map(([code, description, chapterTitle, headingTitle]) => ({
+    code,
+    display: `${code.slice(0, 4)}.${code.slice(4)}`,
+    chapter: code.slice(0, 2),
+    chapter_title: chapterTitle,
+    heading: code.slice(0, 4),
+    heading_title: headingTitle,
+    description,
+    unit: "kg",
+  })),
 ];
 
 /**
