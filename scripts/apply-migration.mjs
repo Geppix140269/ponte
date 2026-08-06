@@ -1,6 +1,6 @@
 // Apply a migration to the database, over a direct Postgres connection.
 //
-//   node scripts/apply-migration.mjs supabase/migrations/20260722b_hs_codes.sql
+//   node scripts/apply-migration.mjs supabase/archive/20260722b_hs_codes.sql
 //   node scripts/apply-migration.mjs --check <file>     parse and refuse, write nothing
 //   node scripts/apply-migration.mjs --list             what has been applied
 //

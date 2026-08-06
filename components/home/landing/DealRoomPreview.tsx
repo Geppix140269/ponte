@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import TaskCompletionBridge from "@/components/ponte/bridge/TaskCompletionBridge";
-import { ACTIVE_PERIOD_DAYS, BASE_ROOM_PRICE_CENTS, CURRENCY } from "@/lib/deal-room/pricing";
+import { PERIOD_CALENDAR_DAYS, BASE_ROOM_PRICE_CENTS, CURRENCY } from "@/lib/deal-room/pricing";
 
 /**
  * A Deal Room, on the entrance, as a room rather than as a word.
@@ -200,7 +200,7 @@ export default function DealRoomPreview() {
           <span>Opening a room and building it are free.</span>
           <span>Invited counterparties join free.</span>
           <span>
-            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} to activate it, for {ACTIVE_PERIOD_DAYS} calendar days.
+            {money(BASE_ROOM_PRICE_CENTS, CURRENCY)} to activate it, for {PERIOD_CALENDAR_DAYS} calendar days.
           </span>
         </footer>
       </div>

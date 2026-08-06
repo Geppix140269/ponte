@@ -1,5 +1,5 @@
 import {
-  ACTIVE_PERIOD_DAYS,
+  PERIOD_CALENDAR_DAYS,
   ADDITIONAL_BRANCH_PRICE_CENTS,
   BASE_ROOM_PRICE_CENTS,
   CURRENCY,
@@ -133,7 +133,7 @@ export const WALKTHROUGH: WalkthroughStage[] = [
       { label: "Unlocks", value: "Invitations, admission and shared progression" },
       { label: "Never silent", value: "You confirm the payment. Nothing activates on its own" },
     ],
-    price: `${ROOM} for ${ACTIVE_PERIOD_DAYS} calendar days, including ${INCLUDED_ACTIVE_BRANCHES} active counterparty branches and all five languages.`,
+    price: `${ROOM} for ${PERIOD_CALENDAR_DAYS} calendar days, including ${INCLUDED_ACTIVE_BRANCHES} active counterparty branches and all five languages.`,
     paid: true,
   },
   {
@@ -145,7 +145,7 @@ export const WALKTHROUGH: WalkthroughStage[] = [
     facts: [
       { label: "Included", value: `${INCLUDED_ACTIVE_BRANCHES} active branches` },
       { label: "Beyond that", value: `${BRANCH} for each additional active branch` },
-      { label: "Never more than", value: `${CEILING} per room, per ${ACTIVE_PERIOD_DAYS} days` },
+      { label: "Never more than", value: `${CEILING} per room, per ${PERIOD_CALENDAR_DAYS} days` },
     ],
     price: `Counterparties you invite never pay anything to take part.`,
   },

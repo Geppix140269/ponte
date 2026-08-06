@@ -24,6 +24,8 @@ import { readdirSync, existsSync } from "node:fs";
 
 const MIGRATIONS = "supabase/migrations";
 const DEPRECATED = "supabase/deprecated";
+const PENDING = "supabase/pending";
+const ARCHIVE = "supabase/archive";
 
 /** Filenames that must never appear under supabase/migrations/. */
 const NEVER_APPLY = new Set([
@@ -56,6 +58,39 @@ for (const file of NEVER_APPLY) {
       `${file} is on the never-apply list but is in neither ${MIGRATIONS} nor ` +
         `${DEPRECATED}.\n    If it was deleted on purpose, remove it from ` +
         `NEVER_APPLY in this script and say why in ${DEPRECATED}/README.md.`,
+    );
+  }
+}
+
+/*
+  1b. A file may never be in BOTH `migrations/` and `pending/` or `archive/`.
+
+  `WO-8` section 3.1 asked that unapplied-by-design files be held so a replay
+  cannot pick them up, and that the distinction be "visible in the folder rather
+  than kept in someone's head". A folder convention is kept in someone's head.
+  This is the part that is not.
+
+  The failure it guards against is ordinary and quiet: somebody copies a pending
+  file into `migrations/` to test it, the copy is committed, and a folder whose
+  entire purpose is "these do not run" now contains a file that does. Under the
+  auto-apply integration described in `pending/README.md`, that is a production
+  schema write nobody decided on.
+*/
+const pending = new Set(sqlIn(PENDING));
+const archived = new Set(sqlIn(ARCHIVE));
+for (const file of migrations) {
+  if (pending.has(file)) {
+    problems.push(
+      `${MIGRATIONS}/${file} is ALSO in ${PENDING}/.\n` +
+        `    ${PENDING}/ means "written and deliberately not applied". A copy in\n` +
+        `    ${MIGRATIONS}/ is on the apply path and cancels that. Keep one.`,
+    );
+  }
+  if (archived.has(file)) {
+    problems.push(
+      `${MIGRATIONS}/${file} is ALSO in ${ARCHIVE}/.\n` +
+        `    ${ARCHIVE}/ holds files already applied before the genesis snapshot.\n` +
+        `    Replaying one collides with an object that already exists.`,
     );
   }
 }
@@ -111,6 +146,7 @@ if (legacyShared.length) {
 }
 
 console.log(
-  `ok   ${migrations.length} migrations: no duplicate dated identifiers, ` +
-    `${NEVER_APPLY.size} deprecated file(s) correctly quarantined`,
+  `ok   ${migrations.length} migration(s) on the apply path; ` +
+    `${archived.size} archived, ${pending.size} pending, ` +
+    `${NEVER_APPLY.size} deprecated. No overlap, no duplicate identifiers.`,
 );

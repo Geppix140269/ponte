@@ -204,7 +204,7 @@ async function upload(parsed: HsRow[]): Promise<void> {
   if (probe) {
     console.error(`Cannot read hs_codes: ${probe.message}`);
     console.error(
-      "Apply supabase/migrations/20260722b_hs_codes.sql in the SQL editor first.",
+      "Apply supabase/archive/20260722b_hs_codes.sql in the SQL editor first.",
     );
     process.exit(1);
   }

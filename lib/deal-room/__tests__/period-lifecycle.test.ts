@@ -15,7 +15,7 @@ import {
   CHANGED_ON_EXPIRY,
   PRESERVED_ON_EXPIRY,
   RENEWAL_POLICY,
-  activeDaysRemaining,
+  calendarDaysRemaining,
   branchActivationNeedsPayment,
   reactivationQuote,
   roomAccessAt,
@@ -148,18 +148,18 @@ test("an expired period is readable, not writable, and says so plainly", () => {
 
 test("days remaining rounds up, so four hours left is one day", () => {
   const nearlyOver = new Date(END.getTime() - 4 * 60 * 60 * 1000);
-  assert.equal(activeDaysRemaining(period(), nearlyOver), 1);
+  assert.equal(calendarDaysRemaining(period(), nearlyOver), 1);
 });
 
 test("days remaining is 30 at the start and 0 once past the end", () => {
-  assert.equal(activeDaysRemaining(period(), START), 30);
-  assert.equal(activeDaysRemaining(period(), AFTER), 0);
+  assert.equal(calendarDaysRemaining(period(), START), 30);
+  assert.equal(calendarDaysRemaining(period(), AFTER), 0);
 });
 
 test("days remaining is null when no period is running", () => {
-  assert.equal(activeDaysRemaining(null, MID), null);
-  assert.equal(activeDaysRemaining(period({ state: "expired" }), MID), null);
-  assert.equal(activeDaysRemaining(period({ state: "pending" }), MID), null);
+  assert.equal(calendarDaysRemaining(null, MID), null);
+  assert.equal(calendarDaysRemaining(period({ state: "expired" }), MID), null);
+  assert.equal(calendarDaysRemaining(period({ state: "pending" }), MID), null);
 });
 
 /* ------------------------------------------------------------------ *
@@ -329,7 +329,7 @@ test("the module is pure: no database, network, clock or environment", () => {
 test("every function that reasons about time is given the instant", () => {
   // Nothing here may ask what time it is; an expiry boundary has to be
   // reproducible in a test rather than dependent on when the test ran.
-  for (const fn of ["roomAccessAt", "activeDaysRemaining"]) {
+  for (const fn of ["roomAccessAt", "calendarDaysRemaining"]) {
     const at = SOURCE.indexOf(`export function ${fn}`);
     assert.notEqual(at, -1, fn);
     const signature = SOURCE.slice(at, SOURCE.indexOf("{", at));

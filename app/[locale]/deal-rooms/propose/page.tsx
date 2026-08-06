@@ -337,7 +337,7 @@ export default async function ProposeRoomPage({
                     history. No card required.
                   </p>
                   <p className="dr__item-limit">
-                    {STARTER_LIMITS_PROPOSED.activeDays} calendar days, beginning when the first invited principal is
+                    {STARTER_LIMITS_PROPOSED.calendarDays} calendar days, beginning when the first invited principal is
                     admitted rather than when you create the room · {STARTER_LIMITS_PROPOSED.subRooms} private
                     workspaces · {STARTER_LIMITS_PROPOSED.externalOrganisations} external organisations. When the term
                     ends the room becomes read-only and nothing is deleted.

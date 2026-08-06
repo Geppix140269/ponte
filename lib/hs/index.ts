@@ -56,7 +56,7 @@ function warnOnce(context: string): void {
   warned = true;
   console.warn(
     `[ponte] hs_codes is not present (${context}). Apply ` +
-      "supabase/migrations/20260722b_hs_codes.sql and run npm run hs:import.",
+      "supabase/archive/20260722b_hs_codes.sql and run npm run hs:import.",
   );
 }
 

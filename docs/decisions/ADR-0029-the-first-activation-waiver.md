@@ -125,6 +125,11 @@ Fact 4 also closes an open unknown listed in the WO-2 reconciliation report §7.
 
 **Consequence:** the $79 side of this model is buildable now. **The waiver is not**, until the uniqueness rule and the eligibility predicate are decided. Those are commercial and compliance decisions and they sit with the owner. `deal_room_entitlements` is estimated at zero rows, so deciding now costs no backfill.
 
+The options and their trade-offs are set out in
+`docs/codex/audits/pricing/WO-7-1-ORGANISATION-UNIQUENESS-2026-08-02.md`, together
+with the one human-run aggregate query that closes the last unknown. **No option
+is chosen there and none is chosen here.**
+
 ---
 
 ## Consequences

@@ -97,7 +97,7 @@ export function roomAccessAt(period: PeriodFacts | null, at: Date): RoomAccess {
 }
 
 /** Whole days left, rounded up, or null when no period is running. */
-export function activeDaysRemaining(period: PeriodFacts | null, at: Date): number | null {
+export function calendarDaysRemaining(period: PeriodFacts | null, at: Date): number | null {
   if (period === null || period.state !== "active") return null;
   const ms = period.periodEnd.getTime() - at.getTime();
   if (ms <= 0) return 0;

@@ -1,5 +1,18 @@
 # ADR-0028: The definitive commercial model. Free to publish, free to build, paid to activate
 
+> **⚠ Amended by ADR-0029, 2 August 2026.** The instruction *"Do not issue a free
+> Starter Deal Room entitlement"* is **withdrawn**, and item 4 of the programme,
+> *"removal of the free Starter entitlement"*, is replaced by *"implementation of
+> the first-activation waiver"*. The price structure stated in this ADR, $79,
+> five included branches, $15 per additional branch and a $199 ceiling, is
+> **unaffected and remains correct**. Everything else in this document stands,
+> including that the entire pre-activation journey is free and that activation is
+> a distinct, member-confirmed event.
+>
+> The sentence *"The paid entitlement is created only after webhook-confirmed
+> payment"* remains true of paid activations and must not be read as forbidding a
+> waived entitlement recorded at $0 due.
+
 - Status: ACCEPTED
 - Date: 2026-08-01
 - Owner brief, received in full and recorded verbatim in substance.

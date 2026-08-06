@@ -10,7 +10,7 @@ import { execSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  ACTIVE_PERIOD_DAYS,
+  PERIOD_CALENDAR_DAYS,
   ADDITIONAL_BRANCH_PRICE_CENTS,
   BASE_ROOM_PRICE_CENTS,
   BILLABLE_PARTICIPANT_CLASSES,
@@ -28,6 +28,11 @@ import {
   isAtPeriodCap,
   isBillableBranch,
   roomPeriodPriceCents,
+  FIRST_ACTIVATION_WAIVED_BRANCHES,
+  WAIVED_PERIOD_ADDITIONAL_CAP_CENTS,
+  amountDueCents,
+  periodCharge,
+  wouldEndWaiver,
   type BranchBillingFacts,
   type CounterpartyFacts,
 } from "../pricing";
@@ -81,7 +86,7 @@ test("the constants are the authority's, to the cent", () => {
   assert.equal(INCLUDED_ACTIVE_BRANCHES, 5);
   assert.equal(ADDITIONAL_BRANCH_PRICE_CENTS, 1500);
   assert.equal(MAXIMUM_ROOM_PERIOD_PRICE_CENTS, 19900);
-  assert.equal(ACTIVE_PERIOD_DAYS, 30);
+  assert.equal(PERIOD_CALENDAR_DAYS, 30);
 });
 
 test("every constant is an integer number of cents", () => {
@@ -696,6 +701,155 @@ test("nothing is wired to this module yet, which is the Stage 2 boundary", () =>
     .filter((f) => !f.startsWith("lib/deal-room/"))
     .filter((f) => !APPROVED.some((a) => f.endsWith(a)));
   assert.deepEqual(callers, [], `nothing else may import deal-room/pricing yet, found: ${callers}`);
+});
+
+/* ------------------------------------------------------------------ *
+ * The first-activation waiver (ADR-0029)
+ *
+ * The waiver is a DISCOUNT on the curve above, not a second product. Most of
+ * what follows exists to keep it that way: if these pass, there is exactly one
+ * price curve in this module and the waived path is the same arithmetic with
+ * something taken off.
+ * ------------------------------------------------------------------ */
+
+test("waiver: one branch, first activation, costs nothing", () => {
+  assert.equal(amountDueCents(1, true), 0);
+});
+
+test("waiver: one branch WITHOUT the waiver is the ordinary $79", () => {
+  // The row that proves the waiver is a discount and not a price. Same input,
+  // different eligibility, and the difference is the whole base fee.
+  assert.equal(amountDueCents(1, false), 7900);
+});
+
+test("waiver: a second branch ends it, and the standard five apply from there", () => {
+  // ADR-0029 refuses the alternative - $15 from the second branch - because it
+  // would charge for branches already inside the $79 package. So two through
+  // five are $79 flat, exactly as in any room.
+  for (const branches of [2, 3, 4, 5]) {
+    assert.equal(amountDueCents(branches, true), 7900, `${branches} branches under a lapsed waiver`);
+  }
+});
+
+test("waiver: the $15 charge still begins at the sixth branch", () => {
+  assert.equal(amountDueCents(6, true), 9400);
+  assert.equal(amountDueCents(7, true), 10900);
+  assert.equal(amountDueCents(8, true), 12400);
+});
+
+test("waiver: a waived period still reaches the $199 ceiling", () => {
+  for (const branches of [13, 14, 20, 100]) {
+    assert.equal(amountDueCents(branches, true), 19900, `${branches} branches`);
+  }
+});
+
+test("waiver: THE identity - the two curves are the same from two branches up", () => {
+  /*
+    The single most important assertion in this section.
+
+    If it ever fails, a second price curve has been introduced and the thing
+    ADR-0029 explicitly refused has happened by accident. Checked well past the
+    cap so a divergence cannot hide in the flat tail.
+  */
+  for (let branches = 2; branches <= 40; branches += 1) {
+    assert.equal(
+      amountDueCents(branches, true),
+      amountDueCents(branches, false),
+      `the waived and unwaived curves diverge at ${branches} branches`,
+    );
+    assert.equal(
+      amountDueCents(branches, false),
+      roomPeriodPriceCents(branches),
+      `the unwaived curve is no longer roomPeriodPriceCents at ${branches} branches`,
+    );
+  }
+});
+
+test("waiver: the list price is always real, so $79 / -$79 / $0 can be shown", () => {
+  /*
+    ADR-0020 section 17 requires the activation screen to show the list price,
+    the reduction and the total, and forbids a silently free room. That needs a
+    genuine list price behind it - a function returning only `0` could not
+    render the middle line.
+  */
+  const waived = periodCharge(1, true);
+  assert.equal(waived.listCents, 7900, "the list price vanished under the waiver");
+  assert.equal(waived.discountCents, 7900, "there is nothing to show on the middle line");
+  assert.equal(waived.amountDueCents, 0);
+  assert.equal(waived.waiverApplied, true);
+  // Rendered by the module's own formatter, so the three lines of section 17
+  // are demonstrably producible rather than assumed.
+  assert.equal(formatUsd(waived.listCents), "$79 USD");
+  assert.equal(formatUsd(waived.amountDueCents), "$0 USD");
+});
+
+test("waiver: a charge always reconciles - list minus discount is the total", () => {
+  // Cheap, and it catches any future edit that computes the total separately
+  // from the two numbers shown to the member.
+  for (const eligible of [true, false]) {
+    for (let branches = 0; branches <= 20; branches += 1) {
+      const c = periodCharge(branches, eligible);
+      assert.equal(
+        c.listCents - c.discountCents,
+        c.amountDueCents,
+        `${branches} branches, eligible=${eligible}`,
+      );
+      assert.ok(c.discountCents >= 0, "a discount may never be negative");
+      assert.ok(c.amountDueCents >= 0, "an amount due may never be negative");
+      assert.ok(c.discountCents <= c.listCents, "a discount may never exceed the list price");
+    }
+  }
+});
+
+test("waiver: the notice fires BEFORE the second branch, not after", () => {
+  // WO-7.5 requires the lapse notice before the action. A member about to owe
+  // $79 finds out first.
+  assert.equal(wouldEndWaiver(2, true), true);
+  assert.equal(wouldEndWaiver(1, true), false, "staying at one branch does not end the waiver");
+  assert.equal(wouldEndWaiver(6, true), true);
+  // Nothing to end when no waiver is held.
+  assert.equal(wouldEndWaiver(2, false), false);
+  assert.equal(wouldEndWaiver(9, false), false);
+});
+
+test("waiver: the additional-branch cap is derived, not typed", () => {
+  // $120, so that $79 + $120 lands exactly on the $199 ceiling. Derived from
+  // the two constants so the three numbers cannot drift apart.
+  assert.equal(WAIVED_PERIOD_ADDITIONAL_CAP_CENTS, 12000);
+  assert.equal(
+    BASE_ROOM_PRICE_CENTS + WAIVED_PERIOD_ADDITIONAL_CAP_CENTS,
+    MAXIMUM_ROOM_PERIOD_PRICE_CENTS,
+    "the waived cap no longer reaches the same ceiling as any other period",
+  );
+});
+
+test("waiver: it is one branch, and that number is stated once", () => {
+  assert.equal(FIRST_ACTIVATION_WAIVED_BRANCHES, 1);
+  assert.ok(
+    FIRST_ACTIVATION_WAIVED_BRANCHES < INCLUDED_ACTIVE_BRANCHES,
+    "the waiver no longer restricts capacity below the standard allowance",
+  );
+});
+
+test("waiver: it rejects a non-integer or negative count like everything else", () => {
+  // The same guard as the rest of the module. A fractional branch is a bug in
+  // the caller, and a charge computed from one is a charge that is wrong.
+  assert.throws(() => amountDueCents(1.5, true), TypeError);
+  assert.throws(() => amountDueCents(-1, true), RangeError);
+  assert.throws(() => wouldEndWaiver(2.5, true), TypeError);
+});
+
+test("waiver: it stays pure - no clock, no database, no environment", () => {
+  /*
+    Eligibility is a BOOLEAN the caller decides, deliberately. Whether an
+    organisation still holds its waiver is a database question with an
+    unresolved uniqueness rule behind it (WO-7.1), and answering it here would
+    drag a clock and a connection into a module whose whole value is that it
+    has neither.
+  */
+  const first = periodCharge(1, true);
+  const second = periodCharge(1, true);
+  assert.deepEqual(first, second, "the same inputs gave different answers");
 });
 
 console.log(`ok   deal-room pricing: ${passed} assertions passed`);

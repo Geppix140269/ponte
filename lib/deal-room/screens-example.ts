@@ -1,6 +1,6 @@
 import { formatRoomMoment } from "./moment";
 import {
-  ACTIVE_PERIOD_DAYS,
+  PERIOD_CALENDAR_DAYS,
   ADDITIONAL_BRANCH_PRICE_CENTS,
   BASE_ROOM_PRICE_CENTS,
   CURRENCY,
@@ -50,7 +50,7 @@ export const ACTIVATION = {
   body:
     "Activate it to invite counterparties, open private negotiations and begin protected commercial progression. Full functionality remains available for 30 calendar days from activation.",
   price: `${ROOM} USD`,
-  period: `for ${ACTIVE_PERIOD_DAYS} calendar days`,
+  period: `for ${PERIOD_CALENDAR_DAYS} calendar days`,
   /**
    * The non-disclosure statement (P1-3), beside the price and above the
    * control.
@@ -96,7 +96,7 @@ export const ACTIVATION = {
     */
     value:
       formatRoomMoment(EXAMPLE_ACTIVATION_INSTANT, "Europe/Rome")?.full ?? "",
-    note: `Counted as ${ACTIVE_PERIOD_DAYS} calendar days from the moment you activate. The clock does not pause.`,
+    note: `Counted as ${PERIOD_CALENDAR_DAYS} calendar days from the moment you activate. The clock does not pause.`,
   },
   included: [
     `Up to ${INCLUDED_ACTIVE_BRANCHES} active private counterparty branches`,
@@ -148,7 +148,7 @@ export const ACTIVATION = {
       detail: "You can change this at any point during the period, in either direction.",
     },
   ],
-  confirm: `I am authorising a charge of ${ROOM} USD to activate this Deal Room for ${ACTIVE_PERIOD_DAYS} calendar days.`,
+  confirm: `I am authorising a charge of ${ROOM} USD to activate this Deal Room for ${PERIOD_CALENDAR_DAYS} calendar days.`,
   confirmSub:
     "Activation is a deliberate act. Ponte will not charge this account on any other trigger, and no amount is taken before you confirm here.",
 } as const;

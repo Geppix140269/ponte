@@ -44,7 +44,7 @@ if (!status) {
       "",
       "    npm run dev:db",
       "",
-      "starts it, applies the migrations and seeds the test account.",
+      "starts it, restores the baseline schema and seeds the test account.",
       "",
     ].join("\n"),
   );
@@ -74,7 +74,8 @@ const env = {
 
 console.log(`dev:local - Supabase ${status.API_URL} (local stack)`);
 console.log("            production is unreachable from this server, by construction");
-console.log("            sign in at http://localhost:3000/login as dev@ponte.local / ponte-dev-password\n");
+console.log("            sign in at http://localhost:3000/login as dev@ponte.local,");
+console.log("            then `npm run dev:code` for the six digits (Ponte is OTP only)\n");
 
 const child = spawn("npx", ["next", "dev"], { env, stdio: "inherit", shell: process.platform === "win32" });
 child.on("exit", (code) => process.exit(code ?? 0));

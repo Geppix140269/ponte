@@ -8,7 +8,7 @@
 // other row — including all review_required — lands 'private'.
 //
 // SAFE FIRST. Run against a Supabase PREVIEW BRANCH before production, and apply
-// supabase/migrations/20260724a_desk_radar_signal_import.sql there first. The
+// supabase/archive/20260724a_desk_radar_signal_import.sql there first. The
 // mapping (safe vs provenance) lives in lib/market-signals/import-map.ts and is
 // unit-tested; this script only reads the workbook and writes batches.
 //
@@ -175,7 +175,7 @@ async function upload(inserts: SignalImportInsert[], batch: string): Promise<voi
   const { error: probe } = await sb.from("desk_radar").select("canonical_signal_id").limit(1);
   if (probe) {
     console.error(`Cannot read desk_radar: ${probe.message}`);
-    console.error("Apply supabase/migrations/20260724a_desk_radar_signal_import.sql first.");
+    console.error("Apply supabase/archive/20260724a_desk_radar_signal_import.sql first.");
     process.exit(1);
   }
 

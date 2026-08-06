@@ -95,7 +95,7 @@ Everything upstream of protected Deal Room progression remains free, and verifyi
 
 The only public commercial product is:
 
-> **Ponte Deal Room — $79 USD for 30 active days.**
+> **Ponte Deal Room — $79 USD for 30 calendar days.**
 
 The base price includes up to five concurrently active private counterparty Deal Branches.
 
@@ -268,6 +268,8 @@ An unanswered, declined or expired pre-activation invitation must never generate
 
 Ponte must not issue a public free Starter Deal Room entitlement. Historical Starter-compatible schema values may remain for safe migration and audit purposes, but no new public Starter room is part of this commercial model.
 
+> **Amended by ADR-0029, 2 August 2026.** The abolition of the free first activation is **withdrawn**. One activation per uniquely verified organisation carries a **waiver of the $79 base fee while it has a single active branch**. The prior Starter *feature* limits, three sub-rooms and two external guest organisations, **remain superseded**. The branch model, the $15 additional-branch charge and the $199 ceiling **stand unchanged**.
+
 ## 9. Activation trigger
 
 Payment begins only when at least one credible counterparty branch is ready to enter protected, write-enabled transaction progression.
@@ -276,7 +278,7 @@ The activation offer must state:
 
 > **Activate this Deal Room — $79 USD**
 >
-> Includes 30 active days and up to five concurrent private counterparty branches.
+> Includes 30 calendar days and up to five concurrent private counterparty branches.
 
 Creating the room and inviting counterparties remains free.
 
@@ -487,7 +489,7 @@ The canonical public position is:
 
 > **One opportunity. Multiple confidential negotiations. Five languages.**
 >
-> A Ponte Deal Room costs **$79 USD for 30 active days** and includes up to five active private counterparty branches.
+> A Ponte Deal Room costs **$79 USD for 30 calendar days** and includes up to five active private counterparty branches.
 >
 > Additional active branches cost **$15 USD each**, with a maximum charge of **$199 USD per Master Deal Room per 30-day period**.
 >
