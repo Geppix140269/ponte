@@ -94,3 +94,49 @@ export function recordLines(answer: {
 export function storedIntentOf(intent: string | null | undefined): string | null {
   return MARKET_INTENTS.find((entry) => entry.key === intent)?.key ?? null;
 }
+
+/**
+ * The same record, once a draft exists, and it is what every surface after
+ * `B01` shows.
+ *
+ * `ADR-0032`: the member's own record is always visible and always growing. It
+ * does not stop growing at the second screen, so this reads the draft rather
+ * than the three answers `recordLines` was given before a draft existed.
+ *
+ * Still derived, still never accumulated. And the DIRECTION is derived from the
+ * stored intent through `MARKET_INTENTS` rather than carried separately: the
+ * member answered it on `B01`, it is not stored anywhere of its own, and a
+ * second copy of it here would be a value that could disagree with the record.
+ */
+export function ledgerLines(input: {
+  intent?: string | null;
+  family?: MarketFamily | null;
+  /** The declared capacity's own label, or null before `B01b` is answered. */
+  capacity?: string | null;
+  /** What the listing is FOR, in the member's words. Never case-folded. */
+  subject?: string | null;
+  hsCode?: string | null;
+}): RecordLine[] {
+  const entry = MARKET_INTENTS.find((candidate) => candidate.key === input.intent);
+  const lines = recordLines({
+    direction: entry ? (entry.side === "demand" ? "need" : "offer") : null,
+    family: input.family ?? null,
+    intent: input.intent ?? null,
+  });
+
+  if (input.subject) {
+    lines.push({
+      key: "subject",
+      label: "Subject",
+      // The HS code travels WITH the thing it classifies. It was once hung off
+      // the quantity row and printed "On requestHS 271019": glued to a value,
+      // and attached to the wrong fact.
+      value: input.hsCode ? `${input.subject}, HS ${input.hsCode}` : input.subject,
+    });
+  }
+  if (input.capacity) {
+    lines.push({ key: "capacity", label: "Capacity", value: input.capacity });
+  }
+
+  return lines;
+}

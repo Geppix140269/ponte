@@ -4,17 +4,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BridgeIntent from "../bridge/publish/BridgeIntent";
-import DeclareCapacity from "./DeclareCapacity";
-import TellPonte from "./TellPonte";
-import ListingSoFar from "./ListingSoFar";
-import DescribeAndAssets from "./DescribeAndAssets";
-import DealPreview from "./DealPreview";
-import AccountGate from "./AccountGate";
-import Screening from "./Screening";
-import Published from "./Published";
+import BridgeCapacity from "../bridge/publish/BridgeCapacity";
+import BridgeTell from "../bridge/publish/BridgeTell";
+import BridgeListing from "../bridge/publish/BridgeListing";
+import BridgeAssets from "../bridge/publish/BridgeAssets";
+import BridgePreview from "../bridge/publish/BridgePreview";
+import BridgeGate from "../bridge/publish/BridgeGate";
+import BridgeScreening from "../bridge/publish/BridgeScreening";
+import BridgePublished from "../bridge/publish/BridgePublished";
 
 import { backLabel, nextNode, backNode, type PublishNode } from "@/lib/publish/steps";
-import { capacityColumns, emptyCapacity, type CapacityAnswer } from "@/lib/publish/capacity";
+import { ledgerLines } from "@/lib/publish/record";
+import { capacity, capacityColumns, emptyCapacity, type CapacityAnswer } from "@/lib/publish/capacity";
 import { retentionSentence, startClock, keep, openDraft, type RetentionClock } from "@/lib/publish/retention";
 import { pendingChecks, type ScreeningCheck } from "@/lib/publish/screening";
 import type { ListingAsset } from "@/lib/publish/assets";
@@ -185,6 +186,22 @@ export default function PublishFlow({
 
   const retention = retentionSentence(signedIn);
 
+  /*
+    The member's record, derived once and given to every surface.
+
+    Derived, never accumulated: going back REMOVES a line rather than leaving one
+    behind that nothing on the draft supports. And derived HERE rather than on
+    each surface, because nine surfaces each assembling their own record is nine
+    chances for two of them to disagree about what the member has said.
+  */
+  const ledger = ledgerLines({
+    intent: draft.canonical?.intent ?? null,
+    family,
+    capacity: capacity(capacityAnswer.key)?.label ?? null,
+    subject: subjectFor(draft),
+    hsCode: draft.hsCode,
+  });
+
   /* ---------------------------------------------------------------- */
   /* Publication                                                       */
   /* ---------------------------------------------------------------- */
@@ -300,7 +317,11 @@ export default function PublishFlow({
 
   if (node === "capacity") {
     return (
-      <DeclareCapacity
+      <BridgeCapacity
+        family={family}
+        signedIn={signedIn}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         answer={capacityAnswer}
         onChange={(next) => {
           setCapacityAnswer(next);
@@ -329,7 +350,9 @@ export default function PublishFlow({
 
   if (node === "tell") {
     return (
-      <TellPonte
+      <BridgeTell
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         family={family ?? "products"}
         /*
           The DEMAND side, read from the pinned intent table.
@@ -400,7 +423,11 @@ export default function PublishFlow({
 
   if (node === "listing") {
     return (
-      <ListingSoFar
+      <BridgeListing
+        family={family}
+        signedIn={signedIn}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         draft={draft}
         onDraft={changeDraft}
         inferred={inferred}
@@ -420,7 +447,10 @@ export default function PublishFlow({
 
   if (node === "assets") {
     return (
-      <DescribeAndAssets
+      <BridgeAssets
+        family={family}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         assets={assets}
         onAssets={(next) => {
           setAssets(next);
@@ -436,7 +466,10 @@ export default function PublishFlow({
 
   if (node === "preview") {
     return (
-      <DealPreview
+      <BridgePreview
+        signedIn={signedIn}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         draft={draft}
         onDraft={changeDraft}
         inferred={inferred}
@@ -453,7 +486,10 @@ export default function PublishFlow({
 
   if (node === "gate") {
     return (
-      <AccountGate
+      <BridgeGate
+        family={family}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         summary={subjectFor(draft)}
         onBack={retreat}
         onVerified={() => {
@@ -469,7 +505,11 @@ export default function PublishFlow({
 
   if (node === "screening") {
     return (
-      <Screening
+      <BridgeScreening
+        family={family}
+        signedIn={signedIn}
+        ledger={ledger}
+        signals={PUBLISH_SIGNALS}
         checks={checks}
         onBack={() => go("preview")}
         onPublish={publish}
@@ -479,7 +519,11 @@ export default function PublishFlow({
   }
 
   return (
-    <Published
+    <BridgePublished
+      family={family}
+      signedIn={signedIn}
+      ledger={ledger}
+      signals={PUBLISH_SIGNALS}
       reference={reference ?? "Pending"}
       subject={subjectFor(draft)}
       validity={typeof draft.validity === "number" || draft.validity === "standing" ? draft.validity : 60}

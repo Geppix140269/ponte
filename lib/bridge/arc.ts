@@ -98,55 +98,100 @@ export function arcPoint(
 export type ArcSize = "hero" | "procedure" | "mini";
 
 export interface ArcMetrics {
-  /** Rendered height, in CSS pixels. */
-  height: number;
   /** Inset from each end, so the springing points are not flush to the edge. */
   inset: number;
   /** Distance from the baseline down to the waterline. */
   water: number;
-  /** How far the deck rises above its springing points. */
-  rise: number;
+  /** The shortest rise this scale will draw, however short the chord. */
+  riseMin: number;
+  /** The tallest rise this scale will draw, however long the chord. */
+  riseMax: number;
+  /** Clear space above the crown, for labels and for the arch to breathe. */
+  headroom: number;
   /** Node radii: reached, current, not yet reached. */
   node: { done: number; current: number; todo: number };
   /** Whether this size carries step labels at all. */
   labels: boolean;
 }
 
+/**
+ * The springing ratio: **rise = chord / 6.**
+ *
+ * ## Why this is a ratio and not a number
+ *
+ * A fixed rise is not an arch, it is a line that happens to bend. At 1,200px it
+ * looked like a crossing; at a 1,960px span the same 126px rise is a 6% rise
+ * and reads as a sagging wire. The brand is named after an arch, and at the
+ * width the owner actually works at there was no arch on the screen.
+ *
+ * One rule, not three hand-tuned breakpoints: the rise is a function of the
+ * chord, so every width between 390 and 2560 gets the same shape rather than
+ * three widths getting a shape and the gaps between them getting whatever falls
+ * out.
+ *
+ * ## Why one sixth
+ *
+ * It is the segmental arch: the shape of a masonry road bridge, which is what
+ * Ponte is named for, and it is shallow enough to sit above a line of type
+ * without becoming a semicircle. A half-round arch (ratio 0.5) is a Roman
+ * aqueduct and would take a third of a laptop screen; anything under about an
+ * eighth stops reading as a span at all.
+ *
+ * The floor and the ceiling are per scale, and both are real:
+ *
+ *   - Below the floor a phone's short chord would give a 55px rise, which is
+ *     the sagging wire again at the other end of the range.
+ *   - Above the ceiling a 4K span would want a 540px rise and the arch would
+ *     push every word below the fold.
+ */
+export const ARCH_RATIO = 1 / 6;
+
+/**
+ * The rise for a chord, at a scale. Clamped at both ends, never interpolated.
+ *
+ * Pure, exported and pinned by test, for the same reason the geometry is: the
+ * failure is invisible. A rise that is slightly wrong still draws a curve.
+ */
+export function riseFor(chord: number, metrics: ArcMetrics): number {
+  return Math.min(metrics.riseMax, Math.max(metrics.riseMin, chord * ARCH_RATIO));
+}
+
+/** The band's height for a given rise. The arch decides, the box follows. */
+export function heightFor(rise: number, metrics: ArcMetrics): number {
+  return Math.round(rise + metrics.water + metrics.headroom);
+}
+
 export const ARC_METRICS: Readonly<Record<ArcSize, ArcMetrics>> = {
   // The hero band. One iconic crossing, drawn on load.
   hero: {
-    height: 196,
     inset: 8,
     water: 22,
-    rise: 126,
+    riseMin: 72,
+    riseMax: 300,
+    headroom: 46,
     node: { done: 3.4, current: 5.6, todo: 2.9 },
     labels: true,
   },
   // The procedure inside a room, with its stages named.
   procedure: {
-    height: 168,
     inset: 8,
     water: 20,
-    rise: 104,
+    riseMin: 64,
+    riseMax: 240,
+    headroom: 42,
     node: { done: 3.2, current: 5.2, todo: 2.7 },
     labels: true,
   },
   // The portfolio mini span. Too small for labels; the row around it names it.
   mini: {
-    height: 30,
     inset: 4,
     water: 6,
-    rise: 16,
+    riseMin: 12,
+    riseMax: 26,
+    headroom: 6,
     node: { done: 2.7, current: 2.9, todo: 2.3 },
     labels: false,
   },
-};
-
-/** The phone band is shorter, and the rise shortens with it. */
-export const HERO_PHONE: ArcMetrics = {
-  ...ARC_METRICS.hero,
-  height: 128,
-  rise: 74,
 };
 
 /**

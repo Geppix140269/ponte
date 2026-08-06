@@ -4,8 +4,16 @@ import type { Locale } from "@/i18n/routing";
 import { bridgeFontVars } from "@/components/bridge/fonts";
 import PublishFlow from "@/components/publish/PublishFlow";
 import { getUser } from "@/lib/auth";
-import "@/components/publish/publish.css";
-import "@/components/publish/publish-path.css";
+/*
+  The retired path's two stylesheets are NOT loaded here any more.
+
+  Every surface from `B01` to `B09` now renders on the bridge, so nothing on
+  this route reads them. Leaving them imported would not be harmless: the
+  defect that made every serif statement cream-on-cream was a global `h1, h2,
+  h3, h4 { color: var(--ink) }` left behind by a retired chrome, and a
+  stylesheet that no longer styles anything is exactly the shape that defect
+  takes.
+*/
 import "@/design-system/bridge/tokens.css";
 import "@/design-system/bridge/bridge.css";
 

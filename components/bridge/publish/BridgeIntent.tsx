@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Arc from "../Arc";
-import Chrome, { type Signal } from "../Chrome";
-import Grain from "../Grain";
+import BridgeShell from "./BridgeShell";
+import type { Signal } from "../Chrome";
 import { recordLines } from "@/lib/publish/record";
 import {
   PRESENTED_CHOICES,
@@ -31,7 +30,8 @@ import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
  * values, and this surface owns neither. The prototype's own publish view holds
  * two identical placeholder questions and jumps to the home screen after four
  * answers; building to it literally would drop
- * `seek_brands_or_products_to_represent` for the third time.
+ * `seek_brands_or_products_to_represent` for the third time. That section of the
+ * prototype now carries a comment saying so: `ADR-0032-AMENDMENT-2` entry 3.
  *
  * ## The correction to Set 2, still standing
  *
@@ -45,16 +45,7 @@ import type { MarketFamily, MarketIntent } from "@/lib/taxonomy/market";
  * The deck draws as the member answers, and it is the only progress indicator:
  * no numeral in a progress role anywhere on the screen. Nothing on it is
  * clickable. `ADR-0032-AMENDMENT-1` section 1.
- *
- * ## Two shells, one content
- *
- * Above 900px the question and the record sit either side of the band and the
- * ledger runs under it. Below 900px the same content stacks and the ledger
- * rises from the bottom. Neither is the other stretched.
  */
-
-/** Stages of the whole publish path. The arc spans all five from the start. */
-const STAGES = 5;
 
 const FAMILY_LABEL: Record<MarketFamily, string> = {
   products: "A product",
@@ -205,10 +196,10 @@ export default function BridgeIntent({
         : "Which side are you on?";
 
   /*
-    The italic accent, per ADR-0032. Split rather than dangerouslySetInnerHTML:
-    the prototype interpolates <em> inside a translated string, which puts
-    markup in copy and makes the accent impossible to place correctly in a
-    script with different word order.
+    The italic accent, per ADR-0032 and now ADR-0032-AMENDMENT-2 entry 1. A
+    separate value rather than an <em> interpolated into a translated string:
+    markup inside copy cannot place an accent correctly in a script with
+    different word order.
   */
   const accent =
     phase === "direction"
@@ -218,91 +209,43 @@ export default function BridgeIntent({
           ? "offering?"
           : "looking for?"
         : "are you on?";
-  const lead = question.slice(0, question.length - accent.length);
-
-  const record = recordLines({
-    direction,
-    family,
-    intent: null,
-  });
 
   return (
-    <div className="brg" data-screen="B01" data-phase={phase}>
-      <Grain />
-      <Chrome signals={signals} who={who} />
-
-      <div className="brg-mx brg-band">
-        <div className="brg-band__head">
-          <h1 className="brg-question">
-            {lead}
-            <em>{accent}</em>
-          </h1>
-          <div className="brg-band__now">
-            <div className="brg-eyebrow">Your opportunity</div>
-            <p className="brg-note" style={{ marginBlockStart: 10 }}>
-              {phase === "position"
-                ? "This one is required. Without it, two listings that are each other's counterparty look identical to two that are peers."
-                : "Publishing is free, and nothing is public until you say so."}
-            </p>
-          </div>
-        </div>
-
-        {/* The only progress indicator. It draws as the member answers. */}
-        <Arc size="hero" total={STAGES} current={0} within={answered / 3} />
-
-        {phase !== "direction" && (
-          <button className="brg-mast__mark" type="button" onClick={back} style={{ marginBlockStart: 8 }}>
-            &#8249; Back
-          </button>
-        )}
-      </div>
-
-      <div className="brg-mx" style={{ maxWidth: 860, marginBlockStart: 8 }}>
-        {zones().map((zone, index) => (
-          <button
-            className="brg-zone"
-            type="button"
-            key={`${phase}-${zone.key}`}
-            data-chosen={chosen === zone.key ? "true" : undefined}
-            data-leaving={chosen !== null && chosen !== zone.key ? "true" : undefined}
-            onClick={() => choose(zone.key)}
-          >
-            <span className="brg-zone__index">{String(index + 1).padStart(2, "0")}</span>
-            <span className="brg-zone__title">{zone.title}</span>
-            <span className="brg-zone__detail">{zone.detail}</span>
-          </button>
-        ))}
-      </div>
-
-      {/*
-        The ledger. Reversed cream, and it grows as they answer. This is the
-        thing a member would be walking away from at the third question, which
-        is why it is on screen from the first one they answer.
-      */}
-      {record.length > 0 && (
-        <div className="brg-ledger" data-ground="cream" style={{ marginBlockStart: 44 }}>
-          <div className="brg-ledger__inner">
-            <div className="brg-eyebrow">Your listing so far</div>
-            <dl style={{ marginBlockStart: 14 }}>
-              {record.map((line) => (
-                <div className="brg-ledger__line" key={line.key}>
-                  <dt>{line.label}</dt>
-                  <dd>{line.value}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="brg-note" style={{ marginBlockStart: 16 }}>
-              {signedIn ? SAVED_SIGNED_IN : SAVED_ANONYMOUS}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {record.length === 0 && (
-        <div className="brg-mx" style={{ paddingBlock: "34px 60px" }}>
-          <p className="brg-note">{signedIn ? SAVED_SIGNED_IN : SAVED_ANONYMOUS}</p>
-        </div>
-      )}
-    </div>
+    <BridgeShell
+      screen="B01"
+      phase={phase}
+      node="intent"
+      family={family}
+      signedIn={signedIn}
+      progress={answered / 3}
+      question={question}
+      accent={accent}
+      eyebrow="Your opportunity"
+      note={
+        phase === "position"
+          ? "This one is required. Without it, two listings that are each other's counterparty look identical to two that are peers."
+          : "Publishing is free, and nothing is public until you say so."
+      }
+      back={phase === "direction" ? null : { label: "Back", onBack: back }}
+      ledger={recordLines({ direction, family, intent: null })}
+      retention={signedIn ? SAVED_SIGNED_IN : SAVED_ANONYMOUS}
+      signals={signals}
+      who={who}
+    >
+      {zones().map((zone, index) => (
+        <button
+          className="brg-zone"
+          type="button"
+          key={`${phase}-${zone.key}`}
+          data-chosen={chosen === zone.key ? "true" : undefined}
+          data-leaving={chosen !== null && chosen !== zone.key ? "true" : undefined}
+          onClick={() => choose(zone.key)}
+        >
+          <span className="brg-zone__index">{String(index + 1).padStart(2, "0")}</span>
+          <span className="brg-zone__title">{zone.title}</span>
+          <span className="brg-zone__detail">{zone.detail}</span>
+        </button>
+      ))}
+    </BridgeShell>
   );
 }

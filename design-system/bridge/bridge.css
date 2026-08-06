@@ -22,6 +22,25 @@
 .brg *, .brg *::before, .brg *::after { box-sizing: border-box; }
 .brg h1, .brg h2, .brg h3, .brg p { margin: 0; }
 
+/* Headings take the GROUND's colour, and nothing else's.
+ *
+ * `app/globals.css` sets `h1, h2, h3, h4 { color: var(--ink) }` for the retired
+ * obsidian canvas, where `--ink` is #eef1f5, near-white. A tag rule beats an
+ * inherited colour however specific the ancestor, so every serif question on
+ * the bridge was painted rgb(238, 241, 245) instead of the cream token, and any
+ * heading inside the cream ledger would have been near-white on cream: which is
+ * precisely the defect that made every statement on the retired publish path
+ * unreadable, found then by looking at the screen.
+ *
+ * It was invisible here only because near-white on ink still reads. That is the
+ * point: this is the third appearance of the same fault, and each time it
+ * survived the previous fix because the previous fix set something else. The
+ * face was set, then the colour, and neither made the RULE stop applying.
+ *
+ * `inherit` rather than a token, so one declaration is correct on both grounds:
+ * cream on ink, ink on cream, with no second rule to keep in step. */
+.brg :is(h1, h2, h3, h4) { color: inherit; }
+
 /* ---- The grain ----
    A fine paper grain over everything, barely visible. It is what stops flat
    fields looking like a wireframe.
@@ -47,6 +66,18 @@
 }
 
 .brg-mx { max-width: var(--brg-max); margin-inline: auto; padding-inline: var(--brg-pad); }
+
+/* A measure inside the gutter, hanging off the START edge.
+ *
+ * NOT a second `.brg-mx` with a smaller max-width, which is what this was: that
+ * centres the narrower block inside the wider one, so on a 1440px desktop the
+ * choice rows sat 310px in from the left while the question, the arc and the
+ * ledger all began at the gutter. Four elements of one composition, three of
+ * them aligned and one of them floating in the middle of the page.
+ *
+ * The prototype gets this right by giving the inner block a max-width and no
+ * auto margin, which is what this is. */
+.brg-column { max-inline-size: 900px; }
 
 /* ---- Masthead ---- */
 .brg-mast { position: sticky; inset-block-start: 0; z-index: 40; background: var(--brg-ink); }
@@ -173,6 +204,35 @@
   font-size: clamp(38px, 4.6vw, 52px); line-height: 1.02;
   letter-spacing: var(--brg-tight); max-width: 14ch; text-wrap: balance;
 }
+
+/* Display type scales with the viewport ABOVE 1,920 and not below it.
+   Two reasons for the seam rather than one continuous clamp. The first is that
+   58px and 52px are the sizes the owner accepted at 1,440, and a continuous
+   clamp would have changed them on the way to fixing 2,560. The second is that
+   a headline dominating a 1,440 screen is simply small on a 2,560 one: the type
+   has to grow with the ink around it or the page reads as a 1,440 layout that
+   somebody stretched.
+
+   RAISES A CONFLICT with ADR-0032-AMENDMENT-1 section 6, which caps the
+   headline at 60px and the question at 52px. Those caps were written before
+   2,560 was a shell. Reported, not resolved here: an amendment is the owner's.
+   Nothing at or below 1,440 changes, so the conflict is confined to the new
+   shell. */
+@media (min-width: 1920px) {
+  .brg-headline { font-size: min(3.8vw, 88px); }
+  .brg-question { font-size: min(2.9vw, 70px); }
+  /* The action grows with the page. A 520px hairline under an 88px headline
+     reads as a footnote rather than as the one thing to do. */
+  .brg-act { max-width: 720px; font-size: 13px; padding-block-start: 24px; }
+  .brg-act small { font-size: 14px; }
+  .brg-snd { font-size: 11px; }
+  /* The text measure opens with the page, but by less than the page does: a
+     column that grew in step would put 22 words on a line. */
+  .brg-column { max-inline-size: 1120px; }
+  .brg-note, .brg-zone__detail { font-size: 13.5px; }
+  .brg-zone__title { font-size: 32px; }
+  .brg-zone[data-lead="true"] .brg-zone__title { font-size: 54px; }
+}
 .brg-headline em, .brg-question em { font-style: italic; color: var(--brg-bronze); }
 /* Neither script has a true italic; a synthesised slant is a defect, not an
    accent. The bronze carries the emphasis on its own. */
@@ -196,11 +256,42 @@
   .brg-band__now { max-width: none; }
 }
 
-.brg-shores { display: flex; justify-content: space-between; gap: 30px; }
+.brg-shores { display: flex; justify-content: space-between; gap: 30px; margin-block-start: -6px; }
 .brg-shore { inline-size: 320px; }
 .brg-shore[data-side="far"] { text-align: end; }
+.brg-shore__n { font-family: var(--brg-serif); font-size: 20px; line-height: 1.2; margin-block-start: 6px; }
 /* The phone does not get two shores side by side; it gets the ledger instead. */
 @media (max-width: 899px) { .brg-shores { display: none; } }
+@media (min-width: 1920px) { .brg-shore { inline-size: 460px; } .brg-shore__n { font-size: 24px; } }
+
+/* The lede beside the headline. Longer measure than a note, quieter than a
+   question: it is what fills the width the headline deliberately does not. */
+.brg-lede {
+  font-size: 14px; font-weight: 300; line-height: 1.55; opacity: .55;
+  margin-block-start: 10px; max-width: 46ch;
+}
+@media (min-width: 1920px) { .brg-lede { font-size: 16.5px; } .brg-band__now { max-width: 520px; } }
+
+/* A column's heading: what it is, and how many. */
+.brg-sechead {
+  display: flex; justify-content: space-between; margin-block-end: 16px;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; color: var(--brg-bronze);
+}
+.brg-sechead span:last-child { color: var(--brg-figure); opacity: .34; }
+
+.brg-item__r {
+  display: flex; justify-content: space-between; gap: 14px;
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track); opacity: .4;
+}
+.brg-item__n { display: block; font-family: var(--brg-serif); font-size: 20px; line-height: 1.2; margin-block-start: 7px; }
+.brg-item__f { display: block; font-size: 12px; opacity: .5; margin-block-start: 6px; font-weight: 300; }
+.brg-row__n { font-family: var(--brg-serif); font-size: 19px; font-weight: 400; }
+@media (min-width: 1920px) {
+  .brg-item__n { font-size: 23px; }
+  .brg-row__n { font-size: 22px; }
+  .brg-row__label { font-size: 14.5px; }
+}
 
 .brg-cols { padding-block-start: 52px; display: grid; grid-template-columns: 1fr 1fr 1fr; }
 /* A grid item's minimum size defaults to its CONTENT's minimum, so any
@@ -230,6 +321,7 @@
   padding-block: 11px; border-block-end: 1px solid var(--brg-hairline);
 }
 .brg-row__label { font-size: 13px; font-weight: 300; opacity: .82; }
+.brg-row__label small { display: block; font-size: 11.5px; opacity: .55; margin-block-start: 4px; line-height: 1.5; }
 .brg-row__value {
   font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
   text-transform: uppercase; white-space: nowrap;
@@ -268,12 +360,29 @@
   transition: opacity 600ms var(--brg-ease), transform 600ms var(--brg-ease);
 }
 
+/* Back. It names the DESTINATION, because a member reads it to learn where
+   they are going rather than where they are. */
+.brg-back {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: none; border: 0; color: inherit; padding: 0; min-height: 48px;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .42;
+  transition: opacity 240ms var(--brg-ease);
+}
+.brg-back:hover, .brg-back:focus-visible { opacity: 1; color: var(--brg-bronze); }
+/* Mirrored with the reading direction: the chevron points back, not left. */
+.brg:dir(rtl) .brg-back u { display: inline-block; transform: scaleX(-1); }
+
 @media (prefers-reduced-motion: reduce) {
   .brg-tape__run { animation: none; }
   .brg-tape__live { animation: none; opacity: .8; }
   .brg-arc__vehicle, .brg-arc__traffic { display: none; }
   .brg-rise { opacity: 1; transform: none; }
   .brg-item, .brg-item::before, .brg-rise[data-in="true"] { transition: none; }
+  .brg-zone, .brg-zone::before, .brg-fact, .brg-act::after, .brg-back { transition: none; }
+  /* The sweep is the one purely decorative movement here. The heading and the
+     status words already say that the checks are running. */
+  .brg-running i { animation: none; inline-size: 100%; opacity: .5; }
 }
 
 /* ---- Zones: the publish path's choices ----
@@ -332,6 +441,241 @@
   margin-block-start: 7px; max-width: 46ch; line-height: 1.5;
 }
 @media (max-width: 899px) { .brg-zone__title { font-size: 24px; } }
+
+/* The leading route on a screen that offers several. Weighted by SIZE AND
+   POSITION rather than by label or by a glyph: it is first, and it is the
+   largest thing under the band. */
+.brg-zone[data-lead="true"] { padding-block: 26px 28px; }
+.brg-zone[data-lead="true"] .brg-zone__title { font-size: 44px; line-height: 1.04; }
+.brg-zone[data-lead="true"] .brg-zone__detail { font-size: 14px; opacity: .55; }
+/* 34 against 24 on the phone. At 30 the weighting was there in the stylesheet
+   and not on the screen: the leading route has to be unmistakably the largest
+   thing under the band, or the routes are weighted by label after all. */
+@media (max-width: 899px) {
+  .brg-zone[data-lead="true"] .brg-zone__title { font-size: 34px; }
+}
+/* Unavailable, and the detail says why BEFORE the tap rather than after it. */
+.brg-zone[aria-disabled="true"] { opacity: .42; }
+.brg-zone[aria-disabled="true"]:hover { padding-inline-start: 0; }
+.brg-zone[aria-disabled="true"]:hover::before { transform: scaleY(0); }
+
+/* What Ponte heard, in the member's own words, at the size of a statement. */
+.brg-transcript {
+  font-family: var(--brg-serif); font-size: 27px; line-height: 1.28;
+  letter-spacing: var(--brg-tight); padding-block: 22px; min-height: 96px;
+  max-width: 26ch;
+}
+.brg-transcript[data-empty="true"] { opacity: .22; }
+
+/* ---- Actions ----
+   The prototype's `.primary`: a hairline with the label under it, and a bronze
+   line that draws across the hairline on hover. Not a filled rectangle, which
+   would be a box. The sub-line carries WHY an action is unavailable when it is:
+   a disabled control with no explanation is the commonest way a member gets
+   stuck, because they can see the way forward and cannot tell what holds it. */
+.brg-act {
+  display: block; inline-size: 100%; max-width: 520px; text-align: start;
+  background: none; border: 0; border-block-start: 1px solid var(--brg-figure);
+  color: var(--brg-figure); padding-block: 20px 0; margin-block-start: 30px;
+  font-family: var(--brg-mono); font-size: 11.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; position: relative; min-height: 48px;
+}
+.brg-act::after {
+  content: ""; position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  block-size: 1px; inline-size: 0; background: var(--brg-bronze);
+  transition: inline-size 620ms var(--brg-ease);
+}
+.brg-act:hover::after, .brg-act:focus-visible::after { inline-size: 100%; }
+.brg-act small {
+  display: block; font-family: var(--brg-sans); font-size: 12px;
+  letter-spacing: 0; text-transform: none; opacity: .45;
+  margin-block-start: 8px; font-weight: 300; max-width: 46ch;
+}
+/* Unavailable, and it says so by tone rather than by disappearing. The reason
+   is in the sub-line, which is why the sub-line stays at full opacity. */
+.brg-act[aria-disabled="true"] { opacity: .38; }
+.brg-act[aria-disabled="true"]::after { display: none; }
+.brg-act[aria-disabled="true"] small { opacity: .8; }
+
+/* The secondary way out. Never styled to compete: no hairline of its own. */
+.brg-snd {
+  display: block; background: none; border: 0; color: inherit;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .45; margin-block-start: 22px;
+  text-align: start; min-height: 48px; padding: 0;
+}
+.brg-snd:hover, .brg-snd:focus-visible { opacity: 1; color: var(--brg-bronze); }
+
+.brg-actions { padding-block-end: 60px; }
+
+/* ---- Fields ----
+   A hairline under the value, and nothing else. A bordered rectangle around an
+   input is a box; the underline is the same affordance without one. */
+.brg-field { display: block; max-width: 520px; margin-block-start: 26px; }
+.brg-field > span {
+  display: block; font-family: var(--brg-mono); font-size: 9px;
+  letter-spacing: var(--brg-track); text-transform: uppercase; opacity: .45;
+}
+.brg-field input, .brg-field textarea {
+  inline-size: 100%; background: none; border: 0;
+  border-block-end: 1px solid var(--brg-hairline);
+  color: inherit; font-family: var(--brg-serif); font-size: 27px;
+  padding-block: 12px 14px; min-height: 56px;
+}
+.brg-field input::placeholder, .brg-field textarea::placeholder { color: inherit; opacity: .22; }
+.brg-field input:focus-visible, .brg-field textarea:focus-visible {
+  outline: none; border-block-end-color: var(--brg-bronze);
+}
+.brg-field[data-bad="true"] > span { color: var(--brg-blocked); opacity: 1; }
+.brg-field[data-bad="true"] input { border-block-end-color: var(--brg-blocked); }
+
+/* A checkbox is a declaration, so the sentence is the control and the mark is
+   a hairline square that fills. It is drawn, fixed at 16px, and holds nothing. */
+.brg-check {
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-block-start: 22px; max-width: 60ch; text-align: start;
+  background: none; border: 0; color: inherit; padding: 0; min-height: 48px;
+  font-size: 13px; font-weight: 300; line-height: 1.5;
+}
+.brg-check i {
+  flex: none; inline-size: 16px; block-size: 16px; margin-block-start: 2px;
+  border: 1px solid var(--brg-hairline); background: none;
+}
+.brg-check[aria-pressed="true"] i { background: var(--brg-bronze); border-color: var(--brg-bronze); }
+
+/* ---- Facts: one per line, and the state is a WORD ----
+   Not a coloured dot. ADR-0002 requires that colour never carries meaning
+   alone, and a mono status word carries it without a second drawn shape to
+   fence. The value is serif because it is the member's own record. */
+.brg-fact {
+  display: block; inline-size: 100%; text-align: start; background: none;
+  border: 0; border-block-end: 1px solid var(--brg-hairline); color: inherit;
+  padding-block: 15px 17px; min-height: 64px; position: relative;
+  transition: padding-inline-start 400ms var(--brg-ease);
+}
+.brg-fact:hover, .brg-fact:focus-visible { padding-inline-start: 12px; }
+.brg-fact__k {
+  display: flex; justify-content: space-between; gap: 14px; align-items: baseline;
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .42;
+}
+.brg-fact__k b { font-weight: 400; }
+.brg-fact__v {
+  display: block; font-family: var(--brg-serif); font-size: 21px;
+  line-height: 1.2; margin-block-start: 8px;
+}
+.brg-fact__note { display: block; font-size: 12px; opacity: .48; margin-block-start: 7px; font-weight: 300; }
+.brg-fact[data-tier="needed"] .brg-fact__k { color: var(--brg-bronze); opacity: 1; }
+/* Inferred is Ponte's until the member says otherwise, and it must never look
+   like something they stated. The dashed underline says "not read from you". */
+.brg-fact[data-tier="inferred"] .brg-fact__v {
+  text-decoration: underline dashed; text-underline-offset: 6px;
+  text-decoration-color: var(--brg-bronze);
+}
+/* The confirm control is a SIBLING of the tap target, never a child: a button
+   inside a button is invalid, and in practice it means "Yes, that is right"
+   also opens the correction sheet. */
+.brg-confirm { display: flex; gap: 26px; padding-block-end: 16px; }
+.brg-confirm button {
+  background: none; border: 0; color: var(--brg-bronze); padding: 0;
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; min-height: 48px;
+}
+.brg-confirm button:last-child { color: inherit; opacity: .45; }
+
+.brg-group {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .34; padding-block: 30px 10px;
+}
+
+/* ---- Layers: what the market sees, and what it never sees ---- */
+.brg-layer { padding-block: 26px 8px; }
+.brg-layer__head { display: flex; justify-content: space-between; gap: 20px; align-items: baseline; }
+.brg-layer__fixed {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .38; white-space: nowrap;
+}
+
+/* ---- The sheet ----
+   Correction in place: a panel of rows over the list, never a bare text field.
+   Reversed to cream so it reads as a different plane without a shadow or a
+   rounded corner doing the work. */
+.brg-scrim {
+  position: fixed; inset: 0; z-index: 60; background: rgba(14, 15, 12, .72);
+  border: 0; inline-size: 100%;
+}
+.brg-sheet {
+  position: fixed; inset-inline: 0; inset-block-end: 0; z-index: 61;
+  max-block-size: 84dvh; overflow-y: auto;
+  background: var(--brg-cream); color: var(--brg-ink);
+  border-block-start: 1px solid var(--brg-bronze);
+}
+/* The gutter, then the same measure as the surface underneath. A row reading
+   "FOB" is not 1,560px wide on a desktop. */
+.brg-sheet__inner { max-width: var(--brg-max); margin-inline: auto; padding: 26px var(--brg-pad) 44px; }
+.brg-sheet__inner > * { max-inline-size: 900px; }
+.brg-sheet__head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 20px;
+  padding-block-end: 8px;
+}
+.brg-sheet__head b {
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; color: var(--brg-bronze); font-weight: 400;
+}
+.brg-sheet__head button {
+  background: none; border: 0; color: inherit; padding: 0; min-height: 48px;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase;
+}
+/* The stepper: a figure between two controls, because a number is the one
+   value a list cannot enumerate. */
+.brg-step { display: flex; align-items: center; gap: 28px; padding-block: 22px; }
+.brg-step button {
+  inline-size: 72px; min-height: 72px; background: none; color: inherit;
+  border: 0; border-block-end: 1px solid var(--brg-hairline);
+  font-family: var(--brg-serif); font-size: 28px;
+}
+.brg-step span { font-family: var(--brg-serif); font-size: 40px; letter-spacing: var(--brg-tight); }
+
+/* ---- The recognition report ----
+   A stage-completion report, never a reward. No coins, points, streaks or
+   confetti: a reward implies Ponte is pleased, which implies a judgement. */
+/* The trailing rule is not decoration: without it the report's last line, an
+   owner attribution in 9px mono, sat directly on top of the first fact and read
+   as that fact's own label. */
+.brg-report { padding-block: 30px 40px; max-width: 62ch; }
+.brg-report h2 {
+  font-family: var(--brg-serif); font-weight: 400; font-size: 34px;
+  line-height: 1.06; letter-spacing: var(--brg-tight); margin-block-start: 14px;
+}
+.brg-report p { font-size: 14px; font-weight: 300; opacity: .6; line-height: 1.6; margin-block-start: 14px; }
+.brg-report__held {
+  border-inline-start: 1px solid var(--brg-bronze); padding-inline-start: 16px;
+  margin-block-start: 24px; font-size: 13px; font-weight: 300; line-height: 1.6; opacity: .72;
+}
+.brg-report__next { margin-block-start: 26px; }
+.brg-report__next b {
+  display: block; font-family: var(--brg-serif); font-size: 20px;
+  font-weight: 400; margin-block-start: 8px;
+}
+.brg-report__meta {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .34; margin-block-start: 10px;
+}
+
+/* The perimeter statement. What the checks are NOT. */
+.brg-perimeter {
+  border-block-start: 1px solid var(--brg-hairline); margin-block-start: 34px;
+  padding-block: 20px; font-size: 11.5px; font-weight: 300; line-height: 1.65;
+  opacity: .5; max-width: 72ch;
+}
+.brg-perimeter b { color: var(--brg-bronze); opacity: 1; font-weight: 400; }
+
+/* The running indicator. One hairline sweeping, and it stops under reduced
+   motion because the words already say what is happening. */
+.brg-running { block-size: 1px; background: var(--brg-hairline); overflow: hidden; margin-block-start: 22px; }
+.brg-running i { display: block; block-size: 1px; inline-size: 34%; background: var(--brg-bronze); animation: brg-sweep 1400ms var(--brg-ease) infinite; }
+@keyframes brg-sweep { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
 /* ---- The ledger's own rows ----
    The member's record, growing. On the phone it rises from the bottom; on the

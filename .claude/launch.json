@@ -4,13 +4,28 @@
     {
       "name": "ponte-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "ponte-audit",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:audit"],
+      "runtimeArgs": [
+        "run",
+        "dev:audit"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "ponte-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:local"
+      ],
       "port": 3000
     }
   ]

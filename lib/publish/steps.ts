@@ -99,6 +99,43 @@ export function pathFor(opts: { family: MarketFamily | null; signedIn: boolean }
   }).map((definition) => definition.node);
 }
 
+/**
+ * Where a surface sits on the arc: which span, and how far through it.
+ *
+ * `ADR-0032-AMENDMENT-2` entry 2. The deck reports position WITHIN a stage as
+ * well as across stages, because several surfaces share one stage and a deck
+ * that sat still through four answers and then jumped a whole fifth of the
+ * crossing would be a stage indicator wearing a drawing.
+ *
+ * The stage is divided between the surfaces THIS MEMBER'S PATH actually visits,
+ * not between every surface that could share it. `assets` is skipped for a
+ * service, and a member who never sees it must not watch the deck stall halfway
+ * through stage three waiting for a screen that is not coming.
+ *
+ * `progress` is the surface's own progress, 0 to 1. The nodes still light on
+ * whole stages: only the deck moves continuously.
+ */
+export function arcPosition(
+  node: PublishNode,
+  opts: { family: MarketFamily | null; signedIn: boolean },
+  progress = 0,
+): { current: number; within: number } {
+  /*
+    The crossing is COMPLETE on the confirmation, so the deck is whole and no
+    node is highlighted. `nodeStates` marks a node "current" while `current`
+    equals its index, so a value past the last node is what says "arrived"
+    rather than "standing on the far shore, still going". Anything less would
+    draw a member's published listing as an unfinished span.
+  */
+  if (node === "published") return { current: STAGES + 1, within: 0 };
+
+  const stage = stageOf(node);
+  const sharing = pathFor(opts).filter((other) => stageOf(other) === stage);
+  const index = Math.max(0, sharing.indexOf(node));
+  const clamped = Math.min(1, Math.max(0, progress));
+  return { current: stage - 1, within: (index + clamped) / sharing.length };
+}
+
 export function nextNode(
   current: PublishNode,
   opts: { family: MarketFamily | null; signedIn: boolean },

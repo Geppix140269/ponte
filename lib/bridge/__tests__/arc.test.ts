@@ -16,7 +16,9 @@ import {
   arcY,
   deckFraction,
   nodeStates,
-  HERO_PHONE,
+  ARCH_RATIO,
+  riseFor,
+  heightFor,
 } from "../arc";
 
 let passed = 0;
@@ -106,18 +108,43 @@ test("the three sizes are distinct and only the big two carry labels", () => {
   assert.equal(ARC_METRICS.mini.labels, false, "the mini span carries labels it has no room for");
   assert.equal(ARC_METRICS.hero.labels, true);
   assert.equal(ARC_METRICS.procedure.labels, true);
-  const heights = [ARC_METRICS.hero.height, ARC_METRICS.procedure.height, ARC_METRICS.mini.height];
-  assert.equal(new Set(heights).size, 3, "two sizes render at the same height");
+  const floors = [ARC_METRICS.hero.riseMin, ARC_METRICS.procedure.riseMin, ARC_METRICS.mini.riseMin];
+  assert.equal(new Set(floors).size, 3, "two sizes spring from the same rise");
 });
 
-test("the phone hero is shorter and its rise shortens with it", () => {
-  assert.ok(HERO_PHONE.height < ARC_METRICS.hero.height);
-  assert.ok(
-    HERO_PHONE.rise < ARC_METRICS.hero.rise,
-    "the phone band is shorter but the rise is not, so the arc would overflow it",
-  );
-  // The rise must still fit inside the band, above the waterline.
-  assert.ok(HERO_PHONE.rise < HERO_PHONE.height - HERO_PHONE.water);
+/**
+ * The arch reads as an arch across the whole range of shells.
+ *
+ * This is the test the fixed rise would have failed. A 126px rise on the
+ * chord a 2,560 screen gives is a 6% rise: a sagging wire, not a span, on the
+ * width the owner actually works at. The rise is now a function of the chord,
+ * and the property to hold is the RATIO, at every width and not at three.
+ */
+test("the rise stays an arch from the phone to 2560", () => {
+  const hero = ARC_METRICS.hero;
+  // The chord each shell actually gives the hero band, gutters and inset taken
+  // off: 390 at 22px pad, 1440 at 40px, 2560 capped to the 1840 measure at 72px.
+  const chords = [390 - 44 - 16, 1440 - 80 - 16, 1840 - 144 - 16];
+  for (const chord of chords) {
+    const rise = riseFor(chord, hero);
+    const ratio = rise / chord;
+    assert.ok(
+      ratio >= 0.12,
+      `a chord of ${chord} rises ${rise.toFixed(0)}, a ratio of ${ratio.toFixed(3)}: that is a wire, not an arch`,
+    );
+    assert.ok(ratio <= 0.32, `a chord of ${chord} rises ${rise.toFixed(0)}: that is an aqueduct`);
+    // And the band always contains the arch it draws.
+    assert.ok(rise < heightFor(rise, hero) - hero.water, "the arch overflows its own band");
+  }
+});
+
+test("the rise is clamped at both ends and monotonic between them", () => {
+  const hero = ARC_METRICS.hero;
+  assert.equal(riseFor(10, hero), hero.riseMin, "a tiny chord is not floored");
+  assert.equal(riseFor(100_000, hero), hero.riseMax, "a huge chord is not capped");
+  assert.ok(riseFor(1400, hero) > riseFor(900, hero), "a longer chord does not rise further");
+  // One rule, not three breakpoints: the ratio holds exactly between the clamps.
+  assert.ok(Math.abs(riseFor(1200, hero) - 1200 * ARCH_RATIO) < 1e-9);
 });
 
 test("node states run done, current, todo, and a finished crossing highlights nothing", () => {
