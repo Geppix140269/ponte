@@ -272,13 +272,29 @@ for (const shell of SHELLS) {
     await signIn(page);
     await freshDraft(page);
 
+    /*
+      Waits on the SCREEN, not on the clock.
+
+      A press indents the chosen row and lets the next question rise into the
+      space over 420ms before the state changes, so a fixed 700ms pause is
+      enough on a production build and not always enough on a dev server. That
+      is how this walk failed once at the capacity control: the surface had not
+      arrived, the row clicked belonged to the previous question, and the
+      failure surfaced two steps later as an action that would not enable.
+    */
+    // And the first click waits for the surface to be interactive, not merely
+    // present: the markup is server-rendered, so a press before hydration is
+    // swallowed and the walk carries on against a screen that never moved.
+    await settle(page, "B01");
     await zone(page, 1).click(); // I am offering something
-    await page.waitForTimeout(700);
+    await expect(page.locator(".brg[data-screen='B01'][data-phase='family']")).toBeVisible();
     await zone(page, 0).click(); // A product
-    await page.waitForTimeout(700);
+    await expect(page.locator(".brg[data-screen='B01b']")).toBeVisible();
     await zone(page, 0).click(); // Principal
+    await expect(page.locator(".brg[data-screen='B01b'][data-phase='principal']")).toBeVisible();
     await act(page).click();
 
+    await expect(page.locator(".brg[data-screen='B02']")).toBeVisible();
     await page.locator(".brg-zone").last().click(); // Type it, with search
     await page.locator(".brg-field input").fill("gas oil");
     await act(page).click();
