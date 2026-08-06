@@ -395,3 +395,30 @@ RLS was enabled on inspected core tables. Investigation and connection policies 
 11. Verify that PR at desktop and 390 × 844, including keyboard and reduced motion, before merge.
 12. Continue market-data, verification and schema work only through their existing explicit plans; do not hide them inside design implementation.
 13. Do not start an uncontrolled app-wide repaint. Apply the Constitution through scoped journey-level PRs.
+
+## Build 1: the listing path, 6 August 2026
+
+`B01` through `B09` are live at `/publish` and publish real records. The path
+replaces the three-option `/structure` intent screen and the
+`/deal-rooms/propose` entry pattern, and it needed no schema change: the
+canonical family and intent reach `listings.market_family` and
+`listings.market_intent`, verified by reading published rows back rather than by
+assertion.
+
+Full record, including nine defects found by rendering the path rather than by
+reading it, four deviations from the design reference and two findings for the
+owner: `docs/codex/audits/build-1-listing-path/BUILD-1-B01-TO-B09-2026-08-06.md`.
+
+Two things that are NOT done and should not be assumed:
+
+- `/structure` is not retired. It remains the destination of the catalogue
+  browse and of the entrances that link to it. Retiring it is a separate cutover
+  with its own redirect work.
+- Services and distribution render every surface and correctly skip `B06`, but
+  neither was published end to end. Their subjects come from the classification
+  journey behind `/structure`, which this build did not replace.
+
+One finding contradicts a brief and is recorded so it is not re-litigated:
+`listings.mandate_sighted` is set by the desk only, by its own schema comment,
+so the member's authority declaration is stored as their own words and never
+promoted to that column.

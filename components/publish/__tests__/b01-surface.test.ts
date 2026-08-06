@@ -26,7 +26,7 @@ function test(name: string, fn: () => void): void {
 
 const CSS = readFileSync("components/publish/publish.css", "utf8");
 const B01 = readFileSync("components/publish/ChooseDealIntent.tsx", "utf8");
-const ENTRY = readFileSync("components/publish/PublishEntry.tsx", "utf8");
+const ENTRY = readFileSync("components/publish/PublishFlow.tsx", "utf8");
 const PAGE = readFileSync("app/[locale]/publish/page.tsx", "utf8");
 const ALL = [CSS, B01, ENTRY, PAGE].join("\n");
 

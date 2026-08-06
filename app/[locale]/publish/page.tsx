@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
-import PublishEntry from "@/components/publish/PublishEntry";
+import PublishFlow from "@/components/publish/PublishFlow";
 import { getUser } from "@/lib/auth";
 import "@/components/publish/publish.css";
+import "@/components/publish/publish-path.css";
 
 /**
- * Publish a listing. Build 1, surface `B01`.
+ * Publish a listing. Build 1, `B01` through `B09`.
  *
  * `/publish` and not `/deal-rooms/propose`: publishing an opportunity is free
  * and public, and it is a different act from activating a Deal Room. `P1-2`
@@ -16,8 +17,9 @@ import "@/components/publish/publish.css";
  * only here.
  *
  * A thin server shell. It resolves the locale, publishes the editorial fonts,
- * and reads whether anyone is signed in - which changes exactly one sentence,
- * the retention promise, and nothing else about the surface.
+ * and reads whether anyone is signed in. Being signed in changes three things
+ * and only three: the retention promise, whether the upload route opens, and
+ * whether `B08` appears in the path at all.
  */
 
 export const dynamic = "force-dynamic";
@@ -51,7 +53,7 @@ export default async function PublishPage({ params }: { params: { locale: string
 
   return (
     <div className={landingFontVars}>
-      <PublishEntry signedIn={Boolean(user)} />
+      <PublishFlow signedIn={Boolean(user)} />
     </div>
   );
 }
