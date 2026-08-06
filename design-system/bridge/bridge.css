@@ -1,0 +1,277 @@
+/* =====================================================================
+   THE BRIDGE SYSTEM: chrome, shells, the arc's own paint, and motion.
+   Authority: ADR-0032 and ADR-0032-AMENDMENT-1.
+
+   NO BOXES still holds, unchanged from ADR-0002. Structure comes from
+   typography, scale, whitespace, full-width hairlines and tone. What
+   ADR-0032 adds is what FILLS a screen, which the constitution never
+   said: an ink ground, a grain, and a bridge.
+
+   Every layout property is logical: `inset-inline-start`, `text-align:
+   start`, `padding-inline-start`, `border-inline-start`. Nothing here
+   says left or right, so Arabic mirrors without a second stylesheet.
+   ===================================================================== */
+
+.brg {
+  background: var(--brg-ink);
+  color: var(--brg-cream);
+  font-family: var(--brg-sans);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+.brg *, .brg *::before, .brg *::after { box-sizing: border-box; }
+.brg h1, .brg h2, .brg h3, .brg p { margin: 0; }
+
+/* ---- The grain ----
+   A fine paper grain over everything, barely visible. It is what stops flat
+   fields looking like a wireframe.
+
+   TILED, not a full-viewport turbulence. The prototype filters a fixed layer
+   the size of the screen at `baseFrequency .9` over four octaves, which is
+   rasterised at device resolution and is genuinely expensive on a low-end
+   phone. A 160px tile repeated is visually identical at 14% and costs one
+   small raster.
+
+   It composites over the text as well as the ground, which is why the on-ink
+   state pair is measured THROUGH it rather than against the flat token. See
+   `scripts/derive-ink-pair.mjs`. */
+.brg-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 80;
+  opacity: .14;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+.brg-mx { max-width: var(--brg-max); margin-inline: auto; padding-inline: var(--brg-pad); }
+
+/* ---- Masthead ---- */
+.brg-mast { position: sticky; inset-block-start: 0; z-index: 40; background: var(--brg-ink); }
+.brg-mast__bar {
+  min-height: 60px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px;
+}
+.brg-mast__mark {
+  font-family: var(--brg-mono); font-size: 11px;
+  letter-spacing: .46em; text-transform: uppercase;
+  background: none; border: 0; color: inherit; padding: 0; min-height: 48px;
+}
+.brg:lang(ar) .brg-mast__mark, .brg:lang(zh) .brg-mast__mark { letter-spacing: var(--brg-track); }
+.brg-mast__nav { display: flex; gap: 28px; }
+.brg-mast__nav a {
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; color: rgba(242, 239, 232, .44); text-decoration: none;
+  white-space: nowrap; transition: color 240ms var(--brg-ease);
+  display: inline-flex; align-items: center; min-height: 48px;
+}
+.brg-mast__nav a:hover, .brg-mast__nav a[aria-current="page"] { color: var(--brg-bronze); }
+.brg-mast__who {
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .42; white-space: nowrap;
+}
+@media (max-width: 899px) { .brg-mast__nav { display: none; } }
+
+/* ---- The market signals tape ----
+   Amendment section 4: "never stops" was written about the market, not about
+   the animation. It stops under reduced motion, and it has a real pause
+   control, because hover serves neither keyboard nor touch. */
+.brg-tape {
+  position: sticky; inset-block-start: 60px; z-index: 39;
+  border-block: 1px solid var(--brg-hairline);
+  background: var(--brg-ink);
+  min-height: 32px; overflow: hidden; display: flex; align-items: center;
+}
+.brg-tape__mask {
+  position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: linear-gradient(to right, var(--brg-ink), transparent 46px, transparent calc(100% - 46px), var(--brg-ink));
+}
+.brg:dir(rtl) .brg-tape__mask {
+  background: linear-gradient(to left, var(--brg-ink), transparent 46px, transparent calc(100% - 46px), var(--brg-ink));
+}
+.brg-tape__run {
+  display: flex; white-space: nowrap;
+  animation: brg-run 52s linear infinite;
+}
+/* Mirrored, so the tape runs with the reading direction rather than against it. */
+.brg:dir(rtl) .brg-tape__run { animation-direction: reverse; }
+.brg-tape__run:hover { animation-play-state: paused; }
+.brg-tape[data-paused="true"] .brg-tape__run { animation-play-state: paused; }
+@keyframes brg-run { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.brg-tape__item {
+  display: inline-flex; align-items: baseline; gap: 9px; padding-inline: 20px;
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; opacity: .55;
+}
+.brg-tape__item b { font-weight: 500; opacity: .95; }
+.brg-tape__item .brg-tape__to { color: var(--brg-bronze); }
+.brg-tape__live {
+  inline-size: 3px; block-size: 3px; border-radius: 50%;
+  background: var(--brg-done); display: inline-block;
+  animation: brg-blip 2.6s ease-in-out infinite;
+}
+@keyframes brg-blip { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+/* The pause control. Visible, focusable, and it says which state it is in. */
+.brg-tape__pause {
+  position: relative; z-index: 3; flex: none;
+  margin-inline-start: auto; margin-inline-end: 4px;
+  background: var(--brg-ink); border: 0; color: rgba(242, 239, 232, .5);
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: .16em;
+  text-transform: uppercase; padding-inline: 12px; min-height: 32px;
+}
+.brg-tape__pause:hover, .brg-tape__pause:focus-visible { color: var(--brg-bronze); }
+
+/* ---- The arc's paint ---- */
+.brg-arc { inline-size: 100%; }
+.brg-arc[data-size="hero"] { block-size: 196px; }
+.brg-arc[data-size="procedure"] { block-size: 168px; }
+.brg-arc[data-size="mini"] { block-size: 30px; }
+@media (max-width: 899px) { .brg-arc[data-size="hero"] { block-size: 128px; } }
+
+/* THE ARC IS NEVER A TARGET. Amendment section 1. A row that happens to
+   contain an arc may be; the arc itself can never be the thing hit.
+
+   It also can never widen its own container. The size comes from CSS, not from
+   the width ATTRIBUTE, because the attribute is an intrinsic width: before the
+   element was measured, the fallback's 960px pushed the grid track out to
+   960px, and the measurement that followed read 960 and called it correct. The
+   arc had sized its own container and then agreed with itself. Sized from CSS
+   it can never exceed the wrapper, so the loop cannot start. */
+.brg-arc svg { pointer-events: none; overflow: visible; display: block; inline-size: 100%; block-size: 100%; }
+.brg:dir(rtl) .brg-arc svg { transform: scaleX(-1); }
+
+.brg-arc__ghost { fill: none; stroke: var(--brg-cream); stroke-width: 1; opacity: .13; }
+.brg-arc__deck { fill: none; stroke: var(--brg-bronze); stroke-width: 1.5; stroke-linecap: round; }
+.brg-arc__pier { stroke: var(--brg-cream); stroke-width: 1; opacity: .17; }
+.brg-arc__water { stroke: var(--brg-cream); stroke-width: 1; opacity: .07; }
+.brg-arc__node--done { fill: var(--brg-bronze); }
+.brg-arc__node--current { fill: none; stroke: var(--brg-bronze); stroke-width: 2; }
+.brg-arc__node--todo { fill: none; stroke: var(--brg-cream); stroke-width: 1; opacity: .3; }
+.brg-arc__label {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: .14em;
+  fill: var(--brg-cream); opacity: .38; text-transform: uppercase;
+}
+.brg-arc__label.is-live { opacity: 1; fill: var(--brg-bronze); }
+/* Mirrored back, so the labels read left-to-right inside a mirrored span. */
+.brg:dir(rtl) .brg-arc__label { transform: scaleX(-1); transform-box: fill-box; transform-origin: center; }
+.brg-arc__vehicle { fill: var(--brg-bronze); }
+
+/* ---- Type ----
+   Amendment section 6: headline up to 60px, question 38 to 52px. The two are
+   different ROLES, not different tags: B01's question is also an h1. */
+.brg-headline {
+  font-family: var(--brg-serif); font-weight: 400;
+  font-size: clamp(40px, 5.4vw, 58px); line-height: .98;
+  letter-spacing: var(--brg-tight); max-width: 12ch; text-wrap: balance;
+}
+.brg-question {
+  font-family: var(--brg-serif); font-weight: 400;
+  font-size: clamp(38px, 4.6vw, 52px); line-height: 1.02;
+  letter-spacing: var(--brg-tight); max-width: 14ch; text-wrap: balance;
+}
+.brg-headline em, .brg-question em { font-style: italic; color: var(--brg-bronze); }
+/* Neither script has a true italic; a synthesised slant is a defect, not an
+   accent. The bronze carries the emphasis on its own. */
+.brg:lang(ar) .brg-headline em, .brg:lang(ar) .brg-question em,
+.brg:lang(zh) .brg-headline em, .brg:lang(zh) .brg-question em { font-style: normal; }
+
+.brg-eyebrow {
+  font-family: var(--brg-mono); font-size: 9.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; color: var(--brg-bronze);
+}
+.brg-note { font-size: 11px; opacity: .4; line-height: 1.6; font-weight: 300; max-width: 46ch; }
+
+/* ---- The shells ----
+   Desktop and phone are two compositions of the same content, not one
+   stretched into the other. Breakpoint 900px. */
+.brg-band { padding-block-start: 16px; }
+.brg-band__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 60px; }
+.brg-band__now { max-width: 400px; padding-block-end: 6px; }
+@media (max-width: 899px) {
+  .brg-band__head { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .brg-band__now { max-width: none; }
+}
+
+.brg-shores { display: flex; justify-content: space-between; gap: 30px; }
+.brg-shore { inline-size: 320px; }
+.brg-shore[data-side="far"] { text-align: end; }
+/* The phone does not get two shores side by side; it gets the ledger instead. */
+@media (max-width: 899px) { .brg-shores { display: none; } }
+
+.brg-cols { padding-block-start: 52px; display: grid; grid-template-columns: 1fr 1fr 1fr; }
+/* A grid item's minimum size defaults to its CONTENT's minimum, so any
+   oversized child silently widens the track instead of overflowing it. That
+   default is what let the arc push its own column out to 960px. Pinning the
+   minimum to zero makes the track govern the child rather than the reverse. */
+.brg-col {
+  padding-inline: 32px;
+  border-inline-start: 1px solid var(--brg-hairline);
+  min-inline-size: 0;
+}
+.brg-col:first-child { padding-inline-start: 0; border-inline-start: 0; }
+.brg-col:last-child { padding-inline-end: 0; }
+@media (max-width: 899px) {
+  .brg-cols { grid-template-columns: 1fr; padding-block-start: 34px; }
+  .brg-col { padding-inline: 0; border-inline-start: 0; margin-block-end: 34px; }
+}
+
+/* The reversed cream ledger. On the phone it rises from the bottom and holds
+   what the member has answered; that is what stops people leaving at the third
+   question, because by then something of theirs exists. */
+.brg-ledger { background: var(--brg-cream); color: var(--brg-ink); }
+.brg-ledger__inner { max-width: var(--brg-max); margin-inline: auto; padding: 38px var(--brg-pad) 40px; }
+
+.brg-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding-block: 11px; border-block-end: 1px solid var(--brg-hairline);
+}
+.brg-row__label { font-size: 13px; font-weight: 300; opacity: .82; }
+.brg-row__value {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; white-space: nowrap;
+}
+.brg-row__value[data-state="checked"] { color: var(--brg-done); }
+.brg-row__value[data-state="unproved"] { color: var(--brg-blocked); }
+.brg-row__value[data-state="waiting"] { color: var(--brg-bronze); }
+
+/* ---- Rows that ARE controls ----
+   They indent and light their leading hairline. Buttons, never divs: the
+   prototype uses a div with an onclick, which no keyboard can reach. */
+.brg-item {
+  display: block; inline-size: 100%; text-align: start; background: none;
+  border: 0; border-block-start: 1px solid var(--brg-hairline); color: inherit;
+  padding-block: 15px 17px; position: relative;
+  transition: padding-inline-start 400ms var(--brg-ease);
+}
+.brg-item::before {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: 0;
+  inline-size: 2px; background: var(--brg-bronze);
+  transform: scaleY(0); transform-origin: top;
+  transition: transform 320ms var(--brg-ease);
+}
+.brg-item:hover, .brg-item:focus-visible { padding-inline-start: 12px; }
+.brg-item:hover::before, .brg-item:focus-visible::before { transform: scaleY(1); }
+.brg-item[data-chosen="true"] { padding-inline-start: 22px; }
+.brg-item[data-chosen="true"]::before { transform: scaleY(1); }
+.brg-item[data-leaving="true"] { opacity: 0; transform: translateX(24px); }
+.brg:dir(rtl) .brg-item[data-leaving="true"] { transform: translateX(-24px); }
+
+/* ---- Motion ----
+   Content arrives staggered at 90ms. Everything stops under reduced motion. */
+.brg-rise { opacity: 0; transform: translateY(15px); }
+.brg-rise[data-in="true"] {
+  opacity: 1; transform: none;
+  transition: opacity 600ms var(--brg-ease), transform 600ms var(--brg-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brg-tape__run { animation: none; }
+  .brg-tape__live { animation: none; opacity: .8; }
+  .brg-arc__vehicle, .brg-arc__traffic { display: none; }
+  .brg-rise { opacity: 1; transform: none; }
+  .brg-item, .brg-item::before, .brg-rise[data-in="true"] { transition: none; }
+}

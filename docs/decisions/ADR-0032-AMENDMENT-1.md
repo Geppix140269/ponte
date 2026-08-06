@@ -19,6 +19,10 @@ The "appears once, decorative" clause is **withdrawn**. The arc now appears on e
 
 **If any implementation makes a node, a label or the deck clickable, item 3 is being violated and the build is wrong.**
 
+**The arc is never a target. A row that happens to contain an arc may be.**
+
+`ponte-platform.html` puts the portfolio mini arc inside `<button class="item">`, so tapping the arc routes. That is the prototype being loose, not the rule being softer: the row is the control and the arc is a passenger in it. Every arc carries `pointer-events: none`, so the arc itself can never be the thing hit while the row around it stays clickable.
+
 ## 2 · Bronze is one colour at two ground levels, not two colours
 
 `#C79A4C` is not a new meaning. `#8A6520` is unreadable on ink; `#C79A4C` is the same intent made readable on a dark ground. Name them as a pair:
@@ -50,6 +54,23 @@ It does **not** mean unbarring the fourteen route families that ChromeGate delib
 Use the existing `--done: #0F6E3D` and `--blocked: #B4402A`, adjusted for the ink ground under the same on-cream / on-ink pairing as bronze if legibility requires it, and **named** if so.
 
 Two greens and two reds with no stated difference is how a palette stops meaning anything. Correct, and my error.
+
+## 6 · The type scale has two roles, and the ADR was written before one of them existed
+
+`ADR-0032` says "question serif at 38 to 52px". `ponte-platform.html` sets `h1` at 58px. Both are right, because they are not the same thing:
+
+- **Headline**, the landing and the band head: **up to 60px**.
+- **Question**, anything the member is being asked to answer: **38 to 52px**.
+
+`B01`'s question is also an `h1`, so the distinction is by ROLE and not by tag.
+
+## 7 · The prototype is the authority for how it looks, never for what it does
+
+**The prototype is the authority for how it looks. It is never the authority for what it stores, what it validates, or what it routes.**
+
+`lib/structure/intent-choice.ts` remains the authority for `B01`'s six presented choices and seven stored values. `ponte-platform.html` is a drawing: its publish view holds two identical placeholder questions and jumps to the signed-in home after four answers.
+
+**Wherever the two appear to disagree, the code wins and the prototype is wrong.** Building `B01` literally from the drawing would drop `seek_brands_or_products_to_represent` for the third time, which is the defect this whole build exists to end.
 
 ---
 

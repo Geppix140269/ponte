@@ -167,6 +167,28 @@ const LUCIDE_BASELINE = [
  * written because the check refused the file, not to get past it.
  */
 const RAW_SVG_BASELINE = [
+  /*
+    The bridge, and the paper grain over it. `ADR-0032`, 6 August 2026.
+
+    Section 7 prohibits ad hoc SVG INTERFACE ICONS, and both of these are
+    argued for here rather than slipped past the check, which is what this list
+    is for.
+
+    `components/bridge/Arc.tsx` is not an icon. It is the product's structural
+    device: a true circular arc whose radius is derived from its chord and rise
+    and which reports how far across a crossing is. `PonteIcon` draws from a
+    fixed set of authored glyphs and cannot express a shape computed per render
+    from a measured width. Its geometry is pure and pinned by test in
+    `lib/bridge/__tests__/arc.test.ts`, and the element carries
+    `pointer-events: none` and `aria-hidden`, so it is never a control and
+    never an icon standing in for one.
+
+    `components/bridge/Grain.tsx` is a texture, not a drawing: one
+    `feTurbulence` tile, repeated, at 14% opacity. There is no glyph in it.
+  */
+  "components/bridge/Arc.tsx",
+  "components/bridge/Grain.tsx",
+
   "app/[locale]/dev/design/page.tsx",
   "app/[locale]/find/o/[ref]/page.tsx",
   "components/Logo.tsx",
