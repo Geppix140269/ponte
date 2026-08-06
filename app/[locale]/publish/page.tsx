@@ -52,7 +52,7 @@ export default async function PublishPage({ params }: { params: { locale: string
   const user = await getUser().catch(() => null);
 
   return (
-    <div className={landingFontVars}>
+    <div className={`pb-page ${landingFontVars}`}>
       <PublishFlow signedIn={Boolean(user)} />
     </div>
   );

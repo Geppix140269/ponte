@@ -261,7 +261,13 @@
 .pb .lay__h .mk { margin-block-start: 2px; }
 .pb .lay__h b { display: block; font-size: var(--t4); font-weight: 600; line-height: 1.4; color: var(--pf-ink); }
 .pb .lay__h > span > span { display: block; font-size: 12.5px; line-height: 1.55; color: var(--pf-ink-2); margin-block-start: 4px; max-width: 36ch; }
-.pb .lay__h .fixed {
+/* NOT `.fixed`. That is the reference's name for it and it is also Tailwind's
+   utility for `position: fixed`, which is in this project's stylesheet. The
+   element left the flow, pinned itself to the viewport and printed "Fixed" on
+   top of "Public: anyone browsing Ponte" at the head of the most important
+   surface in Set 2. Every rule below applied exactly as written; the collision
+   was with a class nobody on this path declared. */
+.pb .lay__h .lay__fixed {
   margin-inline-start: auto; font-family: var(--f-mono); font-size: var(--t5);
   letter-spacing: .1em; text-transform: uppercase; color: var(--pf-ink-3);
   flex: none; display: inline-flex; align-items: center; gap: 6px;

@@ -219,7 +219,7 @@ export default function DealPreview({
                   reduced.
                 </span>
               </span>
-              <span className="fixed">
+              <span className="lay__fixed">
                 <span className="mk mk--lock" />
                 Fixed
               </span>

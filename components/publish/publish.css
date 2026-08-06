@@ -15,6 +15,37 @@
    360px phone and a desktop browser, and the brief requires both.
    ===================================================================== */
 
+/* ---- The page behind the frame ----
+   `/publish` is bared from `ChromeGate`, so it supplies its own chrome and
+   nothing else paints the page. The app's default `body` background is the
+   retired obsidian, which showed as a dark band under the cream frame wherever
+   the document was taller than the frame: 58px of it on `B01`, and a hard edge
+   at the bottom of every surface.
+
+   The frame carries its own surface colour and always did; what was missing was
+   anything painting the page AROUND it. A route that renders its own chrome
+   owns its own background. */
+.pb-page {
+  background: var(--pf-surface);
+  min-height: 100vh;
+}
+
+/* The body itself, because a shell 100vh tall does not cover a document that is
+   taller than the viewport. `--pf-surface` is a root token, so this follows the
+   theme without restating either value. */
+body:has(.pb-page) { background: var(--pf-surface); }
+
+/* `globals.css` reserves `--bottom-nav-h` at the foot of every mobile page, for
+   a bar this route does not render: `ChromeGate` bares `/publish`, so the strip
+   was 58px of empty obsidian under the cream.
+
+   The phone's OWN reservation is kept. Dropping both would put the primary
+   action under the home indicator on a notched phone, which is a worse defect
+   than the one being fixed. */
+@media (max-width: 767px) {
+  body:has(.pb-page) { padding-block-end: env(safe-area-inset-bottom, 0px); }
+}
+
 .pb {
   /* ---- The type faces ----
      Defined HERE and not inherited, because the `--f-*` aliases live on
@@ -96,7 +127,21 @@
 }
 
 .pb * { box-sizing: border-box; }
-.pb h1, .pb h2 { margin: 0; font-weight: 500; }
+/* ---- Headings ----
+   The COLOUR is declared here, and it has to be. `app/[locale]/layout.css`
+   carries a global `h1, h2, h3, h4 { color: var(--ink) }` from the retired
+   obsidian chrome, where `--ink` is a near-white meant for a dark surface. On
+   this cream frame every serif statement rendered at rgb(238,241,245) against
+   rgb(242,238,226): present, correctly set in Playfair, and effectively
+   invisible.
+
+   This is the same defect as the Inter fallback and it survived the fix for it,
+   because that fix set the FACE and this rule sets the COLOUR. A token test
+   cannot see either one: `font-family` resolved, the heading existed, the
+   markup was right. It was caught by photographing the screen and looking at
+   it. `e2e/build-1-listing-path.spec.ts` now measures the contrast of every
+   statement it captures, so neither half can come back unnoticed. */
+.pb h1, .pb h2 { margin: 0; font-weight: 500; color: var(--pf-ink); }
 .pb p { margin: 0; }
 .pb button { font-family: inherit; cursor: pointer; }
 .pb .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }

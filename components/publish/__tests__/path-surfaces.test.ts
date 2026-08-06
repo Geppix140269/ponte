@@ -340,7 +340,7 @@ test("the confirm control is not nested inside the tap target", () => {
 test("the public layer is fixed, and its rows are not controls", () => {
   const code = stripComments(SURFACES.preview);
   assert.match(code, /mk mk--lock/, "the fixed layer carries no lock");
-  assert.match(code, /className="fixed"/);
+  assert.match(code, /className="lay__fixed"/);
   // Rows in the public list are divs. There is nothing to change, so there is
   // nothing to tap, and a control that does nothing teaches a member that
   // controls on this screen do nothing.

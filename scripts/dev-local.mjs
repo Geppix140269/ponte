@@ -70,6 +70,24 @@ const env = {
   // The Deal Room routes are on for development regardless of what the
   // machine's environment happens to carry.
   NEXT_PUBLIC_DEAL_ROOM: "on",
+  /*
+    A build directory of its own, so `npm run verify` cannot pull the floor out
+    from under a running dev server.
+
+    `verify` ends in `next build`, which writes `.next`. Run while `next dev` is
+    serving out of the same directory, it replaces the chunks the dev server
+    still holds references to, and the next request answers
+
+        Error: Cannot find module './1682.js'
+
+    from inside `webpack-runtime.js`. Nothing is wrong with the code and every
+    check has just passed, which is the worst possible moment to be handed a
+    server error: it reads as a defect in whatever was being tested. It cost two
+    diagnoses on 6 August 2026 before the cause was obvious.
+
+    Overridable, because the evidence runs set it deliberately.
+  */
+  PONTE_DIST_DIR: process.env.PONTE_DIST_DIR || ".next-dev",
 };
 
 console.log(`dev:local - Supabase ${status.API_URL} (local stack)`);
