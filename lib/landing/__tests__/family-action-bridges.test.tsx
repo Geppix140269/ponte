@@ -218,25 +218,43 @@ test("every family carries at least one action, and the two- and three-action va
 // The landing composition
 // ---------------------------------------------------------------------------
 
-test("the approved headline and its gold italic emphasis are untouched", () => {
+/*
+  The two tests this block replaces pinned the Brand v5 obsidian landing:
+  the literal headline "Global trade, from signal to deal.", and the presence
+  of `SignalStrip`, `PonteFooter` and `DeskShell` in `app/[locale]/page.tsx`.
+
+  `ADR-0032` (2026-08-06, owner approval on five working prototypes) names the
+  landing as Phase 3's rebuild and supersedes the Brand v5 surface language
+  outright; the newer ADR wins over the older Constitution v1 section 5 pin.
+  The landing is now `BridgeLanding` on the bridge system, and the old
+  assertions fail honestly rather than being stale passes: this replaces them
+  with the equivalent protection for the surface that is actually live.
+*/
+test("the landing is the bridge system, not the retired obsidian shell", () => {
+  /*
+    Comments stripped first. The route's own doc comment explains why
+    `DeskShell` is no longer rendered, and that explanation necessarily
+    contains the word: checking the raw source would fail on the sentence that
+    is telling the reader the shell is gone.
+  */
+  const code = landingPage.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/[^\n]*$/gm, "");
+  assert.ok(!code.includes("DeskShell"), "the retired obsidian shell is still mounted");
+  assert.ok(!code.includes("SignalStrip"), "the retired obsidian strip is still mounted");
+  assert.match(code, /LandingEntrance/, "the landing is not rendering the bridge entrance");
+});
+
+test("the approved bridge headline and its bronze italic emphasis are in place", () => {
+  const bridgeLanding = readFileSync("components/bridge/BridgeLanding.tsx", "utf8");
   assert.match(
-    landingPage,
-    /Global trade, from <em>signal to deal\.<\/em>/,
-    "the authorised headline structure has been changed",
+    bridgeLanding,
+    /What&rsquo;s <em>your deal\?<\/em>/,
+    "the ADR-0032 headline structure is not in the bridge landing",
   );
 });
 
 test("the temporary three-column family/action grid is gone", () => {
   assert.ok(!/className="fams"/.test(landingPage), "the replaced card grid is still rendered");
   assert.ok(!/className="fam__go/.test(landingPage), "the replaced action cards are still rendered");
-});
-
-test("the rest of the landing is still there", () => {
-  // The notes authorise replacing the family/action section and nothing else.
-  for (const kept of ["SignalStrip", "Market Signals", "PonteFooter", "DeskShell"]) {
-    assert.ok(landingPage.includes(kept), `${kept} was removed from the landing`);
-  }
-  assert.ok(!/hero__input|<input/.test(landingPage), "a hero input was introduced, which section 5 forbids");
 });
 
 test("the product sectors are gone from the landing", () => {
