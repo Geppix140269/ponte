@@ -316,6 +316,24 @@ function V_landing(){
   </div>`;
 }
 
+/* ============================================================================
+   DEFECTIVE. THIS SECTION IS NOT A BUILD TARGET. ADR-0032-AMENDMENT-2, entry 3.
+
+   This view holds two identical placeholder questions and jumps to the signed-in
+   home after four answers. Built literally it would drop the stored intent
+   `seek_brands_or_products_to_represent` for the third time, which is the defect
+   the whole listing build exists to end.
+
+   The file stays authoritative for APPEARANCE everywhere: ink ground, grain,
+   type, scale, whitespace, hairlines, tone, the arc, the tape, the ledger. It is
+   not authoritative for flow, count or content anywhere.
+
+   The authority for what the publish path asks, stores, validates and routes is
+   the code: lib/structure/intent-choice.ts for the six presented choices and the
+   seven stored market_intent values, and lib/publish/steps.ts for the order of
+   the nine surfaces. Where the two appear to disagree, the code wins and this
+   drawing is wrong.
+   ========================================================================== */
 function V_publish(){
   const t=S[L];
   const done=ans.length;
