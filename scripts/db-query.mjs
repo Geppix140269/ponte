@@ -1,6 +1,6 @@
 // Run SQL against the project database through the Supabase Management API.
 //
-//   node scripts/db-query.mjs --file supabase/migrations/20260722b_hs_codes.sql
+//   node scripts/db-query.mjs --file supabase/archive/20260722b_hs_codes.sql
 //   node scripts/db-query.mjs --sql "select count(*) from hs_codes"
 //
 // Exists because the direct Postgres host is IPv6 only and this machine has no

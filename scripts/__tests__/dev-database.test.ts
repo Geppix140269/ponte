@@ -84,12 +84,51 @@ test("the runner restores that snapshot, and refuses one carrying rows", () => {
   }
 });
 
-test("it does not silently skip a migration written after the snapshot", () => {
-  // A new migration has to be applied for the local database to be current,
-  // and the CLI would skip it for the same filename reason. The runner applies
-  // it itself, and fails loudly if it does not apply.
-  assert.match(RUNNER, /applyNewerMigrations/, "migrations newer than the baseline are no longer applied");
-  assert.match(RUNNER, /does not apply on top of the baseline/, "a failing new migration no longer fails the run");
+test("every migration on the apply path is applied, and a failure is loud", () => {
+  /*
+    `WO-8` adopted the snapshot as the genesis, so `supabase/migrations/` holds
+    only files written after it and there is no cut-line rule left to get wrong.
+
+    The previous version of this asserted `applyNewerMigrations`, which guessed
+    from the filename date whether a file was already in the baseline. The guess
+    was wrong in a knowable way - it assumed everything older than the snapshot
+    had been applied to production, and WO-2 proved two files had not. The
+    folder now answers the question the guess was answering.
+  */
+  assert.match(RUNNER, /function applyMigrations/, "migrations on the apply path are no longer applied");
+  assert.match(RUNNER, /does not apply on top of the genesis/, "a failing migration no longer fails the run");
+});
+
+test("pending migrations are applied only when named", () => {
+  // `supabase/pending/` means written and deliberately not applied. The default
+  // is the schema that actually launches; anything ahead of production has to
+  // be asked for by name, and is printed when it is.
+  assert.match(RUNNER, /function applyPending/, "pending files can no longer be opted into at all");
+  assert.match(RUNNER, /NOT in production/, "an opted-in pending file is no longer announced");
+  assert.match(
+    RUNNER,
+    /argument === "with"/,
+    "pending files are no longer gated behind an explicit request",
+  );
+});
+
+test("supabase/migrations holds nothing that is also pending or archived", () => {
+  /*
+    The structural half of the same rule, enforced by `check-migrations.mjs` and
+    asserted here so that removing it from there is a visible act rather than a
+    quiet one.
+
+    A file in both places is the quiet failure: somebody copies a pending
+    migration into `migrations/` to test it, commits the copy, and a folder
+    whose entire purpose is "these do not run" now contains one that does.
+  */
+  const onPath = readdirSync("supabase/migrations").filter((n) => n.endsWith(".sql"));
+  for (const dir of ["supabase/pending", "supabase/archive"]) {
+    const held = new Set(readdirSync(dir).filter((n) => n.endsWith(".sql")));
+    for (const file of onPath) {
+      assert.ok(!held.has(file), `${file} is in both supabase/migrations and ${dir}`);
+    }
+  }
 });
 
 test("FINDING-01 is still reported on every run", () => {

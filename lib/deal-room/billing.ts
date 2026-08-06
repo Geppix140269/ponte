@@ -6,7 +6,7 @@
  *
  * ## What this module is
  *
- * The TypeScript half of `supabase/migrations/20260731e_deal_room_paid_room_periods.sql`,
+ * The TypeScript half of `supabase/pending/20260731e_deal_room_paid_room_periods.sql`,
  * which is **written and not applied**. It is pure, in the same sense as
  * `./pricing`: no database, no network, no clock, no environment. A period end
  * is derived from a start that is *passed in*, never from `new Date()`, so a

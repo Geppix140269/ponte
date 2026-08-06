@@ -150,7 +150,7 @@ test("referral attribution is never imported by auth, verification or payment co
     "app/auth/confirm/route.ts",
     "app/api/webhooks/stripe/route.ts",
     "app/api/verification/route.ts",
-    "supabase/migrations/20260722e_handle_new_user_search_path.sql",
+    "supabase/archive/20260722e_handle_new_user_search_path.sql",
   ];
   for (const file of forbidden) {
     let src = "";

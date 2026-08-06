@@ -55,7 +55,33 @@
 // and parameter names are dropped.
 
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+
+/*
+  Every folder a migration can live in.
+
+  `WO-8` adopted the schema snapshot as the genesis, so `supabase/migrations/`
+  holds only files written after 1 August 2026, and every Deal Room migration
+  moved to `archive/` (applied before the genesis) or `pending/` (written and
+  deliberately not applied).
+
+  The property these tests check is about the REPOSITORY, not the apply path: a
+  grant that hands a member an internal function is wrong wherever the file
+  sits, and a pending file is one approval away from running. So the scan
+  follows the files.
+*/
+const MIGRATION_DIRS = ["supabase/migrations", "supabase/archive", "supabase/pending"];
+
+/** Every dated migration in the repository, in filename order, as text. */
+function migrationTexts(): string[] {
+  return MIGRATION_DIRS.flatMap((dir) =>
+    (existsSync(dir) ? readdirSync(dir) : [])
+      .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+      .map((f) => ({ name: f, path: `${dir}/${f}` })),
+  )
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((f) => readFileSync(f.path, "utf8"));
+}
 import { join } from "node:path";
 
 let passed = 0;
@@ -69,10 +95,10 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const CORE = "supabase/migrations/20260729a_deal_room_core.sql";
-const RLS = "supabase/migrations/20260729b_deal_room_rls.sql";
-const ACL = "supabase/migrations/20260730b_deal_room_function_acl.sql";
-const ACL_C = "supabase/migrations/20260730c_deal_room_internal_acl.sql";
+const CORE = "supabase/archive/20260729a_deal_room_core.sql";
+const RLS = "supabase/archive/20260729b_deal_room_rls.sql";
+const ACL = "supabase/archive/20260730b_deal_room_function_acl.sql";
+const ACL_C = "supabase/archive/20260730c_deal_room_internal_acl.sql";
 
 const coreSql = readFileSync(CORE, "utf8");
 const rlsSql = readFileSync(RLS, "utf8");
@@ -87,10 +113,10 @@ const rlsCode = rlsSql.replace(/--[^\n]*/g, "");
 const aclCSql = readFileSync(ACL_C, "utf8");
 const aclCCode = aclCSql.replace(/--[^\n]*/g, "");
 
-const STORAGE = "supabase/migrations/20260729c_deal_room_storage.sql";
+const STORAGE = "supabase/archive/20260729c_deal_room_storage.sql";
 const storageSql = readFileSync(STORAGE, "utf8");
 
-const ACL_D = "supabase/migrations/20260731a_deal_room_storage_policy_helpers.sql";
+const ACL_D = "supabase/archive/20260731a_deal_room_storage_policy_helpers.sql";
 const aclDSql = readFileSync(ACL_D, "utf8");
 const aclDCode = aclDSql.replace(/--[^\n]*/g, "");
 
@@ -166,10 +192,7 @@ function declaredFunctions(): Set<string> {
   // and its ACL could not be checked. `20260731f` added `deal_room_display_label`
   // and this was the test that noticed, which is the behaviour worth keeping.
   // A replacement declares the same name and argument types, so the Set dedupes.
-  const migrations = readdirSync("supabase/migrations")
-    .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
-    .sort()
-    .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8"));
+  const migrations = migrationTexts();
   for (const sql of migrations) {
     const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(sql.matchAll(pattern))) found.add(key(m[1], m[2]));
@@ -340,10 +363,8 @@ type Statement = { sig: string; roles: string[]; index: number };
  * and a false finding in this file is expensive, because this file is what says
  * whether LB-008 has come back.
  */
-const allAclCode = readdirSync("supabase/migrations")
-  .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
-  .sort()
-  .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8").replace(/--[^\n]*/g, ""))
+const allAclCode = migrationTexts()
+  .map((sql) => sql.replace(/--[^\n]*/g, ""))
   .join("\n");
 
 function aclStatements(verb: "revoke" | "grant", code: string = aclCode): Statement[] {
@@ -521,10 +542,7 @@ function effectiveAuthenticatedGrants(): Set<string> {
   // reason `declaredFunctions()` is. A revoke written in a migration this list
   // did not name would be invisible, and the function would look member-callable
   // when it is not - a false finding, which erodes the value of a true one.
-  const allCode = readdirSync("supabase/migrations")
-    .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
-    .sort()
-    .map((f) => readFileSync(`supabase/migrations/${f}`, "utf8").replace(/--[^\n]*/g, ""));
+  const allCode = migrationTexts().map((sql) => sql.replace(/--[^\n]*/g, ""));
   for (const code of allCode) {
     for (const s of aclStatements("revoke", code)) {
       if (s.roles.includes("authenticated")) effective.delete(s.sig);

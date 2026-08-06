@@ -7,7 +7,7 @@
 // upstream that is down.
 //
 // The pipeline stores the results in `verifications.registry`, `.vies` and
-// `.gleif` (see supabase/migrations/20260721g_verification.sql).
+// `.gleif` (see supabase/archive/20260721g_verification.sql).
 //
 // CONTRACT, read this before consuming a RegistryResult:
 //

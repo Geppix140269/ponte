@@ -32,7 +32,7 @@
 // clause is dropped - a defaulted argument is still part of the identity.
 
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -45,7 +45,7 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const MIGRATION = "supabase/migrations/20260729b_deal_room_rls.sql";
+const MIGRATION = "supabase/archive/20260729b_deal_room_rls.sql";
 const sql = readFileSync(MIGRATION, "utf8");
 
 /** An ordered list of argument types, as Postgres would identify the function. */
@@ -189,10 +189,27 @@ test("every command is granted to authenticated and nothing is granted to anon",
 // the signature `20260729b` declared. The set of files is discovered rather than
 // listed, so a new migration cannot opt out by not being mentioned here.
 
-const LATER_MIGRATIONS = readdirSync("supabase/migrations")
-  .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
-  .filter((f) => f > "20260729b_deal_room_rls.sql")
-  .sort();
+/*
+  Every folder a migration can live in, not just the apply path.
+
+  `WO-8` adopted the schema snapshot as the genesis, so `supabase/migrations/`
+  now holds only files written after 1 August 2026 and every Deal Room migration
+  moved to `archive/` (applied before the genesis) or `pending/` (written and
+  deliberately not applied).
+
+  The scan follows them, because the property being checked is about the
+  REPOSITORY and not about the apply path: a file that redefines a
+  `deal_room_*` function with a changed signature is a latent overload wherever
+  it sits, and a pending file is one approval away from running.
+*/
+const MIGRATION_DIRS = ["supabase/migrations", "supabase/archive", "supabase/pending"];
+
+const LATER_MIGRATIONS = MIGRATION_DIRS.flatMap((dir) =>
+  (existsSync(dir) ? readdirSync(dir) : [])
+    .filter((f) => /^\d{8}[a-z]_.*\.sql$/.test(f))
+    .filter((f) => f > "20260729b_deal_room_rls.sql")
+    .map((f) => `${dir}/${f}`),
+).sort((a, b) => (a.split("/").pop() ?? "").localeCompare(b.split("/").pop() ?? ""));
 
 /**
  * `deal_room_*` functions legitimately introduced AFTER `20260729b`.
@@ -229,7 +246,7 @@ test("every later migration redefining a deal_room function keeps the declared s
   let redefinitions = 0;
 
   for (const file of LATER_MIGRATIONS) {
-    const text = readFileSync(`supabase/migrations/${file}`, "utf8");
+    const text = readFileSync(file, "utf8");
     const pattern = /create or replace function public\.(deal_room_\w+)\(([\s\S]*?)\)\s*returns/g;
     for (const m of Array.from(text.matchAll(pattern))) {
       redefinitions++;
@@ -262,7 +279,7 @@ test("every classified new function is actually declared by a later migration", 
   // permission to nothing, which is how an allowlist stops being read.
   const declared = new Set<string>();
   for (const file of LATER_MIGRATIONS) {
-    const text = readFileSync(`supabase/migrations/${file}`, "utf8");
+    const text = readFileSync(file, "utf8");
     for (const m of Array.from(
       text.matchAll(/create or replace function public\.(deal_room_\w+)\(/g),
     )) {
@@ -281,7 +298,7 @@ test("a classified new function still has to state what it is", () => {
 });
 
 test("20260731b fixes the initiator identity constraint and changes nothing else", () => {
-  const FILE = "supabase/migrations/20260731b_deal_room_propose_initiator_capacity.sql";
+  const FILE = "supabase/archive/20260731b_deal_room_propose_initiator_capacity.sql";
   const patched = readFileSync(FILE, "utf8");
 
   // The defect Approval 3 found: the initiator was admitted with neither an
@@ -324,7 +341,7 @@ test("20260731b fixes the initiator identity constraint and changes nothing else
 });
 
 test("20260731c fixes the procedure approver gate and touches nothing else", () => {
-  const FILE = "supabase/migrations/20260731c_deal_room_procedure_approver_gate.sql";
+  const FILE = "supabase/archive/20260731c_deal_room_procedure_approver_gate.sql";
   const patched = readFileSync(FILE, "utf8");
 
   // Exactly the three functions the defect lives in, and no fourth.
@@ -382,7 +399,7 @@ test("20260731c fixes the procedure approver gate and touches nothing else", () 
 });
 
 test("20260731d seeds an approver row the other approvers can read", () => {
-  const FILE = "supabase/migrations/20260731d_deal_room_approver_row_visibility.sql";
+  const FILE = "supabase/archive/20260731d_deal_room_approver_row_visibility.sql";
   const patched = readFileSync(FILE, "utf8");
 
   // One function, and it is the one that seeds.

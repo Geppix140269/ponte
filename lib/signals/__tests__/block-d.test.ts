@@ -322,7 +322,7 @@ test("10: confirmation links a normal listing and never writes a badge", () => {
 });
 
 test("the Block D migration is additive, idempotent and RLS-guarded", () => {
-  const m = src("supabase/migrations/20260723d_investigation_and_interest.sql");
+  const m = src("supabase/archive/20260723d_investigation_and_interest.sql");
   assert.ok(m.includes("add column if not exists interested_business"));
   assert.ok(m.includes("create table if not exists signal_investigations"));
   assert.ok(m.includes("enable row level security"));
@@ -429,7 +429,7 @@ test("22: identity is disclosed to the owner only on acceptance", () => {
 // --- Follow-up 2: investigation idempotency and count accuracy --------------
 
 test("investigation dedupe: a unique constraint and an atomic count trigger exist", () => {
-  const m = src("supabase/migrations/20260723e_investigation_dedupe_and_count.sql");
+  const m = src("supabase/archive/20260723e_investigation_dedupe_and_count.sql");
   assert.ok(
     m.includes("unique (signal_id, requester_id)"),
     "one investigation request per member per signal",

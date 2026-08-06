@@ -325,7 +325,7 @@ test("no submit payload key is dropped for a column the listing cannot lose", ()
 // The database says the same thing, to every writer
 // ---------------------------------------------------------------------------
 
-const MIGRATION = readFileSync("supabase/migrations/20260728a_market_classification.sql", "utf8");
+const MIGRATION = readFileSync("supabase/archive/20260728a_market_classification.sql", "utf8");
 
 /** The body of one named CHECK constraint, whitespace collapsed. */
 function constraintBody(name: string): string {

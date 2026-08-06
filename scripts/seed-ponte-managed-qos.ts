@@ -14,7 +14,7 @@
 // found-or-created / upserted on stable keys, so re-running changes nothing.
 //
 // SAFE FIRST: run against a Supabase PREVIEW BRANCH, after applying
-// supabase/migrations/20260724b_listings_desk_managed.sql there. Never a
+// supabase/archive/20260724b_listings_desk_managed.sql there. Never a
 // throwaway on production without review.
 //
 // Env (.env.local): NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.

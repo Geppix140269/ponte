@@ -38,7 +38,7 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const MIGRATION_PATH = "supabase/migrations/20260731e_deal_room_paid_room_periods.sql";
+const MIGRATION_PATH = "supabase/pending/20260731e_deal_room_paid_room_periods.sql";
 const SQL = readFileSync(join(process.cwd(), MIGRATION_PATH), "utf8");
 const BILLING_SRC = readFileSync(join(process.cwd(), "lib/deal-room/billing.ts"), "utf8");
 
@@ -384,8 +384,12 @@ test("the purity scan is looking at code, not at comments", () => {
   // it keeps the code and drops the comment that mentions the migration path.
   const code = codeOnly(BILLING_SRC);
   assert.ok(code.includes("export function periodEndFrom"), "code must survive");
-  assert.ok(BILLING_SRC.includes("supabase/migrations"), "the doc comment does name the migration");
-  assert.ok(!code.includes("supabase/migrations"), "and the scan does not see it");
+  // `supabase/pending/`, not `supabase/migrations/`: WO-8 moved the billing
+  // migration there, because it is written and deliberately not applied. The
+  // property under test is unchanged - a path in a doc comment must not be
+  // visible to the purity scan - only the path is.
+  assert.ok(BILLING_SRC.includes("supabase/pending"), "the doc comment does name the migration");
+  assert.ok(!code.includes("supabase/pending"), "and the scan does not see it");
 });
 
 function importersUnder(dir: string): string[] {

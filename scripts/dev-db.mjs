@@ -59,14 +59,25 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const SNAPSHOT_DIR = "supabase/schema-snapshots";
 const MIGRATIONS_DIR = "supabase/migrations";
+const PENDING_DIR = "supabase/pending";
 
 const argument = process.argv[2] ?? "start";
+
+/**
+ * Pending migrations to apply on top, named explicitly.
+ *
+ *   npm run dev:db -- with 20260731e_deal_room_paid_room_periods.sql
+ *
+ * Default: none. The development database builds the schema that actually
+ * launches, and anything ahead of production has to be asked for by name.
+ */
+const requestedPending = argument === "with" ? process.argv.slice(3) : [];
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -315,134 +326,40 @@ function restoreBaseline(container) {
 }
 
 /* ------------------------------------------------------------------ *
- * Phase 1: migrations written after the snapshot was taken
+ * Phase 1: migrations written after the genesis
  * ------------------------------------------------------------------ */
 
-/** Leading digits of a filename, as a comparable number. `01_x.sql` -> 1,
- *  `20260731f_y.sql` -> 20260731. Files with no leading digit sort first. */
-function dateOf(name) {
-  const digits = name.match(/^(\d+)/);
-  return digits ? Number(digits[1]) : 0;
-}
-
 /**
- * Migrations dated BEFORE the snapshot that are nevertheless not in it.
+ * Everything in `supabase/migrations/` is applied, in filename order.
  *
- * The cut-line rule below assumes every migration older than the snapshot was
- * applied to production. That assumption is **wrong for exactly these two**,
- * and it is wrong knowably: the WO-2 reconciliation read production's ledger
- * and its catalogue and found both written, reviewed and never run. Each says
- * so in its own header.
+ * There is no cut-line rule any more, and no exception list. `WO-8` adopted the
+ * committed snapshot as the genesis, so the folder holds only files written
+ * AFTER it, and every one of them belongs on the apply path by definition. That
+ * is the whole benefit of the change: the question "is this file already in the
+ * baseline?" no longer has to be answered, because the folder answers it.
  *
- *   20260730a  "NOT APPLIED. Written and reviewed; not run against production."
- *              None of its nine indexes exist.
- *   20260731e  "WRITTEN AND NOT APPLIED."
- *              deal_room_room_periods and deal_room_billing_events do not exist.
+ * The previous version guessed from the filename date, and the guess was wrong
+ * in a knowable way - it assumed every migration older than the snapshot had
+ * been applied to production, and WO-2 proved two had not. The exception list
+ * that patched it is gone with the thing it was patching.
  *
- * This list is not a guess and not a heuristic. It is transcribed from a report
- * built on production's own catalogue, and it is the only place the cut-line
- * rule is allowed an exception.
- *
- * ## Why they are applied here anyway
- *
- * Because the local database's job is to be the schema you are BUILDING
- * against, and `WO-6.4` is explicit that `20260731e` is extended rather than
- * replaced. A migration written today on top of it - `20260802a` is exactly
- * that - cannot be tested at all against a database that lacks it.
- *
- * The cost is that local is then production PLUS two unapplied files, which is
- * not production. So it is printed, every run, by name.
+ * Applied one at a time by this file rather than by the CLI, which is what
+ * sidesteps FINDING-01's filename-pattern trap without renaming anything.
  */
-const WRITTEN_NOT_APPLIED = ["20260731e_deal_room_paid_room_periods.sql"];
-
-/**
- * Written, unapplied, and **known not to work**. Skipped, with the reason.
- *
- * `20260730a_market_signal_search.sql` creates `pg_trgm` `with schema
- * extensions` and then references `extensions.gin_trgm_ops`. Production already
- * has `pg_trgm` installed **in `public`**, so `create extension if not exists`
- * is a silent no-op and the operator class never resolves under `extensions.`.
- * Every index statement in the file then fails.
- *
- * ## This is now demonstrated rather than predicted
- *
- * The WO-2 reconciliation reasoned it out from production's catalogue and
- * recorded it as blocker 2. Running it here **executed** it:
- *
- *   ERROR: operator class "extensions.gin_trgm_ops" does not exist
- *          for access method "gin"
- *
- * Same failure, reached independently, with no production access. That is the
- * first time this repository has been able to prove a migration is broken
- * without running it against the live database, and it is worth more than the
- * inconvenience of skipping the file.
- *
- * **Not fixed here.** The standing instruction is that migration remedies
- * belong to the reconciliation, not to whoever trips over them.
- */
-const KNOWN_BROKEN = {
-  "20260730a_market_signal_search.sql":
-    "creates pg_trgm in `extensions`; production has it in `public`, so extensions.gin_trgm_ops does not resolve (WO-2 blocker 2, reproduced here)",
-};
-
-/**
- * The snapshot is production as it stood on its own date, so every migration
- * dated on or before that is already in it and replaying one would collide with
- * an object that exists. Anything dated after it is work done since, and has to
- * be applied for the local database to be current.
- *
- * The rule is the two filenames and nothing else - no manifest to maintain and
- * forget - plus the named exceptions above, and the boundary is printed on
- * every run so it is never invisible.
- *
- * Applied one at a time, in order, by this file rather than by the CLI. That is
- * what sidesteps FINDING-01's filename-pattern trap without renaming anything:
- * the CLI would skip `20260802a_...` for having a letter in its version, and
- * this does not care.
- */
-function applyNewerMigrations(container, snapshotFile) {
-  const boundary = dateOf(snapshotFile.replace(/^production-public-/, ""));
-  const all = readdirSync(MIGRATIONS_DIR).filter((name) => name.endsWith(".sql")).sort();
-
-  const skip = (name) => WRITTEN_NOT_APPLIED.includes(name) || name in KNOWN_BROKEN;
-  const pending = all.filter((name) => WRITTEN_NOT_APPLIED.includes(name));
-  const newer = all.filter((name) => dateOf(name) > boundary && !skip(name));
-
-  console.log(
-    `  baseline   current to ${boundary}; ${all.length - newer.length - pending.length} migration(s) already in it`,
-  );
-
-  for (const [name, reason] of Object.entries(KNOWN_BROKEN)) {
-    if (all.includes(name)) console.log(`  skipped    ${name}\n             ${reason}`);
-  }
-
-  // The order matters: a file written today may build on one of these.
-  for (const name of pending) {
-    const sql = readFileSync(join(MIGRATIONS_DIR, name), "utf8");
-    const applied = psql(container, sql, { label: name });
-    if (applied.status !== 0) {
-      fail(
-        `Written-but-unapplied migration ${name} does not apply to the baseline.`,
-        (applied.stderr ?? "").split("\n").slice(-20).join("\n"),
-      );
-    }
-    console.log(`  pending    ${name}  (NOT in production)`);
-  }
-
-  if (newer.length === 0) {
-    console.log("  newer      none");
+function applyMigrations(container) {
+  const files = readdirSync(MIGRATIONS_DIR).filter((n) => n.endsWith(".sql")).sort();
+  if (files.length === 0) {
+    console.log("  genesis    the snapshot IS the schema; no migrations written since");
     return;
   }
-
-  for (const name of newer) {
-    const sql = readFileSync(join(MIGRATIONS_DIR, name), "utf8");
-    const applied = psql(container, sql, { label: name });
+  for (const name of files) {
+    const applied = psql(container, readFileSync(join(MIGRATIONS_DIR, name), "utf8"), { label: name });
     if (applied.status !== 0) {
       fail(
-        `Migration ${name} does not apply on top of the baseline.`,
+        `Migration ${name} does not apply on top of the genesis.`,
         [
           "This is a real finding about that migration, not a setup problem: the",
-          "baseline is production's own schema, so a migration that cannot be",
+          "genesis is production's own schema, so a migration that cannot be",
           "applied to it cannot be applied to production either.",
           "",
           (applied.stderr ?? "").split("\n").slice(-20).join("\n"),
@@ -450,6 +367,37 @@ function applyNewerMigrations(container, snapshotFile) {
       );
     }
     console.log(`  applied    ${name}`);
+  }
+}
+
+/**
+ * Files from `supabase/pending/`, applied ONLY when asked for by name.
+ *
+ * `npm run dev:db -- with 20260731e_deal_room_paid_room_periods.sql`
+ *
+ * Pending means written and deliberately not applied, so the default is to
+ * build the schema that actually launches and nothing else. Opting in is for
+ * developing against a migration before it is approved - which is the only way
+ * to find out it does not work, and how `20260730a` was demonstrated broken.
+ *
+ * Each one is named on the way in, so a local database is never quietly ahead
+ * of production without saying so.
+ */
+function applyPending(container, requested) {
+  for (const name of requested) {
+    const path = join(PENDING_DIR, name);
+    if (!existsSync(path)) {
+      const available = readdirSync(PENDING_DIR).filter((n) => n.endsWith(".sql"));
+      fail(`${name} is not in ${PENDING_DIR}.`, `Available:\n  ${available.join("\n  ")}`);
+    }
+    const applied = psql(container, readFileSync(path, "utf8"), { label: name });
+    if (applied.status !== 0) {
+      fail(
+        `Pending migration ${name} does not apply.`,
+        (applied.stderr ?? "").split("\n").slice(-20).join("\n"),
+      );
+    }
+    console.log(`  pending    ${name}  (NOT in production)`);
   }
 }
 
@@ -501,7 +449,7 @@ function reattachSignupTrigger(container) {
  * not a reading of the migrations - which matters, because the migrations are
  * WRONG about this.
  *
- * `supabase/migrations/20260729c_deal_room_storage.sql` states in its header
+ * `supabase/archive/20260729c_deal_room_storage.sql` states in its header
  * that it is "NOT APPLIED" and that creating `deal-room-evidence` is a separate
  * owner decision. The bucket EXISTS in production: private, 25 MB, pdf/png/
  * jpeg/webp. An earlier version of this file read that header, believed it, and
@@ -647,8 +595,9 @@ if (skipped > 0) {
 }
 
 console.log("\nbuilding the schema\n");
-const snapshot = restoreBaseline(container);
-applyNewerMigrations(container, snapshot);
+restoreBaseline(container);
+applyMigrations(container);
+applyPending(container, requestedPending);
 reattachSignupTrigger(container);
 createBuckets(container);
 

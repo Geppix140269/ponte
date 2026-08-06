@@ -65,9 +65,9 @@ function test(name: string, fn: () => void): void {
   }
 }
 
-const core = readFileSync("supabase/migrations/20260729a_deal_room_core.sql", "utf8");
-const rls = readFileSync("supabase/migrations/20260729b_deal_room_rls.sql", "utf8");
-const storage = readFileSync("supabase/migrations/20260729c_deal_room_storage.sql", "utf8");
+const core = readFileSync("supabase/archive/20260729a_deal_room_core.sql", "utf8");
+const rls = readFileSync("supabase/archive/20260729b_deal_room_rls.sql", "utf8");
+const storage = readFileSync("supabase/archive/20260729c_deal_room_storage.sql", "utf8");
 const all = core + rls + storage;
 
 /**

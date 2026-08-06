@@ -462,7 +462,7 @@ export default async function AdminSignalsPage({
               <b>The signal table could not be read</b>
               <p>
                 If the Block A migration has not been applied yet, apply
-                supabase/migrations/20260723a_desk_radar_signal_gate.sql first.
+                supabase/archive/20260723a_desk_radar_signal_gate.sql first.
               </p>
             </div>
           </div>
