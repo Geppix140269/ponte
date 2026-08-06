@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ponte, the bridge builds itself</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0E0F0C;
+  --cream:#F2EFE6;
+  --bronze:#C79A4C;
+  --bronze-deep:#8A6520;
+  --serif:"Playfair Display",Georgia,serif;
+  --sans:"Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --ease:cubic-bezier(.19,1,.22,1);
+}
+html,body{height:100%}
+body{background:#050504;display:flex;align-items:center;justify-content:center;gap:34px;flex-wrap:wrap;padding:26px;font-family:var(--sans)}
+.wrap{position:relative}
+.cap{position:absolute;bottom:-24px;left:0;font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:rgba(255,255,255,.3);text-transform:uppercase}
+
+.phone{
+  width:390px;height:844px;position:relative;overflow:hidden;
+  background:var(--ink);color:var(--cream);
+  display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06);
+}
+.phone.light{--ink:#F2EFE6;--cream:#0E0F0C;--bronze:#8A6520;--bronze-deep:#C79A4C}
+
+/* paper grain */
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:overlay;z-index:6}
+
+/* ---------- the bridge ---------- */
+.span{position:absolute;left:0;right:0;top:0;height:520px;z-index:1;pointer-events:none}
+.span svg{width:100%;height:100%;display:block;overflow:visible}
+.deck,.cable{fill:none;stroke-linecap:round}
+.deck{stroke:var(--bronze);stroke-width:1.25}
+.cable{stroke:var(--cream);stroke-width:.75;opacity:.14}
+.pier{stroke:var(--cream);stroke-width:1;opacity:.22}
+.node{fill:var(--bronze)}
+.node.pending{fill:none;stroke:var(--cream);stroke-width:1;opacity:.28}
+
+/* ---------- masthead ---------- */
+.top{position:relative;z-index:4;padding:26px 26px 0;display:flex;justify-content:space-between;align-items:baseline}
+.mark{font-family:var(--mono);font-size:10px;letter-spacing:.42em;text-transform:uppercase;opacity:.5}
+.count{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--bronze)}
+
+/* ---------- ask ---------- */
+.ask{position:relative;z-index:4;padding:150px 26px 0}
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);margin-bottom:16px}
+.ask h1{font-family:var(--serif);font-weight:400;font-size:46px;line-height:.99;letter-spacing:-.022em;max-width:9ch}
+.ask h1 em{font-style:italic;color:var(--bronze)}
+
+/* ---------- choices ---------- */
+.zones{position:relative;z-index:4;margin-top:auto;flex:0 0 auto}
+.zone{
+  width:100%;display:block;text-align:left;background:transparent;border:0;cursor:pointer;color:inherit;
+  padding:19px 26px;position:relative;border-top:1px solid rgba(255,255,255,.10);
+  transition:padding-left 420ms var(--ease),opacity 340ms var(--ease),transform 420ms var(--ease);
+}
+.phone.light .zone{border-top-color:rgba(0,0,0,.12)}
+.zone .n{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;opacity:.4;display:block;margin-bottom:6px}
+.zone .t{font-family:var(--serif);font-size:25px;line-height:1.1;letter-spacing:-.012em;display:block}
+.zone .d{font-size:12.5px;font-weight:300;opacity:.5;margin-top:6px;display:block;max-width:31ch;line-height:1.45}
+.zone::before{
+  content:"";position:absolute;left:0;top:-1px;height:1px;width:0;background:var(--bronze);
+  transition:width 520ms var(--ease);
+}
+.zone:hover{padding-left:36px}
+.zone:hover::before{width:100%}
+.zone:hover .n{opacity:.9;color:var(--bronze)}
+.zone.go{padding-left:36px}
+.zone.go::before{width:100%}
+.zone.out{opacity:0;transform:translateX(26px)}
+
+/* ---------- the record, reversed panel ---------- */
+.ledger{
+  position:relative;z-index:4;background:var(--cream);color:var(--ink);
+  height:0;overflow:hidden;transition:height 560ms var(--ease);
+}
+.ledger .in{padding:18px 26px 20px}
+.ledger .lb{font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze-deep)}
+.ledger ul{list-style:none;margin-top:12px}
+.ledger li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.10);opacity:0;transform:translateY(10px);animation:up 520ms var(--ease) forwards}
+.phone.light .ledger li{border-bottom-color:rgba(255,255,255,.12)}
+.ledger li:last-child{border-bottom:0}
+.ledger .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;opacity:.45;white-space:nowrap}
+.ledger .v{font-family:var(--serif);font-size:17px;text-align:right}
+@keyframes up{to{opacity:1;transform:none}}
+
+.foot{position:relative;z-index:4;padding:14px 26px 24px;font-size:11px;line-height:1.5;opacity:.34;font-weight:300}
+
+.enter{opacity:0;transform:translateY(20px)}
+.enter.on{opacity:1;transform:none;transition:opacity 620ms var(--ease),transform 620ms var(--ease)}
+
+.cta{width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--bronze);color:var(--bronze);
+  font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;padding:18px 26px;cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:1ms!important;animation-duration:1ms!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="gr"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="4"/></filter>
+</svg>
+
+<div class="wrap"><div class="phone" id="a"></div><div class="cap">the span completes as you answer</div></div>
+<div class="wrap"><div class="phone light" id="b"></div><div class="cap">light</div></div>
+
+<script>
+const STEPS=[
+ {k:"DIRECTION",eye:"Step one",q:'What are you<br><em>here to do?</em>',o:[
+  {t:"I need something",d:"Buying, sourcing, or looking for a partner",s:"I need"},
+  {t:"I am offering something",d:"You supply, provide a service, or represent others",s:"I offer"}]},
+ {k:"MARKET",eye:"Step two",q:'What kind of<br><em>opportunity?</em>',o:[
+  {t:"A product",d:"Goods moving across a border",s:"A product"},
+  {t:"A trade service",d:"Freight, inspection, finance, customs, insurance",s:"A trade service"},
+  {t:"Distribution",d:"Carrying a brand, or finding someone to carry yours",s:"Distribution"}]},
+ {k:"SCALE",eye:"Step three",q:'How much,<br><em>roughly?</em>',o:[
+  {t:"A single shipment",d:"One consignment, one time",s:"One shipment"},
+  {t:"Recurring volume",d:"A programme you intend to repeat",s:"Recurring"},
+  {t:"Still deciding",d:"Ponte will ask again when it matters",s:"Undecided"}]},
+ {k:"REACH",eye:"Step four",q:'Where does it<br><em>need to go?</em>',o:[
+  {t:"A named country",d:"You know the destination",s:"Named market"},
+  {t:"A region",d:"Anywhere within it works",s:"Regional"},
+  {t:"Open",d:"The best counterparty, wherever they are",s:"Open"}]}
+];
+const TOTAL=STEPS.length;
+const LEDGER_H=[0,104,152,200,248];
+
+function build(root){
+  const st={i:0,ans:[]};
+
+  function bridge(done){
+    const W=390,H=520, y=430, rise=232;
+    const pts=[]; for(let n=0;n<=TOTAL;n++){
+      const x=26+(W-52)*(n/TOTAL);
+      const t=n/TOTAL, arc=Math.sin(Math.PI*t);
+      pts.push([x, y-rise*arc]);
+    }
+    const path=(upto)=>{
+      let d=`M ${pts[0][0]} ${pts[0][1]}`;
+      for(let n=1;n<=upto;n++){
+        const p0=pts[n-1],p1=pts[n], mx=(p0[0]+p1[0])/2;
+        d+=` C ${mx} ${p0[1]}, ${mx} ${p1[1]}, ${p1[0]} ${p1[1]}`;
+      }
+      return d;
+    };
+    const cables=pts.map((p,n)=>`<line class="cable" x1="${p[0]}" y1="${p[1]}" x2="${p[0]}" y2="${y+52}"/>`).join("");
+    const nodes=pts.map((p,n)=>n<=done
+      ? `<circle class="node" cx="${p[0]}" cy="${p[1]}" r="3.5"/>`
+      : `<circle class="node pending" cx="${p[0]}" cy="${p[1]}" r="3"/>`).join("");
+    return `<div class="span"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line class="pier" x1="26" y1="${y+52}" x2="26" y2="${pts[0][1]}"/>
+      <line class="pier" x1="${W-26}" y1="${y+52}" x2="${W-26}" y2="${pts[TOTAL][1]}"/>
+      <path class="cable" d="${path(TOTAL)}" style="opacity:.10"/>
+      ${cables}
+      <path class="deck" id="deck" d="${path(TOTAL)}"/>
+      ${nodes}
+    </svg></div>`;
+  }
+
+  function render(){
+    const step=STEPS[st.i], facts=st.ans.filter(Boolean);
+    root.innerHTML = bridge(facts.length) + '<div class="grain" style="filter:url(#gr)"></div>';
+
+    // draw the deck only as far as answered
+    const deck=root.querySelector("#deck");
+    if(deck){
+      const L=deck.getTotalLength();
+      const shown=L*(facts.length/TOTAL);
+      deck.style.strokeDasharray=L;
+      deck.style.strokeDashoffset=L-(facts.length?shown:0.001);
+      deck.style.transition="stroke-dashoffset 900ms var(--ease)";
+    }
+
+    const top=el("div","top");
+    top.appendChild(el("div","mark","Ponte"));
+    top.appendChild(el("div","count", String(facts.length).padStart(2,"0")+" / "+String(TOTAL).padStart(2,"0")));
+    root.appendChild(top);
+
+    const ask=el("div","ask enter");
+    if(step){
+      ask.appendChild(el("div","eyebrow",step.eye));
+      const h=el("h1"); h.innerHTML=step.q; ask.appendChild(h);
+    }else{
+      ask.appendChild(el("div","eyebrow","The span is complete"));
+      const h=el("h1"); h.innerHTML='Now Ponte<br><em>builds it.</em>'; ask.appendChild(h);
+    }
+    root.appendChild(ask);
+
+    const sp=el("div"); sp.style.flex="1 1 auto"; root.appendChild(sp);
+
+    if(step){
+      const zones=el("div","zones");
+      step.o.forEach((o,idx)=>{
+        const z=document.createElement("button"); z.className="zone enter";
+        z.appendChild(el("span","n",String(idx+1).padStart(2,"0")));
+        z.appendChild(el("span","t",o.t));
+        z.appendChild(el("span","d",o.d));
+        z.onclick=()=>pick(z,zones,step,o);
+        zones.appendChild(z);
+      });
+      root.appendChild(zones);
+    }
+
+    const led=el("div","ledger");
+    const inn=el("div","in");
+    inn.appendChild(el("div","lb","Your opportunity"));
+    const ul=document.createElement("ul");
+    facts.forEach((f,n)=>{const li=document.createElement("li");li.style.animationDelay=(80*n)+"ms";
+      li.appendChild(el("span","k",f.k));li.appendChild(el("span","v",f.s));ul.appendChild(li);});
+    inn.appendChild(ul); led.appendChild(inn); root.appendChild(led);
+    requestAnimationFrame(()=>led.style.height=LEDGER_H[Math.min(facts.length,LEDGER_H.length-1)]+"px");
+
+    if(step){
+      root.appendChild(el("div","foot","Saved only in this browser for up to 7 days. Sign in to keep it longer and continue on another device."));
+      const seq=[ask,...root.querySelectorAll(".zone")];
+      seq.forEach((n,i)=>setTimeout(()=>n.classList.add("on"),60+i*90));
+    }else{
+      const b=document.createElement("button"); b.className="cta"; b.textContent="Start again";
+      b.onclick=()=>{root.innerHTML="";build(root);}; root.appendChild(b);
+      setTimeout(()=>ask.classList.add("on"),80);
+    }
+  }
+
+  function pick(z,zones,step,o){
+    z.classList.add("go");
+    [...zones.children].forEach(c=>{if(c!==z)c.classList.add("out");});
+    st.ans[STEPS.indexOf(step)]={k:step.k,s:o.s};
+    setTimeout(()=>{st.i++;render();},520);
+  }
+  render();
+}
+function el(t,c,x){const n=document.createElement(t);if(c)n.className=c;if(x)n.textContent=x;return n;}
+build(document.getElementById("a"));
+build(document.getElementById("b"));
+</script>
+</body>
+</html>

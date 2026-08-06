@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ponte, Deal Room, desktop</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0E0F0C;--cream:#F2EFE6;--bronze:#C79A4C;--bronze-deep:#8A6520;
+  --checked:#5E9B78;--unproved:#C4664E;--waiting:#C79A4C;
+  --serif:"Playfair Display",Georgia,serif;--sans:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --ease:cubic-bezier(.19,1,.22,1);
+  --rule:rgba(242,239,232,.12);
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--cream);font-family:var(--sans);min-height:100vh;position:relative;overflow-x:hidden}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.14;mix-blend-mode:overlay;z-index:60}
+
+/* ---------- chrome ---------- */
+header{position:sticky;top:0;z-index:20;background:var(--ink);border-bottom:1px solid var(--rule)}
+.hbar{max-width:1560px;margin:0 auto;padding:0 40px;height:62px;display:flex;align-items:center;justify-content:space-between}
+.mark{font-family:var(--mono);font-size:11px;letter-spacing:.46em;text-transform:uppercase}
+.hnav{display:flex;gap:34px}
+.hnav a{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(242,239,232,.45);text-decoration:none;transition:color 260ms}
+.hnav a.on,.hnav a:hover{color:var(--bronze)}
+.who{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.42}
+
+/* ---------- room bar ---------- */
+.roombar{max-width:1560px;margin:0 auto;padding:22px 40px 0;display:flex;align-items:baseline;justify-content:space-between}
+.rl{display:flex;align-items:baseline;gap:20px}
+.rref{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--bronze)}
+.rstate{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.45}
+.rdays{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--waiting)}
+
+/* ---------- the span band ---------- */
+.band{max-width:1560px;margin:0 auto;padding:14px 40px 0;position:relative}
+.bandhead{display:flex;align-items:flex-end;justify-content:space-between;gap:60px}
+h1{font-family:var(--serif);font-weight:400;font-size:56px;line-height:.98;letter-spacing:-.026em;max-width:12ch}
+h1 em{font-style:italic;color:var(--bronze)}
+.now{max-width:400px;padding-bottom:8px}
+.now .k{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze)}
+.now .t{font-family:var(--serif);font-size:22px;line-height:1.25;margin-top:9px}
+.now .d{font-size:12.5px;opacity:.5;margin-top:8px;line-height:1.55;font-weight:300}
+
+.arcwrap{height:190px;margin-top:8px;position:relative}
+.arcwrap svg{width:100%;height:100%;overflow:visible}
+.deck{fill:none;stroke:var(--bronze);stroke-width:1.5;stroke-linecap:round}
+.ghost{fill:none;stroke:var(--cream);stroke-width:1;opacity:.14}
+.arch{fill:none;stroke:var(--cream);stroke-width:1;opacity:.14}
+.pier{stroke:var(--cream);stroke-width:1;opacity:.18}
+.water{stroke:var(--cream);stroke-width:1;opacity:.08}
+.nd{fill:var(--bronze)}
+.nd.off{fill:none;stroke:var(--cream);stroke-width:1;opacity:.3}
+.nd.now{fill:none;stroke:var(--bronze);stroke-width:2}
+.plab{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;fill:var(--cream);opacity:.4;text-transform:uppercase}
+.plab.on{opacity:1;fill:var(--bronze)}
+.veh{fill:var(--bronze)}
+.halo{fill:var(--bronze);opacity:.16}
+
+/* two shores */
+.shores{display:flex;justify-content:space-between;padding:0 40px;max-width:1560px;margin:0 auto;margin-top:-14px}
+.shore{width:300px}
+.shore.r{text-align:right}
+.shore .k{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.4}
+.shore .n{font-family:var(--serif);font-size:21px;margin-top:7px;line-height:1.2}
+.shore .m{font-size:11.5px;opacity:.45;margin-top:5px;font-weight:300}
+
+/* ---------- three columns ---------- */
+.cols{max-width:1560px;margin:0 auto;padding:56px 40px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.col{padding:0 34px;border-left:1px solid var(--rule)}
+.col:first-child{padding-left:0;border-left:0}
+.col:last-child{padding-right:0}
+.sechead{font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--bronze);display:flex;justify-content:space-between;margin-bottom:18px}
+.sechead span:last-child{color:var(--cream);opacity:.34}
+
+.br{display:block;width:100%;text-align:left;background:transparent;border:0;color:inherit;cursor:pointer;padding:14px 0 16px;border-top:1px solid var(--rule);transition:padding-left 400ms var(--ease)}
+.br:hover{padding-left:12px}
+.br .r{font-family:var(--mono);font-size:9px;letter-spacing:.2em;opacity:.4;display:flex;justify-content:space-between}
+.br .n{font-family:var(--serif);font-size:19px;margin-top:6px}
+.br .mini{height:30px;margin-top:9px}
+.br .mini svg{width:100%;height:100%;overflow:visible}
+.br .st{display:flex;justify-content:space-between;margin-top:7px}
+.br .st .a{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze)}
+.br .st .b{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;opacity:.36}
+
+.ig{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:11px 0;border-bottom:1px solid rgba(242,239,232,.08)}
+.ig .l{font-size:13px;font-weight:300;opacity:.82}
+.ig .v{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.ok{color:var(--checked)}.no{color:var(--unproved)}.wt{color:var(--waiting)}
+.note{font-size:11px;opacity:.4;margin-top:14px;line-height:1.6;font-weight:300}
+
+.ev{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid rgba(242,239,232,.08)}
+.ev .l{font-size:13px;font-weight:300}
+.ev .l small{display:block;font-size:11px;opacity:.42;margin-top:4px}
+.ev .s{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+
+/* ---------- lower band ---------- */
+.lower{max-width:1560px;margin:56px auto 0;padding:0 40px;display:grid;grid-template-columns:1.6fr 1fr;gap:0}
+.snap{background:var(--cream);color:var(--ink);padding:34px 40px 36px}
+.snap .sechead{color:var(--bronze-deep)}
+.snap .sechead span:last-child{color:var(--ink);opacity:.35}
+.snapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+.snap .row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.snap .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;opacity:.45}
+.snap .v{font-family:var(--serif);font-size:17px;text-align:right}
+.snap .note{opacity:.5}
+.act{padding:34px 0 0 40px}
+.ac{padding:11px 0;border-bottom:1px solid rgba(242,239,232,.07);display:flex;gap:16px;align-items:baseline}
+.ac .w{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;opacity:.34;white-space:nowrap;width:62px;flex:0 0 auto}
+.ac .x{font-size:12.5px;font-weight:300;opacity:.72;line-height:1.45}
+
+footer{max-width:1560px;margin:0 auto;padding:48px 40px 70px;opacity:.3;font-size:11px;line-height:1.6;font-weight:300}
+.rise{opacity:0;transform:translateY(16px)}
+.rise.on{opacity:1;transform:none;transition:opacity 620ms var(--ease),transform 620ms var(--ease)}
+@media (prefers-reduced-motion:reduce){.veh,.halo{display:none}*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="4"/></filter></svg>
+<div class="grain" style="filter:url(#g)"></div>
+
+<header><div class="hbar">
+  <span class="mark">Ponte</span>
+  <nav class="hnav">
+    <a href="#">Market</a><a href="#">Your crossings</a><a href="#" class="on">Deal Rooms</a><a href="#">Verification</a>
+  </nav>
+  <span class="who">GF &middot; 1402 Celsius Ltd</span>
+</div></header>
+
+<div class="roombar rise">
+  <div class="rl"><span class="rref">DR-0042 &middot; PD-0042</span><span class="rstate">Active &middot; procedure not agreed</span></div>
+  <span class="rdays">28 days left &middot; to 3 September 2026, 14:32 UTC</span>
+</div>
+
+<div class="band rise">
+  <div class="bandhead">
+    <h1>Gas oil EN 590<br><em>30,000 MT.</em></h1>
+    <div class="now">
+      <div class="k">Waiting on both parties</div>
+      <div class="t">Agree what evidence this deal needs, from whom, and by when.</div>
+      <div class="d">Ponte does not decide this. You and the counterparty agree it, and the room then holds you both to it.</div>
+    </div>
+  </div>
+  <div class="arcwrap" id="arc"></div>
+</div>
+
+<div class="shores rise">
+  <div class="shore"><div class="k">This side</div><div class="n">1402 Celsius Ltd</div><div class="m">United Kingdom &middot; Principal &middot; Room administrator</div></div>
+  <div class="shore r"><div class="k">The other side</div><div class="n">Three admitted branches</div><div class="m">No branch can see another, or that another exists</div></div>
+</div>
+
+<div class="cols rise">
+  <div class="col">
+    <div class="sechead"><span>Counterparty branches</span><span>03</span></div>
+    <button class="br"><span class="r"><span>Branch A</span><span>Admitted 4 Aug</span></span><span class="n">Kefalonia Marine Fuels</span><span class="mini" data-at="2"></span><span class="st"><span class="a">Evidence</span><span class="b">Principal &middot; Greece</span></span></button>
+    <button class="br"><span class="r"><span>Branch B</span><span>Invited 5 Aug</span></span><span class="n">Adriatic Bunker Supply</span><span class="mini" data-at="0"></span><span class="st"><span class="a">Awaiting admission</span><span class="b">Broker &middot; Malta</span></span></button>
+    <button class="br"><span class="r"><span>Branch C</span><span>Admitted 5 Aug</span></span><span class="n">Levant Energy Trading</span><span class="mini" data-at="1"></span><span class="st"><span class="a">Terms</span><span class="b">Principal &middot; Cyprus</span></span></button>
+    <p class="note">Only you see this column. A counterparty signed into this room sees one branch, theirs, and no total that could reveal how many exist.</p>
+  </div>
+
+  <div class="col">
+    <div class="sechead"><span>Ponte Integrity</span><span>Both parties see this</span></div>
+    <div class="ig"><span class="l">Both organisations exist on a public register</span><span class="v ok">Checked</span></div>
+    <div class="ig"><span class="l">Restricted-party screening, both sides</span><span class="v ok">Checked</span></div>
+    <div class="ig"><span class="l">Authority to sign, declared by each party</span><span class="v wt">Declared, not proved</span></div>
+    <div class="ig"><span class="l">Product specification against the shipment</span><span class="v no">Not yet supplied</span></div>
+    <div class="ig"><span class="l">Ability to pay</span><span class="v no">Never checked by Ponte</span></div>
+    <p class="note">A check Ponte has performed is named. A check Ponte has not performed is named too. Nothing here says a counterparty is safe.</p>
+  </div>
+
+  <div class="col">
+    <div class="sechead"><span>Evidence register</span><span>Branch A</span></div>
+    <div class="ev"><span class="l">Certificate of analysis<small>Required before inspection</small></span><span class="s wt">Requested</span></div>
+    <div class="ev"><span class="l">Company registration extract<small>Supplied 2 August</small></span><span class="s ok">Accepted for this procedure</span></div>
+    <div class="ev"><span class="l">Bill of lading<small>Not yet produced. No shipment exists.</small></span><span class="s" style="opacity:.4">Expected later</span></div>
+    <div class="ev"><span class="l">Phytosanitary certificate<small>Not applicable to this product</small></span><span class="s" style="opacity:.28">Not applicable</span></div>
+    <p class="note">Accepted for this procedure does not mean authentic, legally valid, independently verified, or approved by Ponte.</p>
+  </div>
+</div>
+
+<div class="lower rise">
+  <div class="snap">
+    <div class="sechead"><span>The deal</span><span>Carried from PT-0105</span></div>
+    <div class="snapgrid">
+      <div><div class="row"><span class="k">Product</span><span class="v">Gas oil EN 590</span></div>
+           <div class="row"><span class="k">Grade</span><span class="v">10ppm</span></div></div>
+      <div><div class="row"><span class="k">Quantity</span><span class="v">30,000 MT</span></div>
+           <div class="row"><span class="k">HS code</span><span class="v">2710.19</span></div></div>
+      <div><div class="row"><span class="k">Origin</span><span class="v">Türkiye</span></div>
+           <div class="row"><span class="k">Delivery</span><span class="v">CIF</span></div></div>
+    </div>
+    <p class="note" style="margin-top:18px">Nothing was re-entered. Every fact above came from the opportunity you published.</p>
+  </div>
+  <div class="act">
+    <div class="sechead"><span>Activity</span><span>Append only</span></div>
+    <div class="ac"><span class="w">09:14</span><span class="x">Kefalonia Marine accepted the participation agreement.</span></div>
+    <div class="ac"><span class="w">Yesterday</span><span class="x">You proposed the procedure. Awaiting agreement.</span></div>
+    <div class="ac"><span class="w">4 Aug</span><span class="x">Room activated. 30 calendar days.</span></div>
+    <div class="ac"><span class="w">4 Aug</span><span class="x">Branch A opened for Kefalonia Marine Fuels.</span></div>
+  </div>
+</div>
+
+<footer>When the period ends this room becomes permanently read only. It is never deleted. No price, branch count or total appears on any screen a counterparty can read.</footer>
+
+<script>
+const PROC=["Admitted","Terms","Evidence","Inspection","Payment terms","Closed"], AT=2;
+
+function arc(x0,x1,yBase,rise){
+  const c=x1-x0,R=(c*c/4+rise*rise)/(2*rise);
+  return {d:`M ${x0} ${yBase} A ${R} ${R} 0 0 1 ${x1} ${yBase}`,R,cx:(x0+x1)/2,cy:yBase+(R-rise)};
+}
+function yAt(a,x0,x1,t){const x=x0+(x1-x0)*t;return a.cy-Math.sqrt(Math.max(a.R*a.R-(x-a.cx)*(x-a.cx),0));}
+
+function bigArc(el){
+  const W=el.clientWidth||1400,H=190,x0=10,x1=W-10,yBase=H-26,rise=H-74;
+  const a=arc(x0,x1,yBase,rise);
+  const BAYS=6;let arches="",piers="";const waterY=H-8;
+  for(let b=0;b<BAYS;b++){
+    const ax=x0+(x1-x0)*(b/BAYS), zx=x0+(x1-x0)*((b+1)/BAYS);
+    const ya=yAt(a,x0,x1,b/BAYS), yz=yAt(a,x0,x1,(b+1)/BAYS);
+    const spring=Math.max(ya,yz)+16, r=(zx-ax)/2;
+    arches+=`<path class="arch" d="M ${ax+2} ${waterY} L ${ax+2} ${spring} A ${r-2} ${r-2} 0 0 1 ${zx-2} ${spring} L ${zx-2} ${waterY}"/>`;
+    if(b>0)piers+=`<line class="pier" x1="${ax}" y1="${waterY}" x2="${ax}" y2="${ya}"/>`;
+  }
+  piers+=`<line class="pier" x1="${x0}" y1="${waterY}" x2="${x0}" y2="${yBase}"/><line class="pier" x1="${x1}" y1="${waterY}" x2="${x1}" y2="${yBase}"/>`;
+  const N=PROC.length-1;
+  const nodes=PROC.map((s,n)=>{const t=n/N,x=x0+(x1-x0)*t,y=yAt(a,x0,x1,t);
+    const cls=n<AT?"nd":(n===AT?"nd now":"nd off"), r=n===AT?6:(n<AT?3.6:3);
+    const anchor=n===0?"start":(n===N?"end":"middle");
+    return `<circle class="${cls}" cx="${x}" cy="${y}" r="${r}"/><text class="plab ${n===AT?'on':''}" x="${x}" y="${y-16}" text-anchor="${anchor}">${s}</text>`}).join("");
+  const traffic=[{d:18,b:0},{d:24,b:-9}].map(t=>`<g>
+      <circle class="halo" r="8"><animateMotion dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"><mpath href="#bigdeck"/></animateMotion>
+      <animate attributeName="opacity" values="0;.16;.16;0" keyTimes="0;.12;.88;1" dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"/></circle>
+      <circle class="veh" r="2.6"><animateMotion dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"><mpath href="#bigdeck"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.9;1" dur="${t.d}s" repeatCount="indefinite" begin="${t.b}s"/></circle></g>`).join("");
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line class="water" x1="0" y1="${waterY}" x2="${W}" y2="${waterY}"/>
+    ${arches}${piers}
+    <path class="ghost" d="${a.d}"/>
+    <path id="bigdeck" class="deck" d="${a.d}"/>
+    ${nodes}${traffic}</svg>`;
+  const p=el.querySelector("#bigdeck"),L=p.getTotalLength();
+  p.style.strokeDasharray=L;p.style.strokeDashoffset=L;
+  p.style.transition="stroke-dashoffset 1900ms var(--ease)";
+  setTimeout(()=>p.style.strokeDashoffset=L-(L*(AT/N)),320);
+}
+
+function miniArc(el,at){
+  const W=el.clientWidth||260,H=30,x0=4,x1=W-4,yBase=H-6,rise=H-14;
+  const a=arc(x0,x1,yBase,rise);const N=PROC.length-1;
+  const nodes=PROC.map((_,n)=>{const t=n/N,x=x0+(x1-x0)*t,y=yAt(a,x0,x1,t);
+    return `<circle class="${n<=at?'nd':'nd off'}" cx="${x}" cy="${y}" r="${n<=at?2.8:2.4}"/>`}).join("");
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <path class="ghost" d="${a.d}"/><path class="deck m" d="${a.d}"/>${nodes}</svg>`;
+  const p=el.querySelector(".m"),L=p.getTotalLength();
+  p.style.strokeDasharray=L;p.style.strokeDashoffset=L-(L*(at/N));
+}
+
+function draw(){
+  bigArc(document.getElementById("arc"));
+  document.querySelectorAll(".mini").forEach(m=>miniArc(m,+m.dataset.at));
+}
+draw(); addEventListener("resize",draw);
+document.querySelectorAll(".rise").forEach((n,i)=>setTimeout(()=>n.classList.add("on"),90+i*120));
+</script>
+</body>
+</html>
