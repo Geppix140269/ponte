@@ -47,6 +47,12 @@ function rendersOwnChrome(path: string): boolean {
     path.startsWith("/find/") ||
     path === "/structure" ||
     path.startsWith("/structure/") ||
+    // Build 1's listing path. The Set 1 and Set 2 patterns are full-screen
+    // surfaces with their own frame, their own journey rule and one primary
+    // action; the legacy chrome adds a second header, a second navigation and a
+    // footer that still names retired destinations. The surface IS the screen.
+    path === "/publish" ||
+    path.startsWith("/publish/") ||
     path === "/check" ||
     path.startsWith("/check/") ||
     path === "/about" ||
