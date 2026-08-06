@@ -527,9 +527,21 @@ test("every animation on the bridge is disabled under reduced motion", () => {
 });
 
 test("controls meet their minimum targets", () => {
+  /*
+    ANY block for the selector, not the first. `.brg-act` now has a second
+    declaration inside `@media (min-width: 1920px)` that only overrides type
+    size for the wide shell and does not repeat `min-height`, and that block
+    happens to sit earlier in the file than the base rule. A regex that reads
+    only the first match found the responsive override and reported a real
+    64px control as failing. The property under test is "the base rule sets a
+    minimum", not "the first rule mentioning this selector sets a minimum", so
+    this checks every block and asks that at least one satisfy it.
+  */
   for (const selector of ["\\.brg-fact", "\\.brg-act", "\\.brg-back", "\\.brg-check"]) {
-    const rule = CSS_CODE.match(new RegExp(`${selector}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
-    assert.match(rule, /min-height:\s*(48|64)px/, `${selector} is below its minimum target`);
+    const blocks = Array.from(CSS_CODE.matchAll(new RegExp(`${selector}\\s*\\{([^}]*)\\}`, "g")));
+    assert.ok(blocks.length > 0, `${selector} has no declaration at all`);
+    const hasMinimum = blocks.some(([, body]) => /min-height:\s*(48|64)px/.test(body));
+    assert.ok(hasMinimum, `${selector} is below its minimum target in every declaration`);
   }
   const zone = CSS_CODE.match(/\.brg-zone \{([^}]*)\}/)?.[1] ?? "";
   // 19px of padding either side of a 27px serif line clears 64px on its own.
