@@ -115,7 +115,7 @@ may not be recorded as "to be decided".
 | JR-02 | Structure and submit a listing | J05 | Not yet specified. Built as `LP01`–`LP09` |
 | JR-03 | Intelligent entry | J01 | Not yet specified. Entry console never built |
 | JR-04 | Check or verify a business | J06 | Not yet specified |
-| JR-05 | Investigate a Market Signal | J07 | Not yet specified |
+| JR-05 | Investigate a Market Signal | J07 | Not yet specified. **Receives every `F03` handoff from JR-01.** Where investigation confirms commercial intent it creates or links a Qualified Opportunity, which may then enter JR-01 |
 | JR-06 | Create and activate a Commercial Mission | J02 | Not yet specified. Not built |
 | JR-07 | Act on a Commercial Development | J03 | Not yet specified. Not built |
 | JR-08 | Workspace return | J09 | Not yet specified |
@@ -146,7 +146,40 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 
 - **Route:** `/find`
 - **Auth state:** unauthenticated permitted, and normal
-- **Preconditions:** none
+- **Preconditions:** **the record entered must be a Qualified Opportunity
+  (`F02`).** A Market Signal is not an entry state for this journey. See the
+  boundary below.
+
+### The Market Signal boundary — binding
+
+**A Market Signal cannot enter the controlled-introduction journey.** It is
+unconfirmed external evidence: read from a public source, republished as
+printed, not confirmed with the party named, and the party named is not a member
+of Ponte. There is nobody to introduce, and nothing has been established to
+introduce them about.
+
+**Its only action is to ask Ponte to investigate.** If investigation confirms
+commercial intent, it **creates or links a Qualified Opportunity**, and only
+that Qualified Opportunity may afterwards enter JR-01.
+
+```text
+F02  Qualified Opportunity  ────────────────────────────►  JR-01 (this journey)
+
+F03  Market Signal  ──►  JR-05 / J07 investigation
+                              │
+                              └── if confirmed ──►  Qualified Opportunity ──►  JR-01
+```
+
+**`F03` may still appear in the shared Find results surface.** Selecting a
+Market Signal is a **journey handoff to JR-05**, not another route through
+JR-01. Nothing in this entry may be read as permitting
+`F03 → RC01 → X01 → O05`.
+
+This restates the Master Brief truth model (section 3.1 versus 3.2), which holds
+that a Qualified Opportunity and a Market Signal are materially different
+objects and must not be blended, and `PT-PRODUCT-2026-07-27-01` section 4, which
+admits a signal to a room only once Ponte has *"investigated sufficiently to
+establish a viable commercial contact route."*
 
 ## 3. User objective
 
@@ -156,9 +189,9 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 
 | Canonical | Local | Surface |
 |---|---|---|
-| F01 | — | Contextual first results |
-| F02 / F03 | RC01 | Qualified Opportunity / Market Signal detail |
-| X01 | RC02 | Action choice |
+| F01 | — | Contextual first results (shared; carries both lanes) |
+| **F02** | RC01 | **Qualified Opportunity detail. `F03` Market Signal detail is NOT in this journey** — see the boundary in field 2 |
+| X01 | RC02 | Action choice, on a Qualified Opportunity |
 | O05 | RC03 | Request introduction — commercial fit |
 | G01–G03 | — | Account boundary and resumption |
 | O03 | RC04 | Interest request list, requester side |
@@ -173,10 +206,13 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 1. **Objective and entry.** Member arrives at `/find`, chooses a family, states
    what they need.
 2. **Results, two lanes.** Qualified Opportunities and Market Signals are
-   separated and never blended.
-3. **Opportunity detail.** Decisive commercial facts first; dated evidence; an
-   explicit statement of what remains unverified.
-4. **Action choice.** Watch, investigate, or request an introduction.
+   separated and never blended. **Selecting a Market Signal leaves this journey**
+   and hands off to JR-05; only a Qualified Opportunity continues to step 3.
+3. **Qualified Opportunity detail (`F02`).** Decisive commercial facts first;
+   dated evidence; an explicit statement of what remains unverified.
+4. **Action choice, on a Qualified Opportunity.** Watch, or request an
+   introduction. **"Ask Ponte to investigate" is not offered here** — it is the
+   Market Signal action, and it belongs to JR-05.
 5. **Commercial fit, before authentication.** Role, target, geography, reason.
 6. **Account boundary.** Only on Send.
 7. **Request submitted.**
@@ -191,7 +227,8 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 
 | Step | Who decides | What they see | What they must not see |
 |---|---|---|---|
-| 4 | Requester | Opportunity facts, evidence, limitations | Owner identity or contact |
+| 2 | Requester | Both lanes, plainly separated | —. **Choosing a Market Signal exits to JR-05; it is a handoff, not a step of this journey** |
+| 4 | Requester | **Qualified Opportunity** facts, evidence, limitations | Owner identity or contact |
 | 9 | **Opportunity owner** | Role, target, geography, reason, capacity | **Requester identity, business name or contact** |
 | 10 | Ponte / reviewer | Verification and admission state | Commercial terms |
 | 11 | Both parties | Each other, on approval | Anything not approved for disclosure |
@@ -199,9 +236,16 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 
 ## 7. Evidence used
 
-- **Qualified Opportunity** — reviewed commercial intent (Master Brief 3.1)
+- **Qualified Opportunity** — reviewed commercial intent (Master Brief 3.1).
+  **The only record class this journey acts on.**
 - **Market Signal** — unconfirmed indication, source and date shown, never
-  presented as verified demand (ADR-0041)
+  presented as verified demand (ADR-0041). **It is evidence this journey may
+  DISPLAY in the shared results surface and may never ACT on.** A signal
+  carries no established counterparty and no confirmed commercial intent, so it
+  cannot support a commercial-fit statement, an owner review or a disclosure. It
+  becomes actionable only after JR-05 / J07 investigation creates or links a
+  Qualified Opportunity, and the journey then begins again at `F02` on that
+  record.
 - **Business Evidence** — evidence-specific only: what was checked, source,
   date, result, limitation, expiry. **No tier, no score, no percentage.** Gold
   is a brand signal and never a trust status.
@@ -233,7 +277,8 @@ Each is a designed state with a recorded outcome and a next owner.
 |---|---|---|
 | 1 | Unsupported or unsafe request | Explained, with a safe continuation |
 | 2 | **No current qualified match** | States what was and was not found |
-| 2 | Signals only, no opportunities | Offers watch or investigation |
+| 2 | Signals only, no qualified opportunities | States that no Qualified Opportunity matched, and offers watch or **a handoff to JR-05 investigation**. It must not offer an introduction |
+| 2 | **Handoff — member selects a Market Signal** | **Leaves JR-01 for JR-05.** Not a failure and not an exit from the product |
 | 3 | Expired / withdrawn | Record no longer available |
 | 3 | **Source unavailable** | Distinguished from "not found" |
 | 4 | **Watch** | Internal watch confirmed |
@@ -267,6 +312,13 @@ Convergence requires all of:
 
 Either principal may propose and sponsor the room. Nothing activates
 automatically, and no charge occurs at convergence — preparing a room is free.
+
+**A Market Signal never satisfies this condition through JR-01.** Route 3 of the
+same section — *"a Market Signal that Ponte has investigated sufficiently to
+establish a viable commercial contact route"* — belongs to **JR-05**, and its
+product is a Qualified Opportunity. `PT-PRODUCT-2026-07-27-01` is explicit that
+*"a public Market Signal, search result, expression of curiosity or incomplete
+draft does not create an active room."*
 
 ## 12. Recorded outcome
 
@@ -332,3 +384,8 @@ credible-interest gate (ADR-0037).
 **Conformity status: not yet conformed.** Set 3 predates ADR-0032, carries the
 retired identifiers, and does not cover the non-success exits in field 10. The
 Journey 1 design brief exists to close that gap.
+
+**`RC01` is the Qualified Opportunity detail only.** Set 3's `A05` was titled
+*"Market Record Detail"*, which spanned both record classes. It does not carry
+over: Market Signal detail is JR-05's surface, and any Set 3 state that lets a
+signal reach a request must be redrawn as a handoff.

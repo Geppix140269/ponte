@@ -48,8 +48,8 @@ it; do not work from this table alone.
 | # | Step | Canonical | Local |
 |---|---|---|---|
 | 1 | Objective and entry | F01 | — |
-| 2 | Results, two lanes | F01 | — |
-| 3 | Opportunity detail | F02 / F03 | RC01 |
+| 2 | Results, two lanes (shared surface) | F01 | — |
+| 3 | **Qualified Opportunity** detail | **F02** | RC01 |
 | 4 | Action choice | X01 | RC02 |
 | 5 | Commercial fit | O05 | RC03 |
 | 6 | Account boundary | G01–G03 | — |
@@ -63,6 +63,39 @@ it; do not work from this table alone.
 **Use `RC01`–`RC07`.** The old `A05`, `A06`, `D01`–`D04` identifiers are retired
 by ADR-0039 because they collided with canonical route families. Do not
 reintroduce them.
+
+### The Market Signal boundary — do not design across it
+
+**A Market Signal (`F03`) is not part of this journey and must never reach a
+Request Introduction.** It is unconfirmed external evidence: read from a public
+source, republished as printed, not confirmed with the party named, and that
+party is not a member of Ponte. There is nobody to introduce.
+
+```text
+F02  Qualified Opportunity  ────────────────────────────►  JR-01 (you are designing this)
+
+F03  Market Signal  ──►  JR-05 / J07 investigation   (NOT in scope)
+                              │
+                              └── if confirmed ──►  Qualified Opportunity ──►  JR-01
+```
+
+**What this means at the drawing board:**
+
+- **Step 2** shows both lanes, plainly separated. That is correct and stays.
+- **Selecting a Market Signal is a handoff out of this journey.** Draw it as a
+  departure to investigation, not as another way into step 3.
+- **`RC01` is Qualified Opportunity detail only.** Set 3's `A05` was titled
+  *"Market Record Detail"* and spanned both classes. It does not carry over.
+- **A Market Signal's only action is "Ask Ponte to investigate."** It never
+  offers Request an introduction, and step 4's action choice never offers
+  investigate — that is the signal's action, not the opportunity's.
+- **The empty state at step 2** — signals present, no qualified opportunities —
+  must say exactly that, and may offer watch or the investigation handoff. It
+  must not offer an introduction.
+
+This is the Master Brief truth model (3.1 versus 3.2): a Qualified Opportunity
+and a Market Signal are materially different objects and must not be blended.
+Blending them in a prototype would authorise it in the build.
 
 ## 4. The two boundaries that must be visible in the design
 
@@ -129,7 +162,8 @@ state coverage, not as surface language); `bridge/ponte-signed-in.html`;
   Gold is a brand signal and never a status.
 - **Market Signals are never dressed as Qualified Opportunities.** Read from a
   named public source, republished as printed, not confirmed with the party
-  named, not a member of Ponte (ADR-0041).
+  named, not a member of Ponte (ADR-0041). They are also never *acted* on as
+  one — see the Market Signal boundary in section 3.
 - **No fabricated traction.** No invented counts, volumes, activity or urgency.
   Thin inventory is described honestly.
 - **A Deal Room is activated, never published.**
