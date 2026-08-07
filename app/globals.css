@@ -928,7 +928,18 @@ select option {
    bridge stylesheet itself is untouched, which keeps its invariance check
    meaningful, and where both are loaded the two agree.
    --------------------------------------------------------------------------- */
-.pg-mast {
+/* `header.pg-mast` and not `.pg-mast`, and the extra element is load bearing.
+
+   bridge.css declares `.brg-mast { background: var(--brg-ink) }` at the same
+   specificity, and `--brg-ink` is scoped to `.brg`. The header now renders at
+   the layout boundary, OUTSIDE that wrapper, so wherever bridge.css also loads
+   the token cannot resolve, the declaration is invalid at computed value time,
+   and the band computed to transparent: the entrance and the whole publish path
+   scrolled their own text up through the navigation.
+
+   Matching the element as well as the class wins outright and stops the result
+   depending on which stylesheet the bundler happens to emit last. */
+header.pg-mast {
   position: sticky;
   inset-block-start: 0;
   z-index: 40;
@@ -1026,4 +1037,44 @@ select option {
 .pg-mast a[href^="/login"]:hover,
 .pg-mast a[href^="/account"]:hover {
   color: #c8a15a;
+}
+
+/* The theme control, for the same reason and with the same treatment.
+   `.cmd__theme` is styled only under `.ponte-desk`, so in the global bar it
+   arrived as a plain button at body size: the single loudest thing in the band,
+   reading louder than Sign in, which is the one decision the bar is asking for. */
+.pg-mast .cmd__theme {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 232, 0.44);
+  background: none;
+  border: 0;
+  padding: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 240ms ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
+.pg-mast .cmd__theme:hover {
+  color: #c8a15a;
+}
+
+/* The signal tape sat 60px too low, and covered the first line of the question
+   the surface exists to ask.
+
+   `.brg` sets `overflow-x: hidden`, which makes it the scroll container for
+   anything sticky inside it. `.brg-tape` offsets itself by 60px within that
+   container to clear the masthead, which was correct for as long as the
+   masthead was the tape's own sibling. The masthead is now above `.brg`
+   entirely, so the reserved 60px is empty and the tape parks over the opening
+   headline instead of under the band.
+
+   Corrected here rather than in bridge.css: the offset is right for the bridge
+   as the bridge declares it, and what changed is what sits above the bridge. */
+.brg .brg-tape {
+  inset-block-start: 0;
 }
