@@ -93,7 +93,9 @@ gone, asserts a parity that does not exist and would authorise a premature retir
 These are shell properties, so R0-A owns them and may mark them resolved:
 
 - five header systems → one;
-- two market entrances → one;
+- **two competing primary market entrances → one canonical navigation entrance; legacy `/explore`
+  remains shelled and reachable until R0-B parity is proven and redirect is separately
+  authorised;**
 - three near-blacks → one;
 - three display typefaces → one;
 - two logo lockups → one;

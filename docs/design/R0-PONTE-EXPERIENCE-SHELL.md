@@ -21,13 +21,20 @@
 
 ## 0. The objective, stated as a test
 
-> One Ponte. One global shell. One market entrance. One publish entrance. One visual language.
+> One Ponte. One global shell. One canonical market entrance. One canonical publish entrance.
+> One visual language.
+
+**“One entrance” means one canonical visible and navigational entrance — not immediate route
+retirement or redirect.** R0-A makes `/find` the single market entrance a member is *offered* in
+navigation, and `/publish` the single publish entrance. It does **not** remove `/explore` or
+`/structure`: those remain shelled and reachable until R0-B parity is proven and the redirect is
+separately authorised.
 
 R0-A is done when a member can move between **any two surfaces** without the logo, the navigation,
 the typeface or the page ground changing — and when the entrance offers exactly two journeys.
 
-**What the audit found, which R0-A exists to end:** five header systems, two market entrances,
-three first questions, three display typefaces and three near-blacks.
+**What the audit found, which R0-A exists to end:** five header systems, **two competing primary
+market entrances**, three first questions, three display typefaces and three near-blacks.
 
 ---
 
@@ -64,15 +71,19 @@ them. Repair is R0-B.
 
 ## 1. Canonical visible sitemap
 
+**This is the canonical *visible and navigational* sitemap — what a member is offered.** It is not
+a list of every route that exists. Legacy routes not shown here remain **live, shelled and
+reachable** until R0-B parity is proven and their redirect is separately authorised. See §2.
+
 ### Signed out
 
 ```
 /                       The entrance
-├─ /find                THE MARKET            (absorbs /explore)
+├─ /find                THE MARKET            (to absorb /explore — R0-B.1)
 │   ├─ /find/o/[ref]      Qualified Opportunity detail        → JR-01
 │   └─ /market-signals    Market Signals  (unconfirmed lane)  → JR-05
 │       └─ /market-signals/[id]
-├─ /publish             START A DEAL          (absorbs /structure)
+├─ /publish             START A DEAL          (to absorb /structure — R0-B.2)
 ├─ /deal-rooms          What a Deal Room is   (explanation, ADR-0036)
 │   └─ /deal-rooms/inside  The walkthrough
 ├─ /pricing             Fees
