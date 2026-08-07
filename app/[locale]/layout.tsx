@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -29,6 +29,26 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+/*
+  JetBrains Mono is the shell's face: the PONTE lockup, the navigation, the
+  account door.
+
+  It is declared HERE, on the document, because that is now where the shell is.
+  Every page that needed it used to publish it on a wrapper of its own, inside
+  the page; once GlobalHeader moved above those wrappers the variable was no
+  longer in scope for it, `font-family: var(--font-jetbrains), ...` became
+  invalid at computed value time, and the lockup and the whole bar quietly
+  inherited Inter on every route. A page that publishes the same variable lower
+  down still wins locally and resolves to the same family, so nothing below the
+  header changes.
+*/
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -131,7 +151,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
       /*
         Dark is the product's ground. Set on the server so the first paint is
         already dark; the script below only overrides it when the member has
