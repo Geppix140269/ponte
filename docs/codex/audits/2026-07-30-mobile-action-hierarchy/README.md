@@ -46,5 +46,5 @@ meaning "act here." Blue is the authorised affordance channel — hence Directio
 
 Governance, tokens, accessibility, copy, scope and the completion schemas are decided in the two
 authority documents:
-- `docs/decisions/ADR-0015-STAGE-2-interaction-tokens.md`
-- `docs/decisions/ADR-0016-mobile-action-hierarchy-and-completion-bridge.md`
+- `docs/decisions/ADR-0034-STAGE-2-interaction-tokens.md`
+- `docs/decisions/ADR-0035-mobile-action-hierarchy-and-completion-bridge.md`

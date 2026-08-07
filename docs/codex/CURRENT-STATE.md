@@ -1,6 +1,56 @@
 # Current state
 
-**Reconciled:** 28 July 2026  
+> ## Recovery Mode reconciliation, 7 August 2026
+>
+> **This document had stopped recording at ADR-0020.** Between 31 July and 7
+> August 2026 eleven further ADRs were accepted and none of them appeared here,
+> while `00-START-HERE.md` states that exact status *"lives only in
+> `CURRENT-STATE.md`"*. The record that was meant to be authoritative was the one
+> most out of date. That is the condition Recovery Mode was called to end.
+>
+> **Accepted but previously unrecorded here:** ADR-0021, ADR-0023, ADR-0024,
+> ADR-0025, ADR-0026, ADR-0027, ADR-0028, ADR-0029, ADR-0030, ADR-0031,
+> ADR-0032 with Amendments 1 and 2.
+>
+> **Accepted 7 August 2026 (Recovery Mode, owner decisions OD-A to OD-I):**
+>
+> | ADR | Decision |
+> |---|---|
+> | **ADR-0036** | Deal Rooms may be publicly named, explained and demonstrated. Supersedes the closed public-surface list in the North Star 31 July amendment and ADR-0021 ruling 4 |
+> | **ADR-0037** | The convergence rule; an accepted introduction does **not** open a Deal Room |
+> | **ADR-0038** | The canonical lifecycle; `MANAGE` is cross-cutting. Closes ADR-0024's open question |
+> | **ADR-0039** | Canonical route-family letters reserved; `LP` and `RC` namespaces |
+> | **ADR-0040** | Rollout flags are not security boundaries |
+> | **ADR-0041** | Market Signals remain a public landing surface |
+> | ADR-0033/0034/0035 | Renumbered from duplicate ADR numbers (OD-I) |
+>
+> **New tier-2 authority:** `docs/ponte-authority/00-CANONICAL-JOURNEY-REGISTER.md`.
+> **No feature implementation may begin before its journey is registered there
+> and approved.** JR-01 (Find to controlled introduction) is specified; the other
+> nine journeys are indexed and unspecified.
+>
+> **Journey 1 status:** design brief issued
+> (`docs/design/JOURNEY-1-CLAUDE-DESIGN-BRIEF.md`). Not implemented. Claude
+> Design produces the connected prototype; the owner approves it before any
+> implementation brief is issued.
+>
+> **Release blocker opened by this reconciliation:** **LB-015** — the public
+> walkthrough at `/deal-rooms/inside` demonstrates an owner-review inbox with
+> **Accept / Clarify / Decline**, and `Clarify` does not exist in the product.
+> Classified by the owner on 7 August 2026 as a **surface-specific release
+> blocker**: it publicly represents a capability Ponte does not have, against
+> North Star section 3.5. **No application change made.**
+>
+> **Known contradictions carried, not yet fixed:** the `LP`/`RC` identifier
+> rename; the incorrect `ADR-0016` citations in `lib/structure/completion.ts` and
+> `components/ponte/bridge/TaskCompletionBridge.tsx`; `/pricing` still selling
+> the retired model (LB-014); `/deal-rooms/propose` bypassing its own
+> credible-interest gate; two express-interest UIs, one dead; no path from an
+> accepted introduction to a Deal Room. All queued in
+> `docs/codex/CANONICAL-ID-RECONCILIATION.md` and none authorised for
+> implementation yet.
+
+**Reconciled:** 7 August 2026 (Recovery Mode; body below still reflects the 28 July reconciliation except where superseded above)  
 **Entry authority:** `docs/ponte-authority/00-NORTH-STAR-ENTRY-ARCHITECTURE.md`, amended 26 July 2026 (Ponte Desk selected)  
 **Design authority:** `design/authority/PONTE_DESIGN_CONSTITUTION_v1.md` **v1.1**, ADR-0002, ADR-0010 (complete-interface scope) and ADR-0015 (contrast and colour remediation, amends sections 6, 15, 18 and 22)  
 **Contrast baseline:** `docs/codex/audits/contrast-remediation/CONTRAST-AUDIT-2026-07-29.md`. 163 pairs measured, 96 short. Remediation is **Designed, not started**; see `docs/plans/active/contrast-and-colour-remediation.md`  
