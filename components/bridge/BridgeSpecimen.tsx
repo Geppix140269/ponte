@@ -46,16 +46,11 @@ export default function BridgeSpecimen() {
   return (
     <div className="brg" lang={script.code} dir={script.dir}>
       <Grain />
-      <Chrome
-        signals={SIGNALS}
-        who="GF · 1402 Celsius"
-        current="market"
-        nav={[
-          { key: "market", label: "Market", href: "#market" },
-          { key: "crossings", label: "Your crossings", href: "#crossings" },
-          { key: "rooms", label: "Deal Rooms", href: "#rooms" },
-        ]}
-      />
+      {/* The specimen used to hand Chrome its own invented navigation, which is
+          how a design sheet ends up teaching a vocabulary the product does not
+          have. Chrome now draws the signal tape only; the masthead belongs to
+          GlobalHeader. */}
+      <Chrome signals={SIGNALS} />
 
       <div className="brg-mx brg-band">
         <div className="brg-band__head">

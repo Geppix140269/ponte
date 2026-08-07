@@ -4,7 +4,6 @@ import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { isRtl } from "@/i18n/routing";
 import PonteFooter from "@/components/PonteFooter";
-import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import { PRIMARY_NAV, signInHref, type PrimaryNavKey } from "@/lib/nav/primary";
 import "@/components/find/find.css";
 
@@ -55,26 +54,7 @@ export default async function PonteShell({
 
   return (
     <div className={`ponte-find ${landingFontVars}`} dir={isRtl(locale) ? "rtl" : "ltr"}>
-      <header className="fnav">
-        <PonteLockup scope="find" label={t("home")} />
-        <nav className="fnav__links" aria-label={t("navLabel")}>
-          {PRIMARY_NAV.map((item) => (
-            <Link
-              key={item.key}
-              className={`fnav__link${current === item.key ? " is-current" : ""}`}
-              href={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {/* The walkthrough found this shell serving /explore, /verification and
-              /verify with NO sign-in control at all, so a member who reached
-              them could not authenticate without going back to the entrance. */}
-          <Link className="fnav__link" href={signInHref(signInReturnTo)}>
-            Sign in
-          </Link>
-        </nav>
-      </header>
+      {/* Header owned by GlobalHeader at the layout boundary. */}
 
       <main>{children}</main>
 

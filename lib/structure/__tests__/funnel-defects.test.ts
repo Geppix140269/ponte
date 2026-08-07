@@ -105,14 +105,27 @@ test("step one carries a labelled Back as well as the wordmark", () => {
   assert.match(COMPOSER, /label=\{exit\.label\}/, "the Back control does not name where it goes");
 });
 
-test("Back on step one is guarded exactly as the wordmark is", () => {
-  // Both go through `guard`, so a member with a part-built record is asked
-  // before they leave rather than dropped on the entrance with an empty hand.
+test("every exit from a dirty composer asks first, including the ones it does not render", () => {
+  // This used to count TWO `guard(` calls in the composer's own bar: the Back
+  // control and a wordmark that also went home. Under R0-A the wordmark and the
+  // primary navigation moved to the global header, which this component does
+  // not render and cannot wrap in `guard`.
+  //
+  // The rule did not change, so the test asserts the rule rather than the old
+  // mechanism. The exit the surface DOES render is still guarded, and the exits
+  // it does not are covered by the hook's link interceptor, which is why that
+  // option has to be on. Dropping either half would let a member lose a
+  // part-built record by pressing the thing that looks like home.
   const bar = COMPOSER.slice(COMPOSER.indexOf("<JourneyBack onClick"), COMPOSER.indexOf("sbar__step"));
   assert.equal(
     (bar.match(/guard\(/g) ?? []).length,
-    2,
-    "one of the two exits on step one leaves without asking",
+    1,
+    "the Back control on step one leaves without asking",
+  );
+  assert.match(
+    COMPOSER,
+    /useUnsavedGuard\(dirty,\s*\{[\s\S]*?interceptLinks:\s*true/,
+    "the global header's exits are not intercepted, so they leave without asking",
   );
 });
 
