@@ -126,7 +126,10 @@ export function keepDraft<T>(draft: T, stack: readonly string[], key: string = K
  * because a member offered a fortnight-old record they have forgotten will
  * assume the product is confused.
  */
-export function readKeptDraft<T>(key: string = KEY): StoredDraft<T> | null {
+export function readKeptDraft<T>(
+  key: string = KEY,
+  isValid?: (draft: unknown) => draft is T,
+): StoredDraft<T> | null {
   const s = store();
   if (!s) return null;
   try {
@@ -140,6 +143,15 @@ export function readKeptDraft<T>(key: string = KEY): StoredDraft<T> | null {
       return null;
     }
     if (!parsed.draft || !Array.isArray(parsed.stack)) return null;
+    // A payload of the wrong SHAPE is removed, not just refused. It was written
+    // by a build or a flow that stored something else here, so it will never
+    // become readable, and leaving it in place means the caller meets it again
+    // on the next visit. Dropping it is what lets an already-poisoned device
+    // heal itself on one load instead of needing its storage cleared by hand.
+    if (isValid && !isValid(parsed.draft)) {
+      s.removeItem(key);
+      return null;
+    }
     return parsed;
   } catch {
     return null;

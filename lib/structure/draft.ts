@@ -286,6 +286,43 @@ export function emptyDraft(): StructureDraft {
 }
 
 /**
+ * Is this stored value actually a draft of the shape THIS build reads?
+ *
+ * A guard for one boundary only: a payload that was written by a different
+ * build, or by a different flow, and has been sitting on the member's device
+ * ever since. Everywhere else the draft is constructed here and can be trusted.
+ *
+ * It has to exist because a wrong shape is not a wrong VALUE, it is a crash.
+ * `/publish` once stored its own wrapper (`{ node, draft, capacity, ... }`)
+ * under the composer's key. `structureDirty` reads `draft.serviceSubcategories
+ * .length` straight off whatever comes back, so a wrapper read as a flat draft
+ * threw on the first dereference and took the whole route down. Separating the
+ * keys stopped new wrappers being written; it could not reach the one already
+ * on the device, so every member who had used `/publish` before that fix kept
+ * hitting the same crash on every visit, with no way out but clearing their
+ * browser storage.
+ *
+ * The array fields are the ones checked because they are the ones dereferenced
+ * without a guard. A payload that fails is dropped rather than repaired: a
+ * half-understood record is worse than a fresh one, and the member is one step
+ * from re-entering what it held.
+ */
+export function isStructureDraft(value: unknown): value is StructureDraft {
+  if (!value || typeof value !== "object") return false;
+  const d = value as Partial<StructureDraft>;
+  return (
+    Array.isArray(d.serviceSubcategories) &&
+    Array.isArray(d.distributionRelationshipTerms) &&
+    Array.isArray(d.territoryCodes) &&
+    Array.isArray(d.siblings) &&
+    !!d.serviceTerms &&
+    typeof d.serviceTerms === "object" &&
+    !!d.distributionTerms &&
+    typeof d.distributionTerms === "object"
+  );
+}
+
+/**
  * The quantity on a draft, in the shared model.
  *
  * Defined in `procedures/shared.ts` and re-exported here so the draft's public

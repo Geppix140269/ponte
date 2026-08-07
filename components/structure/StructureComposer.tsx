@@ -22,6 +22,7 @@ import {
   roleGroupsFor,
   statesOwnCapability,
   submitPayloads,
+  isStructureDraft,
   type StructureDraft,
   type DraftResolution,
   type Intent,
@@ -232,7 +233,7 @@ export default function StructureComposer({
   useEffect(() => {
     if (restored.current || initial) return;
     restored.current = true;
-    const kept = readKeptDraft<StructureDraft>();
+    const kept = readKeptDraft<StructureDraft>(undefined, isStructureDraft);
     if (!kept || !structureDirty(kept.draft)) return;
     setDraft(kept.draft);
     // Only steps this build knows. A stack from an older shape is ignored

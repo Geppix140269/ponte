@@ -19,7 +19,7 @@ import { capacity, capacityColumns, emptyCapacity, type CapacityAnswer } from "@
 import { retentionSentence, startClock, keep, openDraft, type RetentionClock } from "@/lib/publish/retention";
 import { pendingChecks, type ScreeningCheck } from "@/lib/publish/screening";
 import type { ListingAsset } from "@/lib/publish/assets";
-import { emptyDraft, toSubmitPayload, subjectFor, type StructureDraft } from "@/lib/structure/draft";
+import { emptyDraft, toSubmitPayload, subjectFor, isStructureDraft, type StructureDraft } from "@/lib/structure/draft";
 import { keepDraft, readKeptDraft, forgetDraft, PUBLISH_DRAFT_KEY } from "@/lib/structure/draft-store";
 import { resolveFrom, type ProductCandidate } from "@/lib/products/model";
 import type { CompletionField } from "@/lib/structure/procedures/types";
@@ -150,7 +150,10 @@ export default function PublishFlow({
     const kept = readKeptDraft<PersistedFlow>(PUBLISH_DRAFT_KEY);
     if (!kept?.draft) return;
     const saved = kept.draft;
-    setDraft(saved.draft ?? emptyDraft());
+    // Shape-checked, not just null-checked. The `??` fallbacks below catch an
+    // ABSENT field; a present-but-foreign one would pass straight into state
+    // and throw later, on whichever array read it first, far from here.
+    setDraft(isStructureDraft(saved.draft) ? saved.draft : emptyDraft());
     setCapacityAnswer(saved.capacity ?? emptyCapacity());
     setAssets(saved.assets ?? []);
     setInferred(new Set(saved.inferred ?? []));

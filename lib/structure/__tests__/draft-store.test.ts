@@ -178,4 +178,49 @@ test("a draft just inside the window is still offered back", () => {
   });
 });
 
+// The crash a member could not clear by themselves. `/publish` once wrote its
+// own wrapper under the composer's key; separating the keys stopped new ones
+// being written and could not reach the one already on the device, so the
+// composer met it on every visit and threw on the first array it dereferenced.
+// The guard has to REMOVE the payload, not merely refuse it, or the next load
+// meets exactly the same one.
+const looksLikeDraft = (d: unknown): d is { serviceSubcategories: unknown[] } =>
+  !!d && typeof d === "object" && Array.isArray((d as Record<string, unknown>).serviceSubcategories);
+
+test("a payload of the wrong shape is dropped, and cleared so it cannot be met again", () => {
+  const s = fakeStorage();
+  withStorage(s, () => {
+    const wrapper = { node: "tell", draft: { serviceSubcategories: [] }, capacity: "principal" };
+    s.setItem(
+      "ponte.structure.draft.v1",
+      JSON.stringify({ version: 1, savedAt: Date.now(), stack: ["tell"], draft: wrapper }),
+    );
+    assert.equal(
+      store.readKeptDraft("ponte.structure.draft.v1", looksLikeDraft),
+      null,
+      "a foreign shape was handed back",
+    );
+    assert.equal(s.size, 0, "a foreign shape was left in the store to crash the next load");
+  });
+});
+
+test("a well-shaped draft still passes the guard", () => {
+  const s = fakeStorage();
+  withStorage(s, () => {
+    s.setItem(
+      "ponte.structure.draft.v1",
+      JSON.stringify({
+        version: 1,
+        savedAt: Date.now(),
+        stack: ["facts"],
+        draft: { ...DRAFT, serviceSubcategories: [] },
+      }),
+    );
+    assert.ok(
+      store.readKeptDraft("ponte.structure.draft.v1", looksLikeDraft),
+      "a real draft was discarded by the guard",
+    );
+  });
+});
+
 console.log(`ok   structure draft store: ${passed} assertions passed`);
