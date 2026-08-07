@@ -44,6 +44,21 @@ export interface ChromeProps {
   current?: string;
 }
 
+/**
+ * The three links every bridge screen's header carries once it has one.
+ *
+ * One place, so the header never drifts between the surfaces that pass it:
+ * the earlier defect was not the wrong links, it was two call sites each
+ * free to invent their own (or, as shipped, neither passing any).
+ */
+export function primaryNav(who: string | null): { key: string; label: string; href: string }[] {
+  return [
+    { key: "market", label: "Market Signals", href: "/market-signals" },
+    { key: "rooms", label: "Deal Rooms", href: "/deal-rooms" },
+    { key: "account", label: who ? "Account" : "Sign in", href: who ? "/account" : "/login" },
+  ];
+}
+
 export default function Chrome({ signals, who = null, nav = [], current }: ChromeProps) {
   /*
     Undefined until read, so the first paint does not assert "running" to a

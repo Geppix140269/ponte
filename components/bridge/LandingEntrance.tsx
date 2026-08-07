@@ -27,6 +27,7 @@ export default function LandingEntrance({ signals, recent, counts = null }: Land
       counts={counts}
       onPublish={() => router.push("/publish")}
       onFind={() => router.push("/find")}
+      onOpenSignal={(id) => router.push(`/market-signals/${id}`)}
     />
   );
 }

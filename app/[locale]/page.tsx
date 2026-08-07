@@ -81,6 +81,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
   }));
 
   const recent: LandingSignal[] = rows.slice(0, BOARD_ROWS).map((signal) => ({
+    id: signal.id,
     reference: signal.canonicalId ?? signal.id.slice(0, 8).toUpperCase(),
     subject: signal.product,
     detail:

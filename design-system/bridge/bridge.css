@@ -687,3 +687,12 @@
   .brg-ledger__line { grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
   .brg-ledger__line dd { font-size: 16px; }
 }
+
+/* The operator line. Every bridge screen ends on it: who runs this, and what
+   the checks above are not. A hairline and low-opacity type, never a boxed
+   footer, per the system's own rule of no cards and no shadows. */
+.brg-footer {
+  border-block-start: 1px solid var(--brg-hairline);
+  margin-block-start: 60px; padding-block: 26px 44px;
+  font-size: 11px; line-height: 1.6; font-weight: 300; opacity: .4; max-width: 60ch;
+}

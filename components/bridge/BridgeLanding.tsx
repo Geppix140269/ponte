@@ -1,7 +1,7 @@
 "use client";
 
 import Arc from "./Arc";
-import Chrome, { type Signal } from "./Chrome";
+import Chrome, { primaryNav, type Signal } from "./Chrome";
 import Grain from "./Grain";
 
 /**
@@ -37,6 +37,11 @@ import Grain from "./Grain";
  */
 
 export interface LandingSignal {
+  /**
+   * The row's real id, from `desk_radar`. Used only for routing to its own
+   * Market Signal record, never shown: `reference` is what a reader sees.
+   */
+  id: string;
   /** The public reference. */
   reference: string;
   /** What is being traded, in the member's own words. */
@@ -55,6 +60,12 @@ export interface BridgeLandingProps {
   who?: string | null;
   onPublish: () => void;
   onFind: () => void;
+  /**
+   * A board row, chosen by its own id. Opens that one Market Signal, never a
+   * Qualified Opportunity: the two are a different record type, on purpose,
+   * and this is the board's own detail page, not `/find/o/[ref]`.
+   */
+  onOpenSignal: (id: string) => void;
 }
 
 /**
@@ -98,11 +109,12 @@ export default function BridgeLanding({
   who = null,
   onPublish,
   onFind,
+  onOpenSignal,
 }: BridgeLandingProps) {
   return (
     <div className="brg" data-screen="LANDING">
       <Grain />
-      <Chrome signals={signals} who={who} />
+      <Chrome signals={signals} who={who} nav={primaryNav(who)} />
 
       <div className="brg-mx brg-band">
         <div className="brg-band__head">
@@ -167,7 +179,12 @@ export default function BridgeLanding({
           </div>
           {recent.length > 0 ? (
             recent.map((signal) => (
-              <button className="brg-item" type="button" key={signal.reference} onClick={onFind}>
+              <button
+                className="brg-item"
+                type="button"
+                key={signal.reference}
+                onClick={() => onOpenSignal(signal.id)}
+              >
                 <span className="brg-item__r">{signal.reference}</span>
                 <span className="brg-item__n">{signal.subject}</span>
                 <span className="brg-item__f">{signal.detail}</span>
@@ -227,6 +244,11 @@ export default function BridgeLanding({
           </p>
         </div>
       </div>
+
+      <footer className="brg-mx brg-footer">
+        Ponte Trade is operated by 1402 Celsius Ltd. Checks shown are the checks performed, and are
+        never a guarantee about a counterparty.
+      </footer>
     </div>
   );
 }
