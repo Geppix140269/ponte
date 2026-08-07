@@ -88,7 +88,9 @@ When documents conflict, use this order:
 
 1i. `docs/ponte-authority/PT-COMMERCIAL-2026-07-27-04-DEAL-ROOM-LAUNCH-MODEL-V2.md` and `PT-COMMERCIAL-2026-07-27-02-DEAL-ROOM-LAUNCH-PRICING-V1.md` — **superseded** by 1e, never approved. History only.
 
-2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing implementation authority for everything downstream of entry, where later accepted authorities do not restate the decision.
+1j. `docs/ponte-authority/00-CANONICAL-JOURNEY-REGISTER.md` — **the canonical journey authority, created 7 August 2026 under Recovery Mode.** It holds, per journey: entry state, objective, steps, decision points, evidence, authentication boundary, disclosure boundary, valid non-success exits, Deal Room convergence condition, recorded outcome and next owner. It also carries the convergence rule (ADR-0037), the canonical lifecycle (ADR-0038) and the reserved-identifier rule (ADR-0039). **No feature implementation may begin before its journey is registered there and the entry is approved by the owner.** A register entry is not proof of implementation.
+
+2. `docs/ponte-authority/00-MASTER-IMPLEMENTATION-BRIEF.md` — the governing implementation authority for everything downstream of entry, where later accepted authorities do not restate the decision. **Its section 9 master route and screen register is protected by ADR-0039: the fifteen single-letter route families are reserved permanently.**
 
 3. Live technical and legal constraints discovered through verified repository, production-schema or counsel evidence; report conflicts before changing direction.
 
@@ -105,6 +107,13 @@ The source-of-truth SOP governs process, not product meaning. It does not silent
 The Design Constitution is mandatory before UI, icon, typography, motion, layout or interaction work. Where it is silent or conflicts with truthful production constraints, stop and request owner approval. Do not improvise a generic substitute.
 
 ## Current implementation headline
+
+> **Recovery Mode is active since 7 August 2026.** New feature development, route
+> invention, terminology change, visual redesign and architecture extrapolation
+> are stopped. Critical break/fix may continue **only** where it restores
+> already-approved behaviour. Implementation resumes journey by journey, through
+> `00-CANONICAL-JOURNEY-REGISTER.md`, and only after the owner approves the
+> connected design prototype for that journey.
 
 `main` contains substantial founding-launch, entry, Explore, Find, Structure, verification and market-activity work. Exact status, including what is merged but not production-verified, lives only in `CURRENT-STATE.md` and must be checked before making a claim.
 

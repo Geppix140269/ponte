@@ -1,5 +1,10 @@
-# ADR-0012 — The market classification contract, as implemented
+# ADR-0033 — The market classification contract, as implemented
 
+- **Identifier note:** **renumbered from ADR-0012 to ADR-0033 on 7 August 2026**
+  (owner decision OD-I; hygiene rule in ADR-0039). `ADR-0012` is
+  `ADR-0012-ai-product-intake-and-document-to-deal-flow.md`, which is accepted
+  and keeps the number. **Content unchanged.** Historical references to
+  "ADR-0012, the classification contract" mean this document.
 - **Status:** Proposed. Awaiting the product owner's review of the implementing
   pull request. Not binding until accepted and merged.
 - **Decision date:** 28 July 2026

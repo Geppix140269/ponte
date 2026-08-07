@@ -1,19 +1,41 @@
-# ADR-0018 — Mobile action hierarchy, review structure, and the universal Task Completion Bridge
+# ADR-0035 — Mobile action hierarchy, review structure, and the universal Task Completion Bridge
 
-- **Status:** Proposed for owner review; effective when merged. **Do not merge without owner approval.**
-- **Decision date:** drafted 30 July 2026
+- **Status:** **ACCEPTED by the product owner, 7 August 2026** (decision OD-H),
+  as a design and interaction pattern **where it conforms to the Design
+  Constitution**. It previously read "Proposed for owner review; do not merge
+  without owner approval" **while its implementation was already merged and
+  running in production** — the contradiction Recovery Mode found and this
+  status corrects.
+- **Decision date:** drafted 30 July 2026; accepted 7 August 2026
 - **Owner:** Giuseppe Funaro
-- **Identifier note:** renumbered from ADR-0016 to **ADR-0018** on 30 July 2026 to resolve a
-  collision — `ADR-0016` is `ADR-0016-multilingual-deal-room-interpretation.md` on `main`, and
-  `ADR-0017` is reserved by PR #114 (authentication and operational email). Content unchanged.
-- **Depends on:** ADR-0015 Stage 2 (the `--pf-interact-*` tokens) for its colour; the two are
-  reviewed together and Stage 2 merges first or with it.
+- **Identifier note:** **this document has been numbered three times.** Drafted
+  as `ADR-0016`; renumbered to `ADR-0018` on 30 July 2026 because `ADR-0016` is
+  `ADR-0016-multilingual-deal-room-interpretation.md` and `ADR-0017` was reserved
+  by PR #114; renumbered to **`ADR-0035`** on 7 August 2026 (owner decision OD-I)
+  because `ADR-0018` was itself taken by
+  `ADR-0018-member-business-verification-is-free.md`, which is accepted and keeps
+  the number. **Content unchanged by any renumber.**
+  **The 30 July renumber was never propagated into the code.** That is why
+  `lib/structure/completion.ts`, `components/ponte/bridge/TaskCompletionBridge.tsx`
+  and six other files still cite `ADR-0016` for this decision. Those citations
+  mean **this** document, and are queued for correction in
+  `docs/codex/CANONICAL-ID-RECONCILIATION.md`.
+- **Depends on:** **ADR-0034** (formerly cited as "ADR-0015 Stage 2") for the
+  `--pf-interact-*` tokens; the two are reviewed together and ADR-0034 merges
+  first or with it.
+
 - **Amends:** the Constitution's component-facing sections — §12 (buttons/actions), §13 (forms),
   §14 (records/evidence/status), §15/15a (surfaces), §9 (progress) and §8 (Bridge) — by
   **application**, adding named patterns without changing any existing rule. No token value
   changes here (that is Stage 2). No Bridge geometry changes.
 - **Scope:** Start a Deal (`/[locale]/structure`), the Review step and the composer's completion
   surface, across all three families and both sides. No other route.
+
+> **Acceptance is conditional on conformity.** OD-H accepts this pattern **where
+> it conforms to the Design Constitution**. It does not retrospectively approve
+> any part of the shipped implementation that does not. Constitution sections 9
+> (progress), 12 (buttons and actions) and 19 (state completeness) govern, and a
+> conformity review of what is already merged is queued rather than waived.
 
 ## Context
 
@@ -44,7 +66,7 @@ component structure that does.
    contract-level fields (contract term, counterparties, signatories, and any field not
    applicable to the family/intent/side) collapse behind one "Add more detail · N optional"
    control and are never surfaced as open problems before a draft exists.
-4. **Action system (§12), using ADR-0015 Stage 2 blue.** One primitive built from `.fbtn`
+4. **Action system (§12), using ADR-0034 blue.** One primitive built from `.fbtn`
    mechanics (no fork, §20): **blue-filled** for a per-row Add (≥40px tap, label names the result
    — `Add destination`); **blue text/outline** for Edit and for the disclosure; **ink-filled**
    for the one commit (`Confirm and create the draft`). Blue = act/edit, ink = commit, gold =
@@ -222,7 +244,7 @@ Bridge types in shape, label and copy.
 
 ## Implementation sequence (after approval — not in this session)
 
-1. ADR-0015 Stage 2 tokens land (or land with this).
+1. ADR-0034 tokens land (or land with this).
 2. `lib/structure/completion.ts` binder + three weight maps + tests (engine untouched).
 3. React Task Completion Bridge component wrapping `PB.progress`/`PB.header`, reading
    `progressValue`; reduced-motion + live-region announcement.
@@ -243,7 +265,7 @@ Bridge geometry, or any other route.
 ## Risks and rollback
 
 - **Blue/gold confusability** (~1.24:1): mitigated by shape/position and proven in greyscale +
-  tritanopia evidence before merge; rollback re-points the interaction tokens (ADR-0015 Stage 2
+  tritanopia evidence before merge; rollback re-points the interaction tokens (ADR-0034
   rollback), which reverts actions to ink/gold without removing the structure.
 - **A weight map that reads as a mechanical ladder:** impossible to merge — `assertWeights`
   rejects it and a per-family test pins it.

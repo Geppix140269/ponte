@@ -123,6 +123,19 @@ document already gives that bar *"all product navigation"*. The one **public**
 surface where the Deal Room must be named is `/pricing`, required by
 `PT-COMMERCIAL-2026-07-31-01` §19.
 
+> **Superseded in part by ADR-0036, 7 August 2026.** The sentence above closed
+> the list of public surfaces to `/pricing` alone. The owner has since decided
+> (OD-A) that **Deal Rooms may be publicly named, explained and demonstrated**
+> on Ponte public surfaces, including the landing, `/deal-rooms`,
+> `/deal-rooms/inside` and `/pricing`. Public visibility grants no access to a
+> real commercial room: participation, identity disclosure, invitation,
+> activation and payment remain contextual, permissioned and controlled.
+>
+> **What survives unchanged:** §1's two entry journeys — the Deal Room is still
+> not a third; convergence is still a claim about the funnel and not about
+> navigation; `/pricing` must **still** name the Deal Room; and §3.5
+> no-dead-doors applies in full to every surface ADR-0036 permits.
+
 ### Navigation depth
 
 **New rule, first stated here.** From the landing page a member is never more
@@ -148,7 +161,7 @@ describing a page that does not exist.
 | 2. No journey rail | yes |
 | 3. Hero and the three market families | yes |
 | 4. The objective console, "Ask Ponte" | **no — never built** |
-| 5. Market Signals | **removed, 31 July 2026, owner instruction** |
+| 5. Market Signals | **present again, 7 August 2026, by ADR-0041** (was removed 31 July 2026) |
 | 6. Qualified Opportunities | **no — never built** |
 | 7. Browse by sector | **no — never built** |
 | 8. Bring a record to the desk | **removed, 31 July 2026, owner instruction** |
@@ -164,6 +177,13 @@ given, recorded so the decision is not re-litigated:
   later, inside Explore, where the member has already chosen a family and the two
   sides mean something specific to them. Asking the demand-or-supply question
   before the family question put the second question first.
+
+  > **Amended by ADR-0041, 7 August 2026.** Market Signals **remain on the
+  > landing** as a public intelligence surface. The July objection was to the
+  > band *as then composed* — it asked demand-or-supply ahead of the family
+  > question — and the current band does not ask it. They must always be
+  > explicitly represented as unconfirmed Market Signals and never as Qualified
+  > Opportunities or verified demand.
 - **Bring a record to the desk (8).** The band read *"Bring a requirement, an
   offer or a service to the desk"* over a *Start a deal* and a *How review works*
   control. It named the product as three things a member brings to a desk, which

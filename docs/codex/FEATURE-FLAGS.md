@@ -1,14 +1,29 @@
 # Feature flags
 
-**Reconciled:** 25 July 2026
+**Reconciled:** 7 August 2026 (previously 25 July 2026)
+
+> **Reconciled to the code by ADR-0040, 7 August 2026.** Two rows in the table
+> below described `NEXT_PUBLIC_DEAL_ROOM` and `DEAL_ROOM_ALLOWLIST` as failing
+> **closed**. `lib/deal-room/flags.ts` inverted both on 1 August 2026 and
+> documented the inversion in its own header: **absent now means on, and an
+> empty allowlist now means everybody.** The document was wrong, not the code,
+> and it is corrected here rather than the code being changed to match it.
+>
+> The owner's ruling (OD-E) is that **Deal Room explanation and discovery may
+> fail open**, because ADR-0036 permits the room to be publicly named and
+> explained. **Protected commercial actions may not rely on a flag**: entering a
+> real room, seeing a real counterparty or real evidence, invitation, admission,
+> activation and payment depend on authentication, permissions and RLS.
+>
+> **A rollout flag is not a security boundary and must never be used as one.**
 
 | Flag | Code behaviour | Default when absent | Production value | Safe disable |
 |---|---|---|---|---|
 | `NEXT_PUBLIC_FIND_JOURNEY` | **Governs no destination since Issue #130 cutover PR 5.** The gateway Find intent opens `/find` in every flag state. Its fallback was the obsidian `/marketplace` board, which is retired and is now a permanent 308 to `/find` | Irrelevant | Irrelevant: `lib/landing/routing.ts` no longer reads it | **None, and none is needed.** There is no earlier surface to fall back to; a change to the Find journey is a change to `/find`. |
 | `NEXT_PUBLIC_STRUCTURE_JOURNEY` | **Governs no destination since Issue #130 cutover PR 3.** A Structure intent opens `/structure` in every flag state. Its fallback was `/marketplace/new?type=requirement`, itself a redirect to `/structure` since LB-013, so the flag chose between arriving directly and arriving through a hop that discarded the member's captured intent, product and company | Irrelevant | Irrelevant: `lib/landing/routing.ts` no longer reads it, so whichever value the deployment host holds, behaviour is identical. **No production flag change was needed to complete the cutover** | **None, and none is needed.** There is no earlier composer to fall back to; a change to the Structure journey is a change to `/structure`. |
 | `NEXT_PUBLIC_CHECK_JOURNEY` | `on` routes a Check intent to `/check`; otherwise to `/verify?for=counterparty` | Off | Unknown — must be checked in the deployment host | Set to anything other than `on` and redeploy; the counterparty handoff returns to `/verify`. |
-| `NEXT_PUBLIC_DEAL_ROOM` | `on` exposes the `/deal-rooms` routes; anything else and every one of them answers 404 | Off | **Not set. The slice has never been activated in production.** | Unset it and redeploy. Nothing else changes: see below. |
-| `DEAL_ROOM_ALLOWLIST` | Server-only. Comma-separated organisation or profile ids permitted to reach the Deal Room. Empty or absent means **nobody** | Nobody | Not set | Clear it and redeploy. |
+| `NEXT_PUBLIC_DEAL_ROOM` | Exposes the `/deal-rooms` routes. **Since 1 August 2026 the default is inverted: absent means ON.** Set it to `off` to withdraw the routes. `/deal-rooms/inside` is public and unflagged (ADR-0036) | **On** | Not set, and therefore **on**. The earlier claim that the slice "has never been activated in production" is withdrawn as inaccurate | Set to `off` and redeploy. Nothing else changes: see below. |
+| `DEAL_ROOM_ALLOWLIST` | Server-only. Comma-separated organisation or profile ids permitted to reach the Deal Room. **Since 1 August 2026 the default is inverted: empty or absent means EVERYBODY.** Populate it to narrow access | **Everybody** | Not set, and therefore everybody | Populate it to narrow; clearing it widens. |
 | `DEAL_ROOM_BILLING` | Server-only. `on` is one of **four** conditions `chargingEnabled()` requires before Ponte may create a Deal Room charge; see below | **Off** | **Not set. Ponte has never taken a Deal Room payment** | Unset it. No charge can be created, and nothing else changes: no surface reads it. |
 
 ## The charging gate needs four things, and has none of them
@@ -35,6 +50,20 @@ on would still charge nobody today: the tables the billing records need are in
 `20260731e`, which is **written and not applied**, and no route calls the
 charging module at all.
 
+## Rollout flags are not security boundaries (ADR-0040)
+
+Every flag in this table is a **rollout control**. It expresses staging intent —
+whether a surface is offered — and nothing about entitlement.
+
+**The boundary is authentication, permissions and Row Level Security.** Where a
+flag is the only thing standing between a member and protected data or a
+chargeable act, that is a defect in the protected thing and must be recorded as
+one. Do not harden the flag and call it fixed.
+
+`lib/deal-room/permissions.ts` states of itself that it is not a security
+boundary and that RLS is. That statement is correct, and ADR-0040 makes it
+authority.
+
 ## The Deal Room flag is a routing control, not a security boundary
 
 `NEXT_PUBLIC_DEAL_ROOM` is a `NEXT_PUBLIC_*` variable, so its value is inlined
@@ -49,6 +78,10 @@ to a non-participant. That is the property that makes a public flag safe here.
 browser, and is checked in every Deal Room server route and command handler. It
 is a staged-rollout control: an allowlisted member still sees only their own
 rooms.
+
+**The paragraph above remains true and is now the reason the open default is
+safe.** RLS returns zero rows to a non-participant whatever the flag says, which
+is why ADR-0040 permits discovery to fail open while participation cannot.
 
 **Safe disable.** Turning `NEXT_PUBLIC_DEAL_ROOM` off removes the slice and
 regresses nothing, by construction rather than by care: the Deal Room adds only

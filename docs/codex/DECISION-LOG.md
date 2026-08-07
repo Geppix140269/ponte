@@ -2,6 +2,52 @@
 
 Newest entries should be added at the top with date, decision, rationale and affected areas.
 
+## 7 August 2026 — Recovery Mode: nine owner decisions, and the Canonical Journey Register
+
+**Context.** The owner declared Recovery Mode and stopped all new feature
+development, route invention, terminology change, visual redesign and
+architecture extrapolation. Reconciling the merged authority found that recent
+Build-1 work had taken canonical screen identifiers, added public surfaces the
+authority did not permit, and shipped an unaccepted ADR — and that this log and
+`CURRENT-STATE.md` had themselves stopped recording at ADR-0020 while eleven
+further ADRs were accepted.
+
+| Ref | Decision | Recorded in |
+|---|---|---|
+| OD-A | Deal Rooms may be publicly named, explained and demonstrated, including on the landing, `/deal-rooms`, `/deal-rooms/inside` and `/pricing`. Public visibility grants no access to a real room | **ADR-0036** |
+| OD-B | An accepted controlled introduction does **not** open a Deal Room. It establishes credible commercial interest and completes the introduction; the surface may *offer* Create a Deal Room. Nothing activates automatically | **ADR-0037** |
+| OD-C | Lifecycle is `ENTER → DISCOVER → CREATE → TRUST → CONNECT → [DEAL ROOM] → PROGRESS → RECORD`. `MANAGE` is cross-cutting, not a stage. Closes the question ADR-0024 left open | **ADR-0038** |
+| OD-D | Canonical route-family letters reserved permanently; `LP` for the listing path, `RC` for Respond and Connect | **ADR-0039** |
+| OD-E | Public Deal Room availability may fail open; protected commercial actions rely on authentication, permissions and RLS. Rollout flags are never security boundaries | **ADR-0040** |
+| OD-F | `/pricing` must be reconciled to the Deal-Room-only commercial model | LB-014 |
+| OD-G | Market Signals remain on the landing, always explicitly unconfirmed, never presented as Qualified Opportunities or verified demand. Amends the 31 July removal | **ADR-0041** |
+| OD-H | The Task Completion Bridge is accepted where it conforms to the Design Constitution; its ADR status and every incorrect `ADR-0016` citation are corrected | ADR-0035 |
+| OD-I | Duplicate ADR numbers renumbered so every ADR has a unique permanent identifier, preserving historical cross-references | ADR-0033/0034/0035 |
+
+**Additional Journey-1 ruling.** A controlled introduction does not imply that a
+Deal Room must be created. A valid introduction may continue as a commercial
+conversation without a room. A Deal Room becomes the next action when the parties
+want structured transaction progression.
+
+**The convergence rule, recorded for the first time (ADR-0037).** Every journey
+that establishes credible bilateral commercial interest **can** converge on a
+Deal Room. A valid journey may instead end in watch, no-match, decline,
+do-not-proceed, investigation not confirmed, expiry, source unavailable or
+continued monitoring. **None of those is a failure**; each is a designed state
+with a recorded outcome and a next owner.
+
+**Affected areas.** New tier-2 authority
+`docs/ponte-authority/00-CANONICAL-JOURNEY-REGISTER.md`, which no feature
+implementation may bypass. ADRs 0036–0041 created; 0033–0035 renumbered from
+duplicates. `00-NORTH-STAR-ENTRY-ARCHITECTURE.md` and ADR-0021 annotated where
+superseded. `FEATURE-FLAGS.md` reconciled to the code it had contradicted since
+1 August. `CURRENT-STATE.md` brought forward from ADR-0020 to ADR-0041.
+`docs/design/JOURNEY-1-CLAUDE-DESIGN-BRIEF.md` issued.
+
+**No code changed.** Documents only. Implementation — the identifier rename, the
+`ADR-0016` citation corrections and the `/pricing` reconciliation — is queued in
+`docs/codex/CANONICAL-ID-RECONCILIATION.md` and awaits separate owner approval.
+
 ## 31 July 2026 - OD-011 decided: the private counterparty check stays paid
 
 **Decision:** the **counterparty check** — a private check a member buys on

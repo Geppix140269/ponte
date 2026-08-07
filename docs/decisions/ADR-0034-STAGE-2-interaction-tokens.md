@@ -1,5 +1,11 @@
-# ADR-0015 Stage 2 — the blue interaction token family
+# ADR-0034 — the blue interaction token family (Stage 2 of ADR-0015)
 
+- **Identifier note:** **renumbered from ADR-0015 to ADR-0034 on 7 August 2026**
+  (owner decision OD-I; hygiene rule in ADR-0039). `ADR-0015` is
+  `ADR-0015-contrast-and-colour-remediation.md`, which is accepted and keeps the
+  number. **Content unchanged.** Within this document, a bare `ADR-0015` still
+  means that accepted parent decision, of which this is the Stage 2 half.
+  Elsewhere, "ADR-0015 Stage 2" means this document.
 - **Status:** Proposed for owner review; effective when merged. **Do not merge without owner approval.**
 - **Decision date:** drafted 30 July 2026
 - **Owner:** Giuseppe Funaro
@@ -9,7 +15,8 @@
 - **Amends:** nothing in the Constitution beyond what ADR-0015 already took to v1.1. It adds
   tokens the v1.1 colour law (§6a) already describes but that were "deliberately absent" from the
   Stage 1 token file.
-- **Paired with:** ADR-0016, which is the first journey to apply these tokens (Start a Deal).
+- **Paired with:** **ADR-0035** (formerly cited here as ADR-0016), which is the first journey to
+  apply these tokens (Start a Deal).
 
 ## Context
 
@@ -25,7 +32,7 @@ Stage 1 changed only token *values* and explicitly did **not** add the blue fami
 
 So today the only blues in the token file are `--pf-focus` (#1E5FA8, keyboard focus only) and
 `--pf-select` (#DCE8F4, a selection fill). There is no token an author may use to make a control
-*read as actionable*. That gap is why the Structure/Review audit (ADR-0016) found the `Add`
+*read as actionable*. That gap is why the Structure/Review audit (ADR-0035) found the `Add`
 action rendered in gold — a §6a violation forced by the absence of an interaction token, because
 gold is barred from meaning "act here."
 
@@ -86,7 +93,7 @@ Two residual risks ADR-0015 already named, carried forward as evidence requireme
 ## Application order
 
 ADR-0015 fixed the journey order for Stage 2, and Start a Deal is journey 1. This authority adds
-the tokens; **ADR-0016 applies them to Start a Deal** and is the reference application. Later
+the tokens; **ADR-0035 applies them to Start a Deal** and is the reference application. Later
 journeys (landing controls, Market Signals, Find, account/Workspace, verification/Deal Room)
 follow one at a time, each with its own evidence, inheriting ADR-0010's journey-by-journey rule.
 Adding the tokens does not repaint anything on its own — no component references them until a

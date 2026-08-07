@@ -131,6 +131,18 @@ Depth is satisfied through navigation the member reaches after signing in.
 
 ### 4. The door goes in the authenticated workspace, not on the public landing
 
+> **Superseded in part by ADR-0036, 7 August 2026 (owner decision OD-A).** The
+> closed list of permitted public placements below is withdrawn. Deal Rooms may
+> be publicly named, explained and demonstrated, including on the landing,
+> `/deal-rooms`, `/deal-rooms/inside` and `/pricing`.
+>
+> **This ruling's reasoning survives its conclusion.** The Deal Room is still not
+> a third entry journey, still not a primary landing route, and still not the
+> category definition of Ponte Trade. ADR-0036 permits **explanation**;
+> **participation** — entering a real room, real counterparties, real evidence,
+> invitation, activation and payment — is unchanged and remains controlled.
+> `/pricing` must still name the Deal Room, and no-dead-doors still applies.
+
 **Ruled:** the Deal Room becomes central as the destination and the sole paid
 product, and it is reached from the authenticated product. It is not added to the
 public landing as a primary route.
