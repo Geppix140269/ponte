@@ -294,6 +294,10 @@
 }
 
 .brg-cols { padding-block-start: 52px; display: grid; grid-template-columns: 1fr 1fr 1fr; }
+/* Landing dropped its third column (Ponte Integrity, cut 7 August 2026): two
+   tracks, not three stretched thin. A separate modifier rather than changing
+   the base rule, because the specimen sheet still shows three side by side. */
+.brg-cols--2 { grid-template-columns: 1fr 1fr; }
 /* A grid item's minimum size defaults to its CONTENT's minimum, so any
    oversized child silently widens the track instead of overflowing it. That
    default is what let the arc push its own column out to 960px. Pinning the
@@ -327,6 +331,30 @@
   text-transform: uppercase; white-space: nowrap;
 }
 .brg-row__value[data-state="checked"] { color: var(--brg-done); }
+/* A row that is also a link (the three markets). No box, no fill: the
+   hairline it already stands on brightens and the row nudges in, the same
+   language .brg-item already uses for a clickable board row. */
+.brg-row--link {
+  cursor: pointer; text-decoration: none; color: inherit;
+  transition: border-color 250ms var(--brg-ease), padding-inline-start 250ms var(--brg-ease);
+}
+.brg-row--link:hover, .brg-row--link:focus-visible {
+  border-block-end-color: var(--brg-bronze); padding-inline-start: 6px;
+}
+.brg-row--link:focus-visible { outline: 1px solid var(--brg-bronze); outline-offset: 4px; }
+
+/* The board's scale, stated once and stated big: the small muted line here
+   used to be the only place a first-time visitor could learn Ponte reads a
+   market with thousands of records in it, and nobody reads fine print. */
+.brg-scale {
+  margin-block-start: 18px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.brg-scale__n {
+  font-family: var(--brg-serif); font-weight: 400; font-size: 44px; line-height: 1;
+  color: var(--brg-bronze);
+}
+.brg-scale__l { font-size: 12px; font-weight: 300; opacity: .6; line-height: 1.45; max-width: 22ch; }
+@media (min-width: 1920px) { .brg-scale__n { font-size: 56px; } }
 .brg-row__value[data-state="unproved"] { color: var(--brg-blocked); }
 .brg-row__value[data-state="waiting"] { color: var(--brg-bronze); }
 

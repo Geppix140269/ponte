@@ -20,8 +20,16 @@ import Grain from "./Grain";
  * span a 2,560 screen gives it, the old fixed 126px rise was a 6% rise: a
  * sagging wire under a headline sitting in the left third of the page with two
  * thirds of empty ink beside it. `lib/bridge/arc.ts` states the ratio, and the
- * band head, the strap and the three columns are what fill the width the
+ * band head, the strap and the two columns are what fill the width the
  * headline does not.
+ *
+ * ## Ponte Integrity, removed
+ *
+ * `ADR-0032` named a checked/not-checked ledger here as deliberate honesty.
+ * On the live page it read the opposite way: a first-time visitor met a list
+ * of what Ponte does NOT verify before they had any reason to trust it in the
+ * first place. Owner call, 7 August 2026: cut, not softened. What Ponte does
+ * check still runs on every submission; it is no longer recited on the door.
  *
  * ## What this page is not allowed to say
  *
@@ -79,28 +87,31 @@ export interface BridgeLandingProps {
  */
 const STAGE_LABELS = ["", "Intent", "Words", "The facts", "Preview", ""];
 
-const MARKETS = [
-  ["01", "Products", "Goods crossing a border, by the shipment or the programme."],
-  ["02", "Trade services", "Freight, inspection, customs, finance, insurance."],
-  ["03", "Distribution", "Carrying a brand into a market, or finding someone to carry yours."],
-];
-
 /**
- * What Ponte checks, and what it does not.
- *
- * `ADR-0032` names Ponte Integrity as the most distinctive thing the product
- * has, and says it had been left in a doctrine document. The second half of
- * each pair is the half that matters: a list of what was checked, with no list
- * of what was not, reads as a guarantee about the counterparty and is not one.
+ * The three markets, each its own entrance into `/find`. `family` is the
+ * canonical key `lib/taxonomy/market.ts` and the Find route both use, so a
+ * click here lands already scoped rather than on the generic board.
  */
-const INTEGRITY: [string, string][] = [
-  ["Sanctions and prohibited goods", "Checked on every submission"],
-  ["Fields complete and internally consistent", "Checked on every submission"],
-  ["Duplicate listings", "Checked on every submission"],
-  ["Who the counterparty is", "Not checked"],
-  ["Whether the goods exist", "Not checked"],
-  ["Whether a document says what it claims", "Not checked"],
-];
+const MARKETS = [
+  {
+    family: "products",
+    index: "01",
+    name: "Products",
+    detail: "Goods crossing a border, by the shipment or the programme.",
+  },
+  {
+    family: "services",
+    index: "02",
+    name: "Trade services",
+    detail: "Freight, inspection, customs, finance, insurance.",
+  },
+  {
+    family: "distribution",
+    index: "03",
+    name: "Distribution",
+    detail: "Carrying a brand into a market, or finding someone to carry yours.",
+  },
+] as const;
 
 export default function BridgeLanding({
   signals,
@@ -132,10 +143,14 @@ export default function BridgeLanding({
               to close it in. Everything up to that room is free.
             </p>
             {counts && (
-              <p className="brg-note" style={{ marginBlockStart: 12 }}>
-                {counts.total.toLocaleString("en")} records on the board,{" "}
-                {counts.live.toLocaleString("en")} of them live.
-              </p>
+              <div className="brg-scale">
+                <span className="brg-scale__n">{counts.total.toLocaleString("en")}</span>
+                <span className="brg-scale__l">
+                  records on the board
+                  <br />
+                  {counts.live.toLocaleString("en")} live and visible today
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -171,7 +186,7 @@ export default function BridgeLanding({
         </div>
       </div>
 
-      <div className="brg-mx brg-cols">
+      <div className="brg-mx brg-cols brg-cols--2">
         <div className="brg-col">
           <div className="brg-sechead">
             <span>On the board</span>
@@ -210,38 +225,19 @@ export default function BridgeLanding({
             <span>Three markets</span>
             <span>03</span>
           </div>
-          {MARKETS.map(([index, name, detail]) => (
-            <div className="brg-row" key={index}>
+          {MARKETS.map((market) => (
+            <a
+              className="brg-row brg-row--link"
+              href={`/find?family=${market.family}`}
+              key={market.family}
+            >
               <span className="brg-row__label">
-                <b className="brg-row__n">{name}</b>
-                <small>{detail}</small>
+                <b className="brg-row__n">{market.name}</b>
+                <small>{market.detail}</small>
               </span>
-              <span className="brg-row__value">{index}</span>
-            </div>
+              <span className="brg-row__value">{market.index}</span>
+            </a>
           ))}
-        </div>
-
-        <div className="brg-col">
-          <div className="brg-sechead">
-            <span>Ponte Integrity</span>
-            <span>06</span>
-          </div>
-          {INTEGRITY.map(([subject, verdict]) => (
-            <div className="brg-row" key={subject}>
-              <span className="brg-row__label">{subject}</span>
-              <span
-                className="brg-row__value"
-                data-state={verdict === "Not checked" ? "unproved" : "checked"}
-              >
-                {verdict}
-              </span>
-            </div>
-          ))}
-          <p className="brg-note" style={{ marginBlockStart: 16 }}>
-            Publishing is free. Searching is free. Preparing a Deal Room is free. Activating one is
-            the only thing Ponte charges for, and the fee and its ceiling are stated in full on the
-            fees page before anything is owed.
-          </p>
         </div>
       </div>
 
