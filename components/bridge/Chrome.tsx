@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PRIMARY_NAV, signInHref } from "@/lib/nav/primary";
 
 /**
  * The chrome: the masthead and the market signals tape.
@@ -45,17 +46,27 @@ export interface ChromeProps {
 }
 
 /**
- * The three links every bridge screen's header carries once it has one.
+ * What the bridge header carries.
  *
- * One place, so the header never drifts between the surfaces that pass it:
- * the earlier defect was not the wrong links, it was two call sites each
- * free to invent their own (or, as shipped, neither passing any).
+ * It used to declare its own three links here. That was one place for THIS
+ * generation, but the walkthrough of 7 August 2026 found four other headers
+ * declaring their own, so the entrance and the rest of the product disagreed
+ * about what Ponte's places are called, and the entrance's own bar offered
+ * neither primary journey.
+ *
+ * The entries now come from `PRIMARY_NAV`, the one declaration for every shell,
+ * with the account or sign-in door appended because that is the only part of
+ * the bar that depends on who is reading it.
  */
-export function primaryNav(who: string | null): { key: string; label: string; href: string }[] {
+export function primaryNav(
+  who: string | null,
+  returnTo?: string | null,
+): { key: string; label: string; href: string }[] {
   return [
-    { key: "market", label: "Market Signals", href: "/market-signals" },
-    { key: "rooms", label: "Deal Rooms", href: "/deal-rooms" },
-    { key: "account", label: who ? "Account" : "Sign in", href: who ? "/account" : "/login" },
+    ...PRIMARY_NAV.map((n) => ({ key: n.key, label: n.label, href: n.href })),
+    who
+      ? { key: "account", label: "Account", href: "/account" }
+      : { key: "account", label: "Sign in", href: signInHref(returnTo) },
   ];
 }
 

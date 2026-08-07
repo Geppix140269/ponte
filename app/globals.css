@@ -29,7 +29,13 @@
 
 :root {
   /* Ground */
-  --obsidian: #0a0c11;
+  /* OD-K, 7 August 2026: the canonical shell ground is --brg-ink #0E0F0C, the
+     ADR-0032 token. Three near-blacks were in play across the product - this
+     one, #0E0F0C in the bridge tokens, and #050504 in the approved prototypes -
+     so a member crossing between surfaces saw the page ground shift. This is now
+     the same value, kept under its historical name so the many call sites that
+     read --obsidian do not each have to be found and rewritten. */
+  --obsidian: #0e0f0c;
   --obsidian-deep: #06070a;
   --surface: #1b2029;
 
@@ -60,7 +66,8 @@
   /* Legacy v2 aliases. Deprecated, removed at the end of U2. */
   --cream: #eef1f5;
   --gray-2: #8a93a2;
-  --navy: #0a0c11;
+  /* OD-K: the same canonical ground. See --obsidian above. */
+  --navy: #0e0f0c;
   --navy-2: #1b2029;
   --navy-3: #232936;
   --navy-deep: #06070a;

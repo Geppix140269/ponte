@@ -131,7 +131,11 @@ const MARKETS = [
     detail: "Goods crossing a border, by the shipment or the programme.",
     doors: [
       { key: "offer", label: "I have a product to offer", href: "/publish?intent=offer_product" },
-      { key: "seek", label: "I am looking for a product", href: "/find?family=products" },
+      {
+        key: "seek",
+        label: "I am looking for a product",
+        href: "/find?intent=source_product",
+      },
     ],
   },
   {
@@ -145,7 +149,7 @@ const MARKETS = [
         label: "I provide a trade service",
         href: "/publish?intent=offer_trade_service",
       },
-      { key: "seek", label: "I need a trade service", href: "/find?family=services" },
+      { key: "seek", label: "I need a trade service", href: "/find?intent=seek_trade_service" },
     ],
   },
   {
@@ -162,7 +166,7 @@ const MARKETS = [
       {
         key: "seek",
         label: "I am looking for a distributor",
-        href: "/find?family=distribution",
+        href: "/find?intent=seek_distribution_partner",
       },
     ],
   },

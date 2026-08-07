@@ -6,6 +6,7 @@ import ThemeToggle from "@/components/desk/ThemeToggle";
 import DeskAccount from "./DeskAccount";
 import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import type { Rail } from "@/lib/desk/journey";
+import { PRIMARY_NAV, type PrimaryNavKey } from "@/lib/nav/primary";
 
 /**
  * The Desk page system: one global command bar, an optional journey rail, and
@@ -31,41 +32,48 @@ import type { Rail } from "@/lib/desk/journey";
  */
 
 /**
- * Navigation, and only to surfaces that are in the Desk system.
+ * Navigation is no longer decided here.
  *
- * `/explore` is deliberately absent. It still exists and is still reachable
- * from the legacy application, but it renders the pre-Desk chrome, and sending
- * a visitor from a Desk page straight into it is the seam this navigation is
- * responsible for not creating. It returns when Explore is rebuilt on the Desk,
- * which is not this slice.
+ * Two earlier notes lived at this point and both are now wrong, so they are
+ * replaced rather than left to mislead. One explained that `/explore` was
+ * deliberately absent "until Explore is rebuilt on the Desk". The other
+ * recorded that "Start a deal" had been removed because it pointed at the
+ * composer.
+ *
+ * The 7 August 2026 walkthrough showed what those two decisions produced
+ * together: on the 21 routes this shell serves, the bar offered neither entry
+ * journey. A member could not reach the market or start a deal from the
+ * navigation at all, and the only two entries were Market Signals and the paid
+ * room's proposal flow.
+ *
+ * Both journeys are back, under the canonical labels fixed by OD-J, pointing at
+ * `/find` and `/publish`. The reasoning that removed them still holds in one
+ * respect and is preserved: **"Start a deal" must not mean the composer.** It
+ * goes to `/publish`, the listing path, not to `/structure`.
  */
-/**
- * Two places, and the second one is the product.
- *
- * "Start a deal" is gone, by owner decision of 1 August 2026. It pointed at
- * `/structure`, the composer, so a member reading the bar was offered "start a
- * deal" and arrived at a form for describing a product. What Ponte sells is the
- * room; the entrance now says so at the scale of the product, and the bar has
- * to agree with the entrance rather than contradict it one line above.
- *
- * `/structure` is not orphaned. Every action on the entrance's Family Bridge
- * lands in the composer, and the Deal Room surfaces link to it directly for the
- * member who has nothing published yet. What is removed is the claim that
- * composing a listing is what starting a deal means.
- *
- * "How Ponte works" moved to the footer, where `/about` already sits. It is
- * read once, before committing, and a permanent slot in a short bar is the
- * wrong weight for a page nobody returns to.
- *
- * `about` stays in `DeskNavKey` so a page may still mark itself as the current
- * place without the bar having to carry a link to it.
- */
-export type DeskNavKey = "market" | "deal" | "about";
+export type DeskNavKey = PrimaryNavKey | "market" | "about";
 
-const NAV: { key: DeskNavKey; label: string; href: string }[] = [
-  { key: "market", label: "Market Signals", href: "/market-signals" },
-  { key: "deal", label: "Open a Deal Room", href: "/deal-rooms/propose" },
-];
+/*
+  The bar is no longer declared here.
+
+  It carried two entries, "Market Signals" and "Open a Deal Room", and NEITHER
+  primary entry journey. So across the 21 routes this shell serves, a member
+  could not reach Explore the market or Start a deal from the navigation at all,
+  while the paid product was offered as a destination and sent an anonymous
+  visitor into a proposal flow (registered as JD-09, and not fixed here).
+
+  `PRIMARY_NAV` is now the single declaration for every shell. See
+  `lib/nav/primary.ts`.
+
+  `market` is kept in `DeskNavKey` so the pages that already mark themselves as
+  the current place keep compiling; it resolves to the `signals` entry.
+*/
+const NAV = PRIMARY_NAV;
+
+/** The retired `market` key means the Market Signals entry. */
+function navKey(current: DeskNavKey | undefined): string | undefined {
+  return current === "market" ? "signals" : current;
+}
 
 export interface DeskShellProps {
   children: ReactNode;
@@ -111,7 +119,7 @@ export default async function DeskShell({ children, rail, current, objective }: 
             <Link
               key={item.key}
               href={item.href}
-              {...(current === item.key ? { "aria-current": "page" as const } : {})}
+              {...(navKey(current) === item.key ? { "aria-current": "page" as const } : {})}
             >
               {item.label}
             </Link>
