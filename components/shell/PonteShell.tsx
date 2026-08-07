@@ -5,6 +5,7 @@ import { landingFontVars } from "@/components/home/landing/fonts";
 import { isRtl } from "@/i18n/routing";
 import PonteFooter from "@/components/PonteFooter";
 import PonteLockup from "@/components/ponte/brand/PonteLockup";
+import { PRIMARY_NAV, signInHref, type PrimaryNavKey } from "@/lib/nav/primary";
 import "@/components/find/find.css";
 
 /**
@@ -33,7 +34,9 @@ export interface PonteShellProps {
   locale: string;
   children: ReactNode;
   /** Which primary entrance to mark as current, if any. */
-  current?: "explore" | "deal";
+  current?: PrimaryNavKey;
+  /** The route to come back to after signing in. */
+  signInReturnTo?: string | null;
   /**
    * Rendered flush, without the shared footer, for a single-action flow such
    * as the composer where a footer would compete with the one thing to do.
@@ -46,6 +49,7 @@ export default async function PonteShell({
   children,
   current,
   bare,
+  signInReturnTo,
 }: PonteShellProps) {
   const t = await getTranslations({ locale, namespace: "shell" });
 
@@ -54,14 +58,20 @@ export default async function PonteShell({
       <header className="fnav">
         <PonteLockup scope="find" label={t("home")} />
         <nav className="fnav__links" aria-label={t("navLabel")}>
-          <Link
-            className={`fnav__link${current === "explore" ? " is-current" : ""}`}
-            href="/explore"
-          >
-            {t("explore")}
-          </Link>
-          <Link className={`fnav__link${current === "deal" ? " is-current" : ""}`} href="/structure">
-            {t("deal")}
+          {PRIMARY_NAV.map((item) => (
+            <Link
+              key={item.key}
+              className={`fnav__link${current === item.key ? " is-current" : ""}`}
+              href={item.href}
+            >
+              {item.label}
+            </Link>
+          ))}
+          {/* The walkthrough found this shell serving /explore, /verification and
+              /verify with NO sign-in control at all, so a member who reached
+              them could not authenticate without going back to the entrance. */}
+          <Link className="fnav__link" href={signInHref(signInReturnTo)}>
+            Sign in
           </Link>
         </nav>
       </header>

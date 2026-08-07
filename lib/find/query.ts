@@ -16,17 +16,61 @@ import {
   subcategoryBelongsTo,
 } from "../taxonomy/services";
 import { partnerType as lookupPartnerType } from "../taxonomy/distribution";
-import { PRODUCT_SECTORS, type MarketFamily } from "../taxonomy/market";
+import {
+  MARKET_INTENTS,
+  PRODUCT_SECTORS,
+  type MarketFamily,
+  type MarketIntent,
+  type MarketIntentDefinition,
+} from "../taxonomy/market";
 import type { InventoryQuery } from "../board/inventory-query";
 import { MAX_QUERY_LENGTH } from "../search/signal-search";
 
-/** Buy/sell/service, in the listings vocabulary. Null means "any direction". */
+/**
+ * Buy/sell/service, in the listings vocabulary. Null means "any direction".
+ *
+ * ## This is an internal side filter, never a product vocabulary
+ *
+ * It predates the canonical taxonomy and conflates two different things:
+ * `offer` and `requirement` are SIDES of a market, while `service` is closer to
+ * a FAMILY — which is why `toInventoryQuery` maps `service` to no side at all.
+ * A member never sees these words, and no surface may present them as intents.
+ *
+ * **The one canonical intent vocabulary is `MARKET_INTENTS`** in
+ * `lib/taxonomy/market.ts`. `parseFindQuery` accepts those keys, derives the
+ * family and the side from the definition, and keeps this type as the internal
+ * filter the inventory query already understands. Legacy values still parse so
+ * that links shared before this change keep working; they are no longer emitted.
+ */
 export type FindIntent = "offer" | "requirement" | "service";
 
 export const FIND_INTENTS: readonly FindIntent[] = ["offer", "requirement", "service"];
 
 export function isFindIntent(v: unknown): v is FindIntent {
   return typeof v === "string" && (FIND_INTENTS as readonly string[]).includes(v);
+}
+
+/** The canonical intent definition for a key, or null if it is not one. */
+function marketIntentDefinition(v: unknown): MarketIntentDefinition | null {
+  if (typeof v !== "string") return null;
+  return MARKET_INTENTS.find((i) => i.key === v) ?? null;
+}
+
+/**
+ * The internal side a canonical intent narrows to.
+ *
+ * Total over every canonical intent, because each one declares a `side`.
+ * `demand` is the buying side and `supply` the selling side; the board stores
+ * those as `requirement` and `offer` (`inventory.ts` filters the `side` column
+ * on exactly those two values).
+ *
+ * **Services carry a side like every other family** — a member seeking freight
+ * and a member offering it are the two sides of one market — so narrowing by
+ * side excludes no family. That is why the canonical vocabulary can be honoured
+ * here without a behavioural decision about the result model.
+ */
+function sideForIntent(def: MarketIntentDefinition): FindIntent {
+  return def.side === "demand" ? "requirement" : "offer";
 }
 
 /** Which lane the URL is focused on. Both lanes always render regardless. */
@@ -89,7 +133,15 @@ export type FindQuery = {
   product: string | null;
   /** The source category label, exactly as stored (e.g. "Rice & Grains"). */
   category: string | null;
-  /** Direction filter, or null for any. */
+  /**
+   * The canonical intent the member actually stated, or null.
+   *
+   * This is what the six landing doors carry and what the URL round-trips, so a
+   * member who said "I am looking for a product" is never asked again. `intent`
+   * below is the internal side it narrows to; this is the thing with meaning.
+   */
+  marketIntent: MarketIntent | null;
+  /** Direction filter, or null for any. Derived from `marketIntent` when set. */
   intent: FindIntent | null;
   /** Destination market, free text (a country name or region). */
   market: string | null;
@@ -221,8 +273,20 @@ export function parseFindQuery(
   const rawFamily = clean(sp.family, 20);
   const qtyNum = rawQty != null ? Number(rawQty) : NaN;
 
-  const family = rawFamily && FAMILIES.indexOf(rawFamily) >= 0 ? (rawFamily as MarketFamily) : null;
+  const urlFamily = rawFamily && FAMILIES.indexOf(rawFamily) >= 0 ? (rawFamily as MarketFamily) : null;
   const serviceCategory = canonicalKey(sp.serviceCategory, (k) => !!lookupServiceCategory(k));
+
+  /*
+    The canonical intent, and what it settles.
+
+    A canonical key carries its own family, so a door may state the intent alone
+    and the family follows from the taxonomy rather than from a second query
+    parameter that could disagree with it. Where the URL names both, the URL's
+    family is kept only if it matches the intent's; a contradiction resolves to
+    the intent, because that is the thing the member chose.
+  */
+  const intentDef = marketIntentDefinition(rawIntent);
+  const family = intentDef ? intentDef.family : urlFamily;
 
   return {
     family,
@@ -239,7 +303,10 @@ export function parseFindQuery(
     territory: territoryCode(sp.territory),
     product: clean(sp.product, 120),
     category: clean(sp.category, 80),
-    intent: isFindIntent(rawIntent) ? rawIntent : null,
+    marketIntent: intentDef ? intentDef.key : null,
+    // The canonical intent decides the side. A legacy value is still honoured so
+    // that links shared before the canonical contract existed keep working.
+    intent: intentDef ? sideForIntent(intentDef) : isFindIntent(rawIntent) ? rawIntent : null,
     market: clean(sp.market, 120),
     origin: clean(sp.origin, 120),
     minQty: Number.isFinite(qtyNum) && qtyNum > 0 ? qtyNum : null,
@@ -320,7 +387,11 @@ function boardParams(q: Partial<FindQuery>): URLSearchParams {
   if (q.territory) params.set("territory", q.territory);
   if (q.product) params.set("product", q.product);
   if (q.category) params.set("category", q.category);
-  if (q.intent) params.set("intent", q.intent);
+  // The canonical intent is what a shared link carries. The legacy side value is
+  // emitted only when that is all the URL ever had, so an old link keeps working
+  // without the retired vocabulary being restated as the current contract.
+  if (q.marketIntent) params.set("intent", q.marketIntent);
+  else if (q.intent) params.set("intent", q.intent);
   if (q.market) params.set("market", q.market);
   if (q.origin) params.set("origin", q.origin);
   if (q.minQty && q.minQty > 0) params.set("minQty", String(q.minQty));
