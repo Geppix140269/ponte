@@ -1,4 +1,4 @@
-# R0 — Ponte Experience Shell: bounded design brief
+# R0-A — Experience Shell Consolidation: bounded design brief
 
 **Issued:** 7 August 2026, under Recovery Mode
 **For:** Claude Design
@@ -8,7 +8,7 @@
 > **Dependency.** ADR-0036 to ADR-0041 and `00-CANONICAL-JOURNEY-REGISTER.md` sit on the
 > `governance/recovery-mode-authority` branch and are **not yet merged to `main`** (PR #231, under
 > controller review). They are cited in prose, never by link, so nothing here dangles. **Design may
-> proceed on this brief; R0 implementation must not begin before PR #231 merges.**
+> proceed on this brief; R0-A implementation must not begin before PR #231 merges.**
 
 ---
 
@@ -16,36 +16,36 @@
 
 **The shell a member is inside, everywhere** — so that Ponte stops being five products wearing one name.
 
-You are **not** designing what happens inside any journey. JR-01 is designed after R0 is approved.
+You are **not** designing what happens inside any journey. JR-01 is designed after R0-A is approved.
 
 ---
 
 ## 1. The rule that governs everything below
 
-> **R0 unifies shell and navigation only. It must not cosmetically legitimise journey defects.**
+> **R0-A unifies shell and navigation only. It must not cosmetically legitimise journey defects.**
 
 A surface that receives the new shell has been **re-housed, not repaired.** Missing Distribution
 in the publish entrance, numbered trust tiers in verification, false anonymous progress in
 opportunities, and every defect like them remain separately classified and open. **None may be
 marked resolved because its surface now looks correct.**
 
-This is the failure mode R0 is most likely to cause: a walkthrough where everything matches, so
+This is the failure mode R0-A is most likely to cause: a walkthrough where everything matches, so
 everything reads as fixed. A consistent shell over an unfixed journey is more dangerous than an
 inconsistent one, because it removes the visible seam that told a reviewer to look closer.
 
 ### 1.1 Two axes, never collapsed
 
-Every surface carries **two independent statuses**. R0 can move the first. R0 can never move the second.
+Every surface carries **two independent statuses**. R0-A can move the first. R0-A can never move the second.
 
-| Axis | Question | R0 may change it? |
+| Axis | Question | R0-A may change it? |
 |---|---|---|
-| **Shell conformance** | Does it wear the one shell, navigation, ground and typeface? | **Yes. This is R0.** |
+| **Shell conformance** | Does it wear the one shell, navigation, ground and typeface? | **Yes. This is R0-A.** |
 | **Journey correctness** | Does it do the right thing for a member? | **No. Out of scope, and stays open.** |
 
 A surface may be **shell-conformant and journey-defective at the same time**, and several will be.
 That combination must be visible in the prototype, not hidden by it.
 
-### 1.2 Carried defects — R0 closes none of these
+### 1.2 Carried defects — R0-A closes none of these, and several BLOCK a retirement
 
 Reproduce these in the prototype **as they are**, and mark each visibly (see §5.4). Do not design
 the fix. Do not quietly draw the corrected version.
@@ -66,9 +66,31 @@ the fix. Do not quietly draw the corrected version.
 **Re-shelling `/pricing` does not close LB-014. Re-shelling the walkthrough does not close LB-015.**
 Those two are named because they are the ones most likely to be assumed fixed.
 
-### 1.3 What R0 *does* legitimately fix
+### 1.2a A defect may BLOCK a retirement without becoming your work
 
-These are shell properties, so R0 owns them and may mark them resolved:
+Some defects gate a route retirement. **That does not move them into R0-A.** They are repaired
+under **R0-B**, separately authorised, and R0-A waits behind them.
+
+| Defect | What it blocks | Repaired under |
+|---|---|---|
+| **JD-01** Distribution missing | **`/structure` may not redirect to `/publish`** | R0-B.2, journey authority |
+| **JD-02** numbered trust tiers | nothing — `/verification` keeps its route and its shell | R0-B.3 |
+| **JD-03** false anonymous progress | nothing — `/opportunities` keeps its route and its shell | R0-B.4 |
+| **JD-08** `/pricing` sells the retired model | nothing — LB-014 closes on its own evidence | R0-B.7 |
+| **JD-09** credible-interest bypass | nothing — `/deal-rooms/propose` keeps its route and its shell | R0-B.5 |
+| — | `/explore` may not redirect to `/find` | R0-B.1 absorption |
+| — | `/check` may not retire | R0-B.6 parity, OD-L |
+
+**You draw none of these repairs.** Where a route awaits one, draw it **with the new shell and the
+defect still present**, annotated per §5.4.
+
+**The sequence you must not shortcut in a prototype:** repair or absorb → prove parity → redirect →
+retire. A prototype showing `/structure` already redirecting to `/publish`, or `/explore` already
+gone, asserts a parity that does not exist and would authorise a premature retirement.
+
+### 1.3 What R0-A *does* legitimately fix
+
+These are shell properties, so R0-A owns them and may mark them resolved:
 
 - five header systems → one;
 - two market entrances → one;
@@ -118,7 +140,8 @@ Nothing else.
 - Admin and reviewer surfaces. `/check`.
 - Verification as a product — only the shell around its explainer.
 - **Any fix to a JD-listed defect.**
-- Any new capability. R0 moves and re-dresses; it adds nothing.
+- Any new capability. R0-A moves and re-dresses; it adds nothing.
+- **Any redirect or retirement.** R0-A redirects nothing and retires nothing.
 
 ---
 
@@ -151,7 +174,7 @@ never be drawn as a member-facing state.
 
 **Draw the defect as it currently is.** Do not add Distribution to the publish entrance. Do not
 replace the numbered tiers. Do not remove Clarify from the walkthrough mock. Showing the true
-current behaviour inside the true new shell is the point of R0.
+current behaviour inside the true new shell is the point of R0-A.
 
 ---
 
@@ -181,7 +204,7 @@ current behaviour inside the true new shell is the point of R0.
 
 ## 7. Acceptance
 
-**Shell (R0's own work)**
+**Shell (R0-A's own work)**
 1. Every corridor walked `/` → destination → back, with **no change** of logo, navigation, typeface
    or ground.
 2. Both journeys reachable in **one tap at 390 px**, labelled per OD-J.
@@ -214,10 +237,12 @@ current behaviour inside the true new shell is the point of R0.
 ## 9. What happens after
 
 1. Owner reviews this package.
-2. On approval, Claude Code receives a bounded R0 implementation brief — **shell and navigation
-   only**, phased per the accepted absorb-then-redirect plan (R0.1 to R0.9).
-3. **Journey defects JD-01 to JD-10 are scheduled separately**, on their own evidence, after R0.
-4. JR-01 design begins only once R0 is implemented and accepted.
+2. On approval, Claude Code receives a bounded **R0-A** implementation brief — **shell and
+   navigation only**, phases R0-A.1 to R0-A.3. **R0-A redirects nothing and retires nothing.**
+3. **R0-B repairs are authorised separately, one at a time, each on its own evidence.** A route is
+   redirected or retired only once its replacement parity is proven — never because the new shell
+   makes the replacement look ready.
+4. JR-01 design begins only once R0-A is implemented and accepted.
 
 ---
 

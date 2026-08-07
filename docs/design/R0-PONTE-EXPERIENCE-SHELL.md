@@ -23,11 +23,42 @@
 
 > One Ponte. One global shell. One market entrance. One publish entrance. One visual language.
 
-R0 is done when a member can move between **any two surfaces** without the logo, the navigation,
+R0-A is done when a member can move between **any two surfaces** without the logo, the navigation,
 the typeface or the page ground changing — and when the entrance offers exactly two journeys.
 
-**What the audit found, which R0 exists to end:** five header systems, two market entrances, three
-first questions, three display typefaces and three near-blacks.
+**What the audit found, which R0-A exists to end:** five header systems, two market entrances,
+three first questions, three display typefaces and three near-blacks.
+
+---
+
+## 0a. R0 is two slices, and only one is being designed
+
+An earlier draft of this specification assigned R0 several **journey corrections**: Distribution
+parity before retiring the publish entrance, removing numbered trust tiers, correcting anonymous
+progress, enforcing credible interest, absorbing `/check`. The design brief simultaneously
+**forbade R0 from fixing those same defects**. Both cannot hold. This section resolves it, and
+every later section is read subject to it.
+
+| Slice | Scope | Authority | Status |
+|---|---|---|---|
+| **R0-A — Experience Shell Consolidation** | Shell, navigation, visual identity, context preservation. **Nothing else.** | This document + `R0-CLAUDE-DESIGN-BRIEF.md` | **Approved. The current Claude Design scope.** |
+| **R0-B — prerequisite journey repairs** | The specific journey defects that must be repaired **before** a route may be redirected, retired, or claimed to have parity | **Separately authorised, per defect, under journey authority.** Not this document | **Not authorised, not designed, not scheduled here** |
+
+### The rule, restated so it cannot be misread
+
+> **R0-A may change shell conformance. R0-A may never change journey correctness.**
+
+**A JD defect may be a blocking precondition for a retirement without becoming R0-A work.** That is
+the distinction the earlier draft collapsed. R0-A is *blocked by* JD defects; it never *fixes*
+them. Repair is R0-B.
+
+### What this means in practice
+
+- A surface may receive the canonical shell **while remaining journey-defective**. Its defect stays
+  open, and stays visible.
+- A route is **not** redirected or retired because its replacement now looks right.
+- Where applying a shell rule would **conceal** a registered defect, R0-A does not apply it — see
+  §3.3.
 
 ---
 
@@ -68,27 +99,36 @@ The Deal Room is publicly **explained** (ADR-0036) and is never a third entry jo
 
 ## 2. Route disposition
 
-| Route | Disposition | Note |
-|---|---|---|
-| `/` | **KEEP** | Canonical entrance. IA in §4 |
-| `/find`, `/find/o/[ref]` | **KEEP + RECONNECT** | The one market entrance. Must first absorb `/explore` |
-| `/publish` | **KEEP + RECONNECT** | The one publish entrance. Must first absorb `/structure` |
-| `/market-signals`, `/market-signals/[id]` | **RECONNECT** | Add `h1`; remove the journey rail from a public page |
-| `/market-signals/categories` | **RECONNECT** | Fold into `/find` sector browse |
-| `/deal-rooms`, `/deal-rooms/inside` | **KEEP + RECONNECT** | Authorised public explanation (ADR-0036). Re-shell |
-| `/pricing` | **KEEP + RECONNECT** | Must name the Deal Room (LB-014, OD-F) |
-| `/verification` | **REDESIGN** | Keep the explainer. **Retire the numbered tiers 01–04** |
-| `/verify` | **KEEP + RECONNECT** | Re-shell to the canonical typeface |
-| `/login` | **KEEP + RECONNECT** | Fix the lost `next=` (§3 back behaviour) |
-| `/workspace`, `/account` | **KEEP + RECONNECT** | Re-shell |
-| `/opportunities` | **REDESIGN + HIDE when signed out** | No progress rail for anonymous visitors |
-| `/deal-rooms/propose` | **HIDE** | Behind auth **and** credible interest (ADR-0037) |
-| `/explore`, `/explore?family=…` | **REDIRECT → `/find`** | After absorption. 308 |
-| `/structure`, `/structure?from=…` | **REDIRECT → `/publish`** | After absorption. 308 |
-| `/check` | **ABSORB then RETIRE** | Not completed as a parallel visible entrance (OD-L). Unique capability absorbed into the canonical verification/check path; route and `NEXT_PUBLIC_CHECK_JOURNEY` retire once parity exists |
-| `/learn/*`, `/about`, `/contact`, `/privacy`, `/terms` | **KEEP + RECONNECT** | Content unchanged; shell applied |
+Three columns, deliberately. **What R0-A does** is shell work and is authorised. **What blocks
+retirement** is an R0-B repair and is *not* R0-A work — it is a gate R0-A must wait behind.
 
-**Nothing is deleted in R0.** `/explore` and `/structure` become redirects, not removals.
+| Route | R0-A does (authorised) | Blocked on (R0-B, separately authorised) | Eventual disposition |
+|---|---|---|---|
+| `/` | Apply shell; entrance IA per §4 | — | **KEEP** |
+| `/find`, `/find/o/[ref]` | Apply shell | Absorb `/explore` capability | **KEEP** |
+| `/publish` | Apply shell | **JD-01** Distribution parity | **KEEP** |
+| `/market-signals`, `/market-signals/[id]` | Apply shell; add missing `h1`; remove the rail (no journey here) | — | **KEEP** |
+| `/market-signals/categories` | Apply shell | Sector browse present in `/find` | **RECONNECT** |
+| `/deal-rooms`, `/deal-rooms/inside` | Apply shell | **JD-04 / LB-015** — the `Clarify` mock | **KEEP** |
+| `/pricing` | Apply shell | **JD-08 / LB-014** — names the retired model | **KEEP** |
+| `/verification` | **Apply shell only.** The numbered tiers stay visible | **JD-02** — changing the trust representation is **not R0-A work** | **KEEP**, repaired under R0-B |
+| `/verify` | Apply shell | Absorb `/check` capability | **KEEP** |
+| `/login` | Apply shell; **set `next=` on every redirect** (§3.5) | — | **KEEP** |
+| `/workspace`, `/account` | Apply shell | — | **KEEP** |
+| `/opportunities` | **Apply shell only.** Rail and anonymous behaviour untouched — see §3.3 | **JD-03** false anonymous progress | **KEEP**, repaired under R0-B |
+| `/deal-rooms/propose` | **Apply shell only.** Access and gating untouched | **JD-09** credible-interest logic | **KEEP**, repaired under R0-B |
+| `/explore`, `/explore?family=…` | Apply shell **while it remains live** | Replacement parity in `/find` proven | **REDIRECT → `/find`** |
+| `/structure`, `/structure?from=…` | Apply shell **while it remains live** | **JD-01** Distribution parity **plus** intake and resume parity | **REDIRECT → `/publish`** |
+| `/check` | Nothing — it 404s and is not drawn (OD-L) | Unique capability absorbed into `/verify`; parity separately authorised | **RETIRE** route + flag |
+| `/learn/*`, `/about`, `/contact`, `/privacy`, `/terms` | Apply shell; content unchanged | — | **KEEP** |
+
+**Nothing is deleted in R0-A.** No route in this table is redirected or retired by R0-A. Every
+redirect and retirement waits on an R0-B repair or a proven absorption, and each is separately
+authorised.
+
+**Applying the shell to a route never advances its eventual disposition.** `/verification` wearing
+the canonical shell does not move it closer to having its trust model fixed; `/pricing` wearing it
+does not close LB-014.
 
 ---
 
@@ -133,9 +173,15 @@ system from the rail."* One bar, one place, always present.
 - The rail carries **journey positions only**, never navigation (North Star §2, ADR-0038).
 - Stages: `ENTER → DISCOVER → CREATE → TRUST → CONNECT → [DEAL ROOM] → PROGRESS → RECORD`.
 - **`MANAGE` never appears** (ADR-0038).
-- **A surface with no journey has no rail.** This retires the rail from `/market-signals` and from
-  `/opportunities` when signed out, where the audit found stages marked *"completed"* for a visitor
-  who had completed nothing.
+- **A surface with no journey has no rail.** R0-A removes the rail from `/market-signals`, which
+  has no journey and no registered defect behind it.
+- **Carve-out, and it matters.** `/opportunities` also shows a rail to anonymous visitors — with
+  stages marked *"completed"* for someone who has completed nothing. **R0-A does not remove it.**
+  Removing it would make the false claim disappear without the defect being repaired, which is
+  precisely the cosmetic legitimisation this specification forbids. **JD-03 owns that surface's
+  rail entirely**, and it stays visible until R0-B repairs it.
+- **The general principle:** where applying a shell rule would *conceal* a registered defect rather
+  than *correct* it, R0-A does not apply the rule. The defect keeps the surface.
 - The rail never draws `[DEAL ROOM]` as the end (ADR-0024).
 
 ### 3.4 Back behaviour
@@ -233,67 +279,132 @@ A member crossing any corridor must never see the product change identity. Bindi
 6. **Cream is a reversed panel inside the ink ground**, per ADR-0032 — not a second theme and not
    a second product.
 7. **No surface renders without the shell.** `/structure` and `/check` render with no chrome today.
-8. **A route that cannot yet be shelled is redirected, not exposed** (§8).
+8. **A route is redirected or retired only after replacement parity is proven.** Until then it may
+   receive the canonical shell where safe, and it remains **explicitly classified as
+   journey-defective**.
+
+   *This replaces an earlier rule — "a route that cannot yet be shelled is redirected, not
+   exposed" — which had it backwards. That rule made redirection the remedy for an unfinished
+   surface, which would have removed working capability from members to tidy the navigation.
+   Parity first, redirect second, in that order and never the reverse.*
 
 ---
 
 ## 7. The five named routes
 
-### `/explore` → **REDIRECT to `/find`**
+Each entry states **what R0-A does now** and **what must happen elsewhere first**. No entry
+authorises a journey repair.
+
+### `/explore`
 A second market entrance in a third generation, reachable only from `/verification`'s header.
-**Absorb first:** the three-family overview, sector tiles with counts, and the market-activity
-statement. Then 308. Counts stay honest — "0 market records" is stated, never hidden, never invented.
 
-### `/structure` → **REDIRECT to `/publish`**
-A third entrance with a third first question, no chrome, and — the sharpest finding — **only three
-options: Source a product / Supply a product / Offer a trade service. Distribution and
-representation is missing**, though the entrance promises three equal families.
-**Absorb first:** the three intake routes (Describe it · Upload a document · Browse categories) and
-the resume-a-draft behaviour. Then 308. `?from=` and `?edit=` continue to work through the redirect.
+- **R0-A now:** apply the canonical shell. It stays live and reachable.
+- **Blocked on (R0-B):** `/find` carrying the three-family overview, sector tiles with counts and
+  the market-activity statement. Counts stay honest — "0 market records" is stated, never hidden,
+  never invented.
+- **Then, separately authorised:** 308 to `/find`.
 
-### `/verification` → **REDESIGN, keep the route**
+### `/structure`
+A third entrance with a third first question, no chrome, and the sharpest finding of the audit:
+**only Source a product / Supply a product / Offer a trade service. Distribution and representation
+is missing**, though the entrance promises three equal families.
+
+- **R0-A now:** apply the canonical shell — this route renders with no chrome at all today. It
+  stays live and reachable.
+- **Blocked on (R0-B): `JD-01` Distribution parity**, resolved under separate journey authority,
+  plus intake parity (Describe it · Upload a document · Browse categories) and resume-a-draft.
+- **Then, separately authorised:** 308 to `/publish`, preserving `?from=` and `?edit=`.
+
+> **`/structure` may not redirect until JD-01 is resolved.** Redirecting first would remove the
+> only entrance that works for two of the three families and route those members into an entrance
+> that serves neither. The defect blocks the retirement; it is not fixed by it.
+
+### `/verification`
 The explainer is good and stays: what is checked, sources, dates, limits, what a verification does
-**not** mean. **The numbered levels 01–04 go.** Master Brief §1.3 forbids numbered tiers as the
-principal user-facing trust model; replace with evidence-specific statements (identity confirmed,
-business information checked, role declared, authority sighted, under review, not confirmed).
-The underlying L1–L4 data model is **not** migrated in R0 — presentation only.
+**not** mean.
 
-### `/opportunities` → **REDESIGN + require auth**
-Renders to anonymous visitors today with a rail showing stages *"completed"*. Signed out it should
-not be reachable; signed in it is the member's records with a truthful rail. Add an `h1`.
+- **R0-A now:** apply the canonical shell, and restore the missing sign-in control. **The numbered
+  levels 01–04 remain visible.**
+- **`JD-02` stays open.** Master Brief §1.3 forbids numbered tiers as the principal user-facing
+  trust model, and replacing them with evidence-specific statements changes what the surface
+  *claims about a member* — **that is a journey correction and is not R0-A work.**
+- **R0-B, separately authorised:** the trust representation. The underlying L1–L4 data model is not
+  migrated by either slice.
 
-### `/deal-rooms/propose` → **HIDE behind auth + credible interest**
-Open to anonymous visitors today. Per ADR-0037 a room may be proposed only after credible
-commercial interest, and per the product contract a search result or expression of curiosity does
-not create one. Signed out it explains and offers sign-in; it does not start a room.
-*(Separately recorded: the propose flow passes placeholder values through its own credible-interest
-gate. Recorded in ADR-0037; not R0 work.)*
+### `/opportunities`
+Renders to anonymous visitors with a rail showing stages *"completed"* for someone who has
+completed nothing.
+
+- **R0-A now:** apply the canonical shell. **Nothing else** — not the rail, not the anonymous
+  access, not the missing `h1` if removing it would mask the claim.
+- **`JD-03` stays open and owns this surface's rail** (§3.3 carve-out). Removing the rail under
+  R0-A would delete the false claim without repairing the defect.
+- **R0-B, separately authorised:** the false-progress behaviour and the access decision.
+
+### `/deal-rooms/propose`
+Open to anonymous visitors. ADR-0037 permits a room only after credible commercial interest, and
+the product contract is explicit that a search result or expression of curiosity does not create
+one.
+
+- **R0-A now:** apply the canonical shell. **Access and gating are untouched.**
+- **`JD-09` stays open:** the flow passes placeholder values through its own credible-interest gate.
+  Gating logic is journey correctness — **not R0-A work.**
+- **R0-B, separately authorised:** the credible-interest enforcement and who may reach the surface.
+
+### `/check` (OD-L)
+- **R0-A now:** nothing. It 404s by design and is not drawn.
+- **Blocked on (R0-B):** its unique capability absorbed into the canonical verification/check path,
+  with parity separately authorised and proven.
+- **Then:** retire the route and `NEXT_PUBLIC_CHECK_JOURNEY`.
 
 ---
 
 ## 8. Retirement and redirect plan
 
-**The rule: absorb, then redirect, then retire.** No route is redirected before the surface that
-replaces it does everything the old one did.
+**The rule, in order and never reversed: repair or absorb → prove parity → redirect → retire.**
+
+> **A route is redirected or retired only after replacement parity is proven. Until then it may
+> receive the canonical shell where safe, and it remains explicitly classified as
+> journey-defective.**
+
+### R0-A — authorised now
 
 | Phase | Action | Precondition |
 |---|---|---|
-| R0.1 | Build the shell; apply to `/`, `/find`, `/publish` | — |
-| R0.2 | Apply to `/market-signals`, `/deal-rooms*`, `/verify`, `/pricing`, `/login`, `/workspace`, `/account`, `/learn/*`, statics | R0.1 accepted |
-| R0.3 | Absorb `/explore` into `/find` | Sector tiles + counts + family overview present in `/find` |
-| R0.4 | `/explore*` → 308 `/find` | R0.3 verified |
-| R0.5 | Absorb `/structure` into `/publish` | Three intake routes, resume, **and all three families including Distribution** |
-| R0.6 | `/structure*` → 308 `/publish`, preserving `?from=` and `?edit=` | R0.5 verified, resume-from-email proven |
-| R0.7 | Gate `/opportunities` and `/deal-rooms/propose` | R0.2 accepted |
-| R0.8 | `/verification` presentation change | R0.2 accepted |
-| R0.9 | `/check`: absorb capability into `/verify`, then 308 and retire the flag | Replacement parity proven (OD-L) |
+| **R0-A.1** | Build the shell; apply to `/`, `/find`, `/publish` | — |
+| **R0-A.2** | Apply to `/market-signals`, `/deal-rooms*`, `/verify`, `/pricing`, `/login`, `/workspace`, `/account`, `/learn/*`, statics | R0-A.1 accepted |
+| **R0-A.3** | Apply to the routes awaiting repair — `/explore`, `/structure`, `/verification`, `/opportunities`, `/deal-rooms/propose` — **shell only**, every JD left visible and open | R0-A.2 accepted |
 
-**Legacy generations are never left exposed.** A surface is shelled or redirected; it is not left
-in an older generation because its turn has not come.
+R0-A ends there. **It redirects nothing and retires nothing.**
+
+### R0-B — separately authorised, each on its own evidence
+
+| Phase | Repair | Unblocks |
+|---|---|---|
+| **R0-B.1** | Absorb `/explore` capability into `/find` (family overview, sector tiles, counts, market-activity statement) | `/explore` → 308 `/find` |
+| **R0-B.2** | **JD-01** Distribution parity in `/publish`, under journey authority, **plus** intake parity and resume-a-draft | `/structure` → 308 `/publish`, preserving `?from=` and `?edit=` |
+| **R0-B.3** | **JD-02** trust representation on `/verification` | closes JD-02. No redirect involved |
+| **R0-B.4** | **JD-03** `/opportunities` false anonymous progress and access | closes JD-03 |
+| **R0-B.5** | **JD-09** `/deal-rooms/propose` credible-interest enforcement | closes JD-09 |
+| **R0-B.6** | Absorb `/check` capability into `/verify` (OD-L) | retire `/check` + `NEXT_PUBLIC_CHECK_JOURNEY` |
+| **R0-B.7** | **JD-08 / LB-014** `/pricing` reconciled to the Deal-Room-only model | closes LB-014 |
+| **R0-B.8** | **JD-04 / LB-015** the `Clarify` mock on the public walkthrough | closes LB-015 |
+
+**Each R0-B phase requires its own authorisation.** None is approved by this document, and none is
+scheduled by it. JD-05, JD-06, JD-07 and JD-10 belong to JR-01 and are not listed here.
+
+### What "parity proven" means
+
+Demonstrated on the replacement surface, not argued: every capability the old route offered is
+reachable and works, including its query contracts. Until that evidence exists the old route stays
+live and shelled.
+
+**No legacy generation is left exposed, and no capability is removed to achieve that.** A surface
+is shelled where it stands. Redirection is never used as a substitute for finishing the work.
 
 **Preserved without exception:** every capability behind `/explore`, `/structure`, `/verification`,
-`/opportunities` and `/deal-rooms/propose`; every email deep link (`?edit=`); the retired-editor
-quarantine (LB-013); the Deal Room slice behind its flag.
+`/opportunities`, `/deal-rooms/propose` and `/check`; every email deep link (`?edit=`); the
+retired-editor quarantine (LB-013); the Deal Room slice behind its flag.
 
 ---
 
