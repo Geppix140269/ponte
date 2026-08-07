@@ -223,9 +223,9 @@
   .brg-question { font-size: min(2.9vw, 70px); }
   /* The action grows with the page. A 520px hairline under an 88px headline
      reads as a footnote rather than as the one thing to do. */
-  .brg-act { max-width: 720px; font-size: 13px; padding-block-start: 24px; }
+  .brg-act { max-width: 760px; font-size: 20px; padding-block-start: 30px; }
   .brg-act small { font-size: 14px; }
-  .brg-snd { font-size: 11px; }
+  .brg-snd { font-size: 12px; }
   /* The text measure opens with the page, but by less than the page does: a
      column that grew in step would put 22 words on a line. */
   .brg-column { max-inline-size: 1120px; }
@@ -501,12 +501,25 @@
    would be a box. The sub-line carries WHY an action is unavailable when it is:
    a disabled control with no explanation is the commonest way a member gets
    stuck, because they can see the way forward and cannot tell what holds it. */
+/* Sized to be the loudest thing on the screen after the question, not a label
+   that happens to be clickable. It was 11.5px, the same voice as an eyebrow or
+   a tape item, with WIDER tracking than either: "PUBLISH AN OPPORTUNITY" read
+   quieter than its own sub-line, which was 12px sans. That is backwards for
+   the one primary action a screen has (ADR-0032: one primary action, no
+   competing control). Still mono, still uppercase, still a hairline rather
+   than a filled box: the identity is kept, only the volume changes. Tracking
+   is a FRACTION of --brg-track rather than a hardcoded value: a phrase this
+   long at the label's full .28em would run past the measure, but a literal
+   .06em would stay .06em for Arabic too, where tracking is zeroed on purpose
+   because it pulls joined letters apart. Scaling the token keeps that rule
+   intact automatically: zero times anything is zero. */
 .brg-act {
-  display: block; inline-size: 100%; max-width: 520px; text-align: start;
+  display: block; inline-size: 100%; max-width: 560px; text-align: start;
   background: none; border: 0; border-block-start: 1px solid var(--brg-figure);
-  color: var(--brg-figure); padding-block: 20px 0; margin-block-start: 30px;
-  font-family: var(--brg-mono); font-size: 11.5px; letter-spacing: var(--brg-track);
-  text-transform: uppercase; position: relative; min-height: 48px;
+  color: var(--brg-figure); padding-block: 26px 0; margin-block-start: 36px;
+  font-family: var(--brg-mono); font-size: 17px; font-weight: 600;
+  letter-spacing: calc(var(--brg-track) * 0.22); text-transform: uppercase;
+  position: relative; min-height: 56px;
 }
 .brg-act::after {
   content: ""; position: absolute; inset-block-start: 0; inset-inline-start: 0;
@@ -515,9 +528,9 @@
 }
 .brg-act:hover::after, .brg-act:focus-visible::after { inline-size: 100%; }
 .brg-act small {
-  display: block; font-family: var(--brg-sans); font-size: 12px;
-  letter-spacing: 0; text-transform: none; opacity: .45;
-  margin-block-start: 8px; font-weight: 300; max-width: 46ch;
+  display: block; font-family: var(--brg-sans); font-size: 13px;
+  letter-spacing: 0; text-transform: none; opacity: .5;
+  margin-block-start: 10px; font-weight: 300; max-width: 46ch;
 }
 /* Unavailable, and it says so by tone rather than by disappearing. The reason
    is in the sub-line, which is why the sub-line stays at full opacity. */
