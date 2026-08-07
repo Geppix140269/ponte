@@ -2,6 +2,7 @@
 
 import Arc from "./Arc";
 import Chrome, { primaryNav, type Signal } from "./Chrome";
+import Footer from "./Footer";
 import Grain from "./Grain";
 
 /**
@@ -52,10 +53,16 @@ export interface LandingSignal {
   id: string;
   /** The public reference. */
   reference: string;
-  /** What is being traded, in the member's own words. */
+  /** What is being traded, in the source's own words. */
   subject: string;
   /** Quantity, corridor, terms. One line. */
   detail: string;
+  /**
+   * Which way round the record runs. An offer is someone with supply, a
+   * requirement is someone who needs it. Printed on the row, because a reader
+   * scanning the board must not have to open a record to learn which it is.
+   */
+  side: "offer" | "requirement" | null;
 }
 
 export interface BridgeLandingProps {
@@ -63,17 +70,19 @@ export interface BridgeLandingProps {
   signals: readonly Signal[];
   /** The board's most recent public records. Never invented. */
   recent: readonly LandingSignal[];
-  /** The three counts under the eyebrow. Null where the board is unreadable. */
-  counts?: { total: number; live: number } | null;
-  who?: string | null;
-  onPublish: () => void;
-  onFind: () => void;
   /**
-   * A board row, chosen by its own id. Opens that one Market Signal, never a
-   * Qualified Opportunity: the two are a different record type, on purpose,
-   * and this is the board's own detail page, not `/find/o/[ref]`.
+   * The size of the Market Signal inventory, split by side.
+   *
+   * These are NOT opportunities and must never be described as such. They are
+   * external indications read from public sources, unconfirmed by Ponte. The
+   * copy that renders them says so, in the same breath as the number.
+   *
+   * Null where the count failed. Null renders nothing, because zero is the
+   * claim that the market is empty and a failed read has established no such
+   * thing.
    */
-  onOpenSignal: (id: string) => void;
+  counts?: { total: number; offers: number; requirements: number } | null;
+  who?: string | null;
 }
 
 /**
@@ -88,9 +97,31 @@ export interface BridgeLandingProps {
 const STAGE_LABELS = ["", "Intent", "Words", "The facts", "Preview", ""];
 
 /**
- * The three markets, each its own entrance into `/find`. `family` is the
- * canonical key `lib/taxonomy/market.ts` and the Find route both use, so a
- * click here lands already scoped rather than on the generic board.
+ * The three markets, and the way into each.
+ *
+ * ## Why the family is the first question, and not "buy or sell"
+ *
+ * Because "buy" and "sell" describe a shipment of goods and nothing else. A
+ * freight forwarder does not sell, an agent looking for a brand to carry is
+ * neither buying nor selling, and both of them are whole markets of their own.
+ * A door worded for products silently tells two thirds of the market that this
+ * platform is not for them.
+ *
+ * The family is also what the data model turns on: `lib/taxonomy/market.ts`
+ * makes family, intent and side one coherent decision, and every downstream
+ * journey is chosen by it. Asking for it first is not just clearer to read, it
+ * is the question the system actually needs answered.
+ *
+ * ## Why the two doors go to different places
+ *
+ * One rule, applied without exception: offering something opens the publish
+ * path, looking for something opens the board. Nobody should have to publish a
+ * record before they are allowed to see whether the thing they want is already
+ * there, and nobody offering should be dropped onto a search page.
+ *
+ * Every `intent` below is a key from the pinned intent table. The publish route
+ * resolves it against that same table, so a renamed intent breaks the build
+ * rather than silently opening the wrong journey.
  */
 const MARKETS = [
   {
@@ -98,29 +129,59 @@ const MARKETS = [
     index: "01",
     name: "Products",
     detail: "Goods crossing a border, by the shipment or the programme.",
+    doors: [
+      { key: "offer", label: "I have a product to offer", href: "/publish?intent=offer_product" },
+      { key: "seek", label: "I am looking for a product", href: "/find?family=products" },
+    ],
   },
   {
     family: "services",
     index: "02",
     name: "Trade services",
     detail: "Freight, inspection, customs, finance, insurance.",
+    doors: [
+      {
+        key: "offer",
+        label: "I provide a trade service",
+        href: "/publish?intent=offer_trade_service",
+      },
+      { key: "seek", label: "I need a trade service", href: "/find?family=services" },
+    ],
   },
   {
     family: "distribution",
     index: "03",
-    name: "Distribution",
+    name: "Distribution and agency",
     detail: "Carrying a brand into a market, or finding someone to carry yours.",
+    doors: [
+      {
+        key: "offer",
+        label: "I can distribute or represent",
+        href: "/publish?intent=offer_distribution_or_representation",
+      },
+      {
+        key: "seek",
+        label: "I am looking for a distributor",
+        href: "/find?family=distribution",
+      },
+    ],
   },
 ] as const;
 
+/**
+ * ## Why nothing on this surface is a callback any more
+ *
+ * Every destination is an `<a href>` resolving to a real route. A trader
+ * middle-clicks to open three records side by side, and a landing whose rows
+ * are buttons cannot be opened in a new tab, cannot be copied, and shows
+ * nothing at all if a script fails. The entrance to a marketplace is the last
+ * place that should depend on JavaScript having loaded.
+ */
 export default function BridgeLanding({
   signals,
   recent,
   counts = null,
   who = null,
-  onPublish,
-  onFind,
-  onOpenSignal,
 }: BridgeLandingProps) {
   return (
     <div className="brg" data-screen="LANDING">
@@ -144,12 +205,25 @@ export default function BridgeLanding({
             </p>
             {counts && (
               <div className="brg-scale">
-                <span className="brg-scale__n">{counts.total.toLocaleString("en")}</span>
-                <span className="brg-scale__l">
-                  records on the board
-                  <br />
-                  {counts.live.toLocaleString("en")} live and visible today
-                </span>
+                <div className="brg-scale__top">
+                  <span className="brg-scale__n">{counts.total.toLocaleString("en")}</span>
+                  <span className="brg-scale__l">
+                    market signals, read from public sources
+                    <br />
+                    {counts.offers.toLocaleString("en")} offering ·{" "}
+                    {counts.requirements.toLocaleString("en")} seeking
+                  </span>
+                </div>
+                {/*
+                  The caveat is the pitch, not a disclaimer bolted onto it. The
+                  distance between an unconfirmed signal and a closed deal is
+                  precisely what Ponte sells, so the honest sentence and the
+                  commercial sentence are the same sentence.
+                */}
+                <p className="brg-scale__c">
+                  Ponte has not confirmed any of these with the party named in them. Establishing
+                  that is what a Deal Room is for.
+                </p>
               </div>
             )}
           </div>
@@ -175,35 +249,90 @@ export default function BridgeLanding({
           </div>
         </div>
 
-        <div className="brg-column" style={{ marginBlockStart: 26 }}>
-          <button className="brg-act" type="button" onClick={onPublish}>
-            Publish an opportunity
-            <small>Three questions to start. No account needed until you publish.</small>
-          </button>
-          <button className="brg-snd" type="button" onClick={onFind}>
-            Or see what is on the board
-          </button>
+      </div>
+
+      {/*
+        The entrance. Three markets, six doors, and every door is a complete
+        sentence a member can recognise themselves in without translating.
+      */}
+      <div className="brg-mx brg-entrance">
+        <div className="brg-sechead">
+          <span>Three markets. Start where you are.</span>
+          <span>03</span>
+        </div>
+        <div className="brg-fams">
+          {MARKETS.map((market) => (
+            <div className="brg-fam" key={market.family}>
+              <div className="brg-fam__i">{market.index}</div>
+              <h2 className="brg-fam__n">{market.name}</h2>
+              <p className="brg-fam__d">{market.detail}</p>
+              <div className="brg-fam__doors">
+                {market.doors.map((door) => (
+                  <a className="brg-fam__door" href={door.href} key={door.key}>
+                    {door.label}
+                    <u aria-hidden="true">&#8250;</u>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        {/*
+          The funnel, stated where the doors are.
+
+          Six doors is six ways in, and six ways in reads as six products
+          unless the page says otherwise. It does not matter which family a
+          member is in or which direction they are travelling: the moment they
+          are serious about the party on the other side, they need the same
+          thing, and that thing is the room. Naming it here is what turns a
+          list of entrances into a single argument.
+        */}
+        <div className="brg-funnel">
+          <p className="brg-funnel__t">Six doors. One destination.</p>
+          <p className="brg-funnel__d">
+            However you come in, the moment you are serious about the party on the other side you
+            need the same thing: a Deal Room. Terms agreed in one place, evidence exchanged and
+            held, each stage settled before the next one opens, and a record of all of it. Getting
+            to that room is free from every door above. Activating it is the only thing Ponte
+            charges for.
+          </p>
+          <a className="brg-funnel__a" href="/deal-rooms">
+            What a Deal Room is
+            <u aria-hidden="true">&#8250;</u>
+          </a>
         </div>
       </div>
 
       <div className="brg-mx brg-cols brg-cols--2">
         <div className="brg-col">
+          {/*
+            Headed "Market Signals", not "On the board". Every row beneath this
+            heading is an unconfirmed external record, and a heading that does
+            not say so leaves a reader to assume these are members Ponte has
+            checked. They are not.
+          */}
           <div className="brg-sechead">
-            <span>On the board</span>
+            <span>Market Signals, read recently</span>
             <span>{String(recent.length).padStart(2, "0")}</span>
           </div>
           {recent.length > 0 ? (
             recent.map((signal) => (
-              <button
+              <a
                 className="brg-item"
-                type="button"
+                href={`/market-signals/${signal.id}`}
                 key={signal.reference}
-                onClick={() => onOpenSignal(signal.id)}
               >
-                <span className="brg-item__r">{signal.reference}</span>
+                <span className="brg-item__r">
+                  {signal.reference}
+                  {signal.side && (
+                    <b className="brg-item__s">
+                      {signal.side === "offer" ? "Offering" : "Seeking"}
+                    </b>
+                  )}
+                </span>
                 <span className="brg-item__n">{signal.subject}</span>
                 <span className="brg-item__f">{signal.detail}</span>
-              </button>
+              </a>
             ))
           ) : (
             /*
@@ -212,39 +341,56 @@ export default function BridgeLanding({
               a visitor cannot check.
             */
             <p className="brg-note">
-              Nothing is on the board right now. The first record published will appear here.
+              Nothing has been read recently. The next signal approved will appear here.
             </p>
           )}
           <p className="brg-note" style={{ marginBlockStart: 16 }}>
-            Nothing here has been confirmed with the party named in it.
+            Read from a public source and published as printed. Not confirmed with the party named,
+            and not a member of Ponte.
           </p>
         </div>
 
+        {/*
+          What a signal is, beside the signals themselves.
+
+          The markets used to sit here, which meant the entrance was stated
+          twice on one page and the reader had to work out whether the two
+          lists were the same thing. This column answers the question the rows
+          beside it actually raise, and it ends where the product begins.
+        */}
         <div className="brg-col">
           <div className="brg-sechead">
-            <span>Three markets</span>
-            <span>03</span>
+            <span>What a Market Signal is</span>
+            <span>&mdash;</span>
           </div>
-          {MARKETS.map((market) => (
-            <a
-              className="brg-row brg-row--link"
-              href={`/find?family=${market.family}`}
-              key={market.family}
-            >
-              <span className="brg-row__label">
-                <b className="brg-row__n">{market.name}</b>
-                <small>{market.detail}</small>
-              </span>
-              <span className="brg-row__value">{market.index}</span>
-            </a>
-          ))}
+          <p className="brg-lede" style={{ fontSize: 15, marginBlockStart: 14 }}>
+            An indication that someone, somewhere, wants to buy or sell something. Ponte reads them
+            from public sources and republishes what they say, in the source&rsquo;s own words.
+          </p>
+          <div className="brg-row" style={{ marginBlockStart: 20 }}>
+            <span className="brg-row__label">Read from a named public source</span>
+            <span className="brg-row__value" data-state="checked">Yes</span>
+          </div>
+          <div className="brg-row">
+            <span className="brg-row__label">Republished exactly as printed</span>
+            <span className="brg-row__value" data-state="checked">Yes</span>
+          </div>
+          <div className="brg-row">
+            <span className="brg-row__label">Confirmed with the party named</span>
+            <span className="brg-row__value" data-state="unproved">No</span>
+          </div>
+          <div className="brg-row">
+            <span className="brg-row__label">A member of Ponte</span>
+            <span className="brg-row__value" data-state="unproved">No</span>
+          </div>
+          <p className="brg-note" style={{ marginBlockStart: 18 }}>
+            Turning one of these into a deal means establishing who is behind it and whether they can
+            perform. That is the work a Deal Room does, and it is the only thing Ponte charges for.
+          </p>
         </div>
       </div>
 
-      <footer className="brg-mx brg-footer">
-        Ponte Trade is operated by 1402 Celsius Ltd. Checks shown are the checks performed, and are
-        never a guarantee about a counterparty.
-      </footer>
+      <Footer />
     </div>
   );
 }

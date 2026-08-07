@@ -84,6 +84,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
     id: signal.id,
     reference: signal.canonicalId ?? signal.id.slice(0, 8).toUpperCase(),
     subject: signal.product,
+    // Anything other than the two known values carries no side rather than a
+    // guessed one: printing "Offering" over a row that is actually demand is
+    // worse than printing nothing at all.
+    side:
+      signal.side === "offer" || signal.side === "requirement"
+        ? (signal.side as "offer" | "requirement")
+        : null,
     detail:
       [
         [signal.quantity, signal.unit].filter(Boolean).join(" "),
@@ -99,7 +106,22 @@ export default async function HomePage({ params }: { params: { locale: string } 
       <LandingEntrance
         signals={signals}
         recent={recent}
-        counts={sideCounts ? { total: sideCounts.total, live: rows.length } : null}
+        /*
+          The real inventory, split by side. The previous second figure was
+          `rows.length`, which is the size of the tape read (capped at
+          TAPE_SIGNALS) and not a property of the market at all: it reported
+          "14 live" on a board of several thousand, every time, whatever the
+          board actually held.
+        */
+        counts={
+          sideCounts
+            ? {
+                total: sideCounts.total,
+                offers: sideCounts.offer,
+                requirements: sideCounts.requirement,
+              }
+            : null
+        }
       />
     </div>
   );

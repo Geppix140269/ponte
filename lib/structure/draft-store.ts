@@ -37,6 +37,33 @@
 /** One version, bumped when the draft shape changes. Old payloads are dropped. */
 const VERSION = 1;
 
+/**
+ * The default key: the `/structure` composer's own draft, unchanged so every
+ * device that already has one keeps reading it back correctly.
+ *
+ * ## Why every caller needs its OWN key
+ *
+ * `/publish` (`components/publish/PublishFlow.tsx`) called `keepDraft` and
+ * `readKeptDraft<PersistedFlow>()` against this SAME key with no key of its
+ * own, because both callers import the same module and neither reads the
+ * other's payload shape. Nothing here enforced that they had to agree.
+ *
+ * `PersistedFlow` is `{ node, draft: StructureDraft, capacity, assets,
+ * inferred, clock }`; `/structure` calls `readKeptDraft<StructureDraft>()`
+ * expecting `.draft` to BE a `StructureDraft`. A member who opened `/publish`
+ * and then reached `/structure` in the same browser - which `B02`'s "Browse
+ * categories" route does directly - had `/publish`'s wrapper sitting under
+ * this key. `/structure` read it back, treated the wrapper as a flat draft,
+ * and `structureDirty` threw on `draft.serviceSubcategories.length`, three
+ * layers short of where the array actually lived. Found by walking the
+ * REAL path a member walks: `/publish` -> Browse categories -> `/structure`,
+ * which a full-page reload of the destination URL alone does not reproduce.
+ *
+ * The fix is one key per flow, not a shape either module has to know the
+ * other's. `keepDraft` and `readKeptDraft` take the key explicitly now;
+ * every existing `/structure` call site is unchanged because the parameter
+ * defaults to this constant.
+ */
 const KEY = "ponte.structure.draft.v1";
 
 /** Older than this and it is not offered back. */
@@ -74,7 +101,7 @@ function store(): Storage | null {
  * carries on working exactly as it did before this module existed. Losing the
  * backup must never cost the member the thing being backed up.
  */
-export function keepDraft<T>(draft: T, stack: readonly string[]): void {
+export function keepDraft<T>(draft: T, stack: readonly string[], key: string = KEY): void {
   const s = store();
   if (!s) return;
   try {
@@ -84,7 +111,7 @@ export function keepDraft<T>(draft: T, stack: readonly string[]): void {
       stack: [...stack],
       draft,
     };
-    s.setItem(KEY, JSON.stringify(payload));
+    s.setItem(key, JSON.stringify(payload));
   } catch {
     // Deliberately silent. See above.
   }
@@ -99,17 +126,17 @@ export function keepDraft<T>(draft: T, stack: readonly string[]): void {
  * because a member offered a fortnight-old record they have forgotten will
  * assume the product is confused.
  */
-export function readKeptDraft<T>(): StoredDraft<T> | null {
+export function readKeptDraft<T>(key: string = KEY): StoredDraft<T> | null {
   const s = store();
   if (!s) return null;
   try {
-    const raw = s.getItem(KEY);
+    const raw = s.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredDraft<T>;
     if (!parsed || parsed.version !== VERSION) return null;
     if (typeof parsed.savedAt !== "number") return null;
     if (Date.now() - parsed.savedAt > MAX_AGE_MS) {
-      s.removeItem(KEY);
+      s.removeItem(key);
       return null;
     }
     if (!parsed.draft || !Array.isArray(parsed.stack)) return null;
@@ -126,12 +153,19 @@ export function readKeptDraft<T>(): StoredDraft<T> | null {
  * are moments where keeping a copy would be the wrong answer: the record now
  * lives on the server, or the member has said they do not want it.
  */
-export function forgetDraft(): void {
+export function forgetDraft(key: string = KEY): void {
   const s = store();
   if (!s) return;
   try {
-    s.removeItem(KEY);
+    s.removeItem(key);
   } catch {
     // Nothing to do, and nothing worth telling anybody.
   }
 }
+
+/**
+ * `/publish`'s own key. A sibling constant, not a sibling module: the
+ * expiry, the probe-before-write and the version guard are the same policy
+ * for both flows, and only the STORAGE SLOT needs to differ.
+ */
+export const PUBLISH_DRAFT_KEY = "ponte.publish.draft.v1";

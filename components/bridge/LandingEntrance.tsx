@@ -1,33 +1,23 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import BridgeLanding, { type LandingSignal } from "./BridgeLanding";
 import type { Signal } from "./Chrome";
 
 /**
- * The entrance, wired.
+ * The entrance.
  *
- * `BridgeLanding` stays presentational and takes callbacks, so it can be
- * rendered in a specimen, in evidence and in a test without a router. This is
- * the one place that knows where the two controls go.
+ * `BridgeLanding` is now entirely link-driven: every door, every board row and
+ * every footer route is an `<a href>` resolving to a real page, so this shell
+ * no longer holds a router or wires callbacks. It stays as its own module
+ * because the route composes the landing with the fonts and the reads, and one
+ * named seam between "what the page is" and "what the page says" is worth
+ * keeping even when the seam is thin.
  */
 
 export interface LandingEntranceProps {
   signals: readonly Signal[];
   recent: readonly LandingSignal[];
-  counts?: { total: number; live: number } | null;
+  counts?: { total: number; offers: number; requirements: number } | null;
 }
 
 export default function LandingEntrance({ signals, recent, counts = null }: LandingEntranceProps) {
-  const router = useRouter();
-  return (
-    <BridgeLanding
-      signals={signals}
-      recent={recent}
-      counts={counts}
-      onPublish={() => router.push("/publish")}
-      onFind={() => router.push("/find")}
-      onOpenSignal={(id) => router.push(`/market-signals/${id}`)}
-    />
-  );
+  return <BridgeLanding signals={signals} recent={recent} counts={counts} />;
 }

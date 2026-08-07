@@ -223,9 +223,9 @@
   .brg-question { font-size: min(2.9vw, 70px); }
   /* The action grows with the page. A 520px hairline under an 88px headline
      reads as a footnote rather than as the one thing to do. */
-  .brg-act { max-width: 760px; font-size: 20px; padding-block-start: 30px; }
+  .brg-act { max-width: 720px; font-size: 13px; padding-block-start: 24px; }
   .brg-act small { font-size: 14px; }
-  .brg-snd { font-size: 12px; }
+  .brg-snd { font-size: 11px; }
   /* The text measure opens with the page, but by less than the page does: a
      column that grew in step would put 22 words on a line. */
   .brg-column { max-inline-size: 1120px; }
@@ -331,39 +331,128 @@
   text-transform: uppercase; white-space: nowrap;
 }
 .brg-row__value[data-state="checked"] { color: var(--brg-done); }
-/* A row that is also a link (the three markets). No box, no fill: the
-   hairline it already stands on brightens and the row nudges in, the same
-   language .brg-item already uses for a clickable board row. */
-.brg-row--link {
-  cursor: pointer; text-decoration: none; color: inherit;
-  transition: border-color 250ms var(--brg-ease), padding-inline-start 250ms var(--brg-ease);
-}
-.brg-row--link:hover, .brg-row--link:focus-visible {
-  border-block-end-color: var(--brg-bronze); padding-inline-start: 6px;
-}
-.brg-row--link:focus-visible { outline: 1px solid var(--brg-bronze); outline-offset: 4px; }
 
-/* The board's scale, stated once and stated big: the small muted line here
+/* The signal inventory, stated once and stated big: the small muted line here
    used to be the only place a first-time visitor could learn Ponte reads a
-   market with thousands of records in it, and nobody reads fine print. */
-.brg-scale {
-  margin-block-start: 18px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
-}
+   market with thousands of records in it, and nobody reads fine print.
+
+   The caveat under it is NOT small print either. It carries the same weight as
+   the note beside the figure, because "we have not confirmed these" is the
+   sentence that sets up the entire commercial argument. */
+.brg-scale { margin-block-start: 18px; }
+.brg-scale__top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
 .brg-scale__n {
   font-family: var(--brg-serif); font-weight: 400; font-size: 44px; line-height: 1;
   color: var(--brg-bronze);
 }
-.brg-scale__l { font-size: 12px; font-weight: 300; opacity: .6; line-height: 1.45; max-width: 22ch; }
+.brg-scale__l { font-size: 12px; font-weight: 300; opacity: .6; line-height: 1.45; max-width: 24ch; }
+.brg-scale__c {
+  margin-block-start: 12px; padding-block-start: 12px;
+  border-block-start: 1px solid var(--brg-hairline);
+  font-size: 12px; font-weight: 300; line-height: 1.55; opacity: .58; max-width: 42ch;
+}
 @media (min-width: 1920px) { .brg-scale__n { font-size: 56px; } }
+
+/* ---- The entrance: three markets, six doors ----
+   The family is the first question, not "buy or sell". Those two words describe
+   a shipment of goods and silently exclude a freight forwarder and an agent,
+   who between them are two thirds of the market families.
+
+   Three equal columns, none styled to win. A member picks the one that
+   describes them, not the one that looks like the primary action. */
+.brg-entrance { padding-block-start: 56px; }
+@media (max-width: 899px) { .brg-entrance { padding-block-start: 38px; } }
+
+.brg-fams { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-block-start: 6px; }
+@media (max-width: 899px) { .brg-fams { grid-template-columns: 1fr; } }
+.brg-fam {
+  padding: 24px 32px 4px;
+  border-inline-start: 1px solid var(--brg-hairline);
+  min-inline-size: 0;
+}
+.brg-fam:first-child { padding-inline-start: 0; border-inline-start: 0; }
+.brg-fam:last-child { padding-inline-end: 0; }
+@media (max-width: 899px) {
+  .brg-fam { padding: 22px 0 6px; border-inline-start: 0; border-block-start: 1px solid var(--brg-hairline); }
+  .brg-fam:first-child { padding-block-start: 14px; }
+}
+.brg-fam__i {
+  font-family: var(--brg-mono); font-size: 9px; letter-spacing: var(--brg-track);
+  color: var(--brg-bronze);
+}
+.brg-fam__n {
+  font-family: var(--brg-serif); font-weight: 400; font-size: 27px; line-height: 1.16;
+  margin: 10px 0 0; letter-spacing: var(--brg-tight);
+}
+.brg-fam__d { font-size: 12.5px; font-weight: 300; opacity: .55; line-height: 1.55; margin: 9px 0 0; max-width: 34ch; }
+.brg-fam__doors { margin-block-start: 20px; }
+
+/* A door is a whole sentence a member recognises themselves in. Hairline above,
+   bronze on approach, and the chevron is the only ornament. */
+.brg-fam__door {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  color: inherit; text-decoration: none;
+  border-block-start: 1px solid var(--brg-hairline);
+  padding-block: 13px; font-size: 13.5px; font-weight: 300; line-height: 1.4;
+  transition: padding-inline-start 260ms var(--brg-ease), border-color 260ms var(--brg-ease);
+}
+.brg-fam__door u { text-decoration: none; color: var(--brg-bronze); opacity: .5; font-size: 15px; }
+.brg-fam__door:hover, .brg-fam__door:focus-visible { padding-inline-start: 7px; border-block-start-color: var(--brg-bronze); }
+.brg-fam__door:hover u, .brg-fam__door:focus-visible u { opacity: 1; }
+.brg-fam__door:focus-visible { outline: 1px solid var(--brg-bronze); outline-offset: 3px; }
+@media (min-width: 1920px) {
+  .brg-fam__n { font-size: 31px; }
+  .brg-fam__door { font-size: 15px; }
+}
+
+/* ---- The funnel statement ----
+   Six doors reads as six products unless the page says where they all go. This
+   is the sentence that turns a list of entrances into one argument. */
+.brg-funnel {
+  margin-block-start: 44px; padding-block-start: 26px;
+  border-block-start: 1px solid var(--brg-bronze);
+  display: grid; grid-template-columns: minmax(0, 22ch) minmax(0, 1fr); gap: 8px 40px;
+  align-items: start;
+}
+@media (max-width: 899px) { .brg-funnel { grid-template-columns: 1fr; gap: 12px; } }
+.brg-funnel__t {
+  font-family: var(--brg-serif); font-size: 25px; line-height: 1.18; margin: 0;
+  letter-spacing: var(--brg-tight);
+}
+.brg-funnel__d { font-size: 13.5px; font-weight: 300; line-height: 1.65; margin: 0; opacity: .72; max-width: 62ch; }
+.brg-funnel__a {
+  grid-column: 2; justify-self: start;
+  display: inline-flex; align-items: baseline; gap: 9px;
+  color: var(--brg-bronze); text-decoration: none;
+  font-family: var(--brg-mono); font-size: 11px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; margin-block-start: 14px;
+  border-block-end: 1px solid transparent; padding-block-end: 3px;
+  transition: border-color 220ms var(--brg-ease);
+}
+@media (max-width: 899px) { .brg-funnel__a { grid-column: 1; } }
+.brg-funnel__a:hover, .brg-funnel__a:focus-visible { border-block-end-color: var(--brg-bronze); }
+.brg-funnel__a:focus-visible { outline: 1px solid var(--brg-bronze); outline-offset: 4px; }
+@media (min-width: 1920px) { .brg-funnel__t { font-size: 29px; } .brg-funnel__d { font-size: 15px; } }
+
+/* The side badge on a board row. Says which way round the record runs, so a
+   reader scanning the column never has to open one to find out. */
+.brg-item__s {
+  font-weight: 400; margin-inline-start: 12px; padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--brg-hairline); opacity: .75;
+}
 .brg-row__value[data-state="unproved"] { color: var(--brg-blocked); }
 .brg-row__value[data-state="waiting"] { color: var(--brg-bronze); }
 
 /* ---- Rows that ARE controls ----
    They indent and light their leading hairline. Buttons, never divs: the
    prototype uses a div with an onclick, which no keyboard can reach. */
+/* Rendered as a button in the specimen and as an anchor on the landing, where
+   a real href means a trader can middle-click three records open at once and
+   the board still works with no script at all. Both need the same reset. */
 .brg-item {
   display: block; inline-size: 100%; text-align: start; background: none;
   border: 0; border-block-start: 1px solid var(--brg-hairline); color: inherit;
+  text-decoration: none;
   padding-block: 15px 17px; position: relative;
   transition: padding-inline-start 400ms var(--brg-ease);
 }
@@ -501,25 +590,12 @@
    would be a box. The sub-line carries WHY an action is unavailable when it is:
    a disabled control with no explanation is the commonest way a member gets
    stuck, because they can see the way forward and cannot tell what holds it. */
-/* Sized to be the loudest thing on the screen after the question, not a label
-   that happens to be clickable. It was 11.5px, the same voice as an eyebrow or
-   a tape item, with WIDER tracking than either: "PUBLISH AN OPPORTUNITY" read
-   quieter than its own sub-line, which was 12px sans. That is backwards for
-   the one primary action a screen has (ADR-0032: one primary action, no
-   competing control). Still mono, still uppercase, still a hairline rather
-   than a filled box: the identity is kept, only the volume changes. Tracking
-   is a FRACTION of --brg-track rather than a hardcoded value: a phrase this
-   long at the label's full .28em would run past the measure, but a literal
-   .06em would stay .06em for Arabic too, where tracking is zeroed on purpose
-   because it pulls joined letters apart. Scaling the token keeps that rule
-   intact automatically: zero times anything is zero. */
 .brg-act {
-  display: block; inline-size: 100%; max-width: 560px; text-align: start;
+  display: block; inline-size: 100%; max-width: 520px; text-align: start;
   background: none; border: 0; border-block-start: 1px solid var(--brg-figure);
-  color: var(--brg-figure); padding-block: 26px 0; margin-block-start: 36px;
-  font-family: var(--brg-mono); font-size: 17px; font-weight: 600;
-  letter-spacing: calc(var(--brg-track) * 0.22); text-transform: uppercase;
-  position: relative; min-height: 56px;
+  color: var(--brg-figure); padding-block: 20px 0; margin-block-start: 30px;
+  font-family: var(--brg-mono); font-size: 11.5px; letter-spacing: var(--brg-track);
+  text-transform: uppercase; position: relative; min-height: 48px;
 }
 .brg-act::after {
   content: ""; position: absolute; inset-block-start: 0; inset-inline-start: 0;
@@ -528,9 +604,9 @@
 }
 .brg-act:hover::after, .brg-act:focus-visible::after { inline-size: 100%; }
 .brg-act small {
-  display: block; font-family: var(--brg-sans); font-size: 13px;
-  letter-spacing: 0; text-transform: none; opacity: .5;
-  margin-block-start: 10px; font-weight: 300; max-width: 46ch;
+  display: block; font-family: var(--brg-sans); font-size: 12px;
+  letter-spacing: 0; text-transform: none; opacity: .45;
+  margin-block-start: 8px; font-weight: 300; max-width: 46ch;
 }
 /* Unavailable, and it says so by tone rather than by disappearing. The reason
    is in the sub-line, which is why the sub-line stays at full opacity. */
@@ -729,11 +805,30 @@
   .brg-ledger__line dd { font-size: 16px; }
 }
 
-/* The operator line. Every bridge screen ends on it: who runs this, and what
-   the checks above are not. A hairline and low-opacity type, never a boxed
-   footer, per the system's own rule of no cards and no shadows. */
-.brg-footer {
+/* ---- The standing footer ----
+   Four columns of routes plus the operator statement. Every bridge screen ends
+   on it. A hairline and low-opacity type, never a boxed footer, per the
+   system's own rule of no cards and no shadows.
+
+   The links sit at .72 rather than the .4 the old single line used: a privacy
+   route a visitor cannot read is not a privacy route, and this is exactly the
+   place where someone is checking whether you are a real company. */
+.brg-foot { border-block-start: 1px solid var(--brg-hairline); margin-block-start: 72px; padding-block: 40px 56px; }
+.brg-foot__cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 32px; }
+@media (max-width: 899px) { .brg-foot__cols { grid-template-columns: 1fr 1fr; gap: 30px 24px; } }
+@media (max-width: 520px) { .brg-foot__cols { grid-template-columns: 1fr; gap: 26px; } }
+.brg-foot__col ul { list-style: none; margin: 12px 0 0; padding: 0; }
+.brg-foot__col li { margin-block-end: 9px; }
+.brg-foot__col a {
+  color: inherit; text-decoration: none; font-size: 12.5px; font-weight: 300;
+  opacity: .72; line-height: 1.5;
+  border-block-end: 1px solid transparent; padding-block-end: 1px;
+  transition: opacity 200ms var(--brg-ease), border-color 200ms var(--brg-ease);
+}
+.brg-foot__col a:hover, .brg-foot__col a:focus-visible { opacity: 1; border-block-end-color: var(--brg-bronze); }
+.brg-foot__col a:focus-visible { outline: 1px solid var(--brg-bronze); outline-offset: 3px; }
+.brg-foot__op {
+  margin-block-start: 40px; padding-block-start: 22px;
   border-block-start: 1px solid var(--brg-hairline);
-  margin-block-start: 60px; padding-block: 26px 44px;
-  font-size: 11px; line-height: 1.6; font-weight: 300; opacity: .4; max-width: 60ch;
+  font-size: 11.5px; line-height: 1.65; font-weight: 300; opacity: .45; max-width: 76ch;
 }

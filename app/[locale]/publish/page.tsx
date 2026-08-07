@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { bridgeFontVars } from "@/components/bridge/fonts";
 import PublishFlow from "@/components/publish/PublishFlow";
 import { getUser } from "@/lib/auth";
+import { MARKET_INTENTS } from "@/lib/taxonomy/market";
 /*
   The retired path's two stylesheets are NOT loaded here any more.
 
@@ -47,7 +48,27 @@ export async function generateMetadata({
   };
 }
 
-export default async function PublishPage({ params }: { params: { locale: string } }) {
+/**
+ * An intent named on the previous screen, read off the query string.
+ *
+ * Resolved against the pinned intent table, never trusted as given: an unknown
+ * or malformed value yields null and the path opens on `B01` exactly as it
+ * always did. A bad link degrades to the normal entrance rather than to an
+ * error, which is the correct posture for a public URL anyone can edit.
+ */
+function presetIntent(raw: string | string[] | undefined) {
+  if (typeof raw !== "string") return null;
+  const found = MARKET_INTENTS.find((definition) => definition.key === raw);
+  return found ? { intent: found.key, family: found.family } : null;
+}
+
+export default async function PublishPage({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams: { intent?: string | string[] };
+}) {
   setRequestLocale(params.locale);
 
   /*
@@ -63,7 +84,7 @@ export default async function PublishPage({ params }: { params: { locale: string
 
   return (
     <div className={bridgeFontVars}>
-      <PublishFlow signedIn={Boolean(user)} />
+      <PublishFlow signedIn={Boolean(user)} initialIntent={presetIntent(searchParams?.intent)} />
     </div>
   );
 }

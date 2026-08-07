@@ -20,7 +20,7 @@ import { retentionSentence, startClock, keep, openDraft, type RetentionClock } f
 import { pendingChecks, type ScreeningCheck } from "@/lib/publish/screening";
 import type { ListingAsset } from "@/lib/publish/assets";
 import { emptyDraft, toSubmitPayload, subjectFor, type StructureDraft } from "@/lib/structure/draft";
-import { keepDraft, readKeptDraft, forgetDraft } from "@/lib/structure/draft-store";
+import { keepDraft, readKeptDraft, forgetDraft, PUBLISH_DRAFT_KEY } from "@/lib/structure/draft-store";
 import { resolveFrom, type ProductCandidate } from "@/lib/products/model";
 import type { CompletionField } from "@/lib/structure/procedures/types";
 import { MARKET_INTENTS, type MarketFamily, type MarketIntent } from "@/lib/taxonomy/market";
@@ -82,6 +82,20 @@ export interface PublishFlowProps {
   /** `submitter_role` from this member's last listing, offered as a suggestion. */
   previousRole?: string | null;
   lastTime?: { label: string; family: MarketFamily; direction: "need" | "offer" } | null;
+  /**
+   * An intent the member already named before arriving, from the landing's
+   * three-market entrance.
+   *
+   * `B01` exists to ask which of the seven intents this is. A member who has
+   * just answered that question on the previous screen must not be asked it
+   * again: that is WCAG 2.2 3.3.7, redundant entry, and it is also simply
+   * rude. When this is supplied the path opens on the NEXT question with the
+   * answer already recorded.
+   *
+   * A saved draft always wins over it. Someone returning to work they left
+   * half-finished is resumed where they were, whatever link they came in on.
+   */
+  initialIntent?: { intent: MarketIntent; family: MarketFamily } | null;
 }
 
 export default function PublishFlow({
@@ -89,11 +103,22 @@ export default function PublishFlow({
   company = null,
   previousRole = null,
   lastTime = null,
+  initialIntent = null,
 }: PublishFlowProps) {
   const router = useRouter();
 
-  const [node, setNode] = useState<PublishNode>("intent");
-  const [draft, setDraft] = useState<StructureDraft>(emptyDraft);
+  /*
+    Seeded at first render rather than in an effect, so the first paint is
+    already on the right node. The restore effect below overwrites both of
+    these whenever a kept draft exists, which is what makes "a saved draft
+    always wins" true rather than a race.
+  */
+  const [node, setNode] = useState<PublishNode>(initialIntent ? "capacity" : "intent");
+  const [draft, setDraft] = useState<StructureDraft>(() =>
+    initialIntent
+      ? { ...emptyDraft(), canonical: { family: initialIntent.family, intent: initialIntent.intent } }
+      : emptyDraft(),
+  );
   const [capacityAnswer, setCapacityAnswer] = useState<CapacityAnswer>(emptyCapacity);
   const [assets, setAssets] = useState<readonly ListingAsset[]>([]);
   const [inferred, setInferred] = useState<ReadonlySet<CompletionField>>(new Set());
@@ -122,7 +147,7 @@ export default function PublishFlow({
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
-    const kept = readKeptDraft<PersistedFlow>();
+    const kept = readKeptDraft<PersistedFlow>(PUBLISH_DRAFT_KEY);
     if (!kept?.draft) return;
     const saved = kept.draft;
     setDraft(saved.draft ?? emptyDraft());
@@ -151,7 +176,7 @@ export default function PublishFlow({
         clock: clockNow,
         ...next,
       };
-      keepDraft(payload, [payload.node]);
+      keepDraft(payload, [payload.node], PUBLISH_DRAFT_KEY);
     },
     [node, draft, capacityAnswer, assets, inferred, clock],
   );
@@ -292,7 +317,7 @@ export default function PublishFlow({
   }, [capacityAnswer, draft, go, now]);
 
   const publish = useCallback(() => {
-    forgetDraft();
+    forgetDraft(PUBLISH_DRAFT_KEY);
     go("published");
   }, [go]);
 
@@ -532,7 +557,7 @@ export default function PublishFlow({
       identityPublic={draft.role === "identity_public"}
       onMyListings={() => router.push("/account")}
       onPublishAnother={() => {
-        forgetDraft();
+        forgetDraft(PUBLISH_DRAFT_KEY);
         setDraft(emptyDraft());
         setCapacityAnswer(emptyCapacity());
         setAssets([]);

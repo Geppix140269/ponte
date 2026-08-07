@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Arc from "../Arc";
 import Chrome, { primaryNav, type Signal } from "../Chrome";
+import Footer from "../Footer";
 import Grain from "../Grain";
 import { STAGES, arcPosition, type PublishNode } from "@/lib/publish/steps";
 import type { RecordLine } from "@/lib/publish/record";
@@ -182,10 +183,7 @@ export default function BridgeShell({
         </div>
       )}
 
-      <footer className="brg-mx brg-footer">
-        Ponte Trade is operated by 1402 Celsius Ltd. Checks shown are the checks performed, and are
-        never a guarantee about a counterparty.
-      </footer>
+      <Footer />
     </div>
   );
 }
