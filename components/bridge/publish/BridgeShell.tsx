@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Arc from "../Arc";
-import Chrome, { primaryNav, type Signal } from "../Chrome";
+import Chrome, { type Signal } from "../Chrome";
 import Footer from "../Footer";
 import Grain from "../Grain";
 import { STAGES, arcPosition, type PublishNode } from "@/lib/publish/steps";
@@ -106,7 +106,7 @@ export default function BridgeShell({
   return (
     <div className="brg" data-screen={screen} {...(phase ? { "data-phase": phase } : {})}>
       <Grain />
-      <Chrome signals={signals} who={who} nav={primaryNav(who)} />
+      <Chrome signals={signals} />
 
       <div className="brg-mx brg-band">
         <div className="brg-band__head">

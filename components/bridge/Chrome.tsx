@@ -39,38 +39,18 @@ const PAUSE_KEY = "ponte.bridge.tape.paused";
 
 export interface ChromeProps {
   signals: readonly Signal[];
-  /** Who is signed in, or null. The masthead states it and nothing more. */
-  who?: string | null;
-  nav?: readonly { key: string; label: string; href: string }[];
-  current?: string;
 }
 
-/**
- * What the bridge header carries.
- *
- * It used to declare its own three links here. That was one place for THIS
- * generation, but the walkthrough of 7 August 2026 found four other headers
- * declaring their own, so the entrance and the rest of the product disagreed
- * about what Ponte's places are called, and the entrance's own bar offered
- * neither primary journey.
- *
- * The entries now come from `PRIMARY_NAV`, the one declaration for every shell,
- * with the account or sign-in door appended because that is the only part of
- * the bar that depends on who is reading it.
- */
-export function primaryNav(
-  who: string | null,
-  returnTo?: string | null,
-): { key: string; label: string; href: string }[] {
-  return [
-    ...PRIMARY_NAV.map((n) => ({ key: n.key, label: n.label, href: n.href })),
-    who
-      ? { key: "account", label: "Account", href: "/account" }
-      : { key: "account", label: "Sign in", href: signInHref(returnTo) },
-  ];
-}
+/*
+  `primaryNav` used to live here and is gone.
 
-export default function Chrome({ signals, who = null, nav = [], current }: ChromeProps) {
+  It built this surface's own three links. Once GlobalHeader took ownership of
+  the masthead there was nothing left for it to feed, and leaving an exported
+  function that names navigation destinations would invite a second owner back.
+  The one declaration is `PRIMARY_NAV` in lib/nav/primary, read by GlobalHeader.
+*/
+
+export default function Chrome({ signals }: ChromeProps) {
   /*
     Undefined until read, so the first paint does not assert "running" to a
     member who paused it and would see it start again before stopping.
@@ -102,27 +82,9 @@ export default function Chrome({ signals, who = null, nav = [], current }: Chrom
 
   return (
     <>
-      <header className="brg-mast">
-        <div className="brg-mx brg-mast__bar">
-          <button className="brg-mast__mark" type="button">
-            Ponte
-          </button>
-          {nav.length > 0 && (
-            <nav className="brg-mast__nav">
-              {nav.map((entry) => (
-                <a
-                  key={entry.key}
-                  href={entry.href}
-                  {...(entry.key === current ? { "aria-current": "page" as const } : {})}
-                >
-                  {entry.label}
-                </a>
-              ))}
-            </nav>
-          )}
-          {who && <span className="brg-mast__who">{who}</span>}
-        </div>
-      </header>
+      {/* The masthead is owned by GlobalHeader at the layout boundary. What
+          stays here is the signal tape below it, which is this surface's own
+          content rather than global chrome. */}
 
       <div className="brg-tape" data-paused={paused ? "true" : "false"}>
         <div className="brg-tape__mask" />

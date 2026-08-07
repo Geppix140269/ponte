@@ -1,7 +1,7 @@
 "use client";
 
 import Arc from "./Arc";
-import Chrome, { primaryNav, type Signal } from "./Chrome";
+import Chrome, { type Signal } from "./Chrome";
 import Footer from "./Footer";
 import Grain from "./Grain";
 
@@ -190,7 +190,7 @@ export default function BridgeLanding({
   return (
     <div className="brg" data-screen="LANDING">
       <Grain />
-      <Chrome signals={signals} who={who} nav={primaryNav(who)} />
+      <Chrome signals={signals} />
 
       <div className="brg-mx brg-band">
         <div className="brg-band__head">

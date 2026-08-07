@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
-import SiteHeader from "@/components/SiteHeader";
+import GlobalHeader from "@/components/shell/GlobalHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BottomNav from "@/components/BottomNav";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -167,8 +167,14 @@ export default async function LocaleLayout({
               header and footer. ChromeGate also drops the <main> wrapper there,
               since the landing renders its own <main> landmark.
               Mobile bottom bar room is reserved by a body rule in globals.css. */}
+          {/* The one global header, for every route. It is rendered here rather
+              than by each page's wrapper because four wrappers each owning a
+              masthead is what produced five header systems. ChromeGate keeps
+              deciding the legacy footer and mobile bar; it no longer decides
+              whether a route has a header at all. */}
+          <GlobalHeader />
           <ChromeGate
-            header={<SiteHeader />}
+            header={null}
             footer={<SiteFooter />}
             bottomNav={<BottomNav />}
             extras={<InstallPrompt />}

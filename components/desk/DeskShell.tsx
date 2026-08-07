@@ -2,9 +2,6 @@ import { Suspense, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import JourneyRail from "./JourneyRail";
-import ThemeToggle from "@/components/desk/ThemeToggle";
-import DeskAccount from "./DeskAccount";
-import PonteLockup from "@/components/ponte/brand/PonteLockup";
 import type { Rail } from "@/lib/desk/journey";
 import { PRIMARY_NAV, type PrimaryNavKey } from "@/lib/nav/primary";
 
@@ -103,38 +100,10 @@ export default async function DeskShell({ children, rail, current, objective }: 
 
   return (
     <>
-      <header className="cmd">
-        <PonteLockup />
-
-        {stated ? (
-          <Link className="cmd__obj" href="/">
-            <span>Objective</span>
-            <b>{stated}</b>
-            <span className="cmd__k">Edit</span>
-          </Link>
-        ) : null}
-
-        <nav className="cmd__nav" aria-label="Ponte Trade">
-          {NAV.map((item) => (
-            <Link
-              key={item.key}
-              href={item.href}
-              {...(navKey(current) === item.key ? { "aria-current": "page" as const } : {})}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <ThemeToggle />
-
-        {/* Suspense because the control reads the current search params to
-            build its return path, and useSearchParams opts a subtree into
-            client rendering. */}
-        <Suspense fallback={null}>
-          <DeskAccount signedIn={signedIn} />
-        </Suspense>
-      </header>
+      {/* The command bar is gone from here. It is owned by GlobalHeader at the
+          layout boundary, because four wrappers each rendering their own
+          masthead is what produced five header systems. This shell keeps what
+          is genuinely page specific: the journey rail and the work surface. */}
 
       <div className={`dk-app${rail ? "" : " dk-app--norail"}`}>
         {rail ? <JourneyRail rail={rail} /> : null}
