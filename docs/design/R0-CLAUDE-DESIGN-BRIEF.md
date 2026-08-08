@@ -195,8 +195,9 @@ current behaviour inside the true new shell is the point of R0-A.
 ### Truth rules
 - Evidence-specific trust only — no tiers, no score, no percentage. **Gold is brand, never status.**
   *(Where an existing surface breaks this, it is JD-02 and stays broken — see §5.4.)*
-- Market Signals: read from a named public source, republished as printed, not confirmed, not a
-  member. **Never dressed or acted on as a Qualified Opportunity** (ADR-0037, ADR-0041).
+- Market Signals: a **sourced, dated, unconfirmed indication** — read from a named public source,
+  not confirmed, not a member. **No surface claims verbatim republication** (ADR-0041 amendment,
+  8 August 2026). **Never dressed or acted on as a Qualified Opportunity** (ADR-0037, ADR-0041).
 - A Deal Room is **activated**, never published.
 - No fabricated traction. An empty market says so plainly and quietly.
 - **No dead doors.** Do not draw a control that performs something the product cannot do. Where one

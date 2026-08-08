@@ -4,6 +4,7 @@ import Arc from "./Arc";
 import Chrome, { type Signal } from "./Chrome";
 import Footer from "./Footer";
 import Grain from "./Grain";
+import { MARKET_FAMILIES, type MarketFamily } from "@/lib/taxonomy/market";
 
 /**
  * The public front door, on the bridge system.
@@ -85,16 +86,23 @@ export interface BridgeLandingProps {
   who?: string | null;
 }
 
-/**
- * The five stages of a crossing, named on the arch.
- *
- * The two ends are deliberately blank. A label at a springing point lands on
- * top of the shore block beneath it, which is exactly what happened: "INTENT"
- * printed over "THIS SHORE" at 2560. The shores name the ends in prose, in
- * better words than a 9px mono label could, so the arch names only what it
- * crosses.
- */
-const STAGE_LABELS = ["", "Intent", "Words", "The facts", "Preview", ""];
+/*
+  The arch carries no stage names, and the reason is a product rule rather than
+  a layout one.
+
+  It used to read INTENT, WORDS, THE FACTS, PREVIEW. Those are the four steps of
+  the PUBLISH path, so the entrance was telling a member who arrived to BUY that
+  they were already partway through a sell flow they had not chosen. Half the
+  market was shown the other half's journey as though it were the product.
+
+  R0 specification section 4: "The arc must not carry publish-path stage labels
+  ... The arc keeps its shore labels and drops the stage names." The crossing on
+  this page is identity, not progress: it says what Ponte is for, and a visitor
+  who has done nothing yet has no position in anything.
+
+  The shores below still name the two ends in prose, which is where the meaning
+  belonged all along.
+*/
 
 /**
  * The three markets, and the way into each.
@@ -123,11 +131,29 @@ const STAGE_LABELS = ["", "Intent", "Words", "The facts", "Preview", ""];
  * resolves it against that same table, so a renamed intent breaks the build
  * rather than silently opening the wrong journey.
  */
+/**
+ * The family's name, from the canonical taxonomy and from nowhere else.
+ *
+ * This surface used to spell the third family "Distribution and agency" in a
+ * literal of its own, while `lib/taxonomy/market.ts` called it "Distribution and
+ * representation" and every downstream screen followed the taxonomy. The
+ * entrance therefore named a family that the rest of the product does not have.
+ *
+ * The taxonomy's own docstring already required this (finding F3: surfaces must
+ * IMPORT it, and a list written independently is a defect even when its contents
+ * happen to match). Reading it here means a renamed family cannot survive on the
+ * front door.
+ */
+function familyName(family: MarketFamily): string {
+  const found = MARKET_FAMILIES.find((f) => f.key === family);
+  if (!found) throw new Error(`No canonical family named ${family}`);
+  return found.label;
+}
+
 const MARKETS = [
   {
     family: "products",
     index: "01",
-    name: "Products",
     detail: "Goods crossing a border, by the shipment or the programme.",
     doors: [
       { key: "offer", label: "I have a product to offer", href: "/publish?intent=offer_product" },
@@ -141,7 +167,6 @@ const MARKETS = [
   {
     family: "services",
     index: "02",
-    name: "Trade services",
     detail: "Freight, inspection, customs, finance, insurance.",
     doors: [
       {
@@ -155,7 +180,6 @@ const MARKETS = [
   {
     family: "distribution",
     index: "03",
-    name: "Distribution and agency",
     detail: "Carrying a brand into a market, or finding someone to carry yours.",
     doors: [
       {
@@ -203,9 +227,23 @@ export default function BridgeLanding({
           </h1>
           <div className="brg-band__now">
             <div className="brg-eyebrow">Two sides. One crossing.</div>
+            {/*
+              The positioning sentence, from North Star section 1's core product
+              statement rather than from the funnel.
+
+              It read: "Ponte reads the market, publishes your opportunity, and
+              gives you a controlled room to close it in. Everything up to that
+              room is free." Two thirds of that sentence described the paid
+              product, and it named the room as where a deal is closed, which
+              tells a first-time visitor that Ponte's real answer is a purchase.
+              ADR-0037 section 3 says the opposite in terms: two parties who are
+              introduced, talk, and never open a room have completed the journey
+              correctly.
+            */}
             <p className="brg-lede">
-              Ponte reads the market, publishes your opportunity, and gives you a controlled room
-              to close it in. Everything up to that room is free.
+              Ponte helps professionals explore what is happening in global physical-goods trade,
+              or start a deal of their own. Exploring the market and publishing an opportunity are
+              free.
             </p>
             {counts && (
               <div className="brg-scale">
@@ -224,9 +262,20 @@ export default function BridgeLanding({
                   precisely what Ponte sells, so the honest sentence and the
                   commercial sentence are the same sentence.
                 */}
+                {/*
+                  The caveat is the pitch, and it now names the right work.
+
+                  It used to end "Establishing that is what a Deal Room is for",
+                  which is not what a room is for and not where that work
+                  happens: confirming an unconfirmed signal is investigation,
+                  JR-05, and ADR-0037 section 3 reserves the room for parties who
+                  want structured transaction progression. The sentence sent a
+                  reader towards the paid product to answer a question the desk
+                  answers before any room exists.
+                */}
                 <p className="brg-scale__c">
                   Ponte has not confirmed any of these with the party named in them. Establishing
-                  that is what a Deal Room is for.
+                  that is what Ponte investigates.
                 </p>
               </div>
             )}
@@ -238,7 +287,7 @@ export default function BridgeLanding({
           progress claim: a first-time visitor is not somewhere in a process
           they have not begun. It is the journey, drawn.
         */}
-        <Arc size="hero" total={5} current={0} labels={STAGE_LABELS} traffic identity />
+        <Arc size="hero" total={5} current={0} traffic identity />
 
         <div className="brg-shores">
           <div className="brg-shore">
@@ -268,7 +317,7 @@ export default function BridgeLanding({
           {MARKETS.map((market) => (
             <div className="brg-fam" key={market.family}>
               <div className="brg-fam__i">{market.index}</div>
-              <h2 className="brg-fam__n">{market.name}</h2>
+              <h2 className="brg-fam__n">{familyName(market.family)}</h2>
               <p className="brg-fam__d">{market.detail}</p>
               <div className="brg-fam__doors">
                 {market.doors.map((door) => (
@@ -282,23 +331,35 @@ export default function BridgeLanding({
           ))}
         </div>
         {/*
-          The funnel, stated where the doors are.
+          What the doors can lead to, and the word "can" is the whole point.
 
-          Six doors is six ways in, and six ways in reads as six products
-          unless the page says otherwise. It does not matter which family a
-          member is in or which direction they are travelling: the moment they
-          are serious about the party on the other side, they need the same
-          thing, and that thing is the room. Naming it here is what turns a
-          list of entrances into a single argument.
+          This band read "Six doors. One destination." over a paragraph saying
+          that however you come in, you need the same thing. That is a funnel
+          claim, and ADR-0037 section 1 rules it out in terms: every journey that
+          establishes credible bilateral commercial interest CAN converge on a
+          Deal Room, and "can" is the operative word. Convergence is available,
+          never automatic and never obligatory.
+
+          The same ADR names the endings a journey may legitimately reach
+          instead, and requires that none of them read as a failure: watch,
+          no-match, decline, do-not-proceed, investigation not confirmed, expiry,
+          source unavailable, continued monitoring. A page that admits one
+          destination has already called all eight of those a defeat.
+
+          So the band states the trigger rather than an inevitability. ADR-0037
+          section 3: a room becomes the next action when the parties want
+          structured transaction progression, and wanting that is the trigger,
+          nothing else. It stays a link and never a primary route (ADR-0036,
+          explanation and not participation).
         */}
         <div className="brg-funnel">
-          <p className="brg-funnel__t">Six doors. One destination.</p>
+          <p className="brg-funnel__t">Six doors. Where they can lead.</p>
           <p className="brg-funnel__d">
-            However you come in, the moment you are serious about the party on the other side you
-            need the same thing: a Deal Room. Terms agreed in one place, evidence exchanged and
-            held, each stage settled before the next one opens, and a record of all of it. Getting
-            to that room is free from every door above. Activating it is the only thing Ponte
-            charges for.
+            Most of what happens here needs no room at all: you find a counterparty, Ponte makes
+            the introduction, and you talk. When two parties want the deal run properly instead,
+            with terms agreed in one place, evidence exchanged and held, each stage settled before
+            the next opens and a record of all of it, that is what a Deal Room is for. Choosing one
+            is always yours to make. Everything up to it is free.
           </p>
           <a className="brg-funnel__a" href="/deal-rooms">
             What a Deal Room is
@@ -349,8 +410,8 @@ export default function BridgeLanding({
             </p>
           )}
           <p className="brg-note" style={{ marginBlockStart: 16 }}>
-            Read from a public source and published as printed. Not confirmed with the party named,
-            and not a member of Ponte.
+            Read from a named public source and dated. Not confirmed with the party named, and not
+            a member of Ponte.
           </p>
         </div>
 
@@ -367,16 +428,32 @@ export default function BridgeLanding({
             <span>What a Market Signal is</span>
             <span>&mdash;</span>
           </div>
+          {/*
+            What a signal is, without claiming to be a reprint of it.
+
+            This column asserted that Ponte "republishes what they say, in the
+            source's own words", and the register beneath it answered "Yes" to
+            "Republished exactly as printed". Neither is true of the record: a
+            signal is read from a source, dated and recorded in Ponte's own
+            words, and the detail page says so in the same breath. A verbatim
+            claim on the entrance also puts Ponte behind the source's wording as
+            though it had adopted it, which is precisely the confirmation the
+            next two rows deny.
+
+            A Market Signal is a sourced, dated, unconfirmed indication. That is
+            what the register now states, and each row is still answerable.
+          */}
           <p className="brg-lede" style={{ fontSize: 15, marginBlockStart: 14 }}>
             An indication that someone, somewhere, wants to buy or sell something. Ponte reads them
-            from public sources and republishes what they say, in the source&rsquo;s own words.
+            from named public sources and records what was indicated, with the source and the date
+            it was read.
           </p>
           <div className="brg-row" style={{ marginBlockStart: 20 }}>
             <span className="brg-row__label">Read from a named public source</span>
             <span className="brg-row__value" data-state="checked">Yes</span>
           </div>
           <div className="brg-row">
-            <span className="brg-row__label">Republished exactly as printed</span>
+            <span className="brg-row__label">Dated, and shown only while current</span>
             <span className="brg-row__value" data-state="checked">Yes</span>
           </div>
           <div className="brg-row">
@@ -387,9 +464,20 @@ export default function BridgeLanding({
             <span className="brg-row__label">A member of Ponte</span>
             <span className="brg-row__value" data-state="unproved">No</span>
           </div>
+          {/*
+            This note used to end "That is the work a Deal Room does, and it is
+            the only thing Ponte charges for", which put the paid product where
+            the desk's work belongs. Establishing who is behind a signal and
+            whether they can perform is INVESTIGATION, and the Market Signal
+            boundary in the Canonical Journey Register is binding: a signal
+            cannot enter the introduction journey at all until it is confirmed.
+            Naming the room here also offered it as the answer to a question
+            that arises before any room could exist.
+          */}
           <p className="brg-note" style={{ marginBlockStart: 18 }}>
             Turning one of these into a deal means establishing who is behind it and whether they can
-            perform. That is the work a Deal Room does, and it is the only thing Ponte charges for.
+            perform. Ask Ponte to investigate, and it is worked by the desk before anything is
+            offered as an opportunity.
           </p>
         </div>
       </div>
