@@ -195,6 +195,32 @@ system from the rail."* One bar, one place, always present.
   than *correct* it, R0-A does not apply the rule. The defect keeps the surface.
 - The rail never draws `[DEAL ROOM]` as the end (ADR-0024).
 
+> **Amendment, 8 August 2026 — the lifecycle rail, and which vocabulary is global.**
+> R0-A shipped with no rail on either corridor, and the stop was real: the repository
+> held two incompatible readings of "the rail". The controller's ruling resolves it.
+>
+> **The ADR-0038 lifecycle above is the global orientation vocabulary.** The two
+> Desk station lists — `R-FIND` *Objective · Discover · Record · Act* and
+> `R-SUBMIT` *Objective · Compose · Preview · Conclude* — **must not be used as
+> the global lifecycle.** They remain `lib/desk/journey.ts`'s own contract for the
+> Desk surfaces that already render them; nothing in R0-A changes them.
+>
+> **R0-A positions:** `/find` highlights `DISCOVER`, `/publish` highlights `CREATE`.
+>
+> **The rail is orientation, not mandatory progress.** Binding on the treatment:
+> the same canonical labels wherever it appears; the current stage visibly
+> emphasised; **no "step X of Y", no count, no completion percentage**; no
+> mandatory-funnel semantics; `[DEAL ROOM]` visibly optional and contextual, being
+> a threshold and an environment rather than a compulsory sequential stage
+> (ADR-0038, ADR-0037); readable at 390 × 844; keyboard, focus and reduced-motion
+> compliant.
+>
+> Implemented as `lib/nav/lifecycle.ts` (the vocabulary) and
+> `components/shell/LifecycleRail.tsx` (the treatment), styled from
+> `app/globals.css` beside the masthead. ADR-0038's consequence note anticipated
+> `lib/desk/journey.ts` expressing this lifecycle; it does not, and does not need
+> to, because the global rail is a separate surface from the Desk journeys.
+
 ### 3.4 Back behaviour
 - **Every surface has an in-product way back.** Browser Back is never the only intelligible move —
   the audit found `/structure` offering only *"Back to Ponte Trade"* and no navigation.
