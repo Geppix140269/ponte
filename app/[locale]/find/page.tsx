@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { isRtl, type Locale } from "@/i18n/routing";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import FindChrome from "@/components/find/FindChrome";
+import LifecycleRail from "@/components/shell/LifecycleRail";
 import FindCategoryEntry from "@/components/find/FindCategoryEntry";
 import CoverageNotice, { coverageValues } from "@/components/find/CoverageNotice";
 import QoRow from "@/components/find/QoRow";
@@ -65,6 +66,15 @@ export default async function FindPage({
 
   return (
     <div className={`ponte-find ${landingFontVars}`} dir={isRtl(params.locale) ? "rtl" : "ltr"}>
+      {/*
+        Orientation, above the corridor and below the global bar.
+
+        It is mounted here rather than inside `FindChrome` on purpose: that
+        wrapper also serves `/find/o/[ref]` and `/workspace`, which sit at
+        different points in the lifecycle, and a rail declared once for all three
+        would state the wrong position on two of them. R0-A covers this corridor.
+      */}
+      <LifecycleRail at="discover" />
       <FindChrome current="opportunities">
         {!answerable ? (
           isProducts ? (
