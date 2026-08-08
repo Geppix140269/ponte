@@ -18,6 +18,75 @@ Use this structure:
 
 ---
 
+## 2026-08-08 - PHASE B EXECUTED. Batch G4WB-2026-08-06 is PUBLISHED. 1,036 Market Signals are live.
+
+### Completed
+
+**Published under explicit owner execution authority.** Every guard revalidated
+and passed: batch id, confirmation phrase, environment, project identity,
+expected count, both source file hashes with their byte sizes and row counts,
+the rules fingerprint, the reviewed decision checksum, and the freshness
+re-evaluation. No drift. Activation then ran as a single statement.
+
+| Required outcome | Result |
+|---|---|
+| public | **1,036** |
+| private/held | **2,273** |
+| held records public | **0** |
+| total reconciled | **3,309 / 3,309** |
+| public board increase | **exactly +1,036** (4,674 to 5,710) |
+| public source prose or counterparty identity | **none** |
+
+### Independent verification, outside the command
+
+| | Before | After |
+|---|---|---|
+| Live public board | 4,674 | **5,710** (+1,036 exactly) |
+| `desk_radar` total | 14,989 | 14,989 (unchanged: activation moved rows, it did not add any) |
+| Batch public | 0 | 1,036 |
+| Batch private | 3,309 | 2,273 |
+| Held made public | - | **0** |
+
+All 1,036 public rows were read back through the live board's own contract
+(`PUBLIC_SIGNAL_COLUMNS` with the public window predicate). The columns returned
+are the seventeen public ones and nothing else: no `counterparty_*`, no
+`source_url`, no `source_platform`, no `raw_description`, no `import_meta`.
+`ai_description` is null on every one of the 1,036, so no source prose became
+public copy. Composition: **400 seller offers, 636 buyer requirements.**
+
+### Evidence
+
+`docs/evidence/batches/G4WB-2026-08-06/publication-receipt.json`, a new artefact
+beside the immutable manifest, SHA-256
+`e08368b7779c339eb19351c62127df152c604f178ddaaea00482f11f3ae4a120`. It carries
+the manifest checksum and rules fingerprint it was validated against, so the
+receipt names the review it satisfies. Scanned clean of prose, counterparty
+data, credentials and absolute paths.
+
+### Risks / discrepancies
+
+- **The activate run rewrote `staging-receipt.json`.** Phase B re-stages
+  idempotently before validating, and staging writes its receipt, so the Phase A
+  artefact was overwritten with a new `stagedAtIso`. Every proof in it was
+  identical; only the timestamp moved. The committed Phase A receipt was
+  **restored from git and is unchanged**, as required. This is a real defect in
+  the command and is recorded rather than repaired here, because the ruling
+  forbade code changes during execution: a staging receipt should be written
+  once and never reopened, and Phase B should write only its own artefact.
+- The 1,036 published signals carry **no `public_expires_at`**, so they do not
+  age off the board on their own. The freshness gate governs what may be
+  published, not how long it stays. Retiring them is a separate decision.
+- The 2,273 held rows remain private and are retained, as ruled, and may later
+  feed appropriately dated historical or SEO intelligence. They must never be
+  represented as current market intent.
+
+### Next
+
+1. Fix the staging-receipt overwrite in `scripts/publish-batch.ts`.
+2. Decide a retirement policy for published signals with no expiry.
+
+---
+
 ## 2026-08-08 - PHASE A EXECUTED. Batch G4WB-2026-08-06 is STAGED AND PRIVATE. Nothing is published.
 
 ### Completed
