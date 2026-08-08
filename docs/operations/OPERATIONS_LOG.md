@@ -18,6 +18,108 @@ Use this structure:
 
 ---
 
+## 2026-08-08 - Go4WorldBusiness ingestion pipeline accepted at dry run. Batch G4WB-2026-08-06 is NOT published.
+
+### Completed
+
+- **A governed ingestion pipeline replaces the ad-hoc import scripts**, built to
+  a controller specification and accepted at dry run. Nothing was written to
+  production; `--apply` is deliberately unwired and exits 2.
+- `lib/market-signals/source-taxonomy.ts` - the boundary layer between one
+  external source and Ponte's own vocabulary. Both maps are **closed**: an
+  unrecognised value returns null so the caller holds and reports the row.
+  - **Side**: `sell` and `seller_offer` to `offer`, `buy` to `requirement`,
+    with **no default branch**. The previous scripts hardcoded `side: "offer"`,
+    which would have inverted 636 buyer requirements into seller offers.
+  - **Category**: all **25** observed slugs mapped to labels already live in the
+    inventory. The previous map covered 6 and would have silently dropped 74% of
+    the supplier file and 81% of the buy file.
+  - A sector or HS chapter is stated **only where the category determines one**.
+    `construction` spans cement, structural steel and tiles, so it carries
+    neither; claiming one would file two thirds of those rows under a sector
+    they are not in.
+- `lib/market-signals/ingest.ts` - the pure decision layer. Every row returns
+  exactly one decision against one of **11 named hold reasons**. Nothing is
+  skipped, and the run fails if `published + held != received`.
+- `scripts/ingest-go4world.ts` - reads the exports, archives every raw row
+  **verbatim before transformation**, prints the reconciliation. Dry by default.
+
+### Decisions (controller ruling, 8 August 2026)
+
+- **Freshness bands stand: 0-90 `current`, 91-365 `aging`, over 365
+  `historical`.** Only `current` is eligible for live publication. `aging` and
+  `historical` rows are **retained privately**, are not deleted, and must never
+  be represented as current market intent; they may later feed appropriately
+  dated historical or SEO intelligence. **The live window must not be widened
+  merely to increase inventory.**
+- **The per-intent quality rules stand, as SOURCE-ADAPTER rules and not as
+  universal Ponte rules**: an offer needs a quantity with a unit or a credible
+  price basis; a requirement needs a quantity with a unit or a meaningful
+  destination. A universal quantity rule is wrong here, and holding every buyer
+  who states a destination but no tonnage would suppress an actionable signal.
+- **All published records remain explicitly unconfirmed Market Signals.**
+- **No unrestricted `--apply`.** The production publication command must be
+  harder to misuse than a single flag; the execution contract is specified below
+  and must be implemented and reviewed before any production write.
+
+### Batch evidence: G4WB-2026-08-06, the first governed batch
+
+Accepted reconciliation, preserved as the baseline any later run is compared to:
+
+| | |
+|---|---|
+| Received | **3,309** |
+| Publishable | **1,036** |
+| Held | **2,273** |
+| Accounted | **3,309 / 3,309** |
+| Silently discarded | **0** |
+
+| File | Received | Side | Categories | Current/aging/historical | Publishable |
+|---|---|---|---|---|---|
+| `go4world_supplier_scrape_aug6.csv` | 2,673 | 2,673 offer | 24 | 489 / 744 / 1,440 | **400** |
+| `go4world_new_buy_since_jul30.csv` | 636 | 636 requirement | 20 | 636 / 0 / 0 | **636** |
+
+Held by reason, supplier file: 1,206 `offer_not_actionable`, 531 `historical`,
+531 `aging`, 5 `generic_product`. Buy file: **0 held**. Zero unmapped slugs and
+zero unmapped type values across both. Zero duplicate source identifiers.
+
+**None of these 3,309 records is in production.** They are new: a probe of all
+3,309 source identifiers against `desk_radar` returned 0 already present.
+
+### Risks / discrepancies
+
+- **ACQUISITION QUALITY, recorded as a collection defect and NOT as a reason to
+  weaken publication standards.** The supplier acquisition process is currently
+  weak: **2,673 received, 400 currently publishable (15%)**. The buy collection
+  is sound at 636 of 636. The dominant causes are listings carrying neither a
+  quantity with a unit nor any price basis (1,206) and indications older than 90
+  days (1,062 on age alone).
+
+  Future Go4WorldBusiness supplier collection should preferentially capture
+  current or recent listings, quantity and unit where present, price or price
+  basis where present, terms or Incoterm where present, the source posting date,
+  a stable source identifier, the category, and the geography. **Missing values
+  must not be invented at collection time any more than at import time.**
+
+- The two exports carry no contact email or phone at all. Where such fields do
+  appear they are internal-only and are never published.
+
+### Next
+
+1. Design and review the safe publication execution contract (below). No
+   production write before it exists and is accepted.
+2. Feed the acquisition-quality requirements back to the collection process.
+
+### Evidence
+
+- `lib/market-signals/source-taxonomy.ts`, `lib/market-signals/ingest.ts`,
+  `scripts/ingest-go4world.ts`, `lib/market-signals/__tests__/ingest.test.ts`
+  (26 tests).
+- Raw archives written outside the repository, one JSONL per file, verbatim and
+  pre-transformation.
+
+---
+
 ## 2026-07-31 - Production hosting moved from Netlify to Vercel
 
 ### Completed
