@@ -18,6 +18,82 @@ Use this structure:
 
 ---
 
+## 2026-08-08 - PHASE A EXECUTED. Batch G4WB-2026-08-06 is STAGED AND PRIVATE. Nothing is published.
+
+### Completed
+
+**The first governed production execution ran, and stopped where it was told
+to.** 3,309 rows were written to production `desk_radar`, every one of them
+`status = 'private'`. **No record became public. The activation PATCH did not
+run and could not have run**: `--phase` is a required argument with no default,
+and the `stage` path returns before the activation block, so there is no code
+route from a Phase A invocation to a public record.
+
+All thirteen reconciliation checks passed, measured against production rather
+than against the script's intentions.
+
+| Proof | Result | Expected |
+|---|---|---|
+| received | 3,309 | 3,309 |
+| staged | 1,036 | 1,036 |
+| held private | 2,273 | 2,273 |
+| publicly visible from this batch | **0** | 0 |
+| duplicate source ids | 0 | 0 |
+| side/intent mismatches | 0 | 0 |
+| rows carrying public source prose | 0 | 0 |
+| held rows marked staged | 0 | 0 |
+| missing canonical/source identity | 0 | 0 |
+| missing source date | 0 | 0 |
+| rows not private | 0 | 0 |
+| silently discarded | **0** | 0 |
+| retrievable by the PUBLIC read | **0** | 0 |
+
+The last line is the one that matters and is not a restatement of the others.
+It issues the live board's own select and predicates (`PUBLIC_SIGNAL_COLUMNS`
+with `publicWindowPredicate`) against the batch and requires an empty result, so
+the claim is what a visitor can retrieve rather than what a status column says.
+
+### Independent verification, outside the command
+
+| | Before | After |
+|---|---|---|
+| `desk_radar` total | 11,680 | 14,989 (+3,309) |
+| **Live public board** | **4,674** | **4,674, unchanged** |
+| Private | 6,827 | 10,136 (+3,309) |
+| Batch rows `approved_signal` | - | **0** |
+
+A read carrying the anon key, which is what a browser holds, returns `[]` for
+this batch: RLS grants no direct select on `desk_radar`.
+
+### Decisions honoured
+
+- No canary. The reviewed batch was staged whole and remains immutable.
+- The manifest was not touched. `staging-receipt.json` is a **new artefact**
+  beside it, never an amendment.
+- Nothing was repaired automatically, and nothing was deleted.
+
+### Next
+
+Phase B is a separate, explicit invocation and is **not authorised by this
+entry**. The activation command is recorded in the handover; it flips exactly
+the 1,036 rows marked `publication = staged` in one statement, leaving the 2,273
+held rows private.
+
+**The reviewed manifest has a shelf life.** Freshness is re-evaluated at
+execution and any row crossing `current` to `aging` aborts the whole run. The
+manifest was reviewed at 2026-08-08T06:19Z; the oldest publishable rows sit near
+that boundary, so a delayed Phase B will correctly refuse and require a fresh
+dry run.
+
+### Evidence
+
+- `docs/evidence/batches/G4WB-2026-08-06/staging-receipt.json`, scanned clean of
+  prose, counterparty data, credentials and absolute paths.
+- Decision checksum `62f6acad...b73dbd231`, rules fingerprint
+  `0e1e0ea2...656fc2594c`, both matching the reviewed manifest.
+
+---
+
 ## 2026-08-08 - Publication execution contract implemented FOR REVIEW. Batch G4WB-2026-08-06 is still NOT published.
 
 ### Schema capability, established before any production-writing code was written

@@ -1,0 +1,34 @@
+{
+  "batchId": "G4WB-2026-08-06",
+  "phase": "stage",
+  "manifestChecksum": "62f6acadd056043a0448dd04e97acd3cd52a4669d5f807e06de2a63b73dbd231",
+  "rulesFingerprint": "0e1e0ea206ba2f6a0616be63090061c012e007674cd532d2eae7e8656fc2594c",
+  "environment": "production",
+  "projectRef": "cptglsmjmzcfpjndqfmc",
+  "stagedAtIso": "2026-08-08T06:43:25.315Z",
+  "stagedNew": 1036,
+  "activatedNew": 0,
+  "alreadyPresentNoOp": 0,
+  "heldPrivate": 2273,
+  "failures": 0,
+  "proofs": {
+    "received": 3309,
+    "staged": 1036,
+    "heldPrivate": 2273,
+    "publiclyVisible": 0,
+    "duplicateSourceIds": 0,
+    "sideIntentMismatches": 0,
+    "rowsCarryingPublicProse": 0,
+    "heldRowsMarkedStaged": 0,
+    "missingIdentity": 0,
+    "missingSourceDate": 0,
+    "rowsNotPrivate": 0,
+    "silentlyDiscarded": 0
+  },
+  "publicReadReturned": 0,
+  "validation": {
+    "ok": true,
+    "failures": []
+  },
+  "activationPerformed": false
+}

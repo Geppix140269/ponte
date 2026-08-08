@@ -31,7 +31,7 @@
 // Re-running a completed batch is a no-op: the upsert is keyed on the source
 // identity and the activation filter matches only rows still awaiting it.
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { decideRow, type IngestDecision, type RawRow } from "../lib/market-signals/ingest";
@@ -47,6 +47,7 @@ import {
   type SourceFileFingerprint,
   type StagedRow,
 } from "../lib/market-signals/publication-contract";
+import { PUBLIC_SIGNAL_COLUMNS, publicWindowPredicate } from "../lib/market-signals/logic";
 
 // ---- arguments: all required, none defaulted --------------------------------
 const argv = process.argv.slice(2);
@@ -59,6 +60,17 @@ const manifestPath = arg("--manifest");
 const expectRaw = arg("--expect-publishable");
 const environment = arg("--environment");
 const confirmation = arg("--confirm");
+/**
+ * Which operational phase this invocation performs.
+ *
+ * Explicit and required, with no default, because the two phases carry
+ * completely different risk. `stage` writes only private rows, which no public
+ * read can reach; `activate` is the single statement that makes records public.
+ * A boolean like `--no-activate` would have made activation the thing that
+ * happens unless you remember to prevent it, which is the wrong way round for
+ * the more dangerous of the two.
+ */
+const phase = arg("--phase");
 
 const missing = [
   ["--batch-id", batchId],
@@ -66,11 +78,17 @@ const missing = [
   ["--expect-publishable", expectRaw],
   ["--environment", environment],
   ["--confirm", confirmation],
+  ["--phase", phase],
 ].filter(([, v]) => !v).map(([k]) => k);
 
 if (missing.length) {
   console.error(`REFUSED: missing required argument(s): ${missing.join(", ")}`);
   console.error("There is no default for any of them. See the header of this file.");
+  process.exit(1);
+}
+
+if (phase !== null && phase !== "stage" && phase !== "activate") {
+  console.error(`REFUSED: --phase must be exactly "stage" or "activate"; got "${phase}".`);
   process.exit(1);
 }
 
@@ -290,8 +308,8 @@ async function run(): Promise<void> {
   }
   console.log("");
 
-  // ---- PHASE 2: validate, by reading back --------------------------------------
-  console.log("VALIDATE  reading the staged batch back from the database...");
+  // ---- read the staged batch back out of production ---------------------------
+  console.log("RECONCILE  reading the batch back from production...");
   const readBack: StagedRow[] = [];
   for (let page = 0; page < 40; page++) {
     const res = await fetch(
@@ -307,29 +325,146 @@ async function run(): Promise<void> {
   }
 
   const validation = validateStaged(manifest, readBack);
-  console.log(`  rows written ${readBack.length}   eligible ${validation.eligible}   held ${validation.held}`);
 
-  if (!validation.ok) {
-    console.error("\nVALIDATION FAILED. The batch remains STAGED and PRIVATE.");
-    for (const f of validation.failures) {
-      console.error(`  ${f.failure}: ${VALIDATION_TEXT[f.failure]}`);
-      console.error(`    ${f.detail}`);
-    }
-    console.error("\nNo record was activated and nothing is public.");
-    console.error("Nothing was deleted. Investigate, then re-run once the cause is fixed.");
+  /*
+   * The proofs, measured against production rather than against intent.
+   *
+   * `validateStaged` checks the shape of what came back. These count it, and
+   * the last one asks the PUBLIC read the same question a visitor's browser
+   * would: not "does the status column say private" but "can this record be
+   * retrieved through the contract the live board actually uses".
+   */
+  const nowIso = new Date().toISOString();
+  const batchFilter = `import_batch=eq.${encodeURIComponent(manifest.batchId)}`;
+  const countOf = async (qs: string): Promise<number> => {
+    const r = await fetch(`${rest}?${qs}`, { headers: { ...H, prefer: "count=exact", range: "0-0" } });
+    if (!r.ok) die(5, `Count failed: HTTP ${r.status}`, (await r.text()).slice(0, 200));
+    return Number((r.headers.get("content-range") ?? "/0").split("/")[1]) || 0;
+  };
+
+  const stagedRows = readBack.filter((r) => r.import_meta?.publication === "staged");
+  const heldRows = readBack.filter((r) => r.import_meta?.publication === "held");
+  const ids = readBack.map((r) => r.canonical_signal_id).filter(Boolean) as string[];
+  const distinctIds = new Set(ids);
+
+  const proofs = {
+    received: readBack.length,
+    staged: stagedRows.length,
+    heldPrivate: heldRows.length,
+    publiclyVisible: await countOf(
+      `select=id&${batchFilter}&status=eq.approved_signal&or=(public_expires_at.is.null,public_expires_at.gt.${nowIso})`,
+    ),
+    duplicateSourceIds: ids.length - distinctIds.size,
+    sideIntentMismatches: readBack.filter((r) => {
+      const intent = r.import_meta?.intent ?? null;
+      return !(
+        (r.side === "offer" && intent === "offer_product") ||
+        (r.side === "requirement" && intent === "source_product")
+      );
+    }).length,
+    rowsCarryingPublicProse: readBack.filter(
+      (r) => r.ai_description !== null && r.ai_description !== "",
+    ).length,
+    heldRowsMarkedStaged: heldRows.filter((r) => r.import_meta?.publication === "staged").length,
+    missingIdentity: readBack.filter((r) => !r.canonical_signal_id).length,
+    missingSourceDate: readBack.filter((r) => !r.spotted_at).length,
+    rowsNotPrivate: readBack.filter((r) => r.status !== "private").length,
+    silentlyDiscarded: manifest.received - readBack.length,
+  };
+
+  /*
+   * The independent proof: ask the PUBLIC contract, not the private one.
+   *
+   * PUBLIC_SIGNAL_COLUMNS and publicWindowPredicate are the exact select and
+   * filter the live board uses. Counting private rows proves what the status
+   * column says; this proves what a visitor can actually retrieve, which is the
+   * claim worth making and the only one a reader should accept.
+   */
+  const publicProbe = await fetch(
+    `${rest}?select=${encodeURIComponent(PUBLIC_SIGNAL_COLUMNS)}` +
+      `&status=eq.approved_signal&or=(${publicWindowPredicate(nowIso)})&${batchFilter}&limit=5`,
+    { headers: H },
+  );
+  if (!publicProbe.ok) die(5, "The public read probe failed; the batch cannot be cleared.");
+  const publicRows = (await publicProbe.json()) as unknown[];
+
+  console.log("");
+  console.log("PRODUCTION RECONCILIATION");
+  const results: boolean[] = [];
+  const expect = (label: string, actual: number, wanted: number): void => {
+    const ok = actual === wanted;
+    results.push(ok);
+    console.log(
+      `  ${ok ? "OK  " : "FAIL"}  ${label.padEnd(38)} ${String(actual).padStart(6)}  (expected ${wanted})`,
+    );
+  };
+  expect("received", proofs.received, manifest.received);
+  expect("staged", proofs.staged, manifest.publishable);
+  expect("held private", proofs.heldPrivate, manifest.held);
+  expect("publicly visible from this batch", proofs.publiclyVisible, 0);
+  expect("duplicate source ids", proofs.duplicateSourceIds, 0);
+  expect("side/intent mismatches", proofs.sideIntentMismatches, 0);
+  expect("rows carrying public source prose", proofs.rowsCarryingPublicProse, 0);
+  expect("held rows marked staged", proofs.heldRowsMarkedStaged, 0);
+  expect("missing canonical/source identity", proofs.missingIdentity, 0);
+  expect("missing source date", proofs.missingSourceDate, 0);
+  expect("rows not private", proofs.rowsNotPrivate, 0);
+  expect("silently discarded", proofs.silentlyDiscarded, 0);
+  expect("retrievable by the PUBLIC read", publicRows.length, 0);
+  const allOk = results.every(Boolean);
+
+  const receipt = {
+    batchId: manifest.batchId,
+    phase: "stage",
+    manifestChecksum: manifest.decisionChecksum,
+    rulesFingerprint: manifest.rulesFingerprint,
+    environment: manifest.environment,
+    projectRef: resolvedProjectRef,
+    stagedAtIso: new Date(executionAtMs).toISOString(),
+    stagedNew: stagedRows.length,
+    activatedNew: 0,
+    alreadyPresentNoOp: Math.max(0, readBack.length - rows.length),
+    heldPrivate: proofs.heldPrivate,
+    failures: validation.ok && allOk ? 0 : validation.failures.length + (allOk ? 0 : 1),
+    proofs,
+    publicReadReturned: publicRows.length,
+    validation: { ok: validation.ok, failures: validation.failures },
+    activationPerformed: false,
+  };
+
+  const receiptPath = join(dirname(manifestPath!), "staging-receipt.json");
+  writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + "\n");
+  console.log(`\nstaging receipt: ${receiptPath}`);
+
+  if (!validation.ok || !allOk) {
+    console.error("\nSTAGING RECONCILIATION FAILED.");
+    for (const f of validation.failures) console.error(`  ${f.failure}: ${f.detail}`);
+    console.error("\nThe batch remains PRIVATE. Nothing was activated and nothing was deleted.");
+    console.error("Production was NOT repaired automatically. Investigate and report.");
     process.exit(6);
   }
-  console.log("  validation passed.");
 
-  // ---- PHASE 3: activate, atomically ------------------------------------------
+  console.log("\nThe batch is staged, private and invisible.");
+  console.log(`${proofs.staged} records are eligible for activation; ${proofs.heldPrivate} are held.`);
+
+  // ---- the phase gate ----------------------------------------------------------
+  // Activation is a separate invocation. There is no code path from a `stage`
+  // run into the PATCH below, so a Phase A run cannot publish a record whatever
+  // else happens in it.
+  if (phase !== "activate") {
+    console.log("\nPHASE A COMPLETE. --phase stage: STOPPING BEFORE ACTIVATION.");
+    console.log("No record became public. Phase B is a separate invocation with --phase activate.");
+    return;
+  }
+
+  // ---- PHASE B: activate, atomically -------------------------------------------
   // ONE statement. Postgres runs it in its own transaction, so every staged row
   // becomes public together or none does. The filter cannot reach a held row:
   // `publication = 'staged'` is written only for a reviewed publishable decision.
-  console.log(`\nACTIVATE  flipping ${validation.eligible} staged rows to approved_signal...`);
+  console.log(`\nACTIVATE  flipping ${proofs.staged} staged rows to approved_signal...`);
   const activatedAt = new Date().toISOString();
   const activation = await fetch(
-    `${rest}?import_batch=eq.${encodeURIComponent(manifest.batchId)}` +
-      `&status=eq.private&import_meta->>publication=eq.staged`,
+    `${rest}?${batchFilter}&status=eq.private&import_meta->>publication=eq.staged`,
     {
       method: "PATCH",
       headers: { ...H, prefer: "return=representation" },
@@ -337,60 +472,54 @@ async function run(): Promise<void> {
     },
   );
   if (!activation.ok) {
-    die(7, `ACTIVATION FAILED: HTTP ${activation.status}`, (await activation.text()).slice(0, 400),
-      "The batch remains staged and private. Nothing was deleted.");
+    die(
+      7,
+      `ACTIVATION FAILED: HTTP ${activation.status}`,
+      (await activation.text()).slice(0, 400),
+      "The batch remains staged and private. Nothing was deleted.",
+    );
   }
   const activated = (await activation.json()) as unknown[];
 
-  // ---- post-write reconciliation ----------------------------------------------
-  const countOf = async (qs: string): Promise<number> => {
-    const r = await fetch(`${rest}?${qs}`, { headers: { ...H, prefer: "count=exact", range: "0-0" } });
-    return Number((r.headers.get("content-range") ?? "/0").split("/")[1]) || 0;
+  const after = {
+    rowsInBatch: await countOf(`select=id&${batchFilter}`),
+    publiclyVisible: await countOf(
+      `select=id&${batchFilter}&status=eq.approved_signal&or=(public_expires_at.is.null,public_expires_at.gt.${new Date().toISOString()})`,
+    ),
+    stillPrivate: await countOf(`select=id&${batchFilter}&status=eq.private`),
+    heldPubliclyVisible: await countOf(
+      `select=id&${batchFilter}&status=eq.approved_signal&import_meta->>publication=eq.held`,
+    ),
   };
-  const nowIso = new Date().toISOString();
-  const batchFilter = `import_batch=eq.${encodeURIComponent(manifest.batchId)}`;
-  const receipt = {
-    batchId: manifest.batchId,
-    manifestChecksum: manifest.decisionChecksum,
-    rulesFingerprint: manifest.rulesFingerprint,
-    environment: manifest.environment,
-    projectRef: resolvedProjectRef,
-    executedAtIso: new Date(executionAtMs).toISOString(),
-    activatedAtIso: activatedAt,
-    stagedNew: rows.length,
+
+  const clean =
+    after.publiclyVisible === manifest.publishable &&
+    after.stillPrivate === manifest.held &&
+    after.heldPubliclyVisible === 0 &&
+    after.rowsInBatch === manifest.received;
+
+  const publicationReceipt = {
+    ...receipt,
+    phase: "activate",
     activatedNew: activated.length,
-    alreadyPresentNoOp: rows.length - readBack.length >= 0 ? Math.max(0, readBack.length - rows.length) : 0,
-    heldPrivate: validation.held,
-    failures: 0,
-    postWrite: {
-      rowsInBatch: await countOf(`select=id&${batchFilter}`),
-      publiclyVisible: await countOf(
-        `select=id&${batchFilter}&status=eq.approved_signal&or=(public_expires_at.is.null,public_expires_at.gt.${nowIso})`,
-      ),
-      stillPrivate: await countOf(`select=id&${batchFilter}&status=eq.private`),
-      heldPubliclyVisible: await countOf(
-        `select=id&${batchFilter}&status=eq.approved_signal&import_meta->>publication=eq.held`,
-      ),
-    },
+    activatedAtIso: activatedAt,
+    activationPerformed: true,
+    postWrite: after,
   };
+  writeFileSync(
+    join(dirname(manifestPath!), "publication-receipt.json"),
+    JSON.stringify(publicationReceipt, null, 2) + "\n",
+  );
 
   console.log("\nPOST-WRITE RECONCILIATION");
-  console.log(`  rows in batch        ${receipt.postWrite.rowsInBatch}`);
-  console.log(`  publicly visible     ${receipt.postWrite.publiclyVisible}  (expected ${manifest.publishable})`);
-  console.log(`  still private        ${receipt.postWrite.stillPrivate}  (expected ${manifest.held})`);
-  console.log(`  held made public     ${receipt.postWrite.heldPubliclyVisible}  (must be 0)`);
-
-  const receiptPath = join(dirname(manifestPath!), "publication-receipt.json");
-  const clean =
-    receipt.postWrite.publiclyVisible === manifest.publishable &&
-    receipt.postWrite.stillPrivate === manifest.held &&
-    receipt.postWrite.heldPubliclyVisible === 0 &&
-    receipt.postWrite.rowsInBatch === manifest.received;
-
-  console.log(`\nreceipt: ${receiptPath}`);
-  console.log(clean ? "PUBLICATION COMPLETE, reconciled." : "PUBLICATION COMPLETED WITH A DISCREPANCY. Investigate; nothing was deleted.");
-  console.log(JSON.stringify(receipt, null, 2));
-  process.exit(clean ? 0 : 8);
+  console.log(`  rows in batch      ${after.rowsInBatch}  (expected ${manifest.received})`);
+  console.log(`  publicly visible   ${after.publiclyVisible}  (expected ${manifest.publishable})`);
+  console.log(`  still private      ${after.stillPrivate}  (expected ${manifest.held})`);
+  console.log(`  held made public   ${after.heldPubliclyVisible}  (must be 0)`);
+  console.log(
+    clean ? "PUBLICATION COMPLETE, reconciled." : "PUBLICATION COMPLETED WITH A DISCREPANCY. Nothing was deleted.",
+  );
+  if (!clean) process.exit(8);
 }
 
 void run();
