@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
-import SiteHeader from "@/components/SiteHeader";
+import GlobalHeader from "@/components/shell/GlobalHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BottomNav from "@/components/BottomNav";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -29,6 +29,26 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+/*
+  JetBrains Mono is the shell's face: the PONTE lockup, the navigation, the
+  account door.
+
+  It is declared HERE, on the document, because that is now where the shell is.
+  Every page that needed it used to publish it on a wrapper of its own, inside
+  the page; once GlobalHeader moved above those wrappers the variable was no
+  longer in scope for it, `font-family: var(--font-jetbrains), ...` became
+  invalid at computed value time, and the lockup and the whole bar quietly
+  inherited Inter on every route. A page that publishes the same variable lower
+  down still wins locally and resolves to the same family, so nothing below the
+  header changes.
+*/
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -131,7 +151,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={isRtl(locale) ? "rtl" : "ltr"}
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
       /*
         Dark is the product's ground. Set on the server so the first paint is
         already dark; the script below only overrides it when the member has
@@ -167,8 +187,14 @@ export default async function LocaleLayout({
               header and footer. ChromeGate also drops the <main> wrapper there,
               since the landing renders its own <main> landmark.
               Mobile bottom bar room is reserved by a body rule in globals.css. */}
+          {/* The one global header, for every route. It is rendered here rather
+              than by each page's wrapper because four wrappers each owning a
+              masthead is what produced five header systems. ChromeGate keeps
+              deciding the legacy footer and mobile bar; it no longer decides
+              whether a route has a header at all. */}
+          <GlobalHeader />
           <ChromeGate
-            header={<SiteHeader />}
+            header={null}
             footer={<SiteFooter />}
             bottomNav={<BottomNav />}
             extras={<InstallPrompt />}

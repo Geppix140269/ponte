@@ -285,8 +285,12 @@ function Detail({ signal, objective }: { signal: MarketSignal; objective: string
           </div>
           <div className="erow erow--pos">
             <PonteIcon name="evidence.evprov" size={18} />
-            <b>The record as the source states it</b>
-            <span>Recorded as printed, in Ponte&apos;s own words, never the source prose</span>
+            {/* "Recorded as printed" was the same verbatim claim the entrance
+                made, and it contradicted the clause beside it in one sentence.
+                A signal is a sourced, dated, unconfirmed indication; it is not a
+                reprint, and this row no longer says it is. */}
+            <b>What the source indicated</b>
+            <span>Recorded in Ponte&apos;s own words, never the source prose</span>
           </div>
           {sector ? (
             <div className="erow erow--pos">

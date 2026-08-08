@@ -153,8 +153,8 @@ the Master Brief did not enumerate, and fixes the convergence condition.
 ### The Market Signal boundary — binding
 
 **A Market Signal cannot enter the controlled-introduction journey.** It is
-unconfirmed external evidence: read from a public source, republished as
-printed, not confirmed with the party named, and the party named is not a member
+unconfirmed external evidence: a sourced, dated indication read from a public
+source, not confirmed with the party named, and the party named is not a member
 of Ponte. There is nobody to introduce, and nothing has been established to
 introduce them about.
 

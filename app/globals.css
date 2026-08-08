@@ -29,7 +29,13 @@
 
 :root {
   /* Ground */
-  --obsidian: #0a0c11;
+  /* OD-K, 7 August 2026: the canonical shell ground is --brg-ink #0E0F0C, the
+     ADR-0032 token. Three near-blacks were in play across the product - this
+     one, #0E0F0C in the bridge tokens, and #050504 in the approved prototypes -
+     so a member crossing between surfaces saw the page ground shift. This is now
+     the same value, kept under its historical name so the many call sites that
+     read --obsidian do not each have to be found and rewritten. */
+  --obsidian: #0e0f0c;
   --obsidian-deep: #06070a;
   --surface: #1b2029;
 
@@ -60,7 +66,8 @@
   /* Legacy v2 aliases. Deprecated, removed at the end of U2. */
   --cream: #eef1f5;
   --gray-2: #8a93a2;
-  --navy: #0a0c11;
+  /* OD-K: the same canonical ground. See --obsidian above. */
+  --navy: #0e0f0c;
   --navy-2: #1b2029;
   --navy-3: #232936;
   --navy-deep: #06070a;
@@ -906,4 +913,287 @@ select option {
   .bottom-nav-post {
     transition: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The global masthead.
+
+   GlobalHeader renders on every route, but the treatment it uses lives in
+   design-system/bridge/bridge.css, which only the bridge surfaces import. So
+   the header arrived unstyled everywhere else: a stack of raw links above the
+   page. These rules give it its approved treatment globally.
+
+   The values are COPIED from the approved bridge masthead, not re-invented, so
+   the band a member sees on /find is the band they saw on the entrance. The
+   bridge stylesheet itself is untouched, which keeps its invariance check
+   meaningful, and where both are loaded the two agree.
+   --------------------------------------------------------------------------- */
+/* `header.pg-mast` and not `.pg-mast`, and the extra element is load bearing.
+
+   bridge.css declares `.brg-mast { background: var(--brg-ink) }` at the same
+   specificity, and `--brg-ink` is scoped to `.brg`. The header now renders at
+   the layout boundary, OUTSIDE that wrapper, so wherever bridge.css also loads
+   the token cannot resolve, the declaration is invalid at computed value time,
+   and the band computed to transparent: the entrance and the whole publish path
+   scrolled their own text up through the navigation.
+
+   Matching the element as well as the class wins outright and stops the result
+   depending on which stylesheet the bundler happens to emit last. */
+header.pg-mast {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 40;
+  background: #0e0f0c;
+}
+.pg-mast .brg-mx,
+.pg-mast .brg-mast__bar {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.pg-mast .brg-mast__mark {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.46em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  color: #f2efe8;
+  text-decoration: none;
+  padding: 0;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+}
+.pg-mast .brg-mast__nav {
+  display: flex;
+  gap: 28px;
+  margin-inline-start: auto;
+}
+.pg-mast .brg-mast__nav a {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 232, 0.44);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 240ms ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
+.pg-mast .brg-mast__nav a:hover,
+.pg-mast .brg-mast__nav a[aria-current="page"] {
+  color: #c8a15a;
+}
+
+/* The two primary journeys stay reachable at 390px. The bridge rule hides the
+   whole bar below 900px, which is right for a decorative masthead and wrong for
+   the only navigation on the page: it would leave a member on a phone with no
+   way to reach the market or start a deal. */
+@media (max-width: 899px) {
+  .pg-mast .brg-mx,
+  .pg-mast .brg-mast__bar {
+    flex-wrap: wrap;
+    padding-inline: 16px;
+    row-gap: 4px;
+  }
+  .pg-mast .brg-mast__nav {
+    gap: 18px;
+    width: 100%;
+    margin-inline-start: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pg-mast .brg-mast__nav::-webkit-scrollbar { display: none; }
+  .pg-mast .brg-mast__nav a { min-height: 40px; }
+}
+
+/* The account door sits in the bar and reads as part of it. DeskAccount brings
+   its own Desk classes, which are unstyled outside the Desk scope, so it is
+   given the same treatment as the navigation here. */
+.pg-mast .cmd__acct,
+.pg-mast .brg-mast__who,
+.pg-mast a[href^="/login"],
+.pg-mast a[href^="/account"] {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 232, 0.44);
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
+.pg-mast .cmd__acct:hover,
+.pg-mast a[href^="/login"]:hover,
+.pg-mast a[href^="/account"]:hover {
+  color: #c8a15a;
+}
+
+/* The theme control, for the same reason and with the same treatment.
+   `.cmd__theme` is styled only under `.ponte-desk`, so in the global bar it
+   arrived as a plain button at body size: the single loudest thing in the band,
+   reading louder than Sign in, which is the one decision the bar is asking for. */
+.pg-mast .cmd__theme {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 232, 0.44);
+  background: none;
+  border: 0;
+  padding: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 240ms ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
+.pg-mast .cmd__theme:hover {
+  color: #c8a15a;
+}
+
+/* ---------------------------------------------------------------------------
+   The lifecycle rail.
+
+   Styled here, beside the masthead, and for the same reason: it is shell, it
+   renders on surfaces belonging to three different generations, and the lesson
+   of the header is that anything living at the shell boundary must not depend
+   on a stylesheet or a token that only one of those generations loads. Every
+   value below is a literal, and it is the approved dark shell's own: the same
+   ink, the same mono at 9.5px and .18em, the same muted cream, the same bronze
+   for the current place that the navigation already uses.
+   --------------------------------------------------------------------------- */
+.pg-rail {
+  background: #0e0f0c;
+  border-block-end: 1px solid rgba(242, 239, 232, 0.09);
+}
+.pg-rail__stages {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pg-rail__stages::-webkit-scrollbar { display: none; }
+.pg-rail__stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 239, 232, 0.34);
+  white-space: nowrap;
+}
+.pg-rail__stage b { font-weight: 400; }
+
+/* The marker carries the state as a shape as well as a colour, so the rail is
+   still readable with colour removed. */
+.pg-rail__mark {
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 239, 232, 0.28);
+  flex: none;
+}
+
+/* The current stage: bronze text, and a larger bronze ring that stays OPEN.
+
+   Not a filled dot beside a cream label. A filled marker reads as a completed
+   point on a track, which is the progress claim this rail must not make, and it
+   would also give the current stage two competing emphases. The ring is the
+   member's position: open, because they are standing in it rather than through
+   it. */
+.pg-rail__stage[data-here="true"] {
+  color: #c8a15a;
+}
+.pg-rail__stage[data-here="true"] .pg-rail__mark {
+  inline-size: 9px;
+  block-size: 9px;
+  background: none;
+  border-color: #c8a15a;
+}
+
+/* The Deal Room, drawn as the threshold it is.
+
+   The optionality lives in the MARKER, a dashed diamond rather than a circle,
+   and in the brackets the label carries. It is deliberately not a box drawn
+   around the stage: a container makes the room a place on the rail with an
+   edge, and it is a transition (ADR-0038), not an eighth compartment. ADR-0037
+   makes convergence available rather than obligatory, and a journey may end
+   validly at CONNECT.
+
+   Order matters here: these rules follow the current-stage rules so that a
+   member who IS in the room gets the bronze ring at diamond shape, rather than
+   losing the threshold treatment to the state above. */
+.pg-rail__stage[data-contextual="true"] {
+  color: rgba(242, 239, 232, 0.42);
+}
+.pg-rail__stage[data-contextual="true"] .pg-rail__mark {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 0;
+  border-style: dashed;
+  transform: rotate(45deg);
+}
+
+/* Visually hidden, and only inside the rail: the global `.sr-only` utility
+   lives in landing.css, which these surfaces do not load. */
+.pg-rail__sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* At 390 the rail stays ONE row and scrolls sideways. It does not wrap.
+
+   An earlier pass wrapped it to two rows so the whole vocabulary was visible at
+   once. That was the wrong instinct: the rail is orientation, not an explanation
+   of the lifecycle that must be read in full before a member can use the page,
+   and two rows of chrome above the fold on a phone costs more than it returns.
+   The stage a member is standing in is what has to be legible, and on both R0-A
+   corridors it sits second or third in the row, well inside 390. */
+@media (max-width: 899px) {
+  .pg-rail__stages {
+    padding: 10px 16px;
+    gap: 16px;
+  }
+}
+
+/* The signal tape sat 60px too low, and covered the first line of the question
+   the surface exists to ask.
+
+   `.brg` sets `overflow-x: hidden`, which makes it the scroll container for
+   anything sticky inside it. `.brg-tape` offsets itself by 60px within that
+   container to clear the masthead, which was correct for as long as the
+   masthead was the tape's own sibling. The masthead is now above `.brg`
+   entirely, so the reserved 60px is empty and the tape parks over the opening
+   headline instead of under the band.
+
+   Corrected here rather than in bridge.css: the offset is right for the bridge
+   as the bridge declares it, and what changed is what sits above the bridge. */
+.brg .brg-tape {
+  inset-block-start: 0;
 }

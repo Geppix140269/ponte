@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { landingFontVars } from "@/components/home/landing/fonts";
 import { isRtl } from "@/i18n/routing";
 import PonteFooter from "@/components/PonteFooter";
-import PonteLockup from "@/components/ponte/brand/PonteLockup";
+import { PRIMARY_NAV, signInHref, type PrimaryNavKey } from "@/lib/nav/primary";
 import "@/components/find/find.css";
 
 /**
@@ -33,7 +33,9 @@ export interface PonteShellProps {
   locale: string;
   children: ReactNode;
   /** Which primary entrance to mark as current, if any. */
-  current?: "explore" | "deal";
+  current?: PrimaryNavKey;
+  /** The route to come back to after signing in. */
+  signInReturnTo?: string | null;
   /**
    * Rendered flush, without the shared footer, for a single-action flow such
    * as the composer where a footer would compete with the one thing to do.
@@ -46,25 +48,13 @@ export default async function PonteShell({
   children,
   current,
   bare,
+  signInReturnTo,
 }: PonteShellProps) {
   const t = await getTranslations({ locale, namespace: "shell" });
 
   return (
     <div className={`ponte-find ${landingFontVars}`} dir={isRtl(locale) ? "rtl" : "ltr"}>
-      <header className="fnav">
-        <PonteLockup scope="find" label={t("home")} />
-        <nav className="fnav__links" aria-label={t("navLabel")}>
-          <Link
-            className={`fnav__link${current === "explore" ? " is-current" : ""}`}
-            href="/explore"
-          >
-            {t("explore")}
-          </Link>
-          <Link className={`fnav__link${current === "deal" ? " is-current" : ""}`} href="/structure">
-            {t("deal")}
-          </Link>
-        </nav>
-      </header>
+      {/* Header owned by GlobalHeader at the layout boundary. */}
 
       <main>{children}</main>
 

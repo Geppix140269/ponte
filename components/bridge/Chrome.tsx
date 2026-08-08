@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PRIMARY_NAV, signInHref } from "@/lib/nav/primary";
 
 /**
  * The chrome: the masthead and the market signals tape.
@@ -38,28 +39,18 @@ const PAUSE_KEY = "ponte.bridge.tape.paused";
 
 export interface ChromeProps {
   signals: readonly Signal[];
-  /** Who is signed in, or null. The masthead states it and nothing more. */
-  who?: string | null;
-  nav?: readonly { key: string; label: string; href: string }[];
-  current?: string;
 }
 
-/**
- * The three links every bridge screen's header carries once it has one.
- *
- * One place, so the header never drifts between the surfaces that pass it:
- * the earlier defect was not the wrong links, it was two call sites each
- * free to invent their own (or, as shipped, neither passing any).
- */
-export function primaryNav(who: string | null): { key: string; label: string; href: string }[] {
-  return [
-    { key: "market", label: "Market Signals", href: "/market-signals" },
-    { key: "rooms", label: "Deal Rooms", href: "/deal-rooms" },
-    { key: "account", label: who ? "Account" : "Sign in", href: who ? "/account" : "/login" },
-  ];
-}
+/*
+  `primaryNav` used to live here and is gone.
 
-export default function Chrome({ signals, who = null, nav = [], current }: ChromeProps) {
+  It built this surface's own three links. Once GlobalHeader took ownership of
+  the masthead there was nothing left for it to feed, and leaving an exported
+  function that names navigation destinations would invite a second owner back.
+  The one declaration is `PRIMARY_NAV` in lib/nav/primary, read by GlobalHeader.
+*/
+
+export default function Chrome({ signals }: ChromeProps) {
   /*
     Undefined until read, so the first paint does not assert "running" to a
     member who paused it and would see it start again before stopping.
@@ -91,27 +82,9 @@ export default function Chrome({ signals, who = null, nav = [], current }: Chrom
 
   return (
     <>
-      <header className="brg-mast">
-        <div className="brg-mx brg-mast__bar">
-          <button className="brg-mast__mark" type="button">
-            Ponte
-          </button>
-          {nav.length > 0 && (
-            <nav className="brg-mast__nav">
-              {nav.map((entry) => (
-                <a
-                  key={entry.key}
-                  href={entry.href}
-                  {...(entry.key === current ? { "aria-current": "page" as const } : {})}
-                >
-                  {entry.label}
-                </a>
-              ))}
-            </nav>
-          )}
-          {who && <span className="brg-mast__who">{who}</span>}
-        </div>
-      </header>
+      {/* The masthead is owned by GlobalHeader at the layout boundary. What
+          stays here is the signal tape below it, which is this surface's own
+          content rather than global chrome. */}
 
       <div className="brg-tape" data-paused={paused ? "true" : "false"}>
         <div className="brg-tape__mask" />

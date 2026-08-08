@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { bridgeFontVars } from "@/components/bridge/fonts";
 import PublishFlow from "@/components/publish/PublishFlow";
+import LifecycleRail from "@/components/shell/LifecycleRail";
 import { getUser } from "@/lib/auth";
 import { MARKET_INTENTS } from "@/lib/taxonomy/market";
 /*
@@ -84,6 +85,14 @@ export default async function PublishPage({
 
   return (
     <div className={bridgeFontVars}>
+      {/*
+        Orientation, above the path and below the global bar. `CREATE` is where
+        structuring a record sits in the canonical lifecycle, and it is where a
+        member on this route is standing from `B01` onwards: the rail states the
+        position, not which of the nine surfaces they have reached, because the
+        lifecycle is orientation and the path has its own arch for its own steps.
+      */}
+      <LifecycleRail at="create" />
       <PublishFlow signedIn={Boolean(user)} initialIntent={presetIntent(searchParams?.intent)} />
     </div>
   );

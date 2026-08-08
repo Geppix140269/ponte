@@ -1,3 +1,4 @@
+import { signInHref } from "@/lib/nav/primary";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { setRequestLocale } from "next-intl/server";
@@ -68,7 +69,11 @@ export default async function AccountPage({ params }: { params: { locale: string
   }
 
   const user = await getUser();
-  if (!user) redirect("/login");
+  // The walkthrough found this sending a member to a bare /login while
+  // /workspace and /admin both preserved their destination, so signing in from
+  // the account page did not bring the member back to it. One helper now sets
+  // the return path everywhere.
+  if (!user) redirect(signInHref("/account"));
 
   // One read, with the service role, scoped to this member. The profile fields
   // are the member's own; the business badge is only real when it rests on the

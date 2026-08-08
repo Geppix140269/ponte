@@ -79,7 +79,8 @@ function deal(over: Record<string, unknown> = {}) {
 const Q = (over: Partial<FindQuery> = {}): FindQuery => ({
   family: null, serviceCategory: null, serviceSubcategory: null, partnerType: null,
   sector: null, territory: null,
-  product: null, category: null, intent: null, market: null, origin: null, minQty: null, lane: null,
+  product: null, category: null, marketIntent: null, intent: null,
+  market: null, origin: null, minQty: null, lane: null,
   q: null, sort: null, page: 1, ...over,
 });
 
@@ -241,6 +242,55 @@ test("the search that runs is the one the URL described", () => {
   // A service filter has no partner type and no sector to narrow by.
   assert.equal(inventory.partnerType, null);
   assert.equal(inventory.sector, null);
+});
+
+test("a canonical intent carries its own family, and narrows to the right side", () => {
+  // The six landing doors state a canonical MarketIntent. The family follows
+  // from the taxonomy rather than from a second parameter that could disagree,
+  // and the side follows from the intent's own `side`.
+  const cases = [
+    ["source_product", "products", "requirement"],
+    ["offer_product", "products", "offer"],
+    ["seek_trade_service", "services", "requirement"],
+    ["offer_trade_service", "services", "offer"],
+    ["seek_distribution_partner", "distribution", "requirement"],
+    ["offer_distribution_or_representation", "distribution", "offer"],
+    ["seek_brands_or_products_to_represent", "distribution", "requirement"],
+  ] as const;
+  for (const [intent, family, side] of cases) {
+    const q = parseFindQuery({ intent });
+    assert.equal(q.marketIntent, intent, `${intent} is preserved`);
+    assert.equal(q.family, family, `${intent} implies ${family}`);
+    assert.equal(toInventoryQuery(q).side, side, `${intent} narrows to ${side}`);
+  }
+});
+
+test("a canonical intent survives the URL round trip", () => {
+  // A member who stated an intent must never be asked again, including after
+  // paging, sorting or changing lane. The canonical key is what is emitted.
+  const q = parseFindQuery({ intent: "seek_trade_service", serviceCategory: "freight" });
+  const href = buildFindHref(q);
+  assert.ok(href.includes("intent=seek_trade_service"), href);
+  const round = parseFindQuery(Object.fromEntries(new URLSearchParams(href.split("?")[1] ?? "")));
+  assert.equal(round.marketIntent, "seek_trade_service");
+  assert.equal(round.family, "services");
+});
+
+test("the intent wins over a family that contradicts it", () => {
+  // A contradiction resolves to the thing the member chose.
+  const q = parseFindQuery({ intent: "source_product", family: "distribution" });
+  assert.equal(q.family, "products");
+});
+
+test("legacy side values still parse, but are not restated as canonical", () => {
+  // Links shared before the canonical contract existed keep working.
+  const q = parseFindQuery({ intent: "offer", family: "products" });
+  assert.equal(q.marketIntent, null);
+  assert.equal(q.intent, "offer");
+  assert.equal(toInventoryQuery(q).side, "offer");
+  // Junk is ignored rather than trusted.
+  assert.equal(parseFindQuery({ intent: "nonsense" }).marketIntent, null);
+  assert.equal(parseFindQuery({ intent: "nonsense" }).intent, null);
 });
 
 console.log(`find/query: ${passed} passed`);

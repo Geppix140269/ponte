@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import PonteLockup from "@/components/ponte/brand/PonteLockup";
+import { PRIMARY_NAV, signInHref } from "@/lib/nav/primary";
 
 /**
  * The Find journey's own light chrome: a cream sticky nav with the bridge
@@ -14,34 +14,18 @@ import PonteLockup from "@/components/ponte/brand/PonteLockup";
 export default async function FindChrome({
   current,
   children,
+  signInReturnTo,
 }: {
   current?: "opportunities" | "signals";
   children: ReactNode;
+  /** The route to come back to after signing in. */
+  signInReturnTo?: string | null;
 }) {
   const t = await getTranslations("find");
 
   return (
     <>
-      <header className="fnav">
-        <PonteLockup scope="find" label={t("nav.home")} />
-        <nav className="fnav__links">
-          <Link
-            className={`fnav__link${current === "opportunities" ? " is-current" : ""}`}
-            href="/find"
-          >
-            {t("nav.opportunities")}
-          </Link>
-          <Link className="fnav__link" href="/market-signals">
-            {t("nav.signals")}
-          </Link>
-          <Link className="fnav__link" href="/structure">
-            {t("nav.submit")}
-          </Link>
-          <Link className="fnav__link" href="/verify">
-            {t("nav.verify")}
-          </Link>
-        </nav>
-      </header>
+      {/* Header owned by GlobalHeader at the layout boundary. */}
 
       <main className="fmain">{children}</main>
 

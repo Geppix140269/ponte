@@ -287,7 +287,24 @@ export default function StructureComposer({
     if (!structureDirty(draft)) return;
     keepDraft(draft, stack);
   }, [draft, stack, step]);
-  const { guard, promptOpen, onContinueEditing, leaveNow } = useUnsavedGuard(dirty);
+  /*
+    `interceptLinks` is on because the exits moved.
+
+    This surface used to render its own wordmark home and guard it explicitly.
+    Under R0-A the wordmark and the primary navigation belong to the global
+    header, which this component does not render and therefore cannot wrap in
+    `guard`. Without this the composer would keep a guarded Back while five
+    unguarded links sat directly above it, and a member with a part-built record
+    would lose it by pressing the one thing that looks like home.
+
+    This is the case the option exists for: the hook's own note calls it "the
+    exits the surface does NOT render". It installs a capture-phase click
+    listener only while the record is dirty, so nothing is intercepted on a
+    clean composer.
+  */
+  const { guard, promptOpen, onContinueEditing, leaveNow } = useUnsavedGuard(dirty, {
+    interceptLinks: true,
+  });
 
   /**
    * Editing one fact, rather than walking the whole record.
@@ -423,16 +440,20 @@ export default function StructureComposer({
             leaving and coming back brings the record with you.
           */
           <>
+            {/*
+              The wordmark that stood here is gone.
+
+              This bar carried a second `Ponte.trade` lockup and a second route
+              home, directly under the global masthead which already provides
+              both. Two marks on one screen is the inconsistency R0-A exists to
+              end, and the composer is not the surface that decides what Ponte's
+              wordmark is.
+
+              The BACK control stays, and matters: it is guarded, so it warns
+              before discarding a part-built record, which the masthead's plain
+              link home cannot do.
+            */}
             <JourneyBack onClick={() => guard(() => router.push(exit.href))} label={exit.label} />
-            <button
-              type="button"
-              className="sbar__title serif"
-              aria-label={t("bar.home")}
-              onClick={() => guard(() => router.push("/"))}
-              style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}
-            >
-              Ponte<span style={{ color: "var(--ink-3)", fontFamily: "var(--f-mono)", fontSize: 12 }}>.trade</span>
-            </button>
           </>
         )}
         {STEP_MARK[step] && <span className="sbar__step">{STEP_MARK[step]}</span>}
