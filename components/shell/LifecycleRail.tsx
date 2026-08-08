@@ -53,7 +53,19 @@ export default function LifecycleRail({
               {...(here ? { "aria-current": "true" as const } : {})}
             >
               <i className="pg-rail__mark" aria-hidden="true" />
-              <b>{stage.label}</b>
+              {/*
+                The brackets are the treatment, not the vocabulary, so they are
+                drawn here rather than baked into `lib/nav/lifecycle.ts`, and
+                they are hidden from assistive technology: ADR-0038 writes the
+                stage as `[DEAL ROOM]`, but a screen reader announcing "left
+                square bracket" says nothing about optionality. The words after
+                the label carry that meaning instead.
+              */}
+              <b>
+                {stage.contextual && <span aria-hidden="true">[</span>}
+                {stage.label}
+                {stage.contextual && <span aria-hidden="true">]</span>}
+              </b>
               {here && <span className="pg-rail__sr">, where you are now</span>}
               {stage.contextual && (
                 <span className="pg-rail__sr">, optional, and not part of every journey</span>
