@@ -18,6 +18,80 @@ Use this structure:
 
 ---
 
+## 2026-08-08 - Publication execution contract implemented FOR REVIEW. Batch G4WB-2026-08-06 is still NOT published.
+
+### Schema capability, established before any production-writing code was written
+
+The controller required a stop-and-report if the schema could not support a safe
+staged-to-public activation. **It can**, on the existing schema, with no
+migration. Probed read-only against production:
+
+| Capability | Mechanism | Probe result |
+|---|---|---|
+| Staged rows invisible | Every public read filters `status = 'approved_signal'`; a staged row is `private` | 6,827 private rows live today, **0** publicly visible |
+| Staged distinguishable from held | `import_meta.publication` = `staged` or `held` | PostgREST `import_meta->>publication=eq.staged` returns **HTTP 200** |
+| Atomic activation | ONE `PATCH` filtered on `import_batch` + `status=private` + the jsonb marker; Postgres runs a single UPDATE in its own transaction | combined filter accepted, HTTP 200 |
+| Held rows unreachable by activation | The filter matches only `publication = 'staged'`, written solely for a reviewed publishable decision | asserted in tests |
+
+No new column, constraint or migration is required.
+
+### Completed
+
+- **`lib/market-signals/publication-contract.ts`** - the pure contract. Twelve
+  named abort reasons before anything is written and ten named validation
+  failures before anything is activated.
+- **`scripts/prepare-batch.ts`** - writes the immutable review artefacts and
+  **refuses to overwrite an existing `manifest.json`**.
+- **`scripts/publish-batch.ts`** - the three-phase command: stage private,
+  validate by reading back, activate atomically. **Never run.**
+- **21 contract tests**, covering every refusal the controller named.
+
+### Decisions honoured
+
+- **Two-phase, and no rollback by deletion.** A failed validation stops, leaves
+  the batch staged and private, and reports. It never deletes: the rows are
+  already invisible, and an automated DELETE against production is a larger
+  hazard than the thing it would be recovering from.
+- **Drift is an abort, never a smaller batch.** The reviewed decision vector is
+  immutable. Decisions are recomputed twice, on the reviewed clock (proving
+  manifest integrity) and on the execution clock (proving no drift). A single
+  record crossing `current` to `aging` aborts the whole run.
+- **The rules are fingerprinted, not just the data.** Identical input files can
+  produce a different batch if the taxonomy or the freshness window changed, so
+  the three governing modules are hashed and a change aborts.
+- **No `--apply`.** Five required arguments, no defaults, no directory
+  discovery. The confirmation phrase is bound to the batch id, so a stray
+  `--confirm yes` cannot publish anything.
+
+### Evidence artefacts, `docs/evidence/batches/G4WB-2026-08-06/`
+
+`manifest.json` (immutable, 888 bytes) and `dry-run.json`. Reconciliation
+reproduced exactly: received 3,309, publishable 1,036, held 2,273, accounted
+3,309 of 3,309, silently discarded 0. Decision checksum
+`62f6acad...b73dbd231`; rules fingerprint `0e1e0ea2...656fc2594c`.
+
+**Scanned clean**: no source prose, no counterparty name, company or contact, no
+credential, no absolute path. Raw archives remain outside git.
+
+### Risks / discrepancies
+
+- The command is implemented but **unexercised end to end**. Its refusals are
+  proven; its staging, validation and activation paths have never run against a
+  database. The first real execution is therefore also the first test of those
+  three phases, which is why the post-write reconciliation exists.
+- `--source-dir` must name the directory holding the reviewed files. The command
+  does not search, by design.
+
+### Evidence
+
+- `lib/market-signals/publication-contract.ts`,
+  `lib/market-signals/__tests__/publication-contract.test.ts` (21 tests),
+  `scripts/prepare-batch.ts`, `scripts/publish-batch.ts`.
+- Refusals demonstrated live: missing arguments, wrong confirmation phrase,
+  wrong publishable count and wrong environment all abort before any write.
+
+---
+
 ## 2026-08-08 - Go4WorldBusiness ingestion pipeline accepted at dry run. Batch G4WB-2026-08-06 is NOT published.
 
 ### Completed
@@ -106,8 +180,8 @@ zero unmapped type values across both. Zero duplicate source identifiers.
 
 ### Next
 
-1. Design and review the safe publication execution contract (below). No
-   production write before it exists and is accepted.
+1. Review the publication execution contract, implemented 8 August 2026 (see
+   the entry above). No production write before it is accepted.
 2. Feed the acquisition-quality requirements back to the collection process.
 
 ### Evidence

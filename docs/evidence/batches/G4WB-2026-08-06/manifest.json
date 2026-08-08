@@ -1,0 +1,30 @@
+{
+  "batchId": "G4WB-2026-08-06",
+  "environment": "production",
+  "projectRef": "cptglsmjmzcfpjndqfmc",
+  "reviewedAtMs": 1786169990874,
+  "reviewedAtIso": "2026-08-08T06:19:50.874Z",
+  "sourceFiles": [
+    {
+      "name": "go4world_supplier_scrape_aug6.csv",
+      "sha256": "1379eb25a7bd3492ae503e1acffeab231d5da78042d57793d2fb51d72503c0cc",
+      "bytes": 732903,
+      "rows": 2673
+    },
+    {
+      "name": "go4world_new_buy_since_jul30.csv",
+      "sha256": "71bc9d4b8c8ef0075717b8d9eb1d7353c6b25690e8f593097ea364a840cb7961",
+      "bytes": 417053,
+      "rows": 636
+    }
+  ],
+  "rulesFingerprint": "0e1e0ea206ba2f6a0616be63090061c012e007674cd532d2eae7e8656fc2594c",
+  "decisionChecksum": "62f6acadd056043a0448dd04e97acd3cd52a4669d5f807e06de2a63b73dbd231",
+  "received": 3309,
+  "publishable": 1036,
+  "held": 2273,
+  "freshnessDays": {
+    "current": 90,
+    "aging": 365
+  }
+}
