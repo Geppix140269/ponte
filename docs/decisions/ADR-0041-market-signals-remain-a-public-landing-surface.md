@@ -54,10 +54,27 @@ is spent while its record stood.
 Every representation of a Market Signal on a public surface must carry, without
 the member having to look for it:
 
-- that it was **read from a named public source** and republished as printed;
+- that it was **read from a named public source**;
 - that it is **not confirmed** with the party named;
 - that the party named is **not a member of Ponte**;
 - its **source and date**, where shown at all.
+
+> **Amendment, 8 August 2026 — no verbatim-republication claim.**
+> The first bullet read *"read from a named public source **and republished as
+> printed**"*. The controller's R0-A visual acceptance ruling of 8 August 2026
+> prohibits that claim, and it was wrong on the facts: a Market Signal is
+> **a sourced, dated, unconfirmed indication**, recorded in Ponte's own words and
+> never the source's prose. The signal detail surface said exactly that in the
+> same breath as claiming to reprint, which is how the contradiction survived.
+>
+> Claiming verbatim republication also does damage the rest of this ADR is
+> written to prevent: it puts Ponte behind the source's wording as though it had
+> adopted it, which is the confirmation the next two bullets deny.
+>
+> **No public surface may state or imply that Ponte reprints, republishes
+> verbatim, or reproduces a source's own words.** The landing register row
+> *"Republished exactly as printed — Yes"* and the lede *"republishes what they
+> say, in the source's own words"* are withdrawn with it.
 
 These are not new. `00-NORTH-STAR-ENTRY-ARCHITECTURE.md` section 3.3, ADR-0011
 and the Master Brief's truth model already require them. This ADR restates them

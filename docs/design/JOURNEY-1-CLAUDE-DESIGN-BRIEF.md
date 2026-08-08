@@ -67,9 +67,9 @@ reintroduce them.
 ### The Market Signal boundary — do not design across it
 
 **A Market Signal (`F03`) is not part of this journey and must never reach a
-Request Introduction.** It is unconfirmed external evidence: read from a public
-source, republished as printed, not confirmed with the party named, and that
-party is not a member of Ponte. There is nobody to introduce.
+Request Introduction.** It is unconfirmed external evidence: a sourced, dated
+indication read from a public source, not confirmed with the party named, and
+that party is not a member of Ponte. There is nobody to introduce.
 
 ```text
 F02  Qualified Opportunity  ────────────────────────────►  JR-01 (you are designing this)
@@ -160,10 +160,11 @@ state coverage, not as surface language); `bridge/ponte-signed-in.html`;
 - **Evidence-specific trust only.** What was checked, source, date, result,
   limitation, expiry. **No tiers, no score, no percentage, no completeness bar.**
   Gold is a brand signal and never a status.
-- **Market Signals are never dressed as Qualified Opportunities.** Read from a
-  named public source, republished as printed, not confirmed with the party
-  named, not a member of Ponte (ADR-0041). They are also never *acted* on as
-  one — see the Market Signal boundary in section 3.
+- **Market Signals are never dressed as Qualified Opportunities.** A sourced,
+  dated, unconfirmed indication: read from a named public source, not confirmed
+  with the party named, not a member of Ponte, and **never claimed as verbatim
+  republication** (ADR-0041 and its 8 August 2026 amendment). They are also
+  never *acted* on as one — see the Market Signal boundary in section 3.
 - **No fabricated traction.** No invented counts, volumes, activity or urgency.
   Thin inventory is described honestly.
 - **A Deal Room is activated, never published.**

@@ -85,10 +85,15 @@ export default function Footer() {
           one that matters: naming what Ponte checks without naming what it does
           not reads as a guarantee about a counterparty, and is not one.
         */}
+        {/* "published as printed" is withdrawn here for the same reason it is
+            withdrawn on the entrance: a Market Signal is a sourced, dated,
+            unconfirmed indication, recorded in Ponte's own words, and claiming
+            to reprint a source puts Ponte behind its wording as though it had
+            adopted it. ADR-0041, amendment of 8 August 2026. */}
         <p className="brg-foot__op">
           Ponte Trade is operated by 1402 Celsius Ltd, registered in the United Kingdom. Market
-          Signals are read from public sources and published as printed. Ponte has not confirmed
-          them with the party named in them.
+          Signals are read from named public sources and dated. Ponte has not confirmed them with
+          the party named in them.
         </p>
       </div>
     </footer>

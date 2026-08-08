@@ -233,11 +233,23 @@ The entrance answers three questions in order: *what is this, what can I do, whe
 |---|---|---|---|
 | 1 | Command bar | Navigation | §3.2 |
 | 2 | **`What's your deal?`** + the crossing | What Ponte is | North Star §1 headline. The arc is identity, not progress |
-| 3 | **Three markets, six doors** | Where to start | Products · Trade services · Distribution — three **equal** families |
-| 4 | **Six doors. One destination.** | What it leads to | Deal Room explained, ADR-0036. A link, never a primary route |
+| 3 | **Three markets, six doors** | Where to start | Products · Trade services · Distribution and representation — three **equal** families, named from `lib/taxonomy/market.ts` |
+| 4 | **Six doors. Where they can lead.** | What it *can* lead to | Deal Room explained, ADR-0036. A link, never a primary route, never a destination |
 | 5 | **Market Signals, read recently** | Live intelligence | ADR-0041. Always labelled unconfirmed, never a Qualified Opportunity |
 | 6 | What a Market Signal is | Honesty | The four-line yes/no register |
 | 7 | Footer | §3.6 |
+
+> **Amendment, 8 August 2026 — band 4 is not a funnel.**
+> Band 4 read **"Six doors. One destination."** The controller's R0-A visual
+> acceptance ruling of 8 August 2026 rejects that wording, and it was never
+> reconcilable with **ADR-0037 §1**: convergence on a Deal Room is *available,
+> never automatic and never obligatory*, and the ADR names eight endings a
+> journey may legitimately reach instead. A band that admits one destination has
+> already called all eight of them a failure, which Constitution §19 forbids.
+>
+> The band states the **trigger** instead, per ADR-0037 §3: a room becomes the
+> next action when the parties want structured transaction progression. Wanting
+> that is the trigger, and nothing else is. Corridor D in §5 is renamed with it.
 
 **Fixes required by the audit**
 - **The arc must not carry publish-path stage labels.** `INTENT · WORDS · THE FACTS · PREVIEW` is
@@ -265,7 +277,7 @@ what they already said.*
 a signal → **Ask Ponte to investigate** → JR-05. *Outcome: the member reaches investigation.*
 **A signal never offers Request an introduction** (ADR-0037).
 
-**D · Deal Room explanation** — `/` → *Six doors. One destination.* or command bar → `/deal-rooms`
+**D · Deal Room explanation** — `/` → *Six doors. Where they can lead.* or command bar → `/deal-rooms`
 → `/deal-rooms/inside`. *Outcome: the member understands the room and its price.* **Explanation
 only**; entry, invitation, activation and payment stay controlled.
 
