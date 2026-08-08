@@ -1112,28 +1112,45 @@ header.pg-mast {
   border: 1px solid rgba(242, 239, 232, 0.28);
   flex: none;
 }
+
+/* The current stage: bronze text, and a larger bronze ring that stays OPEN.
+
+   Not a filled dot beside a cream label. A filled marker reads as a completed
+   point on a track, which is the progress claim this rail must not make, and it
+   would also give the current stage two competing emphases. The ring is the
+   member's position: open, because they are standing in it rather than through
+   it. */
 .pg-rail__stage[data-here="true"] {
-  color: #f2efe8;
+  color: #c8a15a;
 }
 .pg-rail__stage[data-here="true"] .pg-rail__mark {
-  background: #c8a15a;
+  inline-size: 9px;
+  block-size: 9px;
+  background: none;
   border-color: #c8a15a;
 }
 
 /* The Deal Room, drawn as the threshold it is.
 
-   Dashed and set apart, never a solid link in a chain, because ADR-0037 makes
-   convergence available rather than obligatory and a journey may end validly at
-   CONNECT. A solid eighth of a solid row of eight would say the opposite of
-   every sentence on the entrance. */
+   The optionality lives in the MARKER, a dashed diamond rather than a circle,
+   and in the brackets the label carries. It is deliberately not a box drawn
+   around the stage: a container makes the room a place on the rail with an
+   edge, and it is a transition (ADR-0038), not an eighth compartment. ADR-0037
+   makes convergence available rather than obligatory, and a journey may end
+   validly at CONNECT.
+
+   Order matters here: these rules follow the current-stage rules so that a
+   member who IS in the room gets the bronze ring at diamond shape, rather than
+   losing the threshold treatment to the state above. */
 .pg-rail__stage[data-contextual="true"] {
-  border: 1px dashed rgba(242, 239, 232, 0.22);
-  border-radius: 2px;
-  padding: 3px 9px;
   color: rgba(242, 239, 232, 0.42);
 }
 .pg-rail__stage[data-contextual="true"] .pg-rail__mark {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 0;
   border-style: dashed;
+  transform: rotate(45deg);
 }
 
 /* Visually hidden, and only inside the rail: the global `.sr-only` utility
@@ -1150,21 +1167,18 @@ header.pg-mast {
   border: 0;
 }
 
-/* At 390 the eight stages WRAP rather than scroll, and that is the point.
+/* At 390 the rail stays ONE row and scrolls sideways. It does not wrap.
 
-   Scrolling them cut the rail at CONNECT on a phone, which hid the fact that
-   the lifecycle continues, hid the Deal Room, and hid the dashed border that is
-   the only thing saying the room is optional. A member would have had to
-   discover a sideways scroll to learn any of it. Two rows cost about 24px and
-   show the whole vocabulary, which is what a rail whose entire job is
-   orientation has to do. */
+   An earlier pass wrapped it to two rows so the whole vocabulary was visible at
+   once. That was the wrong instinct: the rail is orientation, not an explanation
+   of the lifecycle that must be read in full before a member can use the page,
+   and two rows of chrome above the fold on a phone costs more than it returns.
+   The stage a member is standing in is what has to be legible, and on both R0-A
+   corridors it sits second or third in the row, well inside 390. */
 @media (max-width: 899px) {
   .pg-rail__stages {
     padding: 10px 16px;
-    gap: 14px;
-    row-gap: 8px;
-    flex-wrap: wrap;
-    overflow-x: visible;
+    gap: 16px;
   }
 }
 
